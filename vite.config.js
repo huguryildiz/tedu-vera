@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/senior-design-jury/',
+  // Vercel deploy runs at the domain root. Using a subpath base causes /assets/* 404s.
+  base: '/',
   build: {
     rollupOptions: {
       output: {
