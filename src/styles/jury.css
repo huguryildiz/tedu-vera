@@ -125,7 +125,7 @@
   text-align: left;
 }
 
-/* 4-box PIN entry */
+/* 6-box PIN entry */
 .pin-input-group {
   display: flex;
   flex-direction: column;
@@ -172,6 +172,51 @@
   padding: 0 22px;
 }
 .pin-ok-btn:disabled { opacity: 0.6; box-shadow: none; }
+
+/* PIN reveal actions */
+.pin-display--reveal {
+  flex-wrap: wrap;
+}
+.pin-reveal-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+.pin-reveal-copy {
+  min-height: 46px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  .pin-digit,
+  .pin-box {
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+    border-radius: 14px;
+  }
+  .pin-display,
+  .pin-boxes-row {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  .pin-digit,
+  .pin-box {
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
+    border-radius: 12px;
+  }
+  .pin-display,
+  .pin-boxes-row {
+    gap: 6px;
+  }
+}
 
 @keyframes pinAuthSpin {
   from { transform: rotate(0deg); }

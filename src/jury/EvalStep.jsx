@@ -28,8 +28,6 @@ import {
   ChevronDownIcon,
   HomeIcon,
   UserCheckIcon,
-  FolderKanbanIcon,
-  UsersRoundIcon,
   CheckCircle2Icon,
   CheckIcon,
   HourglassIcon,
@@ -38,6 +36,7 @@ import {
   TriangleAlertIcon,
 } from "../shared/Icons";
 import LevelPill from "../shared/LevelPill";
+import { GroupLabel, ProjectTitle, StudentNames } from "../components/EntityMeta";
 
 function progressGradient(pct) {
   if (pct === 0)   return "#e2e8f0";
@@ -198,10 +197,10 @@ export default function EvalStep({
         <div className={`eval-project-card-wrap${headerCollapsed ? " collapsed" : ""}`}>
           <div className={`eval-project-card${groupInfoOpen ? " is-open" : ""}`}>
             <div className="eval-project-summary">
-              <span className="eval-project-icon" aria-hidden="true"><FolderKanbanIcon /></span>
-              <span className="eval-group-label eval-scroll-line">
-                Group {project.group_no} — {project.project_title}
-              </span>
+              <div className="eval-group-label eval-scroll-line">
+                <GroupLabel text={`Group ${project.group_no}`} size={18} />
+                <ProjectTitle text={project.project_title} size={18} />
+              </div>
               <button
                 className="eval-project-toggle"
                 type="button"
@@ -221,10 +220,7 @@ export default function EvalStep({
             <div className="eval-project-details">
               {APP_CONFIG.showStudents && studentList.length > 0 && (
                 <div className="eval-project-detail">
-                  <span className="eval-project-detail-icon" aria-hidden="true"><UsersRoundIcon /></span>
-                  <span className="eval-project-detail-text eval-scroll-line">
-                    {studentList.join(" · ")}
-                  </span>
+                  <StudentNames names={studentList} />
                 </div>
               )}
             </div>

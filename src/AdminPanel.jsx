@@ -37,12 +37,14 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronDownIcon,
+  SettingsIcon,
 } from "./shared/Icons";
 import SummaryTab    from "./admin/SummaryTab";
 import DashboardTab  from "./admin/DashboardTab";
 import DetailsTab    from "./admin/DetailsTab";
 import JurorsTab     from "./admin/JurorsTab";
 import MatrixTab     from "./admin/MatrixTab";
+import ManagePage    from "./admin/ManagePage";
 import "./styles/admin-layout.css";
 import "./styles/admin-summary.css";
 import "./styles/admin-details.css";
@@ -50,6 +52,7 @@ import "./styles/admin-jurors.css";
 import "./styles/admin-matrix.css";
 import "./styles/admin-dashboard.css";
 import "./styles/admin-responsive.css";
+import "./styles/admin-manage.css";
 
 const CRITERIA_LIST = CRITERIA.map((c) => ({
   id: c.id, label: c.label, shortLabel: c.shortLabel, max: c.max,
@@ -61,9 +64,65 @@ const TABS = [
   { id: "detail",    label: "Details",   icon: ClipboardIcon },
   { id: "jurors",    label: "Jurors",    icon: UserCheckIcon },
   { id: "matrix",    label: "Matrix",    icon: GridIcon      },
+  { id: "manage",    label: "Manage",    icon: SettingsIcon  },
 ];
 
-function ResultsStatusBar({ metrics, id }) {
+function SemesterDropdown({
+  semesterList,
+  sortedSemesters,
+  selectedSemesterId,
+  selectedSemesterName,
+  semesterOpen,
+  setSemesterOpen,
+  setSelectedSemesterId,
+  fetchData,
+  semesterRef,
+}) {
+  if (semesterList.length === 0) return null;
+
+  return (
+    <div className="semester-dropdown" ref={semesterRef}>
+      <button
+        type="button"
+        className={`status-chip status-chip--semester semester-dropdown-trigger${semesterOpen ? " open" : ""}`}
+        aria-haspopup="listbox"
+        aria-expanded={semesterOpen}
+        onClick={() => setSemesterOpen((v) => !v)}
+      >
+        <span className="semester-dropdown-label">{selectedSemesterName}</span>
+        <span className="semester-dropdown-chevron" aria-hidden="true"><ChevronDownIcon /></span>
+      </button>
+      {semesterOpen && (
+        <ul
+          className="semester-dropdown-panel"
+          role="listbox"
+          aria-label="Select semester"
+        >
+          {sortedSemesters.map((s) => (
+            <li
+              key={s.id}
+              role="option"
+              aria-selected={selectedSemesterId === s.id}
+              className={`semester-dropdown-item${selectedSemesterId === s.id ? " active" : ""}`}
+              onClick={() => {
+                setSelectedSemesterId(s.id);
+                setSemesterOpen(false);
+                fetchData(s.id);
+              }}
+            >
+              {s.name}
+              {selectedSemesterId === s.id && (
+                <span className="semester-dropdown-check" aria-hidden="true">✓</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function ResultsStatusBar({ metrics, id, semesterSlot }) {
   const {
     completedJurors, totalJurors,
     completedEvaluations, totalEvaluations,
@@ -83,18 +142,25 @@ function ResultsStatusBar({ metrics, id }) {
 
   return (
     <div id={id} className="results-status-bar" role="group" aria-label="Results status metrics">
-      <span className={`status-chip status-chip--${jurorTheme}`}>
-        <span className="status-block"><UsersLucideIcon /><span className="status-value">{jv(safeTJ)}</span></span>
-        <span className="status-sep" aria-hidden="true">·</span>
-        <span className="status-block"><CheckCircle2Icon /><span className="status-value">{jv(safeCJ)}</span></span>
-        <span className="status-sep" aria-hidden="true">·</span>
-        <span className="status-block"><HourglassIcon /><span className="status-value">{jv(safeIP)}</span></span>
-        <span className="status-sep" aria-hidden="true">·</span>
-        <span className="status-block"><PencilIcon /><span className="status-value">{jv(safeED)}</span></span>
-      </span>
-      <span className={`status-chip status-chip--${evalTheme}`}>
-        <span className="status-block"><ListChecksIcon /><span className="status-value">{ev}</span></span>
-      </span>
+      {semesterSlot && (
+        <div className="results-status-row results-status-row--semester">
+          {semesterSlot}
+        </div>
+      )}
+      <div className="results-status-row results-status-row--chips">
+        <span className={`status-chip status-chip--${jurorTheme}`}>
+          <span className="status-block"><UsersLucideIcon /><span className="status-value">{jv(safeTJ)}</span></span>
+          <span className="status-sep" aria-hidden="true">·</span>
+          <span className="status-block"><CheckCircle2Icon /><span className="status-value">{jv(safeCJ)}</span></span>
+          <span className="status-sep" aria-hidden="true">·</span>
+          <span className="status-block"><HourglassIcon /><span className="status-value">{jv(safeIP)}</span></span>
+          <span className="status-sep" aria-hidden="true">·</span>
+          <span className="status-block"><PencilIcon /><span className="status-value">{jv(safeED)}</span></span>
+        </span>
+        <span className={`status-chip status-chip--${evalTheme}`}>
+          <span className="status-block"><ListChecksIcon /><span className="status-value">{ev}</span></span>
+        </span>
+      </div>
     </div>
   );
 }
@@ -104,11 +170,13 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
   const [rawScores,  setRawScores]  = useState([]);
   // All jurors for semester (includes those with zero scores)
   const [allJurors,  setAllJurors]  = useState([]);
-  // Per-project aggregates + notes from rpc_admin_project_summary
+  // Per-project aggregates from rpc_admin_project_summary
   const [summaryData, setSummaryData] = useState([]);
   // Semester selector
   const [semesterList,       setSemesterList]       = useState([]);
   const [selectedSemesterId, setSelectedSemesterId] = useState("");
+  const [semesterOpen,       setSemesterOpen]       = useState(false);
+  const semesterRef = useRef(null);
 
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState("");
@@ -116,7 +184,7 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
   const [showStatus,  setShowStatus]  = useState(true);
   const [activeTab,   setActiveTab]   = useState(() => {
     const s = readSection("tab");
-    const valid = ["summary", "dashboard", "detail", "jurors", "matrix"];
+    const valid = ["summary", "dashboard", "detail", "jurors", "matrix", "manage"];
     return valid.includes(s.activeTab) ? s.activeTab : "summary";
   });
   const [lastRefresh, setLastRefresh] = useState(null);
@@ -126,13 +194,38 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
   const tabBarRef = useRef(null);
 
   const initialLoadFiredRef = useRef(false);
-  const passRef = useRef(adminPass);
-  useEffect(() => { passRef.current = adminPass; }, [adminPass]);
+  const [adminPassState, setAdminPassState] = useState(
+    () => adminPass || sessionStorage.getItem("ee492_admin_pass") || ""
+  );
+  const passRef = useRef(adminPassState);
+  useEffect(() => {
+    const next = adminPass || sessionStorage.getItem("ee492_admin_pass") || "";
+    setAdminPassState(next);
+  }, [adminPass]);
+  useEffect(() => { passRef.current = adminPassState; }, [adminPassState]);
   const getAdminPass = () => passRef.current || sessionStorage.getItem("ee492_admin_pass") || "";
+  const handleAdminPasswordChange = (nextPass) => {
+    if (!nextPass) return;
+    setAdminPassState(nextPass);
+    passRef.current = nextPass;
+    try { sessionStorage.setItem("ee492_admin_pass", nextPass); } catch {}
+  };
 
   // Track selected semester separately so refresh uses the latest selection
   const selectedSemesterRef = useRef("");
   useEffect(() => { selectedSemesterRef.current = selectedSemesterId; }, [selectedSemesterId]);
+
+  // Close semester dropdown on outside click
+  useEffect(() => {
+    if (!semesterOpen) return;
+    function handleOutside(e) {
+      if (semesterRef.current && !semesterRef.current.contains(e.target)) {
+        setSemesterOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [semesterOpen]);
 
   // ── Data fetch ────────────────────────────────────────────
   const fetchData = async (forceSemesterId) => {
@@ -160,12 +253,9 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
       // Cache password for the duration of this session
       try { sessionStorage.setItem("ee492_admin_pass", pass); } catch {}
 
-      // Load semesters on first fetch
-      let sems = semesterList;
-      if (sems.length === 0) {
-        sems = await listSemesters();
-        setSemesterList(sems);
-      }
+      // Always refresh semesters (IDs change after reseed)
+      const sems = await listSemesters();
+      setSemesterList(sems);
 
       // Determine target semester
       const targetId =
@@ -242,7 +332,14 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
   const groups = useMemo(
     () =>
       summaryData
-        .map((p) => ({ id: p.id, groupNo: p.groupNo, label: `Group ${p.groupNo}`, desc: "" }))
+        .map((p) => ({
+          id: p.id,
+          groupNo: p.groupNo,
+          label: `Group ${p.groupNo}`,
+          title: p.name ?? "",
+          students: p.students ?? "",
+          desc: "",
+        }))
         .sort((a, b) => a.groupNo - b.groupNo),
     [summaryData]
   );
@@ -281,6 +378,10 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
   // Rows with all criteria filled = "submitted" in Supabase model
   const submittedData = useMemo(
     () => rawScores.filter((r) => r.status === "submitted"),
+    [rawScores]
+  );
+  const dashboardData = useMemo(
+    () => rawScores.filter((r) => r.status === "submitted" || r.status === "in_progress"),
     [rawScores]
   );
   const completedData = useMemo(
@@ -387,6 +488,17 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
       }).format(lastRefresh)
     : "";
 
+  // Semester list sorted descending: year DESC, then Spring > Fall within same year
+  const sortedSemesters = useMemo(() => {
+    const TERM_RANK = { spring: 2, summer: 1, fall: 0, winter: -1 };
+    function semKey(name = "") {
+      const [y = "0", t = ""] = name.split(" ");
+      return parseInt(y, 10) * 10 + (TERM_RANK[t.toLowerCase()] ?? 0);
+    }
+    return semesterList.slice().sort((a, b) => semKey(b.name) - semKey(a.name));
+  }, [semesterList]);
+  const selectedSemesterName = sortedSemesters.find((s) => s.id === selectedSemesterId)?.name ?? "Semester";
+
   // ── Render ────────────────────────────────────────────────
   return (
     <div className="admin-screen">
@@ -414,23 +526,6 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
                   </span>
                 </button>
               </div>
-              {/* Semester selector */}
-              {semesterList.length > 1 && (
-                <select
-                  className="semester-selector"
-                  value={selectedSemesterId}
-                  onChange={(e) => {
-                    setSelectedSemesterId(e.target.value);
-                    fetchData(e.target.value);
-                  }}
-                  aria-label="Select semester"
-                  style={{ marginTop: 4, fontSize: "0.85em" }}
-                >
-                  {semesterList.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-              )}
             </div>
           </div>
           <div className="header-right">
@@ -453,7 +548,25 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
             </button>
           </div>
         </div>
-        {showStatus && <ResultsStatusBar id="results-status-bar" metrics={statusMetrics} />}
+        {showStatus && (
+          <div className="status-expandable">
+            <SemesterDropdown
+              semesterList={semesterList}
+              sortedSemesters={sortedSemesters}
+              selectedSemesterId={selectedSemesterId}
+              selectedSemesterName={selectedSemesterName}
+              semesterOpen={semesterOpen}
+              setSemesterOpen={setSemesterOpen}
+              setSelectedSemesterId={setSelectedSemesterId}
+              fetchData={fetchData}
+              semesterRef={semesterRef}
+            />
+            <ResultsStatusBar
+              id="results-status-bar"
+              metrics={statusMetrics}
+            />
+          </div>
+        )}
 
         {/* Tab bar */}
         <div className="tab-bar-wrap">
@@ -497,10 +610,11 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
           {activeTab === "dashboard" && (
             <DashboardTab
               dashboardStats={dashboardStats}
-              submittedData={submittedData}
+              submittedData={dashboardData}
               lastRefresh={lastRefresh}
               loading={loading}
               error={error}
+              semesterName={selectedSemesterName}
             />
           )}
           {activeTab === "detail" && (
@@ -526,6 +640,12 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
               jurors={uniqueJurors}
               groups={groups}
               jurorDeptMap={jurorDeptMap}
+            />
+          )}
+          {activeTab === "manage" && (
+            <ManagePage
+              adminPass={adminPassState || getAdminPass()}
+              onAdminPasswordChange={handleAdminPasswordChange}
             />
           )}
         </div>

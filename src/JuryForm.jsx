@@ -1,10 +1,12 @@
 // src/JuryForm.jsx
 // Step-router. All logic lives in useJuryState.
-// Steps: "pin" → "semester" → "eval" → "done"
+// Steps: "identity" → "semester" → ("pin" | "pin_reveal") → "eval" → "done"
 
 import { useEffect }           from "react";
 import useJuryState            from "./jury/useJuryState";
+import InfoStep                from "./jury/InfoStep";
 import PinStep                 from "./jury/PinStep";
+import PinRevealStep           from "./jury/PinRevealStep";
 import SemesterStep            from "./jury/SemesterStep";
 import EvalStep                from "./jury/EvalStep";
 import DoneStep                from "./jury/DoneStep";
@@ -16,25 +18,36 @@ export default function JuryForm({ onBack }) {
   const {
     step,
     juryName, juryDept,
+    setJuryName, setJuryDept,
+    authError,
+    issuedPin,
     semesters,
+    activeSemesterInfo,
     projects,
     current, handleNavigate,
     scores, comments, touched,
     groupSynced, editMode,
+    editAllowed,
     progressPct, allComplete,
     doneScores,
     loadingState,
     saveStatus,
     pinError,
+    pinErrorCode,
+    pinAttemptsLeft,
+    pinLockedUntil,
     handleScore, handleScoreBlur,
     handleCommentChange, handleCommentBlur,
     handlePinSubmit,
+    handleIdentitySubmit,
+    handlePinRevealContinue,
     handleSemesterSelect,
     confirmingSubmit,
     handleRequestSubmit, handleConfirmSubmit, handleCancelSubmit,
     handleEditScores,
     handleFinalSubmit,
     resetAll,
+    clearLocalSession,
   } = useJuryState();
 
   // Force navy background while JuryForm is mounted.
@@ -49,6 +62,30 @@ export default function JuryForm({ onBack }) {
   }, []);
 
   const isLoading = loadingState?.stage === "loading";
+  const handleExitHome = () => {
+    clearLocalSession();
+    resetAll();
+    onBack();
+  };
+
+  // ── Identity ──────────────────────────────────────────────
+  if (step === "identity") {
+    return (
+      <>
+        <InfoStep
+          juryName={juryName}
+          setJuryName={setJuryName}
+          juryDept={juryDept}
+          setJuryDept={setJuryDept}
+          activeSemester={activeSemesterInfo}
+          onStart={handleIdentitySubmit}
+          onBack={handleExitHome}
+          error={authError}
+        />
+        <MinimalLoaderOverlay open={isLoading} minDuration={400} />
+      </>
+    );
+  }
 
   // ── PIN ───────────────────────────────────────────────────
   if (step === "pin") {
@@ -56,8 +93,25 @@ export default function JuryForm({ onBack }) {
       <>
         <PinStep
           pinError={pinError}
+          pinErrorCode={pinErrorCode}
+          pinAttemptsLeft={pinAttemptsLeft}
+          pinLockedUntil={pinLockedUntil}
           onPinSubmit={handlePinSubmit}
-          onBack={onBack}
+          onBack={handleExitHome}
+        />
+        <MinimalLoaderOverlay open={isLoading} minDuration={400} />
+      </>
+    );
+  }
+
+  // ── PIN reveal (new juror) ────────────────────────────────
+  if (step === "pin_reveal") {
+    return (
+      <>
+        <PinRevealStep
+          pin={issuedPin}
+          onContinue={handlePinRevealContinue}
+          onBack={handleExitHome}
         />
         <MinimalLoaderOverlay open={isLoading} minDuration={400} />
       </>
@@ -71,7 +125,7 @@ export default function JuryForm({ onBack }) {
         <SemesterStep
           semesters={semesters}
           onSelect={handleSemesterSelect}
-          onBack={() => { resetAll(); onBack(); }}
+          onBack={handleExitHome}
         />
         <MinimalLoaderOverlay open={isLoading} minDuration={400} />
       </>
@@ -86,8 +140,8 @@ export default function JuryForm({ onBack }) {
         doneScores={doneScores}
         scores={scores}
         projects={projects}
-        onBack={() => { resetAll(); onBack(); }}
-        onEditScores={handleEditScores}
+        onBack={handleExitHome}
+        onEditScores={editAllowed ? handleEditScores : null}
       />
     );
   }

@@ -282,7 +282,7 @@ export default function MatrixTab({ data, jurors, groups }) {
                       onClick={() => toggleGroupSort(g.id)}
                       title={`Sort by ${g.label}`}
                     >
-                      <strong>{g.groupNo}</strong>
+                      <span>{g.label || `Group ${g.groupNo}`}</span>
                       <span className="sort-icon">{groupSortIcon(g.id)}</span>
                     </button>
                   </th>

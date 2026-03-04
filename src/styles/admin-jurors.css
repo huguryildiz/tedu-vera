@@ -159,6 +159,37 @@
   align-items: center;
   gap: 6px;
 }
+.juror-row-toggle {
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 2px;
+  margin-left: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #64748b;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.juror-row-toggle:hover {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+.juror-row-toggle:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+.juror-row-toggle.is-open {
+  color: #334155;
+}
+.juror-row-toggle .group-accordion-chevron {
+  color: currentColor;
+}
+.juror-row-toggle-inline {
+  flex-shrink: 0;
+}
 
 @media (min-width: 640px) {
   .juror-row-right {
@@ -213,6 +244,31 @@
   gap: 6px;
   padding: 0 0 6px 2px;
   margin-top: 0;
+}
+.juror-row-detail-line {
+  display: block;
+  min-width: 0;
+}
+.juror-row-detail-title .entity-project-title {
+  font-size: 12px;
+  color: #0f172a;
+}
+.juror-row-detail-students {
+  font-size: 11px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.juror-row-detail-students::-webkit-scrollbar { display: none; }
+.juror-row-detail-students .entity-student-names {
+  flex-shrink: 0;
+}
+.juror-row-detail-students .entity-student-names > span {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 
 /* Row wrapper replaces direct .juror-row as the gap-child in .juror-projects */
@@ -386,4 +442,3 @@
 
 /* Editing indicator in admin header */
 .editing-indicator { color: #92400e; font-weight: 600; }
-

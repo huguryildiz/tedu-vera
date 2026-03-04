@@ -3,7 +3,8 @@
 
 import { useState } from "react";
 import { APP_CONFIG, CRITERIA } from "../config";
-import { InfoIcon, UsersRoundIcon, ChevronDownIcon, FolderKanbanIcon } from "../shared/Icons";
+import { InfoIcon, ChevronDownIcon } from "../shared/Icons";
+import { GroupLabel, ProjectTitle, StudentNames } from "../components/EntityMeta";
 import medalFirst from "../assets/1st-place-medal.svg";
 import medalSecond from "../assets/2nd-place-medal.svg";
 import medalThird from "../assets/3rd-place-medal.svg";
@@ -83,8 +84,7 @@ export default function SummaryTab({ ranked, submittedData }) {
                         style={{ cursor: hasDetails ? "pointer" : "default" }}
                       >
                         <span className="group-card-name">
-                          <span className="group-card-name-icon" aria-hidden="true"><FolderKanbanIcon /></span>
-                          <span className="group-card-name-text">{groupLabel}</span>
+                          <GroupLabel text={groupLabel} />
                         </span>
                         {hasDetails && (
                           <span className={`group-accordion-chevron${isExpanded ? " open" : ""}`}>
@@ -107,12 +107,13 @@ export default function SummaryTab({ ranked, submittedData }) {
                   >
                     <div className="group-accordion-panel-inner group-card-accordion-inner">
                       {showTitle && (
-                        <div className="group-card-full-title">{projectTitle}</div>
+                        <div className="group-card-full-title">
+                          <ProjectTitle text={projectTitle} />
+                        </div>
                       )}
                       {APP_CONFIG.showStudents && studentList.length > 0 && (
                         <div className="group-card-students">
-                          <span className="group-card-students-icon" aria-hidden="true"><UsersRoundIcon /></span>
-                          <span className="group-card-students-text">{studentList.join(" · ")}</span>
+                          <StudentNames names={studentList} />
                         </div>
                       )}
                     </div>

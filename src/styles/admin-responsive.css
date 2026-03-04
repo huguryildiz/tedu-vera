@@ -18,13 +18,14 @@
     padding-left: 0;
     white-space: nowrap;
   }
-  .results-status-bar {
+  .results-status-row--chips {
     flex-wrap: nowrap;
     white-space: nowrap;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
   }
   .status-chip { width: auto; }
+  .semester-dropdown { flex: 0 0 auto; }
   .tab-bar { gap: 8px; }
 }
 
@@ -274,7 +275,10 @@
   /* Finger-swipe for long text cells */
   .detail-table td.cell-juror,
   .detail-table td.cell-dept,
-  .detail-table td.cell-group,
+  .detail-table td.cell-semester,
+  .detail-table td.cell-group-no,
+  .detail-table td.cell-project-title,
+  .detail-table td.cell-students,
   .detail-table td.cell-comment {
     overflow-x: auto;
     white-space: nowrap;
@@ -284,7 +288,10 @@
   }
   .detail-table td.cell-juror::-webkit-scrollbar,
   .detail-table td.cell-dept::-webkit-scrollbar,
-  .detail-table td.cell-group::-webkit-scrollbar,
+  .detail-table td.cell-semester::-webkit-scrollbar,
+  .detail-table td.cell-group-no::-webkit-scrollbar,
+  .detail-table td.cell-project-title::-webkit-scrollbar,
+  .detail-table td.cell-students::-webkit-scrollbar,
   .detail-table td.cell-comment::-webkit-scrollbar { display: none; }
 
   /* Matrix: portrait mobile usability */
@@ -306,14 +313,15 @@
   .status-pill { font-size: 11px; padding: 3px 10px; }
 
   /* Results status chips: single-line, swipeable */
-  .results-status-bar {
+  .results-status-row--chips {
     flex-wrap: nowrap;
     white-space: nowrap;
     overflow-x: auto;
     gap: 8px;
     touch-action: pan-x;
   }
-  .status-chip { font-size: 12px; padding: 6px 12px; flex: 0 0 auto; }
+  .status-chip { font-size: 12px; padding: 6px 12px; flex: 0 0 auto; width: fit-content; max-width: 100%; }
+  .semester-dropdown-trigger { min-width: 140px; width: max-content; flex: 0 0 auto; }
 
   /* Rank cards wrap */
   .rank-card { flex-wrap: wrap; padding: 18px 18px; gap: 16px; }
@@ -417,6 +425,9 @@
   .print-header-title  { font-size: 22px; font-weight: 700; color: #0f172a; line-height: 1.2; }
   .print-header-sub    { font-size: 13px; color: #475569; margin-top: 4px; line-height: 1.2; }
   .print-header-meta   { font-size: 13px; color: #64748b; margin-top: 6px; line-height: 1.2; }
+  .print-header-meta > div { margin-top: 2px; }
+  .print-card-title { font-size: 11px; font-weight: 700; color: #0f172a; line-height: 1.2; }
+  .print-card-note  { font-size: 9px; color: #475569; margin-top: 2px; line-height: 1.2; }
 
   /* Hide everything except the dashboard content */
   .form-header, .tab-bar, .no-print, .mudek-badge-wrap { display: none !important; }
@@ -457,7 +468,7 @@
     overflow: hidden !important;
   }
   .chart-span-2.chart-card.dashboard-card {
-    height: 235px !important;
+    height: 180px !important;
   }
   /* Inner chart component root (direct child of dashboard-card) */
   .dashboard-card > .chart-card {
@@ -477,8 +488,8 @@
   }
 
   /* Title + note */
-  .chart-title { font-size: 11px !important; line-height: 1.2 !important; }
-  .chart-note  { font-size: 9px !important; margin-top: 1px !important; line-height: 1.2 !important; }
+  .chart-title { font-size: 9px !important; line-height: 1.15 !important; }
+  .chart-note  { font-size: 8px !important; margin-top: 1px !important; line-height: 1.15 !important; }
   .chart-subtitle { line-height: 1.2 !important; }
   .chart-title-row { margin-bottom: 6px !important; flex-shrink: 0 !important; }
 
@@ -512,6 +523,10 @@
     height: 100% !important;
   }
 
+  /* Outcome by Group: shrink labels to fit many groups */
+  #chart-1 .chart-x-label { font-size: 6px !important; }
+  #chart-1 .chart-bar-value { font-size: 6px !important; }
+
   /* CV formula block */
   .cv-formula-block { margin: 4px 0 !important; }
   .cv-formula-pill  { font-size: 9px !important; padding: 2px 6px !important; }
@@ -519,4 +534,28 @@
 
   /* Radar chart: fixed size */
   .radar-group-select { display: none !important; }
+
+  /* Page breaks after every printed chart */
+  .print-page {
+    break-after: page;
+    page-break-after: always;
+  }
+  .print-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  /* Radar print (one per page) */
+  .radar-print-card {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    padding: 10px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .radar-print-card svg {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 150mm !important;
+  }
 }

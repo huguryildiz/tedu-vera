@@ -70,7 +70,7 @@ function DashboardEmpty() {
 }
 
 // ── Main component ────────────────────────────────────────────
-export default function DashboardTab({ dashboardStats, submittedData, lastRefresh, loading, error }) {
+export default function DashboardTab({ dashboardStats, submittedData, lastRefresh, loading, error, semesterName = "" }) {
   const restoreRef   = useRef(null);
   const [exporting, setExporting] = useState(false);
 
@@ -83,9 +83,23 @@ export default function DashboardTab({ dashboardStats, submittedData, lastRefres
     setExporting(true);
 
     let done = false;
+    const originalTitle = document.title;
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, "0");
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const yyyy = String(today.getFullYear());
+    const hh = String(today.getHours()).padStart(2, "0");
+    const min = String(today.getMinutes()).padStart(2, "0");
+    const safeSemester = String(semesterName || "Semester")
+      .trim()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-zA-Z0-9_-]/g, "");
+    document.title = `TEDU_EE491-492_Jury_Report_${safeSemester}_${dd}${mm}${yyyy}_${hh}${min}.pdf`;
+
     const restore = () => {
       if (done) return;
       done = true;
+      document.title = originalTitle;
       clearTimeout(safariTimer);
       window.removeEventListener("afterprint", restore);
       printMq.removeEventListener("change", onMqChange);
@@ -117,6 +131,22 @@ export default function DashboardTab({ dashboardStats, submittedData, lastRefres
 
   // ── Render states ────────────────────────────────────────────
   const showPrint = formatDashboardTs(lastRefresh);
+  const printDate = (() => {
+    const dt = lastRefresh ? new Date(lastRefresh) : new Date();
+    if (Number.isNaN(dt.getTime())) return showPrint;
+    const datePart = dt.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+    const timePart = dt.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    return `${datePart} · ${timePart}`;
+  })();
+  const semesterLabel = semesterName ? `${semesterName} Semester` : "Semester";
 
   if (loading) {
     return (
@@ -215,12 +245,12 @@ export default function DashboardTab({ dashboardStats, submittedData, lastRefres
       <div className="print-report">
         {/* Print-only header — appears above page 1 */}
         <div className="print-header">
-          <div className="print-header-title">{APP_CONFIG.appTitle}</div>
-          <div className="print-header-sub">{APP_CONFIG.courseName} — {APP_CONFIG.university}</div>
+          <div className="print-header-title">TED University — Department of Electrical &amp; Electronics Engineering</div>
+          <div className="print-header-sub">Senior Project (EE 491 / EE 492) Jury Assessment Report</div>
           <div className="print-header-meta">
-            Dashboard Report &nbsp;·&nbsp; {showPrint}
-            &nbsp;·&nbsp; {submittedData.length} final submission{submittedData.length !== 1 ? "s" : ""}
-            &nbsp;·&nbsp; {dashboardStats.length} group{dashboardStats.length !== 1 ? "s" : ""}
+            <div>{semesterLabel}</div>
+            <div>Report Generated: {printDate}</div>
+            <div>{submittedData.length} Final Submission{submittedData.length !== 1 ? "s" : ""} · {dashboardStats.length} Project Group{dashboardStats.length !== 1 ? "s" : ""}</div>
           </div>
         </div>
 
@@ -238,12 +268,8 @@ export default function DashboardTab({ dashboardStats, submittedData, lastRefres
           <OutcomeOverviewChartPrint data={submittedData} />
         </section>
 
-        {/* Page 3: Competency Radar (all groups) */}
-        <section className="print-page">
-          <div className="print-card-title">Competency Profiles — All Groups</div>
-          <div className="print-card-note">Each polygon shows one group's balance across all four outcomes. Dashed = cohort average.</div>
-          <RadarPrintAll stats={dashboardStats} />
-        </section>
+        {/* Page 3+: Competency Radar (one group per page) */}
+        <RadarPrintAll stats={dashboardStats} />
 
         {/* Page 4: Juror Consistency Heatmap */}
         <section className="print-page">

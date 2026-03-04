@@ -125,6 +125,22 @@ body {
   font-size: 16px;
   color: var(--text-600);
 }
+.premium-semester-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-500);
+}
+.premium-semester-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-500);
+}
+.premium-semester-icon svg {
+  width: 14px;
+  height: 14px;
+}
 .premium-body {
   font-size: 15px;
   color: var(--text-600);
@@ -464,6 +480,40 @@ body {
 .loading   { text-align: center; padding: 40px; color: var(--gray-500); }
 .error-msg { background: var(--red-light); color: var(--red); padding: 14px 20px; margin: 20px; border-radius: var(--radius); font-size: 14px; }
 .empty-msg { text-align: center; padding: 40px; color: var(--gray-500); }
+
+/* ── EntityMeta — canonical Group / ProjectTitle / StudentNames ── */
+.entity-group-label,
+.entity-project-title,
+.entity-student-names {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-shrink: 1;
+}
+.entity-group-label svg,
+.entity-project-title svg,
+.entity-student-names svg {
+  flex-shrink: 0;
+}
+.entity-group-label > span {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.entity-project-title > span {
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.entity-student-names > span {
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* ── Group accordion — used by JurorsTab (admin) and DoneStep (jury) ── */
 .group-accordion-header {

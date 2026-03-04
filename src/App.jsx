@@ -10,9 +10,8 @@
 //
 // Home "Resume" banner removed in v5 — draft continuity is now
 // handled inside the jury flow after PIN verification.
-// Note: localStorage is NOT used — Sheets is the single source of truth
-// are pre-filled, but the banner that bypassed the PIN step
-// is gone.
+// Note: localStorage is used only for same-device convenience
+// (juror_id + semester_id), not as a source of truth.
 // ============================================================
 
 import { useRef, useState } from "react";

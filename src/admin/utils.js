@@ -134,6 +134,19 @@ function exportScoreValue(v) {
   return v;
 }
 
+function formatExportTimestamp(value) {
+  if (!value) return "";
+  const dt = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(dt.getTime())) return "";
+  const dd = String(dt.getDate()).padStart(2, "0");
+  const mm = String(dt.getMonth() + 1).padStart(2, "0");
+  const yyyy = dt.getFullYear();
+  const hh = String(dt.getHours()).padStart(2, "0");
+  const min = String(dt.getMinutes()).padStart(2, "0");
+  const ss = String(dt.getSeconds()).padStart(2, "0");
+  return `${dd}.${mm}.${yyyy} ${hh}:${min}:${ss}`;
+}
+
 export async function exportXLSX(rows, { semesterName = "", summaryData = [] } = {}) {
   const XLSX = await import("xlsx");
 
@@ -170,7 +183,7 @@ export async function exportXLSX(rows, { semesterName = "", summaryData = [] } =
     exportScoreValue(r.delivery),  // oral in DB
     exportScoreValue(r.teamwork),
     exportScoreValue(r.total),
-    r.timestamp   ?? "",           // submitted_at
+    formatExportTimestamp(r.timestamp), // submitted_at
     r.comments    ?? "",
   ]);
 
@@ -182,9 +195,16 @@ export async function exportXLSX(rows, { semesterName = "", summaryData = [] } =
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Jury Evaluations");
   const now  = new Date();
-  const date = now.toISOString().slice(0, 10);
-  const hhmm = `${String(now.getHours()).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}`;
-  XLSX.writeFile(wb, `jury_export_${date}_${hhmm}.xlsx`);
+  const dd = String(now.getDate()).padStart(2, "0");
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const yyyy = String(now.getFullYear());
+  const hh = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+  const safeSemester = String(semesterName || "Semester")
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-zA-Z0-9_-]/g, "");
+  XLSX.writeFile(wb, `TEDU_EE491-492_Jury_Details_${safeSemester}_${dd}${mm}${yyyy}_${hh}${min}.xlsx`);
 }
 
 // ── Completion % — mirrors countFilled / totalFields in useJuryState ─────────

@@ -4,7 +4,8 @@ import { useState, useMemo, useEffect } from "react";
 import { formatTs, adminCompletionPct, cmp } from "./utils";
 import { readSection, writeSection } from "./persist";
 import { StatusBadge } from "./components";
-import { CircleCheckBigIcon, ClockIcon, UserCheckIcon, ChevronDownIcon, FolderKanbanIcon, PencilIcon } from "../shared/Icons";
+import { CircleCheckBigIcon, ClockIcon, UserCheckIcon, PencilIcon, ChevronDownIcon } from "../shared/Icons";
+import { GroupLabel, ProjectTitle, StudentNames } from "../components/EntityMeta";
 
 // jurorStats prop: { key, name, dept, jurorId, rows, overall, latestRow }[]
 // groups prop: { id (uuid), groupNo, label }[]
@@ -153,6 +154,16 @@ export default function JurorsTab({ jurorStats, groups = [] }) {
                     const grp = groups.find((g) => g.id === d.projectId);
                     const groupKey = `${key}-${d.projectId}`;
                     const panelId = `juror-group-panel-${groupKey}`;
+                    const isExpanded = expandedGroups.has(groupKey);
+                    const projectTitle = String(d.projectName ?? grp?.title ?? "").trim();
+                    const studentsRaw = grp?.students ?? "";
+                    const studentList = Array.isArray(studentsRaw)
+                      ? studentsRaw.map((s) => String(s).trim()).filter(Boolean)
+                      : String(studentsRaw)
+                        .split(",")
+                        .map((s) => s.trim())
+                        .filter(Boolean);
+                    const studentNames = studentList.length ? studentList : ["—"];
                     return (
                       <div key={groupKey} className="juror-row-wrap">
                         <div
@@ -166,11 +177,20 @@ export default function JurorsTab({ jurorStats, groups = [] }) {
                           <div className="juror-row-left">
                             <div className="juror-row-header-line">
                               <span className="juror-row-name">
-                                <span className="juror-row-name-icon" aria-hidden="true"><FolderKanbanIcon /></span>
-                                <span className="juror-row-name-text">
-                                  {grp?.label || `Group ${d.groupNo ?? d.projectId}`}
-                                </span>
+                                <GroupLabel text={grp?.label || `Group ${d.groupNo ?? d.projectId}`} />
                               </span>
+                              <button
+                                type="button"
+                                className={`juror-row-toggle juror-row-toggle-inline${isExpanded ? " is-open" : ""}`}
+                                aria-expanded={isExpanded}
+                                aria-controls={panelId}
+                                onClick={() => toggleGroup(groupKey)}
+                                title={isExpanded ? "Hide details" : "Show details"}
+                              >
+                                <span className={`group-accordion-chevron${isExpanded ? " open" : ""}`}>
+                                  <ChevronDownIcon />
+                                </span>
+                              </button>
                             </div>
                           </div>
                           {/* RIGHT: KPI stack */}
@@ -192,6 +212,19 @@ export default function JurorsTab({ jurorStats, groups = [] }) {
                                   {d.total}
                                 </span>
                               )}
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          id={panelId}
+                          className={`group-accordion-panel${isExpanded ? " open" : ""}`}
+                        >
+                          <div className="group-accordion-panel-inner juror-accordion-inner">
+                            <div className="juror-row-detail-line juror-row-detail-title">
+                              <ProjectTitle text={projectTitle || "—"} size={14} />
+                            </div>
+                            <div className="juror-row-detail-line juror-row-detail-students">
+                              <StudentNames names={studentNames} size={14} />
                             </div>
                           </div>
                         </div>

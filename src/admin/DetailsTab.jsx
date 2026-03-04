@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { cmp, exportXLSX, formatTs, tsToMillis, rowKey } from "./utils";
 import { readSection, writeSection } from "./persist";
-import { StatusBadge, FilterPopoverPortal } from "./components";
+import { FilterPopoverPortal } from "./components";
 import { FilterIcon, DownloadIcon, ArrowUpDownIcon, ArrowDown01Icon, ArrowDown10Icon, ArrowDownIcon, ArrowUpIcon, XIcon } from "../shared/Icons";
 
 // Show "" for null/undefined/empty/NaN.  0 is a valid score.
@@ -18,11 +18,6 @@ function displayScore(val) {
   return n;
 }
 
-const STATUS_OPTIONS = [
-  { key: "in_progress",     label: "In Progress" },
-  { key: "submitted",       label: "Submitted"   },
-];
-
 const SCORE_COLS = [
   { key: "technical", label: "Technical /30" },
   { key: "design",    label: "Written /30"   },
@@ -32,20 +27,23 @@ const SCORE_COLS = [
 ];
 
 // jurors prop: { key, name, dept }[]
-// groups prop: { id (uuid), groupNo, label }[]
-export default function DetailsTab({ data, jurors, groups: groupsProp = [], semesterName = "", summaryData = [] }) {
-  const VALID_STATUSES = ["in_progress", "submitted"];
+export default function DetailsTab({ data, jurors, semesterName = "", summaryData = [] }) {
   const VALID_SORT_DIRS = ["asc", "desc"];
+  const [filterSemester, setFilterSemester] = useState(() => { const s = readSection("details"); return typeof s.filterSemester === "string" ? s.filterSemester : ""; });
+  const [filterGroupNo,  setFilterGroupNo]  = useState(() => { const s = readSection("details"); return typeof s.filterGroupNo  === "string" ? s.filterGroupNo  : ""; });
   const [filterJuror,    setFilterJuror]    = useState(() => { const s = readSection("details"); return typeof s.filterJuror  === "string" ? s.filterJuror  : "ALL"; });
   const [filterDept,     setFilterDept]     = useState(() => { const s = readSection("details"); return typeof s.filterDept   === "string" ? s.filterDept   : "ALL"; });
-  const [filterGroup,    setFilterGroup]    = useState(() => { const s = readSection("details"); return typeof s.filterGroup  === "string" ? s.filterGroup  : "ALL"; });
-  const [filterStatuses, setFilterStatuses] = useState(() => { const s = readSection("details"); return new Set(Array.isArray(s.filterStatuses) ? s.filterStatuses.filter((k) => VALID_STATUSES.includes(k)) : []); });
-  const [filterEditing,  setFilterEditing]  = useState(() => { const s = readSection("details"); return typeof s.filterEditing === "string" ? s.filterEditing : "ALL"; });
+  const [filterProjectTitle, setFilterProjectTitle] = useState(() => { const s = readSection("details"); return typeof s.filterProjectTitle === "string" ? s.filterProjectTitle : ""; });
+  const [filterStudents,     setFilterStudents]     = useState(() => { const s = readSection("details"); return typeof s.filterStudents     === "string" ? s.filterStudents     : ""; });
   const [dateFrom,       setDateFrom]       = useState(() => { const s = readSection("details"); return typeof s.dateFrom     === "string" ? s.dateFrom     : ""; });
   const [dateTo,         setDateTo]         = useState(() => { const s = readSection("details"); return typeof s.dateTo       === "string" ? s.dateTo       : ""; });
   const [dateError,      setDateError]      = useState(null);
   const [filterComment,  setFilterComment]  = useState(() => { const s = readSection("details"); return typeof s.filterComment === "string" ? s.filterComment : ""; });
-  const [sortKey,        setSortKey]        = useState(() => { const s = readSection("details"); return typeof s.sortKey === "string" && s.sortKey ? s.sortKey : "tsMs"; });
+  const [sortKey,        setSortKey]        = useState(() => {
+    const s = readSection("details");
+    const key = typeof s.sortKey === "string" && s.sortKey ? s.sortKey : "tsMs";
+    return key === "projectId" ? "projectTitle" : key;
+  });
   const [sortDir,        setSortDir]        = useState(() => { const s = readSection("details"); return VALID_SORT_DIRS.includes(s.sortDir) ? s.sortDir : "desc"; });
   const [activeFilterCol, setActiveFilterCol] = useState(null);
   const [anchorRect, setAnchorRect] = useState(null);
@@ -54,10 +52,34 @@ export default function DetailsTab({ data, jurors, groups: groupsProp = [], seme
     typeof window !== "undefined" && window.matchMedia("(max-width: 480px)").matches
   ));
 
-  const groups = useMemo(
-    () => [...groupsProp].sort((a, b) => (a.groupNo ?? 0) - (b.groupNo ?? 0)),
-    [groupsProp]
+  const projectMetaById = useMemo(
+    () => new Map((summaryData || []).map((p) => [p.id, { title: p?.name ?? "", students: p?.students ?? "" }])),
+    [summaryData]
   );
+  const semesterOptions = useMemo(() => {
+    const map = new Map();
+    const add = (val) => {
+      const label = String(val ?? "").trim();
+      if (!label) return;
+      map.set(label.toLowerCase(), label);
+    };
+    data.forEach((row) => add(row?.semester));
+    add(semesterName);
+    return Array.from(map.entries())
+      .sort((a, b) => a[1].localeCompare(b[1], "tr"))
+      .map(([, label]) => label);
+  }, [data, semesterName]);
+  const groupNoOptions = useMemo(() => {
+    const map = new Map();
+    data.forEach((row) => {
+      const label = String(row?.groupNo ?? "").trim();
+      if (!label) return;
+      map.set(label.toLowerCase(), label);
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => a[1].localeCompare(b[1], "tr", { numeric: true }))
+      .map(([, label]) => label);
+  }, [data]);
   const deptOptions = useMemo(() => {
     const map = new Map();
     jurors.forEach((j) => {
@@ -93,13 +115,11 @@ export default function DetailsTab({ data, jurors, groups: groupsProp = [], seme
 
   useEffect(() => {
     writeSection("details", {
-      filterJuror, filterDept, filterGroup,
-      filterStatuses: [...filterStatuses],
-      filterEditing,
+      filterSemester, filterGroupNo, filterJuror, filterDept, filterProjectTitle, filterStudents,
       dateFrom, dateTo, filterComment,
       sortKey, sortDir,
     });
-  }, [filterJuror, filterDept, filterGroup, filterStatuses, filterEditing, dateFrom, dateTo, filterComment, sortKey, sortDir]);
+  }, [filterSemester, filterGroupNo, filterJuror, filterDept, filterProjectTitle, filterStudents, dateFrom, dateTo, filterComment, sortKey, sortDir]);
 
   function isValidDateParts(yyyy, mm, dd) {
     if (yyyy < 2000 || yyyy > 2100) return false;
@@ -143,30 +163,33 @@ export default function DetailsTab({ data, jurors, groups: groupsProp = [], seme
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
+    if (filterSemester) count += 1;
+    if (filterGroupNo) count += 1;
     if (filterJuror !== "ALL") count += 1;
     if (filterDept !== "ALL") count += 1;
-    if (filterGroup !== "ALL") count += 1;
-    if (filterStatuses.size > 0) count += 1;
-    if (filterEditing !== "ALL") count += 1;
+    if (filterProjectTitle) count += 1;
+    if (filterStudents) count += 1;
     if (dateFrom || dateTo) count += 1;
     if (filterComment) count += 1;
     return count;
-  }, [filterJuror, filterDept, filterGroup, filterStatuses, filterEditing, dateFrom, dateTo, filterComment]);
+  }, [filterSemester, filterGroupNo, filterJuror, filterDept, filterProjectTitle, filterStudents, dateFrom, dateTo, filterComment]);
   const hasAnyFilter = activeFilterCount > 0;
+  const isSemesterFilterActive = !!filterSemester || activeFilterCol === "semester";
+  const isGroupNoFilterActive = !!filterGroupNo || activeFilterCol === "groupNo";
   const isJurorFilterActive = filterJuror !== "ALL" || activeFilterCol === "juror";
   const isDeptFilterActive = filterDept !== "ALL" || activeFilterCol === "dept";
-  const isGroupFilterActive = filterGroup !== "ALL" || activeFilterCol === "group";
+  const isProjectTitleFilterActive = !!filterProjectTitle || activeFilterCol === "projectTitle";
+  const isStudentsFilterActive = !!filterStudents || activeFilterCol === "students";
   const isDateFilterActive = !!dateFrom || !!dateTo || activeFilterCol === "timestamp";
-  const isStatusFilterActive = filterStatuses.size > 0 || activeFilterCol === "status";
-  const isEditingFilterActive = filterEditing !== "ALL" || activeFilterCol === "editing";
   const isCommentFilterActive = !!filterComment || activeFilterCol === "comments";
 
   function resetFilters() {
+    setFilterSemester("");
+    setFilterGroupNo("");
     setFilterJuror("ALL");
     setFilterDept("ALL");
-    setFilterGroup("ALL");
-    setFilterStatuses(new Set());
-    setFilterEditing("ALL");
+    setFilterProjectTitle("");
+    setFilterStudents("");
     setDateFrom("");
     setDateTo("");
     setDateError(null);
@@ -175,15 +198,6 @@ export default function DetailsTab({ data, jurors, groups: groupsProp = [], seme
     setSortDir("desc");
     setActiveFilterCol(null);
     setAnchorRect(null);
-  }
-
-  function toggleStatus(key) {
-    setFilterStatuses((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
   }
 
   function closePopover() {
@@ -223,33 +237,43 @@ export default function DetailsTab({ data, jurors, groups: groupsProp = [], seme
       ? toMsBase + 24 * 60 * 60 * 1000 - 1
       : toMsBase;
 
-    let list = data.slice();
+    let list = data.map((row) => {
+      const meta = projectMetaById.get(row.projectId);
+      const projectTitle = String(row.projectName ?? meta?.title ?? "").trim();
+      const studentsRaw = row.students ?? meta?.students ?? "";
+      const students = Array.isArray(studentsRaw)
+        ? studentsRaw.map((s) => String(s).trim()).filter(Boolean).join(", ")
+        : String(studentsRaw).trim();
+      return {
+        ...row,
+        semester: semesterName ?? "",
+        projectTitle,
+        students,
+      };
+    });
 
+    if (filterSemester) {
+      const q = filterSemester.toLowerCase();
+      list = list.filter((r) => String(r.semester || "").trim().toLowerCase() === q);
+    }
+    if (filterGroupNo) {
+      const q = filterGroupNo.toLowerCase();
+      list = list.filter((r) => String(r.groupNo ?? "").trim().toLowerCase() === q);
+    }
     if (filterJuror !== "ALL") {
       list = list.filter((r) => rowKey(r) === filterJuror);
-    }
-    if (filterGroup !== "ALL") {
-      list = list.filter((r) => String(r.projectId) === filterGroup);
     }
     if (filterDept !== "ALL") {
       const q = filterDept.toLowerCase();
       list = list.filter((r) => String(r.juryDept ?? "").trim().toLowerCase() === q);
     }
-    if (filterStatuses.size > 0) {
-      list = list.filter((r) => {
-        const isSubmittedStatus = r.status === "submitted" || r.status === "group_submitted" || r.status === "all_submitted";
-        const isInProgressStatus = r.status === "in_progress";
-
-        if (filterStatuses.has("submitted") && isSubmittedStatus) return true;
-        if (filterStatuses.has("in_progress") && isInProgressStatus) return true;
-        return false;
-      });
+    if (filterProjectTitle) {
+      const q = filterProjectTitle.toLowerCase();
+      list = list.filter((r) => (r.projectTitle || "").toLowerCase().includes(q));
     }
-    if (filterEditing !== "ALL") {
-      list = list.filter((r) => {
-        const isEditing = r.editingFlag === "editing";
-        return filterEditing === "editing" ? isEditing : !isEditing;
-      });
+    if (filterStudents) {
+      const q = filterStudents.toLowerCase();
+      list = list.filter((r) => (r.students || "").toLowerCase().includes(q));
     }
     const canApplyDateFilter =
       (!dateFrom || parsedFromMs !== null) &&
@@ -277,8 +301,8 @@ export default function DetailsTab({ data, jurors, groups: groupsProp = [], seme
       return sortDir === "asc" ? cmp(av, bv) : cmp(bv, av);
     });
     return list;
-  }, [data, filterJuror, filterGroup, filterDept, filterStatuses, filterEditing, dateFrom, dateTo,
-      filterComment, sortKey, sortDir]);
+  }, [data, projectMetaById, semesterName, filterSemester, filterGroupNo, filterJuror, filterDept, filterProjectTitle, filterStudents,
+      dateFrom, dateTo, filterComment, sortKey, sortDir]);
 
   function setSort(key) {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -295,6 +319,58 @@ export default function DetailsTab({ data, jurors, groups: groupsProp = [], seme
   };
 
   const popoverConfig = (() => {
+    if (activeFilterCol === "semester") {
+      return {
+        className: "col-filter-popover col-filter-popover-portal",
+        contentKey: filterSemester,
+        content: (
+          <>
+            <select
+              autoFocus
+              value={filterSemester}
+              onChange={(e) => { setFilterSemester(e.target.value); closePopover(); }}
+              className={isSemesterFilterActive ? "filter-input-active" : ""}
+            >
+              <option value="">All semesters</option>
+              {semesterOptions.map((label) => (
+                <option key={label} value={label}>{label}</option>
+              ))}
+            </select>
+            {filterSemester && (
+              <button className="col-filter-clear" onClick={() => { setFilterSemester(""); closePopover(); }}>
+                Clear
+              </button>
+            )}
+          </>
+        ),
+      };
+    }
+    if (activeFilterCol === "groupNo") {
+      return {
+        className: "col-filter-popover col-filter-popover-portal",
+        contentKey: filterGroupNo,
+        content: (
+          <>
+            <select
+              autoFocus
+              value={filterGroupNo}
+              onChange={(e) => { setFilterGroupNo(e.target.value); closePopover(); }}
+              className={isGroupNoFilterActive ? "filter-input-active" : ""}
+            >
+              <option value="">All groups</option>
+              {groupNoOptions.map((label) => (
+                <option key={label} value={label}>{label}</option>
+              ))}
+            </select>
+            {filterGroupNo && (
+              <button className="col-filter-clear" onClick={() => { setFilterGroupNo(""); closePopover(); }}>
+                Clear
+              </button>
+            )}
+          </>
+        ),
+      };
+    }
     if (activeFilterCol === "juror") {
       return {
         className: "col-filter-popover col-filter-popover-portal",
@@ -349,25 +425,43 @@ export default function DetailsTab({ data, jurors, groups: groupsProp = [], seme
         ),
       };
     }
-    if (activeFilterCol === "group") {
+    if (activeFilterCol === "projectTitle") {
       return {
         className: "col-filter-popover col-filter-popover-portal",
-        contentKey: filterGroup,
+        contentKey: filterProjectTitle,
         content: (
           <>
-            <select
+            <input
               autoFocus
-              value={filterGroup}
-              onChange={(e) => { setFilterGroup(e.target.value); closePopover(); }}
-              className={isGroupFilterActive ? "filter-input-active" : ""}
-            >
-              <option value="ALL">All groups</option>
-              {groups.map((g) => (
-                <option key={g.id} value={String(g.id)}>{g.label}</option>
-              ))}
-            </select>
-            {filterGroup !== "ALL" && (
-              <button className="col-filter-clear" onClick={() => { setFilterGroup("ALL"); closePopover(); }}>
+              placeholder="Search project title…"
+              value={filterProjectTitle}
+              onChange={(e) => setFilterProjectTitle(e.target.value)}
+              className={isProjectTitleFilterActive ? "filter-input-active" : ""}
+            />
+            {filterProjectTitle && (
+              <button className="col-filter-clear" onClick={() => { setFilterProjectTitle(""); closePopover(); }}>
+                Clear
+              </button>
+            )}
+          </>
+        ),
+      };
+    }
+    if (activeFilterCol === "students") {
+      return {
+        className: "col-filter-popover col-filter-popover-portal",
+        contentKey: filterStudents,
+        content: (
+          <>
+            <input
+              autoFocus
+              placeholder="Search students…"
+              value={filterStudents}
+              onChange={(e) => setFilterStudents(e.target.value)}
+              className={isStudentsFilterActive ? "filter-input-active" : ""}
+            />
+            {filterStudents && (
+              <button className="col-filter-clear" onClick={() => { setFilterStudents(""); closePopover(); }}>
                 Clear
               </button>
             )}
@@ -451,56 +545,6 @@ export default function DetailsTab({ data, jurors, groups: groupsProp = [], seme
         ),
       };
     }
-    if (activeFilterCol === "status") {
-      return {
-        className: "col-filter-popover col-filter-popover-portal col-filter-popover-status",
-        contentKey: Array.from(filterStatuses).sort().join("|"),
-        content: (
-          <>
-            {STATUS_OPTIONS.map(({ key, label }) => (
-              <label key={key} className="status-option">
-                <input
-                  type="checkbox"
-                  checked={filterStatuses.has(key)}
-                  onChange={() => toggleStatus(key)}
-                />
-                {label}
-              </label>
-            ))}
-            {filterStatuses.size > 0 && (
-              <button className="col-filter-clear" onClick={() => { setFilterStatuses(new Set()); closePopover(); }}>
-                Clear
-              </button>
-            )}
-          </>
-        ),
-      };
-    }
-    if (activeFilterCol === "editing") {
-      return {
-        className: "col-filter-popover col-filter-popover-portal",
-        contentKey: filterEditing,
-        content: (
-          <>
-            <select
-              autoFocus
-              value={filterEditing}
-              onChange={(e) => { setFilterEditing(e.target.value); closePopover(); }}
-              className={isEditingFilterActive ? "filter-input-active" : ""}
-            >
-              <option value="ALL">All</option>
-              <option value="editing">Editing only</option>
-              <option value="not_editing">Not editing</option>
-            </select>
-            {filterEditing !== "ALL" && (
-              <button className="col-filter-clear" onClick={() => { setFilterEditing("ALL"); closePopover(); }}>
-                Clear
-              </button>
-            )}
-          </>
-        ),
-      };
-    }
     if (activeFilterCol === "comments") {
       return {
         className: "col-filter-popover col-filter-popover-portal",
@@ -571,6 +615,86 @@ export default function DetailsTab({ data, jurors, groups: groupsProp = [], seme
         <table className="detail-table">
           <thead>
             <tr>
+              {/* Semester */}
+              <th style={{ position: "relative", whiteSpace: "nowrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <span
+                    className={`col-sort-label details-col-label${isSemesterFilterActive ? " filtered" : ""}`}
+                    onClick={() => setSort("semester")}
+                  >
+                    Semester
+                  </span>
+                  <button
+                    type="button"
+                    className={`col-filter-hotspot${isSemesterFilterActive ? " active filter-icon-active" : ""}`}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFilterCol("semester", e); }}
+                    title="Filter by semester"
+                  >
+                    <FilterIcon />
+                  </button>
+                </div>
+              </th>
+
+              {/* Group No */}
+              <th style={{ position: "relative", whiteSpace: "nowrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <span
+                    className={`col-sort-label details-col-label${isGroupNoFilterActive ? " filtered" : ""}`}
+                    onClick={() => setSort("groupNo")}
+                  >
+                    Group No
+                  </span>
+                  <button
+                    type="button"
+                    className={`col-filter-hotspot${isGroupNoFilterActive ? " active filter-icon-active" : ""}`}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFilterCol("groupNo", e); }}
+                    title="Filter by group no"
+                  >
+                    <FilterIcon />
+                  </button>
+                </div>
+              </th>
+
+              {/* Project Title */}
+              <th style={{ position: "relative", whiteSpace: "nowrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <span
+                    className={`col-sort-label details-col-label${isProjectTitleFilterActive ? " filtered" : ""}`}
+                    onClick={() => setSort("projectTitle")}
+                  >
+                    Project Title
+                  </span>
+                  <button
+                    type="button"
+                    className={`col-filter-hotspot${isProjectTitleFilterActive ? " active filter-icon-active" : ""}`}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFilterCol("projectTitle", e); }}
+                    title="Filter by project title"
+                  >
+                    <FilterIcon />
+                  </button>
+                </div>
+              </th>
+
+              {/* Group Students */}
+              <th style={{ position: "relative", whiteSpace: "nowrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <span
+                    className={`col-sort-label details-col-label${isStudentsFilterActive ? " filtered" : ""}`}
+                    onClick={() => setSort("students")}
+                  >
+                    Group Students
+                  </span>
+                  <button
+                    type="button"
+                    className={`col-filter-hotspot${isStudentsFilterActive ? " active filter-icon-active" : ""}`}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFilterCol("students", e); }}
+                    title="Filter by students"
+                  >
+                    <FilterIcon />
+                  </button>
+                </div>
+              </th>
+
               {/* Juror — sort label + filter hotspot */}
               <th style={{ position: "relative" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -611,34 +735,23 @@ export default function DetailsTab({ data, jurors, groups: groupsProp = [], seme
                 </div>
               </th>
 
-              {/* Group */}
-              <th style={{ position: "relative", whiteSpace: "nowrap" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <span
-                    className={`col-sort-label details-col-label${isGroupFilterActive ? " filtered" : ""}`}
-                    onClick={() => setSort("projectId")}
-                  >
-                    Group
+              {/* Score columns — sort only, no filter */}
+              {SCORE_COLS.map(({ key: col, label }) => (
+                <th key={col} style={{ cursor: "pointer", whiteSpace: "nowrap" }} onClick={() => setSort(col)}>
+                  <span className={`col-sort-label details-col-label${sortKey === col ? " filtered" : ""}`}>
+                    {label} <span className={`sort-icon${sortKey === col ? " icon-active-box" : ""}`}>{sortIcon(col)}</span>
                   </span>
-                  <button
-                    type="button"
-                    className={`col-filter-hotspot${isGroupFilterActive ? " active filter-icon-active" : ""}`}
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFilterCol("group", e); }}
-                    title="Filter by group"
-                  >
-                    <FilterIcon />
-                  </button>
-                </div>
-              </th>
+                </th>
+              ))}
 
-              {/* Timestamp */}
+              {/* Submitted At */}
               <th style={{ position: "relative" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <span
                     className={`col-sort-label details-col-label${isDateFilterActive ? " filtered" : ""}`}
                     onClick={() => setSort("tsMs")}
                   >
-                    Timestamp
+                    Submitted At
                   </span>
                   <button
                     type="button"
@@ -651,55 +764,11 @@ export default function DetailsTab({ data, jurors, groups: groupsProp = [], seme
                 </div>
               </th>
 
-              {/* Status — filter only (no sort) */}
-              <th style={{ position: "relative" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <span
-                    className={`col-sort-label details-col-label${isStatusFilterActive ? " filtered" : ""}`}
-                    onClick={() => setSort("status")}
-                  >
-                    Status
-                  </span>
-                  <button
-                    type="button"
-                    className={`col-filter-hotspot${isStatusFilterActive ? " active filter-icon-active" : ""}`}
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFilterCol("status", e); }}
-                    title="Filter by status"
-                  >
-                    <FilterIcon />
-                  </button>
-                </div>
-              </th>
-              <th style={{ position: "relative", textAlign: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 2, justifyContent: "center" }}>
-                  <span className={`details-col-label${isEditingFilterActive ? " filtered" : ""}`}>
-                    Editing
-                  </span>
-                  <button
-                    type="button"
-                    className={`col-filter-hotspot${isEditingFilterActive ? " active filter-icon-active" : ""}`}
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFilterCol("editing", e); }}
-                    title="Filter by editing"
-                  >
-                    <FilterIcon />
-                  </button>
-                </div>
-              </th>
-
-              {/* Score columns — sort only, no filter */}
-              {SCORE_COLS.map(({ key: col, label }) => (
-                <th key={col} style={{ cursor: "pointer", whiteSpace: "nowrap" }} onClick={() => setSort(col)}>
-                  <span className={`col-sort-label details-col-label${sortKey === col ? " filtered" : ""}`}>
-                    {label} <span className={`sort-icon${sortKey === col ? " icon-active-box" : ""}`}>{sortIcon(col)}</span>
-                  </span>
-                </th>
-              ))}
-
-              {/* Comments — filter only (no sort) */}
+              {/* Comment — filter only (no sort) */}
               <th style={{ position: "relative" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <span className={`details-col-label${isCommentFilterActive ? " filtered" : ""}`}>
-                    Comments
+                    Comment
                   </span>
                   <button
                     type="button"
@@ -716,42 +785,43 @@ export default function DetailsTab({ data, jurors, groups: groupsProp = [], seme
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={12} style={{ textAlign: "center", padding: 32, color: "#64748b" }}>
+                <td colSpan={13} style={{ textAlign: "center", padding: 32, color: "#64748b" }}>
                   No matching rows.
                 </td>
               </tr>
             )}
             {rows.map((row, i) => {
-              const grp = groups.find((g) => g.id === row.projectId);
-              const grpLabel = grp?.label || `Group ${row.groupNo ?? ""}`;
               const isIP = row.status === "in_progress";
+              const projectTitle = row.projectTitle || "";
+              const students = row.students || "";
               return (
                 <tr
                   key={`${rowKey(row)}-${row.projectId}-${i}`}
                   className={i % 2 === 1 ? "row-even" : ""}
                 >
+                  <td className="cell-semester" style={{ whiteSpace: "nowrap" }}>
+                    {row.semester ? row.semester : "—"}
+                  </td>
+                  <td className="cell-group-no" style={{ whiteSpace: "nowrap" }}>
+                    {row.groupNo ?? "—"}
+                  </td>
+                  <td className="cell-project-title" style={{ whiteSpace: "nowrap" }}>
+                    {projectTitle ? projectTitle : "—"}
+                  </td>
+                  <td className="cell-students" style={{ whiteSpace: "nowrap" }}>
+                    {students ? students : "—"}
+                  </td>
                   <td className="cell-juror">{row.juryName}</td>
                   <td className="cell-dept" style={{ fontSize: 12, color: "#475569" }}>{row.juryDept}</td>
-                  <td className="cell-group" style={{ whiteSpace: "nowrap" }}>
-                    <div
-                      className="cell-group-wrap"
-                      title={grpLabel}
-                      style={{ cursor: "default" }}
-                    >
-                      <strong className="cell-group-title">{grpLabel}</strong>
-                    </div>
-                  </td>
-                  <td style={{ fontSize: 12, color: "#475569", whiteSpace: "nowrap" }}>
-                    {formatTs(row.timestamp)}
-                  </td>
-                  <td><StatusBadge status={row.status} /></td>
-                  <td>{row.editingFlag === "editing" ? <StatusBadge editingFlag="editing" /> : null}</td>
                   <td style={{ color: isIP ? "#94a3b8" : undefined }}>{displayScore(row.technical)}</td>
                   <td style={{ color: isIP ? "#94a3b8" : undefined }}>{displayScore(row.design)}</td>
                   <td style={{ color: isIP ? "#94a3b8" : undefined }}>{displayScore(row.delivery)}</td>
                   <td style={{ color: isIP ? "#94a3b8" : undefined }}>{displayScore(row.teamwork)}</td>
                   <td style={{ color: isIP ? "#94a3b8" : undefined }}>
                     <strong>{displayScore(row.total)}</strong>
+                  </td>
+                  <td style={{ fontSize: 12, color: "#475569", whiteSpace: "nowrap" }}>
+                    {formatTs(row.timestamp)}
                   </td>
                   <td className="comment-cell cell-comment">{row.comments}</td>
                 </tr>

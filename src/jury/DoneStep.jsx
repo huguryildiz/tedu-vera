@@ -7,7 +7,8 @@
 
 import { useState } from "react";
 import { CRITERIA } from "../config";
-import { HomeIcon, ChevronDownIcon, CheckIcon, UsersRoundIcon, PencilIcon } from "../shared/Icons";
+import { HomeIcon, ChevronDownIcon, CheckIcon, PencilIcon } from "../shared/Icons";
+import { GroupLabel, ProjectTitle, StudentNames } from "../components/EntityMeta";
 
 function groupTotal(scores, pid) {
   return CRITERIA.reduce((s, c) => s + (parseInt(scores[pid]?.[c.id], 10) || 0), 0);
@@ -70,11 +71,9 @@ export default function DoneStep({
                     style={{ cursor: hasDetails ? "pointer" : "default" }}
                   >
                     <div className="spd-row-header-line">
-                      <span className="spd-row-icon" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/><path d="M8 10v4"/><path d="M12 10v2"/><path d="M16 10v6"/></svg>
-                      </span>
                       <span className="spd-row-name swipe-x">
-                        Group {p.group_no} — {p.project_title}
+                        <GroupLabel text={`Group ${p.group_no}`} />
+                        <ProjectTitle text={p.project_title} />
                       </span>
                       {hasDetails && (
                         <span className={`group-accordion-chevron${isExpanded ? " open" : ""}`}>
@@ -98,8 +97,7 @@ export default function DoneStep({
                   <div id={panelId} className={`group-accordion-panel${isExpanded ? " open" : ""}`}>
                     <div className="group-accordion-panel-inner spd-row-details">
                       <div className="spd-detail">
-                        <span className="spd-detail-icon" aria-hidden="true"><UsersRoundIcon /></span>
-                        <span className="spd-detail-text swipe-x">{studentList.join(" · ")}</span>
+                        <StudentNames names={studentList} />
                       </div>
                     </div>
                   </div>

@@ -645,7 +645,7 @@ export function CompetencyRadarChart({ stats }) {
         <select
           className="radar-group-select"
           value={selId ?? available[0].id}
-          onChange={(e) => setSelId(Number(e.target.value))}
+          onChange={(e) => setSelId(e.target.value)}
         >
           {available.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
@@ -758,49 +758,67 @@ export function RadarPrintAll({ stats }) {
   const avgPathD = avgPts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") + " Z";
 
   return (
-    <div className="radar-print-grid">
+    <>
       {available.map((group) => {
         const vals = OUTCOMES.map((o) => ((group.avg[o.key] || 0) / o.max) * 100);
         const pts  = vals.map((v, i) => spoke(i, (v / 100) * R));
         const pathD = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") + " Z";
         return (
-          <div key={group.id} className="radar-print-card">
-            <div className="radar-print-title">Competency Profile — {group.name}</div>
-            <svg
-              viewBox="0 0 260 240"
-              preserveAspectRatio="xMidYMid meet"
-              style={{ width: "100%", height: "auto", display: "block" }}
-            >
-              {[0.25, 0.5, 0.75, 1].map((r) => (
-                <path key={r} d={ringPath(r)} fill="none" stroke="#e2e8f0" strokeWidth="1" />
-              ))}
-              {OUTCOMES.map((_, i) => {
-                const end = spoke(i, R);
-                return <line key={i} x1={cx} y1={cy} x2={end.x.toFixed(1)} y2={end.y.toFixed(1)} stroke="#cbd5e1" strokeWidth="1" />;
-              })}
-              <path d={avgPathD} fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeDasharray="4,3" />
-              <path d={pathD} fill="rgba(59,130,246,0.18)" stroke="#3b82f6" strokeWidth="2.2" strokeLinejoin="round" />
-              {pts.map((p, i) => (
-                <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="3.5" fill="#3b82f6" stroke="#fff" strokeWidth="1.2" />
-              ))}
-              {OUTCOMES.map((o, i) => {
-                const lp = spoke(i, R + 16);
-                return (
-                  <text
-                    key={o.key}
-                    x={lp.x.toFixed(1)} y={lp.y.toFixed(1)}
-                    textAnchor="middle" dominantBaseline="middle"
-                    fontSize="9" fill="#334155" fontWeight="700"
-                  >
-                    {o.label}
-                  </text>
-                );
-              })}
-            </svg>
-          </div>
+          <section key={group.id} className="print-page radar-print-page">
+            <div className="print-card-title">Competency Profile — {group.name}</div>
+            <div className="print-card-note">Dashed line shows the cohort average across all groups.</div>
+            <div className="radar-print-card">
+              <svg
+                viewBox="0 0 260 240"
+                preserveAspectRatio="xMidYMid meet"
+                style={{ width: "100%", height: "auto", display: "block" }}
+              >
+                {[0.25, 0.5, 0.75, 1].map((r) => (
+                  <path key={r} d={ringPath(r)} fill="none" stroke="#e2e8f0" strokeWidth="1" />
+                ))}
+                {[0.25, 0.5, 0.75, 1].map((r) => {
+                  const p = spoke(0, r * R);
+                  return (
+                    <text
+                      key={`tick-${r}`}
+                      x={p.x.toFixed(1)}
+                      y={(p.y - 6).toFixed(1)}
+                      textAnchor="middle"
+                      fontSize="8"
+                      fill="#94a3b8"
+                    >
+                      {Math.round(r * 100)}%
+                    </text>
+                  );
+                })}
+                {OUTCOMES.map((_, i) => {
+                  const end = spoke(i, R);
+                  return <line key={i} x1={cx} y1={cy} x2={end.x.toFixed(1)} y2={end.y.toFixed(1)} stroke="#cbd5e1" strokeWidth="1" />;
+                })}
+                <path d={avgPathD} fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeDasharray="4,3" />
+                <path d={pathD} fill="rgba(59,130,246,0.18)" stroke="#3b82f6" strokeWidth="2.2" strokeLinejoin="round" />
+                {pts.map((p, i) => (
+                  <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="3.5" fill="#3b82f6" stroke="#fff" strokeWidth="1.2" />
+                ))}
+                {OUTCOMES.map((o, i) => {
+                  const lp = spoke(i, R + 16);
+                  return (
+                    <text
+                      key={o.key}
+                      x={lp.x.toFixed(1)} y={lp.y.toFixed(1)}
+                      textAnchor="middle" dominantBaseline="middle"
+                      fontSize="9" fill="#334155" fontWeight="700"
+                    >
+                      {o.label}
+                    </text>
+                  );
+                })}
+              </svg>
+            </div>
+          </section>
         );
       })}
-    </div>
+    </>
   );
 }
 

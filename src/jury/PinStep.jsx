@@ -1,42 +1,47 @@
 // src/jury/PinStep.jsx
 // ============================================================
 // PIN authentication screen.
-// Jurors enter their 4-digit access code (juror_code from DB).
-// No PIN creation — codes are managed by admin in the database.
+// Jurors enter their 4-digit access PIN.
 //
 // Props:
 //   pinError    : string  — error message (empty = no error)
+//   pinErrorCode: string  — "invalid" | "locked" | "not_found" | "no_pin" | "network" | ""
+//   pinAttemptsLeft: number
+//   pinLockedUntil: string (timestamptz)
 //   onPinSubmit : (pin: string) => void
 //   onBack      : () => void
 // ============================================================
 
 import { useState, useRef, useEffect } from "react";
-import { KeyRoundIcon, AlertCircleIcon } from "../shared/Icons";
+import { KeyRoundIcon, AlertCircleIcon, LockIcon } from "../shared/Icons";
 import MinimalLoaderOverlay from "../shared/MinimalLoaderOverlay";
 
 // ── 4-box PIN input with explicit OK button ───────────────────
-function PinBoxes({ onSubmit, pinError, shake }) {
-  const [digits, setDigits] = useState(["", "", "", ""]);
-  const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
+function PinBoxes({ onSubmit, pinError, shake, disabled }) {
+  const PIN_LEN = 4;
+  const [digits, setDigits] = useState(Array.from({ length: PIN_LEN }, () => ""));
+  const inputRefs = Array.from({ length: PIN_LEN }, () => useRef(null));
 
   // Reset boxes whenever an error is shown so the user can retry cleanly.
   useEffect(() => {
     if (pinError) {
-      setDigits(["", "", "", ""]);
+      setDigits(Array.from({ length: PIN_LEN }, () => ""));
       setTimeout(() => inputRefs[0].current?.focus(), 50);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pinError]);
 
   function handleChange(i, val) {
+    if (disabled) return;
     const d    = val.replace(/\D/g, "").slice(-1);
     const next = [...digits];
     next[i]    = d;
     setDigits(next);
-    if (d && i < 3) inputRefs[i + 1].current?.focus();
+    if (d && i < PIN_LEN - 1) inputRefs[i + 1].current?.focus();
   }
 
   function handleKeyDown(i, e) {
+    if (disabled) return;
     if (e.key === "Backspace") {
       if (digits[i] === "" && i > 0) {
         const next  = [...digits];
@@ -50,28 +55,31 @@ function PinBoxes({ onSubmit, pinError, shake }) {
       }
     }
     if (e.key === "ArrowLeft"  && i > 0) inputRefs[i - 1].current?.focus();
-    if (e.key === "ArrowRight" && i < 3) inputRefs[i + 1].current?.focus();
+    if (e.key === "ArrowRight" && i < PIN_LEN - 1) inputRefs[i + 1].current?.focus();
     if (e.key === "Enter") {
       const pin = digits.join("");
-      if (pin.length === 4) onSubmit(pin);
+      if (pin.length === PIN_LEN) onSubmit(pin);
     }
   }
 
   function handlePaste(e) {
-    const text = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
-    if (text.length === 4) {
+    if (disabled) return;
+    const text = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, PIN_LEN);
+    if (text.length === PIN_LEN) {
       setDigits(text.split(""));
-      inputRefs[3].current?.focus();
+      inputRefs[PIN_LEN - 1].current?.focus();
     }
     e.preventDefault();
   }
 
   function handleOk() {
+    if (disabled) return;
     const pin = digits.join("");
-    if (pin.length === 4) onSubmit(pin);
+    if (pin.length === PIN_LEN) onSubmit(pin);
   }
 
   const isComplete = digits.every((d) => d !== "");
+  const isDisabled = disabled || !isComplete;
 
   return (
     <div className={`pin-input-group${shake ? " pin-input-group--shake" : ""}`}>
@@ -95,13 +103,14 @@ function PinBoxes({ onSubmit, pinError, shake }) {
             onKeyDown={(e) => handleKeyDown(i, e)}
             onPaste={i === 0 ? handlePaste : undefined}
             className={`pin-box${pinError ? " pin-box--error" : ""}`}
+            disabled={disabled}
           />
         ))}
       </div>
       <button
         className="premium-btn-primary pin-ok-btn"
         onClick={handleOk}
-        disabled={!isComplete}
+        disabled={isDisabled}
       >
         Verify PIN →
       </button>
@@ -110,10 +119,47 @@ function PinBoxes({ onSubmit, pinError, shake }) {
 }
 
 // ── Main component ────────────────────────────────────────────
-export default function PinStep({ pinError, onPinSubmit, onBack }) {
+export default function PinStep({
+  pinError,
+  pinErrorCode,
+  pinAttemptsLeft,
+  pinLockedUntil,
+  onPinSubmit,
+  onBack,
+}) {
   const [shake,       setShake]       = useState(false);
   const [authOverlay, setAuthOverlay] = useState(false);
   const authActiveRef = useRef(false);
+  const isLocked = pinErrorCode === "locked";
+  const attemptsLeft = typeof pinAttemptsLeft === "number" ? Math.max(0, pinAttemptsLeft) : null;
+  const errorTitle =
+    pinErrorCode === "locked"
+      ? "Too many attempts"
+      : pinErrorCode === "network"
+        ? "Connection error"
+      : pinErrorCode === "not_found"
+        ? "Juror not found"
+        : pinErrorCode === "no_pin"
+          ? "PIN required"
+          : "Incorrect PIN";
+  const lockedUntilText = (() => {
+    if (!pinLockedUntil) return "";
+    const d = new Date(pinLockedUntil);
+    if (Number.isNaN(d.getTime())) return "";
+    const pad = (v) => String(v).padStart(2, "0");
+    const day = pad(d.getDate());
+    const month = pad(d.getMonth() + 1);
+    const year = d.getFullYear();
+    const hour = pad(d.getHours());
+    const minute = pad(d.getMinutes());
+    return `${day}.${month}.${year} ${hour}:${minute}`;
+  })();
+  const errorDetail =
+    pinErrorCode === "locked" && lockedUntilText
+      ? `You cannot login until ${lockedUntilText}`
+      : pinErrorCode === "invalid" && attemptsLeft !== null
+        ? `Please try again. ${attemptsLeft} attempt${attemptsLeft === 1 ? "" : "s"} remaining.`
+      : pinError;
 
   useEffect(() => {
     if (!pinError) return;
@@ -139,6 +185,47 @@ export default function PinStep({ pinError, onPinSubmit, onBack }) {
     setAuthOverlay(false);
   };
 
+  if (isLocked) {
+    return (
+      <>
+        <div className="premium-screen">
+          <div className="premium-card">
+            <div className="premium-header">
+              <div className="premium-icon-square" aria-hidden="true">
+                <LockIcon />
+              </div>
+              <div className="premium-title">Too many attempts</div>
+              <div className="premium-subtitle">This session is locked for security.</div>
+            </div>
+
+            <div className="premium-info-strip">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4" />
+                <path d="M12 8h.01" />
+              </svg>
+              <div>
+                {lockedUntilText
+                  ? `You can log in after ${lockedUntilText}, or contact the administrator to reset your PIN.`
+                  : "Please try again later."}
+              </div>
+            </div>
+
+            {onBack && (
+              <button className="premium-btn-link" type="button" onClick={onBack}
+                style={{ marginTop: 4 }}>
+                ← Return to Home
+              </button>
+            )}
+          </div>
+        </div>
+        <MinimalLoaderOverlay open={authOverlay} minDuration={400} />
+      </>
+    );
+  }
+
   return (
     <>
       <div className="premium-screen">
@@ -151,17 +238,22 @@ export default function PinStep({ pinError, onPinSubmit, onBack }) {
             <div className="premium-subtitle">Enter your 4-digit PIN to continue.</div>
           </div>
 
-          {pinError && (
+          {(pinError || pinErrorCode) && (
             <div className="premium-error-banner">
               <AlertCircleIcon />
               <div>
-                <div className="premium-error-title">Incorrect PIN</div>
-                <div className="premium-error-detail">{pinError}</div>
+                <div className="premium-error-title">{errorTitle}</div>
+                <div className="premium-error-detail">{errorDetail}</div>
               </div>
             </div>
           )}
 
-          <PinBoxes onSubmit={handleVerify} pinError={pinError} shake={shake} />
+          <PinBoxes
+            onSubmit={handleVerify}
+            pinError={pinError}
+            shake={shake}
+            disabled={isLocked}
+          />
 
           {onBack && (
             <button className="premium-btn-link" type="button" onClick={onBack}
