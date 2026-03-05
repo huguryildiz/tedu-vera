@@ -63,12 +63,6 @@ function PinBoxes({ onSubmit, pinError, shake, disabled }) {
   }
 
   function handlePaste(e) {
-    if (disabled) return;
-    const text = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, PIN_LEN);
-    if (text.length === PIN_LEN) {
-      setDigits(text.split(""));
-      inputRefs[PIN_LEN - 1].current?.focus();
-    }
     e.preventDefault();
   }
 
@@ -101,7 +95,7 @@ function PinBoxes({ onSubmit, pinError, shake, disabled }) {
             data-form-type="other"
             onChange={(e) => handleChange(i, e.target.value)}
             onKeyDown={(e) => handleKeyDown(i, e)}
-            onPaste={i === 0 ? handlePaste : undefined}
+            onPaste={handlePaste}
             className={`pin-box${pinError ? " pin-box--error" : ""}`}
             disabled={disabled}
           />
@@ -134,7 +128,7 @@ export default function PinStep({
   const attemptsLeft = typeof pinAttemptsLeft === "number" ? Math.max(0, pinAttemptsLeft) : null;
   const errorTitle =
     pinErrorCode === "locked"
-      ? "Too many attempts"
+      ? "Too many login attempts"
       : pinErrorCode === "network"
         ? "Connection error"
       : pinErrorCode === "not_found"
@@ -157,7 +151,7 @@ export default function PinStep({
   const errorDetail =
     pinErrorCode === "locked" && lockedUntilText
       ? `You cannot login until ${lockedUntilText}`
-      : pinErrorCode === "invalid" && attemptsLeft !== null
+      : pinErrorCode === "invalid" && attemptsLeft !== null && attemptsLeft > 0
         ? `Please try again. ${attemptsLeft} attempt${attemptsLeft === 1 ? "" : "s"} remaining.`
       : pinError;
 
@@ -194,8 +188,8 @@ export default function PinStep({
               <div className="premium-icon-square" aria-hidden="true">
                 <LockIcon />
               </div>
-              <div className="premium-title">Too many attempts</div>
-              <div className="premium-subtitle">This session is locked for security.</div>
+              <div className="premium-title">Too many login attempts</div>
+              <div className="premium-subtitle">This session has been temporarily locked for security reasons.</div>
             </div>
 
             <div className="premium-info-strip">
@@ -208,7 +202,7 @@ export default function PinStep({
               </svg>
               <div>
                 {lockedUntilText
-                  ? `You can log in after ${lockedUntilText}, or contact the administrator to reset your PIN.`
+                  ? `You can try again after ${lockedUntilText}, or contact the administrator to reset your PIN.`
                   : "Please try again later."}
               </div>
             </div>

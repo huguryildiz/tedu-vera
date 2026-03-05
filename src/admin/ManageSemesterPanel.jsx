@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle2Icon, PencilIcon } from "../shared/Icons";
+import LastActivity from "./LastActivity";
 import DangerIconButton from "../components/admin/DangerIconButton";
 
 export default function ManageSemesterPanel({
@@ -14,10 +15,12 @@ export default function ManageSemesterPanel({
   onCreateSemester,
   onUpdateSemester,
   onDeleteSemester,
+  activityMap,
 }) {
   const [showCreate, setShowCreate] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [createForm, setCreateForm] = useState({ name: "", starts_on: "", ends_on: "" });
   const [editForm, setEditForm] = useState({ id: "", name: "", starts_on: "", ends_on: "" });
 
@@ -74,6 +77,20 @@ export default function ManageSemesterPanel({
   };
 
   const orderedSemesters = sortSemesters(semesters);
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredSemesters = normalizedSearch
+    ? orderedSemesters.filter((s) => {
+        const haystack = `${s?.name || ""} ${s?.starts_on || ""} ${s?.ends_on || ""}`.toLowerCase();
+        return haystack.includes(normalizedSearch);
+      })
+    : orderedSemesters;
+  const visibleSemesters = normalizedSearch
+    ? filteredSemesters
+    : (showAll ? orderedSemesters : orderedSemesters.slice(0, 4));
+  const getLastActivity = (s) => {
+    const entry = activityMap?.get(s.id);
+    return entry?.value || entry || s.updated_at || s.updatedAt || null;
+  };
   const normalizeDateInput = (value) => {
     if (!value) return "";
     return String(value).slice(0, 10);
@@ -140,7 +157,17 @@ export default function ManageSemesterPanel({
 
           <div className="manage-list">
             <div className="manage-list-header">All Semesters</div>
-            {(showAll ? orderedSemesters : orderedSemesters.slice(0, 4)).map((s) => (
+            <div className="manage-search">
+              <input
+                className="manage-input manage-search-input"
+                type="text"
+                placeholder="Search semesters"
+                aria-label="Search semesters"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            {visibleSemesters.map((s) => (
               <div key={s.id} className="manage-item">
                 <div>
                   <div className="manage-item-title">{s.name}</div>
@@ -162,6 +189,9 @@ export default function ManageSemesterPanel({
                       </svg>
                     </span>
                     <span>{formatDate(s.starts_on)} → {formatDate(s.ends_on)}</span>
+                  </div>
+                  <div className="manage-item-sub manage-meta-line">
+                    <LastActivity value={getLastActivity(s)} />
                   </div>
                 </div>
                 <div className="manage-item-actions">
@@ -196,9 +226,12 @@ export default function ManageSemesterPanel({
                 </div>
               </div>
             ))}
+            {normalizedSearch && filteredSemesters.length === 0 && (
+              <div className="manage-empty manage-empty-search">No results.</div>
+            )}
           </div>
 
-          {orderedSemesters.length > 4 && (
+          {!normalizedSearch && orderedSemesters.length > 4 && (
             <button
               className="manage-btn ghost"
               type="button"

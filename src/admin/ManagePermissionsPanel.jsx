@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDownIcon, FolderLockIcon } from "../shared/Icons";
+import LastActivity from "./LastActivity";
 
 export default function ManagePermissionsPanel({
   settings,
@@ -11,9 +12,12 @@ export default function ManagePermissionsPanel({
   onToggle,
   onSave,
   onToggleEdit,
+  activityMap,
+  activeSemesterId,
 }) {
   const [local, setLocal] = useState(settings);
   const [showAll, setShowAll] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     setLocal(settings);
@@ -39,6 +43,18 @@ export default function ManagePermissionsPanel({
   const permissionJurors = hasAssignedFlag
     ? orderedJurors.filter((j) => toBool(j.isAssigned ?? j.is_assigned))
     : orderedJurors;
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredJurors = normalizedSearch
+    ? permissionJurors.filter((j) => {
+        const name = j.juryName || j.juror_name || "";
+        const inst = j.juryDept || j.juror_inst || "";
+        const haystack = `${name} ${inst}`.toLowerCase();
+        return haystack.includes(normalizedSearch);
+      })
+    : permissionJurors;
+  const visibleJurors = normalizedSearch
+    ? filteredJurors
+    : (showAll ? permissionJurors : permissionJurors.slice(0, 4));
 
   return (
     <div className={`manage-card${isMobile ? " is-collapsible" : ""}`}>
@@ -73,15 +89,36 @@ export default function ManagePermissionsPanel({
           </div>
 
           <div className="manage-list">
-            {(showAll ? permissionJurors : permissionJurors.slice(0, 4)).map((j) => {
+            <div className="manage-search">
+              <input
+                className="manage-input manage-search-input"
+                type="text"
+                placeholder="Search jurors"
+                aria-label="Search jurors"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            {visibleJurors.map((j) => {
+              const jurorId = j.jurorId || j.juror_id;
               const totalProjects = Number(j.totalProjects ?? j.total_projects ?? 0);
               const completedProjects = Number(j.completedProjects ?? j.completed_projects ?? 0);
               const finalSubmittedAt = j.finalSubmittedAt ?? j.final_submitted_at ?? null;
               const isCompleted = Boolean(finalSubmittedAt);
               const completionHint = `Finalize submission first (${completedProjects}/${totalProjects})`;
               const editEnabled = toBool(j.editEnabled ?? j.edit_enabled);
+              const permissionKey = activeSemesterId ? `${jurorId}:${activeSemesterId}` : null;
+              const entry = permissionKey ? activityMap?.get(permissionKey) : null;
+              const lastActivityAt =
+                entry?.value
+                || entry
+                || j.lastSeenAt
+                || j.last_seen_at
+                || j.lastActivityAt
+                || j.last_activity_at
+                || "";
               return (
-                <div key={j.jurorId || j.juror_id} className="manage-item">
+                <div key={jurorId} className="manage-item">
                   <div>
                     <div className="manage-item-title">{j.juryName || j.juror_name}</div>
                     <div className="manage-item-sub">{j.juryDept || j.juror_inst}</div>
@@ -96,6 +133,9 @@ export default function ManagePermissionsPanel({
                           {completionHint}
                         </span>
                       )}
+                    </div>
+                    <div className="manage-item-sub manage-meta-line">
+                      <LastActivity value={lastActivityAt} />
                     </div>
                   </div>
                   <div className="manage-item-actions">
@@ -122,12 +162,15 @@ export default function ManagePermissionsPanel({
                 </div>
               );
             })}
-            {permissionJurors.length === 0 && (
+            {!normalizedSearch && permissionJurors.length === 0 && (
               <div className="manage-empty">No jurors assigned to the active semester.</div>
+            )}
+            {normalizedSearch && filteredJurors.length === 0 && (
+              <div className="manage-empty manage-empty-search">No results.</div>
             )}
           </div>
 
-          {permissionJurors.length > 4 && (
+          {!normalizedSearch && permissionJurors.length > 4 && (
             <button
               className="manage-btn ghost"
               type="button"

@@ -48,7 +48,7 @@ export async function createOrGetJurorAndIssuePin(semesterId, jurorName, jurorIn
   return data?.[0] || null;
 }
 
-// Returns { ok, juror_id, juror_name, juror_inst, error_code, locked_until, failed_attempts }.
+// Returns { ok, juror_id, juror_name, juror_inst, error_code, locked_until, failed_attempts, pin_plain_once }.
 export async function verifyJurorPin(semesterId, jurorName, jurorInst, pin) {
   const { data, error } = await supabase.rpc("rpc_verify_juror_pin", {
     p_semester_id: semesterId,
@@ -83,7 +83,8 @@ export async function listProjects(semesterId, jurorId = null) {
     group_no:       row.group_no,
     project_title:  row.project_title,
     group_students: row.group_students || "",
-    submitted_at:   row.submitted_at,
+    updated_at:     row.updated_at,
+    final_submitted_at: row.final_submitted_at,
     // Normalize DB column names → config.js criterion ids
     scores: {
       technical: row.technical ?? null,
@@ -154,44 +155,43 @@ export async function adminGetScores(semesterId, adminPassword) {
       row.oral      != null &&
       row.teamwork  != null;
     const hasComment = String(row.comment || "").trim().length > 0;
-    const hasSubmitTs = !!row.submitted_at;
+    const finalSubmittedAtRaw = row.final_submitted_at || "";
+    const isFinalSubmitted = !!finalSubmittedAtRaw;
+    const status = row.status || (
+      isFinalSubmitted || hasAllScores
+        ? "submitted"
+        : (!hasAnyScore && !hasComment ? "not_started" : "in_progress")
+    );
 
-    let status = row.status;
-    // If status is missing (or only "in_progress" from DB), allow a true "not_started"
-    // when there is literally no activity recorded.
-    if (!status || status === "in_progress") {
-      if (!hasAnyScore && !hasComment && !hasSubmitTs) {
-        status = "not_started";
-      } else if (hasAllScores) {
-        status = "submitted";
-      } else {
-        status = "in_progress";
-      }
-    }
+    const updatedAt = row.updated_at ? new Date(row.updated_at).toISOString() : "";
+    const updatedMs = row.updated_at ? new Date(row.updated_at).getTime() : 0;
+    const finalSubmittedAt = finalSubmittedAtRaw ? new Date(finalSubmittedAtRaw).toISOString() : "";
+    const finalSubmittedMs = finalSubmittedAtRaw ? new Date(finalSubmittedAtRaw).getTime() : 0;
 
     return ({
-    jurorId:     row.juror_id,
-    juryName:    row.juror_name,
-    juryDept:    row.juror_inst,
-    projectId:   row.project_id,
-    groupNo:     row.group_no,
-    projectName: row.project_title,
-    // Normalize DB column names → config.js criterion ids
-    technical:   row.technical   ?? null,
-    design:      row.written     ?? null,   // written → design
-    delivery:    row.oral        ?? null,   // oral    → delivery
-    teamwork:    row.teamwork    ?? null,
-    total:       row.total       ?? null,
-    comments:    row.comment     || "",
-    timestamp:   row.submitted_at
-      ? new Date(row.submitted_at).toISOString()
-      : "",
-    tsMs: row.submitted_at
-      ? new Date(row.submitted_at).getTime()
-      : 0,
-    status,
-    editingFlag: "",  // no longer applicable in Supabase model
-  });
+      jurorId:     row.juror_id,
+      juryName:    row.juror_name,
+      juryDept:    row.juror_inst,
+      projectId:   row.project_id,
+      groupNo:     row.group_no,
+      projectName: row.project_title,
+      // Normalize DB column names → config.js criterion ids
+      technical:   row.technical   ?? null,
+      design:      row.written     ?? null,   // written → design
+      delivery:    row.oral        ?? null,   // oral    → delivery
+      teamwork:    row.teamwork    ?? null,
+      total:       row.total       ?? null,
+      comments:    row.comment     || "",
+      updatedAt,
+      updatedMs,
+      finalSubmittedAt,
+      finalSubmittedMs,
+      // Legacy timestamp fields now represent "last edited"
+      timestamp:   updatedAt,
+      tsMs:        updatedMs,
+      status,
+      editingFlag: "",  // no longer applicable in Supabase model
+    });
   });
 }
 
@@ -218,6 +218,10 @@ export async function adminListJurors(semesterId, adminPassword) {
     editEnabled: j.edit_enabled,
     finalSubmittedAt: j.final_submitted_at || "",
     finalSubmitted: Boolean(j.final_submitted_at),
+    lastActivityAt: j.last_activity_at || "",
+    lastActivityMs: j.last_activity_at ? new Date(j.last_activity_at).getTime() : 0,
+    lastSeenAt: j.last_seen_at || "",
+    lastSeenMs: j.last_seen_at ? new Date(j.last_seen_at).getTime() : 0,
     totalProjects: j.total_projects,
     completedProjects: j.completed_projects,
     lockedUntil: j.locked_until,
@@ -361,6 +365,26 @@ export async function adminGetSettings(adminPassword) {
     p_admin_password: adminPassword,
   });
   if (error) throw error;
+  return data || [];
+}
+
+export async function adminListAuditLogs(filters, adminPassword) {
+  const { data, error } = await supabase.rpc("rpc_admin_list_audit_logs", {
+    p_admin_password: adminPassword,
+    p_start_at: filters?.startAt || null,
+    p_end_at: filters?.endAt || null,
+    p_actor_types: filters?.actorTypes || null,
+    p_actions: filters?.actions || null,
+    p_limit: filters?.limit || 120,
+  });
+  if (error) {
+    if (error.code === "P0401" || error.message?.includes("unauthorized")) {
+      const e = new Error("unauthorized");
+      e.unauthorized = true;
+      throw e;
+    }
+    throw error;
+  }
   return data || [];
 }
 

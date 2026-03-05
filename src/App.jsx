@@ -20,11 +20,10 @@ import AdminPanel from "./AdminPanel";
 import {
   ClipboardIcon,
   InfoIcon,
-  LockIcon,
+  ShieldUserIcon,
   AlertCircleIcon,
   EyeIcon,
   EyeOffIcon,
-  ShieldUserIcon,
 } from "./shared/Icons";
 import MinimalLoaderOverlay from "./shared/MinimalLoaderOverlay";
 import "./styles/home.css";
@@ -75,9 +74,9 @@ export default function App() {
         <div className="premium-screen">
           <div className="premium-card">
             <div className="premium-header">
-              <div className="premium-icon-square" aria-hidden="true"><LockIcon /></div>
+              <div className="premium-icon-square" aria-hidden="true"><ShieldUserIcon /></div>
               <div className="premium-title">Admin Panel</div>
-              <div className="premium-subtitle">Enter the admin password to view results</div>
+              <div className="premium-subtitle">Enter the admin password to access the results and management panel.</div>
             </div>
             <div className="premium-input-wrap">
               <input
@@ -110,7 +109,7 @@ export default function App() {
               </div>
             )}
             <button className="premium-btn-primary" onClick={handleAdminLogin} disabled={adminChecking}>
-              Login
+              Log In
             </button>
             <button className="premium-btn-link" onClick={() => { setPage("home"); setAdminAuthError(""); }}>
               ← Back to Home
@@ -153,10 +152,10 @@ export default function App() {
           <img className="home-logo" src={teduLogo} alt="TED University" loading="eager" />
         </div>
 
-        <h1>Senior Project Jury Portal</h1>
+        <h1>Senior Project Poster Day <br/> Jury Portal</h1>
 
         <p className="home-sub">
-          TED University · EEE Dept.
+          TED University <br/> Department of Electrical and Electronics Engineering
         </p>
 
         <div className="home-buttons">
@@ -165,7 +164,7 @@ export default function App() {
             onClick={() => setPage("jury")}
           >
             <span className="home-btn-icon" aria-hidden="true"><ClipboardIcon /></span>
-            Evaluation Form
+            Start Evaluation
           </button>
           <button className="btn-outline big home-secondary-btn" onClick={() => setPage("admin")}>
             <span className="home-btn-icon" aria-hidden="true"><ShieldUserIcon /></span>
@@ -175,7 +174,7 @@ export default function App() {
 
         <div className="home-info">
           <span className="home-info-icon" aria-hidden="true"><InfoIcon /></span>
-          <span>Use the <strong>Evaluation Form</strong> to score each project group.</span>
+          <span>Use the Evaluation Form to score each project group.</span>
         </div>
 
         <div className="home-footer">

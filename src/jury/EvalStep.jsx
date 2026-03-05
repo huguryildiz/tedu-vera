@@ -412,20 +412,21 @@ export default function EvalStep({
       {showBackMenu && (
         <div className="back-menu-overlay" onClick={() => setShowBackMenu(false)}>
           <div className="back-menu" onClick={(e) => e.stopPropagation()}>
-            <p className="back-menu-title">Leave evaluation?</p>
-            <p className="back-menu-sub">Your progress is saved. You can continue any time.</p>
+            <p className="back-menu-title">Leave this evaluation?</p>
+            <p className="back-menu-sub">Your progress is saved. You can continue later.</p>
             <button
               className="back-menu-btn primary"
               onClick={() => { setShowBackMenu(false); onGoHome(); }}
             >
               <HomeIcon />
-              Go to Home
+              Go Home
             </button>
             <button
               className="back-menu-btn secondary"
               onClick={() => setShowBackMenu(false)}
             >
-              Cancel
+              <PencilIcon />
+              Continue Editing
             </button>
           </div>
         </div>

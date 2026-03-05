@@ -19,6 +19,7 @@ import {
   adminProjectSummary,
   listSemesters,
 } from "./shared/api";
+import { supabase } from "./lib/supabaseClient";
 import { toNum, tsToMillis, cmp, jurorBg, jurorDot, rowKey } from "./admin/utils";
 import { readSection, writeSection } from "./admin/persist";
 import { HomeIcon, RefreshIcon } from "./admin/components";
@@ -312,6 +313,58 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
   };
 
   useEffect(() => { fetchData(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Live refresh (Supabase Realtime)
+  const fetchDataRef = useRef(fetchData);
+  const liveTimerRef = useRef(null);
+  useEffect(() => { fetchDataRef.current = fetchData; }, [fetchData]);
+  useEffect(() => {
+    if (!getAdminPass()) return;
+    const scheduleLiveRefresh = () => {
+      if (liveTimerRef.current) return;
+      liveTimerRef.current = setTimeout(() => {
+        liveTimerRef.current = null;
+        fetchDataRef.current?.();
+      }, 600);
+    };
+
+    const channel = supabase
+      .channel("admin-panel-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "scores" },
+        scheduleLiveRefresh
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "juror_semester_auth" },
+        scheduleLiveRefresh
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "projects" },
+        scheduleLiveRefresh
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "semesters" },
+        scheduleLiveRefresh
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "jurors" },
+        scheduleLiveRefresh
+      )
+      .subscribe();
+
+    return () => {
+      if (liveTimerRef.current) {
+        clearTimeout(liveTimerRef.current);
+        liveTimerRef.current = null;
+      }
+      supabase.removeChannel(channel);
+    };
+  }, [adminPassState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Tab overflow hints ─────────────────────────────────────
   const updateTabHints = () => {

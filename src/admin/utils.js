@@ -147,6 +147,20 @@ function formatExportTimestamp(value) {
   return `${dd}.${mm}.${yyyy} ${hh}:${min}:${ss}`;
 }
 
+export function buildExportFilename(type, semesterName, ext = "xlsx") {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm   = String(now.getMonth() + 1).padStart(2, "0");
+  const dd   = String(now.getDate()).padStart(2, "0");
+  const hh   = String(now.getHours()).padStart(2, "0");
+  const min  = String(now.getMinutes()).padStart(2, "0");
+  const safeSem  = String(semesterName || "semester").trim().toLowerCase()
+    .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  const safeType = String(type || "export").trim().toLowerCase()
+    .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  return `tedu-jury_${safeType}_${safeSem}_${yyyy}-${mm}-${dd}_${hh}${min}.${ext}`;
+}
+
 export async function exportXLSX(rows, { semesterName = "", summaryData = [] } = {}) {
   const XLSX = await import("xlsx");
 
@@ -167,7 +181,8 @@ export async function exportXLSX(rows, { semesterName = "", summaryData = [] } =
     "oral",
     "teamwork",
     "total",
-    "submitted_at",
+    "updated_at",
+    "final_submitted_at",
     "comment",
   ];
 
@@ -183,28 +198,19 @@ export async function exportXLSX(rows, { semesterName = "", summaryData = [] } =
     exportScoreValue(r.delivery),  // oral in DB
     exportScoreValue(r.teamwork),
     exportScoreValue(r.total),
-    formatExportTimestamp(r.timestamp), // submitted_at
+    formatExportTimestamp(r.updatedAt), // updated_at
+    formatExportTimestamp(r.finalSubmittedAt), // final_submitted_at
     r.comments    ?? "",
   ]);
 
   const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
   // semester(A), group_no(B), project_title(C), group_students(D),
   // juror_name(E), juror_inst(F), technical(G), written(H), oral(I),
-  // teamwork(J), total(K), submitted_at(L), comment(M)
-  ws["!cols"] = [18, 8, 32, 42, 24, 26, 11, 9, 7, 11, 8, 24, 32].map((w) => ({ wch: w }));
+  // teamwork(J), total(K), updated_at(L), final_submitted_at(M), comment(N)
+  ws["!cols"] = [18, 8, 32, 42, 24, 26, 11, 9, 7, 11, 8, 24, 24, 32].map((w) => ({ wch: w }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Jury Evaluations");
-  const now  = new Date();
-  const dd = String(now.getDate()).padStart(2, "0");
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const yyyy = String(now.getFullYear());
-  const hh = String(now.getHours()).padStart(2, "0");
-  const min = String(now.getMinutes()).padStart(2, "0");
-  const safeSemester = String(semesterName || "Semester")
-    .trim()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-zA-Z0-9_-]/g, "");
-  XLSX.writeFile(wb, `TEDU_EE491-492_Jury_Details_${safeSemester}_${dd}${mm}${yyyy}_${hh}${min}.xlsx`);
+  XLSX.writeFile(wb, buildExportFilename("details", semesterName));
 }
 
 // ── Completion % — mirrors countFilled / totalFields in useJuryState ─────────
@@ -220,7 +226,7 @@ export const adminCompletionPct = (rows, totalProjects) => {
 
 // ── Row deduplication ─────────────────────────────────────────
 // Keeps the single best row per (juror + dept + group) composite key.
-// "Best" = latest timestamp, with status priority as tiebreaker.
+// "Best" = latest activity (updated_at preferred), with status priority as tiebreaker.
 export function dedupeAndSort(rows) {
   const priority = { all_submitted: 3, group_submitted: 2, in_progress: 1 };
 
@@ -228,7 +234,10 @@ export function dedupeAndSort(rows) {
     .filter((r) => r?.juryName || r?.projectName || (r?.total ?? 0) > 0)
     .map((r) => ({
       ...r,
-      tsMs: Number.isFinite(r?.tsMs) ? r.tsMs : tsToMillis(r?.timestamp),
+      tsMs:
+        (Number.isFinite(r?.updatedMs) ? r.updatedMs : 0) ||
+        (Number.isFinite(r?.tsMs) ? r.tsMs : 0) ||
+        tsToMillis(r?.updatedAt || r?.timestamp),
     }));
 
   const byKey = new Map();

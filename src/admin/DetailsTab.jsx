@@ -3,7 +3,7 @@
 // Sortable details table with Excel-style column header filters.
 // ============================================================
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cmp, exportXLSX, formatTs, tsToMillis, rowKey } from "./utils";
 import { readSection, writeSection } from "./persist";
 import { FilterPopoverPortal, StatusBadge } from "./components";
@@ -38,6 +38,7 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
   const [filterStudents,     setFilterStudents]     = useState(() => { const s = readSection("details"); return typeof s.filterStudents     === "string" ? s.filterStudents     : ""; });
   const [dateFrom,       setDateFrom]       = useState(() => { const s = readSection("details"); return typeof s.dateFrom     === "string" ? s.dateFrom     : ""; });
   const [dateTo,         setDateTo]         = useState(() => { const s = readSection("details"); return typeof s.dateTo       === "string" ? s.dateTo       : ""; });
+  const [dateFilterCol,  setDateFilterCol]  = useState(() => { const s = readSection("details"); return s.dateFilterCol === "completed" ? "completed" : "updated"; });
   const [dateError,      setDateError]      = useState(null);
   const jurorEditMap = useMemo(() => {
     const map = new Map();
@@ -54,7 +55,8 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
   const [filterComment,  setFilterComment]  = useState(() => { const s = readSection("details"); return typeof s.filterComment === "string" ? s.filterComment : ""; });
   const [sortKey,        setSortKey]        = useState(() => {
     const s = readSection("details");
-    const key = typeof s.sortKey === "string" && s.sortKey ? s.sortKey : "tsMs";
+    const rawKey = typeof s.sortKey === "string" && s.sortKey ? s.sortKey : "updatedMs";
+    const key = rawKey === "tsMs" ? "updatedMs" : rawKey;
     return key === "projectId" ? "projectTitle" : key;
   });
   const [sortDir,        setSortDir]        = useState(() => { const s = readSection("details"); return VALID_SORT_DIRS.includes(s.sortDir) ? s.sortDir : "desc"; });
@@ -64,6 +66,8 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
   const [isMobile, setIsMobile] = useState(() => (
     typeof window !== "undefined" && window.matchMedia("(max-width: 480px)").matches
   ));
+  const topScrollRef = useRef(null);
+  const tableScrollRef = useRef(null);
 
   const projectMetaById = useMemo(
     () => new Map((summaryData || []).map((p) => [p.id, { title: p?.name ?? "", students: p?.students ?? "" }])),
@@ -107,7 +111,7 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
 
   useEffect(() => {
     if (!isMobile) return;
-    if (activeFilterCol !== "timestamp") return;
+    if (activeFilterCol !== "timestamp" && activeFilterCol !== "finalSubmittedAt") return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
@@ -127,12 +131,53 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
   }, []);
 
   useEffect(() => {
+    const top = topScrollRef.current;
+    const wrap = tableScrollRef.current;
+    if (!top || !wrap) return;
+
+    const inner = top.firstElementChild;
+    if (!inner) return;
+
+    let syncing = false;
+    const syncFromWrap = () => {
+      if (syncing) return;
+      syncing = true;
+      top.scrollLeft = wrap.scrollLeft;
+      syncing = false;
+    };
+    const syncFromTop = () => {
+      if (syncing) return;
+      syncing = true;
+      wrap.scrollLeft = top.scrollLeft;
+      syncing = false;
+    };
+    const updateWidth = () => {
+      inner.style.width = `${wrap.scrollWidth}px`;
+      syncFromWrap();
+    };
+
+    updateWidth();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateWidth) : null;
+    ro?.observe(wrap);
+    window.addEventListener("resize", updateWidth);
+    wrap.addEventListener("scroll", syncFromWrap, { passive: true });
+    top.addEventListener("scroll", syncFromTop, { passive: true });
+
+    return () => {
+      wrap.removeEventListener("scroll", syncFromWrap);
+      top.removeEventListener("scroll", syncFromTop);
+      window.removeEventListener("resize", updateWidth);
+      ro?.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
     writeSection("details", {
       filterSemester, filterGroupNo, filterJuror, filterDept, filterProjectTitle, filterStudents,
-      filterStatus, dateFrom, dateTo, filterComment,
+      filterStatus, dateFrom, dateTo, dateFilterCol, filterComment,
       sortKey, sortDir,
     });
-  }, [filterSemester, filterGroupNo, filterJuror, filterDept, filterStatus, filterProjectTitle, filterStudents, dateFrom, dateTo, filterComment, sortKey, sortDir]);
+  }, [filterSemester, filterGroupNo, filterJuror, filterDept, filterStatus, filterProjectTitle, filterStudents, dateFrom, dateTo, dateFilterCol, filterComment, sortKey, sortDir]);
 
   function isValidDateParts(yyyy, mm, dd) {
     if (yyyy < 2000 || yyyy > 2100) return false;
@@ -142,23 +187,40 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
     return dd <= maxDays;
   }
 
+  function isValidTimeParts(hh, mi, ss) {
+    if (hh < 0 || hh > 23) return false;
+    if (mi < 0 || mi > 59) return false;
+    if (ss < 0 || ss > 59) return false;
+    return true;
+  }
+
   function parseDateString(value) {
     if (!value) return null;
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(value)) {
+      const [datePart, timePart] = value.split("T");
+      const [yyyy, mm, dd] = datePart.split("-").map(Number);
+      const [hh, mi, ss = "0"] = timePart.split(":").map(Number);
+      if (!isValidDateParts(yyyy, mm, dd)) return null;
+      if (!isValidTimeParts(hh, mi, ss)) return null;
+      return { ms: new Date(yyyy, mm - 1, dd, hh, mi, ss).getTime(), isDateOnly: false };
+    }
     if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
       const [yyyy, mm, dd] = value.split("-").map(Number);
       if (!isValidDateParts(yyyy, mm, dd)) return null;
-      return new Date(yyyy, mm - 1, dd).getTime();
+      return { ms: new Date(yyyy, mm - 1, dd).getTime(), isDateOnly: true };
     }
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
       const [dd, mm, yyyy] = value.split("/").map(Number);
       if (!isValidDateParts(yyyy, mm, dd)) return null;
-      return new Date(yyyy, mm - 1, dd).getTime();
+      return { ms: new Date(yyyy, mm - 1, dd).getTime(), isDateOnly: true };
     }
     return null;
   }
 
-  const parsedFromMs = useMemo(() => (dateFrom ? parseDateString(dateFrom) : null), [dateFrom]);
-  const parsedToMs = useMemo(() => (dateTo ? parseDateString(dateTo) : null), [dateTo]);
+  const parsedFrom = useMemo(() => (dateFrom ? parseDateString(dateFrom) : null), [dateFrom]);
+  const parsedTo = useMemo(() => (dateTo ? parseDateString(dateTo) : null), [dateTo]);
+  const parsedFromMs = parsedFrom ? parsedFrom.ms : null;
+  const parsedToMs = parsedTo ? parsedTo.ms : null;
   const isInvalidRange = useMemo(() => {
     if (parsedFromMs === null || parsedToMs === null) return false;
     return parsedFromMs > parsedToMs;
@@ -195,7 +257,8 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
   const isStatusFilterActive = filterStatus !== "ALL" || activeFilterCol === "status";
   const isProjectTitleFilterActive = !!filterProjectTitle || activeFilterCol === "projectTitle";
   const isStudentsFilterActive = !!filterStudents || activeFilterCol === "students";
-  const isDateFilterActive = !!dateFrom || !!dateTo || activeFilterCol === "timestamp";
+  const isUpdatedDateFilterActive = (dateFilterCol === "updated" && (dateFrom || dateTo)) || activeFilterCol === "timestamp";
+  const isCompletedDateFilterActive = (dateFilterCol === "completed" && (dateFrom || dateTo)) || activeFilterCol === "finalSubmittedAt";
   const isCommentFilterActive = !!filterComment || activeFilterCol === "comments";
 
   function resetFilters() {
@@ -209,8 +272,9 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
     setDateFrom("");
     setDateTo("");
     setDateError(null);
+    setDateFilterCol("updated");
     setFilterComment("");
-    setSortKey("tsMs");
+    setSortKey("updatedMs");
     setSortDir("desc");
     setActiveFilterCol(null);
     setAnchorRect(null);
@@ -250,7 +314,7 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
     const fromMs = parsedFromMs ?? 0;
     const toMsBase = parsedToMs ?? Infinity;
     const toMs = Number.isFinite(toMsBase)
-      ? toMsBase + 24 * 60 * 60 * 1000 - 1
+      ? toMsBase + (parsedTo?.isDateOnly ? (24 * 60 * 60 * 1000 - 1) : 0)
       : toMsBase;
 
     let list = data.map((row) => {
@@ -306,7 +370,9 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
       !isInvalidRange;
     if ((dateFrom || dateTo) && canApplyDateFilter) {
       list = list.filter((r) => {
-        const ms = r.tsMs || tsToMillis(r.timestamp);
+        const ms = dateFilterCol === "completed"
+          ? (r.finalSubmittedMs || tsToMillis(r.finalSubmittedAt))
+          : (r.updatedMs || tsToMillis(r.updatedAt));
         return ms >= fromMs && ms <= toMs;
       });
     }
@@ -327,7 +393,7 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
     });
     return list;
   }, [data, projectMetaById, semesterName, filterSemester, filterGroupNo, filterJuror, filterDept, filterStatus, filterProjectTitle, filterStudents,
-      dateFrom, dateTo, filterComment, sortKey, sortDir, jurorEditMap]);
+      dateFrom, dateTo, dateFilterCol, filterComment, sortKey, sortDir, jurorEditMap]);
 
   function setSort(key) {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -521,7 +587,9 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
         ),
       };
     }
-    if (activeFilterCol === "timestamp") {
+    if (activeFilterCol === "timestamp" || activeFilterCol === "finalSubmittedAt") {
+      const isDateFilterActive =
+        activeFilterCol === "finalSubmittedAt" ? isCompletedDateFilterActive : isUpdatedDateFilterActive;
       const handleFromChange = (val) => {
         setDateFrom(val);
       };
@@ -547,28 +615,30 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
           <>
             <div className="timestamp-field">
               <label>From</label>
-              <input
-                autoFocus
-                type="date"
-                placeholder="YYYY-MM-DD"
-                value={dateFrom}
-                onChange={(e) => handleFromChange(e.target.value)}
-                onBlur={handleDateBlur}
-                className={`timestamp-date-input ${dateError ? "is-invalid " : ""}${isDateFilterActive ? "filter-input-active" : ""}`}
-                aria-invalid={!!dateError}
-              />
+                <input
+                  autoFocus
+                  type="datetime-local"
+                  step="60"
+                  placeholder="YYYY-MM-DDThh:mm"
+                  value={dateFrom}
+                  onChange={(e) => handleFromChange(e.target.value)}
+                  onBlur={handleDateBlur}
+                  className={`timestamp-date-input ${dateError ? "is-invalid " : ""}${isDateFilterActive ? "filter-input-active" : ""}`}
+                  aria-invalid={!!dateError}
+                />
             </div>
             <div className="timestamp-field">
               <label>To</label>
-              <input
-                type="date"
-                placeholder="YYYY-MM-DD"
-                value={dateTo}
-                onChange={(e) => handleToChange(e.target.value)}
-                onBlur={handleDateBlur}
-                className={`timestamp-date-input ${dateError ? "is-invalid " : ""}${isDateFilterActive ? "filter-input-active" : ""}`}
-                aria-invalid={!!dateError}
-              />
+                <input
+                  type="datetime-local"
+                  step="60"
+                  placeholder="YYYY-MM-DDThh:mm"
+                  value={dateTo}
+                  onChange={(e) => handleToChange(e.target.value)}
+                  onBlur={handleDateBlur}
+                  className={`timestamp-date-input ${dateError ? "is-invalid " : ""}${isDateFilterActive ? "filter-input-active" : ""}`}
+                  aria-invalid={!!dateError}
+                />
             </div>
             {dateError && (
               <div className="timestamp-error" role="alert">
@@ -663,7 +733,10 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
       </FilterPopoverPortal>
 
       {/* Table */}
-      <div className="detail-table-wrap">
+      <div className="detail-table-scroll-top" ref={topScrollRef} aria-hidden="true">
+        <div className="detail-table-scroll-top-inner" />
+      </div>
+      <div className="detail-table-wrap" ref={tableScrollRef}>
         <table className="detail-table">
           <thead>
             <tr>
@@ -813,20 +886,50 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
                 </th>
               ))}
 
-              {/* Submitted At */}
+              {/* Updated At */}
               <th style={{ position: "relative" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <span
-                    className={`col-sort-label details-col-label${isDateFilterActive ? " filtered" : ""}`}
-                    onClick={() => setSort("tsMs")}
+                    className={`col-sort-label details-col-label${isUpdatedDateFilterActive ? " filtered" : ""}`}
+                    onClick={() => setSort("updatedMs")}
                   >
-                    Submitted At
+                    Updated At
                   </span>
                   <button
                     type="button"
-                    className={`col-filter-hotspot${isDateFilterActive ? " active filter-icon-active" : ""}`}
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFilterCol("timestamp", e); }}
+                    className={`col-filter-hotspot${isUpdatedDateFilterActive ? " active filter-icon-active" : ""}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDateFilterCol("updated");
+                      toggleFilterCol("timestamp", e);
+                    }}
                     title="Filter by date"
+                  >
+                    <FilterIcon />
+                  </button>
+                </div>
+              </th>
+
+              {/* Completed At */}
+              <th style={{ cursor: "pointer", whiteSpace: "nowrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <span
+                    className={`col-sort-label details-col-label${isCompletedDateFilterActive ? " filtered" : ""}`}
+                    onClick={() => setSort("finalSubmittedMs")}
+                  >
+                    Completed At
+                  </span>
+                  <button
+                    type="button"
+                    className={`col-filter-hotspot${isCompletedDateFilterActive ? " active filter-icon-active" : ""}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDateFilterCol("completed");
+                      toggleFilterCol("finalSubmittedAt", e);
+                    }}
+                    title="Filter by completed date"
                   >
                     <FilterIcon />
                   </button>
@@ -854,7 +957,7 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={14} style={{ textAlign: "center", padding: 32, color: "#64748b" }}>
+                <td colSpan={15} style={{ textAlign: "center", padding: 32, color: "#64748b" }}>
                   No matching rows.
                 </td>
               </tr>
@@ -897,7 +1000,10 @@ export default function DetailsTab({ data, jurors, semesterName = "", summaryDat
                     <strong>{displayScore(row.total)}</strong>
                   </td>
                   <td style={{ fontSize: 12, color: "#475569", whiteSpace: "nowrap" }}>
-                    {formatTs(row.timestamp)}
+                    {formatTs(row.updatedAt)}
+                  </td>
+                  <td style={{ fontSize: 12, color: "#475569", whiteSpace: "nowrap" }}>
+                    {formatTs(row.finalSubmittedAt)}
                   </td>
                   <td className="comment-cell cell-comment">{row.comments}</td>
                 </tr>

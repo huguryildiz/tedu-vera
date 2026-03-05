@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { CalendarRangeIcon, ChevronDownIcon, FileTextIcon, FolderKanbanIcon, PencilIcon, UsersLucideIcon } from "../shared/Icons";
 import DangerIconButton from "../components/admin/DangerIconButton";
+import LastActivity from "./LastActivity";
 
 function parseCsv(text) {
   const rows = [];
@@ -63,6 +64,7 @@ export default function ManageProjectsPanel({
   onAddGroup,
   onEditGroup,
   onDeleteProject,
+  activityMap,
 }) {
   const fileRef = useRef(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -74,6 +76,7 @@ export default function ManageProjectsPanel({
   const [editForm, setEditForm] = useState({ group_no: "", project_title: "", group_students: "" });
   const [importError, setImportError] = useState("");
   const [importWarning, setImportWarning] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const canSubmit =
     String(form.group_no).trim() &&
@@ -88,14 +91,24 @@ export default function ManageProjectsPanel({
     const bNo = Number(b.group_no || 0);
     return aNo - bNo;
   });
-  const visibleProjects = orderedProjects.slice(0, 3);
-  const hiddenProjects = orderedProjects.slice(3);
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredProjects = normalizedSearch
+    ? orderedProjects.filter((p) => {
+        const haystack = `${p?.group_no ?? ""} ${p?.project_title || ""} ${p?.group_students || ""}`
+          .toLowerCase();
+        return haystack.includes(normalizedSearch);
+      })
+    : orderedProjects;
+  const visibleProjects = normalizedSearch ? filteredProjects : orderedProjects.slice(0, 3);
+  const hiddenProjects = normalizedSearch ? [] : orderedProjects.slice(3);
 
   const renderProject = (p, idx) => {
     const students = splitStudents(p.group_students);
     const groupLabel = Number.isFinite(Number(p.group_no)) && Number(p.group_no) > 0
       ? Number(p.group_no)
       : idx + 1;
+    const entry = activityMap?.get(p.id);
+    const lastActivity = entry?.value || entry || p.updated_at || p.updatedAt || null;
     return (
       <div key={p.id || `${p.group_no}-${p.project_title}`} className="manage-item">
         <div>
@@ -121,6 +134,9 @@ export default function ManageProjectsPanel({
               <CalendarRangeIcon />
             </span>
             <span className="manage-item-semester-text">{semesterName || "—"}</span>
+          </div>
+          <div className="manage-item-sub manage-meta-line">
+            <LastActivity value={lastActivity} />
           </div>
         </div>
         <div className="manage-item-actions">
@@ -298,10 +314,24 @@ export default function ManageProjectsPanel({
             </button>
           </div>
 
+          <div className="manage-search">
+            <input
+              className="manage-input manage-search-input"
+              type="text"
+              placeholder="Search groups, project titles, students"
+              aria-label="Search groups, titles, students"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
           <div className="manage-list">
             {visibleProjects.map((p, idx) => renderProject(p, idx))}
-            {orderedProjects.length === 0 && (
+            {!normalizedSearch && orderedProjects.length === 0 && (
               <div className="manage-empty">No projects for the active semester.</div>
+            )}
+            {normalizedSearch && filteredProjects.length === 0 && (
+              <div className="manage-empty manage-empty-search">No results.</div>
             )}
           </div>
 

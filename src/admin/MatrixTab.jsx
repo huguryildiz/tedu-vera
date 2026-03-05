@@ -5,7 +5,7 @@
 // - Juror column text filter
 // - Final-only averages (all_submitted only)
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { cmp, rowKey } from "./utils";
 import { readSection, writeSection } from "./persist";
 import { FilterPopoverPortal } from "./components";
@@ -58,9 +58,52 @@ export default function MatrixTab({ data, jurors, groups }) {
   useEffect(() => {
     writeSection("matrix", { sortGroupId, sortGroupDir, sortJurorDir, sortMode, jurorFilter });
   }, [sortGroupId, sortGroupDir, sortJurorDir, sortMode, jurorFilter]);
+
+  useEffect(() => {
+    const top = topScrollRef.current;
+    const wrap = tableScrollRef.current;
+    if (!top || !wrap) return;
+
+    const inner = top.firstElementChild;
+    if (!inner) return;
+
+    let syncing = false;
+    const syncFromWrap = () => {
+      if (syncing) return;
+      syncing = true;
+      top.scrollLeft = wrap.scrollLeft;
+      syncing = false;
+    };
+    const syncFromTop = () => {
+      if (syncing) return;
+      syncing = true;
+      wrap.scrollLeft = top.scrollLeft;
+      syncing = false;
+    };
+    const updateWidth = () => {
+      inner.style.width = `${wrap.scrollWidth}px`;
+      syncFromWrap();
+    };
+
+    updateWidth();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateWidth) : null;
+    ro?.observe(wrap);
+    window.addEventListener("resize", updateWidth);
+    wrap.addEventListener("scroll", syncFromWrap, { passive: true });
+    top.addEventListener("scroll", syncFromTop, { passive: true });
+
+    return () => {
+      wrap.removeEventListener("scroll", syncFromWrap);
+      top.removeEventListener("scroll", syncFromTop);
+      window.removeEventListener("resize", updateWidth);
+      ro?.disconnect();
+    };
+  }, []);
   const [activeFilterCol, setActiveFilterCol] = useState(null);
   const [anchorRect, setAnchorRect] = useState(null);
   const [anchorEl,   setAnchorEl]   = useState(null);
+  const topScrollRef = useRef(null);
+  const tableScrollRef = useRef(null);
 
   const isJurorFilterActive = !!jurorFilter || activeFilterCol === "juror";
   const jurorFinalMap = useMemo(
@@ -273,8 +316,11 @@ export default function MatrixTab({ data, jurors, groups }) {
         )}
       </div>
 
+      <div className="matrix-scroll-top" ref={topScrollRef} aria-hidden="true">
+        <div className="matrix-scroll-top-inner" />
+      </div>
       <div className="matrix-scroll-wrap">
-        <div className="matrix-scroll">
+        <div className="matrix-scroll" ref={tableScrollRef}>
           <table className="matrix-table">
             <thead>
               <tr>

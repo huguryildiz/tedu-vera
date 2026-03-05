@@ -78,6 +78,25 @@
 }
 .detail-table-toolbar .filter-count { font-weight: 600; color: var(--gray-700); }
 
+.detail-table-scroll-top {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 12px;
+  max-width: 100%;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.detail-table-scroll-top-inner {
+  height: 1px;
+}
+.detail-table-scroll-top::-webkit-scrollbar { height: 10px; }
+.detail-table-scroll-top::-webkit-scrollbar-track { background: transparent; }
+.detail-table-scroll-top::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
 .detail-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -302,13 +321,13 @@ th .sort-icon svg { vertical-align: middle; }
   overflow: auto;
 }
 .col-filter-popover-timestamp.is-centered {
-  width: min(92vw, 420px);
-  max-width: min(92vw, 420px);
+  width: max-content;
+  max-width: min(92vw, 360px);
   box-sizing: border-box;
   max-height: 80vh;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 16px;
+  padding: 14px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom));
 }
 .col-filter-popover-timestamp .timestamp-field {
@@ -316,6 +335,7 @@ th .sort-icon svg { vertical-align: middle; }
   flex-direction: column;
   gap: 10px;
   margin-bottom: 12px;
+  align-items: flex-start;
 }
 .col-filter-popover-timestamp .timestamp-field:last-of-type {
   margin-bottom: 2px;
@@ -325,17 +345,34 @@ th .sort-icon svg { vertical-align: middle; }
   color: #64748b;
 }
 .col-filter-popover-timestamp .timestamp-date-input {
-  width: 100%;
+  width: 22ch;
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  padding-right: 44px;
-  font-size: 14px;
+  padding: 6px 38px 6px 10px;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
   color: #64748b;
-  min-height: 42px;
+  font-variant-numeric: tabular-nums;
+  min-height: 36px;
   -webkit-appearance: none;
   appearance: none;
   transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+.col-filter-popover-timestamp .timestamp-date-input::-webkit-datetime-edit,
+.col-filter-popover-timestamp .timestamp-date-input::-webkit-datetime-edit-fields-wrapper,
+.col-filter-popover-timestamp .timestamp-date-input::-webkit-datetime-edit-text,
+.col-filter-popover-timestamp .timestamp-date-input::-webkit-datetime-edit-month-field,
+.col-filter-popover-timestamp .timestamp-date-input::-webkit-datetime-edit-day-field,
+.col-filter-popover-timestamp .timestamp-date-input::-webkit-datetime-edit-year-field,
+.col-filter-popover-timestamp .timestamp-date-input::-webkit-datetime-edit-hour-field,
+.col-filter-popover-timestamp .timestamp-date-input::-webkit-datetime-edit-minute-field,
+.col-filter-popover-timestamp .timestamp-date-input::-webkit-datetime-edit-second-field,
+.col-filter-popover-timestamp .timestamp-date-input::-webkit-datetime-edit-ampm-field {
+  font-family: inherit;
+  font-weight: inherit;
+  color: inherit;
 }
 .col-filter-popover-timestamp .timestamp-date-input::placeholder { color: #94a3b8; }
 .col-filter-popover-timestamp .timestamp-date-input.is-invalid {

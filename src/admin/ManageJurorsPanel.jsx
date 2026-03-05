@@ -10,6 +10,7 @@ import {
   UserRoundCheckIcon,
 } from "../shared/Icons";
 import DangerIconButton from "../components/admin/DangerIconButton";
+import LastActivity from "./LastActivity";
 
 function parseCsv(text) {
   const rows = [];
@@ -67,13 +68,11 @@ export default function ManageJurorsPanel({
   onEditJuror,
   onResetPin,
   onDeleteJuror,
+  activityMap,
 }) {
   const fileRef = useRef(null);
   const [showAdd, setShowAdd] = useState(false);
   const [showAll, setShowAll] = useState(false);
-  const [showReset, setShowReset] = useState(false);
-  const [resetTarget, setResetTarget] = useState(null);
-  const [resetForm, setResetForm] = useState({ juror_name: "", juror_inst: "" });
   const [form, setForm] = useState({ juror_name: "", juror_inst: "" });
   const [showEdit, setShowEdit] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
@@ -82,9 +81,9 @@ export default function ManageJurorsPanel({
   const [isDragging, setIsDragging] = useState(false);
   const [importError, setImportError] = useState("");
   const [importWarning, setImportWarning] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const canSubmit = form.juror_name.trim() && form.juror_inst.trim();
-  const canReset = resetForm.juror_name.trim() && resetForm.juror_inst.trim();
   const canEdit = editForm.juror_name.trim() && editForm.juror_inst.trim();
   const isJurorLocked = (j) => {
     const lockedUntil = j.locked_until || j.lockedUntil;
@@ -104,6 +103,18 @@ export default function ManageJurorsPanel({
     const bName = (b.juryName || b.juror_name || "").toLowerCase();
     return aName.localeCompare(bName);
   });
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredJurors = normalizedSearch
+    ? orderedJurors.filter((j) => {
+        const name = j.juryName || j.juror_name || "";
+        const inst = j.juryDept || j.juror_inst || "";
+        const haystack = `${name} ${inst}`.toLowerCase();
+        return haystack.includes(normalizedSearch);
+      })
+    : orderedJurors;
+  const visibleJurors = normalizedSearch
+    ? filteredJurors
+    : (showAll ? orderedJurors : orderedJurors.slice(0, 4));
 
   const handleFile = async (file) => {
     if (!file) return;
@@ -241,7 +252,17 @@ export default function ManageJurorsPanel({
           </div>
 
           <div className="manage-list">
-            {(showAll ? orderedJurors : orderedJurors.slice(0, 4)).map((j) => {
+            <div className="manage-search">
+              <input
+                className="manage-input manage-search-input"
+                type="text"
+                placeholder="Search jurors"
+                aria-label="Search jurors"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            {visibleJurors.map((j) => {
               const isLocked = isJurorLocked(j);
               const scoredSemesters = Array.isArray(j.scoredSemesters)
                 ? j.scoredSemesters.filter(Boolean)
@@ -249,8 +270,21 @@ export default function ManageJurorsPanel({
                   ? j.scored_semesters.filter(Boolean)
                   : [];
               const scoredLabel = scoredSemesters.join(" · ");
+              const jurorId = j.jurorId || j.juror_id;
+              const entry = activityMap?.get(jurorId);
+              const lastActivityAt =
+                entry?.value
+                || entry
+                || j.lastActivityAt
+                || j.last_activity_at
+                || j.lastSeenAt
+                || j.last_seen_at
+                || "";
               return (
-                <div key={j.jurorId || j.juror_id} className="manage-item">
+                <div
+                  key={jurorId}
+                  className={`manage-item${isLocked ? " is-locked" : ""}`}
+                >
                   <div>
                     <div className="manage-item-title">{j.juryName || j.juror_name}</div>
                     <div className="manage-item-sub">{j.juryDept || j.juror_inst}</div>
@@ -262,6 +296,9 @@ export default function ManageJurorsPanel({
                         <span className="manage-item-semesters-text">{scoredLabel}</span>
                       </div>
                     )}
+                    <div className="manage-item-sub manage-meta-line">
+                      <LastActivity value={lastActivityAt} />
+                    </div>
                   </div>
                   <div className="manage-item-actions">
                     {isLocked && (
@@ -270,23 +307,22 @@ export default function ManageJurorsPanel({
                       </span>
                     )}
                     <button
-                      className="manage-icon-btn"
+                      className={`manage-icon-btn${isLocked ? " danger" : ""}`}
                       type="button"
                       title="Reset PIN"
                       aria-label={`Reset PIN for ${j.juryName || j.juror_name}`}
                       onClick={() => {
-                        setResetTarget(j);
-                        setResetForm({
+                        onResetPin?.({
+                          jurorId: j.jurorId || j.juror_id,
                           juror_name: j.juryName || j.juror_name || "",
                           juror_inst: j.juryDept || j.juror_inst || "",
                         });
-                        setShowReset(true);
                       }}
                     >
                       <KeyRoundIcon />
                     </button>
                     <button
-                      className="manage-icon-btn"
+                      className={`manage-icon-btn${isLocked ? " danger" : ""}`}
                       type="button"
                       title="Edit juror"
                       aria-label={`Edit ${j.juryName || j.juror_name}`}
@@ -311,12 +347,15 @@ export default function ManageJurorsPanel({
                 </div>
               );
             })}
-            {jurors.length === 0 && (
+            {!normalizedSearch && jurors.length === 0 && (
               <div className="manage-empty">No jurors found.</div>
+            )}
+            {normalizedSearch && filteredJurors.length === 0 && (
+              <div className="manage-empty manage-empty-search">No results.</div>
             )}
           </div>
 
-          {jurors.length > 4 && (
+          {!normalizedSearch && jurors.length > 4 && (
             <button
               className="manage-btn ghost"
               type="button"
@@ -364,58 +403,6 @@ export default function ManageJurorsPanel({
                     }}
                   >
                     Add
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showReset && (
-            <div className="manage-modal">
-              <div className="manage-modal-card">
-                <div className="manage-modal-title">Reset Juror PIN</div>
-                <div className="manage-modal-body">
-                  <label className="manage-label">Full name</label>
-                  <input
-                    className="manage-input"
-                    value={resetForm.juror_name}
-                    onChange={(e) => setResetForm((f) => ({ ...f, juror_name: e.target.value }))}
-                    placeholder="Dr. Andrew Collins"
-                  />
-                  <label className="manage-label">Department / Institution</label>
-                  <input
-                    className="manage-input"
-                    value={resetForm.juror_inst}
-                    onChange={(e) => setResetForm((f) => ({ ...f, juror_inst: e.target.value }))}
-                    placeholder="Electrical Engineering"
-                  />
-                </div>
-                <div className="manage-modal-actions">
-                  <button
-                    className="manage-btn"
-                    type="button"
-                    onClick={() => {
-                      setShowReset(false);
-                      setResetTarget(null);
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="manage-btn primary"
-                    type="button"
-                    disabled={!canReset}
-                    onClick={() => {
-                      onResetPin({
-                        jurorId: resetTarget?.jurorId || resetTarget?.juror_id,
-                        juror_name: resetForm.juror_name.trim(),
-                        juror_inst: resetForm.juror_inst.trim(),
-                      });
-                      setShowReset(false);
-                      setResetTarget(null);
-                    }}
-                  >
-                    Create New PIN
                   </button>
                 </div>
               </div>

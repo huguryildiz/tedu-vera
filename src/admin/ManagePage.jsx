@@ -3,7 +3,7 @@
 // Admin Manage page: semesters, projects, jurors, permissions.
 // ============================================================
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   listSemesters,
   adminListJurors,
@@ -19,10 +19,12 @@ import {
   adminSetJurorEditMode,
   adminDeleteEntity,
   adminGetSettings,
+  adminListAuditLogs,
   adminSetSetting,
 } from "../shared/api";
-import { ChevronDownIcon, DownloadIcon } from "../shared/Icons";
-import { exportXLSX } from "./utils";
+import { supabase } from "../lib/supabaseClient";
+import { ChevronDownIcon, DownloadIcon, HistoryIcon } from "../shared/Icons";
+import { exportXLSX, buildExportFilename } from "./utils";
 import ManageSemesterPanel from "./ManageSemesterPanel";
 import ManageProjectsPanel from "./ManageProjectsPanel";
 import ManageJurorsPanel from "./ManageJurorsPanel";
@@ -34,22 +36,128 @@ const SETTINGS_KEYS = {
   evalLock: "eval_lock_active_semester",
 };
 
-const buildExportFilename = (label, semesterName) => {
-  const now = new Date();
-  const dd = String(now.getDate()).padStart(2, "0");
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const yyyy = String(now.getFullYear());
-  const hh = String(now.getHours()).padStart(2, "0");
-  const min = String(now.getMinutes()).padStart(2, "0");
-  const safeSemester = String(semesterName || "Semester")
-    .trim()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-zA-Z0-9_-]/g, "");
-  return `TEDU_EE491-492_Jury_${label}_${safeSemester}_${dd}${mm}${yyyy}_${hh}${min}.xlsx`;
-};
+const AUDIT_ACTOR_OPTIONS = [
+  { value: "admin", label: "Admin" },
+  { value: "juror", label: "Juror" },
+];
+
+const AUDIT_ACTION_OPTIONS = [
+  { value: "admin_password_change", label: "Admin password change" },
+  { value: "delete_password_change", label: "Delete password change" },
+  { value: "eval_lock_toggle", label: "Eval lock toggled" },
+  { value: "semester_create", label: "Semester created" },
+  { value: "semester_update", label: "Semester updated" },
+  { value: "semester_delete", label: "Semester deleted" },
+  { value: "set_active_semester", label: "Set active semester" },
+  { value: "juror_create", label: "Juror created" },
+  { value: "juror_update", label: "Juror updated" },
+  { value: "juror_delete", label: "Juror deleted" },
+  { value: "juror_pin_reset", label: "Juror PIN reset" },
+  { value: "juror_pin_locked", label: "Juror PIN locked" },
+  { value: "project_create", label: "Project created" },
+  { value: "project_update", label: "Project updated" },
+  { value: "project_delete", label: "Project deleted" },
+  { value: "juror_group_started", label: "Juror group started" },
+  { value: "juror_group_completed", label: "Juror group completed" },
+  { value: "juror_all_completed", label: "Juror all completed" },
+  { value: "juror_finalize_submission", label: "Juror finalized submission" },
+  { value: "admin_juror_edit_toggle", label: "Admin juror edit toggle" },
+];
+
 
 const defaultSettings = {
   evalLockActive: false,
+};
+
+const defaultAuditFilters = {
+  startDate: "",
+  endDate: "",
+  actorTypes: [],
+  actions: [],
+};
+
+const formatAuditTimestamp = (value) => {
+  if (!value) return "—";
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return "—";
+  const day = String(dt.getDate()).padStart(2, "0");
+  const month = dt.toLocaleString("en-GB", { month: "short" });
+  const year = dt.getFullYear();
+  const hours = String(dt.getHours()).padStart(2, "0");
+  const minutes = String(dt.getMinutes()).padStart(2, "0");
+  return `${day} ${month} ${year} ${hours}:${minutes}`;
+};
+
+const isValidDateParts = (yyyy, mm, dd) => {
+  if (yyyy < 2000 || yyyy > 2100) return false;
+  if (mm < 1 || mm > 12) return false;
+  if (dd < 1) return false;
+  const maxDays = new Date(yyyy, mm, 0).getDate();
+  return dd <= maxDays;
+};
+
+const isValidTimeParts = (hh, mi, ss) => {
+  if (hh < 0 || hh > 23) return false;
+  if (mi < 0 || mi > 59) return false;
+  if (ss < 0 || ss > 59) return false;
+  return true;
+};
+
+const parseAuditDateString = (value) => {
+  if (!value) return null;
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(value)) {
+    const [datePart, timePart] = value.split("T");
+    const [yyyy, mm, dd] = datePart.split("-").map(Number);
+    const [hh, mi, ss = "0"] = timePart.split(":").map(Number);
+    if (!isValidDateParts(yyyy, mm, dd)) return null;
+    if (!isValidTimeParts(hh, mi, ss)) return null;
+    return { ms: new Date(yyyy, mm - 1, dd, hh, mi, ss).getTime(), isDateOnly: false };
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [yyyy, mm, dd] = value.split("-").map(Number);
+    if (!isValidDateParts(yyyy, mm, dd)) return null;
+    return { ms: new Date(yyyy, mm - 1, dd).getTime(), isDateOnly: true };
+  }
+  return null;
+};
+
+const getAuditDateRangeError = (filters) => {
+  const start = filters?.startDate || "";
+  const end = filters?.endDate || "";
+  const parsedStart = start ? parseAuditDateString(start) : null;
+  const parsedEnd = end ? parseAuditDateString(end) : null;
+  if ((start && !parsedStart) || (end && !parsedEnd)) {
+    return "Invalid date format. Use YYYY-MM-DDThh:mm.";
+  }
+  if (parsedStart && parsedEnd && parsedStart.ms > parsedEnd.ms) {
+    return "The 'From' date/time cannot be later than the 'To' date/time.";
+  }
+  return "";
+};
+
+const buildAuditParams = (filters) => {
+  let startAt = null;
+  let endAt = null;
+  if (filters.startDate) {
+    const parsed = parseAuditDateString(filters.startDate);
+    if (parsed) {
+      startAt = new Date(parsed.ms);
+    }
+  }
+  if (filters.endDate) {
+    const parsed = parseAuditDateString(filters.endDate);
+    if (parsed) {
+      const endMs = parsed.ms + (parsed.isDateOnly ? (24 * 60 * 60 * 1000 - 1) : 0);
+      endAt = new Date(endMs);
+    }
+  }
+  return {
+    startAt: startAt ? startAt.toISOString() : null,
+    endAt: endAt ? endAt.toISOString() : null,
+    actorTypes: filters.actorTypes?.length ? filters.actorTypes : null,
+    actions: filters.actions?.length ? filters.actions : null,
+    limit: 120,
+  };
 };
 
 function useMediaQuery(query) {
@@ -78,6 +186,7 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
     jurors: true,
     permissions: true,
     security: true,
+    audit: true,
     export: true,
   });
 
@@ -91,6 +200,15 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
   const [error, setError] = useState("");
   const [resetPinInfo, setResetPinInfo] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState("");
+  const [auditFilters, setAuditFilters] = useState(defaultAuditFilters);
+  const [auditSearch, setAuditSearch] = useState("");
+  const [activityLogs, setActivityLogs] = useState([]);
+  const liveTimerRef = useRef(null);
+  const adminSecurityRef = useRef(null);
+  const auditCardRef = useRef(null);
 
   const activeSemester = useMemo(
     () => semesterList.find((s) => s.id === activeSemesterId) || null,
@@ -130,6 +248,44 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
     });
   }, [adminPass]);
 
+  const loadAuditLogs = useCallback(async (filters) => {
+    if (!adminPass) return;
+    setAuditLoading(true);
+    setAuditError("");
+    const rangeError = getAuditDateRangeError(filters || defaultAuditFilters);
+    if (rangeError) {
+      setAuditError(rangeError);
+      setAuditLogs([]);
+      setAuditLoading(false);
+      return;
+    }
+    try {
+      const params = buildAuditParams(filters || defaultAuditFilters);
+      const rows = await adminListAuditLogs(params, adminPass);
+      setAuditLogs(rows || []);
+    } catch (e) {
+      setAuditError(e?.message || "Could not load audit logs.");
+    } finally {
+      setAuditLoading(false);
+    }
+  }, [adminPass]);
+
+  const loadActivityLogs = useCallback(async () => {
+    if (!adminPass) return;
+    try {
+      const rows = await adminListAuditLogs({
+        startAt: null,
+        endAt: null,
+        actorTypes: null,
+        actions: null,
+        limit: 500,
+      }, adminPass);
+      setActivityLogs(rows || []);
+    } catch {
+      setActivityLogs([]);
+    }
+  }, [adminPass]);
+
   useEffect(() => {
     setLoading(true);
     setError("");
@@ -153,6 +309,202 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
       .catch((e) => setError(e?.message || "Could not load manage data."))
       .finally(() => setLoading(false));
   }, [activeSemesterId, adminPass, loadProjects, loadJurors, loadSettings]);
+
+  useEffect(() => {
+    if (!adminPass) return;
+    loadAuditLogs(auditFilters);
+  }, [adminPass, auditFilters, loadAuditLogs]);
+
+  useEffect(() => {
+    if (!adminPass) return;
+    loadActivityLogs();
+  }, [adminPass, loadActivityLogs]);
+
+  const visibleAuditLogs = useMemo(() => {
+    const query = auditSearch.trim().toLowerCase();
+    if (!query) return auditLogs;
+    return auditLogs.filter((log) => {
+      const message = String(log?.message || "").toLowerCase();
+      const action = String(log?.action || "").toLowerCase();
+      const actor = String(log?.actor_type || "").toLowerCase();
+      const entity = String(log?.entity_type || "").toLowerCase();
+      return (
+        message.includes(query)
+        || action.includes(query)
+        || actor.includes(query)
+        || entity.includes(query)
+      );
+    });
+  }, [auditLogs, auditSearch]);
+
+  useLayoutEffect(() => {
+    const adminEl = adminSecurityRef.current;
+    const auditEl = auditCardRef.current;
+    if (!adminEl || !auditEl) return undefined;
+
+    if (isMobile) {
+      auditEl.style.height = "";
+      return undefined;
+    }
+
+    const syncHeight = () => {
+      const height = adminEl.getBoundingClientRect().height;
+      if (height) {
+        auditEl.style.height = `${height}px`;
+      }
+    };
+
+    syncHeight();
+
+    let observer;
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(() => syncHeight());
+      observer.observe(adminEl);
+    } else {
+      window.addEventListener("resize", syncHeight);
+    }
+
+    return () => {
+      if (observer) {
+        observer.disconnect();
+      } else {
+        window.removeEventListener("resize", syncHeight);
+      }
+    };
+  }, [isMobile, openPanels.security]);
+
+  const activityMaps = useMemo(() => {
+    const maps = {
+      semester: new Map(),
+      project: new Map(),
+      juror: new Map(),
+      permission: new Map(),
+    };
+
+    const normalizeMeta = (meta) => {
+      if (!meta) return null;
+      if (typeof meta === "object") return meta;
+      try {
+        return JSON.parse(meta);
+      } catch {
+        return null;
+      }
+    };
+
+    const updateLatest = (map, key, value) => {
+      if (!key || !value) return;
+      const ms = Date.parse(value);
+      if (!Number.isFinite(ms)) return;
+      const prev = map.get(key);
+      if (!prev || ms > prev.ms) {
+        map.set(key, { value, ms });
+      }
+    };
+
+    (activityLogs || []).forEach((log) => {
+      const ts = log?.created_at;
+      if (!ts) return;
+
+      if (log.entity_type === "semester" && log.entity_id) {
+        updateLatest(maps.semester, log.entity_id, ts);
+      }
+      if (log.entity_type === "project" && log.entity_id) {
+        updateLatest(maps.project, log.entity_id, ts);
+      }
+      if (log.entity_type === "juror" && log.entity_id) {
+        updateLatest(maps.juror, log.entity_id, ts);
+      }
+      if (log.actor_type === "juror" && log.actor_id) {
+        updateLatest(maps.juror, log.actor_id, ts);
+      }
+
+      if (log.action === "admin_juror_edit_toggle" && log.entity_id) {
+        const meta = normalizeMeta(log.metadata);
+        const semId = meta?.semester_id;
+        if (semId) {
+          updateLatest(maps.permission, `${log.entity_id}:${semId}`, ts);
+        }
+      }
+    });
+
+    return maps;
+  }, [activityLogs]);
+
+  const scheduleLiveRefresh = useCallback(() => {
+    if (!adminPass) return;
+    if (liveTimerRef.current) return;
+    liveTimerRef.current = setTimeout(() => {
+      liveTimerRef.current = null;
+      loadSemesters().catch(() => {});
+      if (activeSemesterId) {
+        loadProjects(activeSemesterId).catch(() => {});
+        loadJurors().catch(() => {});
+      }
+      loadSettings().catch(() => {});
+      loadAuditLogs(auditFilters).catch(() => {});
+      loadActivityLogs().catch(() => {});
+    }, 500);
+  }, [
+    adminPass,
+    activeSemesterId,
+    auditFilters,
+    loadSemesters,
+    loadProjects,
+    loadJurors,
+    loadSettings,
+    loadAuditLogs,
+    loadActivityLogs,
+  ]);
+
+  useEffect(() => {
+    if (!adminPass) return;
+    const channel = supabase
+      .channel("admin-manage-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "juror_semester_auth" },
+        scheduleLiveRefresh
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "scores" },
+        scheduleLiveRefresh
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "jurors" },
+        scheduleLiveRefresh
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "projects" },
+        scheduleLiveRefresh
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "semesters" },
+        scheduleLiveRefresh
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "settings" },
+        scheduleLiveRefresh
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "audit_logs" },
+        scheduleLiveRefresh
+      )
+      .subscribe();
+
+    return () => {
+      if (liveTimerRef.current) {
+        clearTimeout(liveTimerRef.current);
+        liveTimerRef.current = null;
+      }
+      supabase.removeChannel(channel);
+    };
+  }, [adminPass, scheduleLiveRefresh]);
 
   const handleSetActiveSemester = async (semesterId) => {
     setMessage("");
@@ -364,6 +716,15 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
     }
   };
 
+  const handleAuditRefresh = () => {
+    loadAuditLogs(auditFilters);
+  };
+
+  const handleAuditReset = () => {
+    setAuditFilters(defaultAuditFilters);
+    setAuditSearch("");
+  };
+
   const handleRequestDelete = (target) => {
     if (!target || !target.id) return;
     setDeleteTarget(target);
@@ -417,7 +778,7 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
     ws["!cols"] = [8, 36, 42].map((w) => ({ wch: w }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Projects");
-    XLSX.writeFile(wb, buildExportFilename("Projects", activeSemester?.name));
+    XLSX.writeFile(wb, buildExportFilename("projects", activeSemester?.name));
   };
 
   const handleExportJurors = async () => {
@@ -429,7 +790,7 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
     ws["!cols"] = [28, 32].map((w) => ({ wch: w }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Jurors");
-    XLSX.writeFile(wb, buildExportFilename("Jurors", activeSemester?.name));
+    XLSX.writeFile(wb, buildExportFilename("jurors", activeSemester?.name));
   };
 
   const handleExportScores = async () => {
@@ -519,6 +880,7 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
                   label: `Semester ${s?.name || ""}`.trim(),
                 })
               }
+              activityMap={activityMaps.semester}
             />
 
             <ManageProjectsPanel
@@ -537,6 +899,7 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
                   label: `Group ${groupLabel}${p?.project_title ? ` — ${p.project_title}` : ""}`,
                 })
               }
+              activityMap={activityMaps.project}
             />
 
             <ManageJurorsPanel
@@ -555,6 +918,7 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
                   label: `Juror ${j?.juryName || j?.juror_name || ""}`.trim(),
                 })
               }
+              activityMap={activityMaps.juror}
             />
 
             <ManagePermissionsPanel
@@ -565,6 +929,8 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
               onToggle={() => togglePanel("permissions")}
               onSave={handleSaveSettings}
               onToggleEdit={handleToggleJurorEdit}
+              activityMap={activityMaps.permission}
+              activeSemesterId={activeSemesterId}
             />
           </div>
         </section>
@@ -578,7 +944,141 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
               onToggle={() => togglePanel("security")}
               onPasswordChanged={onAdminPasswordChange}
               adminPass={adminPass}
+              innerRef={adminSecurityRef}
             />
+
+            <div
+              className={`manage-card manage-card-audit${isMobile ? " is-collapsible" : ""}`}
+              ref={auditCardRef}
+            >
+              <button
+                type="button"
+                className="manage-card-header"
+                onClick={() => togglePanel("audit")}
+                aria-expanded={openPanels.audit}
+              >
+                <div className="manage-card-title">
+                  <span className="manage-card-icon" aria-hidden="true"><HistoryIcon /></span>
+                  Audit Log
+                </div>
+                {isMobile && <ChevronDownIcon className={`manage-chevron${openPanels.audit ? " open" : ""}`} />}
+              </button>
+
+              {(!isMobile || openPanels.audit) && (
+                <div className="manage-card-body manage-audit-body">
+                  <div className="manage-audit-header">
+                    <div className="manage-card-desc">Latest audit events (most recent first).</div>
+                    <div className="manage-audit-filters">
+                      <div className="manage-field">
+                        <label className="manage-label" htmlFor="auditStartDate">From</label>
+                        <input
+                          id="auditStartDate"
+                          type="datetime-local"
+                          step="60"
+                          placeholder="YYYY-MM-DDThh:mm"
+                          className={`manage-input manage-date${auditFilters.startDate ? "" : " is-empty"}${auditError ? " is-error" : ""}`}
+                          value={auditFilters.startDate}
+                          onChange={(e) => setAuditFilters((prev) => ({ ...prev, startDate: e.target.value }))}
+                        />
+                      </div>
+                      <div className="manage-field">
+                        <label className="manage-label" htmlFor="auditEndDate">To</label>
+                        <input
+                          id="auditEndDate"
+                          type="datetime-local"
+                          step="60"
+                          placeholder="YYYY-MM-DDThh:mm"
+                          className={`manage-input manage-date${auditFilters.endDate ? "" : " is-empty"}${auditError ? " is-error" : ""}`}
+                          value={auditFilters.endDate}
+                          onChange={(e) => setAuditFilters((prev) => ({ ...prev, endDate: e.target.value }))}
+                        />
+                      </div>
+                      <div className="manage-field">
+                        <label className="manage-label" htmlFor="auditActorType">Actor</label>
+                        <select
+                          id="auditActorType"
+                          className="manage-select"
+                          multiple
+                          size={Math.max(1, AUDIT_ACTOR_OPTIONS.length)}
+                          value={auditFilters.actorTypes}
+                          onChange={(e) =>
+                            setAuditFilters((prev) => ({
+                              ...prev,
+                              actorTypes: Array.from(e.target.selectedOptions).map((opt) => opt.value),
+                            }))
+                          }
+                        >
+                          {AUDIT_ACTOR_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="manage-field">
+                        <label className="manage-label" htmlFor="auditAction">Action</label>
+                        <select
+                          id="auditAction"
+                          className="manage-select"
+                          multiple
+                          value={auditFilters.actions}
+                          onChange={(e) =>
+                            setAuditFilters((prev) => ({
+                              ...prev,
+                              actions: Array.from(e.target.selectedOptions).map((opt) => opt.value),
+                            }))
+                          }
+                        >
+                          {AUDIT_ACTION_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="manage-field">
+                        <label className="manage-label" htmlFor="auditSearch">Search</label>
+                        <input
+                          id="auditSearch"
+                          type="text"
+                          className="manage-input"
+                          placeholder="Search message, actor, action, or entity"
+                          value={auditSearch}
+                          onChange={(e) => setAuditSearch(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="manage-card-actions manage-audit-actions">
+                      <button className="manage-btn" type="button" onClick={handleAuditRefresh}>
+                        Refresh
+                      </button>
+                      <button className="manage-btn ghost" type="button" onClick={handleAuditReset}>
+                        Reset filters
+                      </button>
+                    </div>
+
+                    {auditError && <div className="manage-hint manage-hint-error">{auditError}</div>}
+                    {auditLoading && <div className="manage-hint">Loading audit logs…</div>}
+                  </div>
+
+                  <div className="manage-audit-scroll" role="region" aria-label="Audit log list">
+                    {!auditLoading && visibleAuditLogs.length === 0 && (
+                      <div className="manage-empty">No audit entries found.</div>
+                    )}
+
+                    {visibleAuditLogs.length > 0 && (
+                      <div className="manage-audit-list">
+                        {visibleAuditLogs.map((log) => (
+                          <div key={log.id} className="manage-audit-row">
+                            <span className="manage-audit-time">{formatAuditTimestamp(log.created_at)}</span>
+                            <span className="manage-audit-sep" aria-hidden="true">—</span>
+                            <span className="manage-audit-message">{log.message}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className={`manage-card${isMobile ? " is-collapsible" : ""}`}>
               <button
                 type="button"

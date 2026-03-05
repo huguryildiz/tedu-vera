@@ -26,8 +26,8 @@ export default function PinRevealStep({ pin, onContinue, onBack }) {
       <div className="premium-card">
         <div className="premium-header">
           <div className="premium-icon-square" aria-hidden="true"><KeyRoundIcon /></div>
-          <div className="premium-title">Your PIN</div>
-          <div className="premium-subtitle">This PIN will be shown only once.</div>
+          <div className="premium-title">Your Access PIN</div>
+          <div className="premium-subtitle">This PIN will be shown only once. Please save it.</div>
         </div>
 
         <div className="pin-display pin-display--reveal" aria-label="One-time PIN">
@@ -45,7 +45,7 @@ export default function PinRevealStep({ pin, onContinue, onBack }) {
 
         <div className="premium-info-strip warn">
           <span className="info-strip-icon" aria-hidden="true"><InfoIcon /></span>
-          <span>Please store this PIN safely. You will need it to resume on another device.</span>
+          <span>You will need this PIN to resume your evaluation later or from another device.</span>
         </div>
 
         <button className="premium-btn-primary" onClick={onContinue}>

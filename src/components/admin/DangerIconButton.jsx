@@ -8,11 +8,12 @@ export default function DangerIconButton({
   disabled = false,
   title,
   showLabel = false,
+  danger = true,
 }) {
   return (
     <button
       type="button"
-      className={`manage-icon-btn danger${showLabel ? " with-label" : ""}`}
+      className={`manage-icon-btn${danger ? " danger" : ""}${showLabel ? " with-label" : ""}`}
       aria-label={ariaLabel}
       title={title}
       onClick={onClick}

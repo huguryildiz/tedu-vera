@@ -1,5 +1,5 @@
 -- ============================================================
--- 001_seed_dummy.sql
+-- 011_dummy_seed.sql
 -- Seed realistic dummy data for Jury Portal (run AFTER 000_bootstrap.sql)
 -- Includes:
 --   - Admin password bootstrap (12345678)
@@ -23,6 +23,7 @@ SET search_path = public, extensions;
 -- DEV RESET (safe order)
 -- ------------------------------------------------------------
 TRUNCATE TABLE
+  public.audit_logs,
   public.scores,
   public.juror_semester_auth,
   public.projects,
@@ -55,6 +56,11 @@ VALUES
 UPDATE public.semesters
 SET is_active = (name = '2025 Spring');
 
+-- normalize semester timestamps to their own timeline
+UPDATE public.semesters
+SET created_at = starts_on::timestamptz - interval '30 days',
+    updated_at = starts_on::timestamptz - interval '10 days';
+
 -- ------------------------------------------------------------
 -- 2) Jurors (18 total) - mixed Turkish + international
 --    juror_inst format: "University / Department"
@@ -82,6 +88,14 @@ SELECT * FROM (VALUES
   ('Ece Kılıç',            'Sabancı University / Data Science'),
   ('Deniz Aydın',          'Ankara University / Software Engineering')
 ) AS v(juror_name, juror_inst);
+
+-- normalize juror timestamps to seed clock
+UPDATE public.jurors
+SET created_at = (
+    (SELECT MIN(starts_on)::timestamptz FROM public.semesters)
+    - interval '40 days'
+  ) + (random() * interval '20 days'),
+    updated_at = created_at + (random() * interval '5 days');
 
 -- ------------------------------------------------------------
 -- 3) Projects (10–15 per semester)
@@ -232,6 +246,14 @@ BEGIN
   END LOOP;
 END $$;
 
+-- normalize project timestamps within semester window
+UPDATE public.projects p
+SET created_at = (s.starts_on::timestamptz - interval '14 days')
+  + (random() * interval '10 days'),
+    updated_at = p.created_at + (random() * interval '3 days')
+FROM public.semesters s
+WHERE s.id = p.semester_id;
+
 -- ------------------------------------------------------------
 -- 4) juror_semester_auth
 --    - 12–16 jurors per semester
@@ -284,6 +306,13 @@ BEGIN
   END LOOP;
 END $$;
 
+-- normalize juror-semester auth timestamps near semester start
+UPDATE public.juror_semester_auth a
+SET created_at = (s.starts_on::timestamptz - interval '7 days')
+  + (random() * interval '5 days')
+FROM public.semesters s
+WHERE s.id = a.semester_id;
+
 -- ------------------------------------------------------------
 -- 5) Scores
 --    - every assigned juror scores every project (at least 1 criterion)
@@ -308,14 +337,14 @@ DECLARE
 
   v_comment text;
   v_comments text[];
-  v_day_offset int;
-  v_submit_date date;
-  v_submit_hour int;
-  v_submit_min int;
-  v_submitted_at timestamptz;
   v_complete_jurors uuid[];
   v_complete_count int;
   v_force_complete boolean;
+
+  v_score_date date;
+  v_score_hour int;
+  v_score_min int;
+  v_updated_at timestamptz;
 BEGIN
   v_comments := ARRAY[
     'Strong implementation; consider expanding the evaluation section.',
@@ -381,21 +410,6 @@ BEGIN
           END IF;
         END IF;
 
-        -- submitted_at: pick a date within the semester, time between 13:00-16:00
-        IF NOT v_missing THEN
-          v_day_offset := floor(
-            random() * (GREATEST(0, (v_sem.ends_on - v_sem.starts_on)) + 1)
-          )::int;
-          v_submit_date := v_sem.starts_on + v_day_offset;
-          v_submit_hour := 13 + floor(random() * 4)::int; -- 13..16
-          v_submit_min := floor(random() * 60)::int;
-          IF v_submit_hour = 16 THEN
-            v_submit_min := 0;
-          END IF;
-          v_submitted_at := (v_submit_date::timestamptz)
-            + make_interval(hours => v_submit_hour, mins => v_submit_min);
-        END IF;
-
         -- optional comment (~25%)
         IF random() < 0.25 THEN
           v_comment := v_comments[1 + floor(random()*array_length(v_comments,1))::int];
@@ -403,25 +417,29 @@ BEGIN
           v_comment := NULL;
         END IF;
 
+        -- updated_at/created_at within semester date range
+        v_score_date := v_sem.starts_on
+          + floor(random() * (GREATEST(0, (v_sem.ends_on - v_sem.starts_on)) + 1))::int;
+        v_score_hour := 9 + floor(random() * 8)::int; -- 09..16
+        v_score_min := floor(random() * 60)::int;
+        IF v_score_hour = 16 THEN
+          v_score_min := 0;
+        END IF;
+        v_updated_at := (v_score_date::timestamptz)
+          + make_interval(hours => v_score_hour, mins => v_score_min);
+
         INSERT INTO public.scores
-          (semester_id, project_id, juror_id, technical, written, oral, teamwork, comment)
+          (semester_id, project_id, juror_id, technical, written, oral, teamwork, comment, created_at, updated_at)
         VALUES
-          (v_sem.id, v_proj.id, v_juror, v_tech, v_writ, v_oral, v_team, v_comment)
+          (v_sem.id, v_proj.id, v_juror, v_tech, v_writ, v_oral, v_team, v_comment, v_updated_at, v_updated_at)
         ON CONFLICT (semester_id, project_id, juror_id) DO UPDATE
           SET technical = EXCLUDED.technical,
               written   = EXCLUDED.written,
               oral      = EXCLUDED.oral,
               teamwork  = EXCLUDED.teamwork,
               comment   = EXCLUDED.comment;
-        -- triggers compute total + submitted_at
+        -- triggers compute total (updated_at stays unless score fields change)
 
-        IF NOT v_missing THEN
-          UPDATE public.scores
-          SET submitted_at = v_submitted_at
-          WHERE semester_id = v_sem.id
-            AND project_id = v_proj.id
-            AND juror_id = v_juror;
-        END IF;
       END LOOP;
     END LOOP;
   END LOOP;
@@ -430,9 +448,9 @@ END $$;
 -- ------------------------------------------------------------
 -- 6) Final submission flags (juror-level)
 --    - only set when ALL projects are fully scored
---    - final_submitted_at is always AFTER latest submitted_at
+--    - final_submitted_at is always AFTER latest updated_at
 -- ------------------------------------------------------------
-UPDATE public.juror_semester_auth
+UPDATE public.scores
 SET final_submitted_at = NULL;
 
 WITH totals AS (
@@ -450,18 +468,335 @@ per_juror AS (
         AND sc.oral      IS NOT NULL
         AND sc.teamwork  IS NOT NULL
     )::int AS completed_projects,
-    MAX(sc.submitted_at) AS max_submitted_at
+    MAX(sc.updated_at) AS max_updated_at
+  FROM public.scores sc
+  GROUP BY sc.semester_id, sc.juror_id
+)
+UPDATE public.scores s
+SET final_submitted_at = pj.max_updated_at + interval '30 minutes'
+FROM per_juror pj
+JOIN totals t ON t.semester_id = pj.semester_id
+WHERE s.semester_id = pj.semester_id
+  AND s.juror_id = pj.juror_id
+  AND pj.completed_projects = t.total_projects
+  AND pj.max_updated_at IS NOT NULL;
+
+WITH totals AS (
+  SELECT p.semester_id, COUNT(*)::int AS total_projects
+  FROM public.projects p
+  GROUP BY p.semester_id
+),
+per_juror AS (
+  SELECT
+    sc.semester_id,
+    sc.juror_id,
+    COUNT(*) FILTER (
+      WHERE sc.technical IS NOT NULL
+        AND sc.written   IS NOT NULL
+        AND sc.oral      IS NOT NULL
+        AND sc.teamwork  IS NOT NULL
+    )::int AS completed_projects,
+    MAX(sc.updated_at) AS max_updated_at
   FROM public.scores sc
   GROUP BY sc.semester_id, sc.juror_id
 )
 UPDATE public.juror_semester_auth a
-SET final_submitted_at = pj.max_submitted_at + interval '30 minutes',
-    edit_enabled = false
+SET edit_enabled = false
 FROM per_juror pj
 JOIN totals t ON t.semester_id = pj.semester_id
 WHERE a.semester_id = pj.semester_id
   AND a.juror_id = pj.juror_id
   AND pj.completed_projects = t.total_projects
-  AND pj.max_submitted_at IS NOT NULL;
+  AND pj.max_updated_at IS NOT NULL;
+
+-- ------------------------------------------------------------
+-- 6b) Audit logs (demo)
+-- ------------------------------------------------------------
+-- Admin setup events anchored to semester timelines
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  (s.starts_on::timestamptz - interval '20 days'),
+  'admin',
+  null,
+  'admin_password_change',
+  'settings',
+  null,
+  'Admin changed admin password',
+  null
+FROM public.semesters s
+ORDER BY s.starts_on
+LIMIT 1;
+
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  (s.starts_on::timestamptz - interval '19 days'),
+  'admin',
+  null,
+  'delete_password_change',
+  'settings',
+  null,
+  'Admin changed delete password',
+  null
+FROM public.semesters s
+ORDER BY s.starts_on
+LIMIT 1;
+
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  (s.starts_on::timestamptz - interval '3 days'),
+  'admin',
+  null,
+  'eval_lock_toggle',
+  'settings',
+  null,
+  'Admin turned evaluation lock OFF (active semester)',
+  jsonb_build_object('semester_id', s.id, 'semester_name', s.name, 'enabled', false)
+FROM public.semesters s
+WHERE s.is_active = true
+LIMIT 1;
+
+-- Semesters: create / update / active
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  (s.starts_on::timestamptz - interval '30 days'),
+  'admin',
+  null,
+  'semester_create',
+  'semester',
+  s.id,
+  format('Admin created semester %s', s.name),
+  jsonb_build_object('starts_on', s.starts_on, 'ends_on', s.ends_on)
+FROM public.semesters s;
+
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  (s.starts_on::timestamptz - interval '7 days'),
+  'admin',
+  null,
+  'semester_update',
+  'semester',
+  s.id,
+  format('Admin updated semester %s', s.name),
+  null
+FROM public.semesters s
+WHERE s.name = '2025 Fall'
+LIMIT 1;
+
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  (s.starts_on::timestamptz - interval '1 day'),
+  'admin',
+  null,
+  'set_active_semester',
+  'semester',
+  s.id,
+  format('Admin set active semester to %s', s.name),
+  null
+FROM public.semesters s
+WHERE s.is_active = true
+LIMIT 1;
+
+-- Jurors: create / update (timestamps from juror table)
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  j.created_at,
+  'admin',
+  null,
+  'juror_create',
+  'juror',
+  j.id,
+  format('Admin created juror %s (%s)', j.juror_name, j.juror_inst),
+  null
+FROM public.jurors j;
+
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  j.updated_at,
+  'admin',
+  null,
+  'juror_update',
+  'juror',
+  j.id,
+  format('Admin updated juror %s', j.juror_name),
+  null
+FROM public.jurors j
+WHERE j.updated_at > j.created_at
+ORDER BY j.updated_at DESC
+LIMIT 4;
+
+-- Projects: create / update (use project timestamps; sample to avoid spam)
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  p.created_at,
+  'admin',
+  null,
+  'project_create',
+  'project',
+  p.id,
+  format('Admin created project Group %s — %s', p.group_no, p.project_title),
+  jsonb_build_object('semester_id', p.semester_id, 'group_no', p.group_no)
+FROM public.projects p
+ORDER BY p.created_at
+LIMIT 12;
+
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  p.updated_at,
+  'admin',
+  null,
+  'project_update',
+  'project',
+  p.id,
+  format('Admin updated project Group %s — %s', p.group_no, p.project_title),
+  jsonb_build_object('semester_id', p.semester_id, 'group_no', p.group_no)
+FROM public.projects p
+WHERE p.updated_at > p.created_at
+ORDER BY p.updated_at DESC
+LIMIT 8;
+
+-- PIN resets — at most once per (juror_id, semester_id):
+-- juror_semester_auth has UNIQUE(juror_id, semester_id) so each pair appears at most
+-- once in the source; ORDER BY random() LIMIT 12 therefore yields no duplicate pairs.
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  (s.starts_on::timestamptz - interval '2 days') + (random() * interval '1 day'),
+  'admin',
+  null,
+  'juror_pin_reset',
+  'juror',
+  a.juror_id,
+  format(
+    'Admin reset PIN for juror %s',
+    CASE
+      WHEN trim(coalesce(j.juror_inst, '')) = '' THEN j.juror_name
+      ELSE j.juror_name || ' (' || j.juror_inst || ')'
+    END
+  ),
+  jsonb_build_object('semester_id', a.semester_id)
+FROM public.juror_semester_auth a
+JOIN public.jurors j ON j.id = a.juror_id
+JOIN public.semesters s ON s.id = a.semester_id
+ORDER BY random()
+LIMIT 12;
+
+-- Edit mode toggle (admin) during semester day
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  (s.starts_on::timestamptz + interval '2 hours') + (random() * interval '3 hours'),
+  'admin',
+  null,
+  'admin_juror_edit_toggle',
+  'juror',
+  a.juror_id,
+  format(
+    'Admin %s edit mode for Juror %s (%s)',
+    CASE WHEN x.enabled THEN 'enabled' ELSE 'disabled' END,
+    j.juror_name,
+    s.name
+  ),
+  jsonb_build_object('semester_id', a.semester_id, 'enabled', x.enabled)
+FROM public.juror_semester_auth a
+JOIN public.jurors j ON j.id = a.juror_id
+JOIN public.semesters s ON s.id = a.semester_id
+CROSS JOIN LATERAL (SELECT (random() < 0.5) AS enabled) x
+ORDER BY random()
+LIMIT 8;
+
+-- Juror events derived from scores
+-- juror_group_completed: sample from fully-scored rows (all 4 criteria NOT NULL)
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  sc.updated_at,
+  'juror',
+  sc.juror_id,
+  'juror_group_completed',
+  'project',
+  sc.project_id,
+  format('Juror %s completed evaluation for Group %s', j.juror_name, p.group_no),
+  jsonb_build_object('semester_id', sc.semester_id, 'group_no', p.group_no, 'project_title', p.project_title)
+FROM public.scores sc
+JOIN public.jurors j ON j.id = sc.juror_id
+JOIN public.projects p ON p.id = sc.project_id
+WHERE sc.technical IS NOT NULL
+  AND sc.written   IS NOT NULL
+  AND sc.oral      IS NOT NULL
+  AND sc.teamwork  IS NOT NULL
+ORDER BY random()
+LIMIT 30;
+
+-- juror_group_started: 15-row subset drawn from the completed events above.
+-- Derives actor_id, entity_id, and metadata from the already-inserted completed rows,
+-- so every started event is guaranteed to have a matching completed event, and
+-- started.created_at (= completed.created_at - 45 min) is always strictly earlier.
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  al.created_at - interval '45 minutes',
+  'juror',
+  al.actor_id,
+  'juror_group_started',
+  'project',
+  al.entity_id,
+  format('Juror %s started evaluating Group %s',
+    j.juror_name,
+    (al.metadata->>'group_no')::int),
+  al.metadata
+FROM public.audit_logs al
+JOIN public.jurors j ON j.id = al.actor_id
+WHERE al.action = 'juror_group_completed'
+ORDER BY random()
+LIMIT 15;
+
+INSERT INTO public.audit_logs
+  (created_at, actor_type, actor_id, action, entity_type, entity_id, message, metadata)
+SELECT
+  MAX(sc.final_submitted_at),
+  'juror',
+  sc.juror_id,
+  'juror_finalize_submission',
+  'semester',
+  sc.semester_id,
+  format('Juror %s finalized submission', j.juror_name),
+  jsonb_build_object('semester_name', s.name)
+FROM public.scores sc
+JOIN public.jurors j ON j.id = sc.juror_id
+JOIN public.semesters s ON s.id = sc.semester_id
+WHERE sc.final_submitted_at IS NOT NULL
+GROUP BY sc.semester_id, sc.juror_id, j.juror_name, s.name;
+
+-- ------------------------------------------------------------
+-- 7) Sanity check: v_active_scores exposes expected join data
+-- ------------------------------------------------------------
+DO $$
+DECLARE
+  v_missing int;
+BEGIN
+  SELECT COUNT(*) INTO v_missing
+  FROM public.v_active_scores
+  WHERE semester_name IS NULL
+     OR project_title IS NULL
+     OR group_students IS NULL
+     OR juror_name IS NULL
+     OR juror_inst IS NULL
+     OR group_no IS NULL;
+
+  IF v_missing > 0 THEN
+    RAISE EXCEPTION 'v_active_scores join mismatch: % rows missing metadata', v_missing;
+  END IF;
+END;
+$$;
 
 COMMIT;

@@ -3,11 +3,13 @@ import { useEffect, useRef, useState } from "react";
 export default function MinimalLoaderOverlay({
   open,
   label = "Loading",
-  minDuration = 400,
+  minDuration = 0,
+  delay = 250,
 }) {
-  const [visible, setVisible] = useState(!!open);
+  const [visible, setVisible] = useState(false);
   const shownAtRef = useRef(0);
   const hideTimerRef = useRef(null);
+  const showTimerRef = useRef(null);
 
   useEffect(() => {
     if (open) {
@@ -15,9 +17,22 @@ export default function MinimalLoaderOverlay({
         clearTimeout(hideTimerRef.current);
         hideTimerRef.current = null;
       }
-      shownAtRef.current = Date.now();
-      setVisible(true);
+      if (!visible) {
+        if (showTimerRef.current) clearTimeout(showTimerRef.current);
+        showTimerRef.current = setTimeout(() => {
+          shownAtRef.current = Date.now();
+          setVisible(true);
+          showTimerRef.current = null;
+        }, delay);
+      }
       return;
+    }
+
+    if (!open) {
+      if (showTimerRef.current) {
+        clearTimeout(showTimerRef.current);
+        showTimerRef.current = null;
+      }
     }
 
     if (!open && visible) {
@@ -32,10 +47,11 @@ export default function MinimalLoaderOverlay({
         }, wait);
       }
     }
-  }, [open, minDuration, visible]);
+  }, [open, minDuration, delay, visible]);
 
   useEffect(() => () => {
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    if (showTimerRef.current) clearTimeout(showTimerRef.current);
   }, []);
 
   if (!visible) return null;

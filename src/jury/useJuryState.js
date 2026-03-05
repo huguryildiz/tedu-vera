@@ -31,7 +31,6 @@ import {
   getActiveSemester,
   listProjects,
   upsertScore,
-  calcRowTotal,
   createOrGetJurorAndIssuePin,
   verifyJurorPin,
   getJurorEditState,
@@ -44,7 +43,7 @@ const STORAGE_KEYS = {
   jurorName: "jury.juror_name",
   jurorInst: "jury.juror_inst",
 };
-const MAX_PIN_ATTEMPTS = 5;
+const MAX_PIN_ATTEMPTS = 3;
 
 // ── Empty-state factories (project UUID keyed) ────────────────
 
@@ -102,8 +101,32 @@ export const countFilled = (scores, projects) =>
     0
   );
 
-const hasAnyCriteria = (scores, pid) =>
-  CRITERIA.some((c) => isScoreFilled(scores[pid]?.[c.id]));
+const normalizeScoreValue = (val, max) => {
+  if (val === "" || val === null || val === undefined) return null;
+  const n = parseInt(String(val), 10);
+  if (!Number.isFinite(n)) return null;
+  return Math.min(Math.max(n, 0), max);
+};
+
+const buildScoreSnapshot = (scores, comment) => {
+  const normalizedScores = {};
+  let hasAnyScores = false;
+  CRITERIA.forEach((c) => {
+    const v = normalizeScoreValue(scores?.[c.id], c.max);
+    normalizedScores[c.id] = v;
+    if (isScoreFilled(v)) hasAnyScores = true;
+  });
+  const cleanComment = String(comment ?? "");
+  const key =
+    `${CRITERIA.map((c) => (normalizedScores[c.id] ?? "")).join("|")}::${cleanComment}`;
+  return {
+    normalizedScores,
+    comment: cleanComment,
+    key,
+    hasAnyScores,
+    hasComment: cleanComment.trim() !== "",
+  };
+};
 
 // ─────────────────────────────────────────────────────────────
 // Hook
@@ -202,25 +225,21 @@ export default function useJuryState() {
       const s = pendingScoresRef.current;
       const c = pendingCommentsRef.current;
       const currentComment = String(c[pid] || "");
+      const snapshot = buildScoreSnapshot(s[pid], currentComment);
 
-      if (!hasAnyCriteria(s, pid) && currentComment === "" && !lastWrittenRef.current[pid]) {
+      if (!snapshot.hasAnyScores && !snapshot.hasComment && !lastWrittenRef.current[pid]) {
         return; // truly untouched, skip
       }
 
-      const total = calcRowTotal(s, pid);
       const last  = lastWrittenRef.current[pid];
-      if (
-        last &&
-        last.comment === currentComment &&
-        last.total === total
-      ) {
+      if (last && last.key === snapshot.key) {
         return; // no data changes
       }
 
       setSaveStatus("saving");
       try {
-        await upsertScore(sid, pid, jid, s[pid] || {}, currentComment);
-        lastWrittenRef.current[pid] = { total, comment: currentComment };
+        await upsertScore(sid, pid, jid, snapshot.normalizedScores, snapshot.comment);
+        lastWrittenRef.current[pid] = { key: snapshot.key };
         setSaveStatus("saved");
         setTimeout(() => setSaveStatus("idle"), 2000);
 
@@ -361,7 +380,7 @@ export default function useJuryState() {
         })
         .catch(() => {});
 
-      // Refresh projects to get submitted_at timestamps for DoneStep.
+      // Refresh projects to get submission timestamps for DoneStep.
       listProjects(sid, jid)
         .then((projectList) => {
           const uiProjects = projectList.map((p) => ({
@@ -369,7 +388,7 @@ export default function useJuryState() {
             group_no:       p.group_no,
             project_title:  p.project_title,
             group_students: p.group_students,
-            submitted_at:   p.submitted_at,
+            final_submitted_at: p.final_submitted_at,
           }));
           setProjects(uiProjects);
         })
@@ -389,6 +408,12 @@ export default function useJuryState() {
     const c = doneComments || comments;
     pendingScoresRef.current   = s;
     pendingCommentsRef.current = c;
+    lastWrittenRef.current     = Object.fromEntries(
+      Object.keys(s || {}).map((pid) => {
+        const snapshot = buildScoreSnapshot(s[pid], c?.[pid]);
+        return [pid, { key: snapshot.key }];
+      })
+    );
     setScores(s);
     setComments(c);
     setEditMode(true);
@@ -458,12 +483,13 @@ export default function useJuryState() {
         setLoadingState(null);
         const failedAttempts =
           typeof res?.failed_attempts === "number" ? res.failed_attempts : null;
-        if (res?.error_code === "locked") {
-          setPinErrorCode("locked");
-          setPinAttemptsLeft(0);
-          setPinLockedUntil(res?.locked_until || "");
-          setPinError("locked");
-        } else if (res?.error_code === "semester_inactive") {
+        const lockedUntil = res?.locked_until || "";
+        const lockedDate = lockedUntil ? new Date(lockedUntil) : null;
+        const isLocked =
+          res?.error_code === "locked"
+          || (lockedDate && !Number.isNaN(lockedDate.getTime()) && lockedDate > new Date())
+          || (failedAttempts !== null && failedAttempts >= MAX_PIN_ATTEMPTS);
+        if (res?.error_code === "semester_inactive") {
           setPinErrorCode("semester_inactive");
           setPinAttemptsLeft(MAX_PIN_ATTEMPTS);
           setPinError("This semester is no longer active. Please start a new evaluation.");
@@ -475,6 +501,11 @@ export default function useJuryState() {
           setPinErrorCode("no_pin");
           setPinAttemptsLeft(MAX_PIN_ATTEMPTS);
           setPinError("No PIN found for this semester. Please start a new evaluation.");
+        } else if (isLocked) {
+          setPinErrorCode("locked");
+          setPinAttemptsLeft(0);
+          setPinLockedUntil(lockedUntil);
+          setPinError("locked");
         } else {
           setPinErrorCode("invalid");
           if (failedAttempts !== null) {
@@ -490,6 +521,17 @@ export default function useJuryState() {
       if (res.juror_name) setJuryName(res.juror_name);
       if (res.juror_inst) setJuryDept(res.juror_inst);
       setJurorId(jid);
+      if (res?.pin_plain_once) {
+        setIssuedPin(res.pin_plain_once);
+        setPinError("");
+        setPinErrorCode("");
+        setPinAttemptsLeft(MAX_PIN_ATTEMPTS);
+        setPinLockedUntil("");
+        setLoadingState(null);
+        setStep("pin_reveal");
+        return;
+      }
+      setIssuedPin("");
       setPinAttemptsLeft(MAX_PIN_ATTEMPTS);
       setPinLockedUntil("");
       setLoadingState(null);
@@ -497,7 +539,7 @@ export default function useJuryState() {
         { id: semesterId, name: semesterName },
         jid,
         { name: nextName, inst: nextInst },
-        { showProgressCheck: true }
+        { showProgressCheck: true, showEmptyProgress: false }
       );
     } catch (_) {
       setLoadingState(null);
@@ -512,7 +554,7 @@ export default function useJuryState() {
   // Shared by handlePinSubmit (auto-advance) and handleSemesterSelect.
   const _loadSemester = async (semester, overrideJurorId, identityOverride, options = {}) => {
     const jid = overrideJurorId || stateRef.current.jurorId;
-    const { showProgressCheck = false } = options;
+      const { showProgressCheck = false, showEmptyProgress = false } = options;
     setLoadingState({ stage: "loading", message: "Loading projects…" });
     try {
       const projectList = await listProjects(semester.id, jid);
@@ -532,10 +574,10 @@ export default function useJuryState() {
         projectList.map((p) => [p.project_id, p.comment || ""])
       );
       const seedTouched  = makeEmptyTouched(projectList);
-      // A project is already "synced" if the juror has previously submitted all criteria
+      // A project is "synced" if all criteria are filled (independent of final submission)
       const seedSynced   = Object.fromEntries(
         projectList
-          .filter((p) => p.submitted_at !== null)
+          .filter((p) => isAllFilled(seedScores, p.project_id))
           .map((p) => [p.project_id, true])
       );
 
@@ -545,12 +587,17 @@ export default function useJuryState() {
         group_no:       p.group_no,
         project_title:  p.project_title,
         group_students: p.group_students,
-        submitted_at:   p.submitted_at,
+        final_submitted_at: p.final_submitted_at,
       }));
 
       pendingScoresRef.current   = seedScores;
       pendingCommentsRef.current = seedComments;
-      lastWrittenRef.current     = {};
+      lastWrittenRef.current     = Object.fromEntries(
+        projectList.map((p) => {
+          const snapshot = buildScoreSnapshot(seedScores[p.project_id], seedComments[p.project_id]);
+          return [p.project_id, { key: snapshot.key }];
+        })
+      );
 
       setProjects(uiProjects);
       setScores(seedScores);
@@ -565,23 +612,39 @@ export default function useJuryState() {
       setEditAllowed(canEdit);
       setEditLockActive(!!editState?.lock_active);
       const allCompleteNow = uiProjects.length > 0 && isAllComplete(seedScores, uiProjects);
+      const finalSubmittedAt = projectList.find((p) => p.final_submitted_at)?.final_submitted_at || "";
+      const isFinalSubmitted = Boolean(finalSubmittedAt);
       const progressRows = projectList
         .filter((p) => {
+          if (isFinalSubmitted) return true;
           const scores = p.scores || {};
           const hasScore = Object.values(scores).some(isScoreFilled);
           const hasComment = String(p.comment || "").trim() !== "";
-          return hasScore || hasComment || p.submitted_at;
+          return hasScore || hasComment;
         })
-        .map((p) => ({
-          projectId: p.project_id,
-          status: p.submitted_at ? "group_submitted" : "in_progress",
-          total: p.total ?? null,
-          timestamp: p.submitted_at || "",
-        }));
-      const filledCount = projectList.filter((p) => p.submitted_at).length;
+        .map((p) => {
+          const scores = p.scores || {};
+          const hasScore = Object.values(scores).some(isScoreFilled);
+          const hasComment = String(p.comment || "").trim() !== "";
+          const hasAny = hasScore || hasComment;
+          const status = isFinalSubmitted
+            ? "group_submitted"
+            : (hasAny ? "in_progress" : "not_started");
+          const timestamp = isFinalSubmitted
+            ? (p.final_submitted_at || finalSubmittedAt || "")
+            : (hasAny ? (p.updated_at || "") : "");
+          return ({
+            projectId: p.project_id,
+            status,
+            total: p.total ?? null,
+            timestamp,
+          });
+        });
+      const hasProgress = progressRows.length > 0;
+      const filledCount = projectList.filter((p) => isAllFilled(seedScores, p.project_id)).length;
       const totalCount = projectList.length;
-      const allSubmitted = totalCount > 0 && filledCount === totalCount;
-      if (allCompleteNow) {
+      const allSubmitted = isFinalSubmitted;
+      if (isFinalSubmitted) {
         setDoneScores({ ...seedScores });
         setDoneComments({ ...seedComments });
         setEditMode(false);
@@ -590,7 +653,7 @@ export default function useJuryState() {
       } else {
         setDoneScores(null);
         setDoneComments(null);
-        if (showProgressCheck) {
+        if (showProgressCheck && (hasProgress || showEmptyProgress)) {
           setProgressCheck({
             rows: progressRows,
             filledCount,
@@ -681,7 +744,12 @@ export default function useJuryState() {
   const handlePinRevealContinue = useCallback(async () => {
     if (!jurorId || !semesterId) return;
     setIssuedPin("");
-    await _loadSemester({ id: semesterId, name: semesterName }, jurorId, { name: juryName, inst: juryDept });
+      await _loadSemester(
+        { id: semesterId, name: semesterName },
+        jurorId,
+        { name: juryName, inst: juryDept },
+        { showProgressCheck: true, showEmptyProgress: true }
+      );
   }, [jurorId, semesterId, semesterName, juryName, juryDept]);
 
   const handleProgressContinue = useCallback(() => {

@@ -4,20 +4,28 @@ import { useState, useMemo, useEffect } from "react";
 import { formatTs, adminCompletionPct, cmp } from "./utils";
 import { readSection, writeSection } from "./persist";
 import { StatusBadge } from "./components";
-import { CircleCheckBigIcon, ClockIcon, UserCheckIcon, PencilIcon, ChevronDownIcon } from "../shared/Icons";
+import {
+  CircleCheckBigIcon,
+  ClockIcon,
+  UserCheckIcon,
+  PencilIcon,
+  ChevronDownIcon,
+  SearchIcon,
+  XIcon,
+} from "../shared/Icons";
 import { GroupLabel, ProjectTitle, StudentNames } from "../components/EntityMeta";
 
 // jurorStats prop: { key, name, dept, jurorId, rows, overall, latestRow }[]
 // groups prop: { id (uuid), groupNo, label }[]
 export default function JurorsTab({ jurorStats, groups = [] }) {
-  const [selectedJurorId, setSelectedJurorId] = useState(() => {
+  const [searchTerm, setSearchTerm] = useState(() => {
     const s = readSection("jurors");
-    return typeof s.selectedJurorId === "string" ? s.selectedJurorId : "";
+    return typeof s.searchTerm === "string" ? s.searchTerm : "";
   });
 
   useEffect(() => {
-    writeSection("jurors", { selectedJurorId });
-  }, [selectedJurorId]);
+    writeSection("jurors", { searchTerm });
+  }, [searchTerm]);
 
   const [expandedGroups, setExpandedGroups] = useState(new Set());
 
@@ -29,24 +37,18 @@ export default function JurorsTab({ jurorStats, groups = [] }) {
     });
   }
 
-  const jurorOptions = useMemo(() => {
-    return jurorStats
-      .slice()
-      .sort((a, b) => cmp(a.jury, b.jury))
-      .map((s) => ({
-        id: s.jurorId || s.latestRow?.jurorId || "",
-        label: `${s.jury}${s.latestRow?.juryDept ? ` (${s.latestRow.juryDept})` : ""}`,
-      }))
-      .filter((opt, idx, arr) => opt.id && arr.findIndex((o) => o.id === opt.id) === idx);
-  }, [jurorStats]);
-
+  const normalizedSearch = searchTerm.trim().toLowerCase();
   const filtered = useMemo(() => {
     let list = jurorStats.slice().sort((a, b) => cmp(a.jury, b.jury));
-    if (selectedJurorId) {
-      list = list.filter((s) => (s.jurorId || s.latestRow?.jurorId || "") === selectedJurorId);
+    if (normalizedSearch) {
+      list = list.filter((s) => {
+        const dept = s.latestRow?.juryDept || "";
+        const haystack = `${s.jury} ${dept}`.toLowerCase();
+        return haystack.includes(normalizedSearch);
+      });
     }
     return list;
-  }, [jurorStats, selectedJurorId]);
+  }, [jurorStats, normalizedSearch]);
 
   const groupById = useMemo(
     () => new Map(groups.map((g) => [g.id, g])),
@@ -57,19 +59,27 @@ export default function JurorsTab({ jurorStats, groups = [] }) {
     <div className="jurors-tab-wrap">
       {/* Search bar */}
       <div className="juror-filter-bar">
-        <select
-          className="juror-filter-select"
-          value={selectedJurorId}
-          onChange={(e) => setSelectedJurorId(e.target.value)}
-          aria-label="Filter by juror"
-        >
-          <option value="">All jurors</option>
-          {jurorOptions.map((opt) => (
-            <option key={opt.id} value={opt.id}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        <div className="juror-search-wrap">
+          <span className="juror-search-icon" aria-hidden="true"><SearchIcon /></span>
+          <input
+            className="juror-search-input"
+            type="text"
+            placeholder="Search jurors"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            aria-label="Search jurors"
+          />
+          {searchTerm && (
+            <button
+              className="juror-search-clear"
+              type="button"
+              aria-label="Clear search"
+              onClick={() => setSearchTerm("")}
+            >
+              <XIcon />
+            </button>
+          )}
+        </div>
       </div>
 
       {filtered.length === 0 && (
@@ -101,7 +111,7 @@ export default function JurorsTab({ jurorStats, groups = [] }) {
               projectName: g.title ?? "",
               status: "not_started",
               total: null,
-              timestamp: "",
+              updatedAt: "",
             };
           });
           const grpStatuses = perGroupRows.map((d) =>
@@ -148,11 +158,11 @@ export default function JurorsTab({ jurorStats, groups = [] }) {
                 </div>
 
                 <div className="juror-meta">
-                  {latestRow?.timestamp && (
+                  {latestRow?.updatedAt && (
                     <div className="juror-last-submit">
                       <span className="juror-last-submit-label">Last activity</span>
                       <span className="juror-last-submit-time">
-                        {formatTs(latestRow?.timestamp)}
+                        {formatTs(latestRow?.updatedAt)}
                       </span>
                     </div>
                   )}
@@ -217,10 +227,10 @@ export default function JurorsTab({ jurorStats, groups = [] }) {
                           </div>
                           {/* RIGHT: KPI stack */}
                           <div className="juror-row-right">
-                            {d.timestamp && (
+                            {d.updatedAt && (
                               <span className="juror-row-ts">
                                 <span className="juror-row-ts-icon" aria-hidden="true"><ClockIcon /></span>
-                                {formatTs(d.timestamp)}
+                                {formatTs(d.updatedAt)}
                               </span>
                             )}
                             <div className="juror-row-right-meta">

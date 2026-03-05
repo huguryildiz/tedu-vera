@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as XLSX from "xlsx";
-import { formatDashboardTs } from "./utils";
+import { formatDashboardTs, buildExportFilename } from "./utils";
 import { CRITERIA } from "../config";
 import { DownloadIcon } from "../shared/Icons";
 import {
@@ -64,19 +64,6 @@ function fmt2(v) {
   return Number.isFinite(v) ? Number(v.toFixed(2)) : null;
 }
 
-function buildExportFilename(label, semesterName) {
-  const today = new Date();
-  const dd = String(today.getDate()).padStart(2, "0");
-  const mm = String(today.getMonth() + 1).padStart(2, "0");
-  const yyyy = String(today.getFullYear());
-  const hh = String(today.getHours()).padStart(2, "0");
-  const min = String(today.getMinutes()).padStart(2, "0");
-  const safeSemester = String(semesterName || "Semester")
-    .trim()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-zA-Z0-9_-]/g, "");
-  return `TEDU_EE491-492_${label}_${safeSemester}_${dd}${mm}${yyyy}_${hh}${min}.xlsx`;
-}
 
 function addTableSheet(wb, name, title, headers, rows, extraSections = []) {
   const aoa = [
@@ -157,17 +144,7 @@ export default function AnalysisTab({ dashboardStats, submittedData, lastRefresh
 
     let done = false;
     const originalTitle = document.title;
-    const today = new Date();
-    const dd = String(today.getDate()).padStart(2, "0");
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const yyyy = String(today.getFullYear());
-    const hh = String(today.getHours()).padStart(2, "0");
-    const min = String(today.getMinutes()).padStart(2, "0");
-    const safeSemester = String(semesterName || "Semester")
-      .trim()
-      .replace(/\s+/g, "_")
-      .replace(/[^a-zA-Z0-9_-]/g, "");
-    document.title = `TEDU_EE491-492_Jury_Report_${safeSemester}_${dd}${mm}${yyyy}_${hh}${min}.pdf`;
+    document.title = buildExportFilename("report", semesterName, "pdf");
 
     const restore = () => {
       if (done) return;
@@ -430,29 +407,7 @@ export default function AnalysisTab({ dashboardStats, submittedData, lastRefresh
       datasets.forEach((ds) => {
         addTableSheet(wb, ds.sheet, ds.title, ds.headers, ds.rows, ds.extra);
       });
-      XLSX.writeFile(wb, buildExportFilename("Analysis_All", semesterName));
-    } finally {
-      setExportingExcel(false);
-    }
-  }
-
-  function exportExcelSingle(kind) {
-    if (exportingExcel) return;
-    setExportingExcel(true);
-    try {
-      const map = {
-        outcome: buildOutcomeByGroupDataset(),
-        programme: buildProgrammeAveragesDataset(),
-        competency: buildCompetencyProfilesDataset(),
-        heatmap: buildJurorConsistencyDataset(),
-        boxplot: buildCriterionBoxplotDataset(),
-        rubric: buildRubricAchievementDataset(),
-      };
-      const ds = map[kind];
-      if (!ds) return;
-      const wb = XLSX.utils.book_new();
-      addTableSheet(wb, ds.sheet, ds.title, ds.headers, ds.rows, ds.extra);
-      XLSX.writeFile(wb, buildExportFilename(ds.sheet.replace(/\s+/g, "_"), semesterName));
+      XLSX.writeFile(wb, buildExportFilename("analysis", semesterName));
     } finally {
       setExportingExcel(false);
     }
@@ -539,17 +494,6 @@ export default function AnalysisTab({ dashboardStats, submittedData, lastRefresh
         <div className="dashboard-section-label" lang="en">Outcome Distribution</div>
         <div className="dashboard-grid dashboard-row" data-row="1">
           <div className="chart-span-2 chart-card dashboard-card" id="chart-1">
-            <div className="chart-title-actions">
-              <button
-                className="chart-export-btn"
-                type="button"
-                onClick={() => exportExcelSingle("outcome")}
-                disabled={exportingExcel}
-              >
-                <DownloadIcon />
-                Export Excel
-              </button>
-            </div>
             <OutcomeByGroupChart stats={dashboardStats} />
           </div>
         </div>
@@ -558,31 +502,9 @@ export default function AnalysisTab({ dashboardStats, submittedData, lastRefresh
         <div className="dashboard-section-label" lang="en">Programme Overview</div>
         <div className="dashboard-grid dashboard-row" data-row="2">
           <div className="chart-card dashboard-card" id="chart-2">
-            <div className="chart-title-actions">
-              <button
-                className="chart-export-btn"
-                type="button"
-                onClick={() => exportExcelSingle("programme")}
-                disabled={exportingExcel}
-              >
-                <DownloadIcon />
-                Export Excel
-              </button>
-            </div>
             <OutcomeOverviewChart data={submittedData} />
           </div>
           <div className="chart-card dashboard-card" id="chart-3">
-            <div className="chart-title-actions">
-              <button
-                className="chart-export-btn"
-                type="button"
-                onClick={() => exportExcelSingle("competency")}
-                disabled={exportingExcel}
-              >
-                <DownloadIcon />
-                Export Excel
-              </button>
-            </div>
             <CompetencyRadarChart stats={dashboardStats} />
           </div>
         </div>
@@ -591,17 +513,6 @@ export default function AnalysisTab({ dashboardStats, submittedData, lastRefresh
         <div className="dashboard-section-label" lang="en">Juror Consistency</div>
         <div className="dashboard-grid dashboard-row" data-row="3">
           <div className="chart-span-2 chart-card dashboard-card" id="chart-4">
-            <div className="chart-title-actions">
-              <button
-                className="chart-export-btn"
-                type="button"
-                onClick={() => exportExcelSingle("heatmap")}
-                disabled={exportingExcel}
-              >
-                <DownloadIcon />
-                Export Excel
-              </button>
-            </div>
             <JurorConsistencyHeatmap stats={dashboardStats} data={submittedData} />
           </div>
         </div>
@@ -610,31 +521,9 @@ export default function AnalysisTab({ dashboardStats, submittedData, lastRefresh
         <div className="dashboard-section-label" lang="en">Criterion Analysis</div>
         <div className="dashboard-grid dashboard-row" data-row="4">
           <div className="chart-card dashboard-card" id="chart-5">
-            <div className="chart-title-actions">
-              <button
-                className="chart-export-btn"
-                type="button"
-                onClick={() => exportExcelSingle("boxplot")}
-                disabled={exportingExcel}
-              >
-                <DownloadIcon />
-                Export Excel
-              </button>
-            </div>
             <CriterionBoxPlotChart data={submittedData} />
           </div>
           <div className="chart-card dashboard-card" id="chart-6">
-            <div className="chart-title-actions">
-              <button
-                className="chart-export-btn"
-                type="button"
-                onClick={() => exportExcelSingle("rubric")}
-                disabled={exportingExcel}
-              >
-                <DownloadIcon />
-                Export Excel
-              </button>
-            </div>
             <RubricAchievementChart data={submittedData} />
           </div>
         </div>

@@ -92,6 +92,23 @@
   align-items: center;
   gap: 4px;
 }
+.matrix-scroll-top {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 12px;
+  max-width: 100%;
+  margin: 8px 0 6px;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.matrix-scroll-top-inner {
+  height: 1px;
+}
+.matrix-scroll-top::-webkit-scrollbar { height: 10px; }
+.matrix-scroll-top::-webkit-scrollbar-track { background: transparent; }
+.matrix-scroll-top::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
 .matrix-scroll-wrap {
   border-radius: var(--surface-radius);
   border: 1px solid var(--surface-border);

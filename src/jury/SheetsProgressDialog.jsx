@@ -6,7 +6,7 @@
 // Shows how many groups have data in the sheet and lets the
 // juror decide whether to:
 //   • Continue  — load sheet data into the form
-//   • Start Fresh — ignore sheet data, start with empty form
+//   • Start Evaluation — ignore sheet data, start with empty form
 //
 // Props:
 //   progress  { rows, filledCount, totalCount, allSubmitted, editAllowed }
@@ -26,13 +26,11 @@ import {
   PencilIcon,
   ClockIcon,
   InfoIcon,
-  BadgeInfoIcon,
   CircleIcon,
-  FolderKanbanIcon,
-  UsersRoundIcon,
 } from "../shared/Icons";
 import MinimalLoaderOverlay from "../shared/MinimalLoaderOverlay";
 import { formatTs as formatShortTs } from "../admin/utils";
+import { GroupLabel, ProjectTitle, StudentNames } from "../components/EntityMeta";
 
 // Status label + colour for each row returned by myscores.
 function rowStatusChip(status) {
@@ -84,16 +82,16 @@ export default function SheetsProgressDialog({ progress, projects, onConfirm, on
             <div className="spd-title" title={allSubmitted
               ? "All evaluations submitted"
               : hasData
-              ? "Saved progress found"
-              : "No saved data found"}>
+              ? "Previous progress found"
+              : "No previous evaluation found"}>
               {allSubmitted
                 ? "All evaluations submitted"
                 : hasData
-                ? "Saved progress found"
-                : "No saved data found"}
+                ? "Previous progress found"
+                : "No previous evaluation found"}
             </div>
-            <div className="spd-sub" title={`${filledCount} / ${totalCount} groups completed on server`}>
-              {filledCount} / {totalCount} groups completed on server
+            <div className="spd-sub" title={`${filledCount} / ${totalCount} groups completed`}>
+              {filledCount} / {totalCount} groups completed
             </div>
             </div>
           </div>
@@ -143,11 +141,8 @@ export default function SheetsProgressDialog({ progress, projects, onConfirm, on
                       style={{ cursor: hasDetails ? "pointer" : "default" }}
                     >
                       <span className="spd-row-header-line">
-                        <span className="spd-row-icon" aria-hidden="true">
-                          <FolderKanbanIcon />
-                        </span>
                         <span className="spd-row-name">
-                          <span className="spd-row-name-text swipe-x" title={name}>{name}</span>
+                          <GroupLabel text={name} />
                           {hasDetails && (
                             <span className={`group-accordion-chevron${isOpen ? " open" : ""}`} aria-hidden="true">
                               <ChevronDownIcon />
@@ -176,16 +171,12 @@ export default function SheetsProgressDialog({ progress, projects, onConfirm, on
                       <div className="group-accordion-panel-inner spd-row-details">
                         {p.project_title && (
                           <div className="spd-detail">
-                            <span className="spd-detail-icon" aria-hidden="true"><BadgeInfoIcon /></span>
-                            <span className="spd-detail-text swipe-x">{p.project_title}</span>
+                            <ProjectTitle text={p.project_title} />
                           </div>
                         )}
                         {students.length > 0 && (
                           <div className="spd-detail">
-                            <span className="spd-detail-icon" aria-hidden="true">
-                              <UsersRoundIcon />
-                            </span>
-                            <span className="spd-detail-text swipe-x">{students.join(" · ")}</span>
+                            <StudentNames names={students} />
                           </div>
                         )}
                       </div>
@@ -199,7 +190,7 @@ export default function SheetsProgressDialog({ progress, projects, onConfirm, on
               <span className="info-strip-icon" aria-hidden="true">
                 <InfoIcon />
               </span>
-              <span>No evaluations were found on the server for your account. You can start a fresh evaluation below.</span>
+              <span>No saved evaluations were found. You can start a new evaluation below.</span>
             </div>
           )}
         </div>
@@ -219,7 +210,7 @@ export default function SheetsProgressDialog({ progress, projects, onConfirm, on
             )}
             {allSubmitted
               ? (editAllowed ? "Edit My Scores" : "Done")
-              : hasData ? "Resume Editing" : "Start Fresh"}
+              : hasData ? "Resume Evaluation" : " Start Evaluation"}
           </button>
         </div>
 

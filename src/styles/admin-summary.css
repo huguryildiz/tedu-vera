@@ -158,6 +158,9 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  max-width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 .group-card-desc-icon svg { width: 14px; height: 14px; color: #94a3b8; }
 .group-card-desc-text { min-width: 0; }
@@ -192,6 +195,9 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  max-width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 .group-card-students-icon svg { width: 14px; height: 14px; color: #94a3b8; }
 .group-card-desc::-webkit-scrollbar,
@@ -353,4 +359,3 @@
     filter: drop-shadow(0 0 4px rgba(74,222,128,0.25));
   }
 }
-

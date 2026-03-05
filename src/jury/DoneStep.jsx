@@ -16,7 +16,7 @@ function groupTotal(scores, pid) {
 }
 
 function groupTimestamp(project) {
-  const ts = project?.submitted_at || "";
+  const ts = project?.final_submitted_at || "";
   if (!ts) return "—";
   return formatShortTs(ts);
 }
@@ -127,7 +127,7 @@ export default function DoneStep({
 
         <div className="done-actions">
           {onEditScores && (
-            <button className="premium-btn-secondary" onClick={onEditScores} type="button">
+            <button className="premium-btn-secondary done-edit-glow" onClick={onEditScores} type="button">
               <PencilIcon />
               Edit My Scores
             </button>
