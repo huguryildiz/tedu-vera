@@ -1,7 +1,7 @@
 /* =============================================================
    jury.css — Jury evaluation flow: info step, PIN step,
    eval step{
-  min-height: 100vh;
+  min-height: 100dvh;
   background: transparent;
   display: flex;
   flex-direction: column;
@@ -272,9 +272,9 @@
 
 /* ── Eval step — sticky combined header ─────────────────────── */
 .eval-screen {
-  min-height: 100vh;
   min-height: 100dvh;
-  width: 100vw;
+  width: 100%;
+  max-width: 100%;
   background: linear-gradient(135deg, var(--navy-800) 0%, var(--navy-900) 100%);
   display: flex;
   align-items: stretch;
@@ -284,10 +284,12 @@
   padding: var(--screen-pad);
   padding-top: calc(var(--screen-pad) + var(--safe-top));
   padding-right: calc(var(--screen-pad) + var(--safe-right));
-  padding-bottom: calc(var(--screen-pad) + var(--safe-bottom));
+  padding-bottom: calc(var(--screen-pad) + env(safe-area-inset-bottom));
   padding-left: calc(var(--screen-pad) + var(--safe-left));
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .eval-card {
   width: min(820px, 96%);
