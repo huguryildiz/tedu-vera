@@ -21,9 +21,11 @@ import {
   adminGetSettings,
   adminListAuditLogs,
   adminSetSetting,
+  adminFullExport,
+  adminFullImport,
 } from "../shared/api";
 import { supabase } from "../lib/supabaseClient";
-import { ChevronDownIcon, DownloadIcon, HistoryIcon } from "../shared/Icons";
+import { ChevronDownIcon, DatabaseIcon, DownloadIcon, HistoryIcon, UploadIcon } from "../shared/Icons";
 import { exportXLSX, buildExportFilename } from "./utils";
 import ManageSemesterPanel from "./ManageSemesterPanel";
 import ManageProjectsPanel from "./ManageProjectsPanel";
@@ -36,35 +38,6 @@ const SETTINGS_KEYS = {
   evalLock: "eval_lock_active_semester",
 };
 
-const AUDIT_ACTOR_OPTIONS = [
-  { value: "admin", label: "Admin" },
-  { value: "juror", label: "Juror" },
-];
-
-const AUDIT_ACTION_OPTIONS = [
-  { value: "admin_password_change", label: "Admin password change" },
-  { value: "delete_password_change", label: "Delete password change" },
-  { value: "eval_lock_toggle", label: "Eval lock toggled" },
-  { value: "semester_create", label: "Semester created" },
-  { value: "semester_update", label: "Semester updated" },
-  { value: "semester_delete", label: "Semester deleted" },
-  { value: "set_active_semester", label: "Set active semester" },
-  { value: "juror_create", label: "Juror created" },
-  { value: "juror_update", label: "Juror updated" },
-  { value: "juror_delete", label: "Juror deleted" },
-  { value: "juror_pin_reset", label: "Juror PIN reset" },
-  { value: "juror_pin_locked", label: "Juror PIN locked" },
-  { value: "project_create", label: "Project created" },
-  { value: "project_update", label: "Project updated" },
-  { value: "project_delete", label: "Project deleted" },
-  { value: "juror_group_started", label: "Juror group started" },
-  { value: "juror_group_completed", label: "Juror group completed" },
-  { value: "juror_all_completed", label: "Juror all completed" },
-  { value: "juror_finalize_submission", label: "Juror finalized submission" },
-  { value: "admin_juror_edit_toggle", label: "Admin juror edit toggle" },
-];
-
-
 const defaultSettings = {
   evalLockActive: false,
 };
@@ -72,8 +45,6 @@ const defaultSettings = {
 const defaultAuditFilters = {
   startDate: "",
   endDate: "",
-  actorTypes: [],
-  actions: [],
 };
 
 const formatAuditTimestamp = (value) => {
@@ -154,8 +125,8 @@ const buildAuditParams = (filters) => {
   return {
     startAt: startAt ? startAt.toISOString() : null,
     endAt: endAt ? endAt.toISOString() : null,
-    actorTypes: filters.actorTypes?.length ? filters.actorTypes : null,
-    actions: filters.actions?.length ? filters.actions : null,
+    actorTypes: null,
+    actions: null,
     limit: 120,
   };
 };
@@ -188,6 +159,7 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
     security: true,
     audit: true,
     export: true,
+    dbbackup: true,
   });
 
   const [semesterList, setSemesterList] = useState([]);
@@ -209,6 +181,13 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
   const auditTimerRef = useRef(null);  // debounce for loadAuditLogs refetch
   const adminSecurityRef = useRef(null);
   const auditCardRef = useRef(null);
+  const importFileRef = useRef(null);
+
+  const [dbBackupMode, setDbBackupMode] = useState(null); // null | 'export' | 'import'
+  const [dbBackupPassword, setDbBackupPassword] = useState("");
+  const [dbImportData, setDbImportData] = useState(null);
+  const [dbBackupLoading, setDbBackupLoading] = useState(false);
+  const [dbBackupError, setDbBackupError] = useState("");
 
   useEffect(() => {
     if (!message && !error) return;
@@ -875,6 +854,80 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
     setMessage(`Deleted ${label}.`);
   };
 
+  const handleDbExportStart = () => {
+    setDbBackupMode("export");
+    setDbBackupPassword("");
+    setDbBackupError("");
+    setDbImportData(null);
+  };
+
+  const handleDbImportFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        setDbImportData(parsed);
+        setDbBackupMode("import");
+        setDbBackupPassword("");
+        setDbBackupError("");
+      } catch {
+        setDbBackupError("Invalid backup file. Could not parse JSON.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  const mapDbBackupError = (e) => {
+    const msg = String(e?.message || "");
+    if (msg.includes("backup_password_missing")) return "Backup password is not configured. Set it in Admin Security.";
+    if (msg.includes("incorrect_backup_password")) return "Incorrect backup password.";
+    if (msg.includes("unauthorized")) return "Incorrect admin password.";
+    return null;
+  };
+
+  const handleDbExportConfirm = async () => {
+    if (!dbBackupPassword || !adminPass) return;
+    setDbBackupLoading(true);
+    setDbBackupError("");
+    try {
+      const data = await adminFullExport(dbBackupPassword, adminPass);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = buildExportFilename("backup", activeSemester?.name, "json");
+      a.click();
+      URL.revokeObjectURL(url);
+      setDbBackupMode(null);
+      setDbBackupPassword("");
+      setMessage("Backup downloaded successfully.");
+    } catch (e) {
+      setDbBackupError(mapDbBackupError(e) || "Export failed. Please try again.");
+    } finally {
+      setDbBackupLoading(false);
+    }
+  };
+
+  const handleDbImportConfirm = async () => {
+    if (!dbImportData || !dbBackupPassword || !adminPass) return;
+    setDbBackupLoading(true);
+    setDbBackupError("");
+    try {
+      await adminFullImport(dbImportData, dbBackupPassword, adminPass);
+      setDbBackupMode(null);
+      setDbBackupPassword("");
+      setDbImportData(null);
+      setMessage("Database restored successfully.");
+    } catch (e) {
+      setDbBackupError(mapDbBackupError(e) || "Import failed. Please try again.");
+    } finally {
+      setDbBackupLoading(false);
+    }
+  };
+
   const handleExportProjects = async () => {
     if (!projects.length) return;
     const XLSX = await import("xlsx");
@@ -1095,64 +1148,16 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
                         />
                       </div>
                       <div className="manage-field">
-                        <label className="manage-label" htmlFor="auditActorType">Actor</label>
-                        <select
-                          id="auditActorType"
-                          className="manage-select"
-                          multiple
-                          size={Math.max(1, AUDIT_ACTOR_OPTIONS.length)}
-                          value={auditFilters.actorTypes}
-                          onChange={(e) =>
-                            setAuditFilters((prev) => ({
-                              ...prev,
-                              actorTypes: Array.from(e.target.selectedOptions).map((opt) => opt.value),
-                            }))
-                          }
-                        >
-                          {AUDIT_ACTOR_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="manage-field">
-                        <label className="manage-label" htmlFor="auditAction">Action</label>
-                        <select
-                          id="auditAction"
-                          className="manage-select"
-                          multiple
-                          value={auditFilters.actions}
-                          onChange={(e) =>
-                            setAuditFilters((prev) => ({
-                              ...prev,
-                              actions: Array.from(e.target.selectedOptions).map((opt) => opt.value),
-                            }))
-                          }
-                        >
-                          {AUDIT_ACTION_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="manage-field">
                         <label className="manage-label" htmlFor="auditSearch">Search</label>
                         <input
                           id="auditSearch"
                           type="text"
                           className="manage-input"
-                          placeholder="Search message, actor, action, or entity"
+                          placeholder="Search message or entity"
                           value={auditSearch}
                           onChange={(e) => setAuditSearch(e.target.value)}
                         />
                       </div>
-                    </div>
-
-                    <div className="manage-card-actions manage-audit-actions">
-                      <button className="manage-btn" type="button" onClick={handleAuditRefresh}>
-                        Refresh
-                      </button>
-                      <button className="manage-btn ghost" type="button" onClick={handleAuditReset}>
-                        Reset filters
-                      </button>
                     </div>
 
                     {auditError && <div className="manage-hint manage-hint-error">{auditError}</div>}
@@ -1161,7 +1166,7 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
 
                   <div className="manage-audit-scroll" role="region" aria-label="Audit log list">
                     {!auditLoading && visibleAuditLogs.length === 0 && (
-                      <div className="manage-empty">No audit entries found.</div>
+                      <div className="manage-empty manage-empty-subtle">No audit entries found.</div>
                     )}
 
                     {visibleAuditLogs.length > 0 && (
@@ -1208,6 +1213,101 @@ export default function ManagePage({ adminPass, onAdminPasswordChange }) {
                       <DownloadIcon /> Export Projects
                     </button>
                   </div>
+                </div>
+              )}
+            </div>
+
+            <div className={`manage-card${isMobile ? " is-collapsible" : ""}`}>
+              <button
+                type="button"
+                className="manage-card-header"
+                onClick={() => togglePanel("dbbackup")}
+                aria-expanded={openPanels.dbbackup}
+              >
+                <div className="manage-card-title">
+                  <span className="manage-card-icon" aria-hidden="true"><DatabaseIcon /></span>
+                  Database Backup
+                </div>
+                {isMobile && <ChevronDownIcon className={`manage-chevron${openPanels.dbbackup ? " open" : ""}`} />}
+              </button>
+
+              {(!isMobile || openPanels.dbbackup) && (
+                <div className="manage-card-body">
+                  <div className="manage-card-desc">
+                    Export or restore the full database. Requires backup password set in Admin Security.
+                  </div>
+
+                  <input
+                    ref={importFileRef}
+                    type="file"
+                    accept=".json"
+                    style={{ display: "none" }}
+                    onChange={handleDbImportFileSelect}
+                  />
+
+                  {!dbBackupMode && (
+                    <div className="manage-export-actions">
+                      <button className="manage-btn" type="button" onClick={handleDbExportStart}>
+                        <DownloadIcon /> Export Database
+                      </button>
+                      <button className="manage-btn" type="button" onClick={() => importFileRef.current?.click()}>
+                        <UploadIcon /> Import / Restore
+                      </button>
+                    </div>
+                  )}
+
+                  {dbBackupMode && (
+                    <div className="manage-security-stack" style={{ marginTop: "0.75rem" }}>
+                      <div className="manage-mini-card">
+                        <div className="manage-mini-card-title">
+                          {dbBackupMode === "export" ? "Confirm Export" : "Confirm Restore"}
+                        </div>
+                        <div className="manage-mini-card-body">
+                          {dbBackupMode === "import" && (
+                            <div className="manage-hint" style={{ marginBottom: "0.5rem" }}>
+                              This will overwrite existing data with the backup. This action cannot be undone.
+                            </div>
+                          )}
+                          <div className="manage-field">
+                            <label className="manage-label">Backup Password</label>
+                            <input
+                              type="password"
+                              className="manage-input"
+                              value={dbBackupPassword}
+                              onChange={(e) => { setDbBackupPassword(e.target.value); setDbBackupError(""); }}
+                              disabled={dbBackupLoading}
+                              autoFocus
+                            />
+                          </div>
+                          {dbBackupError && (
+                            <div className="manage-alerts">
+                              <span className="manage-alert error">{dbBackupError}</span>
+                            </div>
+                          )}
+                          <div className="manage-card-actions">
+                            <button
+                              className="manage-btn"
+                              type="button"
+                              disabled={dbBackupLoading}
+                              onClick={() => { setDbBackupMode(null); setDbBackupPassword(""); setDbImportData(null); }}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              className="manage-btn primary"
+                              type="button"
+                              disabled={dbBackupLoading || !dbBackupPassword}
+                              onClick={dbBackupMode === "export" ? handleDbExportConfirm : handleDbImportConfirm}
+                            >
+                              {dbBackupLoading
+                                ? (dbBackupMode === "export" ? "Exporting…" : "Restoring…")
+                                : (dbBackupMode === "export" ? "Download Backup" : "Restore Database")}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -894,6 +894,289 @@ BEGIN
 END;
 $$;
 
+-- ── Backup Password ──────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION public._assert_backup_password(p_password text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+DECLARE
+  v_hash text;
+BEGIN
+  SELECT value INTO v_hash
+  FROM settings
+  WHERE key = 'backup_password_hash';
+
+  IF v_hash IS NULL THEN
+    RAISE EXCEPTION 'backup_password_missing' USING ERRCODE = 'P0401';
+  END IF;
+
+  IF crypt(p_password, v_hash) <> v_hash THEN
+    RAISE EXCEPTION 'incorrect_backup_password' USING ERRCODE = 'P0401';
+  END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.rpc_admin_change_backup_password(
+  p_current_password text,
+  p_new_password     text,
+  p_admin_password   text
+)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+BEGIN
+  IF NOT public._verify_admin_password(p_admin_password) THEN
+    RAISE EXCEPTION 'unauthorized' USING ERRCODE = 'P0401';
+  END IF;
+
+  PERFORM public._assert_backup_password(p_current_password);
+
+  INSERT INTO settings (key, value)
+  VALUES ('backup_password_hash', crypt(p_new_password, gen_salt('bf')))
+  ON CONFLICT (key) DO UPDATE
+    SET value = EXCLUDED.value,
+        updated_at = now();
+
+  PERFORM public._audit_log(
+    'admin',
+    null::uuid,
+    'backup_password_change',
+    'settings',
+    null::uuid,
+    'Admin changed backup password',
+    null
+  );
+
+  RETURN true;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.rpc_admin_full_export(
+  p_backup_password text,
+  p_admin_password  text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+BEGIN
+  IF NOT public._verify_admin_password(p_admin_password) THEN
+    RAISE EXCEPTION 'unauthorized' USING ERRCODE = 'P0401';
+  END IF;
+
+  PERFORM public._assert_backup_password(p_backup_password);
+
+  RETURN jsonb_build_object(
+    'exported_at',     now(),
+    'schema_version',  1,
+    'semesters',       COALESCE((SELECT jsonb_agg(row_to_json(s)) FROM semesters s),           '[]'::jsonb),
+    'jurors',          COALESCE((SELECT jsonb_agg(row_to_json(j)) FROM jurors j),              '[]'::jsonb),
+    'projects',        COALESCE((SELECT jsonb_agg(row_to_json(p)) FROM projects p),            '[]'::jsonb),
+    'scores',          COALESCE((SELECT jsonb_agg(row_to_json(sc)) FROM scores sc),            '[]'::jsonb),
+    'juror_semester_auth', COALESCE((SELECT jsonb_agg(row_to_json(a)) FROM juror_semester_auth a), '[]'::jsonb)
+  );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.rpc_admin_full_import(
+  p_backup_password text,
+  p_admin_password  text,
+  p_data            jsonb
+)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+DECLARE
+  r jsonb;
+BEGIN
+  IF NOT public._verify_admin_password(p_admin_password) THEN
+    RAISE EXCEPTION 'unauthorized' USING ERRCODE = 'P0401';
+  END IF;
+
+  PERFORM public._assert_backup_password(p_backup_password);
+
+  -- 1. Semesters (no FK deps)
+  FOR r IN SELECT * FROM jsonb_array_elements(COALESCE(p_data->'semesters', '[]'::jsonb)) LOOP
+    INSERT INTO semesters (id, name, is_active, starts_on, ends_on, created_at, updated_at)
+    VALUES (
+      (r->>'id')::uuid,
+      r->>'name',
+      COALESCE((r->>'is_active')::boolean, false),
+      (r->>'starts_on')::date,
+      (r->>'ends_on')::date,
+      COALESCE((r->>'created_at')::timestamptz, now()),
+      COALESCE((r->>'updated_at')::timestamptz, now())
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      name       = EXCLUDED.name,
+      is_active  = EXCLUDED.is_active,
+      starts_on  = EXCLUDED.starts_on,
+      ends_on    = EXCLUDED.ends_on,
+      updated_at = EXCLUDED.updated_at;
+  END LOOP;
+
+  -- 2. Jurors (no FK deps)
+  FOR r IN SELECT * FROM jsonb_array_elements(COALESCE(p_data->'jurors', '[]'::jsonb)) LOOP
+    INSERT INTO jurors (id, juror_name, juror_inst, created_at, updated_at)
+    VALUES (
+      (r->>'id')::uuid,
+      r->>'juror_name',
+      r->>'juror_inst',
+      COALESCE((r->>'created_at')::timestamptz, now()),
+      COALESCE((r->>'updated_at')::timestamptz, now())
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      juror_name = EXCLUDED.juror_name,
+      juror_inst = EXCLUDED.juror_inst,
+      updated_at = EXCLUDED.updated_at;
+  END LOOP;
+
+  -- 3. Juror semester auth (deps: jurors, semesters)
+  FOR r IN SELECT * FROM jsonb_array_elements(COALESCE(p_data->'juror_semester_auth', '[]'::jsonb)) LOOP
+    INSERT INTO juror_semester_auth (
+      id, juror_id, semester_id, pin_hash, pin_reveal_pending, pin_plain_once,
+      created_at, failed_attempts, locked_until, last_seen_at, edit_enabled
+    )
+    VALUES (
+      (r->>'id')::uuid,
+      (r->>'juror_id')::uuid,
+      (r->>'semester_id')::uuid,
+      r->>'pin_hash',
+      COALESCE((r->>'pin_reveal_pending')::boolean, false),
+      r->>'pin_plain_once',
+      COALESCE((r->>'created_at')::timestamptz, now()),
+      COALESCE((r->>'failed_attempts')::integer, 0),
+      (r->>'locked_until')::timestamptz,
+      (r->>'last_seen_at')::timestamptz,
+      COALESCE((r->>'edit_enabled')::boolean, false)
+    )
+    ON CONFLICT (juror_id, semester_id) DO UPDATE SET
+      pin_hash           = EXCLUDED.pin_hash,
+      pin_reveal_pending = EXCLUDED.pin_reveal_pending,
+      pin_plain_once     = EXCLUDED.pin_plain_once,
+      failed_attempts    = EXCLUDED.failed_attempts,
+      locked_until       = EXCLUDED.locked_until,
+      last_seen_at       = EXCLUDED.last_seen_at,
+      edit_enabled       = EXCLUDED.edit_enabled;
+  END LOOP;
+
+  -- 4. Projects (deps: semesters)
+  FOR r IN SELECT * FROM jsonb_array_elements(COALESCE(p_data->'projects', '[]'::jsonb)) LOOP
+    INSERT INTO projects (id, semester_id, group_no, project_title, group_students, created_at, updated_at)
+    VALUES (
+      (r->>'id')::uuid,
+      (r->>'semester_id')::uuid,
+      (r->>'group_no')::integer,
+      r->>'project_title',
+      COALESCE(r->>'group_students', ''),
+      COALESCE((r->>'created_at')::timestamptz, now()),
+      COALESCE((r->>'updated_at')::timestamptz, now())
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      semester_id    = EXCLUDED.semester_id,
+      group_no       = EXCLUDED.group_no,
+      project_title  = EXCLUDED.project_title,
+      group_students = EXCLUDED.group_students,
+      updated_at     = EXCLUDED.updated_at;
+  END LOOP;
+
+  -- 5. Scores (deps: jurors, projects, semesters)
+  FOR r IN SELECT * FROM jsonb_array_elements(COALESCE(p_data->'scores', '[]'::jsonb)) LOOP
+    INSERT INTO scores (
+      id, semester_id, project_id, juror_id,
+      technical, written, oral, teamwork, total, comment,
+      final_submitted_at, created_at, updated_at
+    )
+    VALUES (
+      (r->>'id')::uuid,
+      (r->>'semester_id')::uuid,
+      (r->>'project_id')::uuid,
+      (r->>'juror_id')::uuid,
+      (r->>'technical')::integer,
+      (r->>'written')::integer,
+      (r->>'oral')::integer,
+      (r->>'teamwork')::integer,
+      (r->>'total')::integer,
+      r->>'comment',
+      (r->>'final_submitted_at')::timestamptz,
+      COALESCE((r->>'created_at')::timestamptz, now()),
+      COALESCE((r->>'updated_at')::timestamptz, now())
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      technical          = EXCLUDED.technical,
+      written            = EXCLUDED.written,
+      oral               = EXCLUDED.oral,
+      teamwork           = EXCLUDED.teamwork,
+      total              = EXCLUDED.total,
+      comment            = EXCLUDED.comment,
+      final_submitted_at = EXCLUDED.final_submitted_at,
+      updated_at         = EXCLUDED.updated_at;
+  END LOOP;
+
+  PERFORM public._audit_log(
+    'admin',
+    null::uuid,
+    'db_import',
+    'settings',
+    null::uuid,
+    'Admin restored database from backup',
+    null
+  );
+
+  RETURN 'ok';
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.rpc_admin_bootstrap_backup_password(
+  p_new_password   text,
+  p_admin_password text
+)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+DECLARE
+  v_hash text;
+BEGIN
+  IF NOT public._verify_admin_password(p_admin_password) THEN
+    RAISE EXCEPTION 'unauthorized' USING ERRCODE = 'P0401';
+  END IF;
+
+  SELECT value INTO v_hash FROM settings WHERE key = 'backup_password_hash';
+  IF v_hash IS NOT NULL THEN
+    RAISE EXCEPTION 'already_initialized';
+  END IF;
+
+  INSERT INTO settings (key, value)
+  VALUES ('backup_password_hash', crypt(p_new_password, gen_salt('bf')))
+  ON CONFLICT (key) DO UPDATE
+    SET value = EXCLUDED.value,
+        updated_at = now();
+
+  PERFORM public._audit_log(
+    'admin', null::uuid, 'backup_password_change', 'settings', null::uuid,
+    'Admin initialized backup password', null
+  );
+
+  RETURN true;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public._assert_backup_password(text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.rpc_admin_bootstrap_backup_password(text, text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.rpc_admin_change_backup_password(text, text, text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.rpc_admin_full_export(text, text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.rpc_admin_full_import(text, text, jsonb) TO anon, authenticated;
+
 DROP FUNCTION IF EXISTS public.rpc_admin_list_audit_logs(text, timestamptz, timestamptz, text, text, integer);
 CREATE OR REPLACE FUNCTION public.rpc_admin_list_audit_logs(
   p_admin_password text,

@@ -310,30 +310,30 @@ export default function EvalStep({
           return (
             <div key={crit.id} className={`crit-card${showMissing ? " invalid" : ""}`}>
               <div className="crit-header">
-                <div className="crit-meta">
+                <div className="crit-title-row">
                   <div className="crit-label">{crit.label}</div>
-                  <div className="crit-max">Maximum: {crit.max} pts</div>
-                  {crit.blurb && (
-                    <div
-                      className="crit-desc swipe-x"
-                      ref={updateDescScrollState}
-                      onScroll={handleDescScroll}
-                      onPointerEnter={handleDescScroll}
-                      onTouchStart={handleDescScroll}
-                    >
-                      {crit.blurb}
-                    </div>
-                  )}
+                  <button
+                    className="rubric-btn"
+                    onClick={() => setOpenRubric(openRubric === crit.id ? null : crit.id)}
+                  >
+                    Rubric
+                    <span className={`rubric-chevron${openRubric === crit.id ? " open" : ""}`}>
+                      <ChevronDownIcon />
+                    </span>
+                  </button>
                 </div>
-                <button
-                  className="rubric-btn"
-                  onClick={() => setOpenRubric(openRubric === crit.id ? null : crit.id)}
-                >
-                  Rubric
-                  <span className={`rubric-chevron${openRubric === crit.id ? " open" : ""}`}>
-                    <ChevronDownIcon />
-                  </span>
-                </button>
+                <div className="crit-max">Maximum: {crit.max} pts</div>
+                {crit.blurb && (
+                  <div
+                    className="crit-desc swipe-x"
+                    ref={updateDescScrollState}
+                    onScroll={handleDescScroll}
+                    onPointerEnter={handleDescScroll}
+                    onTouchStart={handleDescScroll}
+                  >
+                    {crit.blurb}
+                  </div>
+                )}
               </div>
 
               {openRubric === crit.id && (

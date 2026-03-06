@@ -699,47 +699,43 @@
 
 .crit-header {
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.crit-title-row {
+  display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 12px;
-}
-.crit-meta {
-  flex: 1 1 0;
-  min-width: 0;
+  width: 100%;
 }
 .crit-label { font-size: 15px; font-weight: 700; color: var(--gray-900); }
 .crit-max   { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
 .crit-desc  {
   font-size: 12px;
   color: #94a3b8;
-  margin-top: 4px;
-  line-height: 1.35;
+  margin-top: 6px;
+  line-height: 1.45;
+  width: 100%;
   max-width: 100%;
-  white-space: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  text-overflow: clip;
-  -webkit-overflow-scrolling: touch;
-  position: relative;
-  padding-right: 16px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  text-align: justify;
+  text-justify: inter-word;
+  word-break: break-word;
+  hyphens: auto;
 }
-.crit-desc.has-overflow::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 18px;
-  background: linear-gradient(
-    to right,
-    rgba(248,250,252,0),
-    rgba(248,250,252,0.85) 45%,
-    rgba(248,250,252,1)
-  );
-  pointer-events: none;
+.crit-desc.swipe-x {
+  overflow: visible;
+  overflow-x: visible;
+  overflow-y: visible;
+  white-space: normal;
+  text-align: justify;
 }
-.crit-desc.has-overflow.is-scrolled::after { opacity: 0; }
+.crit-desc.has-overflow::after { display: none; }
 
 /* Rubric toggle button */
 .rubric-btn {
