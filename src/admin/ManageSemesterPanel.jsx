@@ -1,7 +1,7 @@
 // src/admin/ManageSemesterPanel.jsx
 
 import { useState } from "react";
-import { CheckCircle2Icon, PencilIcon } from "../shared/Icons";
+import { CheckCircle2Icon, ChevronDownIcon, PencilIcon } from "../shared/Icons";
 import LastActivity from "./LastActivity";
 import DangerIconButton from "../components/admin/DangerIconButton";
 
@@ -129,16 +129,17 @@ export default function ManageSemesterPanel({
           </span>
           Semester Management
         </div>
+        {isMobile && <ChevronDownIcon className={`manage-chevron${isOpen ? " open" : ""}`} />}
       </button>
 
       {isOpen && (
         <div className="manage-card-body">
           <div className="manage-card-desc">Set the active term and maintain semester dates.</div>
           <div className="manage-field">
-            <label className="manage-label">Active Semester</label>
+            <label className="manage-list-header manage-list-header--danger">Active Semester</label>
             <div className="manage-row">
               <select
-                className="manage-select"
+                className="manage-select is-danger"
                 value={activeSemesterId || ""}
                 onChange={(e) => onSetActive(e.target.value)}
               >

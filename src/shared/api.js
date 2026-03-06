@@ -433,6 +433,44 @@ export async function adminBootstrapPassword(newPassword) {
   return data?.[0] || null;
 }
 
+export async function adminBootstrapBackupPassword(newPassword, adminPassword) {
+  const { data, error } = await supabase.rpc("rpc_admin_bootstrap_backup_password", {
+    p_new_password: newPassword,
+    p_admin_password: adminPassword,
+  });
+  if (error) throw error;
+  return data === true;
+}
+
+export async function adminChangeBackupPassword(currentPassword, newPassword, adminPassword) {
+  const { data, error } = await supabase.rpc("rpc_admin_change_backup_password", {
+    p_current_password: currentPassword,
+    p_new_password: newPassword,
+    p_admin_password: adminPassword,
+  });
+  if (error) throw error;
+  return data === true;
+}
+
+export async function adminFullExport(backupPassword, adminPassword) {
+  const { data, error } = await supabase.rpc("rpc_admin_full_export", {
+    p_backup_password: backupPassword,
+    p_admin_password: adminPassword,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function adminFullImport(backup, backupPassword, adminPassword) {
+  const { data, error } = await supabase.rpc("rpc_admin_full_import", {
+    p_backup_password: backupPassword,
+    p_admin_password: adminPassword,
+    p_data: backup,
+  });
+  if (error) throw error;
+  return data;
+}
+
 export async function adminChangeDeletePassword(currentPassword, newPassword, adminPassword) {
   const { data, error } = await supabase.rpc("rpc_admin_change_delete_password", {
     p_current_password: currentPassword,
