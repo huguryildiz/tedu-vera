@@ -12,6 +12,8 @@
     "lucide-react": "^0.576.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-virtualized-auto-sizer": "^1.0.26",
+    "react-window": "^1.8.11",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

@@ -1607,6 +1607,61 @@ BEGIN
 END;
 $$;
 
+DROP FUNCTION IF EXISTS public.rpc_admin_outcome_trends(uuid[], text);
+CREATE OR REPLACE FUNCTION public.rpc_admin_outcome_trends(
+  p_semester_ids   uuid[],
+  p_admin_password text
+)
+RETURNS TABLE (
+  semester_id   uuid,
+  semester_name text,
+  poster_date   date,
+  avg_technical numeric,
+  avg_written   numeric,
+  avg_oral      numeric,
+  avg_teamwork  numeric,
+  n_evals       bigint
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+BEGIN
+  IF NOT public._verify_admin_password(p_admin_password) THEN
+    RAISE EXCEPTION 'unauthorized' USING ERRCODE = 'P0401';
+  END IF;
+
+  RETURN QUERY
+    SELECT
+      s.id AS semester_id,
+      s.name AS semester_name,
+      s.poster_date,
+      ROUND(AVG(sc.technical), 2) AS avg_technical,
+      ROUND(AVG(sc.written),   2) AS avg_written,
+      ROUND(AVG(sc.oral),      2) AS avg_oral,
+      ROUND(AVG(sc.teamwork),  2) AS avg_teamwork,
+      COUNT(sc.juror_id)       AS n_evals
+    FROM semesters s
+    LEFT JOIN scores sc
+      ON  sc.semester_id = s.id
+      AND sc.technical IS NOT NULL
+      AND sc.written   IS NOT NULL
+      AND sc.oral      IS NOT NULL
+      AND sc.teamwork  IS NOT NULL
+      AND sc.final_submitted_at IS NOT NULL
+      AND EXISTS (
+        SELECT 1
+        FROM juror_semester_auth a
+        WHERE a.juror_id = sc.juror_id
+          AND a.semester_id = sc.semester_id
+          AND COALESCE(a.edit_enabled, false) = false
+      )
+    WHERE (p_semester_ids IS NULL OR s.id = ANY(p_semester_ids))
+    GROUP BY s.id, s.name, s.poster_date
+    ORDER BY s.name;
+END;
+$$;
+
 -- ── Admin manage RPCs ───────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION public.rpc_admin_set_active_semester(
@@ -3146,6 +3201,7 @@ GRANT EXECUTE ON FUNCTION public.rpc_admin_login(text) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.rpc_admin_security_state() TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.rpc_admin_get_scores(uuid, text) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.rpc_admin_project_summary(uuid, text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.rpc_admin_outcome_trends(uuid[], text) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.rpc_admin_set_active_semester(uuid, text) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.rpc_admin_create_semester(text, date, text) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.rpc_admin_update_semester(uuid, text, date, text) TO anon, authenticated;

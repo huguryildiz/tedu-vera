@@ -46,11 +46,6 @@
   }
   .header-actions { gap: 8px; }
   .last-updated { font-size: 10px; }
-  .tab-context {
-    max-width: 40%;
-    min-width: 0;
-    margin-right: 8px;
-  }
   .tab-bar-row { gap: 8px; }
   .semester-control--tab {
     max-width: 100%;
@@ -68,6 +63,32 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .semester-dropdown-trigger--title {
+    font-size: 16px;
+  }
+  .admin-title-icon svg { width: 18px; height: 18px; }
+  .semester-dropdown-trigger--title .semester-dropdown-chevron svg {
+    width: 13px;
+    height: 13px;
+  }
+  .semester-dropdown-trigger--title .semester-dropdown-label {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  .mudek-outcome-text,
+  .mudek-outcomes-table.compact .mudek-outcome-text,
+  .mudek-outcomes-table.expanded .mudek-outcome-text {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    text-align: justify;
+    text-justify: inter-word;
   }
 }
 
@@ -200,6 +221,11 @@
     width: auto;
     top: calc(100% + 8px);
   }
+  .trend-select-panel {
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
   .dashboard-screen-header { flex-direction: column; gap: 4px; }
   .dashboard-header-right  { align-items: flex-start; text-align: left; }
   .dashboard-grid { gap: 16px; margin-bottom: 24px; }
@@ -311,8 +337,7 @@
   .filter-reset { width: 100%; }
   .filter-count { margin-left: 0; }
   .csv-export-btn, .xlsx-export-btn { flex: 0 0 auto; justify-content: center; }
-  .export-label-long  { display: none; }
-  .export-label-short { display: inline; }
+  .export-label { display: inline; }
 
   /* Finger-swipe for long text cells */
   .detail-table td.cell-juror,
@@ -372,8 +397,8 @@
   .rank-card.rank-3 { padding: 22px; }
   .rank-card { --rank-badge-size: 64px; }
   .rank-num { font-size: 16px; }
-  .rank-rest .avg-score { font-size: 18px; }
-  .avg-score { font-size: 18px; }
+  .rank-rest .avg-score { font-size: 20px; }
+  .avg-score { font-size: 20px; }
 
   /* Summary: swipe-scrollable text lines */
   .group-card-students {
@@ -387,12 +412,13 @@
   /* Summary total: slightly smaller on mobile */
   .group-card-header { row-gap: 6px; }
   .group-card-score { width: auto; justify-content: flex-end; }
-  .group-card-score-value  { font-size: 18px; }
+  .group-card-score-value  { font-size: 20px; }
   .group-card-score-label { font-size: 10px; }
   .group-card-score-label.sigma { font-size: 10px; }
   .group-card-name { font-size: 12px; }
   .group-card-toggle { gap: 4px; }
   .group-card-left { gap: 8px; }
+  .rankings-page .group-accordion-chevron svg { width: 16px; height: 16px; }
   .eval-badge { padding: 0 6px; min-height: 24px; font-size: 10px; gap: 4px; }
   .eval-badge svg { width: 12px; height: 12px; }
   .group-card-full-title { font-size: 11px; }
@@ -400,6 +426,17 @@
   .group-card-students { font-size: 10px; }
   .group-card-desc-icon svg,
   .group-card-students-icon svg { width: 12px; height: 12px; }
+  .mini-label { width: 56px; font-size: 10px; }
+  .mini-val { min-width: 60px; font-size: 10px; }
+  .rank-meta { font-size: 10px; }
+
+  .rankings-toolbar { padding: 10px 12px; }
+  .rankings-toolbar-header { display: flex; }
+  .rankings-toolbar-main { flex-direction: column; align-items: stretch; }
+  .rankings-control { width: 100%; min-width: 0; }
+  .rankings-search { flex: 0 0 auto; }
+  .rankings-toolbar-body.is-collapsed { display: none; }
+  .rank-virtual-wrap { height: min(60vh, 560px); }
 
   /* Summary note: tighter on mobile */
   .summary-note { padding: 8px 12px !important; font-size: 12px !important; }
@@ -444,6 +481,7 @@
   .matrix-subtitle { gap: 10px; }
   .matrix-legend-count { flex-basis: 100%; margin-left: 0; }
   .matrix-legend-row.legend-scroll-row::after { width: 22px; }
+  .matrix-scroll-hint { display: block; }
 
   /* Dashboard toolbar */
   .pdf-export-btn { width: 100%; text-align: center; }
@@ -457,22 +495,73 @@
   .juror-row-right { flex-wrap: nowrap; }
 }
 
+/* ── Print report layout (shared) ──────────────────────────── */
+.page-chart {
+  width: 100%;
+  height: 100%;
+  min-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.page-chart h2 {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.page-chart .print-card-note {
+  text-align: center;
+}
+.chart-wrapper {
+  width: 100%;
+  max-width: 1100px;
+  height: 60vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.chart-wrapper svg,
+.chart-wrapper canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+.print-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 14px;
+  margin-top: 12px;
+  font-size: 9px;
+  color: #475569;
+}
+.print-chart-legend .legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.print-chart-legend .legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
 /* ── Print styles ───────────────────────────────────────────── */
 @media print {
   /* A4 page setup */
-  @page { size: A4 landscape; margin: 12mm; }
+  @page { size: A4 landscape; margin-top: 28mm; margin-bottom: 24mm; margin-left: 24mm; margin-right: 24mm; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
   /* Show print-only sections, hide screen-only sections */
   .screen-charts { display: none !important; }
   .print-report  { display: block !important; }
   .print-header  { display: block !important; margin-bottom: 24px; border-bottom: 2px solid #1e3a8a; padding-bottom: 12px; }
-  .print-header-title  { font-size: 22px; font-weight: 700; color: #0f172a; line-height: 1.2; }
-  .print-header-sub    { font-size: 13px; color: #475569; margin-top: 4px; line-height: 1.2; }
-  .print-header-meta   { font-size: 13px; color: #64748b; margin-top: 6px; line-height: 1.2; }
+  .print-header-title  { font-size: 22px; font-weight: 700; color: #0f172a; line-height: 1.3; text-align: center; }
+  .print-header-sub    { font-size: 13px; color: #475569; margin-top: 4px; line-height: 1.2; text-align: center; }
+  .print-header-meta   { font-size: 12px; color: #64748b; margin-top: 6px; line-height: 1.2; text-align: center; }
   .print-header-meta > div { margin-top: 2px; }
-  .print-card-title { font-size: 11px; font-weight: 700; color: #0f172a; line-height: 1.2; }
-  .print-card-note  { font-size: 9px; color: #475569; margin-top: 2px; line-height: 1.2; }
+  .print-header-summary { white-space: nowrap; }
+  .print-card-title { font-size: 16px !important; font-weight: 600; color: #0f172a; line-height: 1.3; margin: 0 0 6px 0; text-align: left; }
+  .print-card-note  { font-size: 12px !important; color: #555; margin-top: 0; margin-bottom: 8px; line-height: 1.4; text-align: left; }
 
   /* Hide everything except the dashboard content */
   .form-header, .tab-bar, .no-print, .mudek-badge-wrap { display: none !important; }
@@ -548,6 +637,14 @@
   .rubric-svg-fill  { align-items: flex-start !important; }
 
   /* Scroll chart wrappers: grow + no clipping */
+  .chart-scroll-wrap {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  .chart-scroll-inner {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
   .chart-svg-wrap {
     flex: 1 1 auto !important;
     min-height: 0 !important;
@@ -565,7 +662,7 @@
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
-    height: 100% !important;
+    height: auto !important;
   }
 
   /* Outcome by Group: shrink labels to fit many groups */
@@ -580,10 +677,31 @@
   /* Radar chart: fixed size */
   .radar-group-select { display: none !important; }
 
+  /* Report chart layout */
+  .page-chart {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    height: 90vh;
+  }
+  .chart-wrapper {
+    width: 100%;
+    height: 65vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .chart-wrapper svg,
+  .chart-wrapper canvas {
+    width: 85% !important;
+    max-width: 1000px;
+    height: auto !important;
+  }
+
   /* Page breaks after every printed chart */
   .print-page {
     break-after: page;
     page-break-after: always;
+    margin-bottom: 48px;
   }
   .print-page:last-child {
     break-after: auto;
@@ -597,10 +715,12 @@
     padding: 10px !important;
     break-inside: avoid;
     page-break-inside: avoid;
+    width: 70%;
+    margin: 0 auto;
   }
   .radar-print-card svg {
     width: 100% !important;
     height: auto !important;
-    max-height: 150mm !important;
+    max-height: 160mm !important;
   }
 }

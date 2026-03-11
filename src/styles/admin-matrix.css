@@ -153,6 +153,49 @@
   border-right: 1px solid var(--gray-200);
   text-align: center;
 }
+.matrix-cell { position: relative; }
+/* Cell state colors (class-based to avoid inline styles) */
+.matrix-cell-scored-final { background: #dcfce7; color: #166534; font-weight: 700; }
+.matrix-cell-scored       { background: #f0fdf4; color: #16a34a; font-weight: 600; }
+.matrix-cell-partial      { background: #fef9c3; color: #92400e; font-weight: 700; }
+.matrix-cell-empty        { background: #f8fafc; color: #94a3b8; }
+
+/* Cell tooltip (non-title, hover/active) */
+.matrix-cell[data-tooltip-active="true"]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  background: #0f172a;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.35;
+  padding: 6px 8px;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+  z-index: 40;
+  max-width: 260px;
+  width: max-content;
+  white-space: normal;
+  line-break: anywhere;
+  word-break: break-word;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.matrix-cell[data-tooltip-active="true"]:hover::after,
+.matrix-cell[data-tooltip-active="true"]:active::after,
+.matrix-cell[data-tooltip-active="true"]:focus::after,
+.matrix-cell[data-tooltip-active="true"]:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+.matrix-cell[data-tooltip-active="true"]:focus,
+.matrix-cell[data-tooltip-active="true"]:focus-visible {
+  outline: 2px solid var(--brand-600);
+  outline-offset: -2px;
+}
 /* Frozen first column */
 .matrix-table th:first-child,
 .matrix-table td:first-child {
@@ -162,7 +205,6 @@
   max-width: 220px;
   width: 220px;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .matrix-table th:first-child {
@@ -195,22 +237,37 @@
   align-items: center;
   gap: 6px;
   min-width: 0;
+  overflow: hidden;
 }
 .matrix-juror-name {
   display: block;
   min-width: 0;
   max-width: 100%;
   flex: 1 1 auto;
-}
-.matrix-juror-name-scroll {
-  display: block;
-  max-width: 100%;
+  gap: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  touch-action: pan-x;
+  color: #94a3b8;
 }
-.matrix-juror-name-scroll::-webkit-scrollbar { display: none; }
-.matrix-juror-dept  { font-size: 11px; color: #94a3b8; font-weight: 500; }
+.matrix-juror-name-text,
+.matrix-juror-dept {
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+}
+.matrix-juror-name-text { flex: 1 1 0; color: #0f172a; }
+.matrix-juror-dept  { flex: 1 1 0; font-size: 11px; color: #94a3b8; font-weight: 500; }
+.matrix-juror-name:hover,
+.matrix-juror-name.is-scrollable {
+  overflow-x: auto;
+  text-overflow: clip;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.matrix-juror-name:hover::-webkit-scrollbar,
+.matrix-juror-name.is-scrollable::-webkit-scrollbar { display: none; }
 .matrix-progress-cell { white-space: nowrap; }
 .matrix-progress-bar-wrap { display: inline-block; width: 60px; height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; vertical-align: middle; margin-right: 6px; }
 .matrix-progress-bar      { height: 100%; background: #22c55e; border-radius: 999px; }
@@ -255,41 +312,6 @@
 .empty-dot        { background: #f8fafc; }                                     /* Gray   — Empty */
 .group-dot        { background: #93c5fd; }
 
-@media (hover: none) and (pointer: coarse) {
-  .matrix-juror-name-scroll {
-    overflow-x: auto;
-    text-overflow: clip;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-}
-
-@media (min-width: 768px) {
-  .matrix-juror-name-scroll {
-    overflow-x: auto;
-    overflow-y: hidden;
-    text-overflow: clip;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    scroll-behavior: smooth;
-  }
-  .matrix-juror-name-scroll::-webkit-scrollbar { display: none; }
-  .matrix-juror-name-scroll:hover { cursor: ew-resize; }
-}
-
-@media (max-width: 768px) {
-  .matrix-juror-name-scroll {
-    overflow-x: auto;
-    overflow-y: hidden;
-    text-overflow: unset;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    position: relative;
-    padding-right: 18px;
-  }
-  .matrix-juror-name-scroll::-webkit-scrollbar { display: none; }
-}
 
 /* Column sort button inside group <th> */
 .matrix-col-sort {
@@ -305,6 +327,7 @@
   gap: 3px;
   white-space: nowrap;
 }
+.matrix-col-sort--juror { justify-content: flex-start; }
 .matrix-col-sort:hover { color: var(--brand-600); }
 .matrix-col-sort .sort-icon {
   font-size: 10px;
@@ -399,11 +422,9 @@
   display: none;
 }
 .matrix-avg-tooltip:hover::after,
-.matrix-avg-tooltip:focus::after {
+.matrix-avg-tooltip:focus::after,
+.matrix-avg-tooltip.is-open::after {
   opacity: 1;
-}
-.matrix-avg-tooltip:hover::after,
-.matrix-avg-tooltip:focus::after {
   transform: translateY(-2px);
 }
 
@@ -421,6 +442,81 @@
 .matrix-export-btn {
   margin-left: auto;
   flex-shrink: 0;
+}
+
+/* ── Inline export warning ───────────────────────────────────── */
+.matrix-export-warning {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--surface-radius, 8px);
+  font-size: 12px;
+  color: #92400e;
+}
+.matrix-export-warning-msg { flex: 1 1 auto; }
+.matrix-export-warning-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.matrix-export-warning-btn {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid #fbbf24;
+  background: #fff;
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.matrix-export-warning-btn:hover { background: #fef3c7; }
+.matrix-export-warning-btn--all {
+  background: #f59e0b;
+  color: #fff;
+  border-color: #d97706;
+}
+.matrix-export-warning-btn--all:hover { background: #d97706; }
+.matrix-export-warning-dismiss {
+  background: none;
+  border: none;
+  color: #a16207;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.matrix-export-warning-dismiss:hover { background: #fde68a; }
+
+/* ── Active sort indicator chip ──────────────────────────────── */
+.matrix-sort-indicator {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brand-600);
+  background: var(--blue-light);
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 2px 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Scroll hint (shown on small screens) */
+.matrix-scroll-hint {
+  display: none;
+  font-size: 11px;
+  color: #94a3b8;
+}
+@media (hover: hover) and (pointer: fine) {
+  .matrix-scroll-hint { display: block; }
 }
 
 /* ── Matrix info note ────────────────────────────────────────── */

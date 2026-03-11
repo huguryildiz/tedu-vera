@@ -458,3 +458,48 @@ export function dedupeAndSort(rows) {
 
   return [...byKey.values()].sort((a, b) => (b.tsMs || 0) - (a.tsMs || 0));
 }
+
+// ── Rankings export ───────────────────────────────────────────
+export async function exportRankingsXLSX(ranked, criteria, { semesterName = "" } = {}) {
+  const XLSX = await import("xlsx");
+  const headers = [
+    "Rank", "Group", "Project Title", "Students",
+    ...criteria.flatMap((c) => [`${c.label} Avg`, `${c.label} Max`]),
+    "Total Avg",
+  ];
+  const displayRanks = [];
+  let scoredIndex = 0;
+  let lastScore = null;
+  let lastRank = 0;
+  (ranked || []).forEach((p) => {
+    if (!Number.isFinite(p?.totalAvg)) {
+      displayRanks.push("");
+      return;
+    }
+    scoredIndex += 1;
+    if (lastScore === null || p.totalAvg !== lastScore) {
+      lastRank = scoredIndex;
+      lastScore = p.totalAvg;
+    }
+    displayRanks.push(lastRank);
+  });
+  const dataRows = (ranked || []).map((p, i) => {
+    const criteriaVals = criteria.flatMap((c) => [
+      Number.isFinite(p.avg?.[c.id]) ? Number(p.avg[c.id].toFixed(2)) : "",
+      c.max,
+    ]);
+    return [
+      displayRanks[i],
+      `Group ${p.groupNo}`,
+      p.name ?? "",
+      p.students ?? "",
+      ...criteriaVals,
+      Number.isFinite(p.totalAvg) ? Number(p.totalAvg.toFixed(2)) : "",
+    ];
+  });
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+  ws["!cols"] = [6, 10, 36, 32, ...criteria.flatMap(() => [10, 8]), 10].map((w) => ({ wch: w }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Rankings");
+  XLSX.writeFile(wb, buildExportFilename("rankings", semesterName));
+}

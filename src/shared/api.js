@@ -265,15 +265,41 @@ export async function adminProjectSummary(semesterId, adminPassword) {
     students:    row.group_students || "",
     count:       Number(row.juror_count || 0),
     avg: {
-      technical: Number(row.avg_technical || 0),
-      design:    Number(row.avg_written   || 0),   // avg_written → design
-      delivery:  Number(row.avg_oral      || 0),   // avg_oral    → delivery
-      teamwork:  Number(row.avg_teamwork  || 0),
+      technical: row.avg_technical == null ? null : Number(row.avg_technical),
+      design:    row.avg_written   == null ? null : Number(row.avg_written),  // avg_written → design
+      delivery:  row.avg_oral      == null ? null : Number(row.avg_oral),     // avg_oral    → delivery
+      teamwork:  row.avg_teamwork  == null ? null : Number(row.avg_teamwork),
     },
-    totalAvg: Number(row.avg_total || 0),
-    totalMin: row.min_total ?? 0,
-    totalMax: row.max_total ?? 0,
+    totalAvg: row.avg_total == null ? null : Number(row.avg_total),
+    totalMin: row.min_total == null ? null : Number(row.min_total),
+    totalMax: row.max_total == null ? null : Number(row.max_total),
     note:     row.note || "",
+  }));
+}
+
+// Returns per-semester outcome averages for trend chart.
+export async function adminGetOutcomeTrends(semesterIds, adminPassword) {
+  const { data, error } = await supabase.rpc("rpc_admin_outcome_trends", {
+    p_semester_ids:   semesterIds,
+    p_admin_password: adminPassword,
+  });
+  if (error) {
+    if (error.code === "P0401" || error.message?.includes("unauthorized")) {
+      const e = new Error("unauthorized");
+      e.unauthorized = true;
+      throw e;
+    }
+    throw error;
+  }
+  return (data || []).map((row) => ({
+    semesterId:   row.semester_id,
+    semesterName: row.semester_name || "",
+    posterDate:   row.poster_date || "",
+    avgTechnical: row.avg_technical == null ? null : Number(row.avg_technical),
+    avgWritten:   row.avg_written   == null ? null : Number(row.avg_written),
+    avgOral:      row.avg_oral      == null ? null : Number(row.avg_oral),
+    avgTeamwork:  row.avg_teamwork  == null ? null : Number(row.avg_teamwork),
+    nEvals:       Number(row.n_evals || 0),
   }));
 }
 

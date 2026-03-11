@@ -1,13 +1,13 @@
-// src/admin/EvaluationsTab.jsx
+// src/admin/ScoresTab.jsx
 // Merges Rankings, Analytics, Grid, and Details views into one tab.
 // View switching is handled by AdminPanel (sub-nav bar above content).
 
 import RankingsTab from "./RankingsTab";
 import AnalyticsTab from "./AnalyticsTab";
-import EvaluationDetails from "./EvaluationDetails";
-import EvaluationGrid from "./EvaluationGrid";
+import ScoreDetails from "./ScoreDetails";
+import ScoreGrid from "./ScoreGrid";
 
-export default function EvaluationsTab({
+export default function ScoresTab({
   view = "rankings",
   ranked,
   submittedData,
@@ -21,11 +21,18 @@ export default function EvaluationsTab({
   overviewMetrics,
   lastRefresh,
   loading,
+  error,
+  semesterOptions,
+  trendSemesterIds,
+  onTrendSelectionChange,
+  trendData,
+  trendLoading,
+  trendError,
 }) {
   return (
-    <div className="evaluations-tab">
+    <div className="scores-tab">
       {view === "rankings" && (
-        <RankingsTab ranked={ranked} submittedData={submittedData} />
+        <RankingsTab ranked={ranked} semesterName={semesterName} />
       )}
       {view === "analytics" && (
         <AnalyticsTab
@@ -34,11 +41,18 @@ export default function EvaluationsTab({
           overviewMetrics={overviewMetrics}
           lastRefresh={lastRefresh}
           loading={loading}
+          error={error}
           semesterName={semesterName}
+          semesterOptions={semesterOptions}
+          trendSemesterIds={trendSemesterIds}
+          onTrendSelectionChange={onTrendSelectionChange}
+          trendData={trendData}
+          trendLoading={trendLoading}
+          trendError={trendError}
         />
       )}
       {view === "details" && (
-        <EvaluationDetails
+        <ScoreDetails
           data={rawScores}
           jurors={jurors}
           assignedJurors={matrixJurors || jurors}
@@ -48,7 +62,7 @@ export default function EvaluationsTab({
         />
       )}
       {view === "grid" && (
-        <EvaluationGrid
+        <ScoreGrid
           data={rawScores}
           jurors={matrixJurors || jurors}
           groups={groups}

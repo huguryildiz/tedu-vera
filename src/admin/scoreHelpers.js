@@ -15,18 +15,16 @@ import {
   CircleDotDashedIcon,
   PencilIcon,
 } from "../shared/Icons";
+import { CRITERIA } from "../config";
 
 // ── Cell state ────────────────────────────────────────────────
-// entry: { total, technical, design, delivery, teamwork } from lookup
+// entry: { total, ...criteriaFields } from lookup
+// Field list is driven by CRITERIA from config.js — no hardcoded names.
 
 export function getCellState(entry) {
   if (!entry) return "empty";
   if (entry.total !== null && entry.total !== undefined) return "scored";
-  const hasAny =
-    entry.technical != null ||
-    entry.design    != null ||
-    entry.delivery  != null ||
-    entry.teamwork  != null;
+  const hasAny = CRITERIA.some((c) => entry[c.id] != null);
   return hasAny ? "partial" : "empty";
 }
 
@@ -34,11 +32,9 @@ export function getCellState(entry) {
 // Returns 0 if nothing is filled.
 export function getPartialTotal(entry) {
   if (!entry) return 0;
-  return (
-    (typeof entry.technical === "number" ? entry.technical : 0) +
-    (typeof entry.design    === "number" ? entry.design    : 0) +
-    (typeof entry.delivery  === "number" ? entry.delivery  : 0) +
-    (typeof entry.teamwork  === "number" ? entry.teamwork  : 0)
+  return CRITERIA.reduce(
+    (sum, c) => sum + (typeof entry[c.id] === "number" ? entry[c.id] : 0),
+    0
   );
 }
 

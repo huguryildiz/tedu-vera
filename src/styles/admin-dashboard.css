@@ -435,6 +435,7 @@
 }
 .pdf-export-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 18px rgba(239,68,68,0.18); }
 .pdf-export-btn:disabled { opacity: 0.65; box-shadow: none; transform: none; }
+.pdf-hint { font-size: 11px; color: #94a3b8; font-style: italic; align-self: center; }
 .dashboard-toolbar .xlsx-export-btn {
   height: 40px;
   border-radius: 12px;
@@ -501,6 +502,60 @@
   50%       { opacity: 0.5; }
 }
 
+/* ── KPI summary strip ───────────────────────────────────────── */
+.analytics-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.kpi-card {
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.kpi-card-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+.kpi-card-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kpi-card-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 640px) {
+  .analytics-kpi-strip { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Export button loading spinner ───────────────────────────── */
+.spin-icon {
+  display: inline-flex;
+  align-items: center;
+  animation: spinIcon 0.75s linear infinite;
+}
+@keyframes spinIcon {
+  to { transform: rotate(360deg); }
+}
+
 /* ── Dashboard empty / error states ─────────────────────────── */
 .dashboard-state-card {
   display: flex;
@@ -529,6 +584,89 @@
 }
 .chart-title-row > div:first-child { flex: 1; min-width: 0; }
 .chart-title-row .chart-title { margin-bottom: 0; }
+.trend-title-row { align-items: center; flex-wrap: wrap; }
+.trend-hint {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: -2px 0 6px;
+}
+.trend-select {
+  position: relative;
+  flex-shrink: 0;
+}
+.trend-select-trigger {
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.trend-select-count {
+  font-size: 10px;
+  font-weight: 700;
+  color: #1f2937;
+  background: #e2e8f0;
+  border-radius: 999px;
+  padding: 2px 6px;
+  font-variant-numeric: tabular-nums;
+}
+.trend-select-chevron { display: inline-flex; transition: transform 0.15s ease; }
+.trend-select-chevron.open { transform: rotate(180deg); }
+.trend-select-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 60;
+  width: min(320px, calc(100vw - 24px));
+  max-height: 320px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(15,23,42,0.12);
+  overflow: hidden;
+}
+.trend-select-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f9fafb;
+}
+.trend-select-actions button {
+  border: none;
+  background: none;
+  font-size: 11px;
+  font-weight: 600;
+  color: #1d4ed8;
+  cursor: pointer;
+}
+.trend-select-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+.trend-select-list {
+  overflow: auto;
+  max-height: 260px;
+  padding: 6px 10px;
+}
+.trend-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #374151;
+  padding: 4px 0;
+}
+.trend-select-option input { accent-color: #3b82f6; }
+.trend-select-empty { font-size: 12px; color: #9ca3af; padding: 10px 0; }
 .chart-title-actions {
   display: flex;
   justify-content: flex-end;
@@ -921,14 +1059,15 @@
   font-size: 12px;
   color: #64748b;
   line-height: 1.5;
-  white-space: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  text-overflow: unset;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  text-align: justify;
+  text-justify: inter-word;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
 }
-.mudek-outcome-text::-webkit-scrollbar { display: none; }
 .mudek-outcome-tr { color: #6b7280; }
 .mudek-outcome-both {
   display: grid;

@@ -5,9 +5,11 @@ import {
   ChevronDownIcon,
   ClipboardCheckIcon,
   UploadIcon,
+  FileUpIcon,
   CloudUploadIcon,
   LandmarkIcon,
   UserCheckIcon,
+  UserPlusIcon,
   KeyRoundIcon,
   LockIcon,
   PencilIcon,
@@ -67,6 +69,7 @@ function normalizeKey(name, inst) {
 
 export default function ManageJurorsPanel({
   jurors,
+  activeSemesterName,
   isMobile,
   isOpen,
   onToggle,
@@ -85,6 +88,7 @@ export default function ManageJurorsPanel({
   const [showEdit, setShowEdit] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState({ juror_name: "", juror_inst: "" });
+  const [editSaving, setEditSaving] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [importError, setImportError] = useState("");
@@ -154,7 +158,7 @@ export default function ManageJurorsPanel({
     : orderedJurors;
   const visibleJurors = normalizedSearch
     ? filteredJurors
-    : (showAll ? orderedJurors : orderedJurors.slice(0, 4));
+    : (showAll ? orderedJurors : orderedJurors.slice(0, 5));
   const existingJurorKeys = new Set(
     (jurors || []).map((j) =>
       normalizeKey(j.juryName || j.juror_name, j.juryDept || j.juror_inst)
@@ -267,6 +271,13 @@ export default function ManageJurorsPanel({
 
     setImportError("");
     const res = await onImport?.(toImport.map(({ juror_name, juror_inst }) => ({ juror_name, juror_inst })));
+    if (res?.formError) {
+      setImportError(res.formError);
+      return;
+    }
+    if (res?.ok === false) {
+      return;
+    }
     const serverSkipped = Number(res?.skipped || 0);
     if (serverSkipped > 0) {
       const extra = `Skipped ${serverSkipped} existing jurors during import.`;
@@ -298,7 +309,8 @@ export default function ManageJurorsPanel({
 
       {(!isMobile || isOpen) && (
         <div className="manage-card-body">
-          <div className="manage-card-desc">Manage jurors, details, and PIN resets.</div>
+          <div className="manage-card-desc">Manage jurors, institutions, and PIN resets.</div>
+          <div className="manage-hint manage-hint-inline">Active semester: {activeSemesterName || "—"}</div>
           <div className="manage-card-actions">
             <button
               className="manage-btn"
@@ -322,7 +334,7 @@ export default function ManageJurorsPanel({
               }}
             >
               <span aria-hidden="true"><CirclePlusIcon className="manage-btn-icon" /></span>
-              Juror
+              Create Juror
             </button>
           </div>
 
@@ -338,6 +350,9 @@ export default function ManageJurorsPanel({
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            {isMobile && (
+              <div className="manage-hint manage-hint-inline">Swipe horizontally on text to view full content.</div>
+            )}
             {visibleJurors.map((j) => {
               const isLocked = isJurorLocked(j);
               const scoredSemesters = Array.isArray(j.scoredSemesters)
@@ -483,7 +498,7 @@ export default function ManageJurorsPanel({
             )}
           </div>
 
-          {!normalizedSearch && jurors.length > 4 && (
+          {!normalizedSearch && jurors.length > 5 && (
             <button
               className="manage-btn ghost"
               type="button"
@@ -496,7 +511,12 @@ export default function ManageJurorsPanel({
           {showAdd && (
             <div className="manage-modal">
               <div className="manage-modal-card">
-                <div className="manage-modal-title">Add Juror</div>
+                <div className="edit-dialog__header">
+                  <span className="edit-dialog__icon" aria-hidden="true">
+                    <UserPlusIcon />
+                  </span>
+                  <div className="edit-dialog__title">Create Juror</div>
+                </div>
                 <div className="manage-modal-body">
                   <label className="manage-label">Full name</label>
                   <input
@@ -508,7 +528,7 @@ export default function ManageJurorsPanel({
                     }}
                     placeholder="Dr. Andrew Collins"
                   />
-                  <label className="manage-label">Department / Institution</label>
+                  <label className="manage-label">Institution / Department</label>
                   <input
                     className={`manage-input${addError ? " is-danger" : ""}`}
                     value={form.juror_inst}
@@ -516,7 +536,7 @@ export default function ManageJurorsPanel({
                       setForm((f) => ({ ...f, juror_inst: e.target.value }));
                       if (addError) setAddError("");
                     }}
-                    placeholder="Electrical Engineering"
+                    placeholder="Middle East Technical University / Electrical Engineering"
                   />
                   {addError && <div className="manage-field-error">{addError}</div>}
                 </div>
@@ -528,24 +548,29 @@ export default function ManageJurorsPanel({
                     className="manage-btn primary"
                     type="button"
                     disabled={!canSubmit}
-                    onClick={() => {
+                    onClick={async () => {
                       const name = form.juror_name.trim();
                       const inst = form.juror_inst.trim();
                       const key = normalizeKey(name, inst);
                       if (existingJurorKeys.has(key)) {
-                        setAddError("A juror with the same name and department already exists.");
+                        setAddError("A juror with the same name and institution already exists.");
                         return;
                       }
-                      onAddJuror({
+                      const res = await onAddJuror({
                         juror_name: name,
                         juror_inst: inst,
                       });
+                      if (res?.fieldErrors?.duplicate) {
+                        setAddError(res.fieldErrors.duplicate);
+                        return;
+                      }
                       setShowAdd(false);
+                      if (res?.ok === false) return;
                       setForm({ juror_name: "", juror_inst: "" });
                       setAddError("");
                     }}
                   >
-                    Add
+                    Create
                   </button>
                 </div>
               </div>
@@ -568,7 +593,7 @@ export default function ManageJurorsPanel({
                     value={editForm.juror_name}
                     onChange={(e) => setEditForm((f) => ({ ...f, juror_name: e.target.value }))}
                   />
-                  <label className="manage-label">Department / Institution</label>
+                  <label className="manage-label">Institution / Department</label>
                   <input
                     className="manage-input"
                     value={editForm.juror_inst}
@@ -589,18 +614,20 @@ export default function ManageJurorsPanel({
                   <button
                     className="manage-btn primary"
                     type="button"
-                    disabled={!canEdit}
-                    onClick={() => {
-                      onEditJuror?.({
+                    disabled={!canEdit || editSaving}
+                    onClick={async () => {
+                      setEditSaving(true);
+                      await onEditJuror?.({
                         jurorId: editTarget?.jurorId || editTarget?.juror_id,
                         juror_name: editForm.juror_name.trim(),
                         juror_inst: editForm.juror_inst.trim(),
                       });
+                      setEditSaving(false);
                       setShowEdit(false);
                       setEditTarget(null);
                     }}
                   >
-                    Save
+                    {editSaving ? "Saving…" : "Save"}
                   </button>
                 </div>
               </div>
@@ -610,7 +637,12 @@ export default function ManageJurorsPanel({
           {showImport && (
             <div className="manage-modal">
               <div className="manage-modal-card">
-                <div className="manage-modal-title">Import CSV</div>
+                <div className="edit-dialog__header">
+                  <span className="edit-dialog__icon" aria-hidden="true">
+                    <FileUpIcon />
+                  </span>
+                  <div className="edit-dialog__title">Import CSV</div>
+                </div>
                 <div className="manage-modal-body">
                   <div className="manage-hint">
                     Upload your CSV file here.

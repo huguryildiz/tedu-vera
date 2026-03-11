@@ -19,6 +19,7 @@ html, body { overflow-x: hidden; width: 100%; min-height: 100dvh; }
   --navy-800:   #162A66;
   --brand-600:  #2F56D6;
   --brand-500:  #3D66E6;
+  --primary-action: #2F56D7;
   --text-900:   #0B1220;
   --text-600:   #56657A;
   --card-bg:    #FFFFFF;
@@ -50,6 +51,19 @@ html, body { overflow-x: hidden; width: 100%; min-height: 100dvh; }
   --safe-left:   env(safe-area-inset-left, 0px);
   --page-pad:    clamp(16px, 3.5vw, 28px);
   --page-pad-sm: clamp(12px, 3vw, 20px);
+}
+
+/* Visually hidden but accessible */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
 }
 
 /* ── Base body ─────────────────────────────────────────────── */
@@ -600,7 +614,6 @@ body {
   .manage-item-text,
   .details-juror-name,
   .detail-cell-scroll,
-  .matrix-juror-name-scroll,
   .hbar-label,
   .strictness-label {
     position: relative;
@@ -614,7 +627,6 @@ body {
   .manage-item-text,
   .details-juror-name,
   .detail-cell-scroll,
-  .matrix-juror-name-scroll,
   .hbar-label,
   .strictness-label {
     overflow-x: auto;
@@ -632,7 +644,6 @@ body {
   .manage-item-text.is-overflowing::after,
   .details-juror-name.is-overflowing::after,
   .detail-cell-scroll.is-overflowing::after,
-  .matrix-juror-name-scroll.is-overflowing::after,
   .hbar-label.is-overflowing::after,
   .strictness-label.is-overflowing::after {
     content: "…";
@@ -656,7 +667,6 @@ body {
   .manage-item-text.is-scrolled::after,
   .details-juror-name.is-scrolled::after,
   .detail-cell-scroll.is-scrolled::after,
-  .matrix-juror-name-scroll.is-scrolled::after,
   .hbar-label.is-scrolled::after,
   .strictness-label.is-scrolled::after {
     display: none;

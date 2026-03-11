@@ -12,13 +12,13 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useToast } from "./components/toast/useToast";
 import { CRITERIA } from "./config";
 import {
   adminLogin,
   adminGetScores,
   adminListJurors,
   adminProjectSummary,
+  adminGetOutcomeTrends,
   listSemesters,
 } from "./shared/api";
 import { supabase } from "./lib/supabaseClient";
@@ -30,7 +30,6 @@ import {
   ListChecksIcon,
   ChartIcon,
   LayoutDashboardIcon,
-  ClockIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronDownIcon,
@@ -38,10 +37,11 @@ import {
   MedalIcon,
   TableIcon,
   Grid3x3Icon,
-  PinIcon,
+  TriangleAlertIcon,
+  ShieldUserIcon,
 } from "./shared/Icons";
 import OverviewTab from "./admin/OverviewTab";
-import EvaluationsTab from "./admin/EvaluationsTab";
+import ScoresTab from "./admin/ScoresTab";
 import SettingsPage from "./admin/SettingsPage";
 import "./styles/admin-layout.css";
 import "./styles/admin-summary.css";
@@ -58,7 +58,7 @@ const CRITERIA_LIST = CRITERIA.map((c) => ({
 
 const TABS = [
   { id: "overview",    label: "Overview",    icon: LayoutDashboardIcon },
-  { id: "evaluations", label: "Evaluations", icon: ListChecksIcon },
+  { id: "scores", label: "Scores", icon: ListChecksIcon },
   { id: "settings",    label: "Settings",    icon: SettingsIcon },
 ];
 
@@ -150,6 +150,8 @@ function SemesterDropdown({
   const triggerClass = [
     variant === "tab"
       ? "tab tab--dropdown semester-dropdown-trigger"
+      : variant === "title"
+      ? "semester-dropdown-trigger semester-dropdown-trigger--title"
       : "status-chip status-chip--semester semester-dropdown-trigger",
     semesterOpen ? "open" : "",
   ].filter(Boolean).join(" ");
@@ -219,7 +221,7 @@ function SemesterDropdown({
   );
 }
 
-function EvaluationsDropdown({
+function ScoresDropdown({
   open,
   setOpen,
   activeView,
@@ -232,7 +234,7 @@ function EvaluationsDropdown({
   );
 
   const triggerClass = [
-    "tab tab--dropdown semester-dropdown-trigger evaluations-dropdown-trigger",
+    "tab tab--dropdown semester-dropdown-trigger scores-dropdown-trigger",
     isActive ? "active" : "",
     open ? "open" : "",
   ].filter(Boolean).join(" ");
@@ -251,7 +253,7 @@ function EvaluationsDropdown({
   }, [open, setOpen, triggerRef, panelRef]);
 
   return (
-    <div className="evaluations-dropdown">
+    <div className="scores-dropdown">
       <button
         type="button"
         className={triggerClass}
@@ -261,7 +263,7 @@ function EvaluationsDropdown({
         onClick={() => setOpen((v) => !v)}
       >
         <ListChecksIcon />
-        <span>Evaluations</span>
+        <span>Scores</span>
         <span className="semester-dropdown-chevron" aria-hidden="true"><ChevronDownIcon /></span>
       </button>
       {open && createPortal(
@@ -270,7 +272,7 @@ function EvaluationsDropdown({
           className={`semester-dropdown-panel semester-dropdown-panel--${panelPlacement}`}
           style={panelStyle || undefined}
           role="listbox"
-          aria-label="Select evaluations view"
+          aria-label="Select scores view"
         >
           {EVALUATION_VIEWS.map((v) => (
             <li
@@ -306,30 +308,34 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
   const [allJurors,  setAllJurors]  = useState([]);
   // Per-project aggregates from rpc_admin_project_summary
   const [summaryData, setSummaryData] = useState([]);
+  // Semester trend chart data
+  const [trendSemesterIds, setTrendSemesterIds] = useState([]);
+  const [trendData, setTrendData] = useState([]);
+  const [trendLoading, setTrendLoading] = useState(false);
+  const [trendError, setTrendError] = useState("");
   // Semester selector
   const [semesterList,       setSemesterList]       = useState([]);
   const [selectedSemesterId, setSelectedSemesterId] = useState("");
   const [semesterOpen,       setSemesterOpen]       = useState(false);
-  const [evalMenuOpen,       setEvalMenuOpen]       = useState(false);
+  const [scoreMenuOpen,      setScoreMenuOpen]      = useState(false);
 
   const [loading,     setLoading]     = useState(true);
-  const _toast = useToast();
-  const setError     = (msg) => { if (msg) _toast.error(msg); };
-  const setAuthError = (msg) => { if (msg) _toast.error(msg); };
+  const [loadError,   setError]       = useState("");
+  const [authError,   setAuthError]   = useState("");
   const normalizeTab = (value) => {
-    if (value === "results" || value === "analysis") return "evaluations";
+    if (value === "results" || value === "analysis") return "scores";
     if (value === "manage") return "settings";
-    if (value === "overview" || value === "evaluations" || value === "settings") return value;
+    if (value === "overview" || value === "evaluations" || value === "scores" || value === "settings") return value === "evaluations" ? "scores" : value;
     return "overview";
   };
-  const VALID_TABS = new Set(["overview", "evaluations", "settings"]);
+  const VALID_TABS = new Set(["overview", "scores", "settings"]);
   const [adminTab, setAdminTab] = useState(() => {
     const saved = readSection("tab");
     const savedTab = saved.adminTab || saved.activeTab;
     const normalized = normalizeTab(savedTab);
     return VALID_TABS.has(normalized) ? normalized : "overview";
   });
-  const normalizeEvaluationsView = (value) => {
+  const normalizeScoresView = (value) => {
     if (value === "table") return "details";
     if (value === "matrix") return "grid";
     if (value === "analysis") return "analytics";
@@ -337,23 +343,24 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
     return "";
   };
   const VALID_EVALUATION_VIEWS = new Set(["rankings", "analytics", "grid", "details"]);
-  const [evaluationsView, setEvaluationsView] = useState(() => {
-    const saved = readSection("evaluations");
-    const legacy = readSection("results");
-    const savedView = saved.view || legacy.view;
-    const normalized = normalizeEvaluationsView(savedView);
+  const [scoresView, setScoresView] = useState(() => {
+    const saved = readSection("scores");
+    const legacy = readSection("evaluations");
+    const legacyOld = readSection("results");
+    const savedView = saved.view || legacy.view || legacyOld.view;
+    const normalized = normalizeScoresView(savedView);
     return VALID_EVALUATION_VIEWS.has(normalized) ? normalized : "rankings";
   });
-  function switchEvaluationsView(id) {
-    setEvaluationsView(id);
-    writeSection("evaluations", { view: id });
+  function switchScoresView(id) {
+    setScoresView(id);
+    writeSection("scores", { view: id });
   }
   useEffect(() => {
-    if (semesterOpen) setEvalMenuOpen(false);
+    if (semesterOpen) setScoreMenuOpen(false);
   }, [semesterOpen]);
   useEffect(() => {
-    if (evalMenuOpen) setSemesterOpen(false);
-  }, [evalMenuOpen]);
+    if (scoreMenuOpen) setSemesterOpen(false);
+  }, [scoreMenuOpen]);
   const [lastRefresh, setLastRefresh] = useState(null);
   const [tabOverflow, setTabOverflow] = useState(false);
   const [tabHintLeft, setTabHintLeft] = useState(false);
@@ -361,6 +368,7 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
   const tabBarRef = useRef(null);
 
   const initialLoadFiredRef = useRef(false);
+  const trendInitRef = useRef(false);
   const [adminPassState, setAdminPassState] = useState(
     () => adminPass || sessionStorage.getItem("ee492_admin_pass") || ""
   );
@@ -392,7 +400,7 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
       if (!pass) {
         setRawScores([]);
         setSummaryData([]);
-        setAuthError("Enter the admin password to load evaluations.");
+        setAuthError("Enter the admin password to load scores.");
         return;
       }
 
@@ -540,7 +548,7 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
   // Total projects in this semester (dynamic)
   const totalProjects = summaryData.length;
 
-  // Groups for EvaluationGrid/JurorActivity (built from summaryData so UUIDs are correct)
+  // Groups for ScoreGrid/JurorActivity (built from summaryData so UUIDs are correct)
   const groups = useMemo(
     () =>
       summaryData
@@ -640,7 +648,11 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
 
   // For RankingsTab: ranked by totalAvg descending
   const ranked = useMemo(
-    () => [...summaryData].sort((a, b) => b.totalAvg - a.totalAvg),
+    () => [...summaryData].sort((a, b) => {
+      const aVal = Number.isFinite(a.totalAvg) ? a.totalAvg : -Infinity;
+      const bVal = Number.isFinite(b.totalAvg) ? b.totalAvg : -Infinity;
+      return bVal - aVal;
+    }),
     [summaryData]
   );
 
@@ -789,6 +801,57 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
     });
   }, [semesterList]);
   const selectedSemesterName = sortedSemesters.find((s) => s.id === selectedSemesterId)?.name ?? "—";
+
+  useEffect(() => {
+    if (trendInitRef.current) return;
+    if (!sortedSemesters.length) return;
+    setTrendSemesterIds(sortedSemesters.slice(0, 4).map((s) => s.id));
+    trendInitRef.current = true;
+  }, [sortedSemesters]);
+
+  useEffect(() => {
+    if (!trendSemesterIds.length) return;
+    const valid = new Set(semesterList.map((s) => s.id));
+    const filtered = trendSemesterIds.filter((id) => valid.has(id));
+    if (filtered.length !== trendSemesterIds.length) {
+      setTrendSemesterIds(filtered);
+    }
+  }, [semesterList, trendSemesterIds]);
+
+  useEffect(() => {
+    const pass = getAdminPass();
+    if (!pass) {
+      setTrendData([]);
+      setTrendError("");
+      return;
+    }
+    if (!trendSemesterIds.length) {
+      setTrendData([]);
+      setTrendError("");
+      return;
+    }
+    let cancelled = false;
+    setTrendLoading(true);
+    setTrendError("");
+    adminGetOutcomeTrends(trendSemesterIds, pass)
+      .then((data) => {
+        if (cancelled) return;
+        setTrendData(data);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        if (e?.unauthorized) {
+          setTrendError("Incorrect password.");
+          return;
+        }
+        setTrendError("Could not load trend data.");
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setTrendLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [trendSemesterIds, adminPassState, lastRefresh]);
   const renderSemesterControl = (className = "", options = {}) => {
     if (!semesterList.length) return null;
     const { variant = "chip", labelPrefix = "", leadingIcon = null } = options;
@@ -824,7 +887,13 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
             </button>
             <div className="header-title">
               <div className="admin-title-row">
-                <h2>Admin Panel</h2>
+                <span className="admin-title-icon" aria-label="Admin Panel"><ShieldUserIcon /></span>
+                {semesterList.length > 0 && (
+                  <>
+                    <span className="title-separator" aria-hidden="true">·</span>
+                    {renderSemesterControl("semester-control--title", { variant: "title" })}
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -832,7 +901,6 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
             <div className="header-actions">
               {lastRefresh && (
                 <span className="last-updated">
-                  <ClockIcon />
                   <span className="last-updated-time">{lastRefreshTime}</span>
                 </span>
               )}
@@ -851,24 +919,21 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
         {/* Tab bar */}
         <div className="tab-bar-wrap">
           <div className="tab-bar-row">
-            <div className="tab-context">
-              {renderSemesterControl("semester-control--tab", { variant: "chip", leadingIcon: PinIcon })}
-            </div>
             <div className="tab-bar-shell" ref={tabBarRef} onScroll={updateTabHints}>
               <div className="tab-bar">
                 {TABS.map((t) => {
-                  if (t.id === "evaluations") {
+                  if (t.id === "scores") {
                     return (
-                      <EvaluationsDropdown
+                      <ScoresDropdown
                         key={t.id}
-                        open={evalMenuOpen}
-                        setOpen={setEvalMenuOpen}
-                        activeView={evaluationsView}
+                        open={scoreMenuOpen}
+                        setOpen={setScoreMenuOpen}
+                        activeView={scoresView}
                         onSelect={(id) => {
-                          setAdminTab("evaluations");
-                          switchEvaluationsView(id);
+                          setAdminTab("scores");
+                          switchScoresView(id);
                         }}
-                        isActive={adminTab === "evaluations" || evalMenuOpen}
+                        isActive={adminTab === "scores" || scoreMenuOpen}
                       />
                     );
                   }
@@ -901,6 +966,12 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
       {/* Tab content */}
       {!loading && (
         <div className="admin-body">
+          {(authError || loadError) && (
+            <div className="manage-alert error with-icon" role="alert">
+              <span className="manage-alert-icon" aria-hidden="true"><TriangleAlertIcon /></span>
+              <span>{authError || loadError}</span>
+            </div>
+          )}
           {adminTab === "overview" && (
             <OverviewTab
               jurorStats={jurorStats}
@@ -908,9 +979,9 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
               metrics={overviewMetrics}
             />
           )}
-          {adminTab === "evaluations" && (
-            <EvaluationsTab
-              view={evaluationsView}
+          {adminTab === "scores" && (
+            <ScoresTab
+              view={scoresView}
               ranked={ranked}
               submittedData={submittedData}
               rawScores={rawScores}
@@ -923,6 +994,13 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
               overviewMetrics={overviewMetrics}
               lastRefresh={lastRefresh}
               loading={loading}
+              error={loadError || null}
+              semesterOptions={sortedSemesters}
+              trendSemesterIds={trendSemesterIds}
+              onTrendSelectionChange={setTrendSemesterIds}
+              trendData={trendData}
+              trendLoading={trendLoading}
+              trendError={trendError}
             />
           )}
           {adminTab === "settings" && (

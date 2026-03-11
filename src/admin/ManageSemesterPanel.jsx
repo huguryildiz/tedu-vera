@@ -1,13 +1,14 @@
 // src/admin/ManageSemesterPanel.jsx
 
 import { useMemo, useState } from "react";
-import { CheckCircle2Icon, ChevronDownIcon, PencilIcon, SearchIcon, CirclePlusIcon } from "../shared/Icons";
+import { CheckCircle2Icon, ChevronDownIcon, PencilIcon, SearchIcon, CirclePlusIcon, CalendarPlusIcon } from "../shared/Icons";
 import LastActivity from "./LastActivity";
 import DangerIconButton from "../components/admin/DangerIconButton";
 
 export default function ManageSemesterPanel({
   semesters,
   activeSemesterId,
+  activeSemesterName,
   isMobile,
   isOpen,
   onToggle,
@@ -22,6 +23,8 @@ export default function ManageSemesterPanel({
   const [searchTerm, setSearchTerm] = useState("");
   const [createForm, setCreateForm] = useState({ name: "", poster_date: "" });
   const [editForm, setEditForm] = useState({ id: "", name: "", poster_date: "" });
+  const [createError, setCreateError] = useState("");
+  const [editError, setEditError] = useState("");
 
   const maxYear = 9999;
   const yearOf = (value) => {
@@ -155,6 +158,7 @@ export default function ManageSemesterPanel({
       {isOpen && (
         <div className="manage-card-body">
           <div className="manage-card-desc">Manage semesters, dates, and the active term.</div>
+          <div className="manage-hint manage-hint-inline">Active semester: {activeSemesterName || "—"}</div>
           <div className="manage-field">
             <label className="manage-list-header">Active Semester</label>
             <div className="manage-row">
@@ -171,7 +175,7 @@ export default function ManageSemesterPanel({
               </select>
               <button className="manage-btn primary" type="button" onClick={() => setShowCreate(true)}>
                 <span aria-hidden="true"><CirclePlusIcon className="manage-btn-icon" /></span>
-                Semester
+                Create Semester
               </button>
             </div>
           </div>
@@ -262,15 +266,24 @@ export default function ManageSemesterPanel({
           {showCreate && (
             <div className="manage-modal">
               <div className="manage-modal-card">
-                <div className="manage-modal-title">Create Semester</div>
+                <div className="edit-dialog__header">
+                  <span className="edit-dialog__icon" aria-hidden="true">
+                    <CalendarPlusIcon />
+                  </span>
+                  <div className="edit-dialog__title">Create Semester</div>
+                </div>
                 <div className="manage-modal-body">
                   <label className="manage-label">Semester name</label>
                   <input
-                    className="manage-input"
+                    className={`manage-input${createError ? " is-danger" : ""}`}
                     value={createForm.name}
-                    onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
+                    onChange={(e) => {
+                      setCreateForm((f) => ({ ...f, name: e.target.value }));
+                      if (createError) setCreateError("");
+                    }}
                     placeholder="2026 Spring"
                   />
+                  {createError && <div className="manage-field-error">{createError}</div>}
                   <div className="manage-field">
                     <label className="manage-label">Poster date</label>
                     <input
@@ -284,18 +297,30 @@ export default function ManageSemesterPanel({
                   {createMeta.yearError && <div className="manage-field-error">{createMeta.yearError}</div>}
                 </div>
                 <div className="manage-modal-actions">
-                  <button className="manage-btn" type="button" onClick={() => setShowCreate(false)}>
+                  <button
+                    className="manage-btn"
+                    type="button"
+                    onClick={() => {
+                      setShowCreate(false);
+                      setCreateError("");
+                    }}
+                  >
                     Cancel
                   </button>
                   <button
                     className="manage-btn primary"
                     type="button"
                     disabled={!createMeta.canSubmit}
-                    onClick={() => {
-                      onCreateSemester({
+                    onClick={async () => {
+                      const res = await onCreateSemester({
                         name: createForm.name.trim(),
                         poster_date: createForm.poster_date,
                       });
+                      if (res?.fieldErrors?.name) {
+                        setCreateError(res.fieldErrors.name);
+                        return;
+                      }
+                      setCreateError("");
                       setShowCreate(false);
                       setCreateForm({ name: "", poster_date: "" });
                     }}
@@ -319,11 +344,15 @@ export default function ManageSemesterPanel({
                 <div className="manage-modal-body">
                   <label className="manage-label">Semester name</label>
                   <input
-                    className="manage-input"
+                    className={`manage-input${editError ? " is-danger" : ""}`}
                     value={editForm.name}
-                    onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                    onChange={(e) => {
+                      setEditForm((f) => ({ ...f, name: e.target.value }));
+                      if (editError) setEditError("");
+                    }}
                     placeholder="2026 Spring"
                   />
+                  {editError && <div className="manage-field-error">{editError}</div>}
                   <div className="manage-field">
                     <label className="manage-label">Poster date</label>
                     <input
@@ -337,19 +366,31 @@ export default function ManageSemesterPanel({
                   {editMeta.yearError && <div className="manage-field-error">{editMeta.yearError}</div>}
                 </div>
                 <div className="manage-modal-actions">
-                  <button className="manage-btn" type="button" onClick={() => setShowEdit(false)}>
+                  <button
+                    className="manage-btn"
+                    type="button"
+                    onClick={() => {
+                      setShowEdit(false);
+                      setEditError("");
+                    }}
+                  >
                     Cancel
                   </button>
                   <button
                     className="manage-btn primary"
                     type="button"
                     disabled={!editMeta.canSubmit}
-                    onClick={() => {
-                      onUpdateSemester({
+                    onClick={async () => {
+                      const res = await onUpdateSemester({
                         id: editForm.id,
                         name: editForm.name.trim(),
                         poster_date: editForm.poster_date,
                       });
+                      if (res?.fieldErrors?.name) {
+                        setEditError(res.fieldErrors.name);
+                        return;
+                      }
+                      setEditError("");
                       setShowEdit(false);
                       setEditForm({ id: "", name: "", poster_date: "" });
                     }}

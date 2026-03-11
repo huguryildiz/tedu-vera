@@ -1,7 +1,7 @@
 // src/components/admin/AdminSecurityPanel.jsx
 
 import { useEffect, useState } from "react";
-import { ChevronDownIcon, ShieldUserIcon } from "../../shared/Icons";
+import { ChevronDownIcon, ShieldUserIcon, TriangleAlertIcon } from "../../shared/Icons";
 import {
   adminBootstrapBackupPassword,
   adminBootstrapDeletePassword,
@@ -25,6 +25,7 @@ export default function AdminSecurityPanel({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [adminFormError, setAdminFormError] = useState("");
   const [missingHash, setMissingHash] = useState(false);
   const [deleteMissingHash, setDeleteMissingHash] = useState(false);
   const [deleteCurrent, setDeleteCurrent] = useState("");
@@ -32,6 +33,7 @@ export default function AdminSecurityPanel({
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleteErrors, setDeleteErrors] = useState({});
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteFormError, setDeleteFormError] = useState("");
 
   const [backupMissingHash, setBackupMissingHash] = useState(false);
   const [backupCurrent, setBackupCurrent] = useState("");
@@ -39,14 +41,12 @@ export default function AdminSecurityPanel({
   const [backupConfirm, setBackupConfirm] = useState("");
   const [backupErrors, setBackupErrors] = useState({});
   const [backupLoading, setBackupLoading] = useState(false);
+  const [backupFormError, setBackupFormError] = useState("");
 
   const _toast = useToast();
   const setSuccess       = (m) => { if (m) _toast.success(m); };
-  const setError         = (m) => { if (m) _toast.error(m); };
   const setDeleteSuccess = (m) => { if (m) _toast.success(m); };
-  const setDeleteError   = (m) => { if (m) _toast.error(m); };
   const setBackupSuccess = (m) => { if (m) _toast.success(m); };
-  const setBackupError   = (m) => { if (m) _toast.error(m); };
   const [activeTab, setActiveTab] = useState("admin");
 
   const isStrongPassword = (value) => {
@@ -93,7 +93,7 @@ export default function AdminSecurityPanel({
 
   const handleSubmit = async () => {
     setSuccess("");
-    setError("");
+    setAdminFormError("");
     if (!validate()) return;
     setLoading(true);
     try {
@@ -109,14 +109,14 @@ export default function AdminSecurityPanel({
     } catch (e) {
       const msg = String(e?.message || "");
       if (msg.includes("incorrect_password")) {
-        setError("Incorrect current password.");
+        setErrors((prev) => ({ ...prev, current: "Incorrect current password." }));
       } else if (msg.includes("admin_password_hash_missing")) {
-        setError("Admin password has not been set yet. Create it to enable secure admin access.");
+        setAdminFormError("Admin password has not been set yet. Create it to enable secure admin access.");
         setMissingHash(true);
       } else if (msg.includes("already_initialized")) {
-        setError("Admin password is already configured.");
+        setAdminFormError("Admin password is already configured.");
       } else {
-        setError("Could not update password. Please try again.");
+        setAdminFormError("Could not update password. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -143,10 +143,10 @@ export default function AdminSecurityPanel({
 
   const handleDeleteSubmit = async () => {
     setDeleteSuccess("");
-    setDeleteError("");
+    setDeleteFormError("");
     if (!validateDelete()) return;
     if (!adminPass) {
-      setDeleteError("Admin password missing. Please re-login.");
+      setDeleteFormError("Admin password missing. Please re-login.");
       return;
     }
     setDeleteLoading(true);
@@ -166,18 +166,18 @@ export default function AdminSecurityPanel({
     } catch (e) {
       const msg = String(e?.message || "");
       if (msg.includes("delete_password_missing")) {
-        setDeleteError("Delete password is not configured yet.");
+        setDeleteFormError("Delete password is not configured yet.");
         setDeleteMissingHash(true);
       } else if (msg.includes("incorrect_delete_password")) {
-        setDeleteError("Incorrect current delete password.");
+        setDeleteErrors((prev) => ({ ...prev, current: "Incorrect current delete password." }));
         setDeleteMissingHash(false);
       } else if (msg.includes("already_initialized")) {
-        setDeleteError("Delete password is already configured.");
+        setDeleteFormError("Delete password is already configured.");
         setDeleteMissingHash(false);
       } else if (msg.includes("unauthorized")) {
-        setDeleteError("Incorrect admin password.");
+        setDeleteFormError("Incorrect admin password.");
       } else {
-        setDeleteError("Could not update delete password. Please try again.");
+        setDeleteFormError("Could not update delete password. Please try again.");
       }
     } finally {
       setDeleteLoading(false);
@@ -202,10 +202,10 @@ export default function AdminSecurityPanel({
 
   const handleBackupPasswordSubmit = async () => {
     setBackupSuccess("");
-    setBackupError("");
+    setBackupFormError("");
     if (!validateBackup()) return;
     if (!adminPass) {
-      setBackupError("Admin password missing. Please re-login.");
+      setBackupFormError("Admin password missing. Please re-login.");
       return;
     }
     setBackupLoading(true);
@@ -225,18 +225,18 @@ export default function AdminSecurityPanel({
     } catch (e) {
       const msg = String(e?.message || "");
       if (msg.includes("backup_password_missing")) {
-        setBackupError("Backup & restore password is not configured yet.");
+        setBackupFormError("Backup & restore password is not configured yet.");
         setBackupMissingHash(true);
       } else if (msg.includes("incorrect_backup_password")) {
-        setBackupError("Incorrect current backup & restore password.");
+        setBackupErrors((prev) => ({ ...prev, current: "Incorrect current backup & restore password." }));
         setBackupMissingHash(false);
       } else if (msg.includes("already_initialized")) {
-        setBackupError("Backup & restore password is already configured.");
+        setBackupFormError("Backup & restore password is already configured.");
         setBackupMissingHash(false);
       } else if (msg.includes("unauthorized")) {
-        setBackupError("Incorrect admin password.");
+        setBackupFormError("Incorrect admin password.");
       } else {
-        setBackupError("Could not update backup & restore password. Please try again.");
+        setBackupFormError("Could not update backup & restore password. Please try again.");
       }
     } finally {
       setBackupLoading(false);
@@ -297,11 +297,17 @@ export default function AdminSecurityPanel({
             {activeTab === "admin" && (
               <div className="manage-mini-card">
                 <div className="manage-mini-card-body">
+                  {adminFormError && (
+                    <div className="manage-alert error with-icon">
+                      <span className="manage-alert-icon" aria-hidden="true"><TriangleAlertIcon /></span>
+                      <span>{adminFormError}</span>
+                    </div>
+                  )}
                   <div className="manage-field">
                     <label className="manage-label">Current Password</label>
                     <input
                       type="password"
-                      className="manage-input"
+                      className={`manage-input${errors.current ? " is-danger" : ""}`}
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       disabled={missingHash}
@@ -314,7 +320,7 @@ export default function AdminSecurityPanel({
                     <label className="manage-label">New Password</label>
                     <input
                       type="password"
-                      className="manage-input"
+                      className={`manage-input${errors.next ? " is-danger" : ""}`}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       autoComplete="new-password"
@@ -326,7 +332,7 @@ export default function AdminSecurityPanel({
                     <label className="manage-label">Confirm New Password</label>
                     <input
                       type="password"
-                      className="manage-input"
+                      className={`manage-input${errors.confirm ? " is-danger" : ""}`}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       autoComplete="new-password"
@@ -361,6 +367,12 @@ export default function AdminSecurityPanel({
             {activeTab === "delete" && (
               <div className="manage-mini-card">
                 <div className="manage-mini-card-body">
+                  {deleteFormError && (
+                    <div className="manage-alert error with-icon">
+                      <span className="manage-alert-icon" aria-hidden="true"><TriangleAlertIcon /></span>
+                      <span>{deleteFormError}</span>
+                    </div>
+                  )}
                   {!adminPass && (
                     <div className="manage-hint manage-hint-warn">
                       Admin session required. Re-login to update the delete password.
@@ -375,7 +387,7 @@ export default function AdminSecurityPanel({
                     <label className="manage-label">Current Delete Password</label>
                     <input
                       type="password"
-                      className={`manage-input${deleteMissingHash ? " is-disabled" : ""}`}
+                      className={`manage-input${deleteErrors.current ? " is-danger" : ""}${deleteMissingHash ? " is-disabled" : ""}`}
                       value={deleteCurrent}
                       onChange={(e) => setDeleteCurrent(e.target.value)}
                       disabled={deleteLoading || !adminPass || deleteMissingHash}
@@ -387,7 +399,7 @@ export default function AdminSecurityPanel({
                     <label className="manage-label">New Delete Password</label>
                     <input
                       type="password"
-                      className="manage-input"
+                      className={`manage-input${deleteErrors.next ? " is-danger" : ""}`}
                       value={deletePassword}
                       onChange={(e) => setDeletePassword(e.target.value)}
                       disabled={deleteLoading || !adminPass}
@@ -400,7 +412,7 @@ export default function AdminSecurityPanel({
                     <label className="manage-label">Confirm Delete Password</label>
                     <input
                       type="password"
-                      className="manage-input"
+                      className={`manage-input${deleteErrors.confirm ? " is-danger" : ""}`}
                       value={deleteConfirm}
                       onChange={(e) => setDeleteConfirm(e.target.value)}
                       disabled={deleteLoading || !adminPass}
@@ -432,6 +444,12 @@ export default function AdminSecurityPanel({
             {activeTab === "backup" && (
               <div className="manage-mini-card">
                 <div className="manage-mini-card-body">
+                  {backupFormError && (
+                    <div className="manage-alert error with-icon">
+                      <span className="manage-alert-icon" aria-hidden="true"><TriangleAlertIcon /></span>
+                      <span>{backupFormError}</span>
+                    </div>
+                  )}
                   {!adminPass && (
                     <div className="manage-hint manage-hint-warn">
                       Admin session required. Re-login to update the backup &amp; restore password.
@@ -446,7 +464,7 @@ export default function AdminSecurityPanel({
                     <label className="manage-label">Current Backup & Restore Password</label>
                     <input
                       type="password"
-                      className={`manage-input${backupMissingHash ? " is-disabled" : ""}`}
+                      className={`manage-input${backupErrors.current ? " is-danger" : ""}${backupMissingHash ? " is-disabled" : ""}`}
                       value={backupCurrent}
                       onChange={(e) => setBackupCurrent(e.target.value)}
                       disabled={backupLoading || backupMissingHash || !adminPass}
@@ -458,7 +476,7 @@ export default function AdminSecurityPanel({
                     <label className="manage-label">New Backup & Restore Password</label>
                     <input
                       type="password"
-                      className="manage-input"
+                      className={`manage-input${backupErrors.next ? " is-danger" : ""}`}
                       value={backupPassword}
                       onChange={(e) => setBackupPassword(e.target.value)}
                       disabled={backupLoading || !adminPass}
@@ -470,7 +488,7 @@ export default function AdminSecurityPanel({
                     <label className="manage-label">Confirm Backup & Restore Password</label>
                     <input
                       type="password"
-                      className="manage-input"
+                      className={`manage-input${backupErrors.confirm ? " is-danger" : ""}`}
                       value={backupConfirm}
                       onChange={(e) => setBackupConfirm(e.target.value)}
                       disabled={backupLoading || !adminPass}

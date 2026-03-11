@@ -30,11 +30,81 @@ export function useOutsidePointerDown(isOpen, targets, onClose) {
 // Renders a floating popover anchored to a button rect.
 // mode="anchor" → positioned below the anchor element.
 // mode="center" → fixed to viewport center (used by date range picker).
-export function FilterPopoverPortal({ open, anchorRect, anchorEl, onClose, className, contentKey, mode = "anchor", children }) {
+export function FilterPopoverPortal({
+  open,
+  anchorRect,
+  anchorEl,
+  onClose,
+  className,
+  contentKey,
+  id,
+  mode = "anchor",
+  trapFocus = mode === "center",
+  closeOnEscape = true,
+  children,
+}) {
   const popRef = useRef(null);
   const [style, setStyle] = useState({ left: 0, top: 0, visibility: "hidden" });
 
   useOutsidePointerDown(open, [popRef, anchorEl], onClose);
+
+  useEffect(() => {
+    if (!open) return;
+    const getFocusables = () => {
+      const root = popRef.current;
+      if (!root) return [];
+      return Array.from(
+        root.querySelectorAll(
+          'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => el.offsetParent !== null);
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && closeOnEscape) {
+        onClose?.();
+        return;
+      }
+      if (!trapFocus || e.key !== "Tab") return;
+      const focusables = getFocusables();
+      if (!focusables.length) {
+        e.preventDefault();
+        return;
+      }
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    if (trapFocus) {
+      const focusables = getFocusables();
+      if (focusables.length && !popRef.current?.contains(document.activeElement)) {
+        focusables[0].focus();
+      }
+    }
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open, trapFocus, closeOnEscape, onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose?.();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [open, onClose]);
 
   useLayoutEffect(() => {
     if (!open || !popRef.current) return;
@@ -75,10 +145,11 @@ export function FilterPopoverPortal({ open, anchorRect, anchorEl, onClose, class
   return createPortal(
     <div
       ref={popRef}
+      id={id}
       className={className}
       style={style}
       role="dialog"
-      aria-modal="true"
+      aria-modal={mode === "center" ? "true" : "false"}
       onClick={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}

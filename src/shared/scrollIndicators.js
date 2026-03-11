@@ -10,7 +10,6 @@ const SCROLL_SELECTOR = [
   ".manage-item-text",
   ".details-juror-name",
   ".detail-cell-scroll",
-  ".matrix-juror-name-scroll",
   ".hbar-label",
   ".strictness-label",
 ].join(",");

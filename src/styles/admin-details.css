@@ -1,7 +1,7 @@
 /* admin-details.css — Details tab: filter bar, table, column filter popovers, status pills */
 
 /* ── Details tab — filter bar + table ───────────────────────── */
-.evaluation-details {
+.score-details {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -36,7 +36,7 @@
 .csv-export-btn:hover { background: var(--gray-100); }
 .xlsx-export-btn   { padding: 7px 14px; border-radius: 10px; border: 1px solid var(--green); background: var(--green-light); color: var(--green); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; background-clip: padding-box; box-shadow: 0 8px 16px rgba(21,128,61,0.15); }
 .xlsx-export-btn:hover { background: var(--green-light); box-shadow: 0 12px 20px rgba(21,128,61,0.2); }
-.export-label-short { display: none; }
+.export-label { display: inline; }
 .filters-active-pill {
   display: inline-flex;
   align-items: center;
@@ -66,6 +66,29 @@
 .filters-clear-btn:hover { background: var(--gray-100); border-color: var(--gray-300); color: var(--brand-600); }
 .filters-clear-btn:active { background: var(--gray-200); }
 .filters-clear-btn svg { width: 16px; height: 16px; }
+.filters-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--gray-200);
+  background: var(--gray-50);
+  color: var(--gray-700);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.filter-chip:hover { background: var(--gray-100); border-color: var(--gray-300); }
+.filter-chip svg { width: 12px; height: 12px; }
+.filter-chip .chip-label { font-weight: 600; }
+.filter-chip .chip-value { color: var(--gray-500); }
 
 .detail-table-toolbar {
   background: var(--surface-bg);
@@ -135,16 +158,37 @@
   border-bottom: 1px solid var(--gray-200);
   border-right: 1px solid var(--gray-200);
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 3;
 }
 .detail-table th:hover .col-sort-label { color: var(--brand-600); }
 .detail-table th:first-child { text-align: left; }
 .detail-table td                        { padding: 10px 12px; border-bottom: 1px solid var(--gray-200); border-right: 1px solid var(--gray-200); --surface-bg: var(--card-bg); }
 .detail-table tr:last-child td          { border-bottom: 1px solid var(--gray-200); }
 .detail-table th:first-child,
-.detail-table td:first-child { border-left: 1px solid var(--gray-200); }
+.detail-table td:first-child {
+  border-left: 1px solid var(--gray-200);
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--card-bg);
+  box-shadow: 2px 0 0 var(--gray-200);
+}
+.detail-table thead th:first-child { z-index: 4; background: var(--gray-100); }
+.detail-table tbody tr.row-even td:first-child { background: var(--gray-50); }
+.detail-table tbody tr:hover td:first-child { background: var(--gray-100) !important; }
 .detail-table tbody tr.row-even td      { background: var(--gray-50); --surface-bg: var(--gray-50); }
 .detail-table tr:hover td               { background: var(--gray-100) !important; --surface-bg: var(--gray-100); }
-.comment-cell              { font-size: 12px; color: var(--gray-500); max-width: 200px; }
+.comment-cell              { font-size: 12px; color: var(--gray-500); max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.score-cell-unscored       { color: var(--gray-400, #94a3b8); }
+.detail-table td.cell-dept,
+.detail-table td.cell-updated-at,
+.detail-table td.cell-completed-at {
+  font-size: 12px;
+  color: #475569;
+  white-space: nowrap;
+}
 .details-juror-cell {
   display: inline-flex;
   align-items: center;
@@ -156,6 +200,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.detail-table .detail-cell-scroll {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  touch-action: pan-x;
 }
 
 @media (max-width: 768px) {
@@ -170,19 +223,46 @@
     padding-right: 18px;
   }
   .details-juror-name::-webkit-scrollbar { display: none; }
+
+  .detail-table .detail-cell-scroll {
+    padding-right: 0;
+    position: static;
+    overflow: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .detail-table .detail-cell-scroll.is-scrollable {
+    overflow-x: auto;
+    text-overflow: clip;
+    scrollbar-width: none;
+  }
+  .detail-table .detail-cell-scroll.is-scrollable::-webkit-scrollbar { display: none; }
+  .detail-table .detail-cell-scroll:focus { outline: none; }
+  .detail-table .detail-cell-scroll.is-overflowing::after {
+    content: none;
+    display: none;
+  }
+  .detail-table td.cell-juror,
+  .detail-table td.cell-dept,
+  .detail-table td.cell-semester,
+  .detail-table td.cell-group-no,
+  .detail-table td.cell-project-title,
+  .detail-table td.cell-students,
+  .detail-table td.cell-comment {
+    overflow-x: hidden;
+  }
 }
 
 /* Wider columns to reduce cramped layout (horizontal scroll already enabled) */
-.detail-table th:nth-child(3),
-.detail-table td.cell-project-title { min-width: 280px; }
-.detail-table th:nth-child(4),
-.detail-table td.cell-students { min-width: 260px; }
-.detail-table th:nth-child(5),
-.detail-table td.cell-juror { min-width: 160px; }
-.detail-table th:nth-child(6),
-.detail-table td.cell-dept { min-width: 210px; }
-.detail-table th:nth-child(16),
-.detail-table td.cell-comment { min-width: 220px; }
+.detail-table th.col-project-title,
+.detail-table td.col-project-title { min-width: 280px; }
+.detail-table th.col-students,
+.detail-table td.col-students { min-width: 260px; }
+.detail-table th.col-juror,
+.detail-table td.col-juror { min-width: 160px; }
+.detail-table th.col-dept,
+.detail-table td.col-dept { min-width: 210px; }
+.detail-table th.col-comment,
+.detail-table td.col-comment { min-width: 220px; }
 
 
 
@@ -274,7 +354,9 @@ th .col-filter-hotspot svg { display: block; }
 }
 
 /* Sort label + icon inside sortable column headers */
+/* Works for both <span> (legacy) and <button> (current ColHeader) */
 .col-sort-label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+button.col-sort-label { background: none; border: none; padding: 0; font: inherit; color: inherit; text-align: left; }
 .sort-icon {
   color: var(--gray-500);
   opacity: 0.85;
@@ -309,6 +391,12 @@ th .sort-icon svg { vertical-align: middle; }
   position: fixed;
   z-index: 9999;
   max-width: min(92vw, 360px);
+}
+.col-filter-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-700);
+  letter-spacing: 0.01em;
 }
 .col-filter-popover input,
 .col-filter-popover select {

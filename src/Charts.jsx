@@ -7,16 +7,18 @@
 // Exports:
 //   OutcomeByGroupChart     – MÜDEK outcome achievement by group (normalized %)
 //   OutcomeOverviewChart    – programme-level MÜDEK outcome averages (normalized %)
+//   OutcomeTrendChart       – semester trend lines (normalized %)
 //   CompetencyRadarChart    – competency profile per group (radar)
 //   CriterionBoxPlotChart   – score distribution by criterion (boxplot)
 //   JurorConsistencyHeatmap – juror consistency heatmap (CV)
 //   RubricAchievementChart  – rubric achievement level distribution (100% stacked)
 // ============================================================
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { CRITERIA, MUDEK_OUTCOMES, MUDEK_THRESHOLD } from "./config";
 import LevelPill from "./shared/LevelPill";
 import { GraduationCapIcon, ChevronDownIcon, SearchIcon } from "./shared/Icons";
+import { mean, stdDev, quantile, outcomeValues } from "./shared/stats";
 
 // ── Per-chart MÜDEK outcome code lists ───────────────────────
 // All charts use the same set per spec §3.
@@ -31,33 +33,6 @@ const OUTCOMES = CRITERIA.map((c) => ({
   max:   c.max,
   color: c.color,
 }));
-
-// ── Math helpers ──────────────────────────────────────────────
-function stdDev(arr) {
-  if (arr.length < 2) return 0;
-  const m = arr.reduce((a, b) => a + b, 0) / arr.length;
-  return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length);
-}
-
-function mean(arr) {
-  if (!arr.length) return 0;
-  return arr.reduce((a, b) => a + b, 0) / arr.length;
-}
-
-function quantile(sorted, q) {
-  if (!sorted.length) return 0;
-  const pos = (sorted.length - 1) * q;
-  const base = Math.floor(pos);
-  const rest = pos - base;
-  if (sorted[base + 1] === undefined) return sorted[base];
-  return sorted[base] + rest * (sorted[base + 1] - sorted[base]);
-}
-
-function outcomeValues(rows, key) {
-  return rows
-    .map((r) => Number(r[key]))
-    .filter((v) => Number.isFinite(v));
-}
 
 function parseOutcomeCode(code) {
   const [majorRaw, minorRaw] = String(code).split(".");
@@ -339,7 +314,7 @@ export function OutcomeOverviewChart({ data }) {
     const vals   = outcomeValues(rows, o.key);
     const avgRaw = vals.length ? mean(vals) : 0;
     const pct    = o.max > 0 ? (avgRaw / o.max) * 100 : 0;
-    const sd     = vals.length > 1 ? (stdDev(vals) / o.max) * 100 : 0;
+    const sd     = vals.length > 1 ? (stdDev(vals, true) / o.max) * 100 : 0;
     return { ...o, avgRaw, pct, sd, n: vals.length };
   });
 
@@ -473,6 +448,224 @@ export function OutcomeOverviewChart({ data }) {
             );
           })}
         </svg>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// CHART 2b — Semester Trend (grouped bar chart)
+// Shows normalized averages per criterion across selected semesters
+// ════════════════════════════════════════════════════════════
+export function OutcomeTrendChart({
+  data = [],
+  semesters = [],
+  selectedIds = [],
+  loading = false,
+  error = "",
+  headerRight = null,
+  hint = "",
+}) {
+  const outcomeByKey = useMemo(
+    () => Object.fromEntries(OUTCOMES.map((o) => [o.key, o])),
+    []
+  );
+
+  const series = [
+    {
+      key: "technical",
+      label: outcomeByKey.technical?.label || "Technical",
+      color: outcomeByKey.technical?.color || "#f59e0b",
+      max: outcomeByKey.technical?.max || 1,
+      field: "avgTechnical",
+    },
+    {
+      key: "design",
+      label: "Written (9.2)",
+      color: outcomeByKey.design?.color || "#22c55e",
+      max: outcomeByKey.design?.max || 1,
+      field: "avgWritten",
+    },
+    {
+      key: "delivery",
+      label: "Oral (9.1)",
+      color: outcomeByKey.delivery?.color || "#3b82f6",
+      max: outcomeByKey.delivery?.max || 1,
+      field: "avgOral",
+    },
+    {
+      key: "teamwork",
+      label: "Teamwork (8.1/8.2)",
+      color: outcomeByKey.teamwork?.color || "#ef4444",
+      max: outcomeByKey.teamwork?.max || 1,
+      field: "avgTeamwork",
+    },
+  ];
+
+  const orderedSemesters = useMemo(() => {
+    const orderIndex = new Map((semesters || []).map((s, i) => [s.id, i]));
+    const selected = (semesters || []).filter((s) => (selectedIds || []).includes(s.id));
+    return selected.sort((a, b) => (orderIndex.get(b.id) ?? 0) - (orderIndex.get(a.id) ?? 0));
+  }, [semesters, selectedIds]);
+
+  const dataMap = useMemo(
+    () => new Map((data || []).map((row) => [row.semesterId, row])),
+    [data]
+  );
+
+  const points = orderedSemesters.map((s) => {
+    const row = dataMap.get(s.id);
+    const n = row?.nEvals ?? 0;
+    const vals = Object.fromEntries(series.map((ser) => {
+      const raw = row ? row[ser.field] : null;
+      const hasData = row && Number(row.nEvals || 0) > 0;
+      const pct = hasData && Number.isFinite(raw) && ser.max > 0
+        ? (raw / ser.max) * 100
+        : null;
+      return [ser.key, pct];
+    }));
+    return {
+      id: s.id,
+      label: row?.semesterName || s.name || "—",
+      n,
+      values: vals,
+    };
+  });
+
+  const padL = 34;
+  const padR = 18;
+  const padTop = 18;
+  const padBot = 46;
+  const chartH = 220;
+  const barW = 16;
+  const barGap = 4;
+  const groupGap = 40;
+  const clusterW = series.length * barW + (series.length - 1) * barGap;
+  const groupW = clusterW + groupGap;
+  const baseTotalW = padL + points.length * groupW + padR;
+  const minInnerW = 640;
+  const innerW = Math.max(baseTotalW, minInnerW);
+  const extraPerGroup = points.length ? (innerW - baseTotalW) / points.length : 0;
+  const groupWAdj = groupW + extraPerGroup;
+  const W = padL + points.length * groupWAdj + padR;
+  const H = padTop + chartH + padBot;
+
+  const scaleMin = 0;
+  const scaleMax = 100;
+  const range = 100;
+  const ticks = [0, 25, 50, 75, 100];
+
+  const xFor = (i) => padL + i * groupWAdj;
+  const yFor = (pct) =>
+    padTop + chartH * (1 - (Math.max(scaleMin, Math.min(scaleMax, pct)) - scaleMin) / range);
+
+  const hasValues = points.some((p) =>
+    series.some((ser) => Number.isFinite(p.values[ser.key]))
+  );
+
+  const renderBody = () => {
+    if (loading) return <ChartEmpty msg="Loading trend…" />;
+    if (error) return <ChartEmpty msg={error} />;
+    if (!points.length) return <ChartEmpty msg="Select at least one semester." />;
+    if (!hasValues) return <ChartEmpty msg="No completed evaluations for selected semesters." />;
+
+    return (
+      <div className="chart-scroll-wrap trend-scroll-wrap">
+        <div className="chart-scroll-inner" style={{ minWidth: W }}>
+          <div className="chart-svg-wrap">
+            <svg
+              className="chart-main-svg"
+              viewBox={`0 0 ${W} ${H}`}
+              style={{ width: "100%", minWidth: W, maxWidth: "none", height: "auto", display: "block" }}
+            >
+              {/* Y-axis grid lines */}
+              {ticks.map((v) => {
+                const y = yFor(v);
+                return (
+                  <g key={v}>
+                    <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#e2e8f0" strokeWidth="1" />
+                    <text x={padL - 4} y={y + 4} fontSize="8" textAnchor="end" fill="#94a3b8">{v}</text>
+                  </g>
+                );
+              })}
+              <text
+                x="10"
+                y={padTop + chartH / 2}
+                transform={`rotate(-90 10 ${padTop + chartH / 2})`}
+                fontSize="8"
+                fill="#94a3b8"
+                textAnchor="middle"
+              >
+                Normalized (%)
+              </text>
+
+              {/* Grouped bars */}
+              {points.map((p, i) => {
+                const gx = xFor(i);
+                return (
+                  <g key={p.id}>
+                    {series.map((ser, si) => {
+                      const v = p.values[ser.key];
+                      if (!Number.isFinite(v)) return null;
+                      const h = (v / 100) * chartH;
+                      const x = gx + si * (barW + barGap);
+                      const y = padTop + (chartH - h);
+                      return (
+                        <g key={ser.key}>
+                          <title>{`${p.label} · ${ser.label}\n${v.toFixed(1)}% · N=${p.n ? p.n : "N/A"}`}</title>
+                          <rect
+                            x={x}
+                            y={y}
+                            width={barW}
+                            height={h}
+                            rx="3"
+                            fill={ser.color}
+                            opacity="0.85"
+                          />
+                        </g>
+                      );
+                    })}
+
+                    {/* X-axis label */}
+                    <text
+                      x={gx + clusterW / 2}
+                      y={padTop + chartH + 20}
+                      textAnchor="middle"
+                      fontSize="9"
+                      fill="#475569"
+                      fontWeight="600"
+                    >
+                      <title>{`${p.label}\nN=${p.n ? p.n : "N/A"}`}</title>
+                      {p.label}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="chart-card chart-fill-card dashboard-chart-card">
+      <div className="chart-title-row trend-title-row">
+        <div>
+          <div className="chart-title">Semester Trend</div>
+          <div className="chart-note">Normalized averages across selected semesters.</div>
+        </div>
+        {headerRight}
+      </div>
+      {hint ? <div className="trend-hint">{hint}</div> : null}
+      {renderBody()}
+      <div className="chart-legend trend-legend">
+        {series.map((ser) => (
+          <span key={ser.key} className="legend-item">
+            <span className="legend-dot" style={{ background: ser.color }} />
+            {ser.label}
+          </span>
+        ))}
       </div>
     </div>
   );
@@ -764,15 +957,16 @@ export function RadarPrintAll({ stats }) {
         const pts  = vals.map((v, i) => spoke(i, (v / 100) * R));
         const pathD = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") + " Z";
         return (
-          <section key={group.id} className="print-page radar-print-page">
-            <div className="print-card-title">Competency Profile — {group.name}</div>
+          <section key={group.id} className="print-page report-chart radar-print-page">
+            <h2 className="print-card-title">Competency Profile — {group.name}</h2>
             <div className="print-card-note">Dashed line shows the cohort average across all groups.</div>
-            <div className="radar-print-card">
-              <svg
-                viewBox="0 0 260 240"
-                preserveAspectRatio="xMidYMid meet"
-                style={{ width: "100%", height: "auto", display: "block" }}
-              >
+            <div className="chart-wrapper">
+              <div className="radar-print-card">
+                <svg
+                  viewBox="0 0 260 240"
+                  preserveAspectRatio="xMidYMid meet"
+                  style={{ width: "100%", height: "auto", display: "block" }}
+                >
                 {[0.25, 0.5, 0.75, 1].map((r) => (
                   <path key={r} d={ringPath(r)} fill="none" stroke="#e2e8f0" strokeWidth="1" />
                 ))}
@@ -813,7 +1007,8 @@ export function RadarPrintAll({ stats }) {
                     </text>
                   );
                 })}
-              </svg>
+                </svg>
+              </div>
             </div>
           </section>
         );
@@ -833,7 +1028,7 @@ export function CriterionBoxPlotChart({ data }) {
   const boxes = OUTCOMES.map((o) => {
     const vals = rows
       .map((r) => Number(r[o.key]))
-      .filter((v) => Number.isFinite(v) && v > 0)
+      .filter((v) => Number.isFinite(v))
       .map((v) => (v / o.max) * 100)
       .sort((a, b) => a - b);
     if (!vals.length) return { ...o, empty: true };
@@ -966,19 +1161,31 @@ export function JurorConsistencyHeatmap({ stats, data }) {
   const rows   = data || [];
   if (!groups.length || !rows.length) return <ChartEmpty />;
 
-  const cellData = OUTCOMES.map((o) =>
-    groups.map((g) => {
-      const vals = rows
-        .filter((r) => r.projectId === g.id)
-        .map((r) => Number(r[o.key]))
-        .filter((v) => Number.isFinite(v));
-      if (vals.length < 2) return { cv: null, m: null, sd: null, n: vals.length };
-      const m  = mean(vals);
-      if (!m) return { cv: null, m, sd: null, n: vals.length };
-      const sd = stdDev(vals);
-      return { cv: (sd / m) * 100, m, sd, n: vals.length };
-    })
-  );
+  const rowsByProject = useMemo(() => {
+    const map = new Map();
+    rows.forEach((r) => {
+      const key = r.projectId;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(r);
+    });
+    return map;
+  }, [rows]);
+
+  const cellData = useMemo(() => (
+    OUTCOMES.map((o) =>
+      groups.map((g) => {
+        const groupRows = rowsByProject.get(g.id) || [];
+        const vals = groupRows
+          .map((r) => Number(r[o.key]))
+          .filter((v) => Number.isFinite(v));
+        if (vals.length < 2) return { cv: null, m: null, sd: null, n: vals.length };
+        const m  = mean(vals);
+        if (!m) return { cv: null, m, sd: null, n: vals.length };
+        const sd = stdDev(vals, true);
+        return { cv: (sd / m) * 100, m, sd, n: vals.length };
+      })
+    )
+  ), [groups, rowsByProject]);
 
   const cvBand = (v) => {
     if (v === null) return { fill: "#f1f5f9", text: "#94a3b8" };
@@ -1273,7 +1480,7 @@ export function OutcomeByGroupChartPrint({ stats }) {
     <svg
       viewBox={`0 0 ${W} ${H}`}
       preserveAspectRatio="xMidYMid meet"
-      style={{ width: "100%", height: "auto", display: "block" }}
+      style={{ width: W, maxWidth: "100%", height: "auto", display: "block" }}
     >
       {/* Y-axis grid + labels */}
       {[0, 25, 50, 75, 100].map((v) => {
@@ -1286,11 +1493,9 @@ export function OutcomeByGroupChartPrint({ stats }) {
           </g>
         );
       })}
-      <text
-        x="10" y={chartPadTop + chartH / 2}
-        transform={`rotate(-90 10 ${chartPadTop + chartH / 2})`}
-        fontSize="8" fill="#94a3b8" textAnchor="middle"
-      >Normalized (%)</text>
+      <g transform={`translate(10, ${chartPadTop + chartH / 2}) rotate(-90)`}>
+        <text x="0" y="0" textAnchor="middle" fontSize="8" fill="#94a3b8">Normalized (%)</text>
+      </g>
 
       {/* Threshold line */}
       <line x1={padL} y1={threshY} x2={W - padR} y2={threshY}
@@ -1354,7 +1559,7 @@ export function OutcomeOverviewChartPrint({ data }) {
     const vals   = outcomeValues(rows, o.key);
     const avgRaw = vals.length ? mean(vals) : 0;
     const pct    = o.max > 0 ? (avgRaw / o.max) * 100 : 0;
-    const sd     = vals.length > 1 ? (stdDev(vals) / o.max) * 100 : 0;
+    const sd     = vals.length > 1 ? (stdDev(vals, true) / o.max) * 100 : 0;
     return { ...o, avgRaw, pct, sd, n: vals.length };
   });
 
@@ -1393,11 +1598,9 @@ export function OutcomeOverviewChartPrint({ data }) {
           </g>
         );
       })}
-      <text
-        x="10" y={padTop + chartH / 2}
-        transform={`rotate(-90 10 ${padTop + chartH / 2})`}
-        fontSize="8" fill="#94a3b8" textAnchor="middle"
-      >Normalized (%)</text>
+      <g transform={`translate(10, ${padTop + chartH / 2}) rotate(-90)`}>
+        <text x="0" y="0" textAnchor="middle" fontSize="8" fill="#94a3b8">Normalized (%)</text>
+      </g>
 
       {/* Threshold */}
       <line x1={padL} y1={threshY} x2={W - padR} y2={threshY}
@@ -1463,6 +1666,132 @@ export function OutcomeOverviewChartPrint({ data }) {
 }
 
 // ════════════════════════════════════════════════════════════
+// CHART 2b-PRINT — Semester Trend (grouped bars)
+// viewBox dynamic × dynamic
+// ════════════════════════════════════════════════════════════
+export function OutcomeTrendChartPrint({ data = [], semesters = [], selectedIds = [] }) {
+  const series = [
+    { key: "technical", label: "Technical", color: "#f59e0b", max: OUTCOMES.find((o) => o.key === "technical")?.max || 1, field: "avgTechnical" },
+    { key: "design", label: "Written (9.2)", color: "#22c55e", max: OUTCOMES.find((o) => o.key === "design")?.max || 1, field: "avgWritten" },
+    { key: "delivery", label: "Oral (9.1)", color: "#3b82f6", max: OUTCOMES.find((o) => o.key === "delivery")?.max || 1, field: "avgOral" },
+    { key: "teamwork", label: "Teamwork (8.1/8.2)", color: "#ef4444", max: OUTCOMES.find((o) => o.key === "teamwork")?.max || 1, field: "avgTeamwork" },
+  ];
+
+  const orderIndex = new Map((semesters || []).map((s, i) => [s.id, i]));
+  const ordered = (semesters || [])
+    .filter((s) => (selectedIds || []).includes(s.id))
+    .sort((a, b) => (orderIndex.get(b.id) ?? 0) - (orderIndex.get(a.id) ?? 0));
+  const dataMap = new Map((data || []).map((row) => [row.semesterId, row]));
+
+  const points = ordered.map((s) => {
+    const row = dataMap.get(s.id);
+    const n = row?.nEvals ?? 0;
+    const values = Object.fromEntries(series.map((ser) => {
+      const raw = row ? row[ser.field] : null;
+      const hasData = row && Number(row.nEvals || 0) > 0;
+      const pct = hasData && Number.isFinite(raw) && ser.max > 0
+        ? (raw / ser.max) * 100
+        : null;
+      return [ser.key, pct];
+    }));
+    return {
+      id: s.id,
+      label: row?.semesterName || s.name || "—",
+      n,
+      values,
+    };
+  });
+
+  const allValues = points.flatMap((p) =>
+    series.map((ser) => p.values[ser.key]).filter((v) => Number.isFinite(v))
+  );
+  if (!points.length || !allValues.length) return null;
+
+  const scaleMin = 0;
+  const scaleMax = 100;
+  const range = 100;
+  const ticks = [0, 25, 50, 75, 100];
+
+  const padL = 38;
+  const padR = 12;
+  const padTop = 12;
+  const padBot = 30;
+  const chartH = 140;
+  const barW = 10;
+  const barGap = 3;
+  const groupGap = 28;
+  const clusterW = series.length * barW + (series.length - 1) * barGap;
+  const groupW = clusterW + groupGap;
+  const baseW = padL + points.length * groupW + padR;
+  const W = Math.max(680, baseW);
+  const extraPerGroup = points.length ? (W - baseW) / points.length : 0;
+  const groupWAdj = groupW + extraPerGroup;
+  const H = padTop + chartH + padBot;
+  const xFor = (i) => padL + i * groupWAdj;
+  const yFor = (pct) =>
+    padTop + chartH * (1 - (Math.max(scaleMin, Math.min(scaleMax, pct)) - scaleMin) / range);
+
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="xMidYMid meet"
+      style={{ width: "100%", height: "auto", display: "block" }}
+    >
+      {/* Y-axis grid lines */}
+      {ticks.map((v) => {
+        const y = yFor(v);
+        return (
+          <g key={v}>
+            <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#e2e8f0" strokeWidth="1" />
+            <text x={padL - 6} y={y + 3} fontSize="7.5" textAnchor="end" fill="#94a3b8">{v}</text>
+          </g>
+        );
+      })}
+      <g transform={`translate(12, ${padTop + chartH / 2}) rotate(-90)`}>
+        <text x="0" y="0" textAnchor="middle" fontSize="7.5" fill="#94a3b8">Normalized (%)</text>
+      </g>
+
+      {/* Grouped bars */}
+      {points.map((p, i) => {
+        const gx = xFor(i);
+        return (
+          <g key={p.id}>
+            {series.map((ser, si) => {
+              const v = p.values[ser.key];
+              if (!Number.isFinite(v)) return null;
+              const h = (v / 100) * chartH;
+              const x = gx + si * (barW + barGap);
+              const y = padTop + (chartH - h);
+              return (
+                <rect
+                  key={`${p.id}-${ser.key}`}
+                  x={x}
+                  y={y}
+                  width={barW}
+                  height={h}
+                  rx="2"
+                  fill={ser.color}
+                  opacity="0.85"
+                />
+              );
+            })}
+            <text
+              x={gx + clusterW / 2}
+              y={padTop + chartH + 18}
+              textAnchor="middle"
+              fontSize="8"
+              fill="#475569"
+            >
+              {p.label}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
 // CHART 4-PRINT — Juror Consistency Heatmap (CV grid)
 // viewBox dynamic × dynamic  (full-width card)
 // ════════════════════════════════════════════════════════════
@@ -1471,18 +1800,30 @@ export function JurorConsistencyHeatmapPrint({ stats, data }) {
   const rows   = data || [];
   if (!groups.length || !rows.length) return null;
 
-  const cellData = OUTCOMES.map((o) =>
-    groups.map((g) => {
-      const vals = rows
-        .filter((r) => r.projectId === g.id)
-        .map((r) => Number(r[o.key]))
-        .filter((v) => Number.isFinite(v));
-      if (vals.length < 2) return { cv: null, n: vals.length };
-      const m = mean(vals);
-      if (!m) return { cv: null, n: vals.length };
-      return { cv: (stdDev(vals) / m) * 100, n: vals.length };
-    })
-  );
+  const rowsByProject = useMemo(() => {
+    const map = new Map();
+    rows.forEach((r) => {
+      const key = r.projectId;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(r);
+    });
+    return map;
+  }, [rows]);
+
+  const cellData = useMemo(() => (
+    OUTCOMES.map((o) =>
+      groups.map((g) => {
+        const groupRows = rowsByProject.get(g.id) || [];
+        const vals = groupRows
+          .map((r) => Number(r[o.key]))
+          .filter((v) => Number.isFinite(v));
+        if (vals.length < 2) return { cv: null, n: vals.length };
+        const m = mean(vals);
+        if (!m) return { cv: null, n: vals.length };
+        return { cv: (stdDev(vals, true) / m) * 100, n: vals.length };
+      })
+    )
+  ), [groups, rowsByProject]);
 
   const cvBand = (v) => {
     if (v === null) return { fill: "#f1f5f9", text: "#94a3b8" };
@@ -1574,7 +1915,7 @@ export function CriterionBoxPlotChartPrint({ data }) {
   const boxes = OUTCOMES.map((o) => {
     const vals = rows
       .map((r) => Number(r[o.key]))
-      .filter((v) => Number.isFinite(v) && v > 0)
+      .filter((v) => Number.isFinite(v))
       .map((v) => (v / o.max) * 100)
       .sort((a, b) => a - b);
     if (!vals.length) return { ...o, empty: true };
@@ -1633,11 +1974,9 @@ export function CriterionBoxPlotChartPrint({ data }) {
         );
       })}
       <line x1={padL} y1={chartPadTop} x2={padL} y2={chartPadTop + chartH} stroke="#e2e8f0" strokeWidth="1" />
-      <text
-        x="10" y={chartPadTop + chartH / 2}
-        transform={`rotate(-90 10 ${chartPadTop + chartH / 2})`}
-        fontSize="8" fill="#94a3b8" textAnchor="middle"
-      >Normalized (%)</text>
+      <g transform={`translate(10, ${chartPadTop + chartH / 2}) rotate(-90)`}>
+        <text x="0" y="0" textAnchor="middle" fontSize="8" fill="#94a3b8">Normalized (%)</text>
+      </g>
 
       {/* Boxes */}
       {boxes.map((b, i) => {

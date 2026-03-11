@@ -29,7 +29,7 @@ import {
   adminFullImport,
 } from "../shared/api";
 import { supabase } from "../lib/supabaseClient";
-import { ChevronDownIcon, CloudUploadIcon, DatabaseBackupIcon, DownloadIcon, FileDownIcon, HistoryIcon, UploadIcon, KeyRoundIcon, LandmarkIcon, UserCheckIcon } from "../shared/Icons";
+import { ChevronDownIcon, CloudUploadIcon, DatabaseBackupIcon, DownloadIcon, FileDownIcon, HistoryIcon, UploadIcon, FileUpIcon, KeyRoundIcon, LandmarkIcon, UserCheckIcon, TriangleAlertIcon } from "../shared/Icons";
 import { exportXLSX, exportAuditLogsXLSX, buildExportFilename } from "./utils";
 import SemesterSettingsPanel from "./ManageSemesterPanel";
 import ProjectSettingsPanel from "./ManageProjectsPanel";
@@ -240,15 +240,30 @@ function useMediaQuery(query) {
 export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   const isMobile = useMediaQuery("(max-width: 900px)");
   const supportsInfiniteScroll = typeof window !== "undefined" && "IntersectionObserver" in window;
-  const [openPanels, setOpenPanels] = useState({
-    semester: true,
-    projects: true,
-    jurors: true,
-    permissions: true,
-    security: true,
-    audit: true,
-    export: true,
-    dbbackup: true,
+  const [openPanels, setOpenPanels] = useState(() => {
+    const mobileInit = typeof window !== "undefined" && window.matchMedia("(max-width: 900px)").matches;
+    if (mobileInit) {
+      return {
+        semester: true,
+        projects: true,
+        jurors: false,
+        permissions: false,
+        security: false,
+        audit: false,
+        export: false,
+        dbbackup: false,
+      };
+    }
+    return {
+      semester: true,
+      projects: true,
+      jurors: true,
+      permissions: true,
+      security: true,
+      audit: true,
+      export: true,
+      dbbackup: true,
+    };
   });
 
   const [semesterList, setSemesterList] = useState([]);
@@ -259,8 +274,12 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   const [loading, setLoading] = useState(false);
   const _toast = useToast();
   const setMessage = (msg) => { if (msg) _toast.success(msg); };
-  const setError   = (err) => { if (err) _toast.error(err); };
+  const [systemError, setSystemError] = useState("");
+  const setSystemErrorSafe = (err) => { setSystemError(err || ""); };
+  const [contextNotice, setContextNotice] = useState("");
   const [resetPinInfo, setResetPinInfo] = useState(null);
+  const [pinResetTarget, setPinResetTarget] = useState(null);
+  const [pinResetLoading, setPinResetLoading] = useState(false);
   const [pinCopied, setPinCopied] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteCounts, setDeleteCounts] = useState(null);
@@ -276,6 +295,8 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   const jurorTimerRef = useRef(null);  // debounce for loadJurors-only refetch
   const auditTimerRef = useRef(null);  // debounce for loadAuditLogs refetch
   const pinCopyTimerRef = useRef(null);
+  const contextTimerRef = useRef(null);
+  const prevActiveSemesterRef = useRef(null);
   const adminSecurityRef = useRef(null);
   const auditCardRef = useRef(null);
   const auditScrollRef = useRef(null);
@@ -299,6 +320,9 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   const [dbBackupLoading, setDbBackupLoading] = useState(false);
   const [dbBackupError, setDbBackupError] = useState("");
   const [backupPasswordSet, setBackupPasswordSet] = useState(true);
+  const [evalLockConfirmOpen, setEvalLockConfirmOpen] = useState(false);
+  const [evalLockConfirmNext, setEvalLockConfirmNext] = useState(false);
+  const [evalLockConfirmLoading, setEvalLockConfirmLoading] = useState(false);
 
   const copyPinToClipboard = async (pinValue) => {
     if (!pinValue) return false;
@@ -338,6 +362,32 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
     () => semesterList.find((s) => s.id === activeSemesterId) || null,
     [semesterList, activeSemesterId]
   );
+  const activeSemesterLabel = activeSemester?.name || "—";
+
+  useEffect(() => {
+    if (!activeSemesterId) return;
+    if (prevActiveSemesterRef.current && prevActiveSemesterRef.current !== activeSemesterId) {
+      setContextNotice(`Active semester switched to ${activeSemesterLabel}.`);
+    }
+    prevActiveSemesterRef.current = activeSemesterId;
+  }, [activeSemesterId, activeSemesterLabel]);
+
+  useEffect(() => {
+    if (!activeSemesterId) return;
+    if (contextTimerRef.current) clearTimeout(contextTimerRef.current);
+    if (contextNotice) {
+      contextTimerRef.current = setTimeout(() => {
+        setContextNotice("");
+        contextTimerRef.current = null;
+      }, 2800);
+    }
+    return () => {
+      if (contextTimerRef.current) {
+        clearTimeout(contextTimerRef.current);
+        contextTimerRef.current = null;
+      }
+    };
+  }, [contextNotice, activeSemesterId]);
 
   useEffect(() => {
     let active = true;
@@ -424,7 +474,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
         setAuditCursor({ beforeAt: last.created_at, beforeId: last.id });
       }
     } catch (e) {
-      setAuditError(e?.message || "Could not load audit logs.");
+      setAuditError(e?.message || "Could not load audit logs. Try again or adjust filters.");
     } finally {
       setAuditLoading(false);
     }
@@ -494,16 +544,16 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   useEffect(() => {
     setLoading(true);
-    setError("");
+    setSystemErrorSafe("");
     loadSemesters()
-      .catch(() => setError("Could not load semesters."))
+      .catch(() => setSystemErrorSafe("Could not load semesters. Try refreshing or check your connection."))
       .finally(() => setLoading(false));
   }, [loadSemesters]);
 
   useEffect(() => {
     if (!activeSemesterId) return;
     if (!adminPass) {
-      setError("Admin password missing. Please re-login.");
+      setSystemErrorSafe("Admin password missing. Please re-login.");
       return;
     }
     setLoading(true);
@@ -512,7 +562,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
       loadJurors(),
       loadSettings(),
     ])
-      .catch((e) => setError(e?.message || "Could not load settings data."))
+      .catch((e) => setSystemErrorSafe(e?.message || "Could not load settings data. Check admin password or refresh."))
       .finally(() => setLoading(false));
   }, [activeSemesterId, adminPass, loadProjects, loadJurors, loadSettings]);
 
@@ -536,7 +586,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
     return () => clearInterval(interval);
   }, [adminPass, activeSemesterId, loadProjects, loadJurors, loadSettings, refreshSemesters]);
 
-  const AUDIT_COMPACT_COUNT = 3;
+  const AUDIT_COMPACT_COUNT = isMobile ? 2 : 3;
   const hasAuditToggle = auditHasMore || auditLogs.length > AUDIT_COMPACT_COUNT;
   const auditTotalLabel = auditHasMore ? `${auditLogs.length}+` : `${auditLogs.length}`;
   const visibleAuditLogs = showAllAuditLogs
@@ -693,8 +743,11 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   const handleSetActiveSemester = async (semesterId) => {
     setMessage("");
-    setError("");
-    if (!adminPass) return setError("Admin password missing.");
+    setSystemErrorSafe("");
+    if (!adminPass) {
+      setSystemErrorSafe("Admin password missing. Please re-login.");
+      return { ok: false };
+    }
     setLoading(true);
     try {
       await adminSetActiveSemester(semesterId, adminPass);
@@ -703,8 +756,10 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
       );
       setActiveSemesterId(semesterId);
       setMessage("Active semester updated.");
+      return { ok: true };
     } catch (e) {
-      setError(e?.message || "Could not update active semester.");
+      setSystemErrorSafe(e?.message || "Could not update active semester. Try again or re-login.");
+      return { ok: false };
     } finally {
       setLoading(false);
     }
@@ -712,8 +767,11 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   const handleCreateSemester = async (payload) => {
     setMessage("");
-    setError("");
-    if (!adminPass) return setError("Admin password missing.");
+    setSystemErrorSafe("");
+    if (!adminPass) {
+      setSystemErrorSafe("Admin password missing. Please re-login.");
+      return { ok: false };
+    }
     setLoading(true);
     try {
       const created = await adminCreateSemester(payload, adminPass);
@@ -728,17 +786,19 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
         });
       }
       setMessage("Semester created.");
+      return { ok: true };
     } catch (e) {
       const msg = String(e?.message || "");
       const msgLower = msg.toLowerCase();
       if (msg.includes("semester_name_exists")
         || msgLower.includes("semesters_name_ci_unique")
         || msgLower.includes("duplicate key value violates unique constraint")) {
-        setError("Semester name already exists.");
+        return { ok: false, fieldErrors: { name: "Semester name already exists." } };
       } else if (msg.includes("semester_name_required")) {
-        setError("Semester name is required.");
+        return { ok: false, fieldErrors: { name: "Semester name is required." } };
       } else {
-        setError(msg || "Could not create semester.");
+        setSystemErrorSafe(msg || "Could not create semester. Try again or check admin password.");
+        return { ok: false };
       }
     } finally {
       setLoading(false);
@@ -747,8 +807,11 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   const handleUpdateSemester = async (payload) => {
     setMessage("");
-    setError("");
-    if (!adminPass) return setError("Admin password missing.");
+    setSystemErrorSafe("");
+    if (!adminPass) {
+      setSystemErrorSafe("Admin password missing. Please re-login.");
+      return { ok: false };
+    }
     setLoading(true);
     try {
       await adminUpdateSemester(payload, adminPass);
@@ -758,17 +821,19 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
         poster_date: payload.poster_date,
       });
       setMessage("Semester updated.");
+      return { ok: true };
     } catch (e) {
       const msg = String(e?.message || "");
       const msgLower = msg.toLowerCase();
       if (msg.includes("semester_name_exists")
         || msgLower.includes("semesters_name_ci_unique")
         || msgLower.includes("duplicate key value violates unique constraint")) {
-        setError("Semester name already exists.");
+        return { ok: false, fieldErrors: { name: "Semester name already exists." } };
       } else if (msg.includes("semester_name_required")) {
-        setError("Semester name is required.");
+        return { ok: false, fieldErrors: { name: "Semester name is required." } };
       } else {
-        setError(msg || "Could not update semester.");
+        setSystemErrorSafe(msg || "Could not update semester. Try again or check admin password.");
+        return { ok: false };
       }
     } finally {
       setLoading(false);
@@ -777,11 +842,11 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   const handleImportProjects = async (rows) => {
     if (!activeSemesterId) {
-      setError("Select an active semester before importing groups.");
-      return;
+      setSystemErrorSafe("Select an active semester before importing groups.");
+      return { ok: false };
     }
     setMessage("");
-    setError("");
+    setSystemErrorSafe("");
     setLoading(true);
     try {
       let skipped = 0;
@@ -809,19 +874,19 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
       }
       setMessage(
         skipped > 0
-          ? `Projects imported. Skipped ${skipped} existing groups.`
-          : "Projects imported."
+          ? `Groups imported. Skipped ${skipped} existing groups.`
+          : "Groups imported."
       );
-      return { skipped };
+      return { ok: true, skipped };
     } catch (e) {
       const msg = String(e?.message || "");
       const msgLower = msg.toLowerCase();
       if (msg.includes("project_group_exists")
         || msgLower.includes("projects_semester_group_no_key")
         || msgLower.includes("duplicate key value violates unique constraint")) {
-        setError("Some groups already exist. Refresh and try again.");
+        return { ok: false, formError: "Some groups already exist. Refresh and try again." };
       } else {
-        setError(msg || "Could not import projects.");
+        return { ok: false, formError: msg || "Could not import groups. Check the CSV format and try again." };
       }
     } finally {
       setLoading(false);
@@ -830,11 +895,11 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   const handleAddProject = async (row) => {
     if (!activeSemesterId) {
-      setError("Select an active semester before adding a group.");
-      return;
+      setSystemErrorSafe("Select an active semester before adding a group.");
+      return { ok: false };
     }
     setMessage("");
-    setError("");
+    setSystemErrorSafe("");
     setLoading(true);
     try {
       const res = await adminCreateProject({ ...row, semesterId: activeSemesterId }, adminPass);
@@ -851,15 +916,17 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
       });
       await loadProjects(activeSemesterId);
       setMessage("Group added.");
+      return { ok: true };
     } catch (e) {
       const msg = String(e?.message || "");
       const msgLower = msg.toLowerCase();
       if (msg.includes("project_group_exists")
         || msgLower.includes("projects_semester_group_no_key")
         || msgLower.includes("duplicate key value violates unique constraint")) {
-        setError(`Group ${row.group_no} already exists. Use Edit to update.`);
+        return { ok: false, fieldErrors: { group_no: `Group ${row.group_no} already exists. Use Edit to update.` } };
       } else {
-        setError(msg || "Could not save group.");
+        setSystemErrorSafe(msg || "Could not save group. Try again or check admin password.");
+        return { ok: false };
       }
     } finally {
       setLoading(false);
@@ -869,7 +936,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   const handleEditProject = async (row) => {
     if (!activeSemesterId) return;
     setMessage("");
-    setError("");
+    setSystemErrorSafe("");
     setLoading(true);
     try {
       const res = await adminUpsertProject({ ...row, semesterId: activeSemesterId }, adminPass);
@@ -881,8 +948,10 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
         group_students: row.group_students,
       });
       setMessage("Group updated.");
+      return { ok: true };
     } catch (e) {
-      setError(e?.message || "Could not update group.");
+      setSystemErrorSafe(e?.message || "Could not update group. Try again or check admin password.");
+      return { ok: false };
     } finally {
       setLoading(false);
     }
@@ -891,7 +960,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   const handleAddJuror = async (row) => {
     setMessage("");
-    setError("");
+    setSystemErrorSafe("");
     setLoading(true);
     try {
       const created = await adminCreateJuror(row, adminPass);
@@ -913,15 +982,17 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
         });
       }
       setMessage("Juror added.");
+      return { ok: true };
     } catch (e) {
       const msg = String(e?.message || "");
       const msgLower = msg.toLowerCase();
       if (msg.includes("juror_exists")
         || msgLower.includes("jurors_name_inst_norm_uniq")
         || msgLower.includes("duplicate key value violates unique constraint")) {
-        setError("Juror already exists.");
+        return { ok: false, fieldErrors: { duplicate: "A juror with the same name and institution already exists." } };
       } else {
-        setError(msg || "Could not add juror.");
+        setSystemErrorSafe(msg || "Could not add juror. Try again or check admin password.");
+        return { ok: false };
       }
     } finally {
       setLoading(false);
@@ -930,7 +1001,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   const handleImportJurors = async (rows) => {
     setMessage("");
-    setError("");
+    setSystemErrorSafe("");
     setLoading(true);
     try {
       let skipped = 0;
@@ -971,16 +1042,16 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
           ? `Jurors imported. Skipped ${skipped} existing jurors.`
           : "Jurors imported."
       );
-      return { skipped };
+      return { ok: true, skipped };
     } catch (e) {
       const msg = String(e?.message || "");
       const msgLower = msg.toLowerCase();
       if (msg.includes("juror_exists")
         || msgLower.includes("jurors_name_inst_norm_uniq")
         || msgLower.includes("duplicate key value violates unique constraint")) {
-        setError("Some jurors already exist. Refresh and try again.");
+        return { ok: false, formError: "Some jurors already exist. Refresh and try again." };
       } else {
-        setError(msg || "Could not import jurors.");
+        return { ok: false, formError: msg || "Could not import jurors. Check the CSV format and try again." };
       }
     } finally {
       setLoading(false);
@@ -990,7 +1061,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   const handleEditJuror = async (row) => {
     if (!row?.jurorId) return;
     setMessage("");
-    setError("");
+    setSystemErrorSafe("");
     setLoading(true);
     try {
       await adminUpdateJuror(row, adminPass);
@@ -1000,8 +1071,10 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
         juror_inst: row.juror_inst,
       });
       setMessage("Juror updated.");
+      return { ok: true };
     } catch (e) {
-      setError(e?.message || "Could not update juror.");
+      setSystemErrorSafe(e?.message || "Could not update juror. Try again or check admin password.");
+      return { ok: false };
     } finally {
       setLoading(false);
     }
@@ -1012,11 +1085,11 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
     const jurorName = juror?.juror_name || juror?.juryName;
     const jurorInst = juror?.juror_inst || juror?.juryDept;
     if (!activeSemesterId || !jurorId) {
-      setError("Select an active semester before resetting a PIN.");
+      setSystemErrorSafe("Select an active semester before resetting a PIN.");
       return;
     }
     setMessage("");
-    setError("");
+    setSystemErrorSafe("");
     setLoading(true);
     try {
       const res = await adminResetJurorPin({ semesterId: activeSemesterId, jurorId }, adminPass);
@@ -1036,21 +1109,37 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
     } catch (e) {
       const msg = String(e?.message || "");
       if (msg.includes("semester_inactive")) {
-        setError("Only the active semester can be edited.");
+        setSystemErrorSafe("Only the active semester can be edited.");
       } else if (msg.includes("unauthorized")) {
-        setError("Admin password is invalid. Please re-login.");
+        setSystemErrorSafe("Admin password is invalid. Please re-login.");
       } else {
-        setError(e?.message || "Could not reset PIN.");
+        setSystemErrorSafe(e?.message || "Could not reset PIN. Try again or check admin password.");
       }
     } finally {
       setLoading(false);
     }
   };
 
+  const requestResetPin = (juror) => {
+    if (!juror) return;
+    setPinResetTarget(juror);
+  };
+
+  const confirmResetPin = async () => {
+    if (!pinResetTarget || pinResetLoading) return;
+    setPinResetLoading(true);
+    try {
+      await handleResetPin(pinResetTarget);
+      setPinResetTarget(null);
+    } finally {
+      setPinResetLoading(false);
+    }
+  };
+
   const handleToggleJurorEdit = async ({ jurorId, enabled }) => {
     if (!activeSemesterId || !jurorId) return;
     setMessage("");
-    setError("");
+    setSystemErrorSafe("");
     // Optimistic update — revert below if the RPC fails
     applyJurorPatch({ juror_id: jurorId, edit_enabled: !!enabled });
     setLoading(true);
@@ -1064,15 +1153,15 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
       applyJurorPatch({ juror_id: jurorId, edit_enabled: !enabled }); // revert
       const msg = String(e?.message || "");
       if (msg.includes("final_submit_required")) {
-        setError("Cannot disable edit mode until all scores are re-submitted.");
+        setSystemErrorSafe("Cannot disable edit mode until all scores are re-submitted.");
       } else if (msg.includes("no_pin")) {
-        setError("Juror PIN is missing for this semester. Reset the PIN first.");
+        setSystemErrorSafe("Juror PIN is missing for this semester. Reset the PIN first.");
       } else if (msg.includes("semester_inactive")) {
-        setError("Only the active semester can be edited.");
+        setSystemErrorSafe("Only the active semester can be edited.");
       } else if (msg.includes("unauthorized")) {
-        setError("Admin password is invalid. Please re-login.");
+        setSystemErrorSafe("Admin password is invalid. Please re-login.");
       } else {
-        setError(e?.message || "Could not update edit mode.");
+        setSystemErrorSafe(e?.message || "Could not update edit mode. Try again or check admin password.");
       }
     } finally {
       setLoading(false);
@@ -1081,10 +1170,13 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
 
   const handleSaveSettings = async (next) => {
-    if (!adminPass) return;
+    if (!adminPass) {
+      setSystemErrorSafe("Admin password missing. Please re-login.");
+      return;
+    }
     setLoading(true);
     setMessage("");
-    setError("");
+    setSystemErrorSafe("");
     try {
       await adminSetSetting(SETTINGS_KEYS.evalLock, String(!!next.evalLockActive), adminPass);
       setSettings(next);
@@ -1094,7 +1186,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
           : "Evaluations unlocked. Jurors can edit and re-submit."
       );
     } catch (e) {
-      setError(e?.message || "Could not save settings.");
+      setSystemErrorSafe(e?.message || "Could not save settings. Try again or check admin password.");
     } finally {
       setLoading(false);
     }
@@ -1163,13 +1255,13 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   const mapDeleteError = (e) => {
     const msg = String(e?.message || "");
     if (msg.includes("delete_password_missing")) {
-      return "Delete password is not configured. Set it in Admin Security.";
+      return "Delete password is not configured. Set it in Admin Security, then try again.";
     }
     if (msg.includes("incorrect_delete_password") || msg.includes("unauthorized")) {
-      return "Incorrect delete password.";
+      return "Incorrect delete password. Try again.";
     }
     if (msg.includes("not_found")) {
-      return "Item not found.";
+      return "Item not found. Refresh the list and try again.";
     }
     return "Could not delete. Please try again.";
   };
@@ -1178,7 +1270,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
     if (!deleteTarget) throw new Error("Nothing selected for deletion.");
     const { type, id, label } = deleteTarget;
     setMessage("");
-    setError("");
+    setSystemErrorSafe("");
     await adminDeleteEntity({ targetType: type, targetId: id, deletePassword: password });
     if (type === "semester") {
       setSemesterList((prev) => {
@@ -1277,10 +1369,10 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   const mapDbBackupError = (e) => {
     const msg = String(e?.message || "");
     if (msg.includes("backup_password_missing")) {
-      return "Backup & restore password is not configured. Set it in Admin Security.";
+      return "Backup & restore password is not configured. Set it in Admin Security, then try again.";
     }
-    if (msg.includes("incorrect_backup_password")) return "Incorrect backup & restore password.";
-    if (msg.includes("unauthorized")) return "Incorrect admin password.";
+    if (msg.includes("incorrect_backup_password")) return "Incorrect backup & restore password. Try again.";
+    if (msg.includes("unauthorized")) return "Incorrect admin password. Please re-login.";
     return null;
   };
 
@@ -1304,7 +1396,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
       setDbImportDragging(false);
       setMessage("Backup downloaded successfully.");
     } catch (e) {
-      setDbBackupError(mapDbBackupError(e) || "Export failed. Please try again.");
+      setDbBackupError(mapDbBackupError(e) || "Export failed. Try again or check your passwords.");
     } finally {
       const remaining = Math.max(0, MIN_BACKUP_DELAY - (Date.now() - start));
       if (remaining) await new Promise((r) => setTimeout(r, remaining));
@@ -1332,7 +1424,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
       setDbImportFileSize(0);
       setMessage("Database restored successfully.");
     } catch (e) {
-      setDbBackupError(mapDbBackupError(e) || "Import failed. Please try again.");
+      setDbBackupError(mapDbBackupError(e) || "Import failed. Check the backup file and try again.");
     } finally {
       const remaining = Math.max(0, MIN_BACKUP_DELAY - (Date.now() - start));
       if (remaining) await new Promise((r) => setTimeout(r, remaining));
@@ -1349,8 +1441,8 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
     const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
     ws["!cols"] = [18, 8, 36, 42].map((w) => ({ wch: w }));
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Projects");
-    XLSX.writeFile(wb, buildExportFilename("projects", activeSemester?.name));
+    XLSX.utils.book_append_sheet(wb, ws, "Groups");
+    XLSX.writeFile(wb, buildExportFilename("groups", activeSemester?.name));
   };
 
   const handleExportJurors = async () => {
@@ -1409,11 +1501,69 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   };
 
   return (
-    <div className="manage-page">
+    <div className="manage-page manage-page--settings">
       {loading && (
         <div className="manage-alerts-sticky">
           <div className="manage-alerts">
             <span className="manage-alert">Working…</span>
+          </div>
+        </div>
+      )}
+      {contextNotice && (
+        <div className="manage-alerts-sticky">
+          <div className="manage-alerts">
+            <span className="manage-alert">{contextNotice}</span>
+          </div>
+        </div>
+      )}
+      {systemError && (
+        <div className="manage-alerts-sticky">
+          <div className="manage-alerts">
+            <span className="manage-alert error with-icon">
+              <span className="manage-alert-icon" aria-hidden="true"><TriangleAlertIcon /></span>
+              <span>{systemError}</span>
+            </span>
+          </div>
+        </div>
+      )}
+      {pinResetTarget && (
+        <div className="manage-modal" role="dialog" aria-modal="true">
+          <div className="manage-modal-card manage-modal-card--danger">
+            <div className="delete-dialog__header">
+              <span className="delete-dialog__icon" aria-hidden="true"><TriangleAlertIcon /></span>
+              <div className="delete-dialog__title">Reset Juror PIN</div>
+            </div>
+            <div className="delete-dialog__body">
+              <div className="delete-dialog__line">
+                This will invalidate the current PIN and generate a new one for
+                <strong className="manage-delete-focus">
+                  {" "}
+                  {pinResetTarget.juror_name || pinResetTarget.juryName || "this juror"}
+                </strong>.
+              </div>
+              <div className="manage-delete-warning">
+                <span className="manage-delete-warning-icon" aria-hidden="true"><TriangleAlertIcon /></span>
+                <span className="manage-delete-warning-text">Share the new PIN securely. The old PIN will stop working.</span>
+              </div>
+            </div>
+            <div className="manage-modal-actions">
+              <button
+                className="manage-btn"
+                type="button"
+                disabled={pinResetLoading}
+                onClick={() => setPinResetTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="manage-btn danger"
+                type="button"
+                disabled={pinResetLoading}
+                onClick={confirmResetPin}
+              >
+                {pinResetLoading ? "Resetting…" : "Reset PIN"}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1486,19 +1636,79 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
             await handleConfirmDelete(password);
           } catch (e) {
             const msg = mapDeleteError(e);
-            setError(msg);
+            setSystemErrorSafe(msg);
             throw new Error(msg);
           }
         }}
       />
 
+      {isMobile && (
+        <div className="manage-card-actions manage-card-actions--left manage-card-actions--tight">
+          <button
+            className="manage-btn ghost"
+            type="button"
+            onClick={() => {
+              const next = !Object.values(openPanels).every(Boolean);
+              setOpenPanels((prev) => {
+                const updated = {};
+                Object.keys(prev).forEach((k) => { updated[k] = next; });
+                return updated;
+              });
+            }}
+          >
+            {Object.values(openPanels).every(Boolean) ? (
+              <>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="manage-btn-icon lucide lucide-chevrons-right-left-icon lucide-chevrons-right-left"
+                  aria-hidden="true"
+                >
+                  <path d="m20 17-5-5 5-5" />
+                  <path d="m4 17 5-5-5-5" />
+                </svg>
+                Collapse all
+              </>
+            ) : (
+              <>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="manage-btn-icon lucide lucide-chevrons-left-right-icon lucide-chevrons-left-right"
+                  aria-hidden="true"
+                >
+                  <path d="m9 7-5 5 5 5" />
+                  <path d="m15 7 5 5-5 5" />
+                </svg>
+                Expand all
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
       <div className="manage-grid">
         <section className="manage-section" style={{ gridColumn: "1 / -1" }}>
-          <h3 className="manage-section-title">Data</h3>
+          <h3 className="manage-section-title">Data Management</h3>
           <div className="manage-section-grid">
             <SemesterSettingsPanel
               semesters={semesterList}
               activeSemesterId={activeSemesterId}
+              activeSemesterName={activeSemesterLabel}
               isMobile={isMobile}
               isOpen={openPanels.semester}
               onToggle={() => togglePanel("semester")}
@@ -1507,7 +1717,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
               onUpdateSemester={handleUpdateSemester}
               onDeleteSemester={(s) =>
                 (s?.id === activeSemesterId
-                  ? setError("Active semester cannot be deleted. Select another semester first.")
+                  ? setSystemErrorSafe("Active semester cannot be deleted. Select another semester first.")
                   : handleRequestDelete({
                       type: "semester",
                       id: s?.id,
@@ -1520,6 +1730,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
             <ProjectSettingsPanel
               projects={projects}
               semesterName={activeSemester?.name || ""}
+              activeSemesterName={activeSemesterLabel}
               isMobile={isMobile}
               isOpen={openPanels.projects}
               onToggle={() => togglePanel("projects")}
@@ -1537,13 +1748,14 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
             <JurorSettingsPanel
               jurors={jurors}
+              activeSemesterName={activeSemesterLabel}
               isMobile={isMobile}
               isOpen={openPanels.jurors}
               onToggle={() => togglePanel("jurors")}
               onImport={handleImportJurors}
               onAddJuror={handleAddJuror}
               onEditJuror={handleEditJuror}
-              onResetPin={handleResetPin}
+              onResetPin={requestResetPin}
               onDeleteJuror={(j) =>
                 handleRequestDelete({
                   type: "juror",
@@ -1560,14 +1772,17 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
               isMobile={isMobile}
               isOpen={openPanels.permissions}
               onToggle={() => togglePanel("permissions")}
-              onSave={handleSaveSettings}
+              onRequestEvalLockChange={(checked) => {
+                setEvalLockConfirmNext(Boolean(checked));
+                setEvalLockConfirmOpen(true);
+              }}
               onToggleEdit={handleToggleJurorEdit}
             />
           </div>
         </section>
 
         <section className="manage-section" style={{ gridColumn: "1 / -1" }}>
-          <h3 className="manage-section-title">Access Control</h3>
+          <h3 className="manage-section-title">Access &amp; Security</h3>
           <div className="manage-section-grid">
             <AdminSecurityPanel
               isMobile={isMobile}
@@ -1577,7 +1792,6 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
               adminPass={adminPass}
               innerRef={adminSecurityRef}
             />
-
             <div
               className={`manage-card manage-card-audit${isMobile ? " is-collapsible" : ""}`}
               ref={auditCardRef}
@@ -1594,14 +1808,6 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
                     <span className="section-label">Audit Log</span>
                   </div>
                   {isMobile && <ChevronDownIcon className={`manage-chevron${openPanels.audit ? " open" : ""}`} />}
-                </button>
-                <button
-                  type="button"
-                  className="manage-btn manage-btn-ghost-pill"
-                  onClick={handleAuditExport}
-                  disabled={auditExporting}
-                >
-                  <DownloadIcon /> Export
                 </button>
               </div>
 
@@ -1648,6 +1854,16 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
                           value={auditSearch}
                           onChange={(e) => setAuditSearch(e.target.value)}
                         />
+                      </div>
+                      <div className="manage-audit-export">
+                        <button
+                          type="button"
+                          className="manage-btn manage-btn-ghost-pill"
+                          onClick={handleAuditExport}
+                          disabled={auditExporting}
+                        >
+                          <DownloadIcon /> Export
+                        </button>
                       </div>
                     </div>
                     <div className="manage-audit-meta">
@@ -1699,7 +1915,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
                   </div>
                   {hasAuditToggle && (
                     <button
-                      className="manage-btn ghost"
+                      className={`manage-btn ${isMobile ? "primary" : "ghost"}`}
                       type="button"
                       onClick={() => {
                         setShowAllAuditLogs((prev) => {
@@ -1731,7 +1947,12 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
                 </div>
               )}
             </div>
+          </div>
+        </section>
 
+        <section className="manage-section" style={{ gridColumn: "1 / -1" }}>
+          <h3 className="manage-section-title">Data Operations</h3>
+          <div className="manage-section-grid">
             <div className={`manage-card${isMobile ? " is-collapsible" : ""}`}>
               <button
                 type="button"
@@ -1748,7 +1969,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
               {(!isMobile || openPanels.export) && (
                 <div className="manage-card-body">
-                  <div className="manage-card-desc">Download Excel exports for scores, jurors, and projects.</div>
+                  <div className="manage-card-desc">Download Excel exports for scores, jurors, and groups.</div>
                   <div className="manage-export-actions">
                     <button className="manage-btn" type="button" onClick={handleExportScores}>
                       <DownloadIcon /> Scores
@@ -1757,7 +1978,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
                       <DownloadIcon /> Jurors
                     </button>
                     <button className="manage-btn" type="button" onClick={handleExportProjects}>
-                      <DownloadIcon /> Projects
+                      <DownloadIcon /> Groups
                     </button>
                   </div>
                 </div>
@@ -1822,26 +2043,39 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
             {dbBackupMode && (
               <div className="manage-modal" role="dialog" aria-modal="true">
                 <div className="manage-modal-card">
-                  <div className="manage-modal-title">
-                    {dbBackupMode === "export" ? (
-                      "Export Database Backup"
-                    ) : (
-                      "Import / Restore Database"
-                    )}
-                  </div>
+                  {dbBackupMode === "export" ? (
+                    <div className="edit-dialog__header">
+                      <span className="edit-dialog__icon" aria-hidden="true">
+                        <FileDownIcon />
+                      </span>
+                      <div className="edit-dialog__title">Export Database Backup</div>
+                    </div>
+                  ) : (
+                    <div className="edit-dialog__header">
+                      <span className="edit-dialog__icon" aria-hidden="true">
+                        <FileUpIcon />
+                      </span>
+                      <div className="edit-dialog__title">Import / Restore Database</div>
+                    </div>
+                  )}
                   <div className="manage-modal-body">
                     <div className="manage-hint">
                       {dbBackupMode === "export"
-                        ? "Export a full backup of semesters, jurors, projects, and scores."
+                        ? "Export a full backup of semesters, jurors, groups, and scores."
                         : "Upload a backup JSON exported from this portal to restore all data."}
                     </div>
                     {dbBackupMode === "import" && (
-                      <ul className="manage-hint" style={{ margin: "0.5rem 0 0.75rem", paddingLeft: "1rem" }}>
-                        <li>Only .json files exported from this portal are supported.</li>
-                        <li>Backup contains semesters, jurors, projects, scores, and assignments.</li>
-                        <li>Maximum file size: 10 MB.</li>
-                        <li>This will overwrite existing data.</li>
-                      </ul>
+                      <>
+                        <ul className="manage-hint" style={{ margin: "0.5rem 0 0.75rem", paddingLeft: "1rem" }}>
+                          <li>Only .json files exported from this portal are supported.</li>
+                          <li>Backup contains semesters, jurors, groups, scores, and assignments.</li>
+                          <li>Maximum file size: 10 MB.</li>
+                        </ul>
+                        <div className="manage-delete-warning">
+                          <span className="manage-delete-warning-icon" aria-hidden="true"><TriangleAlertIcon /></span>
+                          <span className="manage-delete-warning-text">This will overwrite existing data.</span>
+                        </div>
+                      </>
                     )}
                     {dbBackupMode === "import" && (
                       <div className="manage-field">
@@ -1914,7 +2148,10 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
                     )}
                     {dbBackupError && (
                       <div className="manage-alerts">
-                        <span className="manage-alert error">{dbBackupError}</span>
+                        <span className="manage-alert error with-icon">
+                          <span className="manage-alert-icon" aria-hidden="true"><TriangleAlertIcon /></span>
+                          <span>{dbBackupError}</span>
+                        </span>
                       </div>
                     )}
                   </div>
@@ -1957,6 +2194,57 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
           </div>
         </section>
       </div>
+
+      {evalLockConfirmOpen && (
+        <div className="manage-modal" role="dialog" aria-modal="true">
+          <div className="manage-modal-card manage-modal-card--danger">
+            <div className="delete-dialog__header">
+              <span className="delete-dialog__icon" aria-hidden="true"><TriangleAlertIcon /></span>
+              <div className="delete-dialog__title">
+                {evalLockConfirmNext ? "Lock Evaluations" : "Unlock Evaluations"}
+              </div>
+            </div>
+            <div className="delete-dialog__body">
+              <div className="delete-dialog__line">
+                {evalLockConfirmNext
+                  ? "Jurors will no longer be able to edit or submit scores for the active semester."
+                  : "Jurors will be able to edit and re-submit scores for the active semester."}
+              </div>
+              <div className="manage-delete-warning">
+                <span className="manage-delete-warning-icon" aria-hidden="true"><TriangleAlertIcon /></span>
+                <span className="manage-delete-warning-text">
+                  This affects all jurors in {activeSemesterLabel}.
+                </span>
+              </div>
+            </div>
+            <div className="manage-modal-actions">
+              <button
+                className="manage-btn"
+                type="button"
+                disabled={evalLockConfirmLoading}
+                onClick={() => setEvalLockConfirmOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className={`manage-btn ${evalLockConfirmNext ? "danger" : "primary"}`}
+                type="button"
+                disabled={evalLockConfirmLoading}
+                onClick={async () => {
+                  setEvalLockConfirmLoading(true);
+                  await handleSaveSettings({ ...settings, evalLockActive: evalLockConfirmNext });
+                  setEvalLockConfirmLoading(false);
+                  setEvalLockConfirmOpen(false);
+                }}
+              >
+                {evalLockConfirmLoading
+                  ? (evalLockConfirmNext ? "Locking…" : "Unlocking…")
+                  : (evalLockConfirmNext ? "Lock evaluations" : "Unlock evaluations")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 // src/admin/ManageProjectsPanel.jsx
 
 import { useEffect, useRef, useState } from "react";
-import { CalendarRangeIcon, ChevronDownIcon, FileTextIcon, MonitorCogIcon, PencilIcon, SearchIcon, UsersLucideIcon, CirclePlusIcon, UploadIcon, CloudUploadIcon } from "../shared/Icons";
+import { CalendarRangeIcon, ChevronDownIcon, FileTextIcon, MonitorCogIcon, PencilIcon, SearchIcon, UsersLucideIcon, CirclePlusIcon, UploadIcon, FileUpIcon, CloudUploadIcon, FolderPlusIcon } from "../shared/Icons";
 import DangerIconButton from "../components/admin/DangerIconButton";
 import LastActivity from "./LastActivity";
 import { formatTs } from "./utils";
@@ -58,6 +58,7 @@ function splitStudents(text) {
 export default function ManageProjectsPanel({
   projects,
   semesterName,
+  activeSemesterName,
   isMobile,
   isOpen,
   onToggle,
@@ -76,6 +77,7 @@ export default function ManageProjectsPanel({
   const [addError, setAddError] = useState("");
   const [showEdit, setShowEdit] = useState(false);
   const [editForm, setEditForm] = useState({ group_no: "", project_title: "", group_students: "" });
+  const [editSaving, setEditSaving] = useState(false);
   const [importError, setImportError] = useState("");
   const [importWarning, setImportWarning] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -179,7 +181,7 @@ export default function ManageProjectsPanel({
           <button
             className="manage-icon-btn"
             type="button"
-            title="Edit project"
+            title="Edit group"
             aria-label={`Edit Group ${groupLabel}`}
             onClick={() => {
               setEditForm({
@@ -304,6 +306,13 @@ export default function ManageProjectsPanel({
 
     setImportError("");
     const res = await onImport(toImport);
+    if (res?.formError) {
+      setImportError(res.formError);
+      return;
+    }
+    if (res?.ok === false) {
+      return;
+    }
     const serverSkipped = Number(res?.skipped || 0);
     if (serverSkipped > 0) {
       const extra = `Skipped ${serverSkipped} existing groups during import.`;
@@ -328,14 +337,15 @@ export default function ManageProjectsPanel({
       >
         <div className="manage-card-title">
           <span className="manage-card-icon" aria-hidden="true"><MonitorCogIcon /></span>
-          <span className="section-label">Project/Group Settings</span>
+          <span className="section-label">Group Settings</span>
         </div>
         {isMobile && <ChevronDownIcon className={`manage-chevron${isOpen ? " open" : ""}`} />}
       </button>
 
       {(!isMobile || isOpen) && (
         <div className="manage-card-body">
-          <div className="manage-card-desc">Manage groups, project titles, and student lists for the active semester.</div>
+          <div className="manage-card-desc">Manage groups, titles, and student lists for the active semester.</div>
+          <div className="manage-hint manage-hint-inline">Active semester: {activeSemesterName || "—"}</div>
           <div className="manage-card-actions">
             <button
               className="manage-btn"
@@ -358,7 +368,7 @@ export default function ManageProjectsPanel({
               }}
             >
               <span aria-hidden="true"><CirclePlusIcon className="manage-btn-icon" /></span>
-              Group
+              Create Group
             </button>
           </div>
 
@@ -367,17 +377,20 @@ export default function ManageProjectsPanel({
             <input
               className="manage-input manage-search-input"
               type="text"
-              placeholder="Search groups, project titles, students"
+              placeholder="Search groups, titles, students"
               aria-label="Search groups, titles, students"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          {isMobile && (
+            <div className="manage-hint manage-hint-inline">Swipe horizontally on text to view full content.</div>
+          )}
 
           <div className="manage-list">
             {visibleProjects.map((p, idx) => renderProject(p, idx))}
             {!normalizedSearch && orderedProjects.length === 0 && (
-              <div className="manage-empty manage-empty-search">No projects for the active semester.</div>
+              <div className="manage-empty manage-empty-search">No groups for the active semester.</div>
             )}
             {normalizedSearch && filteredProjects.length === 0 && (
               <div className="manage-empty manage-empty-search">No results.</div>
@@ -421,7 +434,12 @@ export default function ManageProjectsPanel({
           {showAdd && (
             <div className="manage-modal">
               <div className="manage-modal-card">
-                <div className="manage-modal-title">Add Group</div>
+                <div className="edit-dialog__header">
+                  <span className="edit-dialog__icon" aria-hidden="true">
+                    <FolderPlusIcon />
+                  </span>
+                  <div className="edit-dialog__title">Create Group</div>
+                </div>
                 <div className="manage-modal-body">
                   <label className="manage-label">Group number</label>
                   <input
@@ -434,7 +452,7 @@ export default function ManageProjectsPanel({
                     placeholder="1"
                   />
                   {addError && <div className="manage-field-error">{addError}</div>}
-                  <label className="manage-label">Project title</label>
+                  <label className="manage-label">Group title</label>
                   <input
                     className="manage-input"
                     value={form.project_title}
@@ -458,7 +476,7 @@ export default function ManageProjectsPanel({
                     className="manage-btn primary"
                     type="button"
                     disabled={!canSubmit}
-                    onClick={() => {
+                    onClick={async () => {
                       const groupNoRaw = String(form.group_no).trim();
                       const groupNo = Number(groupNoRaw);
                       const isInteger = Number.isInteger(groupNo) && groupNoRaw !== "" && groupNo > 0;
@@ -475,16 +493,21 @@ export default function ManageProjectsPanel({
                         setAddError(`Group ${groupNo} already exists. Use Edit to update.`);
                         return;
                       }
-                      onAddGroup({
+                      const res = await onAddGroup({
                         group_no: groupNo,
                         project_title: form.project_title.trim(),
                         group_students: form.group_students.trim(),
                       });
+                      if (res?.fieldErrors?.group_no) {
+                        setAddError(res.fieldErrors.group_no);
+                        return;
+                      }
                       setShowAdd(false);
+                      if (res?.ok === false) return;
                       setForm({ group_no: "", project_title: "", group_students: "" });
                     }}
                   >
-                    Save
+                    Create
                   </button>
                 </div>
               </div>
@@ -507,7 +530,7 @@ export default function ManageProjectsPanel({
                     value={editForm.group_no}
                     disabled
                   />
-                  <label className="manage-label">Project title</label>
+                  <label className="manage-label">Group title</label>
                   <input
                     className="manage-input"
                     value={editForm.project_title}
@@ -528,17 +551,19 @@ export default function ManageProjectsPanel({
                   <button
                     className="manage-btn primary"
                     type="button"
-                    disabled={!canEditSubmit}
-                    onClick={() => {
-                      onEditGroup?.({
+                    disabled={!canEditSubmit || editSaving}
+                    onClick={async () => {
+                      setEditSaving(true);
+                      await onEditGroup?.({
                         group_no: Number(editForm.group_no),
                         project_title: editForm.project_title.trim(),
                         group_students: editForm.group_students.trim(),
                       });
+                      setEditSaving(false);
                       setShowEdit(false);
                     }}
                   >
-                    Save
+                    {editSaving ? "Saving…" : "Save"}
                   </button>
                 </div>
               </div>
@@ -548,10 +573,15 @@ export default function ManageProjectsPanel({
           {showImport && (
             <div className="manage-modal">
               <div className="manage-modal-card">
-                <div className="manage-modal-title">Import CSV</div>
+                <div className="edit-dialog__header">
+                  <span className="edit-dialog__icon" aria-hidden="true">
+                    <FileUpIcon />
+                  </span>
+                  <div className="edit-dialog__title">Import CSV</div>
+                </div>
                 <div className="manage-modal-body">
                   <div className="manage-hint">
-                    Upload your CSV file here.
+                    Upload your CSV file here. Header must include <span className="manage-code">project_title</span> (group title).
                   </div>
                   <input
                     ref={fileRef}

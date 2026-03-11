@@ -86,7 +86,36 @@
   gap: 12px;
   min-width: 0;
 }
-.header-title { min-width: 0; }
+.header-title { min-width: 0; display: flex; align-items: center; }
+
+.admin-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+.admin-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  color: var(--text-900);
+  flex-shrink: 0;
+}
+.admin-title-icon svg { width: 20px; height: 20px; }
+.title-separator {
+  color: var(--gray-400);
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.semester-control--title {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
 
 /* ── Status expandable section (semester + metrics) ─────────── */
 .status-expandable {
@@ -215,6 +244,34 @@
 .dropdown-item-icon svg { width: 14px; height: 14px; }
 .semester-dropdown-item.active .dropdown-item-icon { color: var(--brand-600); }
 
+/* ── Title variant ──────────────────────────────────────────── */
+.semester-dropdown-trigger--title {
+  background: none;
+  border: none;
+  padding: 0;
+  min-height: unset;
+  height: auto;
+  min-width: 0;
+  width: auto;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--text-900);
+  gap: 4px;
+  align-self: center;
+  border-radius: 4px;
+  box-shadow: none;
+}
+.semester-dropdown-trigger--title:hover,
+.semester-dropdown-trigger--title.open {
+  color: var(--brand-600);
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+.semester-dropdown-trigger--title .semester-dropdown-icon { display: none; }
+.semester-dropdown-trigger--title .semester-dropdown-chevron svg { width: 16px; height: 16px; }
+
 .semester-dropdown-check {
   font-size: 13px;
   color: var(--brand-600);
@@ -274,7 +331,7 @@
 .last-updated svg { width: 14px; height: 14px; display: block; }
 .admin-screen .form-header h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.2px;
   color: var(--text-900);
@@ -298,13 +355,10 @@
   align-items: center;
   gap: 4px;
 }
-.tab-context {
-  display: inline-flex;
+.semester-bar {
+  display: flex;
   align-items: center;
-  gap: 4px;
-  margin-right: 8px;
-  flex-shrink: 0;
-  max-width: 40%;
+  padding: 0 2px;
 }
 .tab-bar-shell {
   position: relative;
@@ -319,7 +373,7 @@
   min-width: 0;
 }
 .tab-bar-shell::-webkit-scrollbar { display: none; }
-.evaluations-dropdown {
+.scores-dropdown {
   display: inline-flex;
 }
 .semester-control--tab .semester-dropdown-trigger {

@@ -12,7 +12,7 @@ export default function ManagePermissionsPanel({
   isMobile,
   isOpen,
   onToggle,
-  onSave,
+  onRequestEvalLockChange,
   onToggleEdit,
 }) {
   const [local, setLocal] = useState(settings);
@@ -29,10 +29,8 @@ export default function ManagePermissionsPanel({
     if (!activeSemesterId || evalLockPending) return;
     const start = Date.now();
     setEvalLockPending(true);
-    const next = { ...local, evalLockActive: checked };
-    setLocal(next);
     try {
-      await Promise.resolve(onSave?.(next));
+      await Promise.resolve(onRequestEvalLockChange?.(checked));
     } finally {
       const elapsed = Date.now() - start;
       const remaining = Math.max(0, 1200 - elapsed);
@@ -152,6 +150,9 @@ export default function ManagePermissionsPanel({
               </span>
             </label>
           </div>
+          <div className="manage-hint manage-hint-inline">
+            When locked, jurors can view but cannot edit or submit scores.
+          </div>
 
           <div className="manage-list">
             <div className="manage-search">
@@ -165,6 +166,9 @@ export default function ManagePermissionsPanel({
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            {isMobile && (
+              <div className="manage-hint manage-hint-inline">Swipe horizontally on text to view full content.</div>
+            )}
             {visibleJurors.map((j) => {
               const jurorId = j.jurorId || j.juror_id;
               const totalProjects = Number(j.totalProjects ?? j.total_projects ?? 0);
