@@ -30,7 +30,7 @@ import {
   adminFullImport,
 } from "../shared/api";
 import { supabase } from "../lib/supabaseClient";
-import { ChevronDownIcon, CloudUploadIcon, DatabaseBackupIcon, DownloadIcon, FileDownIcon, HistoryIcon, UploadIcon, FileUpIcon, KeyRoundIcon, LockIcon, CircleXLucideIcon, SearchIcon, InfoIcon } from "../shared/Icons";
+import { ChevronDownIcon, CloudUploadIcon, DatabaseBackupIcon, DownloadIcon, FileDownIcon, HistoryIcon, UploadIcon, FileUpIcon, KeyRoundIcon, LockIcon, CircleXLucideIcon, SearchIcon, TriangleAlertIcon } from "../shared/Icons";
 import { exportXLSX, exportAuditLogsXLSX, buildExportFilename } from "./utils";
 import SemesterSettingsPanel from "./ManageSemesterPanel";
 import ProjectSettingsPanel from "./ManageProjectsPanel";
@@ -277,11 +277,25 @@ function useMediaQuery(query) {
   return matches;
 }
 
-export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
+export default function SettingsPage({ adminPass, onAdminPasswordChange, selectedSemesterId = "" }) {
   const isMobile = useMediaQuery("(max-width: 900px)");
   const supportsInfiniteScroll = typeof window !== "undefined" && "IntersectionObserver" in window;
   const [openPanels, setOpenPanels] = useState(() => {
     const mobileInit = typeof window !== "undefined" && window.matchMedia("(max-width: 900px)").matches;
+    const portraitInit = typeof window !== "undefined" && window.matchMedia("(max-width: 900px) and (orientation: portrait)").matches;
+    const landscapeInit = typeof window !== "undefined" && window.matchMedia("(max-width: 900px) and (orientation: landscape)").matches;
+    if (portraitInit || landscapeInit) {
+      return {
+        semester: false,
+        projects: false,
+        jurors: false,
+        permissions: false,
+        security: false,
+        audit: false,
+        export: false,
+        dbbackup: false,
+      };
+    }
     if (mobileInit) {
       return {
         semester: true,
@@ -314,9 +328,22 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   const [loading, setLoading] = useState(false);
   const _toast = useToast();
   const setMessage = (msg) => { if (msg) _toast.success(msg); };
-  const [systemError, setSystemError] = useState("");
-  const setSystemErrorSafe = (err) => { setSystemError(err || ""); };
-  const [contextNotice, setContextNotice] = useState("");
+  const [panelErrors, setPanelErrors] = useState({
+    semester: "",
+    projects: "",
+    jurors: "",
+  });
+  const setPanelError = (panel, err) => {
+    setPanelErrors((prev) => ({ ...prev, [panel]: err || "" }));
+  };
+  const clearPanelError = (panel) => setPanelError(panel, "");
+  const clearAllPanelErrors = () => {
+    setPanelErrors({
+      semester: "",
+      projects: "",
+      jurors: "",
+    });
+  };
   const [resetPinInfo, setResetPinInfo] = useState(null);
   const [pinResetTarget, setPinResetTarget] = useState(null);
   const [pinResetLoading, setPinResetLoading] = useState(false);
@@ -335,8 +362,6 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   const jurorTimerRef = useRef(null);  // debounce for loadJurors-only refetch
   const auditTimerRef = useRef(null);  // debounce for loadAuditLogs refetch
   const pinCopyTimerRef = useRef(null);
-  const contextTimerRef = useRef(null);
-  const prevActiveSemesterRef = useRef(null);
   const adminSecurityRef = useRef(null);
   const auditCardRef = useRef(null);
   const auditScrollRef = useRef(null);
@@ -363,6 +388,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   const [evalLockConfirmOpen, setEvalLockConfirmOpen] = useState(false);
   const [evalLockConfirmNext, setEvalLockConfirmNext] = useState(false);
   const [evalLockConfirmLoading, setEvalLockConfirmLoading] = useState(false);
+  const [evalLockError, setEvalLockError] = useState("");
 
   const copyPinToClipboard = async (pinValue) => {
     if (!pinValue) return false;
@@ -403,35 +429,19 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
     [semesterList, activeSemesterId]
   );
   const activeSemesterLabel = activeSemester?.name || "—";
+  const viewSemesterId = useMemo(() => {
+    if (selectedSemesterId && semesterList.some((s) => s.id === selectedSemesterId)) return selectedSemesterId;
+    return activeSemesterId || "";
+  }, [selectedSemesterId, semesterList, activeSemesterId]);
+  const viewSemester = useMemo(
+    () => semesterList.find((s) => s.id === viewSemesterId) || null,
+    [semesterList, viewSemesterId]
+  );
+  const viewSemesterLabel = viewSemester?.name || "—";
 
   useEffect(() => {
-    setSettings({ evalLockActive: Boolean(activeSemester?.is_locked) });
-  }, [activeSemester?.id, activeSemester?.is_locked]);
-
-  useEffect(() => {
-    if (!activeSemesterId) return;
-    if (prevActiveSemesterRef.current && prevActiveSemesterRef.current !== activeSemesterId) {
-      setContextNotice(`Active semester switched to ${activeSemesterLabel}.`);
-    }
-    prevActiveSemesterRef.current = activeSemesterId;
-  }, [activeSemesterId, activeSemesterLabel]);
-
-  useEffect(() => {
-    if (!activeSemesterId) return;
-    if (contextTimerRef.current) clearTimeout(contextTimerRef.current);
-    if (contextNotice) {
-      contextTimerRef.current = setTimeout(() => {
-        setContextNotice("");
-        contextTimerRef.current = null;
-      }, 2800);
-    }
-    return () => {
-      if (contextTimerRef.current) {
-        clearTimeout(contextTimerRef.current);
-        contextTimerRef.current = null;
-      }
-    };
-  }, [contextNotice, activeSemesterId]);
+    setSettings({ evalLockActive: Boolean(viewSemester?.is_locked) });
+  }, [viewSemester?.id, viewSemester?.is_locked]);
 
   useEffect(() => {
     let active = true;
@@ -475,9 +485,9 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   const loadJurors = useCallback(async () => {
     if (!adminPass) return;
-    const rows = await adminListJurors(activeSemesterId, adminPass);
+    const rows = await adminListJurors(viewSemesterId, adminPass);
     setJurors(rows || []);
-  }, [adminPass, activeSemesterId]);
+  }, [adminPass, viewSemesterId]);
 
   const loadAuditLogs = useCallback(async (filters, options = {}) => {
     if (!adminPass) return;
@@ -578,26 +588,32 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   useEffect(() => {
     setLoading(true);
-    setSystemErrorSafe("");
+    clearPanelError("semester");
     loadSemesters()
-      .catch(() => setSystemErrorSafe("Could not load semesters. Try refreshing or check your connection."))
+      .catch(() => setPanelError("semester", "Could not load semesters. Try refreshing or check your connection."))
       .finally(() => setLoading(false));
   }, [loadSemesters]);
 
   useEffect(() => {
-    if (!activeSemesterId) return;
+    if (!viewSemesterId) return;
     if (!adminPass) {
-      setSystemErrorSafe("Admin password missing. Please re-login.");
+      setEvalLockError("Admin password missing. Please re-login.");
       return;
     }
     setLoading(true);
+    clearPanelError("projects");
+    clearPanelError("jurors");
     Promise.all([
-      loadProjects(activeSemesterId),
+      loadProjects(viewSemesterId),
       loadJurors(),
     ])
-      .catch((e) => setSystemErrorSafe(e?.message || "Could not load settings data. Check admin password or refresh."))
+      .catch((e) => {
+        const message = e?.message || "Could not load settings data. Check admin password or refresh.";
+        setPanelError("projects", message);
+        setPanelError("jurors", message);
+      })
       .finally(() => setLoading(false));
-  }, [activeSemesterId, adminPass, loadProjects, loadJurors]);
+  }, [viewSemesterId, adminPass, loadProjects, loadJurors]);
 
   useEffect(() => {
     if (!adminPass) return;
@@ -608,15 +624,15 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   useEffect(() => {
     if (!adminPass) return;
     const interval = setInterval(() => {
-      if (!activeSemesterId) return;
+      if (!viewSemesterId) return;
       Promise.all([
-        loadProjects(activeSemesterId),
+        loadProjects(viewSemesterId),
         loadJurors(),
       ]).catch(() => {});
       refreshSemesters().catch(() => {});
     }, 5_000);
     return () => clearInterval(interval);
-  }, [adminPass, activeSemesterId, loadProjects, loadJurors, refreshSemesters]);
+  }, [adminPass, viewSemesterId, loadProjects, loadJurors, refreshSemesters]);
 
   const AUDIT_COMPACT_COUNT = isMobile ? 2 : 3;
   const hasAuditToggle = auditHasMore || auditLogs.length > AUDIT_COMPACT_COUNT;
@@ -728,12 +744,12 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
         });
       })
 
-      // ── projects: patch in-place for active semester ───────
+      // ── projects: patch in-place for viewed semester ───────
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "projects" }, (payload) => {
-        if (payload.new?.semester_id === activeSemesterId) applyProjectPatch(payload.new);
+        if (payload.new?.semester_id === viewSemesterId) applyProjectPatch(payload.new);
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "projects" }, (payload) => {
-        if (payload.new?.semester_id === activeSemesterId) applyProjectPatch(payload.new);
+        if (payload.new?.semester_id === viewSemesterId) applyProjectPatch(payload.new);
       })
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "projects" }, (payload) => {
         const deletedId = payload.old?.id;
@@ -757,7 +773,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
     };
   }, [
     adminPass,
-    activeSemesterId,
+    viewSemesterId,
     applySemesterPatch,
     applyProjectPatch,
     scheduleJurorRefresh,
@@ -766,9 +782,9 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   const handleSetActiveSemester = async (semesterId) => {
     setMessage("");
-    setSystemErrorSafe("");
+    clearPanelError("semester");
     if (!adminPass) {
-      setSystemErrorSafe("Admin password missing. Please re-login.");
+      setPanelError("semester", "Admin password missing. Please re-login.");
       return { ok: false };
     }
     setLoading(true);
@@ -779,10 +795,10 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
         prev.map((s) => ({ ...s, is_active: s.id === semesterId }))
       );
       setActiveSemesterId(semesterId);
-      setMessage(nextSemesterName ? `Semester ${nextSemesterName} activated` : "Semester activated");
+      setMessage(nextSemesterName ? `Current semester set to ${nextSemesterName}.` : "Current semester set.");
       return { ok: true };
     } catch (e) {
-      setSystemErrorSafe(e?.message || "Could not update active semester. Try again or re-login.");
+      setPanelError("semester", e?.message || "Could not update active semester. Try again or re-login.");
       return { ok: false };
     } finally {
       setLoading(false);
@@ -791,9 +807,9 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   const handleCreateSemester = async (payload) => {
     setMessage("");
-    setSystemErrorSafe("");
+    clearPanelError("semester");
     if (!adminPass) {
-      setSystemErrorSafe("Admin password missing. Please re-login.");
+      setPanelError("semester", "Admin password missing. Please re-login.");
       return { ok: false };
     }
     if (!isSemesterPosterDateInRange(payload?.poster_date)) {
@@ -825,7 +841,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
       } else if (msg.includes("semester_name_required")) {
         return { ok: false, fieldErrors: { name: "Semester name is required." } };
       } else {
-        setSystemErrorSafe(msg || "Could not create semester. Try again or check admin password.");
+        setPanelError("semester", msg || "Could not create semester. Try again or check admin password.");
         return { ok: false };
       }
     } finally {
@@ -835,9 +851,9 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   const handleUpdateSemester = async (payload) => {
     setMessage("");
-    setSystemErrorSafe("");
+    clearPanelError("semester");
     if (!adminPass) {
-      setSystemErrorSafe("Admin password missing. Please re-login.");
+      setPanelError("semester", "Admin password missing. Please re-login.");
       return { ok: false };
     }
     if (!isSemesterPosterDateInRange(payload?.poster_date)) {
@@ -864,7 +880,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
       } else if (msg.includes("semester_name_required")) {
         return { ok: false, fieldErrors: { name: "Semester name is required." } };
       } else {
-        setSystemErrorSafe(msg || "Could not update semester. Try again or check admin password.");
+        setPanelError("semester", msg || "Could not update semester. Try again or check admin password.");
         return { ok: false };
       }
     } finally {
@@ -873,28 +889,28 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   };
 
   const handleImportProjects = async (rows) => {
-    if (!activeSemesterId) {
-      setSystemErrorSafe("Select an active semester before importing groups.");
+    if (!viewSemesterId) {
+      setPanelError("projects", "Select a semester from the header before importing groups.");
       return { ok: false };
     }
     setMessage("");
-    setSystemErrorSafe("");
+    clearPanelError("projects");
     setLoading(true);
     try {
-      const semesterContext = (activeSemesterLabel && activeSemesterLabel !== "—")
-        ? activeSemesterLabel
-        : "active semester";
+      const semesterContext = (viewSemesterLabel && viewSemesterLabel !== "—")
+        ? viewSemesterLabel
+        : "selected semester";
       let skipped = 0;
       for (const row of rows) {
         const normalizedStudents = normalizeStudentNames(row.group_students);
         try {
           const res = await adminCreateProject(
-            { ...row, group_students: normalizedStudents, semesterId: activeSemesterId },
+            { ...row, group_students: normalizedStudents, semesterId: viewSemesterId },
             adminPass
           );
           applyProjectPatch({
             id: res?.project_id || res?.projectId || undefined,
-            semester_id: activeSemesterId,
+            semester_id: viewSemesterId,
             group_no: row.group_no,
             project_title: row.project_title,
             group_students: normalizedStudents,
@@ -933,32 +949,40 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   };
 
   const handleAddProject = async (row) => {
-    if (!activeSemesterId) {
-      setSystemErrorSafe("Select an active semester before adding a group.");
+    const targetSemesterId = row?.semesterId || viewSemesterId;
+    if (!targetSemesterId) {
+      setPanelError("projects", "Select a semester before adding a group.");
       return { ok: false };
     }
     setMessage("");
-    setSystemErrorSafe("");
+    clearPanelError("projects");
     setLoading(true);
     try {
       const normalizedStudents = normalizeStudentNames(row.group_students);
+      const targetSemesterName = semesterList.find((s) => s.id === targetSemesterId)?.name || "";
       const res = await adminCreateProject(
-        { ...row, group_students: normalizedStudents, semesterId: activeSemesterId },
+        { ...row, group_students: normalizedStudents, semesterId: targetSemesterId },
         adminPass
       );
       const projectId = res?.project_id || res?.projectId;
       if (!projectId) {
         throw new Error("Could not create group. Please refresh and try again.");
       }
-      applyProjectPatch({
-        id: projectId,
-        semester_id: activeSemesterId,
-        group_no: row.group_no,
-        project_title: row.project_title,
-        group_students: normalizedStudents,
-      });
-      await loadProjects(activeSemesterId);
-      setMessage(`Group ${row.group_no} created`);
+      if (targetSemesterId === viewSemesterId) {
+        applyProjectPatch({
+          id: projectId,
+          semester_id: targetSemesterId,
+          group_no: row.group_no,
+          project_title: row.project_title,
+          group_students: normalizedStudents,
+        });
+        await loadProjects(targetSemesterId);
+      }
+      setMessage(
+        targetSemesterName
+          ? `Group ${row.group_no} created in Semester ${targetSemesterName}`
+          : `Group ${row.group_no} created`
+      );
       return { ok: true };
     } catch (e) {
       const msg = String(e?.message || "");
@@ -968,7 +992,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
         || msgLower.includes("duplicate key value violates unique constraint")) {
         return { ok: false, fieldErrors: { group_no: `Group ${row.group_no} already exists. Use 'Edit' to update.` } };
       } else {
-        setSystemErrorSafe(msg || "Could not save group. Try again or check admin password.");
+        setPanelError("projects", msg || "Could not save group. Try again or check admin password.");
         return { ok: false };
       }
     } finally {
@@ -977,27 +1001,30 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   };
 
   const handleEditProject = async (row) => {
-    if (!activeSemesterId) return;
+    const targetSemesterId = row?.semesterId || viewSemesterId;
+    if (!targetSemesterId) return;
     setMessage("");
-    setSystemErrorSafe("");
+    clearPanelError("projects");
     setLoading(true);
     try {
       const normalizedStudents = normalizeStudentNames(row.group_students);
       const res = await adminUpsertProject(
-        { ...row, group_students: normalizedStudents, semesterId: activeSemesterId },
+        { ...row, group_students: normalizedStudents, semesterId: targetSemesterId },
         adminPass
       );
-      applyProjectPatch({
-        id: res?.project_id || res?.projectId || undefined,
-        semester_id: activeSemesterId,
-        group_no: row.group_no,
-        project_title: row.project_title,
-        group_students: normalizedStudents,
-      });
+      if (targetSemesterId === viewSemesterId) {
+        applyProjectPatch({
+          id: res?.project_id || res?.projectId || undefined,
+          semester_id: targetSemesterId,
+          group_no: row.group_no,
+          project_title: row.project_title,
+          group_students: normalizedStudents,
+        });
+      }
       setMessage(`Group ${row.group_no} updated`);
       return { ok: true };
     } catch (e) {
-      setSystemErrorSafe(e?.message || "Could not update group. Try again or check admin password.");
+      setPanelError("projects", e?.message || "Could not update group. Try again or check admin password.");
       return { ok: false };
     } finally {
       setLoading(false);
@@ -1007,7 +1034,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   const handleAddJuror = async (row) => {
     setMessage("");
-    setSystemErrorSafe("");
+    clearPanelError("jurors");
     setLoading(true);
     try {
       const created = await adminCreateJuror(row, adminPass);
@@ -1039,7 +1066,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
         || msgLower.includes("duplicate key value violates unique constraint")) {
         return { ok: false, fieldErrors: { duplicate: "A juror with the same name and institution / department already exists." } };
       } else {
-        setSystemErrorSafe(msg || "Could not add juror. Try again or check admin password.");
+        setPanelError("jurors", msg || "Could not add juror. Try again or check admin password.");
         return { ok: false };
       }
     } finally {
@@ -1049,7 +1076,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   const handleImportJurors = async (rows) => {
     setMessage("");
-    setSystemErrorSafe("");
+    clearPanelError("jurors");
     setLoading(true);
     try {
       let skipped = 0;
@@ -1109,7 +1136,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   const handleEditJuror = async (row) => {
     if (!row?.jurorId) return;
     setMessage("");
-    setSystemErrorSafe("");
+    clearPanelError("jurors");
     setLoading(true);
     try {
       await adminUpdateJuror(row, adminPass);
@@ -1122,7 +1149,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
       setMessage(jurorName ? `Juror ${jurorName} updated` : "Juror updated");
       return { ok: true };
     } catch (e) {
-      setSystemErrorSafe(e?.message || "Could not update juror. Try again or check admin password.");
+      setPanelError("jurors", e?.message || "Could not update juror. Try again or check admin password.");
       return { ok: false };
     } finally {
       setLoading(false);
@@ -1133,15 +1160,15 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
     const jurorId = juror?.jurorId || juror?.juror_id;
     const jurorName = juror?.juror_name || juror?.juryName;
     const jurorInst = juror?.juror_inst || juror?.juryDept;
-    if (!activeSemesterId || !jurorId) {
-      setSystemErrorSafe("Select an active semester before resetting a PIN.");
+    if (!viewSemesterId || !jurorId) {
+      setPanelError("jurors", "Select a semester from the header before resetting a PIN.");
       return { ok: false };
     }
     setMessage("");
-    setSystemErrorSafe("");
+    clearPanelError("jurors");
     setLoading(true);
     try {
-      const res = await adminResetJurorPin({ semesterId: activeSemesterId, jurorId }, adminPass);
+      const res = await adminResetJurorPin({ semesterId: viewSemesterId, jurorId }, adminPass);
       setResetPinInfo({
         ...res,
         juror_name: jurorName || res?.juror_name || null,
@@ -1160,11 +1187,11 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
     } catch (e) {
       const msg = String(e?.message || "");
       if (msg.includes("semester_inactive")) {
-        setSystemErrorSafe("Only the active semester can be edited.");
+        setPanelError("jurors", "Only the semester selected in header can be edited.");
       } else if (msg.includes("unauthorized")) {
-        setSystemErrorSafe("Admin password is invalid. Please re-login.");
+        setPanelError("jurors", "Admin password is invalid. Please re-login.");
       } else {
-        setSystemErrorSafe(e?.message || "Could not reset PIN. Try again or check admin password.");
+        setPanelError("jurors", e?.message || "Could not reset PIN. Try again or check admin password.");
       }
       return { ok: false };
     } finally {
@@ -1199,11 +1226,11 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   };
 
   const handleToggleJurorEdit = async ({ jurorId, enabled }) => {
-    if (!activeSemesterId || !jurorId) return;
+    if (!viewSemesterId || !jurorId) return;
     setMessage("");
-    setSystemErrorSafe("");
+    setEvalLockError("");
     if (!enabled) {
-      setSystemErrorSafe("Edit mode can only be closed by juror resubmission.");
+      setEvalLockError("Edit mode can only be closed by juror resubmission.");
       return;
     }
     // Optimistic update — revert below if the RPC fails
@@ -1211,30 +1238,30 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
     setLoading(true);
     try {
       await adminSetJurorEditMode(
-        { semesterId: activeSemesterId, jurorId, enabled: true },
+        { semesterId: viewSemesterId, jurorId, enabled: true },
         adminPass
       );
       const jurorName = getJurorNameById(jurors, jurorId);
-      setMessage(jurorName ? `Edit mode enabled for Juror ${jurorName}` : "Edit mode enabled for juror");
+      setMessage(jurorName ? `Editing unlocked for Juror ${jurorName}` : "Editing unlocked for juror");
     } catch (e) {
       applyJurorPatch({ juror_id: jurorId, edit_enabled: false }); // revert
       const msg = String(e?.message || "");
       if (msg.includes("edit_mode_disable_not_allowed")) {
-        setSystemErrorSafe("Edit mode can only be closed by juror resubmission.");
+        setEvalLockError("Edit mode can only be closed by juror resubmission.");
       } else if (msg.includes("final_submit_required")) {
-        setSystemErrorSafe("Edit mode can only be closed by juror resubmission.");
+        setEvalLockError("Edit mode can only be closed by juror resubmission.");
       } else if (msg.includes("final_submission_required")) {
-        setSystemErrorSafe("Juror must have a completed submission before edit mode can be enabled.");
+        setEvalLockError("Juror must have a completed submission before edit mode can be enabled.");
       } else if (msg.includes("no_pin")) {
-        setSystemErrorSafe("Juror PIN is missing for this semester. Reset the PIN first.");
-      } else if (msg.includes("semester_inactive")) {
-        setSystemErrorSafe("Only the active semester can be edited.");
+        setEvalLockError("Juror PIN is missing for this semester. Reset the PIN first.");
+      } else if (msg.includes("semester_not_found") || msg.includes("semester_inactive")) {
+        setEvalLockError("Selected semester could not be found. Refresh and try again.");
       } else if (msg.includes("semester_locked")) {
-        setSystemErrorSafe("Evaluation lock is active. Unlock the semester first.");
+        setEvalLockError("Evaluation lock is active. Unlock the semester first.");
       } else if (msg.includes("unauthorized")) {
-        setSystemErrorSafe("Admin password is invalid. Please re-login.");
+        setEvalLockError("Admin password is invalid. Please re-login.");
       } else {
-        setSystemErrorSafe(e?.message || "Could not update edit mode. Try again or check admin password.");
+        setEvalLockError(e?.message || "Could not update edit mode. Try again or check admin password.");
       }
     } finally {
       setLoading(false);
@@ -1242,29 +1269,29 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
   };
 
   const handleForceCloseJurorEdit = async ({ jurorId }) => {
-    if (!activeSemesterId || !jurorId) return;
+    if (!viewSemesterId || !jurorId) return;
     setMessage("");
-    setSystemErrorSafe("");
+    setEvalLockError("");
     applyJurorPatch({ juror_id: jurorId, edit_enabled: false });
     setLoading(true);
     try {
       await adminForceCloseJurorEditMode(
-        { semesterId: activeSemesterId, jurorId },
+        { semesterId: viewSemesterId, jurorId },
         adminPass
       );
       const jurorName = getJurorNameById(jurors, jurorId);
-      setMessage(jurorName ? `Edit mode closed for Juror ${jurorName}` : "Edit mode closed for juror");
+      setMessage(jurorName ? `Editing locked for Juror ${jurorName}` : "Editing locked for juror");
     } catch (e) {
       applyJurorPatch({ juror_id: jurorId, edit_enabled: true }); // revert
       const msg = String(e?.message || "");
       if (msg.includes("no_pin")) {
-        setSystemErrorSafe("Juror PIN is missing for this semester. Reset the PIN first.");
-      } else if (msg.includes("semester_inactive")) {
-        setSystemErrorSafe("Only the active semester can be edited.");
+        setEvalLockError("Juror PIN is missing for this semester. Reset the PIN first.");
+      } else if (msg.includes("semester_not_found") || msg.includes("semester_inactive")) {
+        setEvalLockError("Selected semester could not be found. Refresh and try again.");
       } else if (msg.includes("unauthorized")) {
-        setSystemErrorSafe("Admin password is invalid. Please re-login.");
+        setEvalLockError("Admin password is invalid. Please re-login.");
       } else {
-        setSystemErrorSafe(e?.message || "Could not force close edit mode. Try again or check admin password.");
+        setEvalLockError(e?.message || "Could not lock editing. Try again or check admin password.");
       }
     } finally {
       setLoading(false);
@@ -1274,39 +1301,39 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
   const handleSaveSettings = async (next) => {
     if (!adminPass) {
-      setSystemErrorSafe("Admin password missing. Please re-login.");
+      setEvalLockError("Admin password missing. Please re-login.");
       return;
     }
-    if (!activeSemesterId) {
-      setSystemErrorSafe("Select an active semester before changing lock settings.");
+    if (!viewSemesterId) {
+      setEvalLockError("Select a semester from the header before changing lock settings.");
       return;
     }
     setLoading(true);
     setMessage("");
-    setSystemErrorSafe("");
+    setEvalLockError("");
     try {
-      await adminSetSemesterEvalLock(activeSemesterId, !!next.evalLockActive, adminPass);
+      await adminSetSemesterEvalLock(viewSemesterId, !!next.evalLockActive, adminPass);
       applySemesterPatch({
-        id: activeSemesterId,
+        id: viewSemesterId,
         is_locked: !!next.evalLockActive,
       });
       setSettings(next);
-      const semesterContext = (activeSemesterLabel && activeSemesterLabel !== "—")
-        ? activeSemesterLabel
-        : "the active semester";
+      const semesterContext = (viewSemesterLabel && viewSemesterLabel !== "—")
+        ? viewSemesterLabel
+        : "the selected";
       setMessage(
         next.evalLockActive
-          ? `Evaluations locked for ${semesterContext}`
-          : `Evaluations unlocked for ${semesterContext}`
+          ? `Scoring for ${semesterContext} semester is now closed.`
+          : `Scoring for ${semesterContext} semester is now open.`
       );
     } catch (e) {
       const msg = String(e?.message || "");
-      if (msg.includes("semester_inactive")) {
-        setSystemErrorSafe("Only the active semester can be edited.");
+      if (msg.includes("semester_not_found") || msg.includes("semester_inactive")) {
+        setEvalLockError("Selected semester could not be found. Refresh and try again.");
       } else if (msg.includes("unauthorized")) {
-        setSystemErrorSafe("Admin password is invalid. Please re-login.");
+        setEvalLockError("Admin password is invalid. Please re-login.");
       } else {
-        setSystemErrorSafe(e?.message || "Could not save settings. Try again or check admin password.");
+        setEvalLockError(e?.message || "Could not save settings. Try again or check admin password.");
       }
     } finally {
       setLoading(false);
@@ -1391,7 +1418,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
     if (!deleteTarget) throw new Error("Nothing selected for deletion.");
     const { type, id, label } = deleteTarget;
     setMessage("");
-    setSystemErrorSafe("");
+    clearAllPanelErrors();
     await adminDeleteEntity({ targetType: type, targetId: id, deletePassword: password });
     if (type === "semester") {
       setSemesterList((prev) => {
@@ -1667,23 +1694,6 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
           </div>
         </div>
       )}
-      {contextNotice && (
-        <div className="manage-alerts-sticky">
-          <div className="manage-alerts">
-            <span className="manage-alert">{contextNotice}</span>
-          </div>
-        </div>
-      )}
-      {systemError && (
-        <div className="manage-alerts-sticky">
-          <div className="manage-alerts">
-            <span className="manage-alert error with-icon">
-              <span className="manage-alert-icon" aria-hidden="true"><CircleXLucideIcon /></span>
-              <span>{systemError}</span>
-            </span>
-          </div>
-        </div>
-      )}
       {pinResetTarget && (
         <div className="manage-modal" role="dialog" aria-modal="true">
           <div className="manage-modal-card manage-modal-card--danger manage-modal-card--pin-flow">
@@ -1696,30 +1706,34 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
             <div className="delete-dialog__body delete-dialog__body--pin-flow">
               {resetPinInfo?.pin_plain_once ? (
                 <div className="pin-reset-step pin-reset-step--result">
-                  <div className="delete-dialog__line">Share this PIN with the juror.</div>
+                  <div className="delete-dialog__line">New PIN generated. Share it securely with the juror.</div>
                   <div className="pin-code">
                     {String(resetPinInfo.pin_plain_once || "").padStart(4, "0").slice(0, 4)}
                   </div>
                 </div>
               ) : (
                 <div className="pin-reset-step pin-reset-step--confirm">
-                  <div className="delete-dialog__line">
-                    This will invalidate the current PIN and generate a new one for
-                    <strong className="manage-delete-focus">
-                      {" "}
-                      {pinResetTarget.juror_name || pinResetTarget.juryName || "this juror"}
-                    </strong>
-                    {(pinResetTarget.juror_inst || pinResetTarget.juryDept) && (
-                      <em className="manage-delete-focus-inst">
-                        {" "}
-                        ({pinResetTarget.juror_inst || pinResetTarget.juryDept})
-                      </em>
-                    )}
-                    .
+                  <div className="pin-reset-copy">
+                    <div className="delete-dialog__line pin-reset-target-inline">
+                      <span className="pin-reset-target-prefix">Will generate a new PIN for </span>
+                      <span className="pin-reset-target-highlight">
+                        {pinResetTarget.juror_name || pinResetTarget.juryName || "this juror"}
+                      </span>
+                      {(pinResetTarget.juror_inst || pinResetTarget.juryDept)
+                        ? (
+                          <span className="pin-reset-target-highlight pin-reset-target-highlight--inst">
+                            {" ("}
+                            {pinResetTarget.juror_inst || pinResetTarget.juryDept}
+                            {")"}
+                          </span>
+                        )
+                        : ""}
+                      <span className="pin-reset-target-prefix">. Are you sure?</span>
+                    </div>
                   </div>
-                  <div className="manage-delete-warning manage-delete-warning--info">
-                    <span className="manage-delete-warning-icon" aria-hidden="true"><InfoIcon /></span>
-                    <span className="manage-delete-warning-text">Share the new PIN securely. The old PIN will stop working.</span>
+                  <div className="manage-delete-warning manage-delete-warning--caution">
+                    <span className="manage-delete-warning-icon" aria-hidden="true"><TriangleAlertIcon /></span>
+                    <span className="manage-delete-warning-text">This will immediately deactivate the current PIN.</span>
                   </div>
                 </div>
               )}
@@ -1758,7 +1772,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
               ) : (
                 <>
                   <button
-                    className="manage-btn"
+                    className="manage-btn manage-btn--delete-cancel"
                     type="button"
                     disabled={pinResetLoading}
                     onClick={closeResetPinDialog}
@@ -1766,7 +1780,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
                     Cancel
                   </button>
                   <button
-                    className="manage-btn danger"
+                    className="manage-btn manage-btn--delete-confirm"
                     type="button"
                     disabled={pinResetLoading}
                     onClick={confirmResetPin}
@@ -1802,8 +1816,9 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
       {isMobile && (
         <div className="manage-card-actions manage-card-actions--left manage-card-actions--tight">
           <button
-            className="manage-btn ghost"
+            className="manage-btn ghost manage-expand-toggle"
             type="button"
+            aria-pressed={Object.values(openPanels).every(Boolean)}
             onClick={() => {
               const next = !Object.values(openPanels).every(Boolean);
               setOpenPanels((prev) => {
@@ -1831,7 +1846,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
                   <path d="m20 17-5-5 5-5" />
                   <path d="m4 17 5-5-5-5" />
                 </svg>
-                Collapse all
+                <span className="manage-expand-toggle-label">Collapse all</span>
               </>
             ) : (
               <>
@@ -1851,7 +1866,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
                   <path d="m9 7-5 5 5 5" />
                   <path d="m15 7 5 5-5 5" />
                 </svg>
-                Expand all
+                <span className="manage-expand-toggle-label">Expand all</span>
               </>
             )}
           </button>
@@ -1866,6 +1881,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
               semesters={semesterList}
               activeSemesterId={activeSemesterId}
               activeSemesterName={activeSemesterLabel}
+              panelError={panelErrors.semester}
               isMobile={isMobile}
               isOpen={openPanels.semester}
               onToggle={() => togglePanel("semester")}
@@ -1874,7 +1890,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
               onUpdateSemester={handleUpdateSemester}
               onDeleteSemester={(s) =>
                 (s?.id === activeSemesterId
-                  ? setSystemErrorSafe("Active semester cannot be deleted. Select another semester first.")
+                  ? setPanelError("semester", "Active semester cannot be deleted. Select another semester first.")
                   : handleRequestDelete({
                       type: "semester",
                       id: s?.id,
@@ -1886,8 +1902,11 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
             <ProjectSettingsPanel
               projects={projects}
-              semesterName={activeSemester?.name || ""}
-              activeSemesterName={activeSemesterLabel}
+              semesterName={viewSemester?.name || ""}
+              activeSemesterId={viewSemesterId}
+              activeSemesterName={viewSemesterLabel}
+              semesterOptions={semesterList}
+              panelError={panelErrors.projects}
               isMobile={isMobile}
               isOpen={openPanels.projects}
               onToggle={() => togglePanel("projects")}
@@ -1905,7 +1924,8 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
             <JurorSettingsPanel
               jurors={jurors}
-              activeSemesterName={activeSemesterLabel}
+              activeSemesterName={viewSemesterLabel}
+              panelError={panelErrors.jurors}
               isMobile={isMobile}
               isOpen={openPanels.jurors}
               onToggle={() => togglePanel("jurors")}
@@ -1927,12 +1947,14 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
             <AccessSettingsPanel
               settings={settings}
               jurors={jurors}
-              activeSemesterId={activeSemesterId}
-              activeSemesterName={activeSemesterLabel}
+              activeSemesterId={viewSemesterId}
+              activeSemesterName={viewSemesterLabel}
+              evalLockError={evalLockError}
               isMobile={isMobile}
               isOpen={openPanels.permissions}
               onToggle={() => togglePanel("permissions")}
               onRequestEvalLockChange={(checked) => {
+                setEvalLockError("");
                 setEvalLockConfirmNext(Boolean(checked));
                 setEvalLockConfirmOpen(true);
               }}
@@ -2371,11 +2393,11 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
 
       {evalLockConfirmOpen && (
         <div className="manage-modal" role="dialog" aria-modal="true">
-          <div className="manage-modal-card manage-modal-card--danger">
+          <div className="manage-modal-card manage-modal-card--danger manage-modal-card--pin-flow manage-modal-card--lock-flow">
             <div className="delete-dialog__header">
               <span className="delete-dialog__icon delete-dialog__icon--lock" aria-hidden="true"><LockIcon /></span>
               <div className="delete-dialog__title">
-                {evalLockConfirmNext ? "Lock Evaluations" : "Unlock Evaluations"}
+                {evalLockConfirmNext ? "Lock" : "Unlock"}
               </div>
             </div>
             <div className="delete-dialog__body">
@@ -2383,17 +2405,30 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
                 {evalLockConfirmNext
                   ? (
                     <>
-                      Jurors will no longer be able to edit or submit scores for{" "}
-                      <span className="delete-dialog__semester-alert">
-                        {activeSemesterLabel && activeSemesterLabel !== "—" ? activeSemesterLabel : "the active semester"}
-                      </span>
+                      Jurors can no longer edit or submit scores for{" "}
+                      {viewSemesterLabel && viewSemesterLabel !== "—" ? (
+                        <>
+                          <span className="delete-dialog__semester-alert">{viewSemesterLabel}</span>{" "}
+                          <span>semester</span>
+                        </>
+                      ) : (
+                        <span>the selected semester</span>
+                      )}
                       .
                     </>
                   )
                   : (
                     <>
-                      Jurors will be able to edit and re-submit scores for{" "}
-                      {activeSemesterLabel && activeSemesterLabel !== "—" ? activeSemesterLabel : "the active semester"}.
+                      Jurors can edit and resubmit scores for{" "}
+                      {viewSemesterLabel && viewSemesterLabel !== "—" ? (
+                        <>
+                          <span className="delete-dialog__semester-alert">{viewSemesterLabel}</span>{" "}
+                          <span>semester</span>
+                        </>
+                      ) : (
+                        <span>the selected semester</span>
+                      )}
+                      .
                     </>
                   )}
               </div>
@@ -2408,7 +2443,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
                 Cancel
               </button>
               <button
-                className={`manage-btn ${evalLockConfirmNext ? "danger" : "primary"}`}
+                className="manage-btn primary"
                 type="button"
                 disabled={evalLockConfirmLoading}
                 onClick={async () => {
@@ -2420,7 +2455,7 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange }) {
               >
                 {evalLockConfirmLoading
                   ? (evalLockConfirmNext ? "Locking…" : "Unlocking…")
-                  : (evalLockConfirmNext ? "Lock Evaluations" : "Unlock Evaluations")}
+                  : (evalLockConfirmNext ? "Lock" : "Unlock")}
               </button>
             </div>
           </div>

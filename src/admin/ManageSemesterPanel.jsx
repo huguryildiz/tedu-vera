@@ -17,6 +17,7 @@ export default function ManageSemesterPanel({
   semesters,
   activeSemesterId,
   activeSemesterName,
+  panelError = "",
   isMobile,
   isOpen,
   onToggle,
@@ -166,9 +167,13 @@ export default function ManageSemesterPanel({
 
       {isOpen && (
         <div className="manage-card-body">
-          <div className="manage-card-desc">Manage semesters, dates, and the active term.</div>
-          <div className="manage-field">
-            <label className="manage-list-header">Active Semester</label>
+          <div className="manage-card-desc">Manage semesters, dates, and the system-wide active term.</div>
+          {panelError && <div className="manage-hint manage-hint-error" role="alert">{panelError}</div>}
+          <div className="manage-field manage-current-semester-card">
+            <label className="manage-list-header">Set Current Semester</label>
+            <div className="manage-hint manage-hint-inline manage-current-semester-desc">
+              The jury form opens for the selected semester and its groups.
+            </div>
             <div className="manage-row">
               <select
                 className="manage-select"
@@ -181,25 +186,27 @@ export default function ManageSemesterPanel({
                   </option>
                 ))}
               </select>
-              <button className="manage-btn primary" type="button" onClick={() => setShowCreate(true)}>
-                <span aria-hidden="true"><CirclePlusIcon className="manage-btn-icon" /></span>
-                Create Semester
-              </button>
             </div>
           </div>
 
           <div className="manage-list">
             <div className="manage-list-header">All Semesters</div>
-          <div className="manage-search">
-            <span className="manage-search-icon" aria-hidden="true"><SearchIcon /></span>
-            <input
-              className="manage-input manage-search-input"
+            <div className="manage-list-controls">
+              <div className="manage-search">
+                <span className="manage-search-icon" aria-hidden="true"><SearchIcon /></span>
+                <input
+                  className="manage-input manage-search-input"
                 type="text"
                 placeholder="Search semesters"
                 aria-label="Search semesters"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-              />
+                />
+              </div>
+              <button className="manage-btn primary" type="button" onClick={() => setShowCreate(true)}>
+                <span aria-hidden="true"><CirclePlusIcon className="manage-btn-icon" /></span>
+                Semester
+              </button>
             </div>
             {visibleSemesters.map((s) => (
               <div key={s.id} className={`manage-item manage-item--semester${s.is_active ? " is-active" : ""}`}>
@@ -207,6 +214,23 @@ export default function ManageSemesterPanel({
                   <div className="manage-item-title-row">
                     <div className="manage-item-title">{s.name}</div>
                   </div>
+                  {(s.is_active || s.id === activeSemesterId) && (
+                    <span className="manage-pill manage-current-semester-pill">
+                      <span aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                          viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                          strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M16 14v2.2l1.6 1" />
+                          <path d="M16 2v4" />
+                          <path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5" />
+                          <path d="M3 10h5" />
+                          <path d="M8 2v4" />
+                          <circle cx="16" cy="16" r="6" />
+                        </svg>
+                      </span>
+                      <span>Current Semester</span>
+                    </span>
+                  )}
                   <div className="manage-item-sub manage-meta-line">
                     <span className="manage-meta-icon manage-semester-date-icon" aria-hidden="true">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"

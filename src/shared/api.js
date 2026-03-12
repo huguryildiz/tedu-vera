@@ -236,6 +236,8 @@ export async function adminListJurors(semesterId, adminPassword) {
     lastActivityMs: j.last_activity_at ? new Date(j.last_activity_at).getTime() : 0,
     lastSeenAt: j.last_seen_at || "",
     lastSeenMs: j.last_seen_at ? new Date(j.last_seen_at).getTime() : 0,
+    updatedAt: j.updated_at || "",
+    updatedMs: j.updated_at ? new Date(j.updated_at).getTime() : 0,
     totalProjects: j.total_projects,
     completedProjects: j.completed_projects,
     lockedUntil: j.locked_until,

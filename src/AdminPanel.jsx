@@ -447,10 +447,12 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
 
       // Determine target semester
       const activeId = sems.find((s) => s.is_active)?.id || "";
+      const selectedId = selectedSemesterRef.current;
+      const selectedIsValid = !!selectedId && sems.some((s) => s.id === selectedId);
       const targetId =
         forceSemesterId ||
+        (selectedIsValid ? selectedId : "") ||
         activeId ||
-        selectedSemesterRef.current ||
         sems[0]?.id;
 
       if (!targetId) {
@@ -506,7 +508,9 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
       const sems = await listSemesters();
       setSemesterList(sems);
       const activeId = sems.find((s) => s.is_active)?.id || sems[0]?.id || "";
-      const semId = activeId || selectedSemesterRef.current;
+      const selectedId = selectedSemesterRef.current;
+      const selectedIsValid = !!selectedId && sems.some((s) => s.id === selectedId);
+      const semId = selectedIsValid ? selectedId : activeId;
       if (!semId) return;
       if (semId !== selectedSemesterRef.current) {
         setSelectedSemesterId(semId);
@@ -1107,6 +1111,7 @@ export default function AdminPanel({ adminPass, onBack, onAuthError, onInitialLo
             <SettingsPage
               adminPass={adminPassState || getAdminPass()}
               onAdminPasswordChange={handleAdminPasswordChange}
+              selectedSemesterId={selectedSemesterId}
             />
           )}
         </div>

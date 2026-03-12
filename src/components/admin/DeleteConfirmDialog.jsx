@@ -109,12 +109,14 @@ export default function DeleteConfirmDialog({
             ) : isJurorTarget ? (
               <>
                 {jurorPrefix}
-                <strong className="manage-delete-focus">{jurorName || "this juror"}</strong>
+                <strong className="manage-delete-focus manage-delete-focus--juror-name">
+                  {jurorName || "this juror"}
+                </strong>
                 {jurorInst && (
-                  <em className="manage-delete-focus-inst">
+                  <span className="manage-delete-focus-inst manage-delete-focus-inst--juror">
                     {" "}
                     ({jurorInst})
-                  </em>
+                  </span>
                 )}
                 {" will be deleted. Are you sure?"}
               </>

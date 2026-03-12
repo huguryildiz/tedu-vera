@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { DndContext, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CalendarRangeIcon, ChevronDownIcon, FileTextIcon, MonitorCogIcon, PencilIcon, SearchIcon, UsersLucideIcon, CirclePlusIcon, UploadIcon, FileUpIcon, CloudUploadIcon, FolderPlusIcon } from "../shared/Icons";
+import { CalendarClockIcon, ChevronDownIcon, FileTextIcon, MonitorCogIcon, PencilIcon, SearchIcon, UsersLucideIcon, CirclePlusIcon, UploadIcon, FileUpIcon, CloudUploadIcon, FolderPlusIcon } from "../shared/Icons";
 import DangerIconButton from "../components/admin/DangerIconButton";
 import LastActivity from "./LastActivity";
 import { buildTimestampSearchText } from "./utils";
@@ -158,7 +158,10 @@ function SortableStudentRow({ id, children }) {
 export default function ManageProjectsPanel({
   projects,
   semesterName,
+  activeSemesterId,
   activeSemesterName,
+  semesterOptions = [],
+  panelError = "",
   isMobile,
   isOpen,
   onToggle,
@@ -173,7 +176,12 @@ export default function ManageProjectsPanel({
   const [showImport, setShowImport] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [form, setForm] = useState({ group_no: "", project_title: "", group_students: [""] });
+  const [form, setForm] = useState({
+    group_no: "",
+    project_title: "",
+    group_students: [""],
+    semester_id: activeSemesterId || "",
+  });
   const [addError, setAddError] = useState("");
   const [showEdit, setShowEdit] = useState(false);
   const [editForm, setEditForm] = useState({ group_no: "", project_title: "", group_students: [""] });
@@ -268,7 +276,8 @@ export default function ManageProjectsPanel({
   const canSubmit =
     String(form.group_no).trim() &&
     form.project_title.trim() &&
-    String(normalizedAddStudents).trim();
+    String(normalizedAddStudents).trim() &&
+    String(form.semester_id || "").trim();
   const canEditSubmit =
     String(editForm.group_no).trim() &&
     editForm.project_title.trim() &&
@@ -362,7 +371,7 @@ export default function ManageProjectsPanel({
             <div className="manage-item-meta-block">
               <div className="manage-item-sub manage-meta-line manage-meta-line--semester-chip">
                 <span className="manage-meta-icon manage-semester-date-icon" aria-hidden="true">
-                  <CalendarRangeIcon />
+                  <CalendarClockIcon />
                 </span>
                 <span className="manage-item-semester-chip">{semesterName || "—"}</span>
               </div>
@@ -593,7 +602,15 @@ export default function ManageProjectsPanel({
 
       {(!isMobile || isOpen) && (
         <div className="manage-card-body">
-          <div className="manage-card-desc">Manage groups, project titles, and student lists for the active semester.</div>
+          <div className="manage-card-desc">
+            Manage groups, projects, and students for{" "}
+            <span className="manage-semester-emphasis-blink">{activeSemesterName || "the selected"}</span>{" "}
+            semester.
+          </div>
+          {panelError && <div className="manage-hint manage-hint-error" role="alert">{panelError}</div>}
+          <div className="manage-hint manage-hint-inline">
+            Use the header to switch semesters and view other groups.
+          </div>
           <div className="manage-card-actions">
             <button
               className="manage-btn"
@@ -613,11 +630,12 @@ export default function ManageProjectsPanel({
               type="button"
               onClick={() => {
                 setAddError("");
+                setForm((f) => ({ ...f, semester_id: activeSemesterId || f.semester_id || "" }));
                 setShowAdd(true);
               }}
             >
               <span aria-hidden="true"><CirclePlusIcon className="manage-btn-icon" /></span>
-              Create Group
+              Group
             </button>
           </div>
 
@@ -639,7 +657,7 @@ export default function ManageProjectsPanel({
           <div className="manage-list">
             {visibleProjects.map((p, idx) => renderProject(p, idx))}
             {!normalizedSearch && orderedProjects.length === 0 && (
-              <div className="manage-empty manage-empty-search">No groups for the active semester.</div>
+              <div className="manage-empty manage-empty-search">No groups for the selected semester.</div>
             )}
             {normalizedSearch && filteredProjects.length === 0 && (
               <div className="manage-empty manage-empty-search">No results.</div>
@@ -690,6 +708,22 @@ export default function ManageProjectsPanel({
                   <div className="edit-dialog__title">Create Group</div>
                 </div>
                 <div className="manage-modal-body">
+                  <div className="manage-field">
+                    <label className="manage-label">Semester</label>
+                    <select
+                      className={`manage-select${addError && !form.semester_id ? " is-danger" : ""}`}
+                      value={form.semester_id || ""}
+                      onChange={(e) => {
+                        setForm((f) => ({ ...f, semester_id: e.target.value }));
+                        if (addError) setAddError("");
+                      }}
+                    >
+                      <option value="" disabled>Select semester</option>
+                      {(semesterOptions || []).map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div className="manage-field">
                     <label className="manage-label">Group number</label>
                     <input
@@ -810,12 +844,16 @@ export default function ManageProjectsPanel({
                         setAddError("Group number must be a positive integer.");
                         return;
                       }
+                      if (!form.semester_id) {
+                        setAddError("Please select a semester.");
+                        return;
+                      }
                       const existingGroupNos = new Set(
                         (projects || [])
                           .map((p) => Number(p.group_no))
                           .filter((n) => Number.isFinite(n) && n > 0)
                       );
-                      if (Number.isFinite(groupNo) && existingGroupNos.has(groupNo)) {
+                      if (form.semester_id === activeSemesterId && Number.isFinite(groupNo) && existingGroupNos.has(groupNo)) {
                         setAddError(`Group ${groupNo} already exists. Use 'Edit' to update.`);
                         return;
                       }
@@ -823,6 +861,7 @@ export default function ManageProjectsPanel({
                         group_no: groupNo,
                         project_title: form.project_title.trim(),
                         group_students: normalizedAddStudents,
+                        semesterId: form.semester_id,
                       });
                       if (res?.fieldErrors?.group_no) {
                         setAddError(res.fieldErrors.group_no);
@@ -830,7 +869,12 @@ export default function ManageProjectsPanel({
                       }
                       setShowAdd(false);
                       if (res?.ok === false) return;
-                      setForm({ group_no: "", project_title: "", group_students: [""] });
+                      setForm({
+                        group_no: "",
+                        project_title: "",
+                        group_students: [""],
+                        semester_id: activeSemesterId || "",
+                      });
                     }}
                   >
                     Create
@@ -968,6 +1012,11 @@ export default function ManageProjectsPanel({
                   </span>
                   <div className="edit-dialog__title">Import CSV</div>
                 </div>
+                <div className="manage-import-context-line">
+                  Groups will be added to{" "}
+                  <span className="manage-semester-emphasis-blink">{activeSemesterName || "selected"}</span>{" "}
+                  semester.
+                </div>
                 <div className="manage-modal-body">
                   <input
                     ref={fileRef}
@@ -1021,7 +1070,7 @@ export default function ManageProjectsPanel({
                       {importWarning}
                     </div>
                   )}
-                  <details className="manage-collapsible" open>
+                  <details className="manage-collapsible">
                     <summary className="manage-collapsible-summary">CSV example</summary>
                     <div className="manage-collapsible-content">
                       <div className="manage-code">group_no,project_title,group_students</div>
@@ -1030,7 +1079,7 @@ export default function ManageProjectsPanel({
                       <div className="manage-code">3,Embedded Vision for Robots,Zeynep Acar; Kerem Sahin</div>
                     </div>
                   </details>
-                  <details className="manage-collapsible" open>
+                  <details className="manage-collapsible">
                     <summary className="manage-collapsible-summary">Rules</summary>
                     <div className="manage-collapsible-content">
                       <ul className="manage-hint-list manage-rules-list">

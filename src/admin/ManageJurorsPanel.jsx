@@ -3,15 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ChevronDownIcon,
-  ClipboardCheckIcon,
   UploadIcon,
   FileUpIcon,
   CloudUploadIcon,
+  CalendarCheckIcon,
   LandmarkIcon,
   UserCheckIcon,
   UserPlusIcon,
   KeyRoundIcon,
-  EllipsisIcon,
   PencilIcon,
   SearchIcon,
   UserCogIcon,
@@ -67,23 +66,22 @@ function normalizeKey(name, inst) {
   return `${norm(name)}|${norm(inst)}`;
 }
 
+function getScoredSemesters(juror) {
+  return Array.isArray(juror?.scoredSemesters)
+    ? juror.scoredSemesters.filter(Boolean)
+    : Array.isArray(juror?.scored_semesters)
+      ? juror.scored_semesters.filter(Boolean)
+      : [];
+}
+
 function renderImportMessage(text) {
-  const raw = String(text || "");
-  const tokenRegex = /\b(juror_name|juror_inst)\b/g;
-  return (
-    <span className="manage-import-msg">
-      {raw.split(tokenRegex).map((part, idx) => (
-        part === "juror_name" || part === "juror_inst"
-          ? <span key={`code-${idx}`} className="manage-code-inline">{part}</span>
-          : <span key={`txt-${idx}`}>{part}</span>
-      ))}
-    </span>
-  );
+  return <span className="manage-import-msg">{String(text || "")}</span>;
 }
 
 export default function ManageJurorsPanel({
   jurors,
   activeSemesterName,
+  panelError = "",
   isMobile,
   isOpen,
   onToggle,
@@ -145,11 +143,7 @@ export default function ManageJurorsPanel({
     ? orderedJurors.filter((j) => {
         const name = j.juryName || j.juror_name || "";
         const inst = j.juryDept || j.juror_inst || "";
-        const scoredSemesters = Array.isArray(j.scoredSemesters)
-          ? j.scoredSemesters.filter(Boolean)
-          : Array.isArray(j.scored_semesters)
-            ? j.scored_semesters.filter(Boolean)
-            : [];
+        const scoredSemesters = getScoredSemesters(j);
         const semestersText = scoredSemesters.join(" ");
         const semestersLabel = scoredSemesters.join(" · ");
         const semestersSearch = scoredSemesters.map((s) => buildSemesterSearchText(s)).join(" ");
@@ -158,6 +152,8 @@ export default function ManageJurorsPanel({
           || j.last_activity_at
           || j.lastSeenAt
           || j.last_seen_at
+          || j.updatedAt
+          || j.updated_at
           || "";
         const lastActivitySearch = buildTimestampSearchText(lastActivity);
         const haystack = [
@@ -362,6 +358,7 @@ export default function ManageJurorsPanel({
       {(!isMobile || isOpen) && (
         <div className="manage-card-body">
           <div className="manage-card-desc">Manage jurors, institution/department details, and PIN resets.</div>
+          {panelError && <div className="manage-hint manage-hint-error" role="alert">{panelError}</div>}
           <div className="manage-card-actions">
             <button
               className="manage-btn"
@@ -386,7 +383,7 @@ export default function ManageJurorsPanel({
               }}
             >
               <span aria-hidden="true"><CirclePlusIcon className="manage-btn-icon" /></span>
-              Create Juror
+              Juror
             </button>
           </div>
 
@@ -407,24 +404,19 @@ export default function ManageJurorsPanel({
             )}
             {visibleJurors.map((j) => {
               const isLocked = isJurorLocked(j);
-              const scoredSemesters = Array.isArray(j.scoredSemesters)
-                ? j.scoredSemesters.filter(Boolean)
-                : Array.isArray(j.scored_semesters)
-                  ? j.scored_semesters.filter(Boolean)
-                  : [];
-              const scoredLabel = scoredSemesters.join(" · ");
-              const maxSemesters = 1;
+              const scoredSemesters = getScoredSemesters(j);
+              const completedCount = scoredSemesters.length;
               const jurorId = j.jurorId || j.juror_id;
               const isSemesterMenuOpen = openSemesterMenuId === jurorId;
-              const previewSemesters = scoredSemesters.slice(0, maxSemesters);
-              const hiddenSemesterCount = Math.max(0, scoredSemesters.length - maxSemesters);
-              const hasScoredSemester = scoredSemesters.length > 0;
-              const semesterLineTitle = scoredLabel || "No completed evaluations";
+              const hasScoredSemester = completedCount > 0;
+              const completedLabel = `${completedCount} semester${completedCount === 1 ? "" : "s"}`;
               const lastActivityAt =
                 j.lastActivityAt
                 || j.last_activity_at
                 || j.lastSeenAt
                 || j.last_seen_at
+                || j.updatedAt
+                || j.updated_at
                 || "";
               return (
                 <div
@@ -450,94 +442,89 @@ export default function ManageJurorsPanel({
                         {j.juryDept || j.juror_inst}
                       </span>
                     </div>
-                    <div className="manage-item-semesters" title={semesterLineTitle}>
-                      <span className="manage-item-semesters-icon" aria-hidden="true">
-                        <ClipboardCheckIcon />
+                    <div className="manage-item-sub manage-meta-line manage-meta-line--juror-completed">
+                      <span className="manage-meta-icon" aria-hidden="true">
+                        <CalendarCheckIcon />
                       </span>
-                      <span className="manage-item-semesters-list">
-                        {hasScoredSemester ? (
-                          previewSemesters.map((s, idx) => (
-                            <span key={`${jurorId}-sem-${idx}`} className="manage-item-semester-chip">
-                              {s}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="manage-item-semester-empty">-</span>
-                        )}
-                        {hiddenSemesterCount > 0 && (
-                          <div className="manage-semesters-menu">
-                            <button
-                              type="button"
-                              className="manage-semesters-toggle manage-semesters-toggle--icon"
-                              aria-haspopup="dialog"
-                              aria-expanded={isSemesterMenuOpen}
-                              aria-label={isSemesterMenuOpen
-                                ? "Hide scored semesters"
-                                : `Show ${hiddenSemesterCount} more semesters`}
-                              onClick={() => setOpenSemesterMenuId((prev) => (prev === jurorId ? null : jurorId))}
-                            >
-                              <EllipsisIcon />
-                            </button>
-                            {isSemesterMenuOpen && (
-                              <div className="manage-semesters-dropdown" role="dialog" aria-label="Scored semesters">
-                                <div className="manage-semesters-dropdown-title">
-                                  Semesters with completed evaluations
+                      <div className="manage-semesters-menu">
+                        <button
+                          type="button"
+                          className="manage-completed-summary"
+                          aria-haspopup="dialog"
+                          aria-expanded={isSemesterMenuOpen}
+                          aria-label={isSemesterMenuOpen
+                            ? "Hide completed semesters"
+                            : "Show completed semesters"}
+                          onClick={() => setOpenSemesterMenuId((prev) => (prev === jurorId ? null : jurorId))}
+                        >
+                          {completedLabel}
+                        </button>
+                        {isSemesterMenuOpen && (
+                          <div className="manage-semesters-dropdown manage-semesters-dropdown--list" role="dialog" aria-label="Completed semesters">
+                            <div className="manage-semesters-dropdown-title">
+                              Completed semesters
+                            </div>
+                            {hasScoredSemester ? (
+                              scoredSemesters.map((s, idx) => (
+                                <div key={`${jurorId}-all-sem-${idx}`} className="manage-semester-row">
+                                  {s}
                                 </div>
-                                {scoredSemesters.map((s, idx) => (
-                                  <span key={`${jurorId}-all-sem-${idx}`} className="manage-item-semester-chip">
-                                    {s}
-                                  </span>
-                                ))}
-                              </div>
+                              ))
+                            ) : (
+                              <div className="manage-semester-row manage-semester-row--empty">No completed semesters yet.</div>
                             )}
                           </div>
                         )}
-                      </span>
+                      </div>
                     </div>
                   </div>
-                  {lastActivityAt && (
-                    <div className="manage-item-sub manage-meta-line manage-meta-line--juror-last">
-                      <LastActivity value={lastActivityAt} />
+                  <div className="manage-item-footer manage-item-footer--juror">
+                    {lastActivityAt ? (
+                      <div className="manage-item-sub manage-meta-line manage-meta-line--juror-last">
+                        <LastActivity value={lastActivityAt} />
+                      </div>
+                    ) : (
+                      <span />
+                    )}
+                    <div className="manage-item-actions-row manage-item-actions-row--juror-actions">
+                      <button
+                        className={`manage-icon-btn${isLocked ? " danger" : ""}`}
+                        type="button"
+                        title="Reset PIN"
+                        aria-label={`Reset PIN for ${j.juryName || j.juror_name}`}
+                        onClick={() => {
+                          onResetPin?.({
+                            jurorId: j.jurorId || j.juror_id,
+                            juror_name: j.juryName || j.juror_name || "",
+                            juror_inst: j.juryDept || j.juror_inst || "",
+                          });
+                        }}
+                      >
+                        <KeyRoundIcon />
+                      </button>
+                      <button
+                        className="manage-icon-btn"
+                        type="button"
+                        title="Edit juror"
+                        aria-label={`Edit ${j.juryName || j.juror_name}`}
+                        onClick={() => {
+                          setEditTarget(j);
+                          setEditForm({
+                            juror_name: j.juryName || j.juror_name || "",
+                            juror_inst: j.juryDept || j.juror_inst || "",
+                          });
+                          setShowEdit(true);
+                        }}
+                      >
+                        <PencilIcon />
+                      </button>
+                      <DangerIconButton
+                        ariaLabel={`Delete ${j.juryName || j.juror_name}`}
+                        title="Delete juror"
+                        showLabel={false}
+                        onClick={() => onDeleteJuror?.(j)}
+                      />
                     </div>
-                  )}
-                  <div className="manage-item-actions-row manage-item-actions-row--juror-actions">
-                    <button
-                      className={`manage-icon-btn${isLocked ? " danger" : ""}`}
-                      type="button"
-                      title="Reset PIN"
-                      aria-label={`Reset PIN for ${j.juryName || j.juror_name}`}
-                      onClick={() => {
-                        onResetPin?.({
-                          jurorId: j.jurorId || j.juror_id,
-                          juror_name: j.juryName || j.juror_name || "",
-                          juror_inst: j.juryDept || j.juror_inst || "",
-                        });
-                      }}
-                    >
-                      <KeyRoundIcon />
-                    </button>
-                    <button
-                      className="manage-icon-btn"
-                      type="button"
-                      title="Edit juror"
-                      aria-label={`Edit ${j.juryName || j.juror_name}`}
-                      onClick={() => {
-                        setEditTarget(j);
-                        setEditForm({
-                          juror_name: j.juryName || j.juror_name || "",
-                          juror_inst: j.juryDept || j.juror_inst || "",
-                        });
-                        setShowEdit(true);
-                      }}
-                    >
-                      <PencilIcon />
-                    </button>
-                    <DangerIconButton
-                      ariaLabel={`Delete ${j.juryName || j.juror_name}`}
-                      title="Delete juror"
-                      showLabel={false}
-                      onClick={() => onDeleteJuror?.(j)}
-                    />
                   </div>
                 </div>
               );
@@ -752,7 +739,7 @@ export default function ManageJurorsPanel({
                       {renderImportMessage(importWarning)}
                     </div>
                   )}
-                  <details className="manage-collapsible" open>
+                  <details className="manage-collapsible">
                     <summary className="manage-collapsible-summary">CSV example</summary>
                     <div className="manage-collapsible-content">
                       <div className="manage-code">juror_name,juror_inst</div>
@@ -761,7 +748,7 @@ export default function ManageJurorsPanel({
                       <div className="manage-code">Kerem Yildiz,TED University / Electrical and Electronics Engineering</div>
                     </div>
                   </details>
-                  <details className="manage-collapsible" open>
+                  <details className="manage-collapsible">
                     <summary className="manage-collapsible-summary">Rules</summary>
                     <div className="manage-collapsible-content">
                       <ul className="manage-hint-list manage-rules-list">

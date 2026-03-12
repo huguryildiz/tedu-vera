@@ -3,6 +3,12 @@ import React from "react";
 
 const ToastContext = createContext(null);
 
+const ensureTrailingPeriod = (message) => {
+  const text = String(message ?? "").trim();
+  if (!text) return text;
+  return text.replace(/[.!?]+$/u, "") + ".";
+};
+
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const counter = useRef(0);
@@ -14,7 +20,11 @@ export function ToastProvider({ children }) {
   const addToast = useCallback(
     (type, message, duration = 4000) => {
       const id = ++counter.current;
-      setToasts((prev) => [{ id, type, message }, ...prev]);
+      const normalizedMessage =
+        typeof message === "string" || typeof message === "number"
+          ? ensureTrailingPeriod(message)
+          : message;
+      setToasts((prev) => [{ id, type, message: normalizedMessage }, ...prev]);
       setTimeout(() => removeToast(id), duration);
     },
     [removeToast]

@@ -1,16 +1,17 @@
 // src/admin/ManagePermissionsPanel.jsx
 
 import { useEffect, useRef, useState } from "react";
-import { CalendarRangeIcon, ChevronDownIcon, UserKeyIcon, SearchIcon, UserCheckIcon, UserPenIcon, LandmarkIcon, LoaderIcon, LockIcon, InfoIcon, CircleDotIcon, BanIcon } from "../shared/Icons";
+import { CalendarClockIcon, ChevronDownIcon, UserKeyIcon, SearchIcon, UserCheckIcon, LandmarkIcon, LoaderIcon, LockIcon, InfoIcon, CircleDotIcon } from "../shared/Icons";
 import { jurorStatusMeta } from "./scoreHelpers";
 import LastActivity from "./LastActivity";
-import { buildSemesterSearchText, formatTs } from "./utils";
+import { formatTs } from "./utils";
 
 export default function ManagePermissionsPanel({
   settings,
   jurors,
   activeSemesterId,
   activeSemesterName,
+  evalLockError = "",
   isMobile,
   isOpen,
   onToggle,
@@ -19,6 +20,7 @@ export default function ManagePermissionsPanel({
   onForceCloseEdit,
 }) {
   const panelRef = useRef(null);
+  const [isLandscapeMobile, setIsLandscapeMobile] = useState(false);
   const [local, setLocal] = useState(settings);
   const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,6 +39,19 @@ export default function ManagePermissionsPanel({
   useEffect(() => {
     setLocal(settings);
   }, [settings]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return undefined;
+    const mql = window.matchMedia("(max-width: 900px) and (orientation: landscape)");
+    const handleChange = (e) => setIsLandscapeMobile(e.matches);
+    setIsLandscapeMobile(mql.matches);
+    if (mql.addEventListener) mql.addEventListener("change", handleChange);
+    else mql.addListener(handleChange);
+    return () => {
+      if (mql.removeEventListener) mql.removeEventListener("change", handleChange);
+      else mql.removeListener(handleChange);
+    };
+  }, []);
 
   const handleEvalLockChange = async (checked) => {
     if (!activeSemesterId || evalLockPending) return;
@@ -161,17 +176,17 @@ export default function ManagePermissionsPanel({
           || j.last_activity_at
           || j.lastSeenAt
           || j.last_seen_at
+          || j.updatedAt
+          || j.updated_at
           || "";
         const formattedActivity = lastActivityAt ? formatTs(lastActivityAt) : "";
         const [formattedDatePart = "", formattedTimePart = ""] = formattedActivity ? formattedActivity.split(" ") : [];
         const formattedActivityAlt = formattedActivity
           ? `${formattedActivity} ${formattedActivity.replace(/\./g, "/")} ${formattedActivity.replace(/\./g, "-")} ${formattedDatePart} ${formattedTimePart}`
           : "";
-        const semesterSearch = buildSemesterSearchText(activeSemesterName || "");
         const haystack = [
           name,
           inst,
-          semesterSearch,
           progressLabel,
           statusTokens,
           editStatusLabel,
@@ -225,10 +240,16 @@ export default function ManagePermissionsPanel({
 
       {(!isMobile || isOpen) && (
         <div className="manage-card-body">
-          <div className="manage-card-desc">Enable edit access per juror and lock evaluations for the active semester.</div>
+          <div className="manage-card-desc">
+            Enable edit access per juror and lock evaluations for{" "}
+            <span className="manage-semester-emphasis-blink">{activeSemesterName || "the selected"}</span>{" "}
+            semester.
+          </div>
           <div className="manage-field">
             <label className="manage-toggle">
-              <span className="manage-toggle-text">Lock evaluations for the active semester</span>
+              <span className="manage-toggle-text">
+                Lock evaluations for {activeSemesterName || "the selected"} semester
+              </span>
               <span className="manage-toggle-control">
                 <input
                   type="checkbox"
@@ -248,6 +269,9 @@ export default function ManagePermissionsPanel({
           <div className="manage-hint manage-hint-inline">
             When locked, jurors can view but cannot edit or submit scores.
           </div>
+          {evalLockError && (
+            <div className="manage-hint manage-hint-error">{evalLockError}</div>
+          )}
 
           <div className="manage-list" ref={panelRef}>
             <div className="manage-search">
@@ -282,10 +306,13 @@ export default function ManagePermissionsPanel({
                 || j.last_activity_at
                 || j.lastSeenAt
                 || j.last_seen_at
+                || j.updatedAt
+                || j.updated_at
                 || "";
               const lockHint = evalLockActive
                 ? "Evaluations are locked. Unlock to let jurors edit."
-                : (!hasActiveSemester ? "No active semester selected." : "");
+                : (!hasActiveSemester ? "No semester selected in header." : "");
+              const inlineLockChip = evalLockActive && (!isMobile || isLandscapeMobile);
               const isPending = pendingEdits.has(jurorId);
               const canForceClose = hasActiveSemester && editEnabled && !isPending;
               const canEnableEdit =
@@ -294,7 +321,7 @@ export default function ManagePermissionsPanel({
                 !editEnabled &&
                 isCompleted &&
                 !isPending;
-              const showActionControls = !evalLockActive && (editEnabled || isCompleted);
+              const showActionControls = editEnabled || (isCompleted && !evalLockActive);
               const enableEditTitle = canEnableEdit
                 ? "Allow juror to reopen and resubmit the evaluation."
                 : (lockHint || "Edit mode can be enabled only after completion.");
@@ -339,7 +366,7 @@ export default function ManagePermissionsPanel({
                     </div>
                     <div className="manage-item-sub manage-meta-line manage-meta-line--semester-chip">
                       <span className="manage-meta-icon manage-semester-date-icon" aria-hidden="true">
-                        <CalendarRangeIcon />
+                        <CalendarClockIcon />
                       </span>
                       <span className="manage-item-semester-chip">{activeSemesterName || "—"}</span>
                     </div>
@@ -350,28 +377,40 @@ export default function ManagePermissionsPanel({
                         </span>
                         <span className={completionClassName}>
                           <span className="manage-status-chip-icon" aria-hidden="true"><CompletionIcon /></span>
-                          {hasGroups ? formatProgressLabel(completionStatusMeta.label, displayCompleted, safeTotal) : "No groups assigned"}
+                          <span className="manage-status-chip-text">
+                            {hasGroups ? formatProgressLabel(completionStatusMeta.label, displayCompleted, safeTotal) : "No groups assigned"}
+                          </span>
                         </span>
+                        {inlineLockChip && (
+                          <span className="manage-item-helper manage-status-chip is-info manage-status-chip--inline-lock">
+                            <span className="manage-status-chip-icon" aria-hidden="true">
+                              <LockIcon />
+                            </span>
+                            <span className="manage-status-chip-text">Evaluations locked</span>
+                          </span>
+                        )}
                       </div>
-                      {editEnabled && !evalLockActive && (
+                      {editEnabled && (
                         <div className="manage-item-status-row manage-meta-line manage-meta-line--status-wait">
                           <span className="manage-meta-icon manage-status-dot-icon manage-status-dot-icon--spacer" aria-hidden="true" />
                           <span className="manage-item-helper manage-status-chip manage-item-helper--editing-wait">
                             <span className="manage-status-chip-icon manage-editing-wait-spinner" aria-hidden="true">
                               <LoaderIcon />
                             </span>
-                            Waiting for juror resubmission
+                            <span className="manage-status-chip-text">Awaiting resubmission</span>
                           </span>
                         </div>
                       )}
-                      {(evalLockActive || !hasActiveSemester) && (
+                      {((evalLockActive && !inlineLockChip) || !hasActiveSemester) && (
                         <div className="manage-item-status-row manage-meta-line manage-meta-line--status-info">
                           <span className="manage-meta-icon manage-status-dot-icon manage-status-dot-icon--spacer" aria-hidden="true" />
                           <span className={`manage-item-helper manage-status-chip${evalLockActive ? " is-info" : " is-muted"}`}>
                             <span className="manage-status-chip-icon" aria-hidden="true">
                               {evalLockActive ? <LockIcon /> : <InfoIcon />}
                             </span>
-                            {evalLockActive ? "Evaluation lock is active." : lockHint}
+                            <span className="manage-status-chip-text">
+                              {evalLockActive ? "Evaluations locked" : lockHint}
+                            </span>
                           </span>
                         </div>
                       )}
@@ -383,51 +422,56 @@ export default function ManagePermissionsPanel({
                   {showActionControls && (
                     <div className="manage-item-actions manage-item-actions--permissions">
                       <div className="manage-toggle-wrap">
-                        {editEnabled && (
-                          <button
-                            type="button"
-                            className="manage-icon-btn with-label manage-cancel-edit-action"
-                            disabled={!canForceClose}
-                            title="Cancel edit mode and return juror to completed state."
-                            aria-label="Cancel edit mode"
-                            onClick={() => {
-                              if (!canForceClose) return;
-                              handleForceCloseEdit({ jurorId: j.jurorId || j.juror_id });
-                            }}
-                          >
-                            <span aria-hidden="true"><BanIcon /></span>
-                            <span className="manage-icon-btn-label">Cancel Edit</span>
-                            {isPending && (
-                              <span className="manage-toggle-spinner" aria-hidden="true">
-                                <LoaderIcon />
+                        <div className="manage-toggle-action-row">
+                          {isPending && (
+                            <span className="manage-toggle-spinner manage-toggle-spinner--left" aria-hidden="true">
+                              <LoaderIcon />
+                            </span>
+                          )}
+                          {editEnabled && (
+                            <button
+                              type="button"
+                              className="manage-icon-btn with-label manage-cancel-edit-action"
+                              disabled={!canForceClose}
+                              title="Lock editing and return juror to completed state."
+                              aria-label="Lock editing"
+                              onClick={() => {
+                                if (!canForceClose) return;
+                                handleForceCloseEdit({ jurorId: j.jurorId || j.juror_id });
+                              }}
+                            >
+                              <span aria-hidden="true"><LockIcon /></span>
+                              <span className="manage-icon-btn-label">Lock Editing</span>
+                            </button>
+                          )}
+                          {!editEnabled && isCompleted && !evalLockActive && (
+                            <button
+                              type="button"
+                              className="manage-icon-btn with-label manage-enable-edit-action"
+                              disabled={!canEnableEdit}
+                              title={enableEditTitle}
+                              aria-label="Unlock editing"
+                              onClick={() => {
+                                if (!canEnableEdit) return;
+                                handleToggleEdit({
+                                  jurorId: j.jurorId || j.juror_id,
+                                  enabled: true,
+                                });
+                              }}
+                            >
+                              <span aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                  viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                                  className="lucide lucide-lock-open-icon lucide-lock-open">
+                                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                                  <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+                                </svg>
                               </span>
-                            )}
-                          </button>
-                        )}
-                        {!editEnabled && isCompleted && (
-                          <button
-                            type="button"
-                            className="manage-icon-btn with-label manage-enable-edit-action"
-                            disabled={!canEnableEdit}
-                            title={enableEditTitle}
-                            aria-label="Enable edit mode"
-                            onClick={() => {
-                              if (!canEnableEdit) return;
-                              handleToggleEdit({
-                                jurorId: j.jurorId || j.juror_id,
-                                enabled: true,
-                              });
-                            }}
-                          >
-                            <span aria-hidden="true"><UserPenIcon /></span>
-                            <span className="manage-icon-btn-label">Enable Edit</span>
-                            {isPending && (
-                              <span className="manage-toggle-spinner" aria-hidden="true">
-                                <LoaderIcon />
-                              </span>
-                            )}
-                          </button>
-                        )}
+                              <span className="manage-icon-btn-label">Unlock Editing</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -435,7 +479,7 @@ export default function ManagePermissionsPanel({
               );
             })}
             {!normalizedSearch && permissionJurors.length === 0 && (
-              <div className="manage-empty manage-empty-search">No jurors assigned to the active semester.</div>
+              <div className="manage-empty manage-empty-search">No jurors assigned to the selected semester.</div>
             )}
             {normalizedSearch && filteredJurors.length === 0 && (
               <div className="manage-empty manage-empty-search">No results.</div>

@@ -708,11 +708,10 @@ BEGIN
   SELECT COALESCE(s.is_locked, false)
     INTO v_sem_locked
   FROM semesters s
-  WHERE s.id = p_semester_id
-    AND s.is_active = true;
+  WHERE s.id = p_semester_id;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'semester_inactive';
+    RAISE EXCEPTION 'semester_not_found';
   END IF;
 
   IF v_sem_locked THEN
@@ -2436,11 +2435,10 @@ BEGIN
   SET is_locked = v_enabled,
       updated_at = now()
   WHERE s.id = p_semester_id
-    AND s.is_active = true
   RETURNING s.name INTO v_sem_name;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'semester_inactive';
+    RAISE EXCEPTION 'semester_not_found';
   END IF;
 
   PERFORM public._audit_log(
@@ -2474,6 +2472,7 @@ RETURNS TABLE (
   juror_id uuid,
   juror_name text,
   juror_inst text,
+  updated_at timestamptz,
   locked_until timestamptz,
   last_seen_at timestamptz,
   is_locked boolean,
@@ -2515,6 +2514,7 @@ BEGIN
       j.id,
       j.juror_name,
       j.juror_inst,
+      j.updated_at,
       a.locked_until,
       a.last_seen_at,
       (a.locked_until IS NOT NULL AND a.locked_until > now()) AS is_locked,
@@ -2593,11 +2593,10 @@ BEGIN
   SELECT COALESCE(s.is_locked, false)
     INTO v_sem_locked
   FROM semesters s
-  WHERE s.id = p_semester_id
-    AND s.is_active = true;
+  WHERE s.id = p_semester_id;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'semester_inactive';
+    RAISE EXCEPTION 'semester_not_found';
   END IF;
 
   IF v_sem_locked THEN
@@ -2673,9 +2672,8 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM semesters s
     WHERE s.id = p_semester_id
-      AND s.is_active = true
   ) THEN
-    RAISE EXCEPTION 'semester_inactive';
+    RAISE EXCEPTION 'semester_not_found';
   END IF;
 
   UPDATE juror_semester_auth
