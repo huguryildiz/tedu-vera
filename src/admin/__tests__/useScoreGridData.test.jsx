@@ -69,6 +69,7 @@ describe("useScoreGridData", () => {
 
     expect(lookup.j1.g1.total).toBe(80);
     expect(lookup.j3.g2.technical).toBe(20);
+    // Average row must ignore editing/non-final jurors.
     expect(groupAverages).toEqual(["80.00", "60.00"]);
     expect(jurorWorkflowMap.get("j3")).toBe("in_progress");
 
