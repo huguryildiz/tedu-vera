@@ -3,23 +3,21 @@ import { describe, expect, it, vi } from "vitest";
 import AdminSecurityPanel from "../../components/admin/AdminSecurityPanel";
 import { ToastProvider } from "../../components/toast/useToast";
 
-// Prevent real API calls — return safe defaults
-vi.mock("../../shared/api", async (importOriginal) => {
-  const mod = await importOriginal();
-  return {
-    ...mod,
-    adminSecurityState: vi.fn().mockResolvedValue({
-      admin_password_set: true,
-      delete_password_set: true,
-      backup_password_set: true,
-    }),
-    adminChangePassword: vi.fn().mockResolvedValue({}),
-    adminChangeDeletePassword: vi.fn().mockResolvedValue({}),
-    adminChangeBackupPassword: vi.fn().mockResolvedValue({}),
-    adminBootstrapDeletePassword: vi.fn().mockResolvedValue({}),
-    adminBootstrapBackupPassword: vi.fn().mockResolvedValue({}),
-  };
-});
+// Prevent real API calls — stub only what AdminSecurityPanel uses.
+// Do NOT spread importOriginal: the real api.js initialises a Supabase client
+// at module load time and requires VITE_SUPABASE_URL (unavailable in CI).
+vi.mock("../../shared/api", () => ({
+  adminSecurityState: vi.fn().mockResolvedValue({
+    admin_password_set: true,
+    delete_password_set: true,
+    backup_password_set: true,
+  }),
+  adminChangePassword: vi.fn().mockResolvedValue({}),
+  adminChangeDeletePassword: vi.fn().mockResolvedValue({}),
+  adminChangeBackupPassword: vi.fn().mockResolvedValue({}),
+  adminBootstrapDeletePassword: vi.fn().mockResolvedValue({}),
+  adminBootstrapBackupPassword: vi.fn().mockResolvedValue({}),
+}));
 
 const DEFAULT_PROPS = {
   isMobile: false,
@@ -126,7 +124,7 @@ describe("AdminSecurityPanel — password strength validation (Admin tab)", () =
 
 describe("AdminSecurityPanel — successful admin password change", () => {
   it("calls onPasswordChanged after valid form submission", async () => {
-    const { adminChangePassword } = await import("../../shared/api");
+    const { adminChangePassword } = await vi.importMock("../../shared/api");
     adminChangePassword.mockResolvedValue({});
 
     const onPasswordChanged = vi.fn();
