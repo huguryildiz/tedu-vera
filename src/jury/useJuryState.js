@@ -102,7 +102,7 @@ export const countFilled = (scores, projects) =>
     0
   );
 
-const normalizeScoreValue = (val, max) => {
+export const normalizeScoreValue = (val, max) => {
   if (val === "" || val === null || val === undefined) return null;
   const n = parseInt(String(val), 10);
   if (!Number.isFinite(n)) return null;
