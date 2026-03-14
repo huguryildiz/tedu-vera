@@ -1,4 +1,6 @@
 import { defineConfig } from "@playwright/test";
+import { config } from "dotenv";
+config({ path: ".env.local" }); // load local E2E secrets (gitignored)
 
 export default defineConfig({
   testDir: "./e2e",

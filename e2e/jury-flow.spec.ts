@@ -19,7 +19,7 @@ test.describe("Jury identity form", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     // Navigate to the jury form
-    await page.getByRole("button", { name: /jury evaluation|start as juror|jüri/i }).click();
+    await page.getByRole("button", { name: /start evaluation/i }).click();
   });
 
   test("Start button is disabled when fields are empty", async ({ page }) => {
@@ -49,13 +49,13 @@ test.describe("Jury PIN flow", () => {
 
   test("Known juror reaches PIN step after identity submit", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /jury evaluation|start as juror|jüri/i }).click();
+    await page.getByRole("button", { name: /start evaluation/i }).click();
 
     await page.getByLabel(/full name/i).fill(TEST_JUROR_NAME);
     await page.getByLabel(/institution \/ department/i).fill(TEST_JUROR_DEPT);
     await page.getByRole("button", { name: /start evaluation/i }).click();
 
     // After identity submit with a known juror, PIN step should appear
-    await expect(page.getByText(/enter your pin|pin verification/i)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/enter your access pin/i)).toBeVisible({ timeout: 10_000 });
   });
 });
