@@ -1159,5 +1159,115 @@
     "risk": "A crash or wrong state on empty group list would break the panel at semester setup time.",
     "coverageStrength": "Medium",
     "severity": "normal"
+  },
+  {
+    "id": "jury.smoke.01",
+    "module": "Jury Flow",
+    "area": "Smoke",
+    "story": "Render without crash",
+    "scenario": "all jury step components render without throwing",
+    "whyItMatters": "A crash on any step makes the entire evaluation day impossible for jurors.",
+    "risk": "Undetected import or prop errors would surface only at evaluation time with no fallback.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
+    "id": "jury.pin.01",
+    "module": "Jury Flow",
+    "area": "PIN Verification",
+    "story": "Wrong PIN",
+    "scenario": "shows remaining attempts on first failed PIN entry",
+    "whyItMatters": "Jurors need immediate feedback on failed PINs to know how many tries remain before lockout.",
+    "risk": "Missing attempt counter leaves jurors unaware they are about to be locked out.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "jury.pin.02",
+    "module": "Jury Flow",
+    "area": "PIN Verification",
+    "story": "PIN Lockout",
+    "scenario": "lockout screen shown when error_code is locked",
+    "whyItMatters": "After 3 failed attempts the UI must switch to the locked state to prevent further attempts.",
+    "risk": "Failing to show the lockout screen would allow continued attempts and confuse the juror.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "jury.pin.03",
+    "module": "Jury Flow",
+    "area": "PIN Verification",
+    "story": "Attempt Counter",
+    "scenario": "attempt counter decrements on each failed attempt",
+    "whyItMatters": "Each failed attempt must reduce the displayed counter so jurors can track remaining tries accurately.",
+    "risk": "A static counter would mislead jurors about how close they are to lockout.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "jury.score.01",
+    "module": "Jury Flow",
+    "area": "Score Input",
+    "story": "Score Clamping — Lower Bound",
+    "scenario": "score below 0 is clamped to 0 on blur",
+    "whyItMatters": "Negative scores are invalid and must be corrected silently before writing to the database.",
+    "risk": "Allowing negative values would corrupt the total score and ranking calculations.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "jury.score.02",
+    "module": "Jury Flow",
+    "area": "Score Input",
+    "story": "Score Clamping — Upper Bound",
+    "scenario": "score above max is clamped to max on blur",
+    "whyItMatters": "Scores exceeding the criterion maximum inflate totals and must be rejected.",
+    "risk": "Unclamped high scores would break rankings and violate rubric constraints.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "jury.resume.01",
+    "module": "Jury Flow",
+    "area": "Resume Flow",
+    "story": "justLoadedRef Guard",
+    "scenario": "fully-scored juror resuming session does not get auto-submit confirmation",
+    "whyItMatters": "A juror who already scored all groups and returns to check progress must not be immediately forced into a submission dialog.",
+    "risk": "Without the guard, every resume of a complete session would trigger an unexpected final-submission prompt.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "jury.semester.01",
+    "module": "Jury Flow",
+    "area": "Semester Select",
+    "story": "Single Semester Auto-advance",
+    "scenario": "SemesterStep auto-advances when only one semester is available",
+    "whyItMatters": "Forcing jurors to manually select a semester when there is only one wastes time and adds unnecessary friction on evaluation day.",
+    "risk": "Missing the auto-advance logic would leave jurors stuck on a selection screen with no obvious action.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "jury.progress.01",
+    "module": "Jury Flow",
+    "area": "Progress Dialog",
+    "story": "Status Chip — Completed",
+    "scenario": "juror chip shows Completed when allSubmitted is true",
+    "whyItMatters": "Jurors who have already submitted must see a clear Completed status so they know their work is done.",
+    "risk": "Wrong chip label could cause a juror to re-submit or be confused about their submission state.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
+    "id": "jury.progress.02",
+    "module": "Jury Flow",
+    "area": "Progress Dialog",
+    "story": "Status Chip — In Progress",
+    "scenario": "juror chip shows In Progress when partial score data exists",
+    "whyItMatters": "Returning jurors must immediately see their previous progress to decide whether to resume or start fresh.",
+    "risk": "Displaying the wrong chip would mislead jurors about their current evaluation state.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
   }
 ]
