@@ -467,6 +467,8 @@
   flex-wrap: nowrap;
   overflow: visible;
   text-align: justify;
+  text-align-last: justify;
+  text-justify: inter-word;
   line-height: 1.4;
   scrollbar-width: none;
 }

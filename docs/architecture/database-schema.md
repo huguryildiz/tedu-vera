@@ -1,192 +1,170 @@
-# Claude Prompt — Supabase Migration (TEDU Capstone Jury Portal)
+# Database Schema — TEDU VERA
 
-You are working on an existing React + Vite project: `tedu-capstone-portal`.
-The current app is a PIN-based jury portal (no email/password auth) with an Admin panel.
+Supabase Postgres. RLS is enabled on all tables with a default-deny policy. No direct table access from the frontend — all reads and writes go through SECURITY DEFINER RPC functions.
 
-Goal: Replace Google Sheets/GAS backend with Supabase Postgres **using RPC-first design** (no direct table access from frontend anon key).
-Add semester filtering and admin dashboard summary.
+---
 
-## Current DB Schema (already created)
+## Tables
 
-Tables:
+### `semesters`
 
-- `public.semesters`
-  - `id uuid pk`
-  - `code text unique` (e.g., `2024-Spring`)
-  - `name text`
-  - `starts_on date`, `ends_on date`
-  - `is_active bool default false`
-  - `created_at timestamptz default now()`
+Stores academic semesters. Only one semester should be active at a time.
 
-- `public.projects`
-  - `id uuid pk`
-  - `semester_id uuid fk -> semesters(id)`
-  - `group_no int`
-  - `project_title text`
-  - `group_students text`
-  - `created_at timestamptz default now()`
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | uuid PK | `gen_random_uuid()` |
+| `code` | text unique | e.g. `2024-Spring` |
+| `name` | text | Display name |
+| `starts_on` | date | |
+| `ends_on` | date | |
+| `is_active` | bool | Default `false` |
+| `lock_active` | bool | When `true`, jurors cannot submit or edit scores |
+| `created_at` | timestamptz | Default `now()` |
 
-- `public.jurors`
-  - `id uuid pk`
-  - `juror_code text unique` and must be **exactly 4 digits** (`^[0-9]{4}$`)
-  - `juror_name text`
-  - `juror_inst text`
-  - `created_at timestamptz default now()`
+---
 
-- `public.scores`
-  - `id uuid pk`
-  - `semester_id uuid fk -> semesters(id)`
-  - `project_id uuid fk -> projects(id)`
-  - `juror_id uuid fk -> jurors(id)`
-  - `technical int` (0–30)
-  - `written int` (0–30)
-  - `oral int` (0–30)
-  - `teamwork int` (0–10)
-  - `total int` (0–100) should be computed in DB
-  - `comment text` (one per score submission)
-  - `submitted_at timestamptz`
-  - `created_at timestamptz default now()`
-  - Must have `unique (semester_id, project_id, juror_id)`
+### `projects`
 
-- `public.settings`
-  - `key text pk`
-  - `value text`
-  - `updated_at timestamptz default now()`
+One row per student group in a semester.
 
-Notes:
-- Supabase Auth is NOT used for jurors (no Users needed).
-- PIN login uses `jurors.juror_code` (4 digit).
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | uuid PK | |
+| `semester_id` | uuid FK → `semesters(id)` | |
+| `group_no` | int | Group number within the semester |
+| `project_title` | text | |
+| `group_students` | text | Student names, stored as free text |
+| `created_at` | timestamptz | Default `now()` |
 
-## New Requirement: Project Notes (Admin-only, one per project)
-Add table `public.project_notes`:
+---
 
-- `id uuid pk default gen_random_uuid()`
-- `semester_id uuid not null fk -> semesters(id)`
-- `project_id uuid not null fk -> projects(id)`
-- `note text not null default ''`
-- `updated_at timestamptz not null default now()`
-- `created_at timestamptz not null default now()`
-- `unique (semester_id, project_id)`
+### `jurors`
 
-These notes are **admin-only** (jury must not read/write them).
+Juror accounts. No Supabase Auth — login is PIN-only.
 
-## App UX Requirements
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | uuid PK | |
+| `juror_code` | text unique | Exactly 4 digits (`^[0-9]{4}$`) |
+| `juror_name` | text | |
+| `juror_inst` | text | Institution / department |
+| `created_at` | timestamptz | Default `now()` |
 
-### Jury flow
-1) Juror enters PIN (4-digit code).
-2) App validates PIN via Supabase RPC and receives juror profile.
-3) Juror chooses **semester** (or auto-select active semester if exactly one active).
-4) App lists projects for that semester (show `Group {group_no} — {project_title}`, and students).
-5) Juror can score each project once; can edit previously submitted scores (upsert).
-6) Score fields: technical, written, oral, teamwork + optional single comment.
-7) Total is computed by DB; frontend should show computed total returned from DB.
+---
 
-### Admin flow
-1) Admin panel has an **admin password** (existing UX).
-2) Add semester dropdown in admin panel: selects which semester’s data is shown.
-3) Admin panel needs a summary view per project:
+### `scores`
 
-`v_active_project_summary` (or RPC returning same shape) with columns:
-- `project_id`
-- `project_title`
-- `group_no`
-- `avg_total`
-- `juror_count`
-- `avg_technical`
-- `avg_written`
-- `avg_oral`
-- `avg_teamwork`
-- `note` (from project_notes, if exists)
-- `note_updated_at`
+One row per (semester, project, juror) combination. `total` is computed by a DB trigger.
 
-Admin can edit/save project note (one note per project).
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | uuid PK | |
+| `semester_id` | uuid FK → `semesters(id)` | |
+| `project_id` | uuid FK → `projects(id)` | |
+| `juror_id` | uuid FK → `jurors(id)` | |
+| `technical` | int | 0–30 |
+| `written` | int | 0–30 (UI name: `design`) |
+| `oral` | int | 0–30 (UI name: `delivery`) |
+| `teamwork` | int | 0–10 |
+| `total` | int | 0–100, computed by DB trigger |
+| `comment` | text | Optional, one per score row |
+| `submitted_at` | timestamptz | Set by trigger on any score field change |
+| `final_submitted_at` | timestamptz | Set when juror explicitly finalizes submission |
+| `created_at` | timestamptz | Default `now()` |
 
-## Security / Architecture Requirements (IMPORTANT)
+**Unique constraint:** `(semester_id, project_id, juror_id)`
 
-We are using Supabase **anon key** on the frontend.
-Therefore:
-- Turn on RLS for tables.
-- Do NOT allow public direct select/insert/update on tables from anon.
-- Use RPC functions (SECURITY DEFINER) to implement allowed reads/writes.
-- Implement admin authentication using `settings.admin_password_hash` (do NOT store plaintext).
+---
 
-### Admin password
-- Store password hash in `public.settings`:
-  - key = `admin_password_hash`
-  - value = bcrypt/argon hash (choose one and implement in SQL)
-- Implement `rpc_admin_login(password text) returns boolean` (or returns token).
-- For MVP, it’s acceptable to require admin password on each admin RPC (or create a short-lived token and validate it).
+### `settings`
 
-### Juror PIN login
-- Implement `rpc_juror_login(pin text) returns (juror_id uuid, juror_name text, juror_inst text)` and reject invalid pins.
+Key-value store for application configuration. Currently holds the admin password hash.
 
-## Implementation Tasks
+| Column | Type | Notes |
+| --- | --- | --- |
+| `key` | text PK | e.g. `admin_password_hash` |
+| `value` | text | |
+| `updated_at` | timestamptz | Default `now()` |
 
-### A) SQL / DB changes to apply (write SQL migration scripts)
-1) Ensure constraints:
-   - juror_code 4 digits check
-   - scores unique (semester_id, project_id, juror_id)
-   - score ranges (0–30 / 0–10)
-2) Add `project_notes` table.
-3) Add DB computation of `scores.total`:
-   - Prefer BEFORE INSERT/UPDATE trigger:
-     total = coalesce(technical,0)+coalesce(written,0)+coalesce(oral,0)+coalesce(teamwork,0)
-   - Also set `submitted_at = now()` on insert/update when any score fields are present.
-4) Create admin summary:
-   - Either create view `v_active_project_summary` parameterized by semester is not possible; so prefer RPC:
-     `rpc_admin_project_summary(semester_id uuid, admin_password text) returns table (...)`
-   - It must join projects + scores aggregation + project_notes.
-5) Create RPCs (SECURITY DEFINER) for:
-   - `rpc_list_semesters()` (public)
-   - `rpc_get_active_semester()` (public)
-   - `rpc_juror_login(pin text)` (public)
-   - `rpc_list_projects(semester_id uuid, juror_id uuid)` (public after juror login; you may not enforce juror_id check for MVP but do not expose more than needed)
-   - `rpc_upsert_score(...)` (public after juror login)
-   - Admin:
-     - `rpc_admin_login(password text)` (or token)
-     - `rpc_admin_project_summary(semester_id uuid, admin_password text)`
-     - `rpc_admin_get_project_note(semester_id uuid, project_id uuid, admin_password text)`
-     - `rpc_admin_set_project_note(semester_id uuid, project_id uuid, note text, admin_password text)` updates/creates note
+---
 
-6) Apply RLS:
-   - Default deny on tables.
-   - Allow access via SECURITY DEFINER RPC only.
+### `project_notes`
 
-### B) Frontend changes (React)
-1) Create `src/lib/supabaseClient.js` using env vars:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-2) Remove old GAS/Sheets API calls and replace with Supabase RPC calls.
-3) Implement:
-   - Semester list fetch on app start (or in pages).
-   - Jury PIN login uses `rpc_juror_login`.
-   - Jury selects semester (default to active).
-   - Projects list uses `rpc_list_projects`.
-   - Score submit uses `rpc_upsert_score`, display returned computed total.
-4) Admin:
-   - Add semester dropdown.
-   - After admin login, fetch summary via `rpc_admin_project_summary`.
-   - Add UI to edit project note (load + save via RPC).
+Admin-only notes, one per project per semester. Jurors cannot read or write these.
 
-### C) Dev UX
-1) Add `.env.local.example` with placeholders for Supabase keys.
-2) Ensure app runs with `npm run dev`.
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | uuid PK | |
+| `semester_id` | uuid FK → `semesters(id)` | |
+| `project_id` | uuid FK → `projects(id)` | |
+| `note` | text | Default `''` |
+| `updated_at` | timestamptz | Default `now()` |
+| `created_at` | timestamptz | Default `now()` |
 
-## Acceptance Criteria
-- App loads without errors.
-- Jury PIN login works using 4-digit codes in `jurors`.
-- Jury can select semester and score projects; scores saved in `scores` with computed total.
-- Admin can select semester and see aggregated metrics per project.
-- Admin can edit per-project note (stored in project_notes).
-- No direct table writes from frontend; use RPC.
-- RLS enabled and prevents anonymous raw table access.
+**Unique constraint:** `(semester_id, project_id)`
 
-## Notes / Constraints
-- Do not use Supabase Auth Users for jurors.
-- Admin password should not be stored or transmitted in plaintext beyond what is needed for MVP.
-- Keep code clean and minimal; do not refactor unrelated UI.
+---
 
-Deliverables:
-1) SQL migration scripts (one or multiple)
-2) Updated frontend code changes (commit-style output, list modified files and key diffs)
-3) Brief instructions for running locally and setting env vars
+## UI Field Name Mapping
+
+The frontend uses different names for two score criteria. The mapping is applied **only in `src/shared/api.js`** and must never be applied in components or hooks.
+
+| UI name (frontend / `config.js`) | DB column |
+| --- | --- |
+| `design` | `written` |
+| `delivery` | `oral` |
+| `technical` | `technical` |
+| `teamwork` | `teamwork` |
+
+---
+
+## RPC Functions
+
+All functions are `SECURITY DEFINER`. The frontend never calls tables directly.
+
+### Public (no authentication required)
+
+| Function | Description |
+| --- | --- |
+| `rpc_juror_login(pin)` | Validates a 4-digit PIN and returns juror profile |
+| `rpc_list_projects(semester_id, juror_id)` | Returns projects for a semester with the juror's existing scores |
+| `rpc_upsert_score(...)` | Creates or updates a score row for a (semester, project, juror) |
+| `rpc_list_semesters()` | Returns all semesters |
+| `rpc_get_active_semester()` | Returns the currently active semester |
+| `rpc_get_juror_edit_state(juror_id, semester_id)` | Returns the juror's submission state and whether editing is allowed |
+
+### Admin (require admin password parameter)
+
+| Function | Description |
+| --- | --- |
+| `rpc_admin_login(password)` | Validates the admin password |
+| `rpc_admin_list_scores(semester_id, password)` | Returns all scores for a semester |
+| `rpc_admin_list_jurors(password)` | Returns all jurors |
+| `rpc_admin_list_projects(semester_id, password)` | Returns all projects for a semester |
+| `rpc_admin_reset_pin(juror_id, password)` | Generates and sets a new PIN for a juror |
+| `rpc_admin_set_semester_active(semester_id, password)` | Sets a semester as active |
+| `rpc_admin_delete_semester(semester_id, password)` | Deletes a semester |
+| `rpc_admin_create_semester(...)` | Creates a new semester |
+| `rpc_admin_upsert_project(...)` | Creates or updates a project |
+| `rpc_admin_delete_project(project_id, password)` | Deletes a project |
+| `rpc_admin_upsert_juror(...)` | Creates or updates a juror |
+| `rpc_admin_delete_juror(juror_id, password)` | Deletes a juror |
+| `rpc_admin_set_lock(semester_id, lock_active, password)` | Enables or disables the score lock for a semester |
+| `rpc_admin_change_password(old_password, new_password)` | Changes the admin password |
+| `rpc_admin_export_backup(semester_id, password)` | Returns a full data export for a semester |
+| `rpc_admin_import_projects(rows, semester_id, password)` | Bulk-imports projects from CSV data |
+| `rpc_admin_import_jurors(rows, password)` | Bulk-imports jurors from CSV data |
+
+---
+
+## Production Security
+
+In production, all admin RPC calls are proxied through the `rpc-proxy` Supabase Edge Function (`supabase/functions/rpc-proxy/index.ts`). This ensures the `rpc_secret` value is never sent to the browser.
+
+The proxy is controlled by `USE_PROXY = !import.meta.env.DEV` in `src/shared/api.js`. In development, RPCs are called directly using the `VITE_RPC_SECRET` env variable.
+
+---
+
+## Schema Source
+
+Full SQL: `sql/000_bootstrap.sql`

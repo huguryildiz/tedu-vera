@@ -1,247 +1,247 @@
-# QA Workbook Test İmplementasyonu — Durum Özeti
+# QA Workbook Test Implementation — Status Summary
 
-**Tarih:** 2026-03-15
-**Referans:** `docs/testing/qa_workbook_prompt.md`
-**Test suite sonucu:** 36 dosya, 276 test — tümü geçiyor ✓
+**Date:** 2026-03-15
+**Reference:** `docs/prompts/` (gitignored)
+**Test suite result:** 36 files, 276 tests — all passing ✓
 
-> Sprint 1–3 risk-bazlı genişleme tamamlandı (2026-03-15). Önceki workbook gap-closing fazına ek olarak 32 yeni katalog girişi ve 32 yeni test eklendi. Önceki faz özeti dokümanın sonunda korundu.
+> Sprint 1–3 risk-based expansion completed (2026-03-15). 32 new catalog entries and 32 new tests were added on top of the previous workbook gap-closing phase. The previous phase summary is preserved at the end of this document.
 
 ---
 
-## Sprint 1–3: Risk-Bazlı Test Genişlemesi
+## Sprint 1–3: Risk-Based Test Expansion
 
-### qa-catalog.json Değişimi
+### qa-catalog.json Changes
 
-| Faz | Giriş Sayısı |
-|---|---|
-| Gap-closing (önceki faz) | 160 |
-| Sprint 1–3 eklentisi | +32 |
-| **Toplam** | **192** |
+| Phase | Entry Count |
+| --- | --- |
+| Gap-closing (previous phase) | 160 |
+| Sprint 1–3 addition | +32 |
+| **Total** | **192** |
 
 ---
 
 ### Sprint 1 — Jury Sync + Flow + Permissions Lock
 
-#### `src/jury/__tests__/useJuryState.writeGroup.test.js` *(genişletildi)*
+#### `src/jury/__tests__/useJuryState.writeGroup.test.js` *(expanded)*
 
-Yeni describe blokları: **"jury.sync — save payload and sync state"**, **"permissions.lock — edit lock behavior"**
+New describe blocks: **"jury.sync — save payload and sync state"**, **"permissions.lock — edit lock behavior"**
 
-| Test ID | Senaryo |
-|---|---|
-| `jury.sync.01` | `handleScoreBlur` → `upsertScore` doğru semesterId/projectId/jurorId/scores ile çağrılıyor |
-| `jury.sync.02` | `upsertScore` reject edince `saveStatus` = `"error"` oluyor |
-| `jury.sync.03` | Başarısız yazımın ardından başarılı yazım `saveStatus`'ü `"saved"` yapıyor |
-| `jury.sync.04` | Blur öncesinde birden fazla değişiklik yapılınca sadece son değer yazılıyor |
-| `permissions.lock.01` | `editLockActive=true` iken `writeGroup` `upsertScore`'u çağırmıyor |
-| `permissions.lock.02` | `upsertScore` `semester_locked` hatası döndürünce `editLockActive=true` oluyor |
-| `permissions.lock.03` | `edit_allowed=true` olan done juror → `handleEditScores` → `step="eval"`, `editLockActive=false` |
-| `permissions.lock.04` | `lock_active=false` ile açılan yeni oturum `editLockActive=false` ile başlıyor |
+| Test ID | Scenario |
+| --- | --- |
+| `jury.sync.01` | `handleScoreBlur` → `upsertScore` called with correct semesterId/projectId/jurorId/scores |
+| `jury.sync.02` | `upsertScore` rejection sets `saveStatus` = `"error"` |
+| `jury.sync.03` | A successful write following a failed write sets `saveStatus` back to `"saved"` |
+| `jury.sync.04` | Multiple changes before blur result in only the latest value being written |
+| `permissions.lock.01` | When `editLockActive=true`, `writeGroup` does not call `upsertScore` |
+| `permissions.lock.02` | When `upsertScore` returns a `semester_locked` error, `editLockActive` becomes `true` |
+| `permissions.lock.03` | Done juror with `edit_allowed=true` → `handleEditScores` → `step="eval"`, `editLockActive=false` |
+| `permissions.lock.04` | A new session opened with `lock_active=false` starts with `editLockActive=false` |
 
-#### `src/jury/__tests__/useJuryState.test.js` *(genişletildi)*
+#### `src/jury/__tests__/useJuryState.test.js` *(expanded)*
 
-Yeni describe bloğu: **"jury.flow — flow mechanics"**
+New describe block: **"jury.flow — flow mechanics"**
 
-| Test ID | Senaryo |
-|---|---|
-| `jury.flow.01` | Eksik kriterler varken auto-done tetiklenmiyor (`confirmingSubmit=false` kalıyor) |
-| `jury.flow.02` | Tüm gruplar synced olunca `confirmingSubmit=true` oluyor |
-| `jury.flow.03` | `handleEditScores` → scores, comments, `groupSynced` kayıtlı veriden yükleniyor |
-| `jury.flow.04` | Bir sonraki gruba navigasyonda önceki grubun skorları değişmiyor |
+| Test ID | Scenario |
+| --- | --- |
+| `jury.flow.01` | Auto-done is not triggered when criteria are incomplete (`confirmingSubmit` stays `false`) |
+| `jury.flow.02` | `confirmingSubmit` becomes `true` when all groups are synced |
+| `jury.flow.03` | `handleEditScores` → scores, comments, and `groupSynced` are loaded from saved data |
+| `jury.flow.04` | Navigating to the next group does not change the previous group's scores |
 
 ---
 
 ### Sprint 2 — Rankings + Consistency + PIN Reset
 
-#### `src/admin/__tests__/RankingsTab.test.jsx` *(genişletildi)*
+#### `src/admin/__tests__/RankingsTab.test.jsx` *(expanded)*
 
-| Test ID | Senaryo |
-|---|---|
-| `results.rank.01` | `totalAvg=null` olan proje ranked listede görünmüyor |
-| `results.rank.02` | Eşit `totalAvg`'de iki proje rank 1 alıyor, sonraki rank 3 oluyor (competition ranking: 1,1,3) |
-| `results.rank.03` | Arama filtresi görünür projenin mutlak rank numarasını değiştirmiyor |
-| `results.rank.04` | `totalAvg=null` olan projenin bulunması diğer projelerin rank sıralamasını kaydırmıyor |
+| Test ID | Scenario |
+| --- | --- |
+| `results.rank.01` | A project with `totalAvg=null` does not appear in the ranked list |
+| `results.rank.02` | Two projects with equal `totalAvg` both receive rank 1; the next project receives rank 3 (competition ranking: 1,1,3) |
+| `results.rank.03` | A search filter does not change the absolute rank number of a visible project |
+| `results.rank.04` | Finding a project with `totalAvg=null` does not shift the rank order of other projects |
 
-**Not:** Algoritma competition ranking (1,1,3) — dense ranking değil (1,1,2). Catalog entry `results.rank.02` buna göre güncellendi.
+**Note:** The algorithm uses competition ranking (1,1,3), not dense ranking (1,1,2). The `results.rank.02` catalog entry was updated accordingly.
 
-#### `src/admin/__tests__/ScoreDetails.test.jsx` *(genişletildi)*
+#### `src/admin/__tests__/ScoreDetails.test.jsx` *(expanded)*
 
-| Test ID | Senaryo |
-|---|---|
-| `results.consistency.01` | Juror Status "Completed" filtresi sadece `finalSubmittedAt` dolu, editing olmayan jurorları gösteriyor |
-| `results.consistency.02` | Score Status "Scored" filtresi sadece `total` dolu olan satırları gösteriyor |
-| `results.consistency.03` | Score Status "Partial" filtresi sadece bazı kriterleri dolu olan satırları gösteriyor |
-| `results.consistency.04` | Updated At range filtresi (from + to) aralık dışındaki satırları gizliyor |
+| Test ID | Scenario |
+| --- | --- |
+| `results.consistency.01` | Juror Status "Completed" filter shows only jurors with a non-null `finalSubmittedAt` and no active editing |
+| `results.consistency.02` | Score Status "Scored" filter shows only rows with a non-null `total` |
+| `results.consistency.03` | Score Status "Partial" filter shows only rows where some criteria are filled |
+| `results.consistency.04` | Updated At range filter (from + to) hides rows outside the range |
 
-#### `src/admin/__tests__/PinResetDialog.test.jsx` *(genişletildi)*
+#### `src/admin/__tests__/PinResetDialog.test.jsx` *(expanded)*
 
-Yeni describe bloğu: **"PinResetDialog — loading and stale state"**
+New describe block: **"PinResetDialog — loading and stale state"**
 
-| Test ID | Senaryo |
-|---|---|
-| `pin.reset.06` | `pinResetLoading=true` iken buton "Resetting…" gösteriyor ve disabled |
-| `pin.reset.07` | `resetPinInfo` yeni PIN ile güncellenince yeni PIN görünüyor (stale PIN değil) |
-| `pin.reset.08` | Farklı juror için dialog açılınca yeni juror adı görünüyor (stale juror değil) |
+| Test ID | Scenario |
+| --- | --- |
+| `pin.reset.06` | When `pinResetLoading=true`, the button shows "Resetting…" and is disabled |
+| `pin.reset.07` | When `resetPinInfo` is updated with a new PIN, the new PIN is displayed (not the stale one) |
+| `pin.reset.08` | When the dialog is opened for a different juror, the new juror's name is displayed (not the stale one) |
 
 ---
 
 ### Sprint 3 — Export + A11y
 
-#### `src/admin/__tests__/export.test.js` *(yeni dosya)*
+#### `src/admin/__tests__/export.test.js` *(new file)*
 
-`exportGridXLSX`, `exportRankingsXLSX`, `buildExportFilename` — `xlsx-js-style` mock'lanarak `aoa_to_sheet` çağrısı capture edildi.
+`exportGridXLSX`, `exportRankingsXLSX`, `buildExportFilename` — `xlsx-js-style` was mocked to capture the `aoa_to_sheet` call.
 
-| Test ID | Senaryo |
-|---|---|
-| `export.filename.01` | `buildExportFilename` → `vera_{type}_{semester}_{YYYY-MM-DD}_{HHMM}.xlsx` pattern'i |
-| `export.grid.01` | `exportGridXLSX` → header row: Juror, Institution / Department, Status + grup kolonları |
-| `export.grid.02` | `exportGridXLSX` → sadece geçirilen satırlar yazılıyor (1 row = header + 1 data) |
-| `export.rank.01` | `exportRankingsXLSX` → eşit `totalAvg`'de iki proje rank=1, sonraki rank=3 |
+| Test ID | Scenario |
+| --- | --- |
+| `export.filename.01` | `buildExportFilename` → `vera_{type}_{semester}_{YYYY-MM-DD}_{HHMM}.xlsx` pattern |
+| `export.grid.01` | `exportGridXLSX` → header row: Juror, Institution / Department, Status + group columns |
+| `export.grid.02` | `exportGridXLSX` → only the passed rows are written (1 row = header + 1 data) |
+| `export.rank.01` | `exportRankingsXLSX` → two projects with equal `totalAvg` both have rank=1, next has rank=3 |
 
-#### `src/admin/__tests__/ScoreGrid.aria.test.jsx` *(genişletildi)*
+#### `src/admin/__tests__/ScoreGrid.aria.test.jsx` *(expanded)*
 
-Yeni describe bloğu: **"ScoreGrid — ARIA sort"**
+New describe block: **"ScoreGrid — ARIA sort"**
 
-| Test ID | Senaryo |
-|---|---|
-| `a11y.table.01` | Sortable column header'lar her zaman geçerli bir `aria-sort` attribute'u taşıyor (`ascending`/`descending`/`none`) |
+| Test ID | Scenario |
+| --- | --- |
+| `a11y.table.01` | Sortable column headers always carry a valid `aria-sort` attribute (`ascending`/`descending`/`none`) |
 
-#### `src/test/a11y.test.jsx` *(genişletildi)*
+#### `src/test/a11y.test.jsx` *(expanded)*
 
-Yeni describe blokları: **"Dialog accessibility"**, **"Form accessibility"**, **"Live region accessibility"**
+New describe blocks: **"Dialog accessibility"**, **"Form accessibility"**, **"Live region accessibility"**
 
-| Test ID | Senaryo |
-|---|---|
-| `a11y.dialog.01` | `PinResetDialog` → `role="dialog"` ve `aria-modal="true"` var |
-| `a11y.dialog.02` | Cancel butonu accessible name taşıyor ve `onClose` callback'ini çağırıyor |
-| `a11y.form.01` | `ScoringGrid` score input'larının `aria-label` attribute'u var |
-| `a11y.banner.01` | `SaveIndicator` → `role="status"` ve `aria-live="polite"` |
-
----
-
-### Catalog Entry Düzeltmeleri (Sprint sırasında güncellenenler)
-
-| ID | Değişiklik |
-|---|---|
-| `results.rank.02` | Scenario ve risk metni güncellendi: dense değil competition ranking (1,1,3) |
-| `pin.reset.06` | Story değişti: "Reset Failure Shows Error" → "Reset PIN Loading State Shows Feedback" (PinResetDialog'da error prop yok) |
-| `a11y.dialog.01` | Scenario güncellendi: focus management yerine structural ARIA contract testi |
-| `a11y.dialog.02` | Scenario güncellendi: Escape handler yok — Cancel butonu accessible close mekanizması |
+| Test ID | Scenario |
+| --- | --- |
+| `a11y.dialog.01` | `PinResetDialog` has `role="dialog"` and `aria-modal="true"` |
+| `a11y.dialog.02` | The cancel button has an accessible name and invokes the `onClose` callback |
+| `a11y.form.01` | `ScoringGrid` score inputs have an `aria-label` attribute |
+| `a11y.banner.01` | `SaveIndicator` has `role="status"` and `aria-live="polite"` |
 
 ---
 
-### Değiştirilen Dosyalar (Sprint 1–3)
+### Catalog Entry Corrections (updated during the sprint)
+
+| ID | Change |
+| --- | --- |
+| `results.rank.02` | Scenario and risk text updated: competition ranking (1,1,3), not dense ranking |
+| `pin.reset.06` | Story changed: "Reset Failure Shows Error" → "Reset PIN Loading State Shows Feedback" (no error prop in PinResetDialog) |
+| `a11y.dialog.01` | Scenario updated: structural ARIA contract test instead of focus management |
+| `a11y.dialog.02` | Scenario updated: no Escape handler — cancel button is the accessible close mechanism |
+
+---
+
+### Changed Files (Sprint 1–3)
 
 ```
-# Güncellenen katalog
-src/test/qa-catalog.json                         160 → 192 giriş
+# Updated catalog
+src/test/qa-catalog.json                         160 → 192 entries
 
-# Genişletilen test dosyaları
-src/jury/__tests__/useJuryState.writeGroup.test.js   +8 test (jury.sync.*, permissions.lock.*)
-src/jury/__tests__/useJuryState.test.js              +4 test (jury.flow.*)
-src/admin/__tests__/RankingsTab.test.jsx             +4 test (results.rank.*)
-src/admin/__tests__/ScoreDetails.test.jsx            +4 test (results.consistency.*)
-src/admin/__tests__/PinResetDialog.test.jsx          +3 test (pin.reset.06-08)
+# Expanded test files
+src/jury/__tests__/useJuryState.writeGroup.test.js   +8 tests (jury.sync.*, permissions.lock.*)
+src/jury/__tests__/useJuryState.test.js              +4 tests (jury.flow.*)
+src/admin/__tests__/RankingsTab.test.jsx             +4 tests (results.rank.*)
+src/admin/__tests__/ScoreDetails.test.jsx            +4 tests (results.consistency.*)
+src/admin/__tests__/PinResetDialog.test.jsx          +3 tests (pin.reset.06-08)
 src/admin/__tests__/ScoreGrid.aria.test.jsx          +1 test (a11y.table.01)
-src/test/a11y.test.jsx                               +4 test (a11y.dialog.*, a11y.form.01, a11y.banner.01)
+src/test/a11y.test.jsx                               +4 tests (a11y.dialog.*, a11y.form.01, a11y.banner.01)
 
-# Yeni test dosyası
-src/admin/__tests__/export.test.js                   +4 test (export.*)
+# New test file
+src/admin/__tests__/export.test.js                   +4 tests (export.*)
 ```
 
 ---
 
 ---
 
-## Neler Yapıldı
+## What Was Done
 
-### 1. Kaynak Kodu Değişikliği
+### 1. Source Code Change
 
 **`src/admin/settings/PinResetDialog.jsx`**
 
-Result adımında (yeni PIN üretildikten sonra) juror adı satırı eklendi. Önceden sadece PIN kodu gösteriliyordu; artık "Juror: Alice" satırı da var. Birden fazla art arda reset yapan adminlerin yanlış kişinin PIN'ini göndermemesi için bağlam sağlar.
+A juror name line was added to the result step (after a new PIN is generated). Previously only the PIN code was shown; now a "Juror: Alice" line is also displayed. This provides context to prevent admins performing multiple consecutive resets from sending the wrong person's PIN.
 
-**Etkilenen workbook satırı:** TC-021
-
----
-
-### 2. Yeni Test Dosyaları
-
-#### `src/admin/__tests__/PinResetDialog.test.jsx` *(yeni)*
-
-| Test ID | Senaryo |
-|---|---|
-| `pin.reset.01` | Onay adımında juror adı görünüyor |
-| `pin.reset.02` | Onay adımında semester etiketi görünüyor |
-| `pin.reset.03` | Cancel ve Reset PIN butonları mevcut |
-| `pin.reset.04` | Result adımında 4 haneli PIN görünüyor |
-| `pin.reset.05` | Result adımında juror adı görünüyor (kaynak kodu değişikliği sonrası) |
-
-**Karşıladığı workbook satırları:** TC-020, TC-021
+**Affected workbook row:** TC-021
 
 ---
 
-#### `src/admin/__tests__/ScoreGrid.aria.test.jsx` *(yeni)*
+### 2. New Test Files
 
-| Test ID | Senaryo |
-|---|---|
-| `scoregrid.aria.01` | Score matrix tablosu `role="grid"` taşıyor |
-| `scoregrid.aria.02` | Juror hücreleri `role="rowheader"` taşıyor |
+#### `src/admin/__tests__/PinResetDialog.test.jsx` *(new)*
 
-**Karşıladığı workbook satırı:** TC-018
+| Test ID | Scenario |
+| --- | --- |
+| `pin.reset.01` | Juror name is shown on the confirmation step |
+| `pin.reset.02` | Semester label is shown on the confirmation step |
+| `pin.reset.03` | Cancel and Reset PIN buttons are present |
+| `pin.reset.04` | A 4-digit PIN is shown on the result step |
+| `pin.reset.05` | Juror name is shown on the result step (after source code change) |
 
-Mock yapısı: `useScoreGridData`, `useGridSort`, `useScrollSync`, `useGridExport`, `useResponsiveFilterPresentation` mock'landı. `jurorFinalMap` ve `jurorWorkflowMap` düzgün `Map` nesneleri olarak, `groupAverages` dizi olarak verildi.
+**Workbook rows covered:** TC-020, TC-021
 
 ---
 
-### 3. Genişletilen Mevcut Test Dosyaları
+#### `src/admin/__tests__/ScoreGrid.aria.test.jsx` *(new)*
+
+| Test ID | Scenario |
+| --- | --- |
+| `scoregrid.aria.01` | The score matrix table carries `role="grid"` |
+| `scoregrid.aria.02` | Juror cells carry `role="rowheader"` |
+
+**Workbook row covered:** TC-018
+
+Mock structure: `useScoreGridData`, `useGridSort`, `useScrollSync`, `useGridExport`, `useResponsiveFilterPresentation` were mocked. `jurorFinalMap` and `jurorWorkflowMap` were provided as proper `Map` objects; `groupAverages` as an array.
+
+---
+
+### 3. Expanded Existing Test Files
 
 #### `src/admin/__tests__/ManageProjectsPanel.test.jsx`
 
-Yeni describe bloğu: **"ManageProjectsPanel — import summary"**
+New describe block: **"ManageProjectsPanel — import summary"**
 
-| Test ID | Senaryo |
-|---|---|
-| `groups.csv.summary.01` | Başarılı importtan sonra "Import complete: 1 added, 1 skipped" mesajı görünüyor |
+| Test ID | Scenario |
+| --- | --- |
+| `groups.csv.summary.01` | After a successful import, the message "Import complete: 1 added, 1 skipped" is shown |
 
-**Karşıladığı workbook satırı:** TC-019
+**Workbook row covered:** TC-019
 
-Davranış notu: Özet mesajı client-side hesaplanıyor — `projects` prop'undaki mevcut `group_no` değerleri ile CSV'deki değerler karşılaştırılarak belirleniyor. `onImport` çağrısı öncesinde set ediliyor.
+Behavior note: The summary message is computed client-side — determined by comparing existing `group_no` values in the `projects` prop against values in the CSV. It is set before the `onImport` call.
 
 ---
 
 #### `src/admin/__tests__/smoke.test.jsx`
 
-Yeni describe bloğu: **"ChartDataTable — reduced motion"**
+New describe block: **"ChartDataTable — reduced motion"**
 
-| Test ID | Senaryo |
-|---|---|
-| `analytics.motion.01` | `prefers-reduced-motion: reduce` aktifken `<details>` elementi `open` olarak render ediliyor |
+| Test ID | Scenario |
+| --- | --- |
+| `analytics.motion.01` | When `prefers-reduced-motion: reduce` is active, the `<details>` element renders as `open` |
 
-**Karşıladığı workbook satırı:** TC-017
+**Workbook row covered:** TC-017
 
-`ChartDataTable` doğrudan test edildi (`AnalyticsTab` üzerinden değil) — daha izole ve güvenilir.
+`ChartDataTable` was tested directly (not through `AnalyticsTab`) for better isolation and reliability.
 
 ---
 
 #### `src/jury/__tests__/EvalStep.test.jsx`
 
-2 adet bare `it()` çağrısı `qaTest()` formatına dönüştürüldü:
+2 bare `it()` calls converted to `qaTest()` format:
 
-| Eski | Yeni ID | Senaryo |
-|---|---|---|
-| `it("Submit All button is hidden...")` | `jury.eval.07` | `allComplete=false` iken Submit butonu görünmüyor |
-| `it("Group synced banner is hidden...")` | `jury.eval.08` | `editMode=true` iken synced banner görünmüyor |
+| Previous | New ID | Scenario |
+| --- | --- | --- |
+| `it("Submit All button is hidden...")` | `jury.eval.07` | Submit button is not visible when `allComplete=false` |
+| `it("Group synced banner is hidden...")` | `jury.eval.08` | Synced banner is not visible when `editMode=true` |
 
-Kullanılmayan `it` import'u da temizlendi.
+Unused `it` import was also removed.
 
 ---
 
 ### 4. `src/test/qa-catalog.json`
 
-11 yeni giriş eklendi:
+11 new entries added:
 
-| ID | Modül | Severity |
-|---|---|---|
+| ID | Module | Severity |
+| --- | --- | --- |
 | `pin.reset.01` | Admin / Settings | critical |
 | `pin.reset.02` | Admin / Settings | critical |
 | `pin.reset.03` | Admin / Settings | normal |
@@ -256,68 +256,68 @@ Kullanılmayan `it` import'u da temizlendi.
 
 ---
 
-## Workbook Boşluk Kapanma Durumu
+## Workbook Gap Coverage Status
 
-| Workbook TC | Senaryo | Önceki Durum | Sonraki Durum |
-|---|---|---|---|
-| TC-017 | Reduced motion → data table açık | ❌ Yok | ✅ `analytics.motion.01` |
-| TC-018 | ScoreGrid ARIA rolleri korunuyor | ❌ Yok | ✅ `scoregrid.aria.01–02` |
-| TC-019 | CSV import sonrası özet mesajı | ⚠️ Kısmen | ✅ `groups.csv.summary.01` |
-| TC-020 | PIN reset onayı semester bağlamını içeriyor | ❌ Yok | ✅ `pin.reset.01–03` |
-| TC-021 | PIN reset sonuç adımı juror adını içeriyor | ❌ Yok + kod değişikliği gerekli | ✅ `pin.reset.04–05` + kaynak kodu |
-| EvalStep bare `it()` | 2 test QA sistemine dahil değildi | ⚠️ Bare `it()` | ✅ `jury.eval.07–08` |
+| Workbook TC | Scenario | Previous Status | New Status |
+| --- | --- | --- | --- |
+| TC-017 | Reduced motion → data table open | ❌ Missing | ✅ `analytics.motion.01` |
+| TC-018 | ScoreGrid ARIA roles preserved | ❌ Missing | ✅ `scoregrid.aria.01–02` |
+| TC-019 | Summary message after CSV import | ⚠️ Partial | ✅ `groups.csv.summary.01` |
+| TC-020 | PIN reset confirmation includes semester context | ❌ Missing | ✅ `pin.reset.01–03` |
+| TC-021 | PIN reset result step includes juror name | ❌ Missing + code change required | ✅ `pin.reset.04–05` + source code |
+| EvalStep bare `it()` | 2 tests were outside the QA system | ⚠️ Bare `it()` | ✅ `jury.eval.07–08` |
 
 ---
 
-## Değişmeyen Alanlar
+## Areas Not Changed
 
-Aşağıdaki workbook TC'leri zaten kapsamlı şekilde test ediliyordu, dokunulmadı:
+The following workbook TCs were already thoroughly covered and were left untouched:
 
 - TC-002/003: PinStep → `jury.pin.01–04`
 - TC-004: PinRevealStep → `jury.pin.*`
-- TC-007: Son grup Next butonu disabled → `jury.eval.03`
-- TC-008: Submit visibility → `jury.eval.04` + yeni `jury.eval.07`
+- TC-007: Last group Next button disabled → `jury.eval.03`
+- TC-008: Submit visibility → `jury.eval.04` + new `jury.eval.07`
 - TC-009: Lock state → `jury.eval.05`
-- TC-011: Admin yanlış şifre → `security.validation.*`
-- TC-022: Semester sil uyarısı → `semester.crud.*`
+- TC-011: Admin wrong password → `security.validation.*`
+- TC-022: Delete semester warning → `semester.crud.*`
 
 ---
 
-## Test Çalıştırma Kılavuzu
+## Test Run Guide
 
-### Lokalde Çalıştırma
+### Running Locally
 
-#### 1. Hızlı kontrol (watch mode)
+#### 1. Quick check (watch mode)
 
 ```bash
 npm test
 ```
 
-Dosya kaydettiğinde otomatik yeniden çalışır. Terminal'de yeşil/kırmızı çıktı.
+Re-runs automatically on file save. Green/red output in terminal.
 
-#### 2. Tek seferlik CI-style run
+#### 2. Single CI-style run
 
 ```bash
 npm test -- --run
 ```
 
-#### 3. Allure + Excel raporlu tam çalıştırma
+#### 3. Full run with Allure + Excel report
 
 ```bash
-npm run test:report                      # testleri çalıştır, JSON + allure-results üretir
+npm run test:report                      # run tests, produce JSON + allure-results
 npm run allure:generate                  # allure-results/ → allure-report/ HTML
-npm run allure:open                      # tarayıcıda aç
-node scripts/generate-test-report.cjs   # test-results/test-report.xlsx üretir
+npm run allure:open                      # open in browser
+node scripts/generate-test-report.cjs   # produce test-results/test-report.xlsx
 ```
 
-- Excel raporu: `test-results/test-report.xlsx`
-- Allure HTML raporu: `allure-report/` klasörü, tarayıcıda interaktif görünüm
+- Excel report: `test-results/test-report.xlsx`
+- Allure HTML report: `allure-report/` directory, interactive view in browser
 
 ---
 
-### GitHub'da CI Akışı
+### CI Flow on GitHub
 
-Her **push** (main/master) ve her **pull request**'te otomatik çalışır:
+Runs automatically on every **push** (main/master) and every **pull request**:
 
 ```
 push / PR
@@ -325,38 +325,38 @@ push / PR
        ├─ npm run test:report              (Vitest + Allure reporter)
        ├─ node scripts/generate-test-report.cjs  → test-report.xlsx
        ├─ npm run allure:generate          → allure-report/
-       ├─ artifact: test-report-excel-{run_number}.xlsx   (30 gün saklanır)
-       └─ artifact: test-report-allure-{run_number}/      (30 gün saklanır)
+       ├─ artifact: test-report-excel-{run_number}.xlsx   (kept 30 days)
+       └─ artifact: test-report-allure-{run_number}/      (kept 30 days)
 ```
 
-GitHub Actions → ilgili workflow run → **Artifacts** bölümünden Excel ve Allure raporunu indirebilirsin.
+Go to GitHub Actions → the relevant workflow run → **Artifacts** to download the Excel and Allure reports.
 
-CI başarısız olursa push **bloklanmaz** (branch protection rule yoksa), ama Actions sekmesinde kırmızı ✗ görünür.
+If CI fails, the push is **not blocked** (unless a branch protection rule is set), but a red ✗ will appear in the Actions tab.
 
-E2E job şu an devre dışı (`if: false`) — izole test DB olmadığı için lokalde manuel çalıştırılıyor:
+The E2E job is currently disabled (`if: false`) — it requires an isolated test DB and is run manually locally:
 
 ```bash
-npm run e2e          # Playwright testleri
-npm run e2e:report   # Playwright HTML raporu aç
+npm run e2e          # Playwright tests
+npm run e2e:report   # Open Playwright HTML report
 ```
 
 ---
 
-## Dosya Envanteri
+## File Inventory
 
 ```
-# Yeni dosyalar
+# New files
 src/admin/__tests__/PinResetDialog.test.jsx
 src/admin/__tests__/ScoreGrid.aria.test.jsx
 
-# Değiştirilen kaynak kodu
+# Changed source code
 src/admin/settings/PinResetDialog.jsx
 
-# Değiştirilen test dosyaları
+# Changed test files
 src/admin/__tests__/ManageProjectsPanel.test.jsx
 src/admin/__tests__/smoke.test.jsx
 src/jury/__tests__/EvalStep.test.jsx
 
-# Güncellenen katalog
+# Updated catalog
 src/test/qa-catalog.json
 ```

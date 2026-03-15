@@ -4,6 +4,7 @@ config({ path: ".env.local" }); // load local E2E secrets (gitignored)
 
 export default defineConfig({
   testDir: "./e2e",
+  outputDir: "test-results/playwright-artifacts",
   timeout: 30_000,
   retries: process.env.CI ? 2 : 0,
   reporter: [

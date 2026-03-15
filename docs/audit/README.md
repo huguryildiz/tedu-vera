@@ -2,7 +2,7 @@
 
 This directory contains sanitized audit report summaries for the TEDU Capstone Portal.
 
-Raw audit files (with inline developer annotations) are in `misc-docs/` (gitignored).
+Raw audit files (with inline developer annotations) are in `docs/misc/` (gitignored).
 
 ---
 

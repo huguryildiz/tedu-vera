@@ -263,43 +263,27 @@ Run with:
 npx vitest run --reporter=verbose
 ```
 
-### 7.2 Playwright — E2E Smoke Suite (recommended addition)
+### 7.2 Playwright — E2E Smoke Suite (already in place)
 
-Create `tests/smoke.spec.ts` with critical path tests:
+The E2E suite covers the critical paths described above. Tests live in `e2e/`:
 
-```ts
-import { test, expect } from "@playwright/test";
-
-test.describe("Smoke Tests", () => {
-  test("Home page renders", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.locator("h1")).toContainText("Jury Portal");
-    await expect(page.locator(".btn-primary")).toBeVisible();
-  });
-
-  test("Jury flow — identity step loads", async ({ page }) => {
-    await page.goto("/");
-    await page.click("text=Start Evaluation");
-    await expect(page.locator("input[placeholder*='name' i]")).toBeVisible();
-  });
-
-  test("Admin login — password gate visible", async ({ page }) => {
-    await page.goto("/");
-    await page.click("text=Admin Panel");
-    await expect(page.locator("input[type='password']")).toBeVisible();
-  });
-
-  test("Admin panel — tabs render after login", async ({ page }) => {
-    await page.goto("/");
-    await page.click("text=Admin Panel");
-    await page.fill("input[type='password']", process.env.TEST_ADMIN_PASS!);
-    await page.click("text=Log In");
-    await expect(page.locator("text=Overview")).toBeVisible();
-    await expect(page.locator("text=Scores")).toBeVisible();
-    await expect(page.locator("text=Settings")).toBeVisible();
-  });
-});
+```text
+e2e/jury-flow.spec.ts       — InfoStep UI smoke + full jury evaluation flow (jury.e2e.01)
+e2e/jury-lock.spec.ts       — Locked semester: lock banner + disabled inputs (jury.e2e.02)
+e2e/admin-login.spec.ts     — Admin password gate
+e2e/admin-results.spec.ts   — Scores → Rankings tab loads (admin.e2e.02)
+e2e/admin-export.spec.ts    — Rankings → Excel download (admin.e2e.03)
+e2e/admin-import.spec.ts    — Settings → CSV import dialog (admin.e2e.01)
 ```
+
+Run the full E2E suite:
+
+```bash
+npm run e2e
+npm run e2e:report   # open HTML report
+```
+
+Credentials-gated tests are automatically skipped if `.env.local` does not contain the required variables. See [docs/qa/e2e-guide.md](e2e-guide.md) for setup details.
 
 ### 7.3 Simple Health Checks
 

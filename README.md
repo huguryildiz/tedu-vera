@@ -171,14 +171,13 @@ E2E:     9/10  ✓  (1 skipped — requires locked semester)
 
 Project documentation is available in the `docs/` directory:
 
-| Folder | İçerik |
-|---|---|
+| Folder | Contents |
+| --- | --- |
 | [`docs/architecture/`](docs/architecture/) | System overview, database schema |
-| [`docs/audit/`](docs/audit/) | Code audit reports |
-| [`docs/qa/`](docs/qa/) | Test strategy, QA workbook, E2E guide, session summaries |
-| [`docs/deployment/`](docs/deployment/) | Git workflow, deployment notes |
-| [`docs/prompts/`](docs/prompts/) | Development prompts archive (audit, E2E, refactor) |
-| [`docs/reports/`](docs/reports/) | Tech debt, release blockers, implementation plans |
+| [`docs/deployment/`](docs/deployment/) | Environment variables, Supabase setup, Vercel deployment, Git workflow |
+| [`docs/qa/`](docs/qa/) | Vitest guide, E2E guide, smoke test plan, QA workbook, session records |
+| [`docs/audit/`](docs/audit/) | Dated production audit reports (gitignored) |
+| [`docs/reports/`](docs/reports/) | Tech debt register, release blockers (gitignored) |
 
 ---
 

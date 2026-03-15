@@ -293,6 +293,8 @@ body {
   color: var(--text-600);
   line-height: 1.6;
   text-align: justify;
+  text-align-last: justify;
+  text-justify: inter-word;
 }
 .premium-helper {
   font-size: 13px;
@@ -437,6 +439,8 @@ body {
   flex: 1 1 auto;
   min-width: 0;
   text-align: justify;
+  text-align-last: justify;
+  text-justify: inter-word;
 }
 .premium-error-banner {
   background: #fff1f2;

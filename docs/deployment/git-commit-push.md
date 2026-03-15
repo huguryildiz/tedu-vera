@@ -1,30 +1,30 @@
-# Git: Commit & Push Nasıl Yapılır
+# Git: How to Commit & Push
 
-## 1. Değişiklikleri Kontrol Et
+## 1. Check Changes
 
 ```bash
 git status
 ```
 
-Hangi dosyaların değiştiğini gösterir.
+Shows which files have changed.
 
 ```bash
 git diff
 ```
 
-Değişikliklerin içeriğini gösterir.
+Shows the content of the changes.
 
 ---
 
-## 2. Dosyaları Stage'e Al
+## 2. Stage Files
 
-Belirli dosyalar:
+Specific files:
 
 ```bash
 git add src/AdminPanel.jsx src/App.jsx
 ```
 
-Tüm değişiklikler (dikkatli kullan):
+All changes (use carefully):
 
 ```bash
 git add .
@@ -32,33 +32,33 @@ git add .
 
 ---
 
-## 3. Commit Oluştur
+## 3. Create a Commit
 
 ```bash
-git commit -m "fix: settings tab demo modda görünür hale getirildi"
+git commit -m "fix: settings tab visible in demo mode"
 ```
 
-### Commit Mesajı Formatı
+### Commit Message Format
 
-Bu projede [Conventional Commits](https://www.conventionalcommits.org/) formatı kullanılır:
+This project uses [Conventional Commits](https://www.conventionalcommits.org/):
 
-| Prefix | Ne zaman |
-|--------|----------|
-| `feat:` | Yeni özellik |
-| `fix:` | Hata düzeltme |
-| `chore:` | Build, config, bağımlılık güncellemeleri |
-| `refactor:` | Davranış değişmeden kod yeniden düzenleme |
-| `test:` | Test ekleme / güncelleme |
-| `docs:` | Sadece dokümantasyon |
+| Prefix | When to use |
+| --- | --- |
+| `feat:` | New feature |
+| `fix:` | Bug fix |
+| `chore:` | Build, config, dependency updates |
+| `refactor:` | Code restructuring without behavior change |
+| `test:` | Adding or updating tests |
+| `docs:` | Documentation only |
 
-Çok satırlı mesaj için HEREDOC kullan:
+For multi-line messages use HEREDOC:
 
 ```bash
 git commit -m "$(cat <<'EOF'
-fix: settings tab demo modda görünür hale getirildi
+fix: settings tab visible in demo mode
 
-- isDemoMode koşulu kaldırıldı
-- SettingsPage render koşulu güncellendi
+- removed isDemoMode condition
+- updated SettingsPage render condition
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 EOF
@@ -67,13 +67,13 @@ EOF
 
 ---
 
-## 4. Remote'a Push Et
+## 4. Push to Remote
 
 ```bash
 git push origin main
 ```
 
-İlk kez push ediyorsan (upstream ayarla):
+First time pushing (set upstream):
 
 ```bash
 git push -u origin main
@@ -81,25 +81,25 @@ git push -u origin main
 
 ---
 
-## 5. Durumu Doğrula
+## 5. Verify
 
 ```bash
 git log --oneline -5
 ```
 
-Son 5 commit'i listeler. En üstteki commit'in remote'a gittiğini GitHub'dan da doğrulayabilirsin.
+Lists the last 5 commits. You can also verify on GitHub that the latest commit has been pushed.
 
 ---
 
-## Sık Kullanılan Kısayollar
+## Common Shortcuts
 
 ```bash
-# Stage + commit tek adımda (sadece takip edilen dosyalar)
-git commit -am "fix: küçük düzeltme"
+# Stage + commit in one step (tracked files only)
+git commit -am "fix: minor correction"
 
-# Son commit'i henüz push etmediysen geri al
+# Undo last commit if not pushed yet
 git reset --soft HEAD~1
 
-# Hangi commit'ler push edilmedi?
+# Which commits have not been pushed?
 git log origin/main..HEAD --oneline
 ```

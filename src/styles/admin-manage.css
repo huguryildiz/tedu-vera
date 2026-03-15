@@ -90,6 +90,8 @@
   color: var(--gray-500);
   margin-top: -2px;
   text-align: justify;
+  text-align-last: justify;
+  text-justify: inter-word;
 }
 .manage-semester-emphasis-blink {
   color: var(--red);
@@ -2817,11 +2819,16 @@ textarea.manage-input--create {
   font-size: 13px;
   line-height: 1.35;
   text-align: justify;
+  text-align-last: justify;
+  text-justify: inter-word;
 }
 .manage-delete-warning.manage-delete-warning--info .manage-delete-warning-text {
   color: #475569;
   font-size: 13px;
   line-height: 1.35;
+  text-align: justify;
+  text-align-last: justify;
+  text-justify: inter-word;
 }
 .manage-delete-warning.manage-delete-warning--caution {
   background: #fff8e6;
@@ -2840,6 +2847,9 @@ textarea.manage-input--create {
   color: #7c2d12;
   font-size: 13px;
   line-height: 1.45;
+  text-align: justify;
+  text-align-last: justify;
+  text-justify: inter-word;
 }
 
 @keyframes deleteWarnPulse {

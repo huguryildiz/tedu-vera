@@ -1,12 +1,12 @@
-# TEDU VERA — E2E Test Rehberi
+# TEDU VERA — E2E Test Guide
 
-Playwright tabanlı uçtan uca testler. Gerçek tarayıcıda, gerçek Supabase demo veritabanına karşı çalışır.
+Playwright-based end-to-end tests. Runs in a real browser against the real Supabase demo database.
 
 ---
 
-## Kurulum
+## Setup
 
-Playwright zaten `package.json`'da tanımlı. İlk kez çalıştırmadan önce browser binary'lerini indir:
+Playwright is already defined in `package.json`. Before running for the first time, download browser binaries:
 
 ```bash
 npx playwright install
@@ -14,157 +14,159 @@ npx playwright install
 
 ---
 
-## Komutlar
+## Commands
 
 ```bash
-# Tüm E2E testleri çalıştır (headless)
+# Run all E2E tests (headless)
 npm run e2e
 
-# HTML raporu aç (son koşumun sonuçları)
+# Open HTML report (results from last run)
 npm run e2e:report
 
-# Canlı UI ile çalıştır — her adımı izle
+# Run with live UI — watch every step
 npx playwright test --ui
 
-# Belirli bir dosyayı çalıştır
+# Run a specific file
 npx playwright test e2e/jury-flow.spec.ts
 
-# Başarısız olan testleri tekrar çalıştır
+# Re-run only failed tests
 npx playwright test --last-failed
 
-# Headed (tarayıcı görünür) modda çalıştır
+# Run in headed mode (browser visible)
 npx playwright test --headed
 ```
 
 ---
 
-## Env Değişkenleri
+## Environment Variables
 
-Testlerin bir kısmı gerçek kimlik bilgisi gerektirir. `.env.local` dosyasına ekle:
+Some tests require real credentials. Add to `.env.local`:
 
 ```env
-# Admin testleri için zorunlu
+# Required for admin tests
 E2E_ADMIN_PASSWORD=your_admin_password
 
-# Jury full-flow testi için zorunlu (jury.e2e.01)
+# Required for jury full-flow test (jury.e2e.01)
 E2E_JUROR_NAME=Test Juror
 E2E_JUROR_DEPT=EE
 E2E_JUROR_PIN=1234
 E2E_SEMESTER_NAME=2026 Spring
 
-# Lock testi için zorunlu (jury.e2e.02) — semester DB'de kilitli olmalı
+# Required for lock test (jury.e2e.02) — semester must be locked in DB
 E2E_LOCKED=true
 ```
 
-Env var eksikse ilgili test otomatik olarak **skip** olur — CI'da hata vermez.
+If an env var is missing, the relevant test is automatically **skipped** — no CI failure.
 
 ---
 
-## Test Dosyaları
+## Test Files
 
-| Dosya | Test ID | Senaryo |
+| File | Test ID | Scenario |
 | --- | --- | --- |
-| `e2e/jury-flow.spec.ts` | — | InfoStep UI smoke testleri |
-| `e2e/jury-flow.spec.ts` | `jury.e2e.01` | Jüri identity → PIN → semester → eval ekranı |
-| `e2e/jury-lock.spec.ts` | `jury.e2e.02` | Kilitli semester → banner görünür, inputlar disabled |
+| `e2e/jury-flow.spec.ts` | — | InfoStep UI smoke tests |
+| `e2e/jury-flow.spec.ts` | `jury.e2e.01` | Juror identity → PIN → semester → eval screen |
+| `e2e/jury-lock.spec.ts` | `jury.e2e.02` | Locked semester → banner visible, inputs disabled |
 | `e2e/admin-login.spec.ts` | — | Admin panel login smoke |
-| `e2e/admin-results.spec.ts` | `admin.e2e.02` | Admin → Scores → Rankings tab yüklenir |
-| `e2e/admin-export.spec.ts` | `admin.e2e.03` | Rankings → Excel butonu → `.xlsx` indirilir |
-| `e2e/admin-import.spec.ts` | `admin.e2e.01` | Settings → Projects → CSV import dialog açılır |
+| `e2e/admin-results.spec.ts` | `admin.e2e.02` | Admin → Scores → Rankings tab loads |
+| `e2e/admin-export.spec.ts` | `admin.e2e.03` | Rankings → Excel button → `.xlsx` downloaded |
+| `e2e/admin-import.spec.ts` | `admin.e2e.01` | Settings → Projects → CSV import dialog opens |
 
 ---
 
-## HTML Raporu
+## HTML Report
 
-`npm run e2e` çalıştırdıktan sonra:
+After running `npm run e2e`:
 
 ```bash
 npm run e2e:report
 ```
 
-Tarayıcıda `http://localhost:9323` açılır. Burada görebileceklerin:
+Opens `http://localhost:9323` in the browser. What you can see:
 
-- Her testin **pass / fail / skip** durumu ve süresi
-- **Başarısız testlerde screenshot** — tam olarak hangi anda patladığı
-- **Video kaydı** — tüm test boyunca ekran kaydı
-- **Trace viewer** — adım adım hangi element'e tıklandı, hangi assertion bekleniyordu
+- **pass / fail / skip** status and duration for each test
+- **Screenshots on failure** — the exact moment it broke
+- **Video recording** — full screen capture of the test run
+- **Trace viewer** — step-by-step which element was clicked, which assertion was expected
 
-Trace viewer'ı açmak için başarısız bir testin üstüne tıkla → `Traces` sekmesi.
+To open the trace viewer, click a failed test → `Traces` tab.
 
 ---
 
-## Skip Mantığı
+## Skip Logic
 
-Testler iki kategoride:
+Tests fall into two categories:
 
-**Her zaman çalışır** (env var gerektirmez):
-- InfoStep UI testleri — saf HTML etkileşimi
-- Admin login — `E2E_ADMIN_PASSWORD` varsa
+**Always runs** (no env var required):
 
-**Credentials gated** (env var yoksa skip):
-- `jury.e2e.01` — `E2E_JUROR_PIN` + `E2E_SEMESTER_NAME` gerekir
-- `jury.e2e.02` — ayrıca `E2E_LOCKED=true` gerekir
+- InfoStep UI tests — pure HTML interaction
+- Admin login — if `E2E_ADMIN_PASSWORD` is set
 
-CI ortamında sadece `E2E_ADMIN_PASSWORD` secret'ı tanımlanmışsa admin testleri çalışır, jury flow testleri skip olur — bu beklenen davranıştır.
+**Credentials gated** (skipped if env var is missing):
+
+- `jury.e2e.01` — requires `E2E_JUROR_PIN` + `E2E_SEMESTER_NAME`
+- `jury.e2e.02` — also requires `E2E_LOCKED=true`
+
+In CI, if only `E2E_ADMIN_PASSWORD` is defined, admin tests run and jury flow tests are skipped — this is expected behavior.
 
 ---
 
 ## Playwright Config
 
-`playwright.config.ts` ayarları:
+Settings in `playwright.config.ts`:
 
-| Ayar | Değer |
+| Setting | Value |
 | --- | --- |
 | Browser | Chromium |
-| Base URL | `http://localhost:5173` (veya `E2E_BASE_URL`) |
-| Timeout | 30 saniye / test |
+| Base URL | `http://localhost:5173` (or `E2E_BASE_URL`) |
+| Timeout | 30 seconds / test |
 | Retry (CI) | 2 |
-| Screenshot | Sadece hata durumunda |
-| Video | Hata durumunda saklanır |
-| Web server | `npm run dev` otomatik başlatılır |
+| Screenshot | On failure only |
+| Video | Retained on failure |
+| Web server | `npm run dev` started automatically |
 
 ---
 
-## Excel Raporları
+## Excel Reports
 
-Test sonuçlarını Excel'e aktarmak için:
+To export test results to Excel:
 
 ```bash
-# Sadece E2E sonuçları → test-results/e2e-report-YYYY-MM-DD_HHMM.xlsx
+# E2E results only → test-results/e2e-report-YYYY-MM-DD_HHMM.xlsx
 npm run e2e:excel
 
-# Sadece unit test sonuçları → test-results/test-report-YYYY-MM-DD_HHMM.xlsx
+# Unit test results only → test-results/test-report-YYYY-MM-DD_HHMM.xlsx
 npm run test:report && node scripts/generate-test-report.cjs
 
-# İkisi birden — tek komutla her şeyi üret
+# Both at once — generate everything in one command
 npm run report:all
 ```
 
-`npm run e2e:excel` çalıştırmadan önce `npm run e2e` koşulmuş olmalı — JSON çıktısı `test-results/playwright-results.json` dosyasından okunur.
+`npm run e2e` must be run before `npm run e2e:excel` — the JSON output is read from `test-results/playwright-results.json`.
 
-Excel dosyaları `test-results/` klasörüne düşer:
+Excel files are written to `test-results/`:
 
-| Dosya | İçerik |
+| File | Contents |
 | --- | --- |
-| `test-results/e2e-report-*.xlsx` | E2E: Summary + tüm testler (status, süre, hata) |
-| `test-results/test-report-*.xlsx` | Unit: Summary + modül bazlı + QA coverage |
+| `test-results/e2e-report-*.xlsx` | E2E: Summary + all tests (status, duration, error) |
+| `test-results/test-report-*.xlsx` | Unit: Summary + per-module + QA coverage |
 
 ---
 
-## Hızlı Kontrol — Poster Günü Öncesi
+## Quick Check — Before Poster Day
 
 ```bash
-# 1. Unit testler — tümü geçmeli
+# 1. Unit tests — all must pass
 npm test -- --run
 
-# 2. E2E — admin testleri + UI smoke
+# 2. E2E — admin tests + UI smoke
 npm run e2e
 
-# 3. Raporu aç ve kontrol et
+# 3. Open report and review
 npm run e2e:report
 
-# 4. (Opsiyonel) Excel çıktısı al
+# 4. (Optional) Generate Excel output
 npm run report:all
 ```
 
-Bu komutlar tüm otomatik test katmanını kapsar.
+These commands cover the full automated test suite.
