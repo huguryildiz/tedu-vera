@@ -344,8 +344,11 @@ export default function AdminSecurityPanel({
                   </div>
 
                   {missingHash && (
-                    <div className="manage-hint manage-hint-warn">
-                      Admin password has not been set yet. Create it to enable secure admin access.
+                    <div className="manage-delete-warning manage-delete-warning--caution" role="status">
+                      <span className="manage-delete-warning-icon" aria-hidden="true"><TriangleAlertIcon /></span>
+                      <span className="manage-delete-warning-text">
+                        Admin password has not been set yet. Create it to enable secure admin access.
+                      </span>
                     </div>
                   )}
 
@@ -428,8 +431,11 @@ export default function AdminSecurityPanel({
                   </div>
 
                   {deleteMissingHash && (
-                    <div className="manage-hint manage-hint-warn">
-                      Delete password is not set. Create one to protect destructive actions.
+                    <div className="manage-delete-warning manage-delete-warning--caution" role="status">
+                      <span className="manage-delete-warning-icon" aria-hidden="true"><TriangleAlertIcon /></span>
+                      <span className="manage-delete-warning-text">
+                        Delete password is not set. Create one to protect destructive actions.
+                      </span>
                     </div>
                   )}
 
