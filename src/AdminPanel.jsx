@@ -987,8 +987,7 @@ export default function AdminPanel({ adminPass, isDemoMode, onBack, onAuthError,
           <div className="tab-bar-row">
             <div className="tab-bar-shell" ref={tabBarRef} onScroll={updateTabHints}>
               <div className="tab-bar" role="tablist" aria-label="Admin panel sections">
-                {/* Ensure Settings is always available and visible */}
-                {TABS.map((t) => {
+                {TABS.filter((t) => !(isDemoMode && t.id === "settings")).map((t) => {
                   if (t.id === "scores") {
                     return (
                       <ScoresDropdown
@@ -1088,7 +1087,7 @@ export default function AdminPanel({ adminPass, isDemoMode, onBack, onAuthError,
               trendError={trendError}
             />
           )}
-          {adminTab === "settings" && (
+          {adminTab === "settings" && !isDemoMode && (
             <SettingsPage
               adminPass={adminPassState || getAdminPass()}
               onAdminPasswordChange={handleAdminPasswordChange}
