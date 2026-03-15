@@ -14,7 +14,28 @@
       "Bash(git commit:*)",
       "Bash(find /Users/huguryildiz/Documents/GitHub/tedu-capstone-portal/src -type f \\\\\\(-name *.jsx -o -name *.js -o -name *.ts -o -name *.tsx -o -name *.css \\\\\\))",
       "Bash(npm test:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(vercel ls:*)",
+      "Bash(vercel --version)",
+      "Bash(npm i:*)",
+      "Bash(sudo npm:*)",
+      "Bash(npx vercel:*)",
+      "Bash(~/.npm-global/bin/vercel --version)",
+      "Bash(~/.npm-global/bin/vercel whoami:*)",
+      "Bash(~/.npm-global/bin/vercel login:*)",
+      "Bash(~/.npm-global/bin/vercel ls:*)",
+      "Bash(~/.npm-global/bin/vercel remove:*)",
+      "Read(//Users/huguryildiz/.local/share/com.vercel.cli/**)",
+      "Read(//Users/huguryildiz/.config/vercel/**)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(list\\(d.values\\(\\)\\)[0][''''token''''][:8]+''''...''''\\)\")",
+      "Read(//Users/huguryildiz/.config/**)",
+      "Read(//Users/huguryildiz/**)",
+      "Bash(find ~/Library -name *.json -path *vercel*)",
+      "Bash(python3 -c \":*)",
+      "Bash(git checkout:*)",
+      "Bash(git replace:*)",
+      "Bash(git filter-branch:*)",
+      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --tag-name-filter cat -- HEAD)"
     ]
   }
 }
