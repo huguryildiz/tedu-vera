@@ -26,9 +26,9 @@ test.describe("Admin rankings view", () => {
     await passwordInput.fill(ADMIN_PASSWORD);
     await page.keyboard.press("Enter");
 
-    // Wait for dashboard to load
+    // Wait for admin tabs to load
     await expect(
-      page.getByText(/overview|dashboard|genel bakış/i).first()
+      page.getByRole("tab", { name: /overview/i })
     ).toBeVisible({ timeout: 10_000 });
   });
 

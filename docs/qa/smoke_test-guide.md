@@ -252,7 +252,7 @@ It is **not** a comprehensive regression suite. It answers one question: _"Is th
 
 Existing tests cover component-level smoke rendering:
 
-```
+```text
 src/jury/__tests__/smoke.test.jsx    — PinStep, SemesterStep, InfoStep, DoneStep, SheetsProgressDialog
 src/admin/__tests__/smoke.test.jsx   — CompletionStrip, JurorActivity, AnalyticsTab
 ```

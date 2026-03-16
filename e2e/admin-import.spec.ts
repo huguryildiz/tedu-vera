@@ -31,7 +31,7 @@ test.describe("Admin CSV import", () => {
     await page.keyboard.press("Enter");
 
     await expect(
-      page.getByText(/overview|dashboard|genel bakış/i).first()
+      page.getByRole("tab", { name: /overview/i })
     ).toBeVisible({ timeout: 10_000 });
   });
 

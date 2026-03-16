@@ -26,7 +26,7 @@ test.describe("Admin export", () => {
     await page.keyboard.press("Enter");
 
     await expect(
-      page.getByText(/overview|dashboard|genel bakış/i).first()
+      page.getByRole("tab", { name: /overview/i })
     ).toBeVisible({ timeout: 10_000 });
 
     // Navigate to Rankings (Scores is a dropdown button, not role="tab")

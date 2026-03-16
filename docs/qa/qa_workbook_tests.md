@@ -131,7 +131,7 @@ New describe blocks: **"Dialog accessibility"**, **"Form accessibility"**, **"Li
 
 ### Changed Files (Sprint 1–3)
 
-```
+```text
 # Updated catalog
 src/test/qa-catalog.json                         160 → 192 entries
 
@@ -319,7 +319,7 @@ node scripts/generate-test-report.cjs   # produce test-results/test-report.xlsx
 
 Runs automatically on every **push** (main/master) and every **pull request**:
 
-```
+```text
 push / PR
   └─ test job
        ├─ npm run test:report              (Vitest + Allure reporter)
@@ -344,7 +344,7 @@ npm run e2e:report   # Open Playwright HTML report
 
 ## File Inventory
 
-```
+```text
 # New files
 src/admin/__tests__/PinResetDialog.test.jsx
 src/admin/__tests__/ScoreGrid.aria.test.jsx

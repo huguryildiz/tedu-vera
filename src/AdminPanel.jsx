@@ -446,15 +446,7 @@ export default function AdminPanel({ adminPass, isDemoMode, onBack, onAuthError,
   const initialLoadFiredRef = useRef(false);
   const trendInitRef = useRef(false);
   const readStoredAdminPass = () => {
-    try {
-      return (
-        adminPass
-        || sessionStorage.getItem("v_sec_ap")
-        || ""
-      );
-    } catch {
-      return adminPass || "";
-    }
+    return adminPass || "";
   };
   const [adminPassState, setAdminPassState] = useState(readStoredAdminPass);
   const passRef = useRef(adminPassState);
@@ -468,9 +460,6 @@ export default function AdminPanel({ adminPass, isDemoMode, onBack, onAuthError,
     if (!nextPass) return;
     setAdminPassState(nextPass);
     passRef.current = nextPass;
-    try {
-      sessionStorage.setItem("v_sec_ap", nextPass);
-    } catch { }
   };
 
   // Track selected semester separately so refresh uses the latest selection
@@ -490,11 +479,6 @@ export default function AdminPanel({ adminPass, isDemoMode, onBack, onAuthError,
         setAuthError("Enter the admin password to load scores.");
         return;
       }
-
-      // Cache password for the duration of this session
-      try {
-        sessionStorage.setItem("v_sec_ap", pass);
-      } catch { }
 
       // Always refresh semesters (IDs change after reseed)
       const sems = await listSemesters();

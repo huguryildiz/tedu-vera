@@ -69,6 +69,7 @@ jobs:
         env:
           VITE_SUPABASE_URL:      ${{ secrets.E2E_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+          VITE_RPC_SECRET:        ${{ secrets.E2E_RPC_SECRET }}
           E2E_ADMIN_PASSWORD:     ${{ secrets.E2E_ADMIN_PASSWORD }}
           E2E_JUROR_NAME:         ${{ secrets.E2E_JUROR_NAME }}
           E2E_JUROR_DEPT:         ${{ secrets.E2E_JUROR_DEPT }}

@@ -1,4 +1,5 @@
 # EE 491 / 492 — Senior Project Poster Day
+
 ## Evaluation Rubric & MÜDEK Alignment
 
 **Total: 100 points** | Updated: February 2026
@@ -23,7 +24,8 @@ independently across the four criteria below.
 ---
 
 ## Criterion 1 — Written Communication
-**30 points · MÜDEK 9.2**
+
+### 30 points · MÜDEK 9.2
 
 > *"Hedef kitlenin çeşitli farklılıklarını (eğitim, dil, meslek gibi) dikkate alarak, teknik konularda **yazılı** etkin iletişim kurma becerisi."*
 
@@ -39,7 +41,8 @@ audience (engineers and non-engineers alike).
 | 13–20 | **Developing** | Occasional gaps in information flow. Some visuals are missing labels or captions. Technical content is only partially communicated. |
 | 0–12  | **Insufficient** | Confusing layout. Low-quality or unlabelled visuals. Technical content is unclear or missing. |
 
-**What to look for:**
+### Written Communication: What to look for
+
 - Is the problem clearly stated at a glance?
 - Are figures, charts, and diagrams properly labelled?
 - Can a non-specialist understand the poster's core message?
@@ -48,7 +51,8 @@ audience (engineers and non-engineers alike).
 ---
 
 ## Criterion 2 — Oral Communication
-**30 points · MÜDEK 9.1**
+
+### 30 points · MÜDEK 9.1
 
 > *"Hedef kitlenin çeşitli farklılıklarını (eğitim, dil, meslek gibi) dikkate alarak, teknik konularda **sözlü** etkin iletişim kurma becerisi."*
 
@@ -64,7 +68,8 @@ on who is asking.
 | 13–20 | **Developing** | Understandable but inconsistent. Limited audience adaptation. Time management or Q&A depth needs improvement. |
 | 0–12  | **Insufficient** | Unclear or disorganised presentation. Most questions answered incorrectly or not at all. |
 
-**What to look for:**
+### Oral Communication: What to look for
+
 - Does the team adjust their language for technical vs. non-technical jurors?
 - Are Q&A responses accurate and appropriately detailed?
 - Is the spoken summary clear and within time?
@@ -73,7 +78,8 @@ on who is asking.
 ---
 
 ## Criterion 3 — Technical Content
-**30 points · MÜDEK 1.2 / 2 / 3**
+
+### 30 points · MÜDEK 1.2 / 2 / 3
 
 > *"Matematik, fen bilimleri ve mühendislik bilgilerini karmaşık mühendislik problemlerinin çözümünde kullanabilme becerisi (1.2); karmaşık mühendislik problemlerini tanımlama, formüle etme ve analiz becerisi (2); karmaşık mühendislik problemlerine yaratıcı, gerçekçi kısıtları gözeten çözümler tasarlama becerisi (3)."*
 
@@ -89,7 +95,8 @@ justified their design decisions, and demonstrated real technical mastery.
 | 13–20 | **Developing** | Problem is stated but motivation or technical justification is insufficient. |
 | 0–12  | **Insufficient** | Vague problem definition and unjustified decisions. Superficial technical content. |
 
-**What to look for:**
+### Technical Content: What to look for
+
 - Is the problem well-defined with clear engineering constraints?
 - Are design choices backed by analysis, calculations, or experiments?
 - Does the work go beyond implementation to include evaluation or validation?
@@ -98,7 +105,8 @@ justified their design decisions, and demonstrated real technical mastery.
 ---
 
 ## Criterion 4 — Teamwork
-**10 points · MÜDEK 8.1 / 8.2**
+
+### 10 points · MÜDEK 8.1 / 8.2
 
 > *"Bireysel olarak disiplin içi ve çok disiplinli takımlarda (yüz yüze, uzaktan veya karma) takım üyesi veya lideri olarak etkin biçimde çalışabilme becerisi (8.1 / 8.2)."*
 
@@ -113,7 +121,8 @@ and ethical conduct in interacting with jurors.
 | 4–6  | **Developing** | Uneven participation. Some members are passive or unprepared. |
 | 0–3  | **Insufficient** | Very low participation or dominated by one person. Lack of professionalism observed. |
 
-**What to look for:**
+### Teamwork: What to look for
+
 - Can every team member answer questions about different parts of the project?
 - Does the team divide presentation responsibilities fairly?
 - Is conduct respectful and professional with all jurors?
@@ -135,4 +144,4 @@ and ethical conduct in interacting with jurors.
 
 ---
 
-*EE 491/492 Senior Project — TED University Department of Electrical & Electronics Engineering*
+EE 491/492 Senior Project — TED University Department of Electrical & Electronics Engineering

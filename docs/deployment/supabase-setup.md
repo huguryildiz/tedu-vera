@@ -17,14 +17,14 @@ How to set up a Supabase project for VERA (new installation or new environment).
 
 The full schema (tables, RLS policies, RPC functions, triggers, grants) lives in `sql/000_bootstrap.sql`.
 
-**Option A — Supabase Studio SQL Editor (recommended for first setup):**
+### Option A — Supabase Studio SQL Editor (recommended for first setup)
 
 1. In your Supabase project, go to **SQL Editor**.
 2. Open `sql/000_bootstrap.sql` from this repository.
 3. Paste the entire contents into the editor and click **Run**.
 4. Verify no errors. All tables, functions, and grants should be created.
 
-**Option B — Supabase CLI:**
+### Option B — Supabase CLI
 
 ```bash
 supabase db push --db-url "postgresql://postgres:<password>@<host>:5432/postgres"
@@ -41,7 +41,7 @@ For development or demo environments, apply the dummy seed data:
 1. In the SQL Editor, paste and run `sql/001_dummy_seed.sql`.
 2. This creates a test semester, sample projects, and test jurors.
 
-**Do not apply seed data to a production database.**
+> Do not apply seed data to a production database.
 
 ---
 
@@ -72,7 +72,7 @@ The `rpc-proxy` Edge Function proxies admin RPC calls in production so that `RPC
 npm install -g supabase
 ```
 
-**Link your project:**
+### Link your project
 
 ```bash
 supabase link --project-ref <your-project-ref>
@@ -80,7 +80,7 @@ supabase link --project-ref <your-project-ref>
 
 The project ref is the string in your Supabase project URL: `https://supabase.com/dashboard/project/<project-ref>`.
 
-**Deploy the function:**
+### Deploy the function
 
 ```bash
 supabase functions deploy rpc-proxy

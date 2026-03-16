@@ -4,7 +4,7 @@ This directory contains the Supabase database schema and seed files.
 
 ## Files and Application Order
 
-```
+```text
 000_bootstrap.sql   ← Apply first (schema, tables, RPCs, RLS)
 001_dummy_seed.sql  ← Optional: staging and local test environments only
 ```
@@ -21,6 +21,7 @@ Sets up a fresh Supabase project from scratch. Includes:
 - Grants and RLS (Row Level Security) policies
 
 Incorporates all security fixes applied on 2026-03-14:
+
 - CSPRNG-based PIN generation (`gen_random_bytes` instead of `random()`)
 - Audit log entry on every failed PIN attempt
 - `pin_hash` / `pin_plain_once` fields excluded from `rpc_admin_full_export` payload
@@ -59,7 +60,7 @@ psql "$DATABASE_URL" -f sql/000_bootstrap.sql
 
 Create a new file named `002_<description>.sql`:
 
-```
+```text
 sql/002_add_group_feedback_column.sql
 ```
 

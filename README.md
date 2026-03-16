@@ -2,15 +2,22 @@
 
 **TEDU Capstone Jury Evaluation Platform** · *Verdict & Evaluation Ranking Assistant*
 
-VERA is an internal academic web application used by the Department of Electrical & Electronics Engineering of TED University to conduct structured poster-day evaluations for EE 491/492 Senior Project courses.
+VERA is an internal academic web application used by the Department of
+Electrical & Electronics Engineering of TED University to conduct structured
+poster-day evaluations for EE 491/492 Senior Project courses.
 
 ---
 
 ## Overview
 
-On poster day, faculty jurors walk the poster exhibition hall, score student projects across four rubric-based criteria, and submit their evaluations through VERA's guided interface. Admins manage semesters, juror assignments, and project data — and generate rankings, analytics, and MÜDEK outcome reports from the admin dashboard.
+On poster day, faculty jurors walk the poster exhibition hall, score student
+projects across four rubric-based criteria, and submit their evaluations
+through VERA's guided interface. Admins manage semesters, juror assignments,
+and project data — and generate rankings, analytics, and MÜDEK outcome reports
+from the admin dashboard.
 
-**Usage pattern:** Active ~2–3 days per year (poster day + preparation). Internal tool, not a public SaaS product.
+**Usage pattern:** Active ~2–3 days per year (poster day + preparation).
+Internal tool, not a public SaaS product.
 
 ---
 
@@ -160,7 +167,7 @@ Criterion definitions, rubric bands, and MÜDEK outcome mappings are defined in 
 
 ## Test Status
 
-```
+```text
 Unit:  276/276 ✓
 E2E:     9/10  ✓  (1 skipped — requires locked semester)
 ```

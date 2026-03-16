@@ -7,6 +7,25 @@ npm test              # watch mode (development)
 npm test -- --run     # single run, no watch
 ```
 
+### E2E env separation
+
+Use a dedicated local file for Playwright:
+
+```text
+.env.e2e.local
+```
+
+Playwright now loads env in this order:
+
+1. `.env.e2e.local` (preferred)
+2. `.env.local` (fallback)
+
+Template:
+
+```text
+.env.e2e.example
+```
+
 ---
 
 ## Allure Interactive Dashboard
@@ -50,14 +69,14 @@ npm run test:report && npm run allure:generate && npm run allure:open
 
 Allure uses a separate Vitest config so the default `npm test` stays fast:
 
-```
+```text
 vitest.config.allure.mjs   ← adds AllureReporter + allure-vitest/setup
 vite.config.js             ← used by npm test (no Allure overhead)
 ```
 
 ### Generated directories (git-ignored)
 
-```
+```text
 allure-results/   ← raw JSON results produced by test:report
 allure-report/    ← final HTML report produced by allure:generate
 ```

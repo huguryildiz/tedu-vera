@@ -80,6 +80,7 @@ async function advanceToEval(result, projectOverrides = []) {
     juror_id: "j-1",
     juror_name: "Test Juror",
     juror_inst: "EE",
+    session_token: "sess-1",
   });
 
   act(() => {
@@ -137,6 +138,7 @@ describe("writeGroup — happy path", () => {
       "sem-1",  // semesterId
       "p-1",    // projectId
       "j-1",    // jurorId
+      expect.any(String), // session token
       expect.objectContaining({ technical: 20 }),
       expect.any(String) // comment
     );
@@ -254,7 +256,7 @@ describe("score normalization on blur", () => {
     expect(result.current.scores["p-1"].technical).toBe(25);
     // The upsert should receive 25, not 30
     expect(api.upsertScore).toHaveBeenCalledWith(
-      expect.any(String), expect.any(String), expect.any(String),
+      expect.any(String), expect.any(String), expect.any(String), expect.any(String),
       expect.objectContaining({ technical: 25 }),
       expect.any(String)
     );
@@ -340,7 +342,7 @@ describe("edit mode flow", () => {
     ]);
     api.getJurorEditState.mockResolvedValue({ edit_allowed: true, lock_active: false });
     api.verifyJurorPin.mockResolvedValue({
-      ok: true, juror_id: "j-1", juror_name: "Test Juror", juror_inst: "EE",
+      ok: true, juror_id: "j-1", juror_name: "Test Juror", juror_inst: "EE", session_token: "sess-1",
     });
 
     const { result } = renderHook(() => useJuryState());
@@ -429,6 +431,7 @@ describe("jury.sync — save payload and sync state", () => {
       "sem-1",
       "p-1",
       "j-1",
+      expect.any(String),
       expect.objectContaining({ technical: 18 }),
       expect.any(String)
     );
@@ -479,7 +482,7 @@ describe("jury.sync — save payload and sync state", () => {
 
     expect(api.upsertScore).toHaveBeenCalledTimes(1);
     expect(api.upsertScore).toHaveBeenCalledWith(
-      expect.any(String), expect.any(String), expect.any(String),
+      expect.any(String), expect.any(String), expect.any(String), expect.any(String),
       expect.objectContaining({ technical: 22 }),
       expect.any(String)
     );
@@ -503,7 +506,7 @@ describe("permissions.lock — edit lock behavior", () => {
     api.listProjects.mockResolvedValue(makeProjects());
     api.getJurorEditState.mockResolvedValue({ edit_allowed: false, lock_active: true });
     api.verifyJurorPin.mockResolvedValue({
-      ok: true, juror_id: "j-1", juror_name: "Test Juror", juror_inst: "EE",
+      ok: true, juror_id: "j-1", juror_name: "Test Juror", juror_inst: "EE", session_token: "sess-1",
     });
 
     const { result } = renderHook(() => useJuryState());
@@ -558,7 +561,7 @@ describe("permissions.lock — edit lock behavior", () => {
     ]);
     api.getJurorEditState.mockResolvedValue({ edit_allowed: true, lock_active: false });
     api.verifyJurorPin.mockResolvedValue({
-      ok: true, juror_id: "j-1", juror_name: "Test Juror", juror_inst: "EE",
+      ok: true, juror_id: "j-1", juror_name: "Test Juror", juror_inst: "EE", session_token: "sess-1",
     });
 
     const { result } = renderHook(() => useJuryState());

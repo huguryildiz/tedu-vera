@@ -70,6 +70,7 @@ async function advanceToEval2(result, projectOverrides = []) {
   api.getJurorEditState.mockResolvedValue({ edit_allowed: false, lock_active: false });
   api.verifyJurorPin.mockResolvedValue({
     ok: true, juror_id: "j-1", juror_name: "Test Juror", juror_inst: "EE",
+    session_token: "sess-1",
   });
 
   act(() => {
@@ -325,7 +326,7 @@ describe("jury.flow — flow mechanics", () => {
     ]);
     api.getJurorEditState.mockResolvedValue({ edit_allowed: true, lock_active: false });
     api.verifyJurorPin.mockResolvedValue({
-      ok: true, juror_id: "j-1", juror_name: "Test Juror", juror_inst: "EE",
+      ok: true, juror_id: "j-1", juror_name: "Test Juror", juror_inst: "EE", session_token: "sess-1",
     });
 
     const { result } = renderHook(() => useJuryState());
@@ -396,6 +397,7 @@ describe("justLoadedRef guard — resume flow", () => {
       juror_id: "j-1",
       juror_name: "Test Juror",
       juror_inst: "EE",
+      session_token: "sess-1",
     });
 
     const { result } = renderHook(() => useJuryState());

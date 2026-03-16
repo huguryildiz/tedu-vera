@@ -25,9 +25,9 @@ test.describe("Admin panel login", () => {
     await passwordInput.fill(ADMIN_PASSWORD);
     await page.keyboard.press("Enter");
 
-    // Dashboard heading should appear
+    // Admin tab bar should appear after successful login
     await expect(
-      page.getByText(/overview|dashboard|genel bakış/i).first()
+      page.getByRole("tab", { name: /overview/i })
     ).toBeVisible({ timeout: 10_000 });
   });
 });

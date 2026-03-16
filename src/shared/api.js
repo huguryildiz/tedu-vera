@@ -125,7 +125,7 @@ export async function getActiveSemester(signal) {
 }
 
 // ── Juror auth ─────────────────────────────────────────────────
-// Returns { juror_id, juror_name, juror_inst, needs_pin, pin_plain_once, locked_until, failed_attempts }.
+// Returns { juror_name, juror_inst, needs_pin, pin_plain_once, locked_until, failed_attempts }.
 export async function createOrGetJurorAndIssuePin(semesterId, jurorName, jurorInst) {
   const { data, error } = await supabase.rpc("rpc_create_or_get_juror_and_issue_pin", {
     p_semester_id: semesterId,
@@ -136,7 +136,7 @@ export async function createOrGetJurorAndIssuePin(semesterId, jurorName, jurorIn
   return data?.[0] || null;
 }
 
-// Returns { ok, juror_id, juror_name, juror_inst, error_code, locked_until, failed_attempts, pin_plain_once }.
+// Returns { ok, juror_id, juror_name, juror_inst, error_code, locked_until, failed_attempts, pin_plain_once, session_token }.
 export async function verifyJurorPin(semesterId, jurorName, jurorInst, pin) {
   const { data, error } = await supabase.rpc("rpc_verify_juror_pin", {
     p_semester_id: semesterId,
@@ -194,12 +194,13 @@ export async function listProjects(semesterId, jurorId = null, signal) {
 // Accepts scores keyed by config.js ids.
 // Maps design→p_written and delivery→p_oral before calling RPC.
 // Returns computed total integer (from DB trigger).
-export async function upsertScore(semesterId, projectId, jurorId, scores, comment) {
+export async function upsertScore(semesterId, projectId, jurorId, sessionToken, scores, comment) {
   return withRetry(async () => {
     const { data, error } = await supabase.rpc("rpc_upsert_score", {
       p_semester_id: semesterId,
       p_project_id:  projectId,
       p_juror_id:    jurorId,
+      p_session_token: sessionToken,
       p_technical:   scores.technical ?? null,
       p_written:     scores.design    ?? null,   // design   → written
       p_oral:        scores.delivery  ?? null,   // delivery → oral
@@ -572,10 +573,11 @@ export async function adminSetSemesterEvalLock(semesterId, enabled, adminPasswor
   return data === true;
 }
 
-export async function getJurorEditState(semesterId, jurorId, signal) {
+export async function getJurorEditState(semesterId, jurorId, sessionToken, signal) {
   const q = supabase.rpc("rpc_get_juror_edit_state", {
     p_semester_id: semesterId,
     p_juror_id: jurorId,
+    p_session_token: sessionToken,
   });
   if (signal) q.abortSignal(signal);
   const { data, error } = await q;
@@ -583,10 +585,11 @@ export async function getJurorEditState(semesterId, jurorId, signal) {
   return data?.[0] || null;
 }
 
-export async function finalizeJurorSubmission(semesterId, jurorId) {
+export async function finalizeJurorSubmission(semesterId, jurorId, sessionToken) {
   const { data, error } = await supabase.rpc("rpc_finalize_juror_submission", {
     p_semester_id: semesterId,
     p_juror_id: jurorId,
+    p_session_token: sessionToken,
   });
   if (error) throw error;
   return data === true;

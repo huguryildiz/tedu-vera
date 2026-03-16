@@ -140,6 +140,7 @@ export default function useJuryState() {
 
   // ── Identity (from DB after PIN login) ────────────────────
   const [jurorId,  setJurorId]  = useState("");
+  const [jurorSessionToken, setJurorSessionToken] = useState("");
   const [juryName, setJuryName] = useState("");
   const [juryDept, setJuryDept] = useState("");
 
@@ -200,7 +201,15 @@ export default function useJuryState() {
 
   // stateRef: always-fresh snapshot for async callbacks
   const stateRef = useRef({});
-  stateRef.current = { jurorId, semesterId, projects, scores, comments, current };
+  stateRef.current = {
+    jurorId,
+    jurorSessionToken,
+    semesterId,
+    projects,
+    scores,
+    comments,
+    current,
+  };
 
   // pendingScoresRef / pendingCommentsRef:
   // Updated synchronously in onChange handlers — writeGroup reads these
@@ -233,8 +242,8 @@ export default function useJuryState() {
   // Reads from pendingScoresRef / pendingCommentsRef — always fresh.
   const writeGroup = useCallback(
     async (pid) => {
-      const { jurorId: jid, semesterId: sid } = stateRef.current;
-      if (!jid || !sid || !pid) return false;
+      const { jurorId: jid, jurorSessionToken: sessionToken, semesterId: sid } = stateRef.current;
+      if (!jid || !sessionToken || !sid || !pid) return false;
       if (editLockActive) return false;
 
       const s = pendingScoresRef.current;
@@ -253,7 +262,7 @@ export default function useJuryState() {
 
       setSaveStatus("saving");
       try {
-        await upsertScore(sid, pid, jid, snapshot.normalizedScores, snapshot.comment);
+        await upsertScore(sid, pid, jid, sessionToken, snapshot.normalizedScores, snapshot.comment);
         lastWrittenRef.current[pid] = { key: snapshot.key };
         setSaveStatus("saved");
         setTimeout(() => setSaveStatus("idle"), 2000);
@@ -314,9 +323,9 @@ export default function useJuryState() {
 
     setLoadingState(null);
     if (!allSaved) {
-      const { jurorId: jid, semesterId: sid } = stateRef.current;
+      const { jurorId: jid, jurorSessionToken: sessionToken, semesterId: sid } = stateRef.current;
       try {
-        const editState = await getJurorEditState(sid, jid);
+        const editState = await getJurorEditState(sid, jid, sessionToken);
         if (editState?.lock_active) {
           setEditLockActive(true);
           setSubmitError("Evaluations are locked for this semester.");
@@ -454,7 +463,9 @@ export default function useJuryState() {
     }
 
     try {
-      const ok = await finalizeJurorSubmission(sid, jid);
+      const sessionToken = stateRef.current.jurorSessionToken;
+      if (!sessionToken) throw new Error("juror_session_missing");
+      const ok = await finalizeJurorSubmission(sid, jid, sessionToken);
       if (!ok) throw new Error("finalize_failed");
 
       doneFiredRef.current = true;
@@ -502,7 +513,7 @@ export default function useJuryState() {
     let alive = true;
     const refreshEditState = async () => {
       try {
-        const editState = await getJurorEditState(semesterId, jurorId);
+        const editState = await getJurorEditState(semesterId, jurorId, jurorSessionToken);
         if (!alive) return;
         if (step === "done") setEditAllowed(!!editState?.edit_allowed);
         setEditLockActive(!!editState?.lock_active);
@@ -515,7 +526,7 @@ export default function useJuryState() {
       alive = false;
       clearInterval(timer);
     };
-  }, [step, jurorId, semesterId]);
+  }, [step, jurorId, semesterId, jurorSessionToken]);
 
   // ── Visibility Autosave (Mobile/Desktop) ──────────────────
   useEffect(() => {
@@ -660,11 +671,21 @@ export default function useJuryState() {
         return;
       }
       const jid = res.juror_id;
+      const sessionToken = String(res?.session_token || "").trim();
+      if (!sessionToken) {
+        setLoadingState(null);
+        setPinAttemptsLeft(MAX_PIN_ATTEMPTS);
+        setPinErrorCode("network");
+        setPinLockedUntil("");
+        setPinError("Session could not be established. Please try again.");
+        return;
+      }
       const nextName = res.juror_name || juryName;
       const nextInst = res.juror_inst || juryDept;
       if (res.juror_name) setJuryName(res.juror_name);
       if (res.juror_inst) setJuryDept(res.juror_inst);
       setJurorId(jid);
+      setJurorSessionToken(sessionToken);
       if (res?.pin_plain_once) {
         setIssuedPin(res.pin_plain_once);
         setPinError("");
@@ -679,7 +700,7 @@ export default function useJuryState() {
       setPinAttemptsLeft(MAX_PIN_ATTEMPTS);
       setPinLockedUntil("");
       setLoadingState(null);
-      await _loadSemester(
+        await _loadSemester(
         { id: semesterId, name: semesterName },
         jid,
         { name: nextName, inst: nextInst },
@@ -714,7 +735,8 @@ export default function useJuryState() {
       const projectList = await listProjects(semester.id, jid, signal);
       let editState = null;
       try {
-        editState = await getJurorEditState(semester.id, jid, signal);
+        const sessionToken = stateRef.current.jurorSessionToken;
+        editState = await getJurorEditState(semester.id, jid, sessionToken, signal);
       } catch (e) {
         if (e?.name === "AbortError") throw e; // propagate abort
       }
@@ -890,7 +912,6 @@ export default function useJuryState() {
         if (res?.juror_name) setJuryName(res.juror_name);
         if (res?.juror_inst) setJuryDept(res.juror_inst);
         if (res?.needs_pin) {
-          setJurorId(res.juror_id || "");
           setIssuedPin("");
           setPinError("");
           const lockedUntil = res?.locked_until || "";
@@ -909,7 +930,6 @@ export default function useJuryState() {
           setStep("pin");
           return;
         }
-        setJurorId(res?.juror_id || "");
         setIssuedPin(res?.pin_plain_once || "");
         setPinError("");
         setPinErrorCode("");
@@ -932,15 +952,9 @@ export default function useJuryState() {
   );
 
   const handlePinRevealContinue = useCallback(async () => {
-    if (!jurorId || !semesterId) return;
-    setIssuedPin("");
-      await _loadSemester(
-        { id: semesterId, name: semesterName },
-        jurorId,
-        { name: juryName, inst: juryDept },
-        { showProgressCheck: true, showEmptyProgress: true }
-      );
-  }, [jurorId, semesterId, semesterName, juryName, juryDept]);
+    if (!issuedPin) return;
+    await handlePinSubmit(issuedPin);
+  }, [issuedPin, handlePinSubmit]);
 
   const handleProgressContinue = useCallback(() => {
     if (!progressCheck?.nextStep) return;
@@ -953,6 +967,7 @@ export default function useJuryState() {
   // ── Full reset ────────────────────────────────────────────
   const resetAll = useCallback(() => {
     setJurorId("");
+    setJurorSessionToken("");
     setJuryName("");
     setJuryDept("");
     setSemesters([]);
@@ -994,6 +1009,7 @@ export default function useJuryState() {
   return {
     // Identity
     jurorId,
+    jurorSessionToken,
     juryName, setJuryName,
     juryDept, setJuryDept,
     authError,

@@ -10,7 +10,6 @@
 //
 // Home "Resume" banner removed in v5 — draft continuity is now
 // handled inside the jury flow after PIN verification.
-// Note: sessionStorage is used for admin re-auth within the same tab.
 // localStorage is used only for non-sensitive UI state (page, juror_id).
 // ============================================================
 
@@ -37,7 +36,6 @@ const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
 const DEMO_PASS = import.meta.env.VITE_DEMO_ADMIN_PASSWORD || "";
 
 export default function App() {
-  const ADMIN_PASS_KEY = "v_sec_ap";
   const [page, setPage] = useState(() => {
     try {
       const saved = localStorage.getItem("tedu_portal_page");
@@ -58,8 +56,6 @@ export default function App() {
   const [adminSetupShowPass, setAdminSetupShowPass] = useState(false);
   const [adminSecurityLoading, setAdminSecurityLoading] = useState(false);
   const [adminPasswordSet, setAdminPasswordSet] = useState(null);
-  const autoLoginAttemptedRef = useRef(false);
-  const autoLoginCancelRef = useRef(null);
 
   const isStrongPassword = (value) => {
     const v = String(value || "");
@@ -103,42 +99,6 @@ export default function App() {
   }, [page, adminUnlocked]);
 
   useEffect(() => {
-    if (page !== "admin" || adminUnlocked) return;
-    if (autoLoginAttemptedRef.current) return;
-    autoLoginAttemptedRef.current = true;
-    let active = true;
-    let didLogin = false;
-    autoLoginCancelRef.current = () => { active = false; };
-    let saved = "";
-    try { saved = sessionStorage.getItem(ADMIN_PASS_KEY) || ""; } catch { }
-    if (!saved) return;
-    adminLogin(saved)
-      .then((valid) => {
-        if (!active) return;
-        if (valid) {
-          adminPassRef.current = saved;
-          didLogin = true;
-          setAdminChecking(true);
-          setAdminUnlocked(true);
-          setAdminAuthError("");
-          setAdminInput("");
-        } else {
-          try { sessionStorage.removeItem(ADMIN_PASS_KEY); } catch { }
-        }
-      })
-      .catch((e) => {
-        if (!active) return;
-        if (e?.adminLocked) return; // locked: let user try manually
-        setAdminAuthError("Connection error — try again.");
-      })
-      .finally(() => {
-        if (!active) return;
-        if (!didLogin) setAdminChecking(false);
-      });
-    return () => { active = false; };
-  }, [page, adminUnlocked]);
-
-  useEffect(() => {
     if (!DEMO_MODE || !DEMO_PASS) return;
     if (page !== "admin" || adminUnlocked) return;
     setAdminPasswordSet(true);
@@ -177,7 +137,6 @@ export default function App() {
         return;
       }
       adminPassRef.current = pass;
-      try { sessionStorage.setItem(ADMIN_PASS_KEY, pass); } catch { }
       setAdminInput("");
       setAdminUnlocked(true);
     } catch (e) {
@@ -213,7 +172,6 @@ export default function App() {
     try {
       await adminBootstrapPassword(pass);
       adminPassRef.current = pass;
-      try { sessionStorage.setItem(ADMIN_PASS_KEY, pass); } catch { }
       setAdminSetupPass("");
       setAdminSetupConfirm("");
       setAdminPasswordSet(true);
@@ -236,7 +194,6 @@ export default function App() {
     setAdminUnlocked(false);
     setAdminChecking(false);
     adminPassRef.current = "";
-    try { sessionStorage.removeItem(ADMIN_PASS_KEY); } catch { }
     setAdminAuthError(msg || "Authentication failed.");
   }
 
@@ -348,10 +305,6 @@ export default function App() {
                 onChange={(e) => {
                   setAdminInput(e.target.value);
                   if (adminAuthError) setAdminAuthError("");
-                  if (autoLoginCancelRef.current) {
-                    autoLoginCancelRef.current();
-                    autoLoginCancelRef.current = null;
-                  }
                   if (adminChecking) setAdminChecking(false);
                 }}
                 onKeyDown={(e) => { if (e.key === "Enter") handleAdminLogin(); }}
@@ -410,7 +363,6 @@ export default function App() {
               setAdminChecking(false);
               setAdminAuthError("");
               adminPassRef.current = "";
-              try { sessionStorage.removeItem(ADMIN_PASS_KEY); } catch { }
             }}
           />
         </div>
@@ -425,7 +377,7 @@ export default function App() {
       <div className="home-card">
 
         <div className="home-logo-wrap">
-          <img className="home-logo" src="/src/assets/tedu-logo.png" alt="VERA" loading="eager" />
+          <img className="home-logo" src={teduLogo} alt="VERA" loading="eager" />
         </div>
 
         <h1>TEDU VERA</h1>

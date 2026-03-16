@@ -1,0 +1,4 @@
+docs/audit/audit_report-*.md
+docs/qa/session-summary-*.md
+docs/reports/*.md
+test-results/

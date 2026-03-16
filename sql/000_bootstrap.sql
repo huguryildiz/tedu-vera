@@ -94,7 +94,9 @@ CREATE TABLE IF NOT EXISTS public.juror_semester_auth (
   failed_attempts integer NOT NULL DEFAULT 0,
   locked_until    timestamptz,
   last_seen_at    timestamptz,
-  edit_enabled    boolean NOT NULL DEFAULT false
+  edit_enabled    boolean NOT NULL DEFAULT false,
+  session_token_hash text,
+  session_expires_at timestamptz
 );
 
 CREATE TABLE IF NOT EXISTS public.audit_logs (
@@ -229,6 +231,8 @@ ALTER TABLE public.scores    DROP COLUMN IF EXISTS submitted_at;
 ALTER TABLE public.juror_semester_auth ADD COLUMN IF NOT EXISTS edit_enabled boolean NOT NULL DEFAULT false;
 ALTER TABLE public.juror_semester_auth ADD COLUMN IF NOT EXISTS pin_reveal_pending boolean NOT NULL DEFAULT false;
 ALTER TABLE public.juror_semester_auth ADD COLUMN IF NOT EXISTS pin_plain_once text;
+ALTER TABLE public.juror_semester_auth ADD COLUMN IF NOT EXISTS session_token_hash text;
+ALTER TABLE public.juror_semester_auth ADD COLUMN IF NOT EXISTS session_expires_at timestamptz;
 
 -- Remove legacy columns if present
 ALTER TABLE public.semesters          DROP COLUMN IF EXISTS starts_on;
@@ -676,10 +680,12 @@ AS $$
 $$;
 
 DROP FUNCTION IF EXISTS public.rpc_upsert_score(uuid, uuid, uuid, integer, integer, integer, integer, text);
+DROP FUNCTION IF EXISTS public.rpc_upsert_score(uuid, uuid, uuid, text, integer, integer, integer, integer, text);
 CREATE OR REPLACE FUNCTION public.rpc_upsert_score(
   p_semester_id uuid,
   p_project_id  uuid,
   p_juror_id    uuid,
+  p_session_token text,
   p_technical   integer,
   p_written     integer,
   p_oral        integer,
@@ -727,6 +733,8 @@ BEGIN
   IF v_sem_locked OR NOT v_sem_active THEN
     RAISE EXCEPTION 'semester_locked';
   END IF;
+
+  PERFORM public._assert_juror_session(p_semester_id, p_juror_id, p_session_token);
 
   SELECT group_no, project_title
     INTO v_group_no, v_project_title
@@ -938,8 +946,8 @@ $$;
 -- RPC secret check (defence-in-depth, DB-side only).
 -- The secret is stored in Supabase Vault (name = 'rpc_secret').
 -- To enable: add a secret named 'rpc_secret' in Supabase Dashboard > Vault.
--- Fail-open when not configured (NULL/empty) — safe gradual rollout.
--- To disable: delete the 'rpc_secret' secret from Vault.
+-- Fail-closed when not configured — production-safe default.
+-- To disable auth checks intentionally, set a temporary explicit secret value.
 CREATE OR REPLACE FUNCTION public._verify_rpc_secret(p_provided text)
 RETURNS void
 LANGUAGE plpgsql
@@ -954,7 +962,8 @@ BEGIN
   WHERE name = 'rpc_secret'
   LIMIT 1;
   IF v_expected IS NULL OR v_expected = '' THEN
-    RETURN; -- Not configured → fail-open.
+    RAISE EXCEPTION 'unauthorized: rpc_secret not configured'
+      USING ERRCODE = 'insufficient_privilege';
   END IF;
   IF p_provided IS DISTINCT FROM v_expected THEN
     RAISE EXCEPTION 'unauthorized: rpc_secret mismatch'
@@ -965,6 +974,55 @@ $$;
 
 REVOKE ALL ON FUNCTION public._verify_rpc_secret(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public._verify_rpc_secret(text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public._assert_juror_session(
+  p_semester_id uuid,
+  p_juror_id uuid,
+  p_session_token text
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+DECLARE
+  v_auth juror_semester_auth%ROWTYPE;
+  v_now timestamptz := now();
+BEGIN
+  IF trim(coalesce(p_session_token, '')) = '' THEN
+    RAISE EXCEPTION 'juror_session_missing' USING ERRCODE = 'P0401';
+  END IF;
+
+  SELECT *
+    INTO v_auth
+  FROM juror_semester_auth a
+  WHERE a.semester_id = p_semester_id
+    AND a.juror_id = p_juror_id
+  LIMIT 1;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'juror_session_not_found' USING ERRCODE = 'P0401';
+  END IF;
+
+  IF v_auth.session_token_hash IS NULL OR v_auth.session_expires_at IS NULL THEN
+    RAISE EXCEPTION 'juror_session_invalid' USING ERRCODE = 'P0401';
+  END IF;
+
+  IF v_auth.session_expires_at <= v_now THEN
+    RAISE EXCEPTION 'juror_session_expired' USING ERRCODE = 'P0401';
+  END IF;
+
+  IF crypt(p_session_token, v_auth.session_token_hash) <> v_auth.session_token_hash THEN
+    RAISE EXCEPTION 'juror_session_invalid' USING ERRCODE = 'P0401';
+  END IF;
+
+  UPDATE juror_semester_auth
+  SET
+    last_seen_at = v_now,
+    session_expires_at = v_now + interval '12 hours'
+  WHERE id = v_auth.id;
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION public._verify_admin_password(
   p_password    text,
@@ -1986,6 +2044,10 @@ BEGIN
       poster_date = p_poster_date
   WHERE id = p_semester_id;
 
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'semester_not_found';
+  END IF;
+
   PERFORM public._audit_log(
     'admin',
     null::uuid,
@@ -2359,6 +2421,10 @@ BEGIN
   SET juror_name = trim(p_juror_name),
       juror_inst = trim(p_juror_inst)
   WHERE id = p_juror_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'juror_not_found';
+  END IF;
 
   PERFORM public._audit_log(
     'admin',
@@ -2919,9 +2985,11 @@ $$;
 -- ── Juror: read effective edit state ────────────────────────
 
 DROP FUNCTION IF EXISTS public.rpc_get_juror_edit_state(uuid, uuid);
+DROP FUNCTION IF EXISTS public.rpc_get_juror_edit_state(uuid, uuid, text);
 CREATE OR REPLACE FUNCTION public.rpc_get_juror_edit_state(
   p_semester_id uuid,
-  p_juror_id uuid
+  p_juror_id uuid,
+  p_session_token text
 )
 RETURNS TABLE (
   edit_enabled boolean,
@@ -2937,6 +3005,8 @@ DECLARE
   v_enabled boolean := false;
   v_sem_active boolean := false;
 BEGIN
+  PERFORM public._assert_juror_session(p_semester_id, p_juror_id, p_session_token);
+
   SELECT s.is_active, COALESCE(s.is_locked, false)
     INTO v_sem_active, v_lock
   FROM semesters s
@@ -2972,9 +3042,11 @@ $$;
 -- ── Juror: finalize submission and auto-disable edit ────────
 
 DROP FUNCTION IF EXISTS public.rpc_finalize_juror_submission(uuid, uuid);
+DROP FUNCTION IF EXISTS public.rpc_finalize_juror_submission(uuid, uuid, text);
 CREATE OR REPLACE FUNCTION public.rpc_finalize_juror_submission(
   p_semester_id uuid,
-  p_juror_id uuid
+  p_juror_id uuid,
+  p_session_token text
 )
 RETURNS boolean
 LANGUAGE plpgsql
@@ -2989,6 +3061,8 @@ DECLARE
   v_sem_name   text;
   v_sem_locked boolean := false;
 BEGIN
+  PERFORM public._assert_juror_session(p_semester_id, p_juror_id, p_session_token);
+
   SELECT COALESCE(s.is_locked, false)
     INTO v_sem_locked
   FROM semesters s
@@ -3333,12 +3407,12 @@ BEGIN
           AND semester_id = p_semester_id;
       END IF;
 
-      RETURN QUERY SELECT v_juror_id, v_juror_name, v_juror_inst, false, v_pin_plain_once,
+      RETURN QUERY SELECT null::uuid, v_juror_name, v_juror_inst, false, v_pin_plain_once,
         null::timestamptz, 0;
       RETURN;
     END IF;
 
-    RETURN QUERY SELECT v_juror_id, v_juror_name, v_juror_inst, true, null::text,
+    RETURN QUERY SELECT null::uuid, v_juror_name, v_juror_inst, true, null::text,
       v_locked_until, coalesce(v_failed_attempts, 0);
     RETURN;
   END IF;
@@ -3351,12 +3425,12 @@ BEGIN
   ON CONFLICT (juror_id, semester_id) DO NOTHING;
 
   IF NOT FOUND THEN
-    RETURN QUERY SELECT v_juror_id, v_juror_name, v_juror_inst, true, null::text,
+    RETURN QUERY SELECT null::uuid, v_juror_name, v_juror_inst, true, null::text,
       null::timestamptz, 0;
     RETURN;
   END IF;
 
-  RETURN QUERY SELECT v_juror_id, v_juror_name, v_juror_inst, false, v_pin,
+  RETURN QUERY SELECT null::uuid, v_juror_name, v_juror_inst, false, v_pin,
     null::timestamptz, 0;
 END;
 $$;
@@ -3376,7 +3450,8 @@ RETURNS TABLE (
   error_code     text,
   locked_until   timestamptz,
   failed_attempts integer,
-  pin_plain_once  text
+  pin_plain_once  text,
+  session_token   text
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -3397,6 +3472,7 @@ DECLARE
   v_sem_name text;
   v_pin_plain_once text;
   v_secret text;
+  v_session_token text;
 BEGIN
   v_norm_name := lower(regexp_replace(trim(coalesce(p_juror_name, '')), '\\s+', ' ', 'g'));
   v_norm_inst := lower(regexp_replace(trim(coalesce(p_juror_inst, '')), '\\s+', ' ', 'g'));
@@ -3407,7 +3483,7 @@ BEGIN
     WHERE s.id = p_semester_id
       AND s.is_active = true
   ) THEN
-    RETURN QUERY SELECT false, null::uuid, null::text, null::text, 'semester_inactive', null::timestamptz, 0, null::text;
+    RETURN QUERY SELECT false, null::uuid, null::text, null::text, 'semester_inactive', null::timestamptz, 0, null::text, null::text;
     RETURN;
   END IF;
 
@@ -3420,7 +3496,7 @@ BEGIN
   LIMIT 1;
 
   IF v_juror_id IS NULL THEN
-    RETURN QUERY SELECT false, null::uuid, null::text, null::text, 'not_found', null::timestamptz, 0, null::text;
+    RETURN QUERY SELECT false, null::uuid, null::text, null::text, 'not_found', null::timestamptz, 0, null::text, null::text;
     RETURN;
   END IF;
 
@@ -3431,12 +3507,12 @@ BEGIN
     AND a.semester_id = p_semester_id;
 
   IF NOT FOUND THEN
-    RETURN QUERY SELECT false, v_juror_id, v_juror_name, v_juror_inst, 'no_pin', null::timestamptz, 0, null::text;
+    RETURN QUERY SELECT false, v_juror_id, v_juror_name, v_juror_inst, 'no_pin', null::timestamptz, 0, null::text, null::text;
     RETURN;
   END IF;
 
   IF v_auth.locked_until IS NOT NULL AND v_auth.locked_until > v_now THEN
-    RETURN QUERY SELECT false, v_juror_id, v_juror_name, v_juror_inst, 'locked', v_auth.locked_until, v_auth.failed_attempts, null::text;
+    RETURN QUERY SELECT false, v_juror_id, v_juror_name, v_juror_inst, 'locked', v_auth.locked_until, v_auth.failed_attempts, null::text, null::text;
     RETURN;
   END IF;
 
@@ -3469,15 +3545,18 @@ BEGIN
         v_pin_plain_once := v_auth.pin_plain_once;
       END IF;
     END IF;
+    v_session_token := encode(gen_random_bytes(32), 'hex');
     UPDATE juror_semester_auth
     SET last_seen_at = v_now,
         failed_attempts = 0,
         locked_until = null,
         pin_reveal_pending = false,
-        pin_plain_once = null
+        pin_plain_once = null,
+        session_token_hash = crypt(v_session_token, gen_salt('bf')),
+        session_expires_at = v_now + interval '12 hours'
     WHERE id = v_auth.id;
 
-    RETURN QUERY SELECT true, v_juror_id, v_juror_name, v_juror_inst, null::text, null::timestamptz, 0, v_pin_plain_once;
+    RETURN QUERY SELECT true, v_juror_id, v_juror_name, v_juror_inst, null::text, null::timestamptz, 0, v_pin_plain_once, v_session_token;
     RETURN;
   END IF;
 
@@ -3519,10 +3598,10 @@ BEGIN
   );
 
   IF v_locked IS NOT NULL THEN
-    RETURN QUERY SELECT false, v_juror_id, v_juror_name, v_juror_inst, 'locked', v_locked, v_failed, null::text;
+    RETURN QUERY SELECT false, v_juror_id, v_juror_name, v_juror_inst, 'locked', v_locked, v_failed, null::text, null::text;
   END IF;
 
-  RETURN QUERY SELECT false, v_juror_id, v_juror_name, v_juror_inst, 'invalid', v_locked, v_failed, null::text;
+  RETURN QUERY SELECT false, v_juror_id, v_juror_name, v_juror_inst, 'invalid', v_locked, v_failed, null::text, null::text;
 END;
 $$;
 
@@ -3531,11 +3610,11 @@ $$;
 GRANT EXECUTE ON FUNCTION public.rpc_list_semesters() TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.rpc_get_active_semester() TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.rpc_list_projects(uuid, uuid) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.rpc_upsert_score(uuid, uuid, uuid, integer, integer, integer, integer, text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.rpc_upsert_score(uuid, uuid, uuid, text, integer, integer, integer, integer, text) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.rpc_create_or_get_juror_and_issue_pin(uuid, text, text) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.rpc_verify_juror_pin(uuid, text, text, text) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.rpc_get_juror_edit_state(uuid, uuid) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.rpc_finalize_juror_submission(uuid, uuid) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.rpc_get_juror_edit_state(uuid, uuid, text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.rpc_finalize_juror_submission(uuid, uuid, text) TO anon, authenticated;
 
 GRANT EXECUTE ON FUNCTION public.rpc_admin_login(text, text) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.rpc_admin_security_state() TO anon, authenticated;

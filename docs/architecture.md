@@ -45,7 +45,7 @@ App.jsx
         └── ManagePermissionsPanel.jsx
 ```
 
-**Admin password flow:**
+### Admin password flow
 
 1. User enters password on login screen
 2. `rpc_admin_login` verifies it; password stored in `useRef` (never in React
@@ -93,7 +93,7 @@ Component
 - DB `written` → UI `design`
 - DB `oral` → UI `delivery`
 
-**Auth model:**
+### Auth model
 
 - Jurors: 4-digit PIN verified via `rpc_verify_juror_pin` (rate-limited in DB)
 - Admin: password passed per-call to protected RPCs (stateless)
@@ -165,7 +165,8 @@ Plain CSS files in `src/styles/`. Each major area has its own file:
 
 ## Testing Architecture
 
-- **Unit tests** — Vitest + Testing Library. Live in `src/admin/__tests__/` and `src/jury/__tests__/`.
+- **Unit tests** — Vitest + Testing Library. Live in `src/admin/__tests__/`
+  and `src/jury/__tests__/`.
 - **E2E tests** — Playwright. Live in `e2e/`. Require a separate E2E Supabase
   project (env vars `E2E_SUPABASE_*`).
 - **Reporting** — Allure dashboard via
