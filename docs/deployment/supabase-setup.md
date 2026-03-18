@@ -104,7 +104,21 @@ This same value is used in `.env.local` as `VITE_RPC_SECRET` for local developme
 
 ---
 
-## 7. Configure `.env.local`
+## 7. Configure Edge Function CORS Origins
+
+The `rpc-proxy` function enforces an origin whitelist. If this is missing or incorrect, admin login fails in the browser with a CORS error.
+
+In **Supabase Dashboard → Edge Functions → `rpc-proxy` → Secrets**, set:
+
+- `ALLOWED_ORIGINS` as a comma-separated list of exact frontend origins (no trailing `/`), for example:
+  - `https://tedu-vera-demo.vercel.app,https://vera.example.com,http://localhost:5173`
+- `ALLOW_WILDCARD_ORIGIN=false` in production.
+
+Use wildcard patterns (for example `https://*.vercel.app`) only when `ALLOW_WILDCARD_ORIGIN=true`, and only in non-production environments.
+
+---
+
+## 8. Configure `.env.local`
 
 Copy your project credentials to `.env.local`:
 
@@ -118,7 +132,7 @@ Find the URL and anon key in **Project Settings → API**.
 
 ---
 
-## 8. Verify
+## 9. Verify
 
 Start the dev server and test the connection:
 

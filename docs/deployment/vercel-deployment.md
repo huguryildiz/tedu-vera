@@ -61,6 +61,11 @@ After configuring environment variables, trigger a deploy:
 
 If admin RPCs fail (403/401), verify the `rpc-proxy` Edge Function is deployed and the `RPC_SECRET` Vault secret is set correctly. See [supabase-setup.md](supabase-setup.md).
 
+If the browser shows a CORS error for `rpc-proxy`, also verify Supabase Edge Function secrets:
+
+- `ALLOWED_ORIGINS` includes your active Vercel URL (for example `https://tedu-vera-demo.vercel.app`)
+- `ALLOW_WILDCARD_ORIGIN=false` in production
+
 ---
 
 ## Custom Domain (optional)

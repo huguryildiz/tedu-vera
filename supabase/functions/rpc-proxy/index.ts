@@ -9,22 +9,43 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const matchesOriginPattern = (
+  pattern: string,
+  origin: string,
+  wildcardAllowed: boolean,
+) => {
+  if (pattern === "*") return wildcardAllowed;
+  if (!pattern.includes("*")) return pattern === origin;
+  if (!wildcardAllowed) return false;
+
+  const regex = new RegExp(`^${pattern.split("*").map(escapeRegex).join(".*")}$`);
+  return regex.test(origin);
+};
+
 const getCorsHeaders = (origin: string | null) => {
   const allowedOriginsRaw = Deno.env.get("ALLOWED_ORIGINS") || "";
-  const allowedOrigins = allowedOriginsRaw.split(",").map(o => o.trim().replace(/\/$/, "")).filter(Boolean);
-  
+  const allowedOrigins = allowedOriginsRaw
+    .split(",")
+    .map((o) => o.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+
   const wildcardAllowed = Deno.env.get("ALLOW_WILDCARD_ORIGIN") === "true";
   const normalizedOrigin = origin ? origin.replace(/\/$/, "") : null;
 
   const isAllowed =
     !normalizedOrigin ||
-    allowedOrigins.includes("*") ||
-    allowedOrigins.includes(normalizedOrigin);
+    allowedOrigins.some((pattern) =>
+      matchesOriginPattern(pattern, normalizedOrigin, wildcardAllowed)
+    );
 
   return {
     "Access-Control-Allow-Origin": isAllowed ? (origin ?? "*") : "null",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
+    Vary: "Origin",
   };
 };
 

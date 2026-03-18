@@ -66,6 +66,18 @@ The E2E CI job is currently disabled (`if: false` in `.github/workflows/ci.yml`)
 
 ---
 
+## Supabase Edge Function Secrets (`rpc-proxy`)
+
+These are configured in Supabase Dashboard for the `rpc-proxy` function.
+
+| Secret | Required | Notes |
+| --- | --- | --- |
+| `RPC_SECRET` | Yes | Must match the DB-side `rpc_secret` (Vault) expected by admin RPCs. |
+| `ALLOWED_ORIGINS` | Yes (production) | Comma-separated origin allowlist, e.g. `https://tedu-vera-demo.vercel.app,https://vera.example.com,http://localhost:5173` |
+| `ALLOW_WILDCARD_ORIGIN` | No | Keep `false` in production. Set `true` only in dev/staging if wildcard patterns in `ALLOWED_ORIGINS` are needed (e.g. `https://*.vercel.app`). |
+
+---
+
 ## Production vs. Development
 
 | Variable | Development | Production |
