@@ -21,6 +21,7 @@
 // ============================================================
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import AutoGrow from "../shared/AutoGrow";
 import {
   DndContext,
   PointerSensor,
@@ -34,6 +35,8 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { GripVerticalIcon, TrashIcon, XIcon, ChevronDownIcon, ChevronUpIcon } from "../shared/Icons";
+import DangerIconButton from "../components/admin/DangerIconButton";
 import { CSS } from "@dnd-kit/utilities";
 import { normalizeCriterion, criterionToTemplate } from "../shared/criteriaHelpers";
 import { CRITERIA } from "../config";
@@ -98,9 +101,12 @@ function validateRows(rows) {
     if (!r.label.trim()) {
       errors[`label_${i}`] = "Required";
     }
+    if (!r.shortLabel.trim()) {
+      errors[`short_label_${i}`] = "Required";
+    }
     const maxN = Number(r.max);
     if (!r.max || !Number.isInteger(maxN) || maxN <= 0) {
-      errors[`max_${i}`] = "Must be a positive integer";
+      errors[`max_${i}`] = "Enter positive integer";
     } else {
       totalMax += maxN;
     }
@@ -142,29 +148,6 @@ function validateRows(rows) {
   return { errors, totalMax };
 }
 
-// ── Auto-grow textarea ────────────────────────────────────────
-
-function AutoGrow({ value, onChange, disabled, placeholder, ariaLabel, hasError, className = "" }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    if (!ref.current) return;
-    ref.current.style.height = "auto";
-    ref.current.style.height = ref.current.scrollHeight + "px";
-  }, [value]);
-  return (
-    <textarea
-      ref={ref}
-      rows={2}
-      style={{ overflow: "hidden", resize: "none" }}
-      className={`manage-textarea${hasError ? " is-danger" : ""}${className ? " " + className : ""}`}
-      value={value}
-      onChange={onChange}
-      disabled={disabled}
-      placeholder={placeholder}
-      aria-label={ariaLabel}
-    />
-  );
-}
 
 // ── MÜDEK pill selector ───────────────────────────────────────
 
@@ -177,7 +160,7 @@ function MudekPillSelector({ selected, mudekTemplate, onChange, disabled, criter
   if (options.length === 0) {
     return (
       <span className="criteria-mudek-empty">
-        No MÜDEK outcomes defined yet.
+        No MÜDEK Outcomes defined yet.
       </span>
     );
   }
@@ -228,9 +211,13 @@ function MudekPillSelector({ selected, mudekTemplate, onChange, disabled, criter
             className="criteria-mudek-add-btn"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
-            aria-label="Select MÜDEK outcomes"
+            aria-label="Select MÜDEK Outcomes"
           >
-            {open ? "▲ Close" : "▼ Select"}
+            {open ? (
+              <><ChevronUpIcon className="criteria-btn-icon" /> Close</>
+            ) : (
+              <><ChevronDownIcon className="criteria-btn-icon" /> Select</>
+            )}
           </button>
         )}
       </div>
@@ -242,7 +229,7 @@ function MudekPillSelector({ selected, mudekTemplate, onChange, disabled, criter
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Filter outcomes…"
-            aria-label="Filter MÜDEK outcomes"
+            aria-label="Filter MÜDEK Outcomes"
           />
           <div className="criteria-mudek-chips">
             {filtered.map((o) => {
@@ -313,58 +300,76 @@ function RubricBandEditor({ bands, onChange, disabled, criterionMax, errors, cri
       {bands.map((band, bi) => {
         const rangeError = errors[`rubric_${criterionIdx}_${bi}_range`];
         return (
-          <div key={bi} className="rubric-band-row">
-            <input
-              className="manage-input rubric-band-level"
-              value={band.level}
-              onChange={(e) => setBand(bi, "level", e.target.value)}
-              placeholder="Excellent"
-              disabled={disabled}
-              aria-label={`Band ${bi + 1} level`}
-            />
-            <input
-              className={`manage-input rubric-band-min${rangeError ? " is-danger" : ""}`}
-              type="number"
-              min="0"
-              value={band.min}
-              onChange={(e) => setBand(bi, "min", e.target.value)}
-              placeholder="min"
-              disabled={disabled}
-              aria-label={`Band ${bi + 1} min`}
-            />
-            <span className="rubric-band-dash">–</span>
-            <input
-              className={`manage-input rubric-band-max${rangeError ? " is-danger" : ""}`}
-              type="number"
-              min="0"
-              value={band.max}
-              onChange={(e) => setBand(bi, "max", e.target.value)}
-              placeholder="max"
-              disabled={disabled}
-              aria-label={`Band ${bi + 1} max`}
-            />
-            <AutoGrow
-              value={band.desc}
-              onChange={(e) => setBand(bi, "desc", e.target.value)}
-              disabled={disabled}
-              placeholder="Description…"
-              ariaLabel={`Band ${bi + 1} description`}
-              className="rubric-band-desc"
-            />
-            {!disabled && (
-              <button
-                type="button"
-                className="manage-icon-btn rubric-band-remove"
-                onClick={() => removeBand(bi)}
-                aria-label={`Remove band ${bi + 1}`}
-                title="Remove band"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                  fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M18 6 6 18" /><path d="m6 6 12 12" />
-                </svg>
-              </button>
-            )}
+          <div key={bi} className="rubric-band-card">
+            <div className="rubric-band-header">
+              <div className="rubric-band-level-group">
+                <label className="criteria-manager-cell-label small-label">Band Name</label>
+                <input
+                  className="manage-input rubric-band-level"
+                  value={band.level}
+                  onChange={(e) => setBand(bi, "level", e.target.value)}
+                  placeholder="Excellent"
+                  disabled={disabled}
+                  aria-label={`Band ${bi + 1} level`}
+                />
+              </div>
+
+              <div className="rubric-band-score-group">
+                <label className="criteria-manager-cell-label small-label">Score Range</label>
+                <div className="rubric-band-range-inputs">
+                  <input
+                    className={`manage-input rubric-band-score-input${rangeError ? " is-danger" : ""}`}
+                    type="number"
+                    min="0"
+                    max={criterionMax}
+                    value={band.min}
+                    onChange={(e) => setBand(bi, "min", e.target.value)}
+                    placeholder="Min"
+                    disabled={disabled}
+                    aria-label={`Band ${bi + 1} min`}
+                  />
+                  <span className="rubric-band-separator">–</span>
+                  <input
+                    className={`manage-input rubric-band-score-input${rangeError ? " is-danger" : ""}`}
+                    type="number"
+                    min="0"
+                    max={criterionMax}
+                    value={band.max}
+                    onChange={(e) => setBand(bi, "max", e.target.value)}
+                    placeholder="Max"
+                    disabled={disabled}
+                    aria-label={`Band ${bi + 1} max`}
+                  />
+                </div>
+              </div>
+
+              {!disabled && (
+                <div className="rubric-band-actions">
+                  <DangerIconButton
+                    Icon={XIcon}
+                    onClick={() => removeBand(bi)}
+                    disabled={disabled}
+                    ariaLabel={`Remove band ${bi + 1}`}
+                    title="Remove band"
+                    className="rubric-band-remove-btn"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="rubric-band-description-row">
+              <label className="criteria-manager-cell-label small-label">Description</label>
+              <AutoGrow
+                value={band.desc}
+                onChange={(e) => setBand(bi, "desc", e.target.value)}
+                disabled={disabled}
+                placeholder="Exemplary performance across all areas…"
+                ariaLabel={`Band ${bi + 1} description`}
+                className="rubric-band-desc-textarea"
+                rows={2}
+              />
+            </div>
+
             {rangeError && (
               <div className="manage-field-error rubric-band-error">{rangeError}</div>
             )}
@@ -524,35 +529,46 @@ export default function CriteriaManager({
                   >
                     {/* ── Card header row ── */}
                     <div className="criterion-card-header">
-                      {/* Drag handle */}
-                      <button
-                        type="button"
-                        className="manage-icon-btn criteria-manager-drag-handle"
-                        disabled={structurallyLocked}
-                        aria-label={`Drag to reorder criterion ${i + 1}`}
-                        title="Drag to reorder"
-                        {...attributes}
-                        {...listeners}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                          viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <line x1="3" y1="6"  x2="21" y2="6"  />
-                          <line x1="3" y1="12" x2="21" y2="12" />
-                          <line x1="3" y1="18" x2="21" y2="18" />
-                        </svg>
-                      </button>
+                      {/* ── Toolbar: Drag, Swatch, Remove ── */}
+                      <div className="criterion-card-toolbar">
+                        <label className="criteria-manager-cell-label toolbar-label-placeholder">&nbsp;</label>
+                        <div className="criterion-card-toolbar-actions">
+                          <button
+                            type="button"
+                            className="manage-icon-btn manage-drag-handle"
+                            disabled={structurallyLocked}
+                            aria-label={`Drag to reorder criterion ${i + 1}`}
+                            title="Drag to reorder"
+                            {...attributes}
+                            {...listeners}
+                          >
+                            <GripVerticalIcon />
+                          </button>
+                          
+                          <label
+                            className="criterion-color-picker-trigger"
+                            title="Change color"
+                            style={{ backgroundColor: row.color }}
+                          >
+                            <input
+                              type="color"
+                              className="criterion-color-input--hidden"
+                              value={row.color}
+                              onChange={(e) => setRow(i, "color", e.target.value)}
+                              disabled={structurallyLocked}
+                              aria-label={`Criterion ${i + 1} color`}
+                            />
+                          </label>
 
-                      {/* Color swatch */}
-                      <input
-                        type="color"
-                        className="criterion-color-swatch"
-                        value={row.color}
-                        onChange={(e) => setRow(i, "color", e.target.value)}
-                        disabled={structurallyLocked}
-                        aria-label={`Criterion ${i + 1} color`}
-                        title="Criterion color"
-                      />
+                          <DangerIconButton
+                            Icon={XIcon}
+                            onClick={() => removeRow(i)}
+                            disabled={structurallyLocked || rows.length === 1}
+                            ariaLabel={`Remove criterion ${i + 1}`}
+                            title="Remove criterion"
+                          />
+                        </div>
+                      </div>
 
                       {/* Label */}
                       <div className="criterion-field criterion-field--label">
@@ -566,7 +582,7 @@ export default function CriteriaManager({
                           aria-label={`Criterion ${i + 1} label`}
                         />
                         {errors[`label_${i}`] && (
-                          <div className="manage-field-error">{errors[`label_${i}`]}</div>
+                          <div className="manage-field-error manage-field-error--simple">{errors[`label_${i}`]}</div>
                         )}
                       </div>
 
@@ -574,13 +590,16 @@ export default function CriteriaManager({
                       <div className="criterion-field criterion-field--short">
                         <label className="criteria-manager-cell-label">Short label</label>
                         <input
-                          className="manage-input"
+                          className={`manage-input${errors[`short_label_${i}`] ? " is-danger" : ""}`}
                           value={row.shortLabel}
                           onChange={(e) => setRow(i, "shortLabel", e.target.value)}
                           placeholder="Technical"
                           disabled={disabled}
                           aria-label={`Criterion ${i + 1} short label`}
                         />
+                        {errors[`short_label_${i}`] && (
+                          <div className="manage-field-error manage-field-error--simple">{errors[`short_label_${i}`]}</div>
+                        )}
                       </div>
 
                       {/* Max */}
@@ -598,43 +617,27 @@ export default function CriteriaManager({
                           aria-label={`Criterion ${i + 1} max score`}
                         />
                         {errors[`max_${i}`] && (
-                          <div className="manage-field-error">{errors[`max_${i}`]}</div>
+                          <div className="manage-field-error manage-field-error--simple">{errors[`max_${i}`]}</div>
                         )}
                       </div>
-
-                      {/* Remove */}
-                      <button
-                        type="button"
-                        className="manage-icon-btn criteria-manager-remove"
-                        onClick={() => removeRow(i)}
-                        disabled={structurallyLocked || rows.length === 1}
-                        aria-label={`Remove criterion ${i + 1}`}
-                        title="Remove criterion"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                          viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M18 6 6 18" /><path d="m6 6 12 12" />
-                        </svg>
-                      </button>
                     </div>
 
-                    {/* ── Blurb ── */}
+                    {/* ── Description ── */}
                     <div className="criterion-field criterion-field--blurb">
-                      <label className="criteria-manager-cell-label">Blurb</label>
+                      <label className="criteria-manager-cell-label">Description</label>
                       <AutoGrow
                         value={row.blurb}
                         onChange={(e) => setRow(i, "blurb", e.target.value)}
                         disabled={disabled}
                         placeholder="Brief description shown to jurors…"
-                        ariaLabel={`Criterion ${i + 1} blurb`}
+                        ariaLabel={`Criterion ${i + 1} description`}
                       />
                     </div>
 
                     {/* ── MÜDEK mapping ── */}
                     {mudekTemplate.length > 0 && (
                       <div className="criterion-field criterion-field--mudek">
-                        <label className="criteria-manager-cell-label">MÜDEK outcomes</label>
+                        <label className="criteria-manager-cell-label">MÜDEK Outcomes</label>
                         <MudekPillSelector
                           selected={row.mudek}
                           mudekTemplate={mudekTemplate}
@@ -653,7 +656,11 @@ export default function CriteriaManager({
                         onClick={() => toggleRubric(i)}
                         aria-expanded={row._rubricOpen}
                       >
-                        {row._rubricOpen ? "▲ Hide Rubric" : `▼ Edit Rubric (${row.rubric.length} band${row.rubric.length !== 1 ? "s" : ""})`}
+                        {row._rubricOpen ? (
+                          <><ChevronUpIcon className="criteria-btn-icon" /> Hide Rubric</>
+                        ) : (
+                          <><ChevronDownIcon className="criteria-btn-icon" /> Edit Rubric ({row.rubric.length} band{row.rubric.length !== 1 ? "s" : ""})</>
+                        )}
                       </button>
                       {row._rubricOpen && (
                         <RubricBandEditor

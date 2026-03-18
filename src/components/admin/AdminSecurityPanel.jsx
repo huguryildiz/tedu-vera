@@ -272,12 +272,12 @@ export default function AdminSecurityPanel({
           <div className="manage-card-desc">
             Manage passwords for admin access, deletion, and backup &amp; restore.
           </div>
-          <div className="manage-security-tabs" role="tablist" aria-label="Admin security tabs">
+          <div className="manage-segmented-tabs" role="tablist" aria-label="Admin security tabs">
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === "admin"}
-              className={`manage-security-tab${activeTab === "admin" ? " is-active" : ""}`}
+              className={`manage-segmented-tab${activeTab === "admin" ? " is-active" : ""}`}
               onClick={() => setActiveTab("admin")}
             >
               Admin
@@ -286,7 +286,7 @@ export default function AdminSecurityPanel({
               type="button"
               role="tab"
               aria-selected={activeTab === "delete"}
-              className={`manage-security-tab${activeTab === "delete" ? " is-active" : ""}`}
+              className={`manage-segmented-tab${activeTab === "delete" ? " is-active" : ""}`}
               onClick={() => setActiveTab("delete")}
             >
               Delete
@@ -295,7 +295,7 @@ export default function AdminSecurityPanel({
               type="button"
               role="tab"
               aria-selected={activeTab === "backup"}
-              className={`manage-security-tab${activeTab === "backup" ? " is-active" : ""}`}
+              className={`manage-segmented-tab${activeTab === "backup" ? " is-active" : ""}`}
               onClick={() => setActiveTab("backup")}
             >
               Backup & Restore

@@ -27,13 +27,13 @@ const TAB_LABELS = {
 
 function SemesterEditorTabs({ activeTab, onTab }) {
   return (
-    <div className="semester-editor-tabs" role="tablist">
+    <div className="manage-segmented-tabs" role="tablist" aria-label="Semester editor tabs">
       {["semester", "criteria", "mudek"].map((t) => (
         <button
           key={t}
           role="tab"
           aria-selected={activeTab === t}
-          className={`semester-tab-btn${activeTab === t ? " active" : ""}`}
+          className={`manage-segmented-tab${activeTab === t ? " is-active" : ""}`}
           onClick={() => onTab(t)}
           type="button"
         >
@@ -356,8 +356,8 @@ export default function ManageSemesterPanel({
 
           {/* ── Create Semester modal ── */}
           {showCreate && (
-            <div className="manage-modal">
-              <div className="manage-modal-card manage-modal-card--semester">
+            <div className="manage-modal" role="dialog" aria-modal="true">
+              <div className="manage-modal-card manage-modal-card--semester manage-modal-card--resizable-ready">
                 <div className="edit-dialog__header">
                   <span className="edit-dialog__icon" aria-hidden="true"><CalendarPlusIcon /></span>
                   <div className="edit-dialog__title">Create Semester</div>
@@ -394,7 +394,7 @@ export default function ManageSemesterPanel({
                       </div>
                       {createMeta.yearError && <div className="manage-field-error">{createMeta.yearError}</div>}
                       <p className="manage-hint">
-                        Evaluation criteria and MÜDEK outcomes are pre-seeded with defaults.
+                        Evaluation criteria and MÜDEK Outcomes are pre-seeded with defaults.
                         You can customise them in the other tabs after creation, or now.
                       </p>
                     </>
@@ -469,8 +469,8 @@ export default function ManageSemesterPanel({
 
           {/* ── Edit Semester modal ── */}
           {showEdit && (
-            <div className="manage-modal">
-              <div className="manage-modal-card manage-modal-card--semester">
+            <div className="manage-modal" role="dialog" aria-modal="true">
+              <div className="manage-modal-card manage-modal-card--semester manage-modal-card--resizable-ready">
                 <div className="edit-dialog__header">
                   <span className="edit-dialog__icon" aria-hidden="true"><PencilIcon /></span>
                   <div className="edit-dialog__title">Edit Semester</div>

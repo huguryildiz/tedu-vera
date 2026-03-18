@@ -286,7 +286,7 @@ export function useManageSemesters({
     try {
       await adminUpdateSemesterMudekTemplate(semesterId, name, posterDate, template, adminPass);
       applySemesterPatch({ id: semesterId, mudek_template: template });
-      setMessage("MÜDEK outcomes updated.");
+      setMessage("MÜDEK Outcomes updated.");
       return { ok: true };
     } catch (e) {
       const msg = String(e?.message || "");

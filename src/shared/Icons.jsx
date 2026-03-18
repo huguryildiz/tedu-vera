@@ -15,6 +15,17 @@ export function HomeIcon() {
   );
 }
 
+export function GripVerticalIcon({ className = "" } = {}) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      className={`lucide lucide-grip-vertical ${className}`.trim()}>
+      <circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/>
+      <circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/>
+    </svg>
+  );
+}
+
 export function SaveIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
@@ -1039,16 +1050,33 @@ export function DatabaseBackupIcon() {
 export function ChevronDownIcon({ className = "", ...props } = {}) {
   return (
     <svg
-      width="14"
-      height="14"
-      viewBox="0 0 14 14"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
       fill="none"
-      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
       aria-hidden="true"
-      className={className}
+      className={`lucide lucide-chevron-down ${className}`.trim()}
       {...props}
     >
-      <path d="M3 5l4 4 4-4"/>
+      <path d="m6 9 6 6 6-6"/>
+    </svg>
+  );
+}
+
+export function ChevronUpIcon({ className = "", ...props } = {}) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      aria-hidden="true"
+      className={`lucide lucide-chevron-up ${className}`.trim()}
+      {...props}
+    >
+      <path d="m18 15-6-6-6 6"/>
     </svg>
   );
 }

@@ -9,6 +9,8 @@ export default function DangerIconButton({
   title,
   showLabel = false,
   danger = true,
+  Icon = TrashIcon,
+  label = "Delete",
 }) {
   return (
     <button
@@ -19,8 +21,8 @@ export default function DangerIconButton({
       onClick={onClick}
       disabled={disabled}
     >
-      <TrashIcon />
-      {showLabel && <span className="manage-icon-btn-label">Delete</span>}
+      <Icon />
+      {showLabel && <span className="manage-icon-btn-label">{label}</span>}
     </button>
   );
 }

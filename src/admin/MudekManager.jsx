@@ -22,6 +22,7 @@
 // ============================================================
 
 import { useEffect, useId, useRef, useState } from "react";
+import AutoGrow from "../shared/AutoGrow";
 import {
   DndContext,
   PointerSensor,
@@ -35,6 +36,8 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { GripVerticalIcon, TrashIcon, XIcon } from "../shared/Icons";
+import DangerIconButton from "../components/admin/DangerIconButton";
 import { CSS } from "@dnd-kit/utilities";
 
 // ── Internal helpers ──────────────────────────────────────────
@@ -43,29 +46,6 @@ function codeToId(code) {
   return "po_" + String(code).replace(/\./g, "_");
 }
 
-// ── Auto-grow textarea ────────────────────────────────────────
-
-function AutoGrow({ value, onChange, disabled, placeholder, ariaLabel, hasError }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    if (!ref.current) return;
-    ref.current.style.height = "auto";
-    ref.current.style.height = ref.current.scrollHeight + "px";
-  }, [value]);
-  return (
-    <textarea
-      ref={ref}
-      rows={2}
-      style={{ overflow: "hidden", resize: "none" }}
-      className={`manage-textarea${hasError ? " is-danger" : ""}`}
-      value={value}
-      onChange={onChange}
-      disabled={disabled}
-      placeholder={placeholder}
-      aria-label={ariaLabel}
-    />
-  );
-}
 
 // ── View-model row ────────────────────────────────────────────
 
@@ -223,7 +203,7 @@ export default function MudekManager({
 
       {rows.length === 0 && (
         <div className="manage-hint" role="status">
-          No custom MÜDEK outcomes defined. Using default outcomes from config as fallback.
+          No custom MÜDEK Outcomes defined. Using default outcomes from config as fallback.
           Add rows below to define semester-specific outcomes.
         </div>
       )}
@@ -241,25 +221,27 @@ export default function MudekManager({
                 <SortableMudekRow key={row._rowId} id={row._rowId}>
                   {({ attributes, listeners, setNodeRef, style }) => (
                     <div ref={setNodeRef} style={style} className="mudek-manager-row">
-
-                      {/* Drag handle */}
-                      <button
-                        type="button"
-                        className="manage-icon-btn mudek-manager-drag-handle"
-                        disabled={structurallyLocked}
-                        aria-label={`Drag to reorder outcome ${i + 1}`}
-                        title="Drag to reorder"
-                        {...attributes}
-                        {...listeners}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                          viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <line x1="3" y1="6"  x2="21" y2="6"  />
-                          <line x1="3" y1="12" x2="21" y2="12" />
-                          <line x1="3" y1="18" x2="21" y2="18" />
-                        </svg>
-                      </button>
+                      {/* ── Left Actions: Drag & Remove ── */}
+                      <div className="mudek-manager-row-actions">
+                        <button
+                          type="button"
+                          className="manage-icon-btn mudek-manager-drag-handle"
+                          disabled={structurallyLocked}
+                          aria-label={`Drag to reorder outcome ${i + 1}`}
+                          title="Drag to reorder"
+                          {...attributes}
+                          {...listeners}
+                        >
+                          <GripVerticalIcon />
+                        </button>
+                        <DangerIconButton
+                          Icon={XIcon}
+                          onClick={() => removeRow(i)}
+                          disabled={structurallyLocked || rows.length === 1}
+                          ariaLabel={`Remove outcome ${i + 1}`}
+                          title="Remove outcome"
+                        />
+                      </div>
 
                       {/* Code */}
                       <div className="mudek-manager-cell mudek-manager-cell--code">
@@ -273,7 +255,7 @@ export default function MudekManager({
                           aria-label={`Outcome ${i + 1} code`}
                         />
                         {errors[`code_${i}`] && (
-                          <div className="manage-field-error mudek-manager-field-error">
+                          <div className="manage-field-error manage-field-error--simple">
                             {errors[`code_${i}`]}
                           </div>
                         )}
@@ -315,21 +297,6 @@ export default function MudekManager({
                         )}
                       </div>
 
-                      {/* Remove */}
-                      <button
-                        type="button"
-                        className="manage-icon-btn mudek-manager-remove"
-                        onClick={() => removeRow(i)}
-                        disabled={structurallyLocked}
-                        aria-label={`Remove outcome ${i + 1}`}
-                        title="Remove outcome"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                          viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M18 6 6 18" /><path d="m6 6 12 12" />
-                        </svg>
-                      </button>
                     </div>
                   )}
                 </SortableMudekRow>

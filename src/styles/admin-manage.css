@@ -100,7 +100,7 @@
   font-weight: 700;
   animation: manage-pulse-red 1.4s ease-in-out infinite;
 }
-.manage-security-tabs {
+.manage-segmented-tabs {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -110,7 +110,7 @@
   border-radius: 12px;
   background: #f8fafc;
 }
-.manage-security-tab {
+.manage-segmented-tab {
   border: 1px solid transparent;
   background: transparent;
   color: #475569;
@@ -125,8 +125,14 @@
   justify-content: center;
   text-align: center;
   line-height: 1.2;
+  white-space: normal;
+  transition: all 0.2s ease;
 }
-.manage-security-tab.is-active {
+.manage-segmented-tab:hover:not(.is-active) {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-primary, #0f172a);
+}
+.manage-segmented-tab.is-active {
   background: #1d4ed8;
   border-color: #1d4ed8;
   color: #fff;
@@ -1888,9 +1894,29 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  text-align: justify;
-  text-justify: inter-word;
-  hyphens: auto;
+  text-align: left; /* Changed from justify */
+  text-justify: auto;
+  hyphens: none;
+  overflow-wrap: break-word;
+}
+
+.manage-field-error--simple {
+  border: none;
+  border-left: none;
+  background: transparent;
+  padding: 4px 0 0;
+  border-radius: 0;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.manage-field-error--simple::before {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  margin-top: 0;
 }
 .manage-field-error::before {
   content: "";
@@ -2212,10 +2238,36 @@
   border: 1px solid var(--gray-200);
   padding: 20px;
   width: min(520px, 92vw);
+  max-width: 100vw;
+  max-height: 90vh;
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
   gap: 12px;
+  position: relative;
+  overflow: hidden; /* container for scrollable body */
+}
+
+/* Base structural readiness for future drag-resize */
+.manage-modal-card--resizable-ready {
+  display: flex;
+  flex-direction: column;
+  min-width: min(320px, 90vw);
+  min-height: min(200px, 80vh);
+}
+
+.manage-modal-card--resizable-ready .manage-modal-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0; /* needed for flex-shrink/grow in some browsers */
+  padding-right: 4px; /* avoid scrollbar overlap with content if possible */
+}
+
+.manage-modal-card--resizable-ready .manage-modal-actions {
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray-100, #f1f5f9);
 }
 
 /* Global dialog typography: justify textual content blocks */
@@ -3913,9 +3965,12 @@ textarea.manage-input--create {
 /* ── Semester modal — wider card ─────────────────────────────*/
 
 .manage-modal-card--semester {
-  width: min(820px, 94vw);
-  max-height: 90vh;
-  overflow-y: auto;
+  width: min(640px, 94vw); /* Reduced from 820px */
+}
+
+.manage-modal-card--semester .manage-segmented-tabs {
+  margin-top: 10px;
+  margin-bottom: 20px;
 }
 
 /* ── manage-hint-warning — amber locking banner ──────────────*/
@@ -4117,31 +4172,13 @@ textarea.manage-input--create {
 
 .mudek-manager-row {
   display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 8px;
+  align-items: center; /* Center against actions */
+  gap: 12px;
+  padding: 10px 14px;
   border: 1px solid var(--gray-200);
   border-radius: 12px;
   background: #fff;
-  flex-wrap: wrap;
-}
-
-.mudek-manager-drag-handle {
-  flex: 0 0 auto;
-  margin-top: 20px;
-  cursor: grab;
-  color: #94a3b8;
-}
-
-.mudek-manager-drag-handle:disabled {
-  cursor: not-allowed;
-  opacity: 0.35;
-}
-
-.mudek-manager-remove {
-  flex: 0 0 auto;
-  margin-top: 20px;
-  color: #94a3b8;
+  flex-wrap: wrap; /* Already exists, but ensuring good behavior */
 }
 
 .mudek-manager-cell {
@@ -4152,6 +4189,14 @@ textarea.manage-input--create {
 }
 
 .mudek-manager-cell--id   { flex: 0 0 110px; }
+.mudek-manager-row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 .mudek-manager-cell--code { flex: 0 0 72px; }
 .mudek-manager-cell--desc { flex: 1 1 160px; }
 
@@ -4189,37 +4234,7 @@ textarea.manage-input--create {
    SEMESTER EDITOR TABS
    ════════════════════════════════════════════════════════════ */
 
-.semester-editor-tabs {
-  display: flex;
-  gap: 0;
-  border-bottom: 2px solid var(--surface-border, var(--gray-200));
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.semester-tab-btn {
-  padding: 8px 16px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  cursor: pointer;
-  color: var(--muted);
-  transition: color 0.15s, border-color 0.15s;
-  white-space: nowrap;
-}
-
-.semester-tab-btn:hover {
-  color: var(--text-primary, #111);
-}
-
-.semester-tab-btn.active {
-  color: var(--brand, #2563eb);
-  border-bottom-color: var(--brand, #2563eb);
-  font-weight: 600;
-}
+/* Segmented Tabs are now shared via .manage-segmented-tabs */
 
 /* ════════════════════════════════════════════════════════════
    CRITERIA TOTAL VALIDITY BAR
@@ -4264,21 +4279,101 @@ textarea.manage-input--create {
 
 .criterion-card-header {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center; /* Centered against the left action stack */
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.criterion-color-swatch {
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: 6px;
-  padding: 2px;
-  cursor: pointer;
-  background: none;
+.criterion-card-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   flex-shrink: 0;
-  align-self: center;
+  flex: 0 0 100%; /* Force full width to push fields to next line */
+  width: 100%;
+  border-bottom: 1px solid var(--surface-border, #e2e8f0);
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+}
+
+.toolbar-label-placeholder {
+  display: none; /* Hide placeholder label as it's no longer needed for alignment */
+}
+
+.criterion-card-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Responsive transformation for narrow screens */
+@media (max-width: 600px) {
+  .criterion-card-toolbar {
+    padding-bottom: 10px;
+    margin-bottom: 4px;
+  }
+
+  .criterion-card-toolbar-actions {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .criterion-field {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+  }
+}
+
+.manage-drag-handle {
+  cursor: grab;
+  color: #94a3b8;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.manage-drag-handle:hover {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.manage-drag-handle:active {
+  cursor: grabbing;
+}
+
+.criterion-color-picker-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15), 0 1px 2px rgba(15, 23, 42, 0.1);
+}
+
+.criterion-color-picker-trigger:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+.criterion-color-input--hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
 .criterion-field {
@@ -4287,28 +4382,30 @@ textarea.manage-input--create {
   gap: 4px;
 }
 
-.criterion-field--label { flex: 2 1 160px; min-width: 120px; }
-.criterion-field--short { flex: 1 1 100px; min-width: 80px; }
-.criterion-field--max   { flex: 0 0 70px; }
+.criterion-field--label { flex: 1 1 200px; min-width: 140px; }
+.criterion-field--short { flex: 0 1 120px; min-width: 90px; }
+.criterion-field--max   { flex: 0 0 75px; }
 .criterion-field--blurb,
 .criterion-field--mudek,
-.criterion-field--rubric { flex: 1 1 100%; }
+.criterion-field--rubric { flex: 1 1 100%; width: 100%; }
 
 /* ── Auto-grow textarea ── */
 
 .manage-textarea {
   width: 100%;
   box-sizing: border-box;
-  padding: 6px 10px;
+  padding: 8px 10px;
   border: 1px solid var(--surface-border, #e2e8f0);
-  border-radius: 7px;
-  font-size: 0.84rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
   font-family: inherit;
-  color: var(--text-primary, #111);
+  color: var(--text-primary, #0f172a);
   background: var(--input-bg, #fff);
-  transition: border-color 0.15s;
-  line-height: 1.5;
-  min-height: 52px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  line-height: 1.55;
+  min-height: 72px; /* ~3 lines default */
+  resize: vertical; /* Allow manual vertical resize */
+  overflow-y: auto;
 }
 
 .manage-textarea:focus {
@@ -4453,49 +4550,106 @@ textarea.manage-input--create {
   margin-top: 6px;
 }
 
-.rubric-band-row {
+.rubric-band-card {
   display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  flex-wrap: wrap;
-  padding: 8px 10px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
   border: 1px solid var(--surface-border, #e2e8f0);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--surface, #f8fafc);
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
 }
 
-.rubric-band-level {
-  flex: 1 1 100px;
-  min-width: 80px;
+.rubric-band-card:hover {
+  border-color: var(--primary-light, #cbd5e1);
+}
+
+.rubric-band-header {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rubric-band-level-group,
+.rubric-band-score-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rubric-band-level-group {
+  flex: 2 1 180px;
+}
+
+.rubric-band-score-group {
+  flex: 0 0 auto;
+}
+
+.rubric-band-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rubric-band-score-input {
+  width: 60px !important;
+  text-align: center;
   font-size: 0.82rem !important;
 }
 
-.rubric-band-min,
-.rubric-band-max {
-  flex: 0 0 58px;
-  font-size: 0.82rem !important;
-}
-
-.rubric-band-dash {
-  align-self: center;
+.rubric-band-separator {
   color: var(--muted, #94a3b8);
-  font-size: 0.9rem;
+  font-weight: 500;
 }
 
-.rubric-band-desc {
-  flex: 1 1 100%;
-  font-size: 0.82rem;
+.rubric-band-actions {
+  flex: 0 0 auto;
+  margin-left: auto;
+  align-self: flex-end; /* Align with input field base */
+  margin-bottom: 2px;
 }
 
-.rubric-band-remove {
-  flex-shrink: 0;
-  align-self: flex-start;
-  margin-top: 2px;
+.rubric-band-description-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rubric-band-desc-textarea {
+  font-size: 0.82rem !important;
+  line-height: 1.5 !important;
+  min-height: 60px;
 }
 
 .rubric-band-error {
-  flex: 1 1 100%;
-  margin-top: 2px;
+  margin-top: -4px;
+}
+
+@media (max-width: 600px) {
+  .rubric-band-header {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+  }
+
+  .rubric-band-level-group {
+    flex: 1 1 100%;
+  }
+
+  .rubric-band-score-group {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rubric-band-actions {
+    margin-left: auto;
+    align-self: flex-end;
+    margin-bottom: 2px;
+  }
 }
 
 .rubric-add-band-btn {
@@ -4543,4 +4697,10 @@ textarea.manage-input--create {
   color: var(--muted, #94a3b8);
   padding: 6px 0;
   font-style: italic;
+}
+
+.criteria-btn-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 4px;
 }
