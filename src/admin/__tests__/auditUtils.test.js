@@ -228,4 +228,14 @@ describe("normalizeStudentNames", () => {
     expect(normalizeStudentNames("")).toBe("");
     expect(normalizeStudentNames(null)).toBe("");
   });
+
+  qaTest("auditUtils.dedup.01", () => {
+    const result = normalizeStudentNames("Alice; Alice; Bob");
+    expect(result).toBe("Alice; Bob");
+  });
+
+  qaTest("auditUtils.dedup.02", () => {
+    const result = normalizeStudentNames("Carol; Alice; Carol; Bob; Alice");
+    expect(result).toBe("Carol; Alice; Bob");
+  });
 });

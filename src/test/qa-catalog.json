@@ -2250,6 +2250,28 @@
     "severity": "normal"
   },
   {
+    "id": "auditUtils.dedup.01",
+    "module": "Admin / Settings / Audit",
+    "area": "Audit Utils — Name Normalization",
+    "story": "Deduplicate student names",
+    "scenario": "normalizeStudentNames deduplicates identical names (case-sensitive, preserves first occurrence)",
+    "whyItMatters": "Duplicate names like 'Alice; Alice; Bob' are stored verbatim without deduplication.",
+    "risk": "Duplicate names look incorrect in the UI and could confuse jurors during evaluation.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "auditUtils.dedup.02",
+    "module": "Admin / Settings / Audit",
+    "area": "Audit Utils — Name Normalization",
+    "story": "Deduplicate student names",
+    "scenario": "normalizeStudentNames deduplicates while preserving order of first occurrence",
+    "whyItMatters": "Order of students should be preserved when removing duplicates.",
+    "risk": "Reordering student names could cause confusion when cross-referencing other records.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
     "id": "criteria.validation.01",
     "module": "Admin / Criteria",
     "area": "Rubric Validation — Coverage",
@@ -2468,5 +2490,49 @@
     "risk": "Auto-stripping rubric-touched rows would silently discard admin rubric work.",
     "coverageStrength": "Strong",
     "severity": "normal"
+  },
+  {
+    "id": "levelpill.gradient.01",
+    "module": "Shared / LevelPill",
+    "area": "Band Gradient Color",
+    "story": "Position-based gradient for custom band names",
+    "scenario": "getBandPositionStyle returns the red stop for rank 0 out of 4",
+    "whyItMatters": "The lowest band must always map to the red end of the gradient regardless of band count.",
+    "risk": "Wrong rank-to-color mapping would make lowest bands appear green, misleading all rubric viewers.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "levelpill.gradient.02",
+    "module": "Shared / LevelPill",
+    "area": "Band Gradient Color",
+    "story": "Position-based gradient for custom band names",
+    "scenario": "getBandPositionStyle returns the green stop for rank 3 out of 4",
+    "whyItMatters": "The highest band must always map to the green end of the gradient.",
+    "risk": "Wrong mapping would show the top band in red, reversing the visual meaning of the rubric.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "levelpill.gradient.03",
+    "module": "Shared / LevelPill",
+    "area": "Band Gradient Color",
+    "story": "Position-based gradient — edge cases",
+    "scenario": "getBandPositionStyle returns green when total is 1 (single-band guard)",
+    "whyItMatters": "A single-band rubric must not trigger division by zero and must still render colored.",
+    "risk": "Unguarded division by zero would crash or render NaN-indexed color, breaking the pill display.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "levelpill.gradient.04",
+    "module": "Shared / LevelPill",
+    "area": "Band Gradient Color",
+    "story": "isKnownBandVariant detection",
+    "scenario": "isKnownBandVariant returns true for all four canonical band names (case-insensitive) and false for custom names",
+    "whyItMatters": "The known-variant guard must route canonical bands to CSS and all others to the gradient, never the reverse.",
+    "risk": "A false negative for a canonical name would override the well-established CSS colors with gradient colors, altering the existing 4-band appearance.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
   }
 ]

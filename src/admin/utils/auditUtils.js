@@ -212,5 +212,6 @@ export const normalizeStudentNames = (value) => {
     .split(";")
     .map((name) => name.trim().replace(/\s+/g, " "))
     .filter(Boolean)
+    .filter((name, idx, arr) => arr.indexOf(name) === idx)
     .join("; ");
 };
