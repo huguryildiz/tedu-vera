@@ -48,8 +48,9 @@ export function useManageProjects({
         (p) =>
           (patch.id && p.id === patch.id) ||
           (patch.group_no != null &&
+            patch.semester_id &&
             p.group_no === patch.group_no &&
-            (!patch.semester_id || p.semester_id === patch.semester_id))
+            p.semester_id === patch.semester_id)
       );
       const updated = {
         ...((idx >= 0 ? next[idx] : {}) || {}),
