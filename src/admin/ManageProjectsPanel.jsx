@@ -132,6 +132,7 @@ export default function ManageProjectsPanel({
   const [importError, setImportError] = useState("");
   const [importWarning, setImportWarning] = useState("");
   const [isImporting, setIsImporting] = useState(false);
+  const [guardError, setGuardError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
   const isDirty =
@@ -360,7 +361,14 @@ export default function ManageProjectsPanel({
                 ariaLabel={`Delete Group ${groupLabel}`}
                 title="Delete group"
                 showLabel={false}
-                onClick={() => onDeleteProject?.(p, groupLabel)}
+                onClick={() => {
+                  if (!p?.id) {
+                    setGuardError("Cannot delete this group right now. Refresh the page and try again.");
+                    return;
+                  }
+                  setGuardError("");
+                  onDeleteProject?.(p, groupLabel);
+                }}
               />
             </div>
           </div>
@@ -584,7 +592,11 @@ export default function ManageProjectsPanel({
             <span className="manage-semester-emphasis-blink">{activeSemesterName || "the selected"}</span>{" "}
             semester.
           </div>
-          {panelError && <div className="manage-hint manage-hint-error" role="alert">{panelError}</div>}
+          {(panelError || guardError) && (
+            <div className="manage-hint manage-hint-error" role="alert">
+              {panelError || guardError}
+            </div>
+          )}
           <div className="manage-hint manage-hint-inline">
             Use the header to switch semesters and view other groups.
           </div>
