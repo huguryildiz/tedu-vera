@@ -156,6 +156,33 @@ describe("ManageProjectsPanel — import summary", () => {
   });
 });
 
+describe("ManageProjectsPanel — edit modal safety", () => {
+  beforeEach(() => localStorage.clear());
+
+  qaTest("groups.edit.01", async () => {
+    const onEditGroup = vi.fn(async () => ({ ok: false, message: "Network error" }));
+    render(
+      <ManageProjectsPanel
+        {...DEFAULT_PROPS}
+        projects={[{ id: "p1", group_no: 1, project_title: "Test", group_students: "Alice", semester_id: "s1" }]}
+        onEditGroup={onEditGroup}
+      />
+    );
+    // Open edit modal
+    fireEvent.click(screen.getByLabelText(/edit group 1/i));
+    await waitFor(() => expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument());
+    // Click save
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    await waitFor(() => expect(onEditGroup).toHaveBeenCalled());
+    // Modal must still be open (Save button still present)
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument();
+    });
+    // In-modal error must appear
+    expect(screen.getByText(/network error/i)).toBeInTheDocument();
+  });
+});
+
 describe("ManageProjectsPanel — group_no upper bound validation", () => {
   beforeEach(() => localStorage.clear());
 

@@ -124,7 +124,8 @@ export default function ManageProjectsPanel({
   });
   const [addError, setAddError] = useState("");
   const [showEdit, setShowEdit] = useState(false);
-  const [editForm, setEditForm] = useState({ group_no: "", project_title: "", group_students: [""] });
+  const [editForm, setEditForm] = useState({ group_no: "", project_title: "", group_students: [""], semesterId: null });
+  const [editError, setEditError] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [importSuccess, setImportSuccess] = useState("");
   const [importError, setImportError] = useState("");
@@ -342,10 +343,12 @@ export default function ManageProjectsPanel({
                 title="Edit group"
                 aria-label={`Edit Group ${groupLabel}`}
                 onClick={() => {
+                  setEditError("");
                   setEditForm({
                     group_no: p.group_no ?? "",
                     project_title: p.project_title || "",
                     group_students: parseStudentInputList(p.group_students || ""),
+                    semesterId: p.semester_id || null,
                   });
                   setShowEdit(true);
                 }}
@@ -948,8 +951,17 @@ export default function ManageProjectsPanel({
                     </span>
                   </button>
                 </div>
+                {editError && (
+                  <div role="alert" className="manage-field-error">
+                    {editError}
+                  </div>
+                )}
                 <div className="manage-modal-actions">
-                  <button className="manage-btn manage-btn--edit-cancel" type="button" onClick={() => setShowEdit(false)}>
+                  <button
+                    className="manage-btn manage-btn--edit-cancel"
+                    type="button"
+                    onClick={() => { setShowEdit(false); setEditError(""); }}
+                  >
                     Cancel
                   </button>
                   <button
@@ -958,13 +970,19 @@ export default function ManageProjectsPanel({
                     disabled={!canEditSubmit || editSaving}
                     onClick={async () => {
                       setEditSaving(true);
-                      await onEditGroup?.({
+                      setEditError("");
+                      const res = await onEditGroup?.({
                         group_no: Number(editForm.group_no),
                         project_title: editForm.project_title.trim(),
                         group_students: normalizedEditStudents,
+                        semesterId: editForm.semesterId,
                       });
                       setEditSaving(false);
-                      setShowEdit(false);
+                      if (res?.ok === false) {
+                        setEditError(res.message || "Could not save changes. Please try again.");
+                      } else {
+                        setShowEdit(false);
+                      }
                     }}
                   >
                     {editSaving ? "Saving…" : "Save"}

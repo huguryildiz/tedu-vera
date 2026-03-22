@@ -675,6 +675,72 @@
     "severity": "normal"
   },
   {
+    "id": "groups.edit.01",
+    "module": "Settings / Groups",
+    "area": "Group Management",
+    "story": "Edit Group — Save Failure",
+    "scenario": "edit modal stays open and shows in-modal error when save fails",
+    "whyItMatters": "If the modal closes on failure, the admin loses their edit context and must reopen and retype changes.",
+    "risk": "Data loss: admin retypes and possibly submits wrong data on retry.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "groups.edit.02",
+    "module": "Settings / Groups",
+    "area": "Group Management",
+    "story": "Edit Group — Semester Lock",
+    "scenario": "edit save uses semesterId locked at modal open, not current viewed semester",
+    "whyItMatters": "Changing the semester dropdown while edit modal is open could redirect the save to the wrong semester.",
+    "risk": "Data integrity: a group's title/students saved into a different semester's record.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "groups.delete.02",
+    "module": "Settings / Groups",
+    "area": "Group Management",
+    "story": "Delete Group — Missing ID Guard",
+    "scenario": "delete is blocked with a visible error when project id is missing",
+    "whyItMatters": "Groups patched without a server-confirmed id should not trigger a delete RPC call with undefined.",
+    "risk": "Silent server error or unexpected behavior when id is undefined.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "groups.import.01",
+    "module": "Settings / Groups",
+    "area": "CSV Import",
+    "story": "Import Success Timing",
+    "scenario": "import success message only appears after import resolves",
+    "whyItMatters": "Showing success before the operation completes misleads the admin if the import subsequently fails.",
+    "risk": "Admin may believe import succeeded and navigate away, only to find groups missing.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "groups.import.02",
+    "module": "Settings / Groups",
+    "area": "CSV Import",
+    "story": "Empty CSV Feedback",
+    "scenario": "shows error when an empty CSV file is dropped",
+    "whyItMatters": "Dropping an empty file produces no feedback and the admin doesn't know what went wrong.",
+    "risk": "Admin is confused, may retry repeatedly or assume the feature is broken.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "groups.import.03",
+    "module": "Settings / Groups",
+    "area": "CSV Import",
+    "story": "Post-Import Refresh",
+    "scenario": "full project list refreshes from server after successful CSV import",
+    "whyItMatters": "Without a full refresh, row-by-row patches may leave incomplete client state with missing server IDs.",
+    "risk": "Subsequent edit/delete on imported groups may target undefined IDs.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
     "id": "groups.crud.01",
     "module": "Settings / Groups",
     "area": "Group Management",

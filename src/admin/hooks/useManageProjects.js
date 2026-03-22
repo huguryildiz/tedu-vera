@@ -242,11 +242,9 @@ export function useManageProjects({
       setMessage(`Group ${row.group_no} updated`);
       return { ok: true };
     } catch (e) {
-      setPanelError(
-        "projects",
-        e?.message || "Could not update group. Try again or check admin password."
-      );
-      return { ok: false };
+      const msg = e?.message || "Could not update group. Try again or check admin password.";
+      // Return message so the edit modal can show it in-context; do not use a distant panel banner.
+      return { ok: false, message: msg };
     } finally {
       setLoading(false);
     }
