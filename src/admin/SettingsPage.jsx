@@ -553,23 +553,32 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange, selecte
               onUpdateCriteriaTemplate={crud.handleUpdateCriteriaTemplate}
               onUpdateMudekTemplate={crud.handleUpdateMudekTemplate}
               isLockedFn={crud.isLockedFn}
-              onDeleteSemester={(s) =>
-                (s?.id === crud.activeSemesterId
-                  ? crud.setPanelError("semester", "Current semester cannot be deleted. Select another semester first.")
-                  : crud.handleRequestDelete({
-                      type: "semester",
-                      id: s?.id,
-                      label: `Semester ${s?.name || ""}`.trim(),
-                    })
-                )
-              }
+              externalUpdatedSemesterId={crud.externalUpdatedSemesterId}
+              onDeleteSemester={(s) => {
+                if (s?.id === crud.activeSemesterId) {
+                  crud.setPanelError("semester", "Current semester cannot be deleted. Select another semester first.");
+                  return;
+                }
+                if (crud.semesterList.length === 1) {
+                  crud.setPanelError("semester", "Cannot delete the only remaining semester.");
+                  return;
+                }
+                if (!adminPass) {
+                  crud.setPanelError("semester", "Admin password missing. Please re-login.");
+                  return;
+                }
+                crud.handleRequestDelete({
+                  type: "semester",
+                  id: s?.id,
+                  label: `Semester ${s?.name || ""}`.trim(),
+                });
+              }}
             />
 
             <ProjectSettingsPanel
               projects={crud.projects}
-              semesterName={crud.viewSemester?.name || ""}
+              semesterName={crud.viewSemesterLabel}
               activeSemesterId={crud.viewSemesterId}
-              activeSemesterName={crud.viewSemesterLabel}
               semesterOptions={crud.semesterList}
               panelError={crud.panelErrors.projects}
               isMobile={isMobile}

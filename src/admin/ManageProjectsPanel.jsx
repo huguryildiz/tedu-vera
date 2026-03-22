@@ -99,7 +99,6 @@ export default function ManageProjectsPanel({
   projects,
   semesterName,
   activeSemesterId,
-  activeSemesterName,
   semesterOptions = [],
   panelError = "",
   isMobile,
@@ -592,7 +591,7 @@ export default function ManageProjectsPanel({
         <div className="manage-card-body">
           <div className="manage-card-desc">
             Manage groups, projects, and students for{" "}
-            <span className="manage-semester-emphasis-blink">{activeSemesterName || "the selected"}</span>{" "}
+            <span className="manage-semester-emphasis-blink">{semesterName || "the selected"}</span>{" "}
             semester.
           </div>
           {(panelError || guardError) && (
@@ -793,7 +792,7 @@ export default function ManageProjectsPanel({
                                   onClick={() => removeStudentInput(setForm, idx)}
                                   disabled={form.group_students.length === 1}
                                   title="Remove student"
-                                  aria-label={`tudent ${idx + 1}`}
+                                  aria-label={`Remove student ${idx + 1}`}
                                 >
                                   <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
                                     <CircleMinusIcon />
@@ -1027,7 +1026,7 @@ export default function ManageProjectsPanel({
                 </div>
                 <div className="manage-import-context-line">
                   Groups will be added to{" "}
-                  <span className="manage-semester-emphasis-blink">{activeSemesterName || "selected"}</span>{" "}
+                  <span className="manage-semester-emphasis-blink">{semesterName || "selected"}</span>{" "}
                   semester.
                 </div>
                 <div className="manage-modal-body">

@@ -7,7 +7,6 @@ const DEFAULT_PROPS = {
   projects: [],
   semesterName: "2026 Spring",
   activeSemesterId: "s1",
-  activeSemesterName: "2026 Spring",
   semesterOptions: [{ id: "s1", name: "2026 Spring" }],
   panelError: "",
   isMobile: false,
