@@ -653,6 +653,28 @@
     "severity": "critical"
   },
   {
+    "id": "groups.csv.09",
+    "module": "Settings / Groups",
+    "area": "CSV Import Validation",
+    "story": "Group Number Upper Bound",
+    "scenario": "shows error for group_no exceeding 999 in CSV import",
+    "whyItMatters": "Group numbers above 999 look broken in sorted list and indicate a data entry mistake.",
+    "risk": "Extremely high group numbers sort incorrectly and can confuse admins managing many groups.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "groups.create.01",
+    "module": "Settings / Groups",
+    "area": "Group Management",
+    "story": "Group Number Upper Bound",
+    "scenario": "shows error when group_no exceeds 999 in add form",
+    "whyItMatters": "Group numbers above 999 should be rejected at form level before reaching the server.",
+    "risk": "Without a bound, typos like 10000 would create groups with nonsensical numbers.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
     "id": "groups.crud.01",
     "module": "Settings / Groups",
     "area": "Group Management",

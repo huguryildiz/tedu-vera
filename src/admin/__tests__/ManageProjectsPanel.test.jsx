@@ -156,6 +156,43 @@ describe("ManageProjectsPanel — import summary", () => {
   });
 });
 
+describe("ManageProjectsPanel — group_no upper bound validation", () => {
+  beforeEach(() => localStorage.clear());
+
+  qaTest("groups.csv.09", async () => {
+    const { container } = render(<ManageProjectsPanel {...DEFAULT_PROPS} />);
+    const csv = makeCSV(
+      "group_no,project_title,group_students",
+      "1000,Project A,Alice"
+    );
+    const file = new File([csv], "groups.csv", { type: "text/csv" });
+    await uploadFile(container, file);
+    await waitFor(() => {
+      expect(screen.getByText(/invalid group_no/i)).toBeInTheDocument();
+    });
+  });
+
+  qaTest("groups.create.01", async () => {
+    render(<ManageProjectsPanel {...DEFAULT_PROPS} />);
+    // Open the add group form — use exact name to avoid matching "Group Settings" header
+    fireEvent.click(screen.getByRole("button", { name: /^group$/i }));
+    // Group number input has placeholder "1"
+    await waitFor(() => expect(screen.getByPlaceholderText("1")).toBeInTheDocument());
+    // Fill in group_no > 999
+    fireEvent.change(screen.getByPlaceholderText("1"), { target: { value: "1000" } });
+    // Fill in required project title
+    fireEvent.change(screen.getByPlaceholderText(/smart traffic/i), { target: { value: "Test Project" } });
+    // Fill in required student name (first student placeholder is "Ali Yilmaz")
+    fireEvent.change(screen.getByPlaceholderText(/ali yilmaz/i), { target: { value: "Alice" } });
+    // Save button in add form is labeled "Create"
+    await waitFor(() => expect(screen.getByRole("button", { name: /create/i })).not.toBeDisabled());
+    fireEvent.click(screen.getByRole("button", { name: /create/i }));
+    await waitFor(() => {
+      expect(screen.getByText(/between 1 and 999/i)).toBeInTheDocument();
+    });
+  });
+});
+
 describe("ManageProjectsPanel — CRUD smoke tests", () => {
   beforeEach(() => localStorage.clear());
 

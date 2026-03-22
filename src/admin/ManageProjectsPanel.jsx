@@ -343,7 +343,7 @@ export default function ManageProjectsPanel({
                 aria-label={`Edit Group ${groupLabel}`}
                 onClick={() => {
                   setEditForm({
-                    group_no: p.group_no,
+                    group_no: p.group_no ?? "",
                     project_title: p.project_title || "",
                     group_students: parseStudentInputList(p.group_students || ""),
                   });
@@ -413,7 +413,7 @@ export default function ManageProjectsPanel({
     }).filter((r, idx) => {
       const rowNo = idx + 2; // include header row
       let isValid = true;
-      if (!Number.isFinite(r.group_no) || r.group_no <= 0) {
+      if (!Number.isFinite(r.group_no) || r.group_no <= 0 || r.group_no > 999) {
         invalidGroupRows.push(rowNo);
         isValid = false;
       }
@@ -810,6 +810,10 @@ export default function ManageProjectsPanel({
                         setAddError("Group number must be a positive integer.");
                         return;
                       }
+                      if (groupNo > 999) {
+                        setAddError("Group number must be between 1 and 999.");
+                        return;
+                      }
                       if (!form.semester_id) {
                         setAddError("Please select a semester.");
                         return;
@@ -939,7 +943,7 @@ export default function ManageProjectsPanel({
                     aria-label="Add student"
                   >
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
-                      <CirclePlusSmallIcon />
+                      <CirclePlusIcon />
                       Student
                     </span>
                   </button>
