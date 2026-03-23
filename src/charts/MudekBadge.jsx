@@ -39,8 +39,9 @@ function MudekOutcomesTab({ codes, mudekLookup }) {
     setExpanded(!isMobile);
   }, [isMobile]);
 
-  // When mudekLookup is provided (semester-specific), use it.
-  // Otherwise fall back to MUDEK_OUTCOMES from config keyed by display code.
+  // Source-of-truth priority:
+  // 1. mudekLookup (semester-specific JSONB template, which handles its own config fallback)
+  // 2. MUDEK_OUTCOME codes + MUDEK_OUTCOMES config (legacy/fallback only)
   const items = mudekLookup
     ? Object.values(mudekLookup)
         .filter((o) => o.code && (o.desc_en || o.desc_tr))
@@ -135,8 +136,8 @@ function MudekOutcomesTab({ codes, mudekLookup }) {
   );
 }
 
-function MudekRubricTab({ criteria = CRITERIA }) {
-  const activeCriteria = (criteria || CRITERIA).map(normalizeCriterion);
+function MudekRubricTab({ criteria = [] }) {
+  const activeCriteria = (criteria || []).map(normalizeCriterion);
   return (
     <div className="mudek-rubric-list">
       {activeCriteria.map((c) => {
@@ -195,7 +196,7 @@ function MudekRubricTab({ criteria = CRITERIA }) {
   );
 }
 
-export function MudekBadge({ outcomeCodes = CHART_OUTCOMES, mudekLookup, criteria }) {
+export function MudekBadge({ outcomeCodes, mudekLookup, criteria }) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState("outcomes");
   const wrapRef = useRef(null);

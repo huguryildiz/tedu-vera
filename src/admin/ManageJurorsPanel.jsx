@@ -19,6 +19,8 @@ import {
 import DangerIconButton from "../components/admin/DangerIconButton";
 import LastActivity from "./LastActivity";
 import { buildSemesterSearchText, buildTimestampSearchText, parseCsv } from "./utils";
+import AlertCard from "../shared/AlertCard";
+import Tooltip from "../shared/Tooltip";
 
 function normalizeKey(name, inst) {
   const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -339,7 +341,7 @@ export default function ManageJurorsPanel({
       {(!isMobile || isOpen) && (
         <div className="manage-card-body">
           <div className="manage-card-desc">Manage jurors, institution/department details, and PIN resets.</div>
-          {panelError && <div className="manage-hint manage-hint-error" role="alert">{panelError}</div>}
+          {panelError && <AlertCard variant="error">{panelError}</AlertCard>}
           <div className="manage-card-actions">
             <button
               className="manage-btn"
@@ -476,37 +478,39 @@ export default function ManageJurorsPanel({
                       <span />
                     )}
                     <div className="manage-item-actions-row manage-item-actions-row--juror-actions">
-                      <button
-                        className={`manage-icon-btn${isLocked ? " is-warning" : ""}`}
-                        type="button"
-                        title={isLocked ? "Reset PIN" : "Set or reset PIN"}
-                        aria-label={`Reset PIN for ${j.juryName || j.juror_name}`}
-                        onClick={() => {
-                          onResetPin?.({
-                            jurorId: j.jurorId || j.juror_id,
-                            juror_name: j.juryName || j.juror_name || "",
-                            juror_inst: j.juryDept || j.juror_inst || "",
-                          });
-                        }}
-                      >
-                        <KeyRoundIcon />
-                      </button>
-                      <button
-                        className="manage-icon-btn"
-                        type="button"
-                        title="Edit juror"
-                        aria-label={`Edit ${j.juryName || j.juror_name}`}
-                        onClick={() => {
-                          setEditTarget(j);
-                          setEditForm({
-                            juror_name: j.juryName || j.juror_name || "",
-                            juror_inst: j.juryDept || j.juror_inst || "",
-                          });
-                          setShowEdit(true);
-                        }}
-                      >
-                        <PencilIcon />
-                      </button>
+                      <Tooltip text={isLocked ? "Reset juror PIN" : "Reset juror PIN"}>
+                        <button
+                          className={`manage-icon-btn${isLocked ? " is-warning" : ""}`}
+                          type="button"
+                          aria-label={`Reset PIN for ${j.juryName || j.juror_name}`}
+                          onClick={() => {
+                            onResetPin?.({
+                              jurorId: j.jurorId || j.juror_id,
+                              juror_name: j.juryName || j.juror_name || "",
+                              juror_inst: j.juryDept || j.juror_inst || "",
+                            });
+                          }}
+                        >
+                          <KeyRoundIcon />
+                        </button>
+                      </Tooltip>
+                      <Tooltip text="Edit juror">
+                        <button
+                          className="manage-icon-btn"
+                          type="button"
+                          aria-label={`Edit ${j.juryName || j.juror_name}`}
+                          onClick={() => {
+                            setEditTarget(j);
+                            setEditForm({
+                              juror_name: j.juryName || j.juror_name || "",
+                              juror_inst: j.juryDept || j.juror_inst || "",
+                            });
+                            setShowEdit(true);
+                          }}
+                        >
+                          <PencilIcon />
+                        </button>
+                      </Tooltip>
                       <DangerIconButton
                         ariaLabel={`Delete ${j.juryName || j.juror_name}`}
                         title="Delete juror"
@@ -717,19 +721,19 @@ export default function ManageJurorsPanel({
                     <div className="manage-dropzone-sub manage-dropzone-sub--muted">Max file size: 2MB</div>
                   </div>
                   {importError && (
-                    <div className="manage-import-feedback manage-import-feedback--error" role="alert">
+                    <AlertCard variant="error" className="manage-import-feedback">
                       {renderImportMessage(importError)}
-                    </div>
+                    </AlertCard>
                   )}
                   {importSuccess && !importError && (
-                    <div className="manage-import-feedback manage-import-feedback--success" role="status">
+                    <AlertCard variant="success" className="manage-import-feedback">
                       {renderImportMessage(importSuccess)}
-                    </div>
+                    </AlertCard>
                   )}
                   {importWarning && !importError && (
-                    <div className="manage-import-feedback manage-import-feedback--warn" role="status">
+                    <AlertCard variant="warning" className="manage-import-feedback">
                       {renderImportMessage(importWarning)}
-                    </div>
+                    </AlertCard>
                   )}
                   <details className="manage-collapsible">
                     <summary className="manage-collapsible-summary">

@@ -29,9 +29,9 @@ import {
 } from "../charts";
 
 // ── Export helpers ───────────────────────────────────────────
-const OUTCOMES = CRITERIA.map((c) => ({
-  key: c.id,
-  label: c.shortLabel || c.label,
+const OUTCOMES = (CRITERIA || []).map((c) => ({
+  id: c.id,
+  label: c.shortLabel,
   max: c.max,
   rubric: c.rubric || [],
   code: (c.mudek || []).join("/"),
@@ -373,12 +373,11 @@ function buildMudekMappingDataset(outcomes = OUTCOMES, mudekLookup = null) {
     } else {
       codes.forEach((code, idx) => {
         let text = "—";
-        if (mudekLookup && mudekLookup[code]) {
-          text = mudekLookup[code].desc_en || mudekLookup[code].desc_tr || "—";
-        } else {
-          text = MUDEK_OUTCOMES[code]?.en || MUDEK_OUTCOMES[code]?.tr || "—";
+        const entry = mudekLookup?.[code];
+        if (entry) {
+          text = entry.desc_en || entry.desc_tr || "—";
         }
-        const displayCode = mudekLookup?.[code]?.code || code;
+        const displayCode = entry?.code || code;
         rows.push([idx === 0 ? label : "", displayCode, text]);
         if (idx === 0) {
           alignments.push({ start: rowIndex, end: rowIndex + count - 1, col: 0, valign: "center" });
@@ -615,17 +614,17 @@ export default function AnalyticsTab({
 
   const FALLBACK_COLORS = ["#f59e0b", "#22c55e", "#3b82f6", "#ef4444", "#a855f7", "#06b6d4"];
   const activeOutcomes = useMemo(() => {
-    if (!criteriaTemplate?.length) return OUTCOMES;
+    if (!Array.isArray(criteriaTemplate) || criteriaTemplate.length === 0) return [];
     return criteriaTemplate.map((c, i) => ({
       key: c.key,
       label: c.shortLabel || c.label,
       max: c.max,
       rubric: c.rubric || [],
-      code: Array.isArray(c.mudek_outcomes) ? c.mudek_outcomes.join("/") : "",
+      code: Array.isArray(c.mudek) ? c.mudek.join("/") : (Array.isArray(c.mudek_outcomes) ? c.mudek_outcomes.join("/") : ""),
       mudek_outcomes: c.mudek_outcomes || [],
       color: getCriterionColor(c.key, FALLBACK_COLORS[i % FALLBACK_COLORS.length]),
     }));
-  }, [criteriaTemplate]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [criteriaTemplate]);
 
   const activeTrendLegend = useMemo(() =>
     activeOutcomes.map((o) => ({
@@ -822,13 +821,11 @@ export default function AnalyticsTab({
       }
       codes.forEach((code, idx) => {
         let text = "—";
-        let displayCode = code;
-        if (mudekLookup && mudekLookup[code]) {
-          text = mudekLookup[code].desc_en || mudekLookup[code].desc_tr || "—";
-          displayCode = mudekLookup[code].code || code;
-        } else {
-          text = MUDEK_OUTCOMES[code]?.en || MUDEK_OUTCOMES[code]?.tr || "—";
+        const entry = mudekLookup?.[code];
+        if (entry) {
+          text = entry.desc_en || entry.desc_tr || "—";
         }
+        const displayCode = entry?.code || code;
         rows.push({
           criteria: label,
           code: displayCode,

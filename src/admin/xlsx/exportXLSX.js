@@ -144,7 +144,7 @@ export async function exportXLSX(rows, { semesterName = "", summaryData = [], ju
 
   const allRows = includeEmptyRows ? [...baseRows, ...generated] : baseRows;
 
-  const criteriaHeaders = activeCriteria.map((c) => `${c.shortLabel || c.label} /${c.max}`);
+  const criteriaHeaders = activeCriteria.map((c) => `${c.shortLabel || c.label} / ${c.max}`);
   const headers = [
     "Semester",
     "Group No",
@@ -283,7 +283,7 @@ export async function exportRankingsXLSX(ranked, criteria, { semesterName = "" }
   const XLSX = await import("xlsx-js-style");
   const headers = [
     "Rank", "Group", "Project Title", "Students",
-    ...criteria.flatMap((c) => [`${c.shortLabel || c.label} Avg`, `${c.shortLabel || c.label} Max`]),
+    ...criteria.flatMap((c) => [`${c.shortLabel} Avg`, `${c.shortLabel} Max`]),
     "Total Avg",
   ];
   const displayRanks = [];

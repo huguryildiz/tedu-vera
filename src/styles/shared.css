@@ -73,6 +73,7 @@ body::-webkit-scrollbar-thumb:hover,
   --navy-800:   #162A66;
   --brand-600:  #2F56D6;
   --brand-500:  #3D66E6;
+  --brand-800:  #1e40af;
   --primary-action: #2F56D7;
   --text-900:   #0B1220;
   --text-600:   #56657A;
@@ -425,7 +426,7 @@ body {
   border-radius: 16px;
   padding: 12px 14px;
   font-size: 14px;
-  color: var(--text-600);
+  color: var(--brand-800);
   display: flex;
   gap: 10px;
   align-items: center;

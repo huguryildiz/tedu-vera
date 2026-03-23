@@ -22,12 +22,6 @@ import {
 
 import {
   useScoreDetailsFilters,
-  buildScoreCols,
-  buildScoreMaxByKey,
-  SCORE_COLS,
-  SCORE_FILTER_MIN,
-  SCORE_FILTER_MAX,
-  SCORE_MAX_BY_KEY,
   STATUS_OPTIONS,
   JUROR_STATUS_OPTIONS,
   VALID_SORT_DIRS,
@@ -35,14 +29,11 @@ import {
   DEFAULT_SORT_DIR,
   DATE_MIN_DATETIME,
   DATE_MAX_DATETIME,
-  SCORE_KEYS,
   parseDateString,
   buildDateRange,
-  buildEmptyScoreFilters,
   toFiniteNumber,
   isInvalidNumberRange,
   hasActiveValidNumberRange,
-  clampScoreInput,
   isMissing,
   NUMERIC_SORT_KEYS,
 } from "./hooks/useScoreDetailsFilters";
@@ -63,19 +54,17 @@ export default function ScoreDetails({
   assignedJurors = null,
   groups = [],
   semesterName = "",
-  semesterOptions: semesterCatalog = [],
   summaryData = [],
   loading = false,
   criteriaTemplate,
 }) {
   const activeCriteria = getActiveCriteria(criteriaTemplate);
-  const scoreCols = criteriaTemplate ? buildScoreCols(activeCriteria) : SCORE_COLS;
-  const scoreMaxByKey = criteriaTemplate ? buildScoreMaxByKey(activeCriteria) : SCORE_MAX_BY_KEY;
-  const scoreFilterMax = criteriaTemplate
-    ? activeCriteria.reduce((s, c) => s + (Number(c.max) || 0), 0)
-    : SCORE_FILTER_MAX;
   const {
-    filterSemester, setFilterSemester,
+    scoreCols,
+    scoreKeys,
+    scoreMaxByKey,
+    updateScoreFilter,
+    buildEmptyFilters,
     filterGroupNo, setFilterGroupNo,
     filterJuror, setFilterJuror,
     filterDept, setFilterDept,
@@ -111,7 +100,9 @@ export default function ScoreDetails({
     multiSearchQuery, setMultiSearchQuery,
     showStatusLegend, setShowStatusLegend,
     filterPresentation,
-  } = useScoreDetailsFilters();
+  } = useScoreDetailsFilters(activeCriteria);
+
+  const scoreFilterMax = scoreMaxByKey.total;
 
   const useSheetFilters = filterPresentation.mode === "sheet";
 
@@ -129,22 +120,6 @@ export default function ScoreDetails({
     [summaryData]
   );
 
-  const semesterOptions = useMemo(() => {
-    const map = new Map();
-    (semesterCatalog || []).forEach((s) => {
-      const label = String(s?.name ?? "").trim();
-      if (!label) return;
-      map.set(label.toLowerCase(), label);
-    });
-    const add = (val) => {
-      const label = String(val ?? "").trim();
-      if (!label) return;
-      if (!map.has(label.toLowerCase())) map.set(label.toLowerCase(), label);
-    };
-    data.forEach((row) => add(row?.semester));
-    add(semesterName);
-    return Array.from(map.values());
-  }, [semesterCatalog, data, semesterName]);
 
   const groupNoOptions = useMemo(() => {
     const map = new Map();
@@ -243,7 +218,6 @@ export default function ScoreDetails({
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (Array.isArray(filterSemester)) count += 1;
     if (Array.isArray(filterGroupNo)) count += 1;
     if (filterJuror) count += 1;
     if (filterDept) count += 1;
@@ -253,16 +227,15 @@ export default function ScoreDetails({
     if (filterStudents) count += 1;
     if (isUpdatedDateFilterValid) count += 1;
     if (isCompletedDateFilterValid) count += 1;
-    SCORE_KEYS.forEach((key) => {
+    scoreKeys.forEach((key) => {
       const f = scoreFilters[key];
       if (hasActiveValidNumberRange(f)) count += 1;
     });
     if (filterComment) count += 1;
     return count;
-  }, [filterSemester, filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus, filterProjectTitle, filterStudents, isUpdatedDateFilterValid, isCompletedDateFilterValid, scoreFilters, filterComment]);
+  }, [filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus, filterProjectTitle, filterStudents, isUpdatedDateFilterValid, isCompletedDateFilterValid, scoreFilters, filterComment]);
 
   const hasAnyFilter = activeFilterCount > 0;
-  const isSemesterFilterActive = Array.isArray(filterSemester) || activeFilterCol === "semester";
   const isGroupNoFilterActive = Array.isArray(filterGroupNo) || activeFilterCol === "groupNo";
   const isJurorFilterActive = !!filterJuror || activeFilterCol === "juror";
   const isDeptFilterActive = !!filterDept || activeFilterCol === "dept";
@@ -275,7 +248,6 @@ export default function ScoreDetails({
   const isCommentFilterActive = !!filterComment || activeFilterCol === "comment";
 
   function resetFilters() {
-    setFilterSemester(null);
     setFilterGroupNo(null);
     setFilterJuror("");
     setFilterDept("");
@@ -289,7 +261,7 @@ export default function ScoreDetails({
     setCompletedFrom("");
     setCompletedTo("");
     setCompletedDateError(null);
-    setScoreFilters(buildEmptyScoreFilters());
+    setScoreFilters(buildEmptyFilters());
     setFilterComment("");
     setSortKey(null);
     setSortDir(DEFAULT_SORT_DIR);
@@ -304,16 +276,6 @@ export default function ScoreDetails({
     setMultiSearchQuery("");
   }
 
-  const updateScoreFilter = (key, field, raw) => {
-    const clipped = clampScoreInput(raw, key);
-    setScoreFilters((prev) => ({
-      ...prev,
-      [key]: {
-        ...(prev?.[key] || { min: "", max: "" }),
-        [field]: clipped,
-      },
-    }));
-  };
 
   const toggleMulti = (value, selected, setter, order = []) => {
     const next = new Set(selected);
@@ -345,7 +307,7 @@ export default function ScoreDetails({
   }
 
   // ── Rows computation ────────────────────────────────────
-  const rows = useMemo(() => {
+  const filteredData = useMemo(() => {
     const { fromMs: updatedFromMs, toMs: updatedToMs } = buildDateRange(updatedParsedFrom, updatedParsedTo);
     const { fromMs: completedFromMs, toMs: completedToMs } = buildDateRange(completedParsedFrom, completedParsedTo);
 
@@ -445,10 +407,9 @@ export default function ScoreDetails({
       };
     });
 
-    if (Array.isArray(filterSemester)) {
-      if (filterSemester.length === 0) return [];
-      const set = new Set(filterSemester.map((v) => String(v).trim().toLowerCase()));
-      list = list.filter((r) => set.has(String(r.semester || "").trim().toLowerCase()));
+    if (semesterName) {
+      const q = String(semesterName).trim().toLowerCase();
+      list = list.filter((r) => String(r.semester || "").trim().toLowerCase() === q);
     }
     if (Array.isArray(filterGroupNo)) {
       if (filterGroupNo.length === 0) return [];
@@ -501,7 +462,7 @@ export default function ScoreDetails({
         return ms >= completedFromMs && ms <= completedToMs;
       });
     }
-    const activeScoreFilters = SCORE_KEYS.filter((key) => {
+    const activeScoreFilters = scoreKeys.filter((key) => {
       const filter = scoreFilters[key];
       return (filter?.min ?? "") !== "" || (filter?.max ?? "") !== "";
     });
@@ -539,21 +500,21 @@ export default function ScoreDetails({
       });
     }
     return list;
-  }, [data, projectMetaById, semesterName, filterSemester, filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus, filterProjectTitle, filterStudents,
+  }, [data, projectMetaById, semesterName, filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus, filterProjectTitle, filterStudents,
       updatedFrom, updatedTo, completedFrom, completedTo, updatedParsedFrom, updatedParsedTo, completedParsedFrom, completedParsedTo,
       updatedParsedFromMs, updatedParsedToMs, completedParsedFromMs, completedParsedToMs, isUpdatedInvalidRange, isCompletedInvalidRange,
       scoreFilters, filterComment, sortKey, sortDir, jurorEditMap, assignedJurors, jurors, groups]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterSemester, filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus,
+  }, [filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus,
       filterProjectTitle, filterStudents, updatedFrom, updatedTo, completedFrom, completedTo, scoreFilters, filterComment,
       sortKey, sortDir, pageSize]);
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
   const safePage   = Math.min(Math.max(1, currentPage), totalPages);
   const pageStart  = (safePage - 1) * pageSize;
-  const pageRows   = rows.slice(pageStart, pageStart + pageSize);
+  const pageRows   = filteredData.slice(pageStart, pageStart + pageSize);
 
   function setSort(key) {
     if (sortKey !== key) {
@@ -574,23 +535,6 @@ export default function ScoreDetails({
     const updatedDateFilterValue = { from: updatedFrom, to: updatedTo };
     const completedDateFilterValue = { from: completedFrom, to: completedTo };
     const base = [
-      {
-        id: "semester",
-        label: "Semester",
-        sortKey: "semester",
-        filter: {
-          type: "multi",
-          value: filterSemester,
-          setValue: setFilterSemester,
-          options: semesterOptions.map((label) => ({ value: label, label })),
-          allLabel: "All Semesters",
-          allMode: "all",
-          isActive: isSemesterFilterActive,
-          clear: () => setFilterSemester(null),
-          searchable: true,
-        },
-        className: "cell-semester",
-      },
       {
         id: "groupNo",
         label: "Group No",
@@ -786,11 +730,11 @@ export default function ScoreDetails({
 
     return [...base, ...scores, ...dates];
   }, [
-    filterSemester, filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus, filterProjectTitle,
+    filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus, filterProjectTitle,
     filterStudents, filterComment, updatedFrom, updatedTo, completedFrom, completedTo, updatedParsedFrom, updatedParsedTo,
     completedParsedFrom, completedParsedTo, updatedDateError, completedDateError, scoreFilters, activeFilterCol,
-    semesterOptions, groupNoOptions,
-    isSemesterFilterActive, isGroupNoFilterActive, isJurorFilterActive, isDeptFilterActive, isStatusFilterActive,
+    groupNoOptions,
+    isGroupNoFilterActive, isJurorFilterActive, isDeptFilterActive, isStatusFilterActive,
     isJurorStatusFilterActive, isProjectTitleFilterActive, isStudentsFilterActive, isUpdatedDateFilterActive,
     isCompletedDateFilterActive, isCommentFilterActive, sortKey, sortDir,
   ]);
@@ -1318,14 +1262,18 @@ export default function ScoreDetails({
           <button
             className="xlsx-export-btn"
             onClick={() => {
-              const exportSemesterLabel = Array.isArray(filterSemester)
-                ? (filterSemester.length === 1 ? filterSemester[0] : (filterSemester.length === 0 ? "no-semester" : "multi-semesters"))
-                : "all-semesters";
-              void exportXLSX(rows, { semesterName: exportSemesterLabel, summaryData, criteria: activeCriteria });
+              const onRequestExport = () => {
+                exportXLSX(filteredData, {
+                  semesterName: semesterName || "TEDU VERA",
+                  criteria: activeCriteria,
+                  summaryData,
+                });
+              };
+              onRequestExport();
             }}
           >
             <DownloadIcon />
-            <span className="export-label">Export XLSX ({rows.length} rows)</span>
+            <span className="export-label">Export XLSX ({filteredData.length} rows)</span>
           </button>
         </div>
       </div>
@@ -1347,7 +1295,7 @@ export default function ScoreDetails({
       />
 
       <ScoreDetailsTable
-        rows={rows}
+        rows={filteredData}
         pageRows={pageRows}
         columns={columns}
         sortKey={sortKey}

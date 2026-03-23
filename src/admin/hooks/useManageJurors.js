@@ -467,7 +467,14 @@ export function useManageJurors({
       setEvalLockError?.("Edit mode can only be closed by juror resubmission.");
       return;
     }
-    applyJurorPatch({ juror_id: jurorId, edit_enabled: true });
+    applyJurorPatch({ 
+      juror_id: jurorId, 
+      edit_enabled: true,
+      editEnabled: true,
+      overviewStatus: "editing",
+      final_submitted_at: null,
+      finalSubmittedAt: null
+    });
     incLoading();
     try {
       await adminSetJurorEditMode(
@@ -478,8 +485,9 @@ export function useManageJurors({
       setMessage(
         jurorName ? `Editing unlocked for Juror ${jurorName}` : "Editing unlocked for juror"
       );
+      scheduleJurorRefresh();
     } catch (e) {
-      applyJurorPatch({ juror_id: jurorId, edit_enabled: false });
+      scheduleJurorRefresh();
       const msg = String(e?.message || "");
       if (
         msg.includes("edit_mode_disable_not_allowed") ||
@@ -515,7 +523,14 @@ export function useManageJurors({
     if (!viewSemesterId || !jurorId) return;
     setMessage("");
     setEvalLockError?.("");
-    applyJurorPatch({ juror_id: jurorId, edit_enabled: false });
+    applyJurorPatch({ 
+      juror_id: jurorId, 
+      edit_enabled: false,
+      editEnabled: false,
+      overviewStatus: "completed",
+      final_submitted_at: new Date().toISOString(),
+      finalSubmittedAt: new Date().toISOString()
+    });
     incLoading();
     try {
       await adminForceCloseJurorEditMode(
@@ -526,8 +541,9 @@ export function useManageJurors({
       setMessage(
         jurorName ? `Editing locked for Juror ${jurorName}` : "Editing locked for juror"
       );
+      scheduleJurorRefresh();
     } catch (e) {
-      applyJurorPatch({ juror_id: jurorId, edit_enabled: true });
+      scheduleJurorRefresh();
       const msg = String(e?.message || "");
       if (msg.includes("no_pin")) {
         setEvalLockError?.("Juror PIN is missing for this semester. Reset the PIN first.");

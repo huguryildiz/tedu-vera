@@ -11,6 +11,7 @@ import {
   adminSecurityState,
 } from "../../shared/api";
 import { useToast } from "../toast/useToast";
+import AlertCard from "../../shared/AlertCard";
 
 export default function AdminSecurityPanel({
   isMobile,
@@ -244,12 +245,7 @@ export default function AdminSecurityPanel({
   };
 
   const SecurityWarning = ({ message }) => (
-    <div className="manage-delete-warning manage-delete-warning--caution" role="status">
-      <span className="manage-delete-warning-icon" aria-hidden="true">
-        <TriangleAlertIcon />
-      </span>
-      <span className="manage-delete-warning-text">{message}</span>
-    </div>
+    <AlertCard variant="warning">{message}</AlertCard>
   );
 
   return (
@@ -307,10 +303,9 @@ export default function AdminSecurityPanel({
               <div className="manage-mini-card">
                 <div className="manage-mini-card-body">
                   {adminFormError && (
-                    <div className="manage-alert error with-icon">
-                      <span className="manage-alert-icon" aria-hidden="true"><CircleXLucideIcon /></span>
-                      <span>{adminFormError}</span>
-                    </div>
+                    <AlertCard variant="error">
+                      {adminFormError}
+                    </AlertCard>
                   )}
                   <span className="manage-hint manage-hint-inline">
                     This password secures admin login and controls access to Settings, Scores, and Analytics.
@@ -379,10 +374,9 @@ export default function AdminSecurityPanel({
               <div className="manage-mini-card">
                 <div className="manage-mini-card-body">
                   {deleteFormError && (
-                    <div className="manage-alert error with-icon">
-                      <span className="manage-alert-icon" aria-hidden="true"><CircleXLucideIcon /></span>
-                      <span>{deleteFormError}</span>
-                    </div>
+                    <AlertCard variant="error">
+                      {deleteFormError}
+                    </AlertCard>
                   )}
                   {!adminPass && (
                     <div className="manage-hint manage-hint-warn">
@@ -457,10 +451,9 @@ export default function AdminSecurityPanel({
               <div className="manage-mini-card">
                 <div className="manage-mini-card-body">
                   {backupFormError && (
-                    <div className="manage-alert error with-icon">
-                      <span className="manage-alert-icon" aria-hidden="true"><CircleXLucideIcon /></span>
-                      <span>{backupFormError}</span>
-                    </div>
+                    <AlertCard variant="error">
+                      {backupFormError}
+                    </AlertCard>
                   )}
                   {!adminPass && (
                     <div className="manage-hint manage-hint-warn">

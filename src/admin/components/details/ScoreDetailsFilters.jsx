@@ -82,7 +82,7 @@ export default function ScoreDetailsFilters({
       {(loading || hasAnyFilter || sortLabel) && (
         <div className="detail-table-toolbar">
           {loading && (
-            <span className="detail-loading">Loading all semesters…</span>
+            <span className="detail-loading">Loading details…</span>
           )}
           {(hasAnyFilter || sortLabel) && (
             <div className="filters-chip-row">

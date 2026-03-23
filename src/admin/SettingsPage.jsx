@@ -441,11 +441,13 @@ export default function SettingsPage({ adminPass, onAdminPasswordChange, selecte
 
   return (
     <div className="manage-page manage-page--settings">
-      <div className="manage-alerts-sticky" style={{ visibility: loading ? "visible" : "hidden" }}>
-        <div className="manage-alerts">
-          <span className="manage-alert">Working…</span>
+      {loading && (
+        <div className="manage-alerts-sticky">
+          <div className="manage-alerts">
+            <span className="manage-alert">Working…</span>
+          </div>
         </div>
-      </div>
+      )}
       <PinResetDialog
         pinResetTarget={crud.pinResetTarget}
         resetPinInfo={crud.resetPinInfo}

@@ -42,6 +42,7 @@ import {
 import OverviewTab from "./admin/OverviewTab";
 import ScoresTab from "./admin/ScoresTab";
 import SettingsPage from "./admin/SettingsPage";
+import AlertCard from "./shared/AlertCard";
 import "./styles/admin-layout.css";
 import "./styles/admin-summary.css";
 import "./styles/admin-details.css";
@@ -661,16 +662,14 @@ export default function AdminPanel({ adminPass, isDemoMode, onBack, onAuthError,
       {!loading && (
         <div className="admin-body" role="tabpanel">
           {selectedSemesterLocked && adminTab !== "settings" && (
-            <div className="manage-alert warn with-icon admin-lock-banner" role="status">
-              <span className="manage-alert-icon" aria-hidden="true"><TriangleAlertIcon /></span>
-              <span>Evaluations are locked for this semester. Jurors cannot submit or edit scores.</span>
-            </div>
+            <AlertCard variant="warning" className="admin-lock-banner">
+              Evaluations are locked for this semester. Jurors cannot submit or edit scores.
+            </AlertCard>
           )}
           {(authError || loadError) && (
-            <div className="manage-alert error with-icon" role="alert">
-              <span className="manage-alert-icon" aria-hidden="true"><TriangleAlertIcon /></span>
-              <span>{authError || loadError}</span>
-            </div>
+            <AlertCard variant="error">
+              {authError || loadError}
+            </AlertCard>
           )}
           {adminTab === "overview" && (
             <OverviewTab

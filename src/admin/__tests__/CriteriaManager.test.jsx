@@ -224,7 +224,7 @@ describe("CriteriaManager rubric range validation UX", () => {
     ], 30);
 
     const alert = screen.getByRole("alert");
-    expect(alert.className).toContain("manage-delete-warning--danger");
+    expect(alert.className).toContain("alert-card--error");
     expect(screen.getByText("Score range [0–30] not fully covered. Fix gaps or overlaps.")).toBeInTheDocument();
   });
 

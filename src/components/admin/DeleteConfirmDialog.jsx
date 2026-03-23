@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { TriangleAlertLucideIcon } from "../../shared/Icons";
 import { useFocusTrap } from "../../shared/useFocusTrap";
+import AlertCard from "../../shared/AlertCard";
 
 function buildCountSummary(counts) {
   if (!counts) return null;
@@ -137,16 +138,13 @@ export default function DeleteConfirmDialog({
             )}
           </div>
           {isSemesterLabel ? (
-            <div className="delete-dialog__impact manage-delete-impact manage-delete-impact--warning">
-              <span className="manage-delete-warning-icon" aria-hidden="true"><TriangleAlertLucideIcon /></span>
-              <div className="manage-delete-warning-text">
-                This will permanently delete <strong>all jurors, groups, and scores</strong> associated with this semester. This action cannot be undone.
-              </div>
-            </div>
+            <AlertCard variant="error">
+              This will permanently delete <strong>all jurors, groups, and scores</strong> associated with this semester. This action cannot be undone.
+            </AlertCard>
           ) : buildCountSummary(counts) ? (
-            <div className="delete-dialog__impact manage-delete-impact">
+            <AlertCard variant="error">
               {buildCountSummary(counts)}
-            </div>
+            </AlertCard>
           ) : null}
           <div className="delete-dialog__line delete-dialog__sub">
             Enter the delete password to confirm.

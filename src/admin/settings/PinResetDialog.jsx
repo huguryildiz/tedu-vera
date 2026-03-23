@@ -2,6 +2,7 @@
 import { useRef } from "react";
 import { KeyRoundIcon, TriangleAlertIcon } from "../../shared/Icons";
 import { useFocusTrap } from "../../shared/useFocusTrap";
+import AlertCard from "../../shared/AlertCard";
 
 export default function PinResetDialog({
   pinResetTarget,
@@ -69,10 +70,7 @@ export default function PinResetDialog({
                   </span>
                 </div>
               </div>
-              <div className="manage-delete-warning manage-delete-warning--caution">
-                <span className="manage-delete-warning-icon" aria-hidden="true"><TriangleAlertIcon /></span>
-                <span className="manage-delete-warning-text">The previous PIN will stop working immediately.</span>
-              </div>
+              <AlertCard variant="error">The previous PIN will stop working immediately.</AlertCard>
             </div>
           )}
         </div>

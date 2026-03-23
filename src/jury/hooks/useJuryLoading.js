@@ -40,6 +40,7 @@ export function useJuryLoading() {
   const [semesterId, setSemesterId] = useState("");
   const [semesterName, setSemesterName] = useState("");
   const [criteriaTemplate, setCriteriaTemplate] = useState([]);
+  const [mudekTemplate, setMudekTemplate] = useState([]);
   const [activeSemesterInfo, setActiveSemesterInfo] = useState(null);
   const [activeProjectCount, setActiveProjectCount] = useState(null);
   const [progressCheck, setProgressCheck] = useState(null);
@@ -88,6 +89,7 @@ export function useJuryLoading() {
     semesterId, setSemesterId,
     semesterName, setSemesterName,
     criteriaTemplate, setCriteriaTemplate,
+    mudekTemplate, setMudekTemplate,
     activeSemesterInfo,
     activeProjectCount, setActiveProjectCount,
     progressCheck, setProgressCheck,

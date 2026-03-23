@@ -5,6 +5,7 @@ import { CalendarClockIcon, ChevronDownIcon, UserKeyIcon, SearchIcon, UserCheckI
 import { jurorStatusMeta } from "./scoreHelpers";
 import LastActivity from "./LastActivity";
 import { formatTs } from "./utils";
+import AlertCard from "../shared/AlertCard";
 
 export default function ManagePermissionsPanel({
   settings,
@@ -318,7 +319,7 @@ export default function ManagePermissionsPanel({
             When locked, jurors can view but cannot edit or submit scores.
           </div>
           {evalLockError && (
-            <div className="manage-hint manage-hint-error">{evalLockError}</div>
+            <AlertCard variant="error">{evalLockError}</AlertCard>
           )}
 
           <div className="manage-list" ref={panelRef}>

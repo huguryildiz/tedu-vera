@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import ConfirmDialog from "../shared/ConfirmDialog";
-import { CheckCircle2Icon, ChevronDownIcon, PencilIcon, SearchIcon, CirclePlusIcon } from "../shared/Icons";
+import { CheckCircle2Icon, ChevronDownIcon, PencilIcon, SearchIcon, CirclePlusIcon, TriangleAlertLucideIcon } from "../shared/Icons";
 import LastActivity from "./LastActivity";
 import DangerIconButton from "../components/admin/DangerIconButton";
+import AlertCard from "../shared/AlertCard";
+import Tooltip from "../shared/Tooltip";
 import CriteriaManager from "./CriteriaManager";
 import MudekManager from "./MudekManager";
 import { buildTimestampSearchText } from "./utils";
@@ -276,7 +278,7 @@ export default function ManageSemesterPanel({
       {isOpen && (
         <div className="manage-card-body">
           <div className="manage-card-desc">Manage semesters, dates, and the system-wide active term.</div>
-          {panelError && <div className="manage-hint manage-hint-error" role="alert">{panelError}</div>}
+          {panelError && <AlertCard variant="error">{panelError}</AlertCard>}
 
           {/* Current semester selector */}
           <div className="manage-field manage-current-semester-card">
@@ -360,33 +362,34 @@ export default function ManageSemesterPanel({
                   </div>
                 </div>
                 <div className="manage-item-actions manage-item-actions--semester">
-                  <button
-                    className="manage-icon-btn"
-                    type="button"
-                    title="Edit semester"
-                    aria-label={`Edit ${s.name}`}
-                    onClick={() => {
-                      const normalizedDate = normalizeDateInput(s.poster_date);
-                      setEditForm({
-                        id: s.id,
-                        name: s.name || "",
-                        poster_date: normalizedDate,
-                        criteria_template: Array.isArray(s.criteria_template) && s.criteria_template.length > 0
-                          ? s.criteria_template
-                          : defaultCriteriaTemplate(),
-                        mudek_template: Array.isArray(s.mudek_template) && s.mudek_template.length > 0
-                          ? s.mudek_template
-                          : defaultMudekTemplate(),
-                      });
-                      editOrigRef.current = { name: s.name || "", poster_date: normalizedDate };
-                      setEditCriteriaDirty(false);
-                      setEditMudekDirty(false);
-                      setEditTab("semester");
-                      setShowEdit(true);
-                    }}
-                  >
-                    <PencilIcon />
-                  </button>
+                  <Tooltip text="Edit semester">
+                    <button
+                      className="manage-icon-btn"
+                      type="button"
+                      aria-label={`Edit ${s.name}`}
+                      onClick={() => {
+                        const normalizedDate = normalizeDateInput(s.poster_date);
+                        setEditForm({
+                          id: s.id,
+                          name: s.name || "",
+                          poster_date: normalizedDate,
+                          criteria_template: Array.isArray(s.criteria_template) && s.criteria_template.length > 0
+                            ? s.criteria_template
+                            : defaultCriteriaTemplate(),
+                          mudek_template: Array.isArray(s.mudek_template) && s.mudek_template.length > 0
+                            ? s.mudek_template
+                            : defaultMudekTemplate(),
+                        });
+                        editOrigRef.current = { name: s.name || "", poster_date: normalizedDate };
+                        setEditCriteriaDirty(false);
+                        setEditMudekDirty(false);
+                        setEditTab("semester");
+                        setShowEdit(true);
+                      }}
+                    >
+                      <PencilIcon />
+                    </button>
+                  </Tooltip>
                   <DangerIconButton
                     ariaLabel={`Delete ${s.name}`}
                     title={s.id === activeSemesterId
@@ -550,9 +553,9 @@ export default function ManageSemesterPanel({
                 <SemesterEditorTabs activeTab={editTab} onTab={setEditTab} dirtyTabs={{ criteria: editCriteriaDirty, mudek: editMudekDirty }} />
 
                 {staleSemester && (
-                  <div className="manage-hint manage-hint-warning manage-stale-warning" role="alert">
+                  <AlertCard variant="warning" className="manage-stale-warning">
                     This semester was updated in another session. Reload before saving to avoid overwriting newer changes.
-                  </div>
+                  </AlertCard>
                 )}
 
                 <div className="manage-modal-body">

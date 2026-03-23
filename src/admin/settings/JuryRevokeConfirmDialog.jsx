@@ -2,6 +2,7 @@
 import { useRef } from "react";
 import { BanIcon } from "../../shared/Icons";
 import { useFocusTrap } from "../../shared/useFocusTrap";
+import AlertCard from "../../shared/AlertCard";
 
 export default function JuryRevokeConfirmDialog({
   open,
@@ -29,12 +30,12 @@ export default function JuryRevokeConfirmDialog({
           <div className="delete-dialog__line">
             Are you sure you want to revoke jury entry access?
           </div>
-          <div className="delete-dialog__impact manage-delete-impact manage-delete-impact--warning">
+          <AlertCard variant="error" icon={BanIcon}>
             <ul style={{ margin: 0, paddingLeft: "1.2rem", textAlign: "left" }}>
               <li>New scans of the current QR code will be <strong>blocked immediately</strong>.</li>
               <li>Jurors who have already entered may keep access until they close their browser.</li>
             </ul>
-          </div>
+          </AlertCard>
         </div>
         <div className="manage-modal-actions">
           <button

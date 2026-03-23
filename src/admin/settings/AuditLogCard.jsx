@@ -1,5 +1,5 @@
-// src/admin/settings/AuditLogCard.jsx
 import { ChevronDownIcon, DownloadIcon, HistoryIcon, SearchIcon } from "../../shared/Icons";
+import AlertCard from "../../shared/AlertCard";
 
 const AUDIT_MIN_DATETIME = "2020-01-01T00:00";
 const AUDIT_MAX_DATETIME = "2035-12-31T23:59";
@@ -115,9 +115,9 @@ export default function AuditLogCard({
                 </span>
               </div>
             </div>
-            {auditRangeError && <div className="manage-hint manage-hint-error">{auditRangeError}</div>}
+            {auditRangeError && <AlertCard variant="error">{auditRangeError}</AlertCard>}
             {auditError && !auditRangeError && (
-              <div className="manage-hint manage-hint-error">{auditError}</div>
+              <AlertCard variant="error">{auditError}</AlertCard>
             )}
             {auditExporting && <div className="manage-hint">Preparing export…</div>}
           </div>

@@ -15,15 +15,23 @@ import {
 
 // Factory functions — produce columns / max map from any criteria array.
 export function buildScoreCols(criteria = CRITERIA) {
-  return [
-    ...criteria.map((c) => ({ key: c.id, label: `${c.shortLabel || c.label} /${c.max}` })),
-    { key: "total", label: "Total" },
+  const cols = [
+    ...(criteria || []).map((c) => ({
+      id: c.id,
+      key: c.id,
+      label: `${c.shortLabel || c.label} / ${c.max}`,
+      sortKey: c.id,
+    })),
   ];
+  const totalMax = criteria.reduce((s, c) => s + (Number(c.max) || 0), 0);
+  cols.push({ key: "total", id: "total", label: `Total / ${totalMax}`, sortKey: "total" });
+  return cols;
 }
+
 export function buildScoreMaxByKey(criteria = CRITERIA) {
   const total = criteria.reduce((s, c) => s + (Number(c.max) || 0), 0);
   return {
-    ...Object.fromEntries(criteria.map((c) => [c.id, c.max])),
+    ...Object.fromEntries(criteria.map((c) => [c.id, Number(c.max) || 0])),
     total,
   };
 }
@@ -106,21 +114,21 @@ export function buildDateRange(parsedFrom, parsedTo) {
   return { fromMs, toMs };
 }
 
-export function normalizeScoreFilterValue(value, key = "total") {
+export function normalizeScoreFilterValue(value, key = "total", maxByKey = SCORE_MAX_BY_KEY) {
   if (value === null || value === undefined || value === "") return "";
   const n = Number(String(value).replace(",", "."));
   if (!Number.isFinite(n)) return "";
-  const maxAllowed = Number.isFinite(SCORE_MAX_BY_KEY[key]) ? SCORE_MAX_BY_KEY[key] : SCORE_FILTER_MAX;
+  const maxAllowed = Number.isFinite(maxByKey[key]) ? maxByKey[key] : SCORE_FILTER_MAX;
   return String(Math.min(maxAllowed, Math.max(SCORE_FILTER_MIN, n)));
 }
 
-export function buildEmptyScoreFilters(stored) {
+export function buildEmptyScoreFilters(stored, keys = SCORE_KEYS, maxByKey = SCORE_MAX_BY_KEY) {
   const base = {};
-  SCORE_KEYS.forEach((key) => {
+  (keys || []).forEach((key) => {
     const entry = stored && typeof stored === "object" ? stored[key] : null;
     base[key] = {
-      min: normalizeScoreFilterValue(entry?.min, key),
-      max: normalizeScoreFilterValue(entry?.max, key),
+      min: normalizeScoreFilterValue(entry?.min, key, maxByKey),
+      max: normalizeScoreFilterValue(entry?.max, key, maxByKey),
     };
   });
   return base;
@@ -147,11 +155,11 @@ export function hasActiveValidNumberRange(range) {
   return !isInvalidNumberRange(minRaw, maxRaw);
 }
 
-export function clampScoreInput(raw, key = "total") {
+export function clampScoreInput(raw, key = "total", maxByKey = SCORE_MAX_BY_KEY) {
   if (raw === "") return "";
   const n = Number(String(raw).replace(",", "."));
   if (!Number.isFinite(n)) return raw;
-  const maxAllowed = Number.isFinite(SCORE_MAX_BY_KEY[key]) ? SCORE_MAX_BY_KEY[key] : SCORE_FILTER_MAX;
+  const maxAllowed = Number.isFinite(maxByKey[key]) ? maxByKey[key] : SCORE_FILTER_MAX;
   return String(Math.min(maxAllowed, Math.max(SCORE_FILTER_MIN, n)));
 }
 
@@ -169,17 +177,18 @@ export const NUMERIC_SORT_KEYS = new Set(SCORE_COLS.map(({ key }) => key));
  *
  * Manages all filter/sort/pagination state for the ScoreDetails component.
  * Persists to localStorage under the "details" section key.
+ *
  */
-export function useScoreDetailsFilters() {
+export function useScoreDetailsFilters(currentCriteria = CRITERIA) {
   const _sRef = useRef(null);
   if (_sRef.current === null) _sRef.current = readSection("details");
   const _s = _sRef.current;
 
-  const [filterSemester, setFilterSemester] = useState(() => {
-    if (Array.isArray(_s.filterSemester)) return _s.filterSemester;
-    if (typeof _s.filterSemester === "string" && _s.filterSemester) return [_s.filterSemester];
-    return null;
-  });
+  // Derive dynamic keys and max map from passed criteria
+  const scoreCols = useMemo(() => buildScoreCols(currentCriteria), [currentCriteria]);
+  const scoreKeys = useMemo(() => scoreCols.map((c) => c.key), [scoreCols]);
+  const scoreMaxByKey = useMemo(() => buildScoreMaxByKey(currentCriteria), [currentCriteria]);
+
   const [filterGroupNo, setFilterGroupNo] = useState(() => {
     if (Array.isArray(_s.filterGroupNo)) return _s.filterGroupNo;
     if (typeof _s.filterGroupNo === "string" && _s.filterGroupNo) return [_s.filterGroupNo];
@@ -237,7 +246,17 @@ export function useScoreDetailsFilters() {
   });
   const [updatedDateError, setUpdatedDateError] = useState(null);
   const [completedDateError, setCompletedDateError] = useState(null);
-  const [scoreFilters, setScoreFilters] = useState(() => buildEmptyScoreFilters(_s.scoreFilters));
+
+  // Initialize score filters using dynamic keys
+  const [scoreFilters, setScoreFilters] = useState(() => 
+    buildEmptyScoreFilters(_s.scoreFilters, scoreKeys, scoreMaxByKey)
+  );
+  
+  // Sync score filters if criteria set changes drastically
+  useEffect(() => {
+    setScoreFilters((prev) => buildEmptyScoreFilters(prev, scoreKeys, scoreMaxByKey));
+  }, [scoreKeys, scoreMaxByKey]);
+
   const [filterComment, setFilterComment] = useState(() => typeof _s.filterComment === "string" ? _s.filterComment : "");
   const [sortKey, setSortKey] = useState(() => {
     if (_s.sortKey === null) return null;
@@ -259,12 +278,12 @@ export function useScoreDetailsFilters() {
   // Persist filter state
   useEffect(() => {
     writeSection("details", {
-      filterSemester, filterGroupNo, filterJuror, filterDept, filterProjectTitle, filterStudents,
+      filterGroupNo, filterJuror, filterDept, filterProjectTitle, filterStudents,
       filterStatus, filterJurorStatus, updatedFrom, updatedTo, completedFrom, completedTo, filterComment,
       scoreFilters,
       sortKey, sortDir,
     });
-  }, [filterSemester, filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus, filterProjectTitle, filterStudents, updatedFrom, updatedTo, completedFrom, completedTo, filterComment, scoreFilters, sortKey, sortDir]);
+  }, [filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus, filterProjectTitle, filterStudents, updatedFrom, updatedTo, completedFrom, completedTo, filterComment, scoreFilters, sortKey, sortDir]);
 
   // Date validation effects
   const updatedParsedFrom = useMemo(() => (updatedFrom ? parseDateString(updatedFrom) : null), [updatedFrom]);
@@ -309,9 +328,28 @@ export function useScoreDetailsFilters() {
     }
   }, [completedFrom, completedTo, completedParsedFromMs, completedParsedToMs, isCompletedInvalidRange]);
 
+  const buildEmptyFilters = () => buildEmptyScoreFilters(null, scoreKeys, scoreMaxByKey);
+
+  const updateScoreFilter = (key, field, raw) => {
+    const clipped = clampScoreInput(raw, key, scoreMaxByKey);
+    setScoreFilters((prev) => ({
+      ...prev,
+      [key]: {
+        ...(prev?.[key] || { min: "", max: "" }),
+        [field]: clipped,
+      },
+    }));
+  };
+
   return {
+    // Shared dynamic metadata
+    scoreCols,
+    scoreKeys,
+    scoreMaxByKey,
+    updateScoreFilter,
+    buildEmptyFilters,
+
     // Filter state + setters
-    filterSemester, setFilterSemester,
     filterGroupNo, setFilterGroupNo,
     filterJuror, setFilterJuror,
     filterDept, setFilterDept,

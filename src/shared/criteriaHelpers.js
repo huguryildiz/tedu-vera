@@ -48,7 +48,7 @@ export function normalizeCriterion(c) {
     key,
     id:         key,
     label:      c.label ?? "",
-    shortLabel: c.shortLabel ?? c.label ?? "",
+    shortLabel: c.shortLabel || c.label || "",
     color:      c.color ?? configMatch?.color ?? "#94A3B8",
     max:        Number(c.max) || 0,
     blurb,
@@ -198,9 +198,13 @@ export function defaultMudekTemplate() {
 // ── MÜDEK helpers ─────────────────────────────────────────────
 
 /**
- * Build a lookup object keyed by internal MÜDEK id.
+ * Build a lookup object keyed by internal MÜDEK id (e.g. "po_1_1").
+ * This is the primary adapter for semester-specific MÜDEK outcome data.
+ * 
  * Output shape: { [id]: { id, code, desc_en, desc_tr } }
- * Falls back to config MUDEK_OUTCOMES when template is null/empty.
+ * 
+ * Falls back to config MUDEK_OUTCOMES when template is null or empty
+ * (intended for new semesters or legacy migration only).
  */
 export function buildMudekLookup(mudekTemplate) {
   if (Array.isArray(mudekTemplate) && mudekTemplate.length > 0) {

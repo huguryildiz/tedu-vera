@@ -41,6 +41,7 @@ const ScoringGrid = memo(function ScoringGrid({
   totalGroups,
   handleFinalSubmit,
   criteria = CRITERIA,
+  mudekLookup,
 }) {
   const [openRubric, setOpenRubric] = useState(null);
 
@@ -75,7 +76,10 @@ const ScoringGrid = memo(function ScoringGrid({
                         <div key={code} className="mudek-tooltip-wrapper">
                           <span className="mudek-code-badge">{code}</span>
                           <div className="mudek-tooltip-text">
-                            {MUDEK_OUTCOMES[code]?.en || "MÜDEK Outcome"}
+                            {(() => {
+                              const entry = Object.values(mudekLookup || {}).find((o) => o.code === code);
+                              return entry ? (entry.desc_en || entry.desc_tr) : (MUDEK_OUTCOMES[code]?.en || "MÜDEK Outcome");
+                            })()}
                           </div>
                         </div>
                       ))}

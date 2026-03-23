@@ -3,11 +3,12 @@
 .manage-page {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
   max-width: 100%;
   min-width: 0;
   overflow-x: hidden;
   text-align: left;
+  padding-top: 16px;
 }
 
 .manage-page button,
@@ -1891,11 +1892,20 @@
   gap: 6px;
 }
 .manage-current-semester-card {
-  border: 1px solid #dbe5f3;
+  border: 1px solid #c7d9f2;
   border-radius: 14px;
-  background: #f8fbff;
+  background: #eff6ff;
   padding: 12px;
   gap: 8px;
+  transition: 
+    background-color var(--btn-motion-duration) var(--btn-motion-ease),
+    border-color var(--btn-motion-duration) var(--btn-motion-ease);
+}
+
+.manage-current-semester-card:hover {
+  background: #e0efff;
+  border-color: #a5c3e8;
+  cursor: pointer;
 }
 .manage-current-semester-card .manage-list-header {
   margin: 0;
@@ -2899,6 +2909,93 @@ textarea.manage-input--create {
   gap: 10px;
 }
 
+/* ── Shared Alert Card ───────────────────────────────────────*/
+
+.alert-card {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+}
+.alert-card-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 2px;
+}
+.alert-card-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.alert-card-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.alert-card-title {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.alert-card-text {
+  display: block;
+  width: 100%;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
+  hyphens: auto;
+}
+
+.alert-card--warning {
+  background: #fff8e6;
+  border: 1px solid #f8d08b;
+  border-left: 4px solid #d97706;
+  border-radius: 14px;
+  color: #7c2d12;
+}
+.alert-card--warning .alert-card-icon {
+  color: #b45309;
+}
+
+.alert-card--error {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-left: 4px solid #dc2626;
+  border-radius: 14px;
+  color: var(--error-text);
+}
+.alert-card--error .alert-card-icon {
+  color: #dc2626;
+}
+
+.alert-card--info {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid #3b82f6;
+  border-radius: 14px;
+  color: var(--brand-800);
+}
+.alert-card--info .alert-card-icon {
+  color: #2563eb;
+}
+
+.alert-card--success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-left: 4px solid #16a34a;
+  border-radius: 14px;
+  color: #166534;
+}
+.alert-card--success .alert-card-icon {
+  color: #15803d;
+}
+
 .manage-delete-warning {
   display: flex;
   gap: 10px;
@@ -2916,7 +3013,7 @@ textarea.manage-input--create {
   border: 1px solid #c3d0ff;
   border-left: 4px solid var(--brand-600);
   border-radius: 16px;
-  color: #475569;
+  color: var(--brand-800);
   padding: 12px 14px;
   gap: 10px;
   align-items: flex-start;
@@ -2928,7 +3025,7 @@ textarea.manage-input--create {
   color: #dc2626;
 }
 .manage-delete-warning.manage-delete-warning--info .manage-delete-warning-icon {
-  color: #475569;
+  color: var(--brand-800);
 }
 .manage-delete-warning-icon svg {
   width: 18px;
@@ -2940,7 +3037,7 @@ textarea.manage-input--create {
   text-align: left;
 }
 .manage-delete-warning.manage-delete-warning--info .manage-delete-warning-text {
-  color: #475569;
+  color: var(--brand-800);
   font-size: 13px;
   line-height: 1.35;
   display: block;
@@ -4121,6 +4218,9 @@ textarea.manage-input--create {
 /* ── manage-hint-warning — amber locking banner ──────────────*/
 
 .manage-hint.manage-hint-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   border: 1px solid #fde68a;
   border-left: 5px solid #f59e0b;
   background: #fffbeb;
@@ -4129,6 +4229,17 @@ textarea.manage-input--create {
   padding: 10px 12px;
   font-size: 12px;
   line-height: 1.4;
+}
+
+.manage-hint-warning-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.manage-hint-warning-icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 /* ── CriteriaManager ─────────────────────────────────────────*/
@@ -4507,6 +4618,13 @@ textarea.manage-input--create {
   touch-action: none;
 }
 
+.manage-drag-handle:disabled,
+.mudek-manager-drag-handle:disabled {
+  cursor: default;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 .mudek-manager-footer {
   display: flex;
   gap: 8px;
@@ -4604,7 +4722,18 @@ textarea.manage-input--create {
   flex-direction: column;
   gap: 8px;
   min-width: 0;
-  transition: border-left-color 0.15s;
+  transition: border-left-color 0.15s, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.criterion-row:hover {
+  border-color: #cbd5e1;
+  background: #f3f8ff;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+}
+
+.criterion-row:focus-within {
+  border-color: #94a3b8;
+  box-shadow: 0 0 0 3px rgba(47, 86, 214, 0.14);
 }
 
 .criterion-row.is-expanded {
@@ -5039,8 +5168,10 @@ textarea.manage-input--create {
   border-color: var(--danger, #dc2626);
 }
 
-.manage-textarea:disabled {
-  opacity: 0.6;
+ .manage-textarea:disabled {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #94a3b8;
   cursor: not-allowed;
 }
 

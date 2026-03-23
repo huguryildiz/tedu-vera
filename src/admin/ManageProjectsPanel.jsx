@@ -270,22 +270,22 @@ export default function ManageProjectsPanel({
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredProjects = normalizedSearch
     ? orderedProjects.filter((p) => {
-        const lastActivity = p.updated_at || p.updatedAt || "";
-        const lastActivitySearch = buildTimestampSearchText(lastActivity);
-        const groupNo = p?.group_no ?? "";
-        const haystack = [
-          "group",
-          groupNo,
-          `group ${groupNo}`,
-          p?.project_title || "",
-          p?.group_students || "",
-          semesterName || "",
-          lastActivitySearch,
-        ]
-          .join(" ")
-          .toLowerCase();
-        return haystack.includes(normalizedSearch);
-      })
+      const lastActivity = p.updated_at || p.updatedAt || "";
+      const lastActivitySearch = buildTimestampSearchText(lastActivity);
+      const groupNo = p?.group_no ?? "";
+      const haystack = [
+        "group",
+        groupNo,
+        `group ${groupNo}`,
+        p?.project_title || "",
+        p?.group_students || "",
+        semesterName || "",
+        lastActivitySearch,
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(normalizedSearch);
+    })
     : orderedProjects;
   const visibleProjects = normalizedSearch ? filteredProjects : orderedProjects.slice(0, 3);
   const hiddenProjects = normalizedSearch ? [] : orderedProjects.slice(3);
@@ -333,10 +333,10 @@ export default function ManageProjectsPanel({
             <span className="manage-students manage-meta-scroll" onScroll={handleMetaScroll}>
               {students.length
                 ? students.map((name, sidx) => (
-                    <span key={`${p.id}-student-${sidx}`} className="manage-student">
-                      <em>{name}</em>{sidx < students.length - 1 ? " · " : ""}
-                    </span>
-                  ))
+                  <span key={`${p.id}-student-${sidx}`} className="manage-student">
+                    <em>{name}</em>{sidx < students.length - 1 ? " · " : ""}
+                  </span>
+                ))
                 : "—"}
             </span>
           </div>
@@ -353,26 +353,27 @@ export default function ManageProjectsPanel({
               </div>
             </div>
             <div className="manage-item-actions manage-item-actions--project">
-              <button
-                className="manage-icon-btn"
-                type="button"
-                title="Edit group"
-                aria-label={`Edit Group ${groupLabel}`}
-                onClick={() => {
-                  setEditError("");
-                  setEditForm({
-                    group_no: p.group_no ?? "",
-                    project_title: p.project_title || "",
-                    group_students: parseStudentInputList(p.group_students || ""),
-                    semesterId: p.semester_id || null,
-                    _id: p.id || null,
-                    _updatedAt: p.updated_at || p.updatedAt || null,
-                  });
-                  setShowEdit(true);
-                }}
-              >
-                <PencilIcon />
-              </button>
+              <Tooltip text="Edit group">
+                <button
+                  className="manage-icon-btn"
+                  type="button"
+                  aria-label={`Edit Group ${groupLabel}`}
+                  onClick={() => {
+                    setEditError("");
+                    setEditForm({
+                      group_no: p.group_no ?? "",
+                      project_title: p.project_title || "",
+                      group_students: parseStudentInputList(p.group_students || ""),
+                      semesterId: p.semester_id || null,
+                      _id: p.id || null,
+                      _updatedAt: p.updated_at || p.updatedAt || null,
+                    });
+                    setShowEdit(true);
+                  }}
+                >
+                  <PencilIcon />
+                </button>
+              </Tooltip>
               <DangerIconButton
                 ariaLabel={`Delete Group ${groupLabel}`}
                 title="Delete group"
@@ -609,14 +610,14 @@ export default function ManageProjectsPanel({
             semester.
           </div>
           {(panelError || guardError) && (
-            <div className="manage-hint manage-hint-error" role="alert">
+            <AlertCard variant="error">
               <span>{panelError || guardError}</span>
               {panelError && onRetry && (
                 <button className="manage-btn manage-btn--retry" type="button" onClick={onRetry}>
                   Retry
                 </button>
               )}
-            </div>
+            </AlertCard>
           )}
           <div className="manage-hint manage-hint-inline">
             Use the header to switch semesters and view other groups.
@@ -1128,9 +1129,9 @@ export default function ManageProjectsPanel({
                     </summary>
                     <div className="manage-collapsible-content">
                       <div className="manage-code">group_no,project_title,group_students</div>
-                      <div className="manage-code">1,Autonomous Drone Navigation,Ali Yilmaz; Ayse Demir; Mehmet Can</div>
+                      <div className="manage-code">1,Autonomous Drone Navigation,Ali Yilmaz</div>
                       <div className="manage-code">2,Power Quality Monitoring,Elif Kaya; Mert Arslan</div>
-                      <div className="manage-code">3,Embedded Vision for Robots,Zeynep Acar; Kerem Sahin</div>
+                      <div className="manage-code">3,Embedded Vision for Robots,Zeynep Acar; Kerem Sahin; Ayse Demir</div>
                     </div>
                   </details>
                   <details className="manage-collapsible">

@@ -23,6 +23,7 @@
 import { useRef } from "react";
 import { TrashIcon, TriangleAlertLucideIcon } from "./Icons";
 import { useFocusTrap } from "./useFocusTrap";
+import AlertCard from "./AlertCard";
 
 export default function ConfirmDialog({
   open,
@@ -59,30 +60,13 @@ export default function ConfirmDialog({
         </div>
 
         <div className="delete-dialog__body">
-          {tone === "danger" ? (
-            <div className="delete-dialog__impact delete-dialog__impact--error delete-dialog__impact--stacked">
-              <div className="delete-dialog__impact-icon" aria-hidden="true">
-                <TriangleAlertLucideIcon />
-              </div>
-              <div className="delete-dialog__impact-text">
-                {body && <div className="delete-dialog__line delete-dialog__line--lead">{body}</div>}
-                {warning && <div className="delete-dialog__impact-subtext">{warning}</div>}
-              </div>
-            </div>
-          ) : (
-            <>
-              {body && (
-                <div className="delete-dialog__line">{body}</div>
-              )}
-              {warning && (
-                <div className="manage-delete-warning manage-delete-warning--caution">
-                  <span className="manage-delete-warning-icon" aria-hidden="true">
-                    <TriangleAlertLucideIcon />
-                  </span>
-                  <div className="manage-delete-warning-text">{warning}</div>
-                </div>
-              )}
-            </>
+          {body && (
+            <div className="delete-dialog__line">{body}</div>
+          )}
+          {warning && (
+            <AlertCard variant={tone === "danger" ? "error" : "warning"}>
+              {warning}
+            </AlertCard>
           )}
         </div>
 

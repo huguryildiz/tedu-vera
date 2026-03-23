@@ -34,7 +34,7 @@
 // ============================================================
 
 import { useCallback } from "react";
-import { getActiveCriteria } from "../../shared/criteriaHelpers";
+import { getActiveCriteria, buildMudekLookup } from "../../shared/criteriaHelpers";
 
 import {
   listSemesters,
@@ -73,6 +73,7 @@ export function useJuryHandlers({
 }) {
   // Derive effective criteria: semester template (if set) or static config fallback.
   const effectiveCriteria = getActiveCriteria(loading.criteriaTemplate);
+  const mudekLookup = buildMudekLookup(loading.mudekTemplate);
 
   // ── Group navigation with guaranteed write ─────────────────
   const handleNavigate = useCallback(
@@ -339,7 +340,9 @@ export function useJuryHandlers({
       // Store the semester's criteria template so the eval UI renders dynamically.
       // `semester` comes from the listSemesters result which now includes criteria_template.
       const semTemplate = semester.criteria_template || [];
+      const mudekTemplate = semester.mudek_template || [];
       loading.setCriteriaTemplate(semTemplate);
+      loading.setMudekTemplate(mudekTemplate);
       const semCriteria = getActiveCriteria(semTemplate);
 
       // Seed scores / comments from existing DB data
@@ -702,5 +705,6 @@ export function useJuryHandlers({
     resetAll,
     clearLocalSession,
     effectiveCriteria,
+    mudekLookup,
   };
 }

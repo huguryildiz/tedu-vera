@@ -11,6 +11,7 @@ import {
   UploadIcon,
   InfoIcon,
 } from "../../shared/Icons";
+import AlertCard from "../../shared/AlertCard";
 
 const SAMPLE_DB_BACKUP_JSON = `{
   "schema_version": 1,
@@ -108,12 +109,9 @@ export default function ExportBackupPanel({
               Export or restore the database. Requires the backup &amp; restore password.
             </div>
             {!backupPasswordSet && (
-              <div className="manage-delete-warning manage-delete-warning--caution" role="status">
-                <span className="manage-delete-warning-icon" aria-hidden="true"><TriangleAlertIcon /></span>
-                <span className="manage-delete-warning-text">
-                  Backup &amp; restore password is not set. Create one in Admin Security to enable export/import.
-                </span>
-              </div>
+              <AlertCard variant="warning">
+                Backup &amp; restore password is not set. Create one in Admin Security to enable export/import.
+              </AlertCard>
             )}
             <input
               ref={importFileRef}
@@ -164,14 +162,11 @@ export default function ExportBackupPanel({
               </div>
             )}
             <div className="manage-modal-body">
-              <div className="manage-delete-warning manage-delete-warning--info">
-                <span className="manage-delete-warning-icon" aria-hidden="true"><InfoIcon /></span>
-                <span className="manage-delete-warning-text">
-                  {dbBackupMode === "export"
-                    ? "Export a full backup of semesters, jurors, groups, and scores."
-                    : "Upload a backup JSON exported from this portal to restore all data."}
-                </span>
-              </div>
+              <AlertCard variant="info">
+                {dbBackupMode === "export"
+                  ? "Export a full backup of semesters, jurors, groups, and scores."
+                  : "Upload a backup JSON exported from this portal to restore all data."}
+              </AlertCard>
               {dbBackupMode === "import" && (
                 <div className="manage-field">
                   <div
@@ -216,22 +211,19 @@ export default function ExportBackupPanel({
                     </div>
                   )}
                   {dbBackupMode === "import" && dbBackupError && (
-                    <div className="manage-alerts" style={{ marginTop: "0.5rem" }}>
-                      <span className="manage-alert error with-icon">
-                        <span className="manage-alert-icon" aria-hidden="true"><CircleXLucideIcon /></span>
-                        <span>{dbBackupError}</span>
-                      </span>
-                    </div>
+                    <AlertCard variant="error" className="manage-alerts" style={{ marginTop: "0.5rem" }}>
+                      {dbBackupError}
+                    </AlertCard>
                   )}
                   {dbBackupMode === "import" && dbImportSuccess && !dbBackupError && (
-                    <div className="manage-import-feedback manage-import-feedback--success" role="status" style={{ marginTop: "0.5rem" }}>
+                    <AlertCard variant="success" className="manage-alerts" style={{ marginTop: "0.5rem" }}>
                       {dbImportSuccess}
-                    </div>
+                    </AlertCard>
                   )}
                   {dbBackupMode === "import" && dbImportWarning && !dbBackupError && (
-                    <div className="manage-import-feedback manage-import-feedback--warn" role="status" style={{ marginTop: "0.5rem" }}>
+                    <AlertCard variant="warning" className="manage-alerts" style={{ marginTop: "0.5rem" }}>
                       {dbImportWarning}
-                    </div>
+                    </AlertCard>
                   )}
                 </div>
               )}
@@ -288,12 +280,9 @@ export default function ExportBackupPanel({
                 </div>
               )}
               {dbBackupMode !== "import" && dbBackupError && (
-                <div className="manage-alerts">
-                  <span className="manage-alert error with-icon">
-                    <span className="manage-alert-icon" aria-hidden="true"><CircleXLucideIcon /></span>
-                    <span>{dbBackupError}</span>
-                  </span>
-                </div>
+                <AlertCard variant="error" className="manage-alerts">
+                  {dbBackupError}
+                </AlertCard>
               )}
             </div>
             <div className="manage-modal-actions">

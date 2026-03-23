@@ -17,12 +17,13 @@
 //   mudekTemplate — semester's MÜDEK outcomes [{ id, code, ... }]
 //   onSave        — (newTemplate) => Promise<{ ok, error? }>
 //   disabled      — disables all inputs and the save button
-//   isLocked      — when true, structural edits disabled; only label/shortLabel/blurb editable
+//   isLocked      — when true, the entire template is read-only; no field or action is editable
 // ============================================================
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import AutoGrow from "../shared/AutoGrow";
 import BlockingValidationAlert from "../shared/BlockingValidationAlert";
+import AlertCard from "../shared/AlertCard";
 import Tooltip from "../shared/Tooltip";
 import { useFocusTrap } from "../shared/useFocusTrap";
 import {
@@ -347,14 +348,9 @@ function CriterionDeleteDialog({ open, rowLabel, onOpenChange, onConfirm }) {
             <strong className="manage-delete-focus">{rowLabel || "This criterion"}</strong>
             {" will be deleted. Are you sure?"}
           </div>
-          <div className="delete-dialog__impact delete-dialog__impact--error">
-            <div className="delete-dialog__impact-icon" aria-hidden="true">
-              <TriangleAlertLucideIcon />
-            </div>
-            <div className="delete-dialog__impact-text">
-              This action removes the criterion from the semester settings. It cannot be undone.
-            </div>
-          </div>
+          <AlertCard variant="error">
+            This action removes the criterion from the semester settings. It cannot be undone.
+          </AlertCard>
         </div>
         <div className="delete-dialog__actions">
           <button
@@ -627,9 +623,9 @@ function RubricBandEditor({ bands, onChange, disabled, criterionMax, rubricError
 
 // ── Sortable row wrapper ──────────────────────────────────────
 
-function SortableCriterionRow({ id, children }) {
+function SortableCriterionRow({ id, disabled, children }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id });
+    useSortable({ id, disabled });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -700,7 +696,7 @@ export default function CriteriaManager({
       e.coverageError
     ) ||
     !totalOk;
-  const canSave = !disabled && !saving;
+  const canSave = !disabled && !isLocked && !saving;
   const saveBlockReasons = (() => {
     if (!hasValidationErrors) return [];
 
@@ -736,7 +732,9 @@ export default function CriteriaManager({
     return [...new Set(reasons)];
   })();
 
-  const structurallyLocked = isLocked || disabled;
+  // fullyLocked: when scoring has started (isLocked) OR the component is externally disabled,
+  // every field, button, and interaction must be non-editable.
+  const fullyLocked = isLocked || disabled;
 
   const markTouched = (i, field) => {
     setRows((prev) => {
@@ -869,6 +867,12 @@ export default function CriteriaManager({
   };
 
   const handleSave = async () => {
+    // Guard: if template is locked (scoring started), reject any save attempt.
+    if (isLocked) {
+      setSaveError("This semester's evaluation template is locked because scoring has already started.");
+      return;
+    }
+
     setSaveAttempted(true);
 
     // Strip truly empty new-draft rows
@@ -973,6 +977,12 @@ export default function CriteriaManager({
         </div>
       </div>
 
+      {isLocked && (
+        <AlertCard variant="warning">
+          Evaluation template locked — scoring has started for this semester. No criteria changes are allowed.
+        </AlertCard>
+      )}
+
       <DndContext
         id={instanceId}
         sensors={sensors}
@@ -982,7 +992,7 @@ export default function CriteriaManager({
         <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
           <div className="criteria-manager-rows">
             {rows.map((row, i) => (
-              <SortableCriterionRow key={row._id} id={row._id}>
+              <SortableCriterionRow key={row._id} id={row._id} disabled={fullyLocked}>
                 {({ attributes, listeners, setNodeRef, style }) => (
                   <div
                     ref={setNodeRef}
@@ -996,7 +1006,7 @@ export default function CriteriaManager({
                             <button
                               type="button"
                               className="manage-icon-btn manage-drag-handle"
-                              disabled={structurallyLocked}
+                              disabled={fullyLocked}
                               aria-label={`Drag to reorder criterion ${i + 1}`}
                               {...attributes}
                               {...listeners}
@@ -1015,7 +1025,7 @@ export default function CriteriaManager({
                                 className="criterion-color-input--hidden"
                                 value={row.color}
                                 onChange={(e) => setRow(i, "color", e.target.value)}
-                                disabled={structurallyLocked}
+                                disabled={fullyLocked}
                                 aria-label={`Criterion ${i + 1} color`}
                               />
                             </label>
@@ -1049,7 +1059,7 @@ export default function CriteriaManager({
                         <DangerIconButton
                           Icon={XIcon}
                           onClick={() => requestRemoveRow(i)}
-                          disabled={structurallyLocked || rows.length === 1}
+                          disabled={fullyLocked || rows.length === 1}
                           ariaLabel={`Remove criterion ${i + 1}`}
                           title="Remove criterion"
                         />
@@ -1146,7 +1156,7 @@ export default function CriteriaManager({
                               onChange={(e) => setRow(i, "label", e.target.value)}
                               onBlur={() => markTouched(i, "label")}
                               placeholder="Technical Content"
-                              disabled={disabled}
+                              disabled={fullyLocked}
                               aria-label={`Criterion ${i + 1} label`}
                             />
                             {(saveAttempted || row._fieldTouched?.label) && errors[`label_${i}`] && (
@@ -1163,7 +1173,7 @@ export default function CriteriaManager({
                               onChange={(e) => setRow(i, "shortLabel", e.target.value)}
                               onBlur={() => markTouched(i, "shortLabel")}
                               placeholder="Technical"
-                              disabled={disabled}
+                              disabled={fullyLocked}
                               aria-label={`Criterion ${i + 1} short label`}
                             />
                             {(saveAttempted || row._fieldTouched?.shortLabel) && errors[`shortLabel_${i}`] && (
@@ -1183,7 +1193,7 @@ export default function CriteriaManager({
                               onChange={(e) => setRow(i, "max", e.target.value)}
                               onBlur={() => markTouched(i, "max")}
                               placeholder="30"
-                              disabled={structurallyLocked}
+                              disabled={fullyLocked}
                               aria-label={`Criterion ${i + 1} max score`}
                             />
                             {(saveAttempted || row._fieldTouched?.max) && errors[`max_${i}`] && (
@@ -1199,7 +1209,7 @@ export default function CriteriaManager({
                             value={row.blurb}
                             onChange={(e) => setRow(i, "blurb", e.target.value)}
                             onBlur={() => markTouched(i, "blurb")}
-                            disabled={disabled}
+                            disabled={fullyLocked}
                             placeholder={RUBRIC_EDITOR_TEXT.criterionBlurbPlaceholder}
                             ariaLabel={`Criterion ${i + 1} description`}
                             hasError={(saveAttempted || row._fieldTouched?.blurb) && !!errors[`blurb_${i}`]}
@@ -1220,7 +1230,7 @@ export default function CriteriaManager({
                                 </span>
                                 <span className="criterion-subsection-title">MÜDEK Outcomes</span>
                               </div>
-                              {!structurallyLocked && (
+                              {!fullyLocked && (
                                 <Tooltip text={row._mudekOpen ? "Hide MÜDEK selection panel" : "Map this criterion to one or more MÜDEK outcomes"}>
                                   <button
                                     type="button"
@@ -1243,7 +1253,7 @@ export default function CriteriaManager({
                                 selected={sanitizeMudekSelection(row.mudek)}
                                 mudekTemplate={mudekTemplate}
                                 onChange={(next) => setRow(i, "mudek", next)}
-                                disabled={structurallyLocked}
+                                disabled={fullyLocked}
                                 criterionColor={row.color}
                                 open={row._mudekOpen}
                               />
@@ -1315,7 +1325,7 @@ export default function CriteriaManager({
                               <RubricBandEditor
                                 bands={row.rubric}
                                 onChange={(next) => setRow(i, "rubric", next)}
-                                disabled={structurallyLocked}
+                                disabled={fullyLocked}
                                 criterionMax={row.max}
                                 rubricErrors={(row._rubricTouched || saveAttempted) ? rubricErrorsByCriterion[i] : null}
                               />
@@ -1337,7 +1347,7 @@ export default function CriteriaManager({
           type="button"
           className="manage-btn"
           onClick={addRow}
-          disabled={structurallyLocked}
+          disabled={fullyLocked}
         >
           <span aria-hidden="true"><CirclePlusIcon className="manage-btn-icon" /></span>
           Add Criterion
@@ -1352,29 +1362,24 @@ export default function CriteriaManager({
         </button>
       </div>
       {saveAttempted && saveBlockReasons.length > 0 && (
-        <div className="manage-hint manage-hint-error" role="status">
+        <AlertCard variant="error">
           {saveBlockReasons.length === 1
             ? saveBlockReasons[0]
             : (
-              <ul className="manage-hint-list">
+              <ul className="manage-hint-list" style={{ margin: 0, paddingLeft: "1.2rem" }}>
                 {saveBlockReasons.map((reason) => (
                   <li key={reason}>{reason}</li>
                 ))}
               </ul>
             )
           }
-        </div>
+        </AlertCard>
       )}
 
-      {isLocked && (
-        <div className="manage-hint manage-hint-warning" role="status">
-          Structure locked — scoring has started for this semester. Only labels and descriptions can be edited.
-        </div>
-      )}
       {saveError && (
-        <div className="manage-hint manage-hint-error" role="alert">
+        <AlertCard variant="error">
           {saveError}
-        </div>
+        </AlertCard>
       )}
 
       <CriterionDeleteDialog

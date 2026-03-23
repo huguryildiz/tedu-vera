@@ -178,6 +178,7 @@ export default function useJuryState() {
     // Projects (dynamic)
     projects:         loading.projects,
     effectiveCriteria: handlers.effectiveCriteria,
+    mudekLookup:       handlers.mudekLookup,
 
     // Step / navigation
     step:           workflow.step,

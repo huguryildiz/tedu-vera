@@ -163,7 +163,7 @@ function RankCard({ p, index, rankMap, expandedGroups, onToggleGroup, criteriaLi
             const pct = hasVal ? Math.min((val / c.max) * 100, 100) : 0;
             return (
               <div key={c.id} className="mini-bar-row">
-                <span className="mini-label">{c.shortLabel || c.label}</span>
+                <span className="mini-label">{c.shortLabel}</span>
                 <div className="mini-bar-track">
                   <div
                     className="mini-bar-fill"

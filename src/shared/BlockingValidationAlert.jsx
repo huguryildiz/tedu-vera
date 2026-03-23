@@ -1,5 +1,5 @@
 // src/shared/BlockingValidationAlert.jsx
-import { TriangleAlertIcon } from "./Icons";
+import AlertCard from "./AlertCard";
 
 export default function BlockingValidationAlert({
   children,
@@ -11,14 +11,8 @@ export default function BlockingValidationAlert({
   if (!content) return null;
 
   return (
-    <div
-      className={`manage-delete-warning manage-delete-warning--danger${className ? ` ${className}` : ""}`}
-      role={role}
-    >
-      <span className="manage-delete-warning-icon" aria-hidden="true">
-        <TriangleAlertIcon />
-      </span>
-      <div className="manage-delete-warning-text">{content}</div>
-    </div>
+    <AlertCard variant="error" role={role} className={className}>
+      {content}
+    </AlertCard>
   );
 }

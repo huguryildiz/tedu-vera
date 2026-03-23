@@ -38,6 +38,7 @@ export default function EvalStep({
   handleFinalSubmit,
   onGoHome,
   criteria = CRITERIA,
+  mudekLookup,
 }) {
   const [showBackMenu,    setShowBackMenu]    = useState(false);
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
@@ -139,6 +140,7 @@ export default function EvalStep({
               totalGroups={totalGroups}
               handleFinalSubmit={handleFinalSubmit}
               criteria={criteria}
+              mudekLookup={mudekLookup}
             />
           </div>
 

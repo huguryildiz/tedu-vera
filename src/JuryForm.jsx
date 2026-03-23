@@ -54,6 +54,7 @@ export default function JuryForm({ onBack }) {
     resetAll,
     clearLocalSession,
     effectiveCriteria,
+    mudekLookup,
   } = useJuryState();
 
   // Force navy background while JuryForm is mounted.
@@ -191,6 +192,7 @@ export default function JuryForm({ onBack }) {
         handleFinalSubmit={handleFinalSubmit}
         onGoHome={onBack}
         criteria={effectiveCriteria}
+        mudekLookup={mudekLookup}
       />
 
       {confirmingSubmit && (

@@ -17,13 +17,14 @@
 //   mudekTemplate — current outcomes array [{ id, code, desc_en, desc_tr }]
 //   onSave        — (newTemplate) => Promise<{ ok, error? }>
 //   disabled      — disables all inputs and the save button
-//   isLocked      — when true, structural edits (add/delete/reorder/code)
-//                   are disabled; only en and tr remain editable
+//   isLocked      — when true, the entire template is read-only;
+//                   all fields and actions are disabled
 // ============================================================
 
 import { useEffect, useId, useRef, useState } from "react";
 import AutoGrow from "../shared/AutoGrow";
 import BlockingValidationAlert from "../shared/BlockingValidationAlert";
+import AlertCard from "../shared/AlertCard";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import {
   DndContext,
@@ -44,6 +45,7 @@ import {
   CirclePlusIcon,
   GripVerticalIcon,
   GoalIcon,
+  TriangleAlertLucideIcon,
   XIcon,
 } from "../shared/Icons";
 import DangerIconButton from "../components/admin/DangerIconButton";
@@ -210,9 +212,9 @@ function MudekLanguageFlag({ language, label }) {
 
 // ── Sortable row wrapper ──────────────────────────────────────
 
-function SortableMudekRow({ id, children }) {
+function SortableMudekRow({ id, disabled, children }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id });
+    useSortable({ id, disabled });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -299,9 +301,8 @@ export default function MudekManager({
     return [...new Set(reasons)];
   })();
 
-  // structurallyLocked: code, drag, delete, add are all disabled
-  // EN/TR only use `disabled` (the prop), NOT structurallyLocked —
-  // this preserves editability of descriptions when isLocked=true.
+  // structurallyLocked: ALL fields and actions are disabled when isLocked or disabled.
+  // This enforces the product rule: once scoring starts, the template is fully immutable.
   const structurallyLocked = isLocked || disabled;
 
   const emitDraft = (nextRows) => {
@@ -377,6 +378,11 @@ export default function MudekManager({
   };
 
   const handleSave = async () => {
+    // Guard: if template is locked (scoring started), reject any save attempt.
+    if (isLocked) {
+      setSaveError("This semester's evaluation template is locked because scoring has already started.");
+      return;
+    }
     if (disabled) return;
 
     // 1. Mark saveAttempted so all errors become visible in displayErrors
@@ -429,6 +435,12 @@ export default function MudekManager({
         </span>
       </div>
 
+      {isLocked && (
+        <AlertCard variant="warning">
+          Evaluation template locked — scoring has started for this semester. No criteria changes are allowed.
+        </AlertCard>
+      )}
+
       {rows.length === 0 && (
         <div className="manage-hint" role="status">
           No custom MÜDEK Outcomes defined. Using default outcomes from config as fallback.
@@ -446,7 +458,7 @@ export default function MudekManager({
           <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
             <div className="mudek-manager-rows">
               {rows.map((row, i) => (
-                <SortableMudekRow key={row._rowId} id={row._rowId}>
+                <SortableMudekRow key={row._rowId} id={row._rowId} disabled={structurallyLocked}>
                   {({ attributes, listeners, setNodeRef, style }) => (
                     <div
                       ref={setNodeRef}
@@ -547,7 +559,7 @@ export default function MudekManager({
                                 value={row.en}
                                 onChange={(e) => setRow(i, "en", e.target.value)}
                                 onBlur={() => touch(`en_${i}`)}
-                                disabled={disabled}
+                                disabled={structurallyLocked}
                                 placeholder="English description"
                                 ariaLabel={`Outcome ${i + 1} English description`}
                                 hasError={!!displayErrors[`en_${i}`]}
@@ -566,7 +578,7 @@ export default function MudekManager({
                                 value={row.tr}
                                 onChange={(e) => setRow(i, "tr", e.target.value)}
                                 onBlur={() => touch(`tr_${i}`)}
-                                disabled={disabled}
+                                disabled={structurallyLocked}
                                 placeholder="Türkçe açıklama"
                                 ariaLabel={`Outcome ${i + 1} Turkish description`}
                                 hasError={!!displayErrors[`tr_${i}`]}
@@ -604,7 +616,7 @@ export default function MudekManager({
           type="button"
           className="manage-btn primary"
           onClick={handleSave}
-          disabled={disabled || saving}
+          disabled={structurallyLocked || saving}
         >
           {saving ? "Saving…" : "Save MÜDEK Outcomes"}
         </button>
@@ -625,15 +637,10 @@ export default function MudekManager({
         </BlockingValidationAlert>
       )}
 
-      {isLocked && (
-        <div className="manage-hint manage-hint-warning" role="status">
-          Structure locked — scoring has started for this semester. Only descriptions can be edited.
-        </div>
-      )}
       {saveError && (
-        <div className="manage-hint manage-hint-error" role="alert">
+        <AlertCard variant="error">
           {saveError}
-        </div>
+        </AlertCard>
       )}
 
       <ConfirmDialog

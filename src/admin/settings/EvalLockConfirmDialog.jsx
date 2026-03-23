@@ -2,6 +2,7 @@
 import { useRef } from "react";
 import { LockIcon } from "../../shared/Icons";
 import { useFocusTrap } from "../../shared/useFocusTrap";
+import AlertCard from "../../shared/AlertCard";
 
 export default function EvalLockConfirmDialog({
   evalLockConfirmOpen,
@@ -26,14 +27,14 @@ export default function EvalLockConfirmDialog({
           </div>
         </div>
         <div className="delete-dialog__body">
-          <div className="delete-dialog__line">
+          <AlertCard variant={evalLockConfirmNext ? "warning" : "info"}>
             {evalLockConfirmNext
               ? (
                 <>
                   Jurors can no longer edit or submit scores for{" "}
                   {viewSemesterLabel && viewSemesterLabel !== "—" ? (
                     <>
-                      <span className="delete-dialog__semester-alert">{viewSemesterLabel}</span>{" "}
+                      <strong>{viewSemesterLabel}</strong>{" "}
                       <span>semester</span>
                     </>
                   ) : (
@@ -47,7 +48,7 @@ export default function EvalLockConfirmDialog({
                   Jurors can edit and resubmit scores for{" "}
                   {viewSemesterLabel && viewSemesterLabel !== "—" ? (
                     <>
-                      <span className="delete-dialog__semester-alert">{viewSemesterLabel}</span>{" "}
+                      <strong>{viewSemesterLabel}</strong>{" "}
                       <span>semester</span>
                     </>
                   ) : (
@@ -56,7 +57,7 @@ export default function EvalLockConfirmDialog({
                   .
                 </>
               )}
-          </div>
+          </AlertCard>
         </div>
         <div className="manage-modal-actions">
           <button

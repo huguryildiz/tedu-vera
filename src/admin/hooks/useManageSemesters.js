@@ -266,12 +266,22 @@ export function useManageSemesters({
     }
   };
 
-  // ── Criteria template update ─────────────────────────────
+  // ── Criteria template update ──────────────────────────────────────────
+  // Product rule: once scoring has started (is_locked), the template is fully
+  // immutable. Reject updates here before the RPC to ensure the UI lock can't
+  // be bypassed through browser devtools.
   const handleUpdateCriteriaTemplate = async (semesterId, name, posterDate, template) => {
     clearPanelError("semester");
     if (!adminPass) {
       setPanelError("semester", "Admin password missing. Please re-login.");
       return { ok: false };
+    }
+    const sem = semesterList.find((s) => s.id === semesterId);
+    if (sem?.is_locked) {
+      return {
+        ok: false,
+        error: "This semester's evaluation template is locked because scoring has already started.",
+      };
     }
     incLoading();
     try {
@@ -288,18 +298,26 @@ export function useManageSemesters({
     }
   };
 
-  // ── MÜDEK template update ────────────────────────────────
+  // ── MÜDEK template update ─────────────────────────────────────────────
+  // Same is_locked guard as handleUpdateCriteriaTemplate above.
   const handleUpdateMudekTemplate = async (semesterId, name, posterDate, template) => {
     clearPanelError("semester");
     if (!adminPass) {
       setPanelError("semester", "Admin password missing. Please re-login.");
       return { ok: false };
     }
+    const sem = semesterList.find((s) => s.id === semesterId);
+    if (sem?.is_locked) {
+      return {
+        ok: false,
+        error: "This semester's evaluation template is locked because scoring has already started.",
+      };
+    }
     incLoading();
     try {
       await adminUpdateSemesterMudekTemplate(semesterId, name, posterDate, template, adminPass);
       applySemesterPatch({ id: semesterId, mudek_template: template });
-      setMessage("MÜDEK Outcomes updated.");
+      setMessage("MÜDEK outcomes updated.");
       return { ok: true };
     } catch (e) {
       const msg = String(e?.message || "");
