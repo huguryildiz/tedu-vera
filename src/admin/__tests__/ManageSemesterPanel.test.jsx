@@ -220,4 +220,50 @@ describe("ManageSemesterPanel smoke tests", () => {
       expect(screen.queryByText("1.2", { selector: ".criterion-row-chip" })).not.toBeInTheDocument();
     });
   });
+
+  it("prompts before collapsing panel when edit criteria has unsaved changes", async () => {
+    const onToggle = vi.fn();
+    renderPanel({ onToggle });
+
+    fireEvent.click(screen.getByLabelText("Edit 2026 Spring"));
+    fireEvent.click(screen.getByRole("tab", { name: "Evaluation Criteria" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add Criterion" }));
+
+    fireEvent.click(screen.getByRole("button", { name: /Semester Settings/i }));
+
+    expect(onToggle).not.toHaveBeenCalled();
+    expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
+  });
+});
+
+describe("ManageSemesterPanel — empty template badge", () => {
+  qaTest("semester.template.01", () => {
+    renderPanel({
+      semesters: [
+        {
+          id: "s1",
+          name: "2025 Fall",
+          poster_date: "2025-11-15",
+          updated_at: "2025-11-20T10:00:00.000Z",
+          is_active: true,
+          criteria_template: [],
+        },
+        {
+          id: "s2",
+          name: "2026 Spring",
+          poster_date: "2026-05-20",
+          updated_at: "2026-05-21T10:00:00.000Z",
+          is_active: false,
+          criteria_template: [{ key: "technical" }],
+        },
+      ],
+    });
+
+    const s1 = screen.getByText("2025 Fall", { selector: ".manage-item-title" }).closest(".manage-item");
+    expect(s1).not.toBeNull();
+    expect(s1.querySelector(".semester-default-template-badge")).not.toBeNull();
+
+    const s2 = screen.getByText("2026 Spring", { selector: ".manage-item-title" }).closest(".manage-item");
+    expect(s2.querySelector(".semester-default-template-badge")).toBeNull();
+  });
 });

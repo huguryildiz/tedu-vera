@@ -2667,4 +2667,15 @@
     "coverageStrength": "Strong",
     "severity": "critical"
   }
+  ,{
+    "id": "semester.template.01",
+    "module": "Settings / Semesters",
+    "area": "Semester CRUD — Template",
+    "story": "Empty Criteria Template Warning",
+    "scenario": "shows default-template badge on semester list item when criteria_template is empty",
+    "whyItMatters": "Admins need to know when a semester has no custom template saved so they can set one before scoring begins.",
+    "risk": "Scoring against the wrong rubric due to silent fallback.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  }
 ]

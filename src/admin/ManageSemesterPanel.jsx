@@ -138,7 +138,7 @@ export default function ManageSemesterPanel({
   };
 
   const handleToggle = () => {
-    if (isOpen && isDirty) {
+    if (isOpen && isAnyDirty) {
       setLeaveDialogOpen(true);
       return;
     }
@@ -360,6 +360,12 @@ export default function ManageSemesterPanel({
                   <div className="manage-item-sub manage-meta-line">
                     <LastActivity value={getLastActivity(s)} />
                   </div>
+                  {(!Array.isArray(s.criteria_template) || s.criteria_template.length === 0) && (
+                    <span className="semester-default-template-badge manage-item-sub">
+                      <span aria-hidden="true"><TriangleAlertLucideIcon width={13} height={13} /></span>
+                      {" "}Default criteria — no custom template saved
+                    </span>
+                  )}
                 </div>
                 <div className="manage-item-actions manage-item-actions--semester">
                   <Tooltip text="Edit semester">
@@ -643,7 +649,12 @@ export default function ManageSemesterPanel({
                             criteria_template: prunedCriteria,
                           });
                           if (res?.fieldErrors) return { ok: false, error: "Invalid semester data." };
-                          if (res?.ok === false) return { ok: false, error: "Could not save MÜDEK Outcomes." };
+                          if (res?.ok === false) {
+                            return {
+                              ok: false,
+                              error: res?.error || "Could not save MÜDEK Outcomes.",
+                            };
+                          }
                           
                           setEditForm((f) => ({ ...f, mudek_template: template, criteria_template: prunedCriteria }));
                           return { ok: true };
@@ -666,6 +677,11 @@ export default function ManageSemesterPanel({
                 </div>
 
                 <div className="manage-modal-actions">
+                  {editTab !== "semester" && (
+                    <div className="manage-hint manage-hint-inline">
+                      Save template changes with the tab-specific button ({editTab === "criteria" ? "Save Criteria" : "Save MÜDEK Outcomes"}).
+                    </div>
+                  )}
                   <button className="manage-btn" type="button" onClick={closeEdit}>
                     Cancel
                   </button>
