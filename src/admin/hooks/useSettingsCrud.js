@@ -215,7 +215,10 @@ export function useSettingsCrud({
         { event: "DELETE", schema: "public", table: "semesters" },
         (payload) => {
           const deletedId = payload.old?.id;
-          if (deletedId) semesters.removeSemester(deletedId);
+          if (deletedId) {
+            semesters.removeSemester(deletedId);
+            semesters.notifyExternalSemesterDelete(deletedId);
+          }
         }
       )
 
@@ -288,6 +291,7 @@ export function useSettingsCrud({
     semesters.applySemesterPatch,
     semesters.removeSemester,
     semesters.notifyExternalSemesterUpdate,
+    semesters.notifyExternalSemesterDelete,
     projects.applyProjectPatch,
     projects.removeProject,
     jurors.scheduleJurorRefresh,
@@ -373,5 +377,6 @@ export function useSettingsCrud({
     scheduleJurorRefresh: jurors.scheduleJurorRefresh,
     refreshSemesters: semesters.refreshSemesters,
     externalUpdatedSemesterId: semesters.externalUpdatedSemesterId,
+    externalDeletedSemesterId: semesters.externalDeletedSemesterId,
   };
 }

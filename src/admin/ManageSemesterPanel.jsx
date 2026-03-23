@@ -67,6 +67,7 @@ export default function ManageSemesterPanel({
   onDeleteSemester,
   isLockedFn,
   externalUpdatedSemesterId,
+  externalDeletedSemesterId,
 }) {
   const [showCreate, setShowCreate] = useState(false);
   const [showAll, setShowAll] = useState(false);
@@ -106,6 +107,16 @@ export default function ManageSemesterPanel({
       setStaleSemester(true);
     }
   }, [externalUpdatedSemesterId, showEdit, editForm.id]);
+
+  // Auto-close edit modal when the semester being edited is deleted externally
+  const [deletedWhileEditing, setDeletedWhileEditing] = useState(false);
+  useEffect(() => {
+    if (!showEdit || !externalDeletedSemesterId || !editForm.id) return;
+    if (externalDeletedSemesterId === editForm.id) {
+      setShowEdit(false);
+      setDeletedWhileEditing(true);
+    }
+  }, [externalDeletedSemesterId, showEdit, editForm.id]);
 
   const editDirty =
     showEdit &&
@@ -279,6 +290,18 @@ export default function ManageSemesterPanel({
         <div className="manage-card-body">
           <div className="manage-card-desc">Manage semesters, dates, and the system-wide active term.</div>
           {panelError && <AlertCard variant="error">{panelError}</AlertCard>}
+
+          {deletedWhileEditing && (
+            <AlertCard variant="warning">
+              This semester was deleted in another session.{" "}
+              <button
+                className="manage-btn manage-btn--inline-link"
+                onClick={() => setDeletedWhileEditing(false)}
+              >
+                Dismiss
+              </button>
+            </AlertCard>
+          )}
 
           {/* Current semester selector */}
           <div className="manage-field manage-current-semester-card">

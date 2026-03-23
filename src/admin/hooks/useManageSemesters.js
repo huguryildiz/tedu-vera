@@ -64,6 +64,9 @@ export function useManageSemesters({
   // Tracks the ID of a semester that was updated externally via Realtime while edit modal is open
   const [externalUpdatedSemesterId, setExternalUpdatedSemesterId] = useState(null);
 
+  // Tracks the ID of a semester that was deleted externally via Realtime while edit modal is open
+  const [externalDeletedSemesterId, setExternalDeletedSemesterId] = useState(null);
+
   // Eval-lock dialog state (owned here because it is driven by semester state)
   const [evalLockError, setEvalLockError] = useState("");
   const [evalLockConfirmOpen, setEvalLockConfirmOpen] = useState(false);
@@ -395,5 +398,7 @@ export function useManageSemesters({
     handleSaveSettings,
     externalUpdatedSemesterId,
     notifyExternalSemesterUpdate: (id) => setExternalUpdatedSemesterId(id),
+    externalDeletedSemesterId,
+    notifyExternalSemesterDelete: (id) => setExternalDeletedSemesterId(id),
   };
 }

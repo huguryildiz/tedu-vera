@@ -2699,5 +2699,16 @@
     "risk": "A regression removing the disabled guard or the onClick null-check could let an admin accidentally delete the active semester.",
     "coverageStrength": "Strong",
     "severity": "critical"
+  },
+  {
+    "id": "semester.realtime.01",
+    "module": "Settings / Semesters",
+    "area": "Semester CRUD — Realtime",
+    "story": "Realtime DELETE closes open edit modal and shows deletion banner",
+    "scenario": "when a Realtime DELETE event arrives for the semester currently open in the edit modal, the modal auto-closes and a warning banner is shown",
+    "whyItMatters": "If an admin has the edit modal open while another session deletes the semester, the modal must close to prevent saving data for a non-existent record.",
+    "risk": "Without this guard, the admin could submit edits for a deleted semester, causing an API error or silent data loss.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
   }
 ]

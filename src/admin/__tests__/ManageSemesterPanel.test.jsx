@@ -263,6 +263,24 @@ describe("ManageSemesterPanel — lock error and delete-active guard", () => {
   });
 });
 
+describe("ManageSemesterPanel — Realtime DELETE", () => {
+  qaTest("semester.realtime.01", () => {
+    const { rerender, props } = renderPanel();
+
+    // Open edit modal for 2026 Spring
+    fireEvent.click(screen.getByLabelText("Edit 2026 Spring"));
+    expect(screen.getByText("Edit Semester")).toBeInTheDocument();
+
+    // Simulate Realtime DELETE arriving for the semester being edited
+    rerender(<ManageSemesterPanel {...props} externalDeletedSemesterId="s2" />);
+
+    // Edit modal should be closed
+    expect(screen.queryByText("Edit Semester")).not.toBeInTheDocument();
+    // Banner should be visible
+    expect(screen.getByText(/deleted in another session/i)).toBeInTheDocument();
+  });
+});
+
 describe("ManageSemesterPanel — empty template badge", () => {
   qaTest("semester.template.01", () => {
     renderPanel({
