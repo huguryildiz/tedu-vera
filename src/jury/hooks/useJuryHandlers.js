@@ -340,6 +340,11 @@ export function useJuryHandlers({
       // Store the semester's criteria template so the eval UI renders dynamically.
       // `semester` comes from the listSemesters result which now includes criteria_template.
       const semTemplate = semester.criteria_template || [];
+      if (!semester.criteria_template || semester.criteria_template.length === 0) {
+        console.warn(
+          `[_loadSemester] Semester "${semester.name}" (${semester.id}) has no criteria_template — falling back to global CRITERIA from config.js`
+        );
+      }
       const mudekTemplate = semester.mudek_template || [];
       loading.setCriteriaTemplate(semTemplate);
       loading.setMudekTemplate(mudekTemplate);
