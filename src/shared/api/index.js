@@ -59,4 +59,4 @@ export {
   adminGenerateEntryToken,
   adminRevokeEntryToken,
   adminGetEntryTokenStatus,
-}                                           from "./adminApi";
+}                                           from "./admin/index";
