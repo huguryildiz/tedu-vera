@@ -38,6 +38,17 @@ import {
   NUMERIC_SORT_KEYS,
 } from "./hooks/useScoreDetailsFilters";
 
+import {
+  buildProjectMetaMap,
+  buildJurorEditMap,
+  deriveGroupNoOptions,
+  generateMissingRows,
+  enrichRows,
+  applyFilters,
+  sortRows,
+  computeActiveFilterCount,
+} from "./selectors/filterPipeline";
+
 import ScoreDetailsFilters from "./components/details/ScoreDetailsFilters";
 import ScoreDetailsTable, {
   displayScore,
@@ -116,35 +127,14 @@ export default function ScoreDetails({
   const cellScrollProps = isTouchInput ? CELL_SCROLL_NATIVE_PROPS : CELL_SCROLL_PROPS;
 
   const projectMetaById = useMemo(
-    () => new Map((summaryData || []).map((p) => [p.id, { title: p?.name ?? "", students: p?.students ?? "" }])),
+    () => buildProjectMetaMap(summaryData),
     [summaryData]
   );
 
 
-  const groupNoOptions = useMemo(() => {
-    const map = new Map();
-    data.forEach((row) => {
-      const label = String(row?.groupNo ?? "").trim();
-      if (!label) return;
-      map.set(label.toLowerCase(), label);
-    });
-    return Array.from(map.entries())
-      .sort((a, b) => a[1].localeCompare(b[1], "tr", { numeric: true }))
-      .map(([, label]) => label);
-  }, [data]);
+  const groupNoOptions = useMemo(() => deriveGroupNoOptions(data), [data]);
 
-  const jurorEditMap = useMemo(() => {
-    const map = new Map();
-    (jurors || []).forEach((j) => {
-      const editEnabled = !!(j.editEnabled ?? j.edit_enabled);
-      if (j.jurorId) map.set(j.jurorId, editEnabled);
-      if (j.key) map.set(j.key, editEnabled);
-      const name = String(j.name ?? j.juryName ?? "").trim().toLowerCase();
-      const dept = String(j.dept ?? j.juryDept ?? "").trim().toLowerCase();
-      if (name || dept) map.set(`${name}__${dept}`, editEnabled);
-    });
-    return map;
-  }, [jurors]);
+  const jurorEditMap = useMemo(() => buildJurorEditMap(jurors), [jurors]);
 
   // Touch detection effect
   useEffect(() => {
@@ -216,24 +206,11 @@ export default function ScoreDetails({
     && !isCompletedInvalidRange
   ), [completedFrom, completedTo, completedParsedFromMs, completedParsedToMs, isCompletedInvalidRange]);
 
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (Array.isArray(filterGroupNo)) count += 1;
-    if (filterJuror) count += 1;
-    if (filterDept) count += 1;
-    if (Array.isArray(filterStatus)) count += 1;
-    if (Array.isArray(filterJurorStatus)) count += 1;
-    if (filterProjectTitle) count += 1;
-    if (filterStudents) count += 1;
-    if (isUpdatedDateFilterValid) count += 1;
-    if (isCompletedDateFilterValid) count += 1;
-    scoreKeys.forEach((key) => {
-      const f = scoreFilters[key];
-      if (hasActiveValidNumberRange(f)) count += 1;
-    });
-    if (filterComment) count += 1;
-    return count;
-  }, [filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus, filterProjectTitle, filterStudents, isUpdatedDateFilterValid, isCompletedDateFilterValid, scoreFilters, filterComment]);
+  const activeFilterCount = useMemo(() => computeActiveFilterCount({
+    filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus,
+    filterProjectTitle, filterStudents, isUpdatedDateFilterValid, isCompletedDateFilterValid,
+    scoreFilters, scoreKeys, filterComment,
+  }), [filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus, filterProjectTitle, filterStudents, isUpdatedDateFilterValid, isCompletedDateFilterValid, scoreFilters, filterComment]);
 
   const hasAnyFilter = activeFilterCount > 0;
   const isGroupNoFilterActive = Array.isArray(filterGroupNo) || activeFilterCol === "groupNo";
@@ -308,198 +285,25 @@ export default function ScoreDetails({
 
   // ── Rows computation ────────────────────────────────────
   const filteredData = useMemo(() => {
-    const { fromMs: updatedFromMs, toMs: updatedToMs } = buildDateRange(updatedParsedFrom, updatedParsedTo);
-    const { fromMs: completedFromMs, toMs: completedToMs } = buildDateRange(completedParsedFrom, completedParsedTo);
-
     const assignedList = Array.isArray(assignedJurors) && assignedJurors.length
       ? assignedJurors
       : (Array.isArray(jurors) ? jurors : []);
-    const groupList = Array.isArray(groups) ? groups : [];
-    const existingKeys = new Set();
-    data.forEach((row) => {
-      if (!row?.projectId) return;
-      const key = rowKey(row);
-      if (!key) return;
-      existingKeys.add(`${key}__${row.projectId}`);
-    });
 
-    const generated = [];
-    if (assignedList.length > 0 && groupList.length > 0) {
-      assignedList.forEach((j) => {
-        const jurorId = j.jurorId ?? j.key;
-        const juryName = String(j.name ?? j.juryName ?? "").trim();
-        const juryDept = String(j.dept ?? j.juryDept ?? "").trim();
-        if (!jurorId && !juryName) return;
-        const jurorKey = rowKey({ jurorId, juryName, juryDept });
-        groupList.forEach((g) => {
-          const projectId = g.id ?? g.projectId;
-          if (!projectId) return;
-          const key = `${jurorKey}__${projectId}`;
-          if (existingKeys.has(key)) return;
-          const meta = projectMetaById.get(projectId);
-          generated.push({
-            jurorId,
-            juryName,
-            juryDept,
-            projectId,
-            groupNo: g.groupNo ?? g.group_no ?? null,
-            projectName: String(meta?.title ?? g.title ?? "").trim(),
-            students: meta?.students ?? g.students ?? "",
-            technical: null,
-            design: null,
-            delivery: null,
-            teamwork: null,
-            total: null,
-            comments: "",
-            updatedAt: "",
-            updatedMs: null,
-            finalSubmittedAt: "",
-            finalSubmittedMs: null,
-            timestamp: "",
-            tsMs: null,
-            status: "empty",
-            editingFlag: "",
-          });
-        });
-      });
-    }
-
+    const generated = generateMissingRows(assignedList, groups, data, projectMetaById);
     const combinedRows = [...data, ...generated];
-    const jurorAgg = new Map();
-    combinedRows.forEach((row) => {
-      const key = rowKey(row);
-      if (!key) return;
-      const cellSt = getCellState(row);
-      const prev = jurorAgg.get(key) || { scored: 0, started: 0, isFinal: false, jurorId: row.jurorId };
-      if (cellSt === "scored") prev.scored += 1;
-      if (cellSt !== "empty") prev.started += 1;
-      if (row.finalSubmittedAt || row.finalSubmittedMs) prev.isFinal = true;
-      jurorAgg.set(key, prev);
-    });
-    const totalGroups = groupList.length;
-    const jurorStatusMap = new Map();
-    jurorAgg.forEach((agg, key) => {
-      const isEditing = !!(jurorEditMap.get(agg.jurorId) || jurorEditMap.get(key));
-      if (isEditing) { jurorStatusMap.set(key, "editing"); return; }
-      if (agg.isFinal) { jurorStatusMap.set(key, "completed"); return; }
-      if (totalGroups > 0 && agg.scored >= totalGroups) { jurorStatusMap.set(key, "ready_to_submit"); return; }
-      if (agg.started > 0) { jurorStatusMap.set(key, "in_progress"); return; }
-      jurorStatusMap.set(key, "not_started");
+    const enriched = enrichRows(combinedRows, projectMetaById, jurorEditMap, groups, semesterName);
+
+    const filtered = applyFilters(enriched, {
+      semesterName, filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus,
+      filterProjectTitle, filterStudents,
+      updatedFrom, updatedTo, updatedParsedFrom, updatedParsedTo,
+      updatedParsedFromMs, updatedParsedToMs, isUpdatedInvalidRange,
+      completedFrom, completedTo, completedParsedFrom, completedParsedTo,
+      completedParsedFromMs, completedParsedToMs, isCompletedInvalidRange,
+      scoreFilters, scoreKeys, filterComment,
     });
 
-    let list = combinedRows.map((row) => {
-      const meta = projectMetaById.get(row.projectId);
-      const projectTitle = String(row.projectName ?? meta?.title ?? "").trim();
-      const studentsRaw = row.students ?? meta?.students ?? "";
-      const students = Array.isArray(studentsRaw)
-        ? studentsRaw.map((s) => String(s).trim()).filter(Boolean).join(", ")
-        : String(studentsRaw).trim();
-      const jurorKey = rowKey(row);
-      const isEditing = !!(jurorEditMap.get(row.jurorId) || jurorEditMap.get(jurorKey));
-      return {
-        ...row,
-        semester: row.semester ?? semesterName ?? "",
-        projectTitle,
-        students,
-        isEditing,
-        effectiveStatus: getCellState(row),
-        jurorStatus: jurorStatusMap.get(jurorKey) || "not_started",
-      };
-    });
-
-    if (semesterName) {
-      const q = String(semesterName).trim().toLowerCase();
-      list = list.filter((r) => String(r.semester || "").trim().toLowerCase() === q);
-    }
-    if (Array.isArray(filterGroupNo)) {
-      if (filterGroupNo.length === 0) return [];
-      const set = new Set(filterGroupNo.map((v) => String(v).trim().toLowerCase()));
-      list = list.filter((r) => set.has(String(r.groupNo ?? "").trim().toLowerCase()));
-    }
-    if (filterJuror) {
-      const q = filterJuror.toLowerCase();
-      list = list.filter((r) => `${r.juryName ?? ""} ${r.juryDept ?? ""}`.toLowerCase().includes(q));
-    }
-    if (filterDept) {
-      const q = filterDept.toLowerCase();
-      list = list.filter((r) => String(r.juryDept ?? "").toLowerCase().includes(q));
-    }
-    if (Array.isArray(filterStatus)) {
-      if (filterStatus.length === 0) return [];
-      const set = new Set(filterStatus);
-      list = list.filter((r) => set.has(r.effectiveStatus));
-    }
-    if (Array.isArray(filterJurorStatus)) {
-      if (filterJurorStatus.length === 0) return [];
-      const set = new Set(filterJurorStatus);
-      list = list.filter((r) => set.has(r.jurorStatus));
-    }
-    if (filterProjectTitle) {
-      const q = filterProjectTitle.toLowerCase();
-      list = list.filter((r) => (r.projectTitle || "").toLowerCase().includes(q));
-    }
-    if (filterStudents) {
-      const q = filterStudents.toLowerCase();
-      list = list.filter((r) => (r.students || "").toLowerCase().includes(q));
-    }
-    const canApplyUpdated =
-      (updatedFrom && updatedParsedFromMs !== null) &&
-      (!updatedTo || updatedParsedToMs !== null) &&
-      !isUpdatedInvalidRange;
-    if ((updatedFrom || updatedTo) && canApplyUpdated) {
-      list = list.filter((r) => {
-        const ms = r.updatedMs || tsToMillis(r.updatedAt);
-        return ms >= updatedFromMs && ms <= updatedToMs;
-      });
-    }
-    const canApplyCompleted =
-      (completedFrom && completedParsedFromMs !== null) &&
-      (!completedTo || completedParsedToMs !== null) &&
-      !isCompletedInvalidRange;
-    if ((completedFrom || completedTo) && canApplyCompleted) {
-      list = list.filter((r) => {
-        const ms = r.finalSubmittedMs || tsToMillis(r.finalSubmittedAt);
-        return ms >= completedFromMs && ms <= completedToMs;
-      });
-    }
-    const activeScoreFilters = scoreKeys.filter((key) => {
-      const filter = scoreFilters[key];
-      return (filter?.min ?? "") !== "" || (filter?.max ?? "") !== "";
-    });
-    if (activeScoreFilters.length > 0) {
-      list = list.filter((r) => {
-        for (const key of activeScoreFilters) {
-          const filter = scoreFilters[key];
-          let min = toFiniteNumber(filter?.min);
-          let max = toFiniteNumber(filter?.max);
-          if (min !== null && max !== null && min > max) {
-            continue;
-          }
-          const value = toFiniteNumber(r[key]);
-          if (value === null) return false;
-          if (min !== null && value < min) return false;
-          if (max !== null && value > max) return false;
-        }
-        return true;
-      });
-    }
-    if (filterComment) {
-      const q = filterComment.toLowerCase();
-      list = list.filter((r) => (r.comments || "").toLowerCase().includes(q));
-    }
-
-    if (sortKey) {
-      list.sort((a, b) => {
-        const av = a[sortKey], bv = b[sortKey];
-        const aMiss = isMissing(av);
-        const bMiss = isMissing(bv);
-        if (aMiss && bMiss) return 0;
-        if (aMiss) return 1;
-        if (bMiss) return -1;
-        return sortDir === "asc" ? cmp(av, bv) : cmp(bv, av);
-      });
-    }
-    return list;
+    return sortRows(filtered, sortKey, sortDir);
   }, [data, projectMetaById, semesterName, filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus, filterProjectTitle, filterStudents,
       updatedFrom, updatedTo, completedFrom, completedTo, updatedParsedFrom, updatedParsedTo, completedParsedFrom, completedParsedTo,
       updatedParsedFromMs, updatedParsedToMs, completedParsedFromMs, completedParsedToMs, isUpdatedInvalidRange, isCompletedInvalidRange,
