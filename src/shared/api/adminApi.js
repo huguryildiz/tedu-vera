@@ -14,7 +14,8 @@ import {
   USE_PROXY,
   DEV_RPC_SECRET,
 } from "./core/client";
-import { dbScoresToUi, dbAvgScoresToUi } from "./fieldMapping";
+import { dbAvgScoresToUi } from "./fieldMapping";
+import { normalizeScoreRow } from "../../admin/selectors/scoreSelectors";
 
 // ── Proxy dispatcher ──────────────────────────────────────────
 // Private — not exported from index.js.
@@ -190,50 +191,7 @@ export async function adminGetScores(semesterId, adminPassword) {
     rethrowUnauthorized(error);
   }
 
-  return (data || []).map((row) => {
-    const cs           = row.criteria_scores || {};
-    const vals         = Object.values(cs);
-    const hasAnyScore  = vals.some(v => v != null);
-    const hasAllScores = vals.length > 0 && vals.every(v => v != null);
-    const hasComment   = String(row.comment || "").trim().length > 0;
-    const finalSubmittedAtRaw = row.final_submitted_at || "";
-    const isFinalSubmitted    = !!finalSubmittedAtRaw;
-    const status = row.status || (
-      isFinalSubmitted
-        ? "completed"
-        : (hasAllScores
-          ? "submitted"
-          : (!hasAnyScore && !hasComment ? "not_started" : "in_progress"))
-    );
-
-    const updatedAt        = row.updated_at         ? new Date(row.updated_at).toISOString()         : "";
-    const updatedMs        = row.updated_at         ? new Date(row.updated_at).getTime()             : 0;
-    const finalSubmittedAt = finalSubmittedAtRaw    ? new Date(finalSubmittedAtRaw).toISOString()    : "";
-    const finalSubmittedMs = finalSubmittedAtRaw    ? new Date(finalSubmittedAtRaw).getTime()        : 0;
-
-    return {
-      jurorId:     row.juror_id,
-      juryName:    row.juror_name,
-      juryDept:    row.juror_inst,
-      projectId:   row.project_id,
-      groupNo:     row.group_no,
-      projectName: row.project_title,
-      posterDate:  row.poster_date || "",
-      // criteria_scores keys already match config.js ids
-      ...dbScoresToUi(row),
-      total:       row.total    ?? null,
-      comments:    row.comment  || "",
-      updatedAt,
-      updatedMs,
-      finalSubmittedAt,
-      finalSubmittedMs,
-      // Legacy timestamp fields now represent "last edited"
-      timestamp:   updatedAt,
-      tsMs:        updatedMs,
-      status,
-      editingFlag: status === "editing" ? "editing" : "",
-    };
-  });
+  return (data || []).map(normalizeScoreRow);
 }
 
 /**
