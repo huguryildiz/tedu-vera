@@ -29,10 +29,13 @@ vi.mock("../config", () => ({
 }));
 
 vi.mock("../shared/Icons", () => ({
-  ChevronDownIcon:   "span",
-  InfoIcon:          "span",
-  KeyRoundIcon:      "span",
-  TriangleAlertIcon: "span",
+  ChevronDownIcon:          "span",
+  InfoIcon:                 "span",
+  KeyRoundIcon:             "span",
+  TriangleAlertIcon:        "span",
+  TriangleAlertLucideIcon:  "span",
+  AlertCircleIcon:          "span",
+  CheckCircle2Icon:         "span",
 }));
 
 // ── Component imports ────────────────────────────────────────

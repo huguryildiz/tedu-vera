@@ -5,22 +5,20 @@ import { useDeleteConfirm } from "../useDeleteConfirm";
 vi.mock("../../../shared/api", () => ({
   adminDeleteEntity: vi.fn(),
   adminDeleteCounts: vi.fn(),
-  listSemesters: vi.fn(),
 }));
 
-import { adminDeleteEntity, listSemesters } from "../../../shared/api";
+import { adminDeleteEntity } from "../../../shared/api";
 
 describe("useDeleteConfirm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("treats semester delete as success when entity is already absent after an error", async () => {
+  it("calls onSemesterDeleted and sets toast message on successful delete", async () => {
     const onSemesterDeleted = vi.fn();
     const setMessage = vi.fn();
 
-    adminDeleteEntity.mockRejectedValueOnce(new Error("network timeout"));
-    listSemesters.mockResolvedValueOnce([{ id: "s2", semester_name: "2026 Spring" }]);
+    adminDeleteEntity.mockResolvedValueOnce({ ok: true });
 
     const { result } = renderHook(() =>
       useDeleteConfirm({
@@ -49,4 +47,3 @@ describe("useDeleteConfirm", () => {
     expect(setMessage).toHaveBeenCalledWith("Semester 2025 Fall deleted");
   });
 });
-

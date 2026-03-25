@@ -10,8 +10,12 @@ import { qaTest } from "../../test/qaTest.js";
 import PinResetDialog from "../settings/PinResetDialog";
 
 vi.mock("../../shared/Icons", () => ({
-  KeyRoundIcon: "span",
-  TriangleAlertIcon: "span",
+  KeyRoundIcon:            "span",
+  TriangleAlertIcon:       "span",
+  TriangleAlertLucideIcon: "span",
+  AlertCircleIcon:         "span",
+  CheckCircle2Icon:        "span",
+  InfoIcon:                "span",
 }));
 
 const BASE_TARGET = { juror_id: "j1", juror_name: "Alice", juror_inst: "EE" };

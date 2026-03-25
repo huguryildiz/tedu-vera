@@ -32,6 +32,7 @@ vi.mock("../../config", () => ({
     { id: "teamwork",  label: "Teamwork",  max: 25 },
   ],
   APP_CONFIG: { maxScore: 100 },
+  MUDEK_OUTCOMES: {},
 }));
 
 // ── Imports (after vi.mock declarations) ──────────────────────────────────

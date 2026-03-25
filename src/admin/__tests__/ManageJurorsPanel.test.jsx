@@ -95,7 +95,8 @@ describe("ManageJurorsPanel — CSV import validation", () => {
     const file = new File([csv], "jurors.csv", { type: "text/csv" });
     await uploadFile(container, file);
     await waitFor(() => {
-      expect(screen.queryByRole("alert")).toBeNull();
+      // No error alert should appear — only a warning about skipped jurors.
+      expect(container.querySelector(".alert-card--error")).toBeNull();
       expect(screen.getByText(/skipped existing jurors/i)).toBeInTheDocument();
     });
   });

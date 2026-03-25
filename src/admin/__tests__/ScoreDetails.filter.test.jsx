@@ -5,6 +5,11 @@
 
 import { beforeAll, beforeEach, describe, expect, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+
+vi.mock("../../shared/auth", () => ({
+  useAuth: () => ({ activeTenant: null }),
+}));
+
 import ScoreDetails from "../ScoreDetails";
 import { qaTest } from "../../test/qaTest.js";
 
