@@ -75,6 +75,17 @@
   border-radius: 4px;
 }
 
+.admin-auth-forgot {
+  text-align: center;
+  margin-top: -4px;
+}
+
+.premium-icon-square--success {
+  background: var(--green-50, #f0fdf4);
+  color: var(--green-600, #16a34a);
+  border-color: var(--green-200, #bbf7d0);
+}
+
 /* ── Labels ────────────────────────────────────────────────── */
 
 .admin-auth-label {
@@ -236,7 +247,12 @@
   max-width: 420px;
 }
 .premium-card--auth-register {
+  max-width: 920px;
+}
+
+.admin-auth-form-register {
   max-width: 480px;
+  margin: 0 auto;
 }
 
 /* ── Return home link (inside card) ────────────────────────── */
@@ -260,6 +276,96 @@
   outline: none;
   box-shadow: var(--btn-focus-ring-brand);
   border-radius: 4px;
+}
+
+/* ── Submitted state view (register success) ───────────────── */
+
+.application-submitted-view {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 8px 0 0;
+  text-align: center;
+}
+
+.application-submitted-icon {
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 20px;
+  border-radius: 26px;
+  background: #edf1ff;
+  border: 2px solid #c8d3f7;
+  color: #3659d1;
+  display: grid;
+  place-items: center;
+}
+
+.application-submitted-icon svg {
+  width: 40px;
+  height: 40px;
+}
+
+.application-submitted-view h2 {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: -0.3px;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.application-submitted-view p {
+  margin: 18px auto 0;
+  max-width: 640px;
+  color: #52637f;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.application-submitted-primary {
+  max-width: 100%;
+  margin-top: 30px;
+  height: 52px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.application-submitted-home {
+  margin-top: 16px;
+  border: none;
+  background: none;
+  color: #5b6f8f;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.application-submitted-home:hover {
+  color: #3659d1;
+}
+
+@media (max-width: 900px) {
+  .application-submitted-view {
+    padding: 4px 0 0;
+  }
+
+  .application-submitted-view h2 {
+    font-size: 24px;
+  }
+
+  .application-submitted-view p {
+    font-size: 14px;
+  }
+
+  .application-submitted-primary {
+    height: 48px;
+    font-size: 15px;
+    border-radius: 18px;
+  }
+
+  .application-submitted-home {
+    font-size: 14px;
+  }
 }
 
 /* =============================================================
@@ -544,12 +650,31 @@
 /* Actions */
 .pending-gate-actions {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   justify-content: center;
   margin-top: 24px;
 }
 .pending-gate-actions .btn {
   min-width: 120px;
+}
+
+.pending-gate-signout {
+  margin-top: 0;
+  font-size: 14px;
+}
+
+.email-review-card {
+  max-width: 560px;
+}
+
+.email-review-actions {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 /* =============================================================

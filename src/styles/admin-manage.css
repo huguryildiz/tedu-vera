@@ -4,6 +4,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  --manage-section-gap: 3px;
+  --manage-section-title-gap: 2px;
   max-width: 100%;
   min-width: 0;
   overflow-x: hidden;
@@ -20,7 +22,7 @@
 .manage-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  gap: var(--manage-section-gap);
 }
 
 .manage-card {
@@ -772,6 +774,12 @@
     animation: none;
   }
   .manage-current-semester-pill {
+    animation: none;
+  }
+  .manage-org-admin-chip--pending {
+    animation: none;
+  }
+  .manage-org-admin-summary-pending {
     animation: none;
   }
 }
@@ -1911,6 +1919,235 @@
 .manage-item--org .manage-meta-icon svg {
   width: 14px;
   height: 14px;
+}
+.manage-meta-line--org-admin-summary {
+  align-items: center;
+  gap: 8px;
+}
+.manage-org-admin-summary {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+}
+.manage-org-admin-summary-pending {
+  color: #92400e;
+  animation: manage-pulse-red 1.2s ease-in-out infinite;
+}
+.manage-org-admin-add-btn {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 6px 12px;
+}
+.manage-modal-actions--org-admin {
+  justify-content: space-between;
+  align-items: center;
+}
+.manage-org-admins {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+.manage-org-admin-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.manage-org-admin-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+.manage-org-admin-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  position: relative;
+  padding: 10px 160px 10px 12px;
+  border: 1px solid #dbe6f5;
+  border-radius: 12px;
+  background: #f8fbff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+.manage-org-admin-line {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+  color: #1f2937;
+  font-size: 13px;
+  line-height: 1.35;
+}
+.manage-org-admin-line-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: #64748b;
+}
+.manage-org-admin-line-icon svg {
+  width: 13px;
+  height: 13px;
+}
+.manage-org-admin-line--name {
+  font-weight: 700;
+  color: #0f172a;
+}
+.manage-org-admin-name {
+  display: inline-block;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.manage-org-admin-mail-link {
+  width: fit-content;
+  max-width: 100%;
+  color: #1d4ed8;
+  text-decoration: none;
+}
+.manage-org-admin-email-text {
+  display: inline-block;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.manage-org-admin-mail-link:hover {
+  color: #1e40af;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.manage-org-admin-mail-link:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.manage-org-admin-line--time {
+  color: #64748b;
+  font-size: 11px;
+}
+.manage-org-admin-status {
+  display: inline-flex;
+  align-items: center;
+}
+.manage-org-admin-row--pending .manage-org-admin-status {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+}
+.manage-org-admin-side {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.manage-org-admin-identity {
+  color: #1f2937;
+  font-size: 12px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+.manage-org-admin-date {
+  color: #64748b;
+  font-size: 11px;
+}
+.manage-org-admin-empty {
+  color: #64748b;
+  font-size: 12px;
+}
+.manage-org-admin-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.manage-org-admin-chip svg {
+  width: 12px;
+  height: 12px;
+}
+.manage-org-admin-chip--approved {
+  background: #dcfce7;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+.manage-org-admin-chip--pending {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #92400e;
+  animation: manage-pulse-red 1.2s ease-in-out infinite;
+}
+.manage-org-admin-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+.manage-org-admin-actions .manage-btn {
+  min-height: 28px;
+  padding: 6px 10px;
+  font-size: 11px;
+}
+.manage-org-admin-inline-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.manage-org-admin-inline-actions .manage-icon-btn {
+  width: 30px;
+  height: 30px;
+}
+
+@media (orientation: portrait) and (max-width: 900px) {
+  .manage-org-admin-add-btn {
+    width: fit-content;
+  }
+  .manage-org-admin-name.swipe-x {
+    overflow-x: auto;
+    overflow-y: hidden;
+    text-overflow: unset;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    scrollbar-width: none;
+  }
+  .manage-org-admin-name.swipe-x::-webkit-scrollbar {
+    display: none;
+  }
+  .manage-org-admin-email-text.swipe-x {
+    overflow-x: auto;
+    overflow-y: hidden;
+    text-overflow: unset;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    scrollbar-width: none;
+  }
+  .manage-org-admin-email-text.swipe-x::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* ── Read-only field group (edit modals) ─────────────────── */
@@ -4109,7 +4346,7 @@ textarea.manage-input--create {
   text-transform: uppercase;
   letter-spacing: 0.09em;
   color: rgba(255, 255, 255, 0.3);
-  margin: 0 0 10px;
+  margin: 0 0 var(--manage-section-title-gap);
   padding: 0 4px;
 }
 .manage-section-grid {
@@ -4140,6 +4377,10 @@ textarea.manage-input--create {
 }
 
 @media (max-width: 640px) {
+  .manage-page--settings {
+    --manage-section-gap: 4px;
+    --manage-section-title-gap: 4px;
+  }
   .manage-page--settings .manage-section-grid {
     grid-template-columns: 1fr;
   }

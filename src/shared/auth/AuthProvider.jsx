@@ -150,6 +150,13 @@ export default function AuthProvider({ children }) {
     return data;
   }, []);
 
+  const resetPassword = useCallback(async (email) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}?page=admin`,
+    });
+    if (error) throw error;
+  }, []);
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     hasSessionRef.current = false;
@@ -200,9 +207,10 @@ export default function AuthProvider({ children }) {
     signIn,
     signUp,
     signOut,
+    resetPassword,
     refreshMemberships,
   }), [user, session, tenants, activeTenant, setActiveTenant, displayName,
-       isSuper, isPending, loading, signIn, signUp, signOut, refreshMemberships]);
+       isSuper, isPending, loading, signIn, signUp, signOut, resetPassword, refreshMemberships]);
 
   return (
     <AuthContext.Provider value={value}>

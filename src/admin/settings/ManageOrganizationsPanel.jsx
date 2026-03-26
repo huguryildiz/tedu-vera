@@ -4,14 +4,20 @@
 // Super-admin only — conditionally rendered from SettingsPage.
 // ============================================================
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  CheckIcon,
   ChevronDownIcon,
+  Clock3Icon,
   CirclePlusIcon,
   CodeIcon,
+  HistoryIcon,
   LandmarkIcon,
+  MailIcon,
   PencilIcon,
   SearchIcon,
+  TrashIcon,
+  UserStarIcon,
   UniversityIcon,
 } from "../../shared/Icons";
 import AlertCard from "../../shared/AlertCard";
@@ -32,8 +38,6 @@ const STATUS_LABELS = {
   disabled: "Disabled",
   archived: "Archived",
 };
-
-// ── Helpers ───────────────────────────────────────────────────
 
 function formatTimestamp(iso) {
   if (!iso) return "—";
@@ -69,10 +73,30 @@ export default function ManageOrganizationsPanel({
   openEdit,
   closeEdit,
   handleUpdateOrg,
+  handleApproveApplication,
+  handleRejectApplication,
+  handleCreateTenantAdminApplication,
+  handleUpdateTenantAdmin,
+  handleDeleteTenantAdmin,
   isDirty,
 }) {
   const [showAll, setShowAll] = useState(false);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [adminsDialogOrg, setAdminsDialogOrg] = useState(null);
+  const [adminEditOpen, setAdminEditOpen] = useState(false);
+  const [adminEditError, setAdminEditError] = useState("");
+  const [adminEditSaving, setAdminEditSaving] = useState(false);
+  const [adminEditForm, setAdminEditForm] = useState({ tenantId: "", userId: "", name: "", email: "" });
+  const [adminCreateOpen, setAdminCreateOpen] = useState(false);
+  const [adminCreateSaving, setAdminCreateSaving] = useState(false);
+  const [adminCreateError, setAdminCreateError] = useState("");
+  const [adminCreateForm, setAdminCreateForm] = useState({
+    tenantId: "",
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [adminDeleteTarget, setAdminDeleteTarget] = useState(null);
 
   const handleToggle = () => {
     if (isOpen && isDirty) {
@@ -86,7 +110,125 @@ export default function ManageOrganizationsPanel({
     setLeaveDialogOpen(false);
     closeCreate();
     closeEdit();
+    setAdminsDialogOrg(null);
+    setAdminCreateOpen(false);
+    setAdminEditOpen(false);
+    setAdminDeleteTarget(null);
     onToggle();
+  };
+
+  useEffect(() => {
+    if (!adminsDialogOrg?.id) return;
+    const fresh = orgList.find((org) => org.id === adminsDialogOrg.id);
+    if (!fresh) {
+      setAdminsDialogOrg(null);
+      setAdminCreateOpen(false);
+      return;
+    }
+    setAdminsDialogOrg(fresh);
+  }, [orgList, adminsDialogOrg?.id]);
+
+  const openAdminCreate = (org) => {
+    setAdminCreateError("");
+    setAdminCreateForm({
+      tenantId: org?.id || "",
+      name: "",
+      email: "",
+      password: "",
+    });
+    setAdminCreateOpen(true);
+  };
+
+  const saveAdminCreate = async () => {
+    const tenantId = adminCreateForm.tenantId;
+    const name = adminCreateForm.name.trim();
+    const email = adminCreateForm.email.trim().toLowerCase();
+    const password = adminCreateForm.password;
+
+    if (!tenantId) {
+      setAdminCreateError("Organization is missing.");
+      return;
+    }
+    if (!name) {
+      setAdminCreateError("Name is required.");
+      return;
+    }
+    if (!email || !email.includes("@")) {
+      setAdminCreateError("A valid email is required.");
+      return;
+    }
+    if (!password || password.length < 10) {
+      setAdminCreateError("Password must be at least 10 characters.");
+      return;
+    }
+
+    setAdminCreateSaving(true);
+    setAdminCreateError("");
+    const result = await handleCreateTenantAdminApplication?.({
+      tenantId,
+      name,
+      email,
+      password,
+      university: adminsDialogOrg?.university || "",
+      department: adminsDialogOrg?.department || "",
+    });
+    setAdminCreateSaving(false);
+    if (result?.ok) {
+      setAdminCreateOpen(false);
+      return;
+    }
+    setAdminCreateError(result?.error || "Could not create admin application.");
+  };
+
+  const openAdminEdit = (tenantId, admin) => {
+    setAdminEditError("");
+    setAdminEditForm({
+      tenantId,
+      userId: admin?.userId || "",
+      name: admin?.name || "",
+      email: admin?.email || "",
+    });
+    setAdminEditOpen(true);
+  };
+
+  const saveAdminEdit = async () => {
+    const name = adminEditForm.name.trim();
+    const email = adminEditForm.email.trim().toLowerCase();
+    if (!adminEditForm.tenantId || !adminEditForm.userId) {
+      setAdminEditError("Admin identity is missing.");
+      return;
+    }
+    if (!name) {
+      setAdminEditError("Name is required.");
+      return;
+    }
+    if (!email || !email.includes("@")) {
+      setAdminEditError("A valid email is required.");
+      return;
+    }
+    setAdminEditSaving(true);
+    setAdminEditError("");
+    const ok = await handleUpdateTenantAdmin?.({
+      tenantId: adminEditForm.tenantId,
+      userId: adminEditForm.userId,
+      name,
+      email,
+    });
+    setAdminEditSaving(false);
+    if (ok) {
+      setAdminEditOpen(false);
+      return;
+    }
+    setAdminEditError("Could not update admin.");
+  };
+
+  const confirmAdminDelete = async () => {
+    if (!adminDeleteTarget?.tenantId || !adminDeleteTarget?.userId) return;
+    await handleDeleteTenantAdmin?.({
+      tenantId: adminDeleteTarget.tenantId,
+      userId: adminDeleteTarget.userId,
+    });
+    setAdminDeleteTarget(null);
   };
 
   // ── Create form validation ──────────────────────────────────
@@ -177,6 +319,18 @@ export default function ManageOrganizationsPanel({
                     <span className="manage-meta-icon" aria-hidden="true"><LandmarkIcon /></span>
                     <span>{org.department || "—"}</span>
                   </div>
+                  <div className="manage-item-sub manage-meta-line manage-meta-line--org-admin-summary">
+                    <span className="manage-meta-icon" aria-hidden="true"><UserStarIcon /></span>
+                    <span className="manage-org-admin-summary">
+                      <span>{org.tenantAdmins?.length || 0} approved</span>
+                      <span aria-hidden="true"> · </span>
+                      <span
+                        className={(org.pendingApplications?.length || 0) > 0 ? "manage-org-admin-summary-pending" : ""}
+                      >
+                        {(org.pendingApplications?.length || 0)} pending
+                      </span>
+                    </span>
+                  </div>
                   <div className="manage-item-sub manage-meta-line">
                     <LastActivity value={org.updated_at || null} />
                   </div>
@@ -190,6 +344,16 @@ export default function ManageOrganizationsPanel({
                       onClick={() => openEdit(org)}
                     >
                       <PencilIcon />
+                    </button>
+                  </Tooltip>
+                  <Tooltip text="Review admins">
+                    <button
+                      className="manage-icon-btn"
+                      type="button"
+                      aria-label={`Review admins for ${org.shortLabel}`}
+                      onClick={() => setAdminsDialogOrg(org)}
+                    >
+                      <UserStarIcon />
                     </button>
                   </Tooltip>
                 </div>
@@ -351,6 +515,263 @@ export default function ManageOrganizationsPanel({
               </div>
             </div>
           )}
+
+          {/* ── Organization admins modal ── */}
+          {adminsDialogOrg && (
+            <div
+              className="manage-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Admins for ${adminsDialogOrg.shortLabel}`}
+            >
+              <div className="manage-modal-card">
+                <div className="edit-dialog__header">
+                  <span className="edit-dialog__icon" aria-hidden="true"><UserStarIcon /></span>
+                  <div className="edit-dialog__title">
+                    {adminsDialogOrg.shortLabel} · Admins
+                  </div>
+                </div>
+
+                <div className="manage-modal-body manage-org-admin-modal-body">
+                  <div className="manage-org-admin-section-title">Approved</div>
+                  <div className="manage-org-admins">
+                    {adminsDialogOrg.tenantAdmins?.length ? (
+                      adminsDialogOrg.tenantAdmins.map((admin, idx) => (
+                        <div key={`${adminsDialogOrg.id}-approved-${idx}`} className="manage-org-admin-row manage-org-admin-row--approved">
+                          <div className="manage-org-admin-line manage-org-admin-line--name">
+                            <span className="manage-org-admin-line-icon" aria-hidden="true"><UserStarIcon /></span>
+                            <span className="manage-org-admin-name swipe-x">{admin.name || "—"}</span>
+                          </div>
+                          <a className="manage-org-admin-line manage-org-admin-mail-link" href={`mailto:${admin.email}`}>
+                            <span className="manage-org-admin-line-icon" aria-hidden="true"><MailIcon /></span>
+                            <span className="manage-org-admin-email-text swipe-x">{admin.email}</span>
+                          </a>
+                          <div className="manage-org-admin-line manage-org-admin-line--time">
+                            <span className="manage-org-admin-line-icon" aria-hidden="true"><HistoryIcon /></span>
+                            <span>{formatTimestamp(admin.updatedAt || admin.updated_at || adminsDialogOrg.updated_at || null)}</span>
+                          </div>
+                          <div className="manage-org-admin-side">
+                            <div className="manage-org-admin-status">
+                              <span className="manage-org-admin-chip manage-org-admin-chip--approved">
+                                <span aria-hidden="true"><CheckIcon /></span>
+                                Approved
+                              </span>
+                            </div>
+                            <div className="manage-org-admin-inline-actions">
+                              <Tooltip text="Edit admin">
+                                <button
+                                  type="button"
+                                  className="manage-icon-btn"
+                                  aria-label={`Edit admin ${admin.name || admin.email}`}
+                                  onClick={() => openAdminEdit(adminsDialogOrg.id, admin)}
+                                  disabled={!admin.userId}
+                                >
+                                  <PencilIcon />
+                                </button>
+                              </Tooltip>
+                              <Tooltip text="Delete admin">
+                                <button
+                                  type="button"
+                                  className="manage-icon-btn danger"
+                                  aria-label={`Delete admin ${admin.name || admin.email}`}
+                                  onClick={() => setAdminDeleteTarget({
+                                    tenantId: adminsDialogOrg.id,
+                                    userId: admin.userId,
+                                    name: admin.name,
+                                    email: admin.email,
+                                  })}
+                                  disabled={!admin.userId}
+                                >
+                                  <TrashIcon />
+                                </button>
+                              </Tooltip>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="manage-org-admin-empty">No approved admin yet.</div>
+                    )}
+                  </div>
+
+                  <div className="manage-org-admin-section-title">Pending Applications</div>
+                  <div className="manage-org-admins">
+                    {adminsDialogOrg.pendingApplications?.length ? (
+                      adminsDialogOrg.pendingApplications.map((entry) => (
+                        <div key={entry.applicationId} className="manage-org-admin-row manage-org-admin-row--pending">
+                          <div className="manage-org-admin-line manage-org-admin-line--name">
+                            <span className="manage-org-admin-line-icon" aria-hidden="true"><UserStarIcon /></span>
+                            <span className="manage-org-admin-name swipe-x">{entry.name || "—"}</span>
+                          </div>
+                          <a className="manage-org-admin-line manage-org-admin-mail-link" href={`mailto:${entry.email}`}>
+                            <span className="manage-org-admin-line-icon" aria-hidden="true"><MailIcon /></span>
+                            <span className="manage-org-admin-email-text swipe-x">{entry.email}</span>
+                          </a>
+                          <div className="manage-org-admin-line manage-org-admin-line--time">
+                            <span className="manage-org-admin-line-icon" aria-hidden="true"><HistoryIcon /></span>
+                            <span>{formatTimestamp(entry.updatedAt || entry.updated_at || entry.createdAt || null)}</span>
+                          </div>
+                          <div className="manage-org-admin-status">
+                            <span className="manage-org-admin-chip manage-org-admin-chip--pending">
+                              <span aria-hidden="true"><Clock3Icon /></span>
+                              Pending approval
+                            </span>
+                          </div>
+                          <div className="manage-org-admin-actions">
+                            <button
+                              type="button"
+                              className="manage-btn primary"
+                              onClick={() => handleApproveApplication(entry.applicationId)}
+                            >
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              className="manage-btn"
+                              onClick={() => handleRejectApplication(entry.applicationId)}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="manage-org-admin-empty">No pending applications.</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="manage-modal-actions manage-modal-actions--org-admin">
+                  <button
+                    type="button"
+                    className="manage-btn primary manage-org-admin-add-btn"
+                    onClick={() => openAdminCreate(adminsDialogOrg)}
+                  >
+                    <span aria-hidden="true"><CirclePlusIcon className="manage-btn-icon" /></span>
+                    Add admin
+                  </button>
+                  <button
+                    className="manage-btn"
+                    type="button"
+                    onClick={() => {
+                      setAdminCreateOpen(false);
+                      setAdminsDialogOrg(null);
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {adminCreateOpen && (
+            <div className="manage-modal" role="dialog" aria-modal="true" aria-label="Add admin">
+              <div className="manage-modal-card">
+                <div className="edit-dialog__header">
+                  <span className="edit-dialog__icon" aria-hidden="true"><CirclePlusIcon /></span>
+                  <div className="edit-dialog__title">Add Admin</div>
+                </div>
+                <div className="manage-modal-body">
+                  <label className="manage-label">Name</label>
+                  <input
+                    className="manage-input"
+                    value={adminCreateForm.name}
+                    onChange={(e) => setAdminCreateForm((prev) => ({ ...prev, name: e.target.value }))}
+                    placeholder="Admin name"
+                  />
+                  <label className="manage-label">Email</label>
+                  <input
+                    className="manage-input"
+                    type="email"
+                    value={adminCreateForm.email}
+                    onChange={(e) => setAdminCreateForm((prev) => ({ ...prev, email: e.target.value }))}
+                    placeholder="admin@example.edu"
+                  />
+                  <label className="manage-label">Temporary Password</label>
+                  <input
+                    className="manage-input"
+                    type="password"
+                    value={adminCreateForm.password}
+                    onChange={(e) => setAdminCreateForm((prev) => ({ ...prev, password: e.target.value }))}
+                    placeholder="Minimum 10 characters"
+                  />
+                  {adminCreateError && <div className="manage-field-error">{adminCreateError}</div>}
+                </div>
+                <div className="manage-modal-actions">
+                  <button className="manage-btn" type="button" onClick={() => setAdminCreateOpen(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    className="manage-btn primary"
+                    type="button"
+                    onClick={saveAdminCreate}
+                    disabled={adminCreateSaving}
+                  >
+                    Create application
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {adminEditOpen && (
+            <div className="manage-modal" role="dialog" aria-modal="true" aria-label="Edit admin">
+              <div className="manage-modal-card">
+                <div className="edit-dialog__header">
+                  <span className="edit-dialog__icon" aria-hidden="true"><PencilIcon /></span>
+                  <div className="edit-dialog__title">Edit Admin</div>
+                </div>
+                <div className="manage-modal-body">
+                  <label className="manage-label">Name</label>
+                  <input
+                    className="manage-input"
+                    value={adminEditForm.name}
+                    onChange={(e) => setAdminEditForm((prev) => ({ ...prev, name: e.target.value }))}
+                    placeholder="Admin name"
+                  />
+                  <label className="manage-label">Email</label>
+                  <input
+                    className="manage-input"
+                    type="email"
+                    value={adminEditForm.email}
+                    onChange={(e) => setAdminEditForm((prev) => ({ ...prev, email: e.target.value }))}
+                    placeholder="admin@example.com"
+                  />
+                  {adminEditError && <div className="manage-field-error">{adminEditError}</div>}
+                </div>
+                <div className="manage-modal-actions">
+                  <button className="manage-btn" type="button" onClick={() => setAdminEditOpen(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    className="manage-btn primary"
+                    type="button"
+                    onClick={saveAdminEdit}
+                    disabled={adminEditSaving}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <ConfirmDialog
+            open={!!adminDeleteTarget}
+            onOpenChange={(open) => { if (!open) setAdminDeleteTarget(null); }}
+            title="Delete admin"
+            body={
+              adminDeleteTarget
+                ? `This will permanently remove ${adminDeleteTarget.name || adminDeleteTarget.email} (${adminDeleteTarget.email}) from auth and admin tables.`
+                : ""
+            }
+            warning="This action is permanent and cannot be undone."
+            confirmLabel="Delete permanently"
+            cancelLabel="Cancel"
+            tone="danger"
+            onConfirm={confirmAdminDelete}
+          />
 
           {/* Unsaved-changes leave dialog */}
           <ConfirmDialog

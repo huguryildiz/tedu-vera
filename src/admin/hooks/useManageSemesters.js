@@ -131,7 +131,7 @@ export function useManageSemesters({
 
   // ── Load functions ───────────────────────────────────────
   const loadSemesters = useCallback(async () => {
-    if (!tenantId) throw new Error("Tenant context missing.");
+    if (!tenantId) throw new Error("Organization context missing.");
     let sems = await adminListSemesters(tenantId);
     if (!sems.length) {
       await new Promise((r) => setTimeout(r, 600));
@@ -161,7 +161,7 @@ export function useManageSemesters({
     setMessage("");
     clearPanelError("semester");
     if (!tenantId) {
-      setPanelError("semester", "Tenant context missing. Please re-login.");
+      setPanelError("semester", "Organization context missing. Please re-login.");
       return { ok: false };
     }
     setCurrentInFlightRef.current = true;
@@ -187,7 +187,7 @@ export function useManageSemesters({
     setMessage("");
     clearPanelError("semester");
     if (!tenantId) {
-      setPanelError("semester", "Tenant context missing. Please re-login.");
+      setPanelError("semester", "Organization context missing. Please re-login.");
       return { ok: false };
     }
     if (!isSemesterPosterDateInRange(payload?.poster_date)) {
@@ -235,7 +235,7 @@ export function useManageSemesters({
     setMessage("");
     clearPanelError("semester");
     if (!tenantId) {
-      setPanelError("semester", "Tenant context missing. Please re-login.");
+      setPanelError("semester", "Organization context missing. Please re-login.");
       return { ok: false };
     }
     if (!isSemesterPosterDateInRange(payload?.poster_date)) {
@@ -281,7 +281,7 @@ export function useManageSemesters({
   const handleUpdateCriteriaTemplate = async (semesterId, name, posterDate, template) => {
     clearPanelError("semester");
     if (!tenantId) {
-      setPanelError("semester", "Tenant context missing. Please re-login.");
+      setPanelError("semester", "Organization context missing. Please re-login.");
       return { ok: false };
     }
     const sem = semesterList.find((s) => s.id === semesterId);
@@ -311,7 +311,7 @@ export function useManageSemesters({
   const handleUpdateMudekTemplate = async (semesterId, name, posterDate, template) => {
     clearPanelError("semester");
     if (!tenantId) {
-      setPanelError("semester", "Tenant context missing. Please re-login.");
+      setPanelError("semester", "Organization context missing. Please re-login.");
       return { ok: false };
     }
     const sem = semesterList.find((s) => s.id === semesterId);
@@ -339,7 +339,7 @@ export function useManageSemesters({
   // ── Eval-lock handler ────────────────────────────────────
   const handleSaveSettings = async (next) => {
     if (!tenantId) {
-      setEvalLockError("Tenant context missing. Please re-login.");
+      setEvalLockError("Organization context missing. Please re-login.");
       return;
     }
     if (!viewSemesterId) {

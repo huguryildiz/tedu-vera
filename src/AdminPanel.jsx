@@ -322,22 +322,32 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
 
   // ── Sticky header collapse on scroll ─────────────────────
   // Sticky collapse — portrait/tablet only (≤768px or narrow landscape)
+  // Use RAF + top-only expand to avoid scroll jitter feedback.
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   useEffect(() => {
+    let rafId = 0;
     const onScroll = () => {
-      if (window.innerWidth > 768 || window.innerWidth > window.innerHeight) {
-        setHeaderCollapsed(false);
-        return;
-      }
-      const y = window.scrollY;
-      setHeaderCollapsed((prev) => {
-        if (!prev && y > 80) return true;
-        if (prev && y < 30) return false;
-        return prev;
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        if (window.innerWidth > 768 || window.innerWidth > window.innerHeight) {
+          setHeaderCollapsed(false);
+          return;
+        }
+        const y = window.scrollY;
+        setHeaderCollapsed((prev) => {
+          if (!prev && y > 96) return true;
+          if (prev && y <= 4) return false;
+          return prev;
+        });
       });
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    onScroll();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafId) window.cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // ── Semester selection (UI state — drives dropdown + hook) ─

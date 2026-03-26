@@ -147,7 +147,7 @@ export function useSettingsCrud({
   useEffect(() => {
     if (!semesters.viewSemesterId) return;
     if (!tenantId) {
-      semesters.setEvalLockError("Tenant ID missing. Please re-login.");
+      semesters.setEvalLockError("Organization ID missing. Please re-login.");
       return;
     }
     incLoading();

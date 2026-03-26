@@ -47,11 +47,6 @@ export {
   adminSetSetting,
   adminSetSemesterEvalLock,
   adminListAuditLogs,
-  adminChangePassword,
-  adminBootstrapBackupPassword,
-  adminBootstrapDeletePassword,
-  adminChangeBackupPassword,
-  adminChangeDeletePassword,
   adminFullExport,
   adminFullImport,
   adminDeleteCounts,
@@ -72,4 +67,6 @@ export {
   adminListTenants,
   adminCreateTenant,
   adminUpdateTenant,
+  adminUpdateTenantAdmin,
+  adminDeleteTenantAdminHard,
 }                                           from "./admin/index";

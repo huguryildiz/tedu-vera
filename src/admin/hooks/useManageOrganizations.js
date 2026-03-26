@@ -9,7 +9,16 @@
 // ============================================================
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { adminListTenants, adminCreateTenant, adminUpdateTenant } from "../../shared/api";
+import {
+  adminListTenants,
+  adminCreateTenant,
+  adminUpdateTenant,
+  adminUpdateTenantAdmin,
+  adminDeleteTenantAdminHard,
+  submitAdminApplication,
+  approveAdminApplication,
+  rejectAdminApplication,
+} from "../../shared/api";
 
 const EMPTY_CREATE = { code: "", shortLabel: "", university: "", department: "" };
 const EMPTY_EDIT = { id: "", code: "", shortLabel: "", university: "", department: "", status: "active", created_at: "", updated_at: "" };
@@ -243,6 +252,111 @@ export function useManageOrganizations({
     }
   }, [enabled, editForm, validateEdit, closeEdit, loadOrgs, setMessage, incLoading, decLoading]);
 
+  const handleApproveApplication = useCallback(async (applicationId) => {
+    if (!enabled || !applicationId) return;
+    setError("");
+    incLoading();
+    try {
+      await approveAdminApplication(applicationId);
+      await loadOrgs();
+      setMessage?.("Application approved.");
+    } catch (e) {
+      const msg = String(e?.message || "");
+      setError(msg || "Could not approve application.");
+    } finally {
+      decLoading();
+    }
+  }, [enabled, loadOrgs, setMessage, incLoading, decLoading]);
+
+  const handleRejectApplication = useCallback(async (applicationId) => {
+    if (!enabled || !applicationId) return;
+    setError("");
+    incLoading();
+    try {
+      await rejectAdminApplication(applicationId);
+      await loadOrgs();
+      setMessage?.("Application rejected.");
+    } catch (e) {
+      const msg = String(e?.message || "");
+      setError(msg || "Could not reject application.");
+    } finally {
+      decLoading();
+    }
+  }, [enabled, loadOrgs, setMessage, incLoading, decLoading]);
+
+  const handleUpdateTenantAdmin = useCallback(async ({ tenantId, userId, name, email }) => {
+    if (!enabled || !tenantId || !userId) return false;
+    setError("");
+    incLoading();
+    try {
+      await adminUpdateTenantAdmin({
+        tenantId,
+        userId,
+        name: String(name || "").trim(),
+        email: String(email || "").trim().toLowerCase(),
+      });
+      await loadOrgs();
+      setMessage?.("Admin updated.");
+      return true;
+    } catch (e) {
+      const msg = String(e?.message || "");
+      setError(msg || "Could not update admin.");
+      return false;
+    } finally {
+      decLoading();
+    }
+  }, [enabled, loadOrgs, setMessage, incLoading, decLoading]);
+
+  const handleDeleteTenantAdmin = useCallback(async ({ tenantId, userId }) => {
+    if (!enabled || !tenantId || !userId) return false;
+    setError("");
+    incLoading();
+    try {
+      await adminDeleteTenantAdminHard({ tenantId, userId });
+      await loadOrgs();
+      setMessage?.("Admin deleted.");
+      return true;
+    } catch (e) {
+      const msg = String(e?.message || "");
+      setError(msg || "Could not delete admin.");
+      return false;
+    } finally {
+      decLoading();
+    }
+  }, [enabled, loadOrgs, setMessage, incLoading, decLoading]);
+
+  const handleCreateTenantAdminApplication = useCallback(async ({
+    tenantId,
+    name,
+    email,
+    password,
+    university,
+    department,
+  }) => {
+    if (!enabled || !tenantId) return { ok: false, error: "Organization is missing." };
+    setError("");
+    incLoading();
+    try {
+      await submitAdminApplication({
+        tenantId,
+        name: String(name || "").trim(),
+        email: String(email || "").trim().toLowerCase(),
+        password: String(password || ""),
+        university: String(university || "").trim(),
+        department: String(department || "").trim(),
+      });
+      await loadOrgs();
+      setMessage?.("Admin application created.");
+      return { ok: true };
+    } catch (e) {
+      const msg = String(e?.message || "");
+      setError(msg || "Could not create admin application.");
+      return { ok: false, error: msg || "Could not create admin application." };
+    } finally {
+      decLoading();
+    }
+  }, [enabled, loadOrgs, setMessage, incLoading, decLoading]);
+
   return {
     orgList,
     filteredOrgs,
@@ -265,6 +379,11 @@ export function useManageOrganizations({
     openEdit,
     closeEdit,
     handleUpdateOrg,
+    handleApproveApplication,
+    handleRejectApplication,
+    handleCreateTenantAdminApplication,
+    handleUpdateTenantAdmin,
+    handleDeleteTenantAdmin,
 
     isDirty,
     loadOrgs,

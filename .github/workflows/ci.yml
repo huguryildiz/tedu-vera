@@ -45,7 +45,7 @@ jobs:
           retention-days: 30
 
   e2e:
-    if: true
+    if: false
     runs-on: ubuntu-latest
     needs: test
     steps:

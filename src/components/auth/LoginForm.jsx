@@ -7,7 +7,7 @@
 import { useState } from "react";
 import { EyeIcon, EyeOffIcon, AlertCircleIcon, ShieldUserIcon } from "../../shared/Icons";
 
-export default function LoginForm({ onLogin, onSwitchToRegister, error: externalError, loading: externalLoading }) {
+export default function LoginForm({ onLogin, onSwitchToRegister, onForgotPassword, error: externalError, loading: externalLoading }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -90,6 +90,14 @@ export default function LoginForm({ onLogin, onSwitchToRegister, error: external
       <button type="submit" disabled={isLoading} className="admin-auth-submit">
         {isLoading ? "Signing in…" : "Sign In"}
       </button>
+
+      {onForgotPassword && (
+        <div className="admin-auth-forgot">
+          <button type="button" onClick={onForgotPassword} className="admin-auth-link">
+            Forgot your password?
+          </button>
+        </div>
+      )}
 
       <p className="admin-auth-switch">
         Don&apos;t have an account?{" "}

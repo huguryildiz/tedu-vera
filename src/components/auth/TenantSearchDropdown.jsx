@@ -16,12 +16,9 @@ export default function TenantSearchDropdown({ tenants, value, onChange, disable
   const filtered = tenants.filter((t) => {
     if (!query.trim()) return true;
     const q = query.toLowerCase();
-    return (
-      t.name.toLowerCase().includes(q) ||
-      t.university.toLowerCase().includes(q) ||
-      t.department.toLowerCase().includes(q) ||
-      t.code.toLowerCase().includes(q)
-    );
+    const hay = [t.name, t.university, t.department, t.code]
+      .filter(Boolean).join(" ").toLowerCase();
+    return hay.includes(q);
   });
 
   const handleSelect = useCallback((tenant) => {
@@ -51,8 +48,8 @@ export default function TenantSearchDropdown({ tenants, value, onChange, disable
       >
         {selected ? (
           <span className="tenant-dropdown-selected">
-            {selected.name}
-            {selected.university && <span className="tenant-dropdown-uni"> — {selected.university}</span>}
+            {selected.university || selected.name}
+            {selected.department && <span className="tenant-dropdown-uni"> · {selected.department}</span>}
           </span>
         ) : (
           <span className="tenant-dropdown-placeholder">Select a department…</span>
@@ -80,9 +77,9 @@ export default function TenantSearchDropdown({ tenants, value, onChange, disable
                   className={`tenant-dropdown-item ${t.id === value ? "active" : ""}`}
                   onClick={() => handleSelect(t)}
                 >
-                  <span className="tenant-dropdown-item-name">{t.name}</span>
-                  {t.university && (
-                    <span className="tenant-dropdown-item-uni">{t.university}</span>
+                  <span className="tenant-dropdown-item-name">{t.university || t.name}</span>
+                  {t.department && (
+                    <span className="tenant-dropdown-item-uni">{t.department}</span>
                   )}
                 </button>
               </li>

@@ -5,11 +5,12 @@
 // ============================================================
 
 import { useEffect, useState } from "react";
-import { AlertCircleIcon, EyeIcon, EyeOffIcon } from "../../shared/Icons";
-import { listTenantsPublic, submitAdminApplication } from "../../shared/api";
+import { CheckCircle2Icon, EyeIcon, EyeOffIcon } from "../../shared/Icons";
+import { listTenantsPublic } from "../../shared/api";
+import AlertCard from "../../shared/AlertCard";
 import TenantSearchDropdown from "./TenantSearchDropdown";
 
-export default function RegisterForm({ onRegister, onSwitchToLogin, error: externalError }) {
+export default function RegisterForm({ onRegister, onSwitchToLogin, onReturnHome, error: externalError }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -18,17 +19,17 @@ export default function RegisterForm({ onRegister, onSwitchToLogin, error: exter
   const [department, setDepartment] = useState("");
   const [tenantId, setTenantId] = useState(null);
   const [showPass, setShowPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [tenants, setTenants] = useState([]);
   const [tenantsLoading, setTenantsLoading] = useState(true);
 
   // Load tenants for dropdown
   useEffect(() => {
     let active = true;
-    // Tenants are loaded via public RPC that requires authentication.
-    // During registration, user may not be authenticated yet.
-    // We'll try to load and fallback gracefully.
+    // Public RPC: tenant list can be loaded before authentication.
     listTenantsPublic()
       .then((data) => {
         if (active) setTenants(data || []);
@@ -45,6 +46,44 @@ export default function RegisterForm({ onRegister, onSwitchToLogin, error: exter
   const isStrongPassword = (v) => {
     const s = String(v || "");
     return s.length >= 10 && /[a-z]/.test(s) && /[A-Z]/.test(s) && /\d/.test(s) && /[^A-Za-z0-9]/.test(s);
+  };
+
+  const normalizeRegisterError = (raw) => {
+    const msg = String(raw || "").toLowerCase().trim();
+    if (!msg) return "Registration failed. Please try again.";
+    if (msg.includes("email_already_registered")) {
+      return "This email is already registered. Please sign in or use a different email.";
+    }
+    if (msg.includes("password_too_short")) {
+      return "Password must be at least 10 characters.";
+    }
+    if (msg.includes("email_required")) {
+      return "Email is required.";
+    }
+    if (msg.includes("name_required")) {
+      return "Full name is required.";
+    }
+    if (msg.includes("tenant_not_found")) {
+      return "Selected department was not found. Please try again.";
+    }
+    if (msg.includes("application_already_pending")) {
+      return "You already have a pending application for this department.";
+    }
+    if (msg.includes("duplicate") || msg.includes("already")) {
+      return "An application with this information already exists.";
+    }
+    return raw;
+  };
+
+  const extractErrorText = (err) => {
+    if (!err) return "";
+    const parts = [
+      err.message,
+      err.details,
+      err.hint,
+      err.code ? `code:${err.code}` : "",
+    ].filter(Boolean);
+    return parts.join(" | ");
   };
 
   async function handleSubmit(e) {
@@ -68,24 +107,48 @@ export default function RegisterForm({ onRegister, onSwitchToLogin, error: exter
         department: department.trim(),
         tenantId,
       });
+      setSubmitted(true);
     } catch (err) {
-      setError(err?.message || "Registration failed. Please try again.");
+      const raw = extractErrorText(err);
+      setError(normalizeRegisterError(raw || "Registration failed. Please try again."));
     } finally {
       setLoading(false);
     }
   }
 
-  const displayError = externalError || error;
+  // Prefer form-local validation errors over parent-level generic errors.
+  const rawDisplayError = (error || externalError || "").trim();
+  const displayError = rawDisplayError ? normalizeRegisterError(rawDisplayError) : "";
+
+  if (submitted) {
+    const selectedTenant = tenants.find((t) => t.id === tenantId);
+    return (
+      <div className="application-submitted-view">
+        <div className="application-submitted-icon" aria-hidden="true">
+          <CheckCircle2Icon />
+        </div>
+        <h2>Application Submitted</h2>
+        <p>
+          Your application for <strong>{selectedTenant?.university || selectedTenant?.name || "the selected department"}</strong>
+          {selectedTenant?.department && <> · <strong>{selectedTenant.department}</strong></>} has been submitted.
+          You&apos;ll be able to sign in once an administrator approves your request.
+        </p>
+        <button type="button" onClick={onSwitchToLogin} className="admin-auth-submit application-submitted-primary">
+          Back to Sign In
+        </button>
+        <button type="button" onClick={onReturnHome} className="application-submitted-home">
+          ← Return Home
+        </button>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="admin-auth-form admin-auth-form-register">
       <h2 className="admin-auth-title">Apply for Admin Access</h2>
 
       {displayError && (
-        <div className="admin-auth-error">
-          <AlertCircleIcon size={16} />
-          <span>{displayError}</span>
-        </div>
+        <AlertCard variant="error">{displayError}</AlertCard>
       )}
 
       <label className="admin-auth-label">
@@ -172,15 +235,25 @@ export default function RegisterForm({ onRegister, onSwitchToLogin, error: exter
 
       <label className="admin-auth-label">
         Confirm Password
-        <input
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Re-enter password"
-          autoComplete="new-password"
-          disabled={loading}
-          className="admin-auth-input"
-        />
+        <div className="admin-auth-pass-wrap">
+          <input
+            type={showConfirmPass ? "text" : "password"}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Re-enter password"
+            autoComplete="new-password"
+            disabled={loading}
+            className="admin-auth-input"
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPass(!showConfirmPass)}
+            className="admin-auth-toggle-pass"
+            tabIndex={-1}
+          >
+            {showConfirmPass ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+          </button>
+        </div>
       </label>
 
       <button type="submit" disabled={loading} className="admin-auth-submit">

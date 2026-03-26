@@ -68,7 +68,7 @@ export default function PendingReviewGate({ user, onSignOut, onBack }) {
           <button onClick={onBack} className="admin-auth-submit" style={{ maxWidth: 200 }}>
             Return Home
           </button>
-          <button onClick={onSignOut} className="admin-auth-home-link" style={{ fontSize: 14 }}>
+          <button onClick={onSignOut} className="admin-auth-home-link pending-gate-signout">
             Sign Out
           </button>
         </div>

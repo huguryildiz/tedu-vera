@@ -55,22 +55,36 @@ export async function adminGetSession() {
 
 /**
  * Lists active tenants for the application form dropdown.
- * Requires authentication but no specific role.
+ * Public RPC (works before authentication).
  */
 export async function listTenantsPublic() {
   return callAdminRpcV2("rpc_admin_tenant_list_public");
 }
 
 /**
- * Submit a tenant admin application.
+ * Submit a tenant admin application (anon-accessible — no auth required).
+ * Password is hashed server-side and stored until approval.
  */
-export async function submitAdminApplication({ tenantId, name, university, department }) {
-  return callAdminRpcV2("rpc_admin_application_submit", {
+export async function submitAdminApplication({ tenantId, email, password, name, university, department }) {
+  const { data, error } = await supabase.rpc("rpc_admin_application_submit", {
     p_tenant_id: tenantId,
+    p_email: email,
+    p_password: password,
     p_name: name,
     p_university: university || "",
     p_department: department || "",
   });
+  if (error) {
+    const msg = String(error.message || "").toLowerCase();
+    const details = String(error.details || "").toLowerCase();
+    if (error.code === "23505" && (msg.includes("taa_pending_email_tenant_unique") || details.includes("taa_pending_email_tenant_unique"))) {
+      const e = new Error("application_already_pending");
+      e.code = error.code;
+      throw e;
+    }
+    throw error;
+  }
+  return data;
 }
 
 /**

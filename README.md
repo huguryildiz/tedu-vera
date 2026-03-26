@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/assets/vera_logo.png" alt="VERA Logo" width="200">
+  <img src="src/assets/vera_logo_white.png" alt="VERA Logo" width="200">
 </p>
 
 # VERA

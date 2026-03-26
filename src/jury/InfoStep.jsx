@@ -11,7 +11,7 @@
 // and delegates everything else downstream.
 // ============================================================
 
-import { InfoIcon, UserRoundCheckIcon, AlertCircleIcon, LandmarkIcon } from "../shared/Icons";
+import { InfoIcon, UserRoundCheckIcon, AlertCircleIcon, LandmarkIcon, UniversityIcon } from "../shared/Icons";
 
 export default function InfoStep({
   juryName, setJuryName,
@@ -88,7 +88,10 @@ export default function InfoStep({
               style={{ fontSize: "0.95rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.2rem" }}
             >
               {currentSemester?.university && (
-                <span>{currentSemester.university}</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+                  <span className="premium-info-icon" aria-hidden="true"><UniversityIcon /></span>
+                  {currentSemester.university}
+                </span>
               )}
               {currentSemester?.department && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>

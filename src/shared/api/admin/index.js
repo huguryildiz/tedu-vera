@@ -55,14 +55,6 @@ export {
   adminSetSemesterEvalLock,
 } from "./scores";
 
-export {
-  adminChangePassword,
-  adminBootstrapBackupPassword,
-  adminBootstrapDeletePassword,
-  adminChangeBackupPassword,
-  adminChangeDeletePassword,
-} from "./passwords";
-
 export { adminFullExport, adminFullImport } from "./export";
 
 export {
@@ -76,4 +68,10 @@ export { adminListAuditLogs } from "./audit";
 export { adminProfileUpsert, adminProfileGet } from "./profiles";
 
 // Tenant/Organization management (super-admin only)
-export { adminListTenants, adminCreateTenant, adminUpdateTenant } from "./tenants";
+export {
+  adminListTenants,
+  adminCreateTenant,
+  adminUpdateTenant,
+  adminUpdateTenantAdmin,
+  adminDeleteTenantAdminHard,
+} from "./tenants";

@@ -220,18 +220,19 @@ ALTER TABLE public.tenant_admin_memberships
 -- ── Tenant Admin Applications ──────────────────────────────
 
 CREATE TABLE public.tenant_admin_applications (
-  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id       uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
-  applicant_email text NOT NULL,
-  applicant_name  text NOT NULL,
-  university      text NOT NULL DEFAULT '',
-  department      text NOT NULL DEFAULT '',
-  status          text NOT NULL DEFAULT 'pending'
+  id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id          uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  applicant_email    text NOT NULL,
+  applicant_name     text NOT NULL,
+  university         text NOT NULL DEFAULT '',
+  department         text NOT NULL DEFAULT '',
+  encrypted_password text,
+  status             text NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
-  reviewed_by     uuid,
-  reviewed_at     timestamptz,
-  created_at      timestamptz NOT NULL DEFAULT now(),
-  updated_at      timestamptz NOT NULL DEFAULT now()
+  reviewed_by        uuid,
+  reviewed_at        timestamptz,
+  created_at         timestamptz NOT NULL DEFAULT now(),
+  updated_at         timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE UNIQUE INDEX taa_pending_email_tenant_unique

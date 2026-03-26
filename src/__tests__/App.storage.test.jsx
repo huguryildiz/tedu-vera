@@ -8,7 +8,7 @@
 //   phaseA.app.03 — jury_gate is never written to localStorage
 // ============================================================
 
-import { afterEach, beforeEach, describe, expect, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { qaTest } from "../test/qaTest.js";
 
@@ -46,6 +46,7 @@ vi.mock("../components/auth/LoginForm", () => ({
     </div>
   ),
 }));
+vi.mock("../components/auth/ForgotPasswordForm", () => ({ default: () => <div data-testid="forgot-form" /> }));
 vi.mock("../components/auth/RegisterForm", () => ({ default: () => <div data-testid="register-form" /> }));
 vi.mock("../admin/components/PendingReviewGate", () => ({ default: () => <div data-testid="pending-gate" /> }));
 vi.mock("../shared/Icons", () => ({
@@ -123,6 +124,17 @@ describe("App page resume / storage flow", () => {
       // App is on jury_gate. The persistence useEffect must not write "jury_gate".
       const stored = localStorage.getItem("tedu_portal_page");
       expect(stored).not.toBe("jury_gate");
+    } finally {
+      restore();
+    }
+  });
+
+  it("does not route to email review page when URL has ?token", () => {
+    const restore = mockLocation({ search: "?token=abc123", pathname: "/" });
+    try {
+      render(<App />);
+      expect(screen.queryByTestId("jury-gate")).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /admin panel/i })).toBeInTheDocument();
     } finally {
       restore();
     }

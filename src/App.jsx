@@ -26,6 +26,7 @@ import MinimalLoaderOverlay from "./shared/MinimalLoaderOverlay";
 import { getPage, setPage as persistPage, getJuryAccess } from "./shared/storage";
 import { AuthProvider, useAuth } from "./shared/auth";
 import LoginForm from "./components/auth/LoginForm";
+import ForgotPasswordForm from "./components/auth/ForgotPasswordForm";
 import RegisterForm from "./components/auth/RegisterForm";
 import PendingReviewGate from "./admin/components/PendingReviewGate";
 import "./styles/home.css";
@@ -107,31 +108,16 @@ function AppInner() {
 
   async function handleRegister(email, password, metadata) {
     setAdminAuthError("");
-    const result = await auth.signUp(email, password, {
+    // No auth.signUp — application is submitted as anon.
+    // auth.users entry is created when super-admin approves.
+    await submitAdminApplication({
+      tenantId: metadata.tenantId,
+      email,
+      password,
       name: metadata.name,
+      university: metadata.university,
+      department: metadata.department,
     });
-
-    // After sign-up, submit the tenant application.
-    // The user is now authenticated but has no membership yet.
-    if (result?.user) {
-      try {
-        await submitAdminApplication({
-          tenantId: metadata.tenantId,
-          name: metadata.name,
-          university: metadata.university,
-          department: metadata.department,
-        });
-      } catch (err) {
-        // Application submission failed, but user is created.
-        // They can retry application later.
-        const msg = err?.message || "";
-        if (msg.includes("application_already_pending")) {
-          // Already has a pending application — that's fine
-        } else {
-          throw new Error("Account created, but application submission failed: " + msg);
-        }
-      }
-    }
   }
 
   function handleAdminSignOut() {
@@ -178,25 +164,37 @@ function AppInner() {
       return (
         <div className="premium-screen">
           <div className={`premium-card ${adminAuthPage === "register" ? "premium-card--auth-register" : "premium-card--auth-login"}`}>
-            {adminAuthPage === "login" ? (
-              <LoginForm
-                onLogin={handleLogin}
-                onSwitchToRegister={() => setAdminAuthPage("register")}
+            {adminAuthPage === "forgot" ? (
+              <ForgotPasswordForm
+                onResetPassword={auth.resetPassword}
+                onBackToLogin={() => { setAdminAuthPage("login"); setAdminAuthError(""); }}
+              />
+            ) : adminAuthPage === "register" ? (
+              <RegisterForm
+                onRegister={handleRegister}
+                onSwitchToLogin={() => { setAdminAuthPage("login"); setAdminAuthError(""); }}
+                onReturnHome={() => {
+                  setPage("home");
+                  setAdminAuthError("");
+                }}
                 error={adminAuthError}
               />
             ) : (
-              <RegisterForm
-                onRegister={handleRegister}
-                onSwitchToLogin={() => setAdminAuthPage("login")}
+              <LoginForm
+                onLogin={handleLogin}
+                onSwitchToRegister={() => { setAdminAuthPage("register"); setAdminAuthError(""); }}
+                onForgotPassword={() => { setAdminAuthPage("forgot"); setAdminAuthError(""); }}
                 error={adminAuthError}
               />
             )}
-            <button
-              className="admin-auth-home-link"
-              onClick={() => { setPage("home"); setAdminAuthError(""); }}
-            >
-              ← Return Home
-            </button>
+            {adminAuthPage === "login" && (
+              <button
+                className="admin-auth-home-link"
+                onClick={() => { setPage("home"); setAdminAuthError(""); }}
+              >
+                ← Return Home
+              </button>
+            )}
           </div>
         </div>
       );

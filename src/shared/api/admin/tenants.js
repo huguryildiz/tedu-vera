@@ -12,14 +12,16 @@ import { callAdminRpcV2 } from "../transport";
 
 /**
  * @typedef {object} TenantRow
- * @property {string}  id          UUID primary key.
- * @property {string}  code        Immutable tenant code (e.g. "tedu-ee").
- * @property {string}  shortLabel  Short UI label (mapped from DB `short_label`).
- * @property {string}  university  Official university name.
- * @property {string}  department  Official department name.
- * @property {string}  status      Lifecycle state: active | disabled | archived.
- * @property {string}  created_at  ISO timestamp.
- * @property {string}  updated_at  ISO timestamp.
+ * @property {string} id
+ * @property {string} code
+ * @property {string} shortLabel
+ * @property {string} university
+ * @property {string} department
+ * @property {string} status
+ * @property {string} created_at
+ * @property {string} updated_at
+ * @property {{userId: string, name: string, email: string, status: "approved", updatedAt: string}[]} tenantAdmins
+ * @property {{applicationId: string, name: string, email: string, status: "pending", createdAt: string}[]} pendingApplications
  */
 
 /**
@@ -27,8 +29,39 @@ import { callAdminRpcV2 } from "../transport";
  * @param {object} row
  * @returns {TenantRow}
  */
-function mapRow(row) {
-  return { ...row, shortLabel: row.short_label };
+function mapAdmins(value) {
+  const list = Array.isArray(value) ? value : [];
+  return list
+    .map((entry) => ({
+      userId: String(entry?.user_id || entry?.userId || entry?.id || "").trim(),
+      name: String(entry?.name || "").trim() || String(entry?.email || "").trim() || "Unknown",
+      email: String(entry?.email || "").trim(),
+      status: "approved",
+      updatedAt: String(entry?.updated_at || entry?.updatedAt || "").trim(),
+    }))
+    .filter((entry) => entry.email !== "");
+}
+
+function mapPending(value) {
+  const list = Array.isArray(value) ? value : [];
+  return list
+    .map((entry) => ({
+      applicationId: String(entry?.application_id || "").trim(),
+      name: String(entry?.name || "").trim() || String(entry?.email || "").trim() || "Unknown",
+      email: String(entry?.email || "").trim(),
+      status: "pending",
+      createdAt: String(entry?.created_at || "").trim(),
+    }))
+    .filter((entry) => entry.applicationId !== "");
+}
+
+export function mapTenantRow(row) {
+  return {
+    ...row,
+    shortLabel: row.short_label,
+    tenantAdmins: mapAdmins(row?.tenant_admins),
+    pendingApplications: mapPending(row?.pending_applications),
+  };
 }
 
 /**
@@ -45,7 +78,7 @@ function byCodeAsc(a, b) {
  */
 export async function adminListTenants() {
   const data = await callAdminRpcV2("rpc_admin_tenant_list");
-  return (data || []).map(mapRow).sort(byCodeAsc);
+  return (data || []).map(mapTenantRow).sort(byCodeAsc);
 }
 
 /**
@@ -76,6 +109,35 @@ export async function adminUpdateTenant(payload) {
     p_university: payload.university ?? null,
     p_department: payload.department ?? null,
     p_status:     payload.status ?? null,
+  });
+  return data === true;
+}
+
+/**
+ * Updates an approved organization admin (name and/or email). Super-admin only.
+ * @param {{ tenantId: string, userId: string, name?: string, email?: string }} payload
+ * @returns {Promise<boolean>}
+ */
+export async function adminUpdateTenantAdmin(payload) {
+  const data = await callAdminRpcV2("rpc_admin_tenant_admin_update", {
+    p_tenant_id: payload.tenantId,
+    p_user_id: payload.userId,
+    p_name: payload.name ?? null,
+    p_email: payload.email ?? null,
+  });
+  return data === true;
+}
+
+/**
+ * Hard-deletes an approved organization admin from auth/profile/memberships.
+ * Super-admin only.
+ * @param {{ tenantId: string, userId: string }} payload
+ * @returns {Promise<boolean>}
+ */
+export async function adminDeleteTenantAdminHard(payload) {
+  const data = await callAdminRpcV2("rpc_admin_tenant_admin_delete_hard", {
+    p_tenant_id: payload.tenantId,
+    p_user_id: payload.userId,
   });
   return data === true;
 }

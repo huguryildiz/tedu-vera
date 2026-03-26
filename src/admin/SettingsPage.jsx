@@ -11,7 +11,6 @@ import {
   adminListJurors,
   adminGetScores,
   adminProjectSummary,
-  adminSecurityState,
   adminFullExport,
   adminFullImport,
 } from "../shared/api";
@@ -25,7 +24,6 @@ import SemesterSettingsPanel from "./ManageSemesterPanel";
 import ProjectSettingsPanel from "./ManageProjectsPanel";
 import JurorSettingsPanel from "./ManageJurorsPanel";
 import AccessSettingsPanel from "./ManagePermissionsPanel";
-import AdminSecurityPanel from "../components/admin/AdminSecurityPanel";
 import DeleteConfirmDialog from "../components/admin/DeleteConfirmDialog";
 import { useSettingsCrud } from "./hooks/useSettingsCrud";
 import { useManageOrganizations } from "./hooks/useManageOrganizations";
@@ -70,7 +68,6 @@ export default function SettingsPage({ tenantId, selectedSemesterId = "", onDirt
       projects: !isSM,
       jurors: !isSM,
       permissions: !isSM,
-      security: !isSM,
       audit: !isSM,
       export: !isSM,
       dbbackup: !isSM,
@@ -98,7 +95,6 @@ export default function SettingsPage({ tenantId, selectedSemesterId = "", onDirt
   const [dbImportSuccess, setDbImportSuccess] = useState("");
   const [dbImportWarning, setDbImportWarning] = useState("");
 
-  const adminSecurityRef = useRef(null);
   const importFileRef = useRef(null);
 
   const localTimeZone = (() => {
@@ -147,20 +143,6 @@ export default function SettingsPage({ tenantId, selectedSemesterId = "", onDirt
     onDirtyChange: handleOrgDirtyChange,
   });
 
-  // ── Security state (backup password check) ────────────────
-  useEffect(() => {
-    let active = true;
-    adminSecurityState()
-      .then((state) => {
-        if (!active) return;
-        setBackupPasswordSet(Boolean(state?.backup_password_set));
-      })
-      .catch(() => {
-        if (!active) return;
-        setBackupPasswordSet(true);
-      });
-    return () => { active = false; };
-  }, []);
 
   const togglePanel = (id) => {
     setOpenPanels((prev) => {
@@ -552,7 +534,7 @@ export default function SettingsPage({ tenantId, selectedSemesterId = "", onDirt
                     return;
                   }
                   if (!tenantId) {
-                    crud.setPanelError("semester", "Tenant ID missing. Please re-login.");
+                    crud.setPanelError("semester", "Organization ID missing. Please re-login.");
                     return;
                   }
                   crud.handleRequestDelete({
@@ -708,14 +690,6 @@ export default function SettingsPage({ tenantId, selectedSemesterId = "", onDirt
                 onForceCloseEdit={crud.handleForceCloseJurorEdit}
               />
             )}
-
-            <AdminSecurityPanel
-              isMobile={isMobile}
-              isOpen={openPanels.security}
-              onToggle={() => togglePanel("security")}
-              tenantId={tenantId}
-              innerRef={adminSecurityRef}
-            />
 
             <JuryEntryControlPanel
               isMobile={isMobile}
