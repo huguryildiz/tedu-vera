@@ -14,20 +14,46 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #1e293b 100%);
-  color: #e2e8f0;
-  text-align: center;
+  gap: 8px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #cbd5e1;
   font-size: 12.5px;
-  font-weight: 500;
-  padding: 7px 16px;
-  letter-spacing: 0.4px;
-  border-bottom: 1px solid rgba(99, 102, 241, 0.25);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  font-weight: 400;
+  padding: 8px 20px;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
-.demo-banner svg {
-  opacity: 0.7;
+.demo-banner-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.2);
   flex-shrink: 0;
+}
+.demo-banner-icon svg {
+  stroke: #818cf8;
+}
+.demo-banner-text {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+}
+.demo-banner-text strong {
+  font-weight: 600;
+  color: #e2e8f0;
+  letter-spacing: 0.4px;
+}
+.demo-banner-sep {
+  margin: 0 6px;
+  color: #475569;
+  font-size: 11px;
 }
 
 /* ── Screen shell ───────────────────────────────────────────── */
