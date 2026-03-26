@@ -48,6 +48,8 @@ function roleBadgeLabel(isSuper) {
 
 // ── Main Component ───────────────────────────────────────────
 
+const isDemoMode = import.meta.env.VITE_DEMO_MODE === "true";
+
 export default function UserAvatarMenu({ onLogout }) {
   const { user, displayName, activeTenant, isSuper } = useAuth();
   const profile = useProfileEdit();
@@ -177,10 +179,10 @@ export default function UserAvatarMenu({ onLogout }) {
 
           <div className="ph-avatar-menu-divider" />
 
-          <button className="ph-avatar-menu-item" role="menuitem" onClick={() => handleMenuAction("profile")}>
+          <button className="ph-avatar-menu-item" role="menuitem" onClick={() => handleMenuAction("profile")} disabled={isDemoMode}>
             <UserPenIcon /> My Profile
           </button>
-          <button className="ph-avatar-menu-item" role="menuitem" onClick={() => handleMenuAction("password")}>
+          <button className="ph-avatar-menu-item" role="menuitem" onClick={() => handleMenuAction("password")} disabled={isDemoMode}>
             <KeyRoundIcon /> Change Password
           </button>
 

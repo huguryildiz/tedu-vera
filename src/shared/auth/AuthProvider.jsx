@@ -129,7 +129,10 @@ export default function AuthProvider({ children }) {
 
     hasSessionRef.current = true;
 
-    // Upsert admin profile (non-blocking — display name is a nice-to-have)
+    // Upsert admin profile (non-blocking — display name is a nice-to-have).
+    // Skip in demo mode — profile already exists in seed, and write RPCs are blocked.
+    const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
+    if (DEMO_MODE) { setLoading(false); return; }
     adminProfileUpsert().then((profile) => {
       if (mountedRef.current && profile?.out_display_name) {
         setDisplayName(profile.out_display_name);
