@@ -28,6 +28,7 @@ import { AuthProvider, useAuth } from "./shared/auth";
 import LoginForm from "./components/auth/LoginForm";
 import ForgotPasswordForm from "./components/auth/ForgotPasswordForm";
 import RegisterForm from "./components/auth/RegisterForm";
+import ResetPasswordCreateForm from "./components/auth/ResetPasswordCreateForm";
 import PendingReviewGate from "./admin/components/PendingReviewGate";
 import "./styles/home.css";
 import "./styles/admin-auth.css";
@@ -78,7 +79,7 @@ function AppInner() {
     } catch { return ""; }
   });
 
-  // Admin auth sub-page: "login" | "register"
+  // Admin auth sub-page: "login" | "register" | "forgot" | "reset"
   const [adminAuthPage, setAdminAuthPage] = useState("login");
   const [adminAuthError, setAdminAuthError] = useState("");
   const [adminInitialLoading, setAdminInitialLoading] = useState(true);
@@ -89,6 +90,22 @@ function AppInner() {
   }, [page]);
 
   useEffect(() => initScrollIndicators(), []);
+
+  useEffect(() => {
+    try {
+      const hash = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
+      const search = new URLSearchParams(window.location.search || "");
+      const isRecovery =
+        hash.get("type") === "recovery" ||
+        search.get("type") === "recovery" ||
+        search.get("page") === "reset-password";
+      if (isRecovery) {
+        setPage("admin");
+        setAdminAuthPage("reset");
+        setAdminAuthError("");
+      }
+    } catch {}
+  }, []);
 
   // Demo mode: auto-sign-in
   useEffect(() => {
@@ -118,6 +135,15 @@ function AppInner() {
       university: metadata.university,
       department: metadata.department,
     });
+  }
+
+  async function handleUpdatePassword(password) {
+    setAdminAuthError("");
+    await auth.updatePassword(password);
+    try {
+      const cleanUrl = `${window.location.pathname}?page=admin`;
+      window.history.replaceState({}, "", cleanUrl);
+    } catch {}
   }
 
   function handleAdminSignOut() {
@@ -159,6 +185,20 @@ function AppInner() {
       return <MinimalLoaderOverlay open minDuration={400} />;
     }
 
+    // Password recovery flow: always show reset form first.
+    if (adminAuthPage === "reset") {
+      return (
+        <div className="premium-screen">
+          <div className="premium-card premium-card--auth-login">
+            <ResetPasswordCreateForm
+              onUpdatePassword={handleUpdatePassword}
+              onBackToLogin={() => { setAdminAuthPage("login"); setAdminAuthError(""); }}
+            />
+          </div>
+        </div>
+      );
+    }
+
     // Not authenticated — show login/register
     if (!auth.user) {
       return (
@@ -167,6 +207,11 @@ function AppInner() {
             {adminAuthPage === "forgot" ? (
               <ForgotPasswordForm
                 onResetPassword={auth.resetPassword}
+                onBackToLogin={() => { setAdminAuthPage("login"); setAdminAuthError(""); }}
+              />
+            ) : adminAuthPage === "reset" ? (
+              <ResetPasswordCreateForm
+                onUpdatePassword={handleUpdatePassword}
                 onBackToLogin={() => { setAdminAuthPage("login"); setAdminAuthError(""); }}
               />
             ) : adminAuthPage === "register" ? (

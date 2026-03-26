@@ -107,9 +107,47 @@ export async function cancelAdminApplication(applicationId) {
  * Approve a pending admin application (tenant-admin or super-admin).
  */
 export async function approveAdminApplication(applicationId) {
-  return callAdminRpcV2("rpc_admin_application_approve", {
-    p_application_id: applicationId,
-  });
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token || "";
+  try {
+    const { data, error } = await supabase.functions.invoke("approve-admin-application", {
+      body: { application_id: applicationId },
+      headers: token
+        ? { Authorization: `Bearer ${token}` }
+        : undefined,
+    });
+    if (error) throw error;
+    if (data?.error) {
+      const e = new Error(data.error);
+      e.code = data.code;
+      throw e;
+    }
+    return data?.data ?? true;
+  } catch (err) {
+    // FunctionsHttpError.message is generic ("Edge Function returned a non-2xx status code").
+    // Try to surface the JSON body from the function response.
+    const fallback = String(err?.message || "Could not approve application.");
+    const response = err?.context;
+    if (!response || typeof response.text !== "function") {
+      throw err;
+    }
+    try {
+      const raw = await response.text();
+      if (!raw) throw err;
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        parsed = null;
+      }
+      const detailed = parsed?.error || parsed?.message || raw;
+      const e = new Error(String(detailed || fallback));
+      if (parsed?.code) e.code = parsed.code;
+      throw e;
+    } catch {
+      throw err;
+    }
+  }
 }
 
 /**

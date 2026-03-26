@@ -1737,6 +1737,28 @@
 }
 
 @media (max-width: 520px) and (orientation: portrait) {
+  .manage-item.manage-item--org {
+    position: relative;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .manage-item.manage-item--org > div:first-child {
+    padding-right: 108px;
+  }
+
+  .manage-item.manage-item--org .manage-item-actions {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    width: auto;
+    margin-top: 0;
+    align-self: auto;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    transform: translateY(-50%);
+  }
+
   .manage-item.manage-item--permissions {
     position: relative;
     flex-direction: row;

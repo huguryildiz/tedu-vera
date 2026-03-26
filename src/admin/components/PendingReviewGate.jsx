@@ -5,7 +5,7 @@
 // ============================================================
 
 import { useEffect, useState } from "react";
-import { AlertCircleIcon } from "../../shared/Icons";
+import { AlertCircleIcon, HomeIcon } from "../../shared/Icons";
 import { getMyApplications } from "../../shared/api";
 
 export default function PendingReviewGate({ user, onSignOut, onBack }) {
@@ -58,14 +58,9 @@ export default function PendingReviewGate({ user, onSignOut, onBack }) {
           </div>
         )}
 
-        {!loading && applications.length === 0 && (
-          <p className="pending-gate-hint">
-            You haven&apos;t submitted any applications yet. Go back to apply for access to a department.
-          </p>
-        )}
-
         <div className="pending-gate-actions">
           <button onClick={onBack} className="admin-auth-submit" style={{ maxWidth: 200 }}>
+            <span aria-hidden="true"><HomeIcon /></span>
             Return Home
           </button>
           <button onClick={onSignOut} className="admin-auth-home-link pending-gate-signout">

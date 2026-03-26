@@ -88,7 +88,7 @@ export default function ForgotPasswordForm({ onResetPassword, onBackToLogin }) {
       </button>
 
       <div className="admin-auth-forgot">
-        <button type="button" onClick={onBackToLogin} className="admin-auth-link">
+        <button type="button" onClick={onBackToLogin} className="admin-auth-home-link">
           ← Back to Sign In
         </button>
       </div>

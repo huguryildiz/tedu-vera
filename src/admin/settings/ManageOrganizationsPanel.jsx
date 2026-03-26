@@ -97,6 +97,13 @@ export default function ManageOrganizationsPanel({
     password: "",
   });
   const [adminDeleteTarget, setAdminDeleteTarget] = useState(null);
+  const adminCreateErrorLower = adminCreateError.trim().toLowerCase();
+  const adminCreateNameError = adminCreateErrorLower.includes("name");
+  const adminCreateEmailError = adminCreateErrorLower.includes("email");
+  const adminCreatePasswordError = adminCreateErrorLower.includes("password");
+  const adminEditErrorLower = adminEditError.trim().toLowerCase();
+  const adminEditNameError = adminEditErrorLower.includes("name");
+  const adminEditEmailError = adminEditErrorLower.includes("email");
 
   const handleToggle = () => {
     if (isOpen && isDirty) {
@@ -675,14 +682,14 @@ export default function ManageOrganizationsPanel({
                 <div className="manage-modal-body">
                   <label className="manage-label">Name</label>
                   <input
-                    className="manage-input"
+                    className={`manage-input${adminCreateNameError ? " is-danger" : ""}`}
                     value={adminCreateForm.name}
                     onChange={(e) => setAdminCreateForm((prev) => ({ ...prev, name: e.target.value }))}
                     placeholder="Admin name"
                   />
                   <label className="manage-label">Email</label>
                   <input
-                    className="manage-input"
+                    className={`manage-input${adminCreateEmailError ? " is-danger" : ""}`}
                     type="email"
                     value={adminCreateForm.email}
                     onChange={(e) => setAdminCreateForm((prev) => ({ ...prev, email: e.target.value }))}
@@ -690,7 +697,7 @@ export default function ManageOrganizationsPanel({
                   />
                   <label className="manage-label">Temporary Password</label>
                   <input
-                    className="manage-input"
+                    className={`manage-input${adminCreatePasswordError ? " is-danger" : ""}`}
                     type="password"
                     value={adminCreateForm.password}
                     onChange={(e) => setAdminCreateForm((prev) => ({ ...prev, password: e.target.value }))}
@@ -708,7 +715,7 @@ export default function ManageOrganizationsPanel({
                     onClick={saveAdminCreate}
                     disabled={adminCreateSaving}
                   >
-                    Create application
+                    Create
                   </button>
                 </div>
               </div>
@@ -725,14 +732,14 @@ export default function ManageOrganizationsPanel({
                 <div className="manage-modal-body">
                   <label className="manage-label">Name</label>
                   <input
-                    className="manage-input"
+                    className={`manage-input${adminEditNameError ? " is-danger" : ""}`}
                     value={adminEditForm.name}
                     onChange={(e) => setAdminEditForm((prev) => ({ ...prev, name: e.target.value }))}
                     placeholder="Admin name"
                   />
                   <label className="manage-label">Email</label>
                   <input
-                    className="manage-input"
+                    className={`manage-input${adminEditEmailError ? " is-danger" : ""}`}
                     type="email"
                     value={adminEditForm.email}
                     onChange={(e) => setAdminEditForm((prev) => ({ ...prev, email: e.target.value }))}

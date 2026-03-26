@@ -53,6 +53,9 @@ vi.mock("../shared/Icons", () => ({
   ClipboardIcon:  () => null,
   ShieldUserIcon: () => null,
   AlertCircleIcon: () => null,
+  TriangleAlertLucideIcon: () => null,
+  InfoIcon: () => null,
+  CheckCircle2Icon: () => null,
   EyeIcon:        () => null,
   EyeOffIcon:     () => null,
 }));

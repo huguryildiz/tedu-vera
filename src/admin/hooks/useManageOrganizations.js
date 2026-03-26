@@ -25,6 +25,25 @@ const EMPTY_EDIT = { id: "", code: "", shortLabel: "", university: "", departmen
 const VALID_STATUSES = ["active", "disabled", "archived"];
 const CODE_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+const normalizeAdminApplicationError = (raw) => {
+  const msg = String(raw || "").trim();
+  const lower = msg.toLowerCase();
+  if (!lower) return "Could not create admin application.";
+  if (lower.includes("email_already_registered")) {
+    return "This email is already registered.";
+  }
+  if (lower.includes("application_already_pending")) {
+    return "There is already a pending application for this email in this organization.";
+  }
+  if (lower.includes("password_too_short")) {
+    return "Password must be at least 10 characters.";
+  }
+  if (lower.includes("tenant_not_found")) {
+    return "Organization was not found. Please refresh and try again.";
+  }
+  return msg;
+};
+
 /**
  * useManageOrganizations — tenant identity CRUD for super-admins.
  *
@@ -349,9 +368,9 @@ export function useManageOrganizations({
       setMessage?.("Admin application created.");
       return { ok: true };
     } catch (e) {
-      const msg = String(e?.message || "");
-      setError(msg || "Could not create admin application.");
-      return { ok: false, error: msg || "Could not create admin application." };
+      const friendly = normalizeAdminApplicationError(e?.message || "");
+      setError(friendly);
+      return { ok: false, error: friendly };
     } finally {
       decLoading();
     }

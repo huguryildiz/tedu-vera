@@ -5,7 +5,8 @@
 // ============================================================
 
 import { useState } from "react";
-import { EyeIcon, EyeOffIcon, AlertCircleIcon, ShieldUserIcon } from "../../shared/Icons";
+import { EyeIcon, EyeOffIcon, ShieldUserIcon } from "../../shared/Icons";
+import AlertCard from "../../shared/AlertCard";
 
 export default function LoginForm({ onLogin, onSwitchToRegister, onForgotPassword, error: externalError, loading: externalLoading }) {
   const [email, setEmail] = useState("");
@@ -15,6 +16,36 @@ export default function LoginForm({ onLogin, onSwitchToRegister, onForgotPasswor
   const [loading, setLoading] = useState(false);
 
   const isLoading = loading || externalLoading;
+  const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+
+  const normalizeLoginError = (raw) => {
+    const msg = String(raw || "").toLowerCase().trim();
+    if (!msg) return "Login failed. Please try again.";
+    if (msg.includes("invalid login credentials")) {
+      return "Invalid email or password.";
+    }
+    if (msg.includes("email not confirmed")) {
+      return "Your email is not confirmed yet. Please check your inbox.";
+    }
+    if (msg.includes("database error querying schema")) {
+      return "Could not sign in right now. Please try again in a moment.";
+    }
+    if (msg.includes("already registered")) {
+      return "This email is already registered. Please sign in.";
+    }
+    return String(raw);
+  };
+
+  const extractErrorText = (err) => {
+    if (!err) return "";
+    const parts = [
+      err.message,
+      err.details,
+      err.hint,
+      err.code ? `code:${err.code}` : "",
+    ].filter(Boolean);
+    return parts.join(" | ");
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -22,21 +53,27 @@ export default function LoginForm({ onLogin, onSwitchToRegister, onForgotPasswor
       setError("Please enter your email and password.");
       return;
     }
+    if (!isValidEmail(email)) {
+      setError("A valid email is required.");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
       await onLogin(email.trim(), password);
     } catch (err) {
-      setError(err?.message || "Login failed. Please try again.");
+      const raw = extractErrorText(err);
+      setError(normalizeLoginError(raw || "Login failed. Please try again."));
     } finally {
       setLoading(false);
     }
   }
 
-  const displayError = externalError || error;
+  const rawDisplayError = (externalError || error || "").trim();
+  const displayError = rawDisplayError ? normalizeLoginError(rawDisplayError) : "";
 
   return (
-    <form onSubmit={handleSubmit} className="admin-auth-form">
+    <form onSubmit={handleSubmit} className="admin-auth-form" noValidate>
       <div className="admin-auth-header">
         <div className="premium-icon-square" aria-hidden="true"><ShieldUserIcon /></div>
         <h2 className="admin-auth-title">Admin Panel</h2>
@@ -44,10 +81,7 @@ export default function LoginForm({ onLogin, onSwitchToRegister, onForgotPasswor
       </div>
 
       {displayError && (
-        <div className="admin-auth-error">
-          <AlertCircleIcon size={16} />
-          <span>{displayError}</span>
-        </div>
+        <AlertCard variant="error">{displayError}</AlertCard>
       )}
 
       <label className="admin-auth-label">

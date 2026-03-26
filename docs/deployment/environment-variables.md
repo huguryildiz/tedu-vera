@@ -58,6 +58,28 @@ The E2E CI job is currently disabled (`if: false` in `.github/workflows/ci.yml`)
 
 ---
 
+## Notification Secret Sync (GitHub Actions)
+
+Workflow: `.github/workflows/notification-secrets-sync.yml`
+
+Required GitHub secrets:
+
+| Secret | Purpose |
+| --- | --- |
+| `SUPABASE_ACCESS_TOKEN` | Auth token for Supabase CLI in GitHub Actions |
+| `SUPABASE_PROJECT_REF_DEMO` | Demo Supabase project ref |
+| `SUPABASE_PROJECT_REF_PROD` | Prod Supabase project ref |
+| `NOTIFICATION_REVIEW_URL_DEMO_LOCAL` | Demo review URL (local profile, e.g. `http://192.168.../?tab=applications`) |
+| `NOTIFICATION_APP_URL_DEMO_LOCAL` | Demo app URL (local profile, e.g. `http://192.168...`) |
+| `NOTIFICATION_REVIEW_URL_DEMO_VERCEL` | Demo review URL (vercel profile, e.g. `https://tedu-vera-demo.vercel.app/?tab=applications`) |
+| `NOTIFICATION_APP_URL_DEMO_VERCEL` | Demo app URL (vercel profile, e.g. `https://tedu-vera-demo.vercel.app`) |
+| `NOTIFICATION_REVIEW_URL_PROD` | Prod review URL |
+| `NOTIFICATION_APP_URL_PROD` | Prod app root URL |
+| `NOTIFICATION_FROM` | Sender identity for notification emails |
+| `NOTIFICATION_LOGO_URL` | Public logo URL used in premium email templates |
+
+---
+
 ## Backup Variable (GitHub Actions Secrets)
 
 | Secret | Used by | Notes |

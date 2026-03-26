@@ -71,6 +71,67 @@ function escapeHtml(input: string): string {
     .replaceAll("'", "&#39;");
 }
 
+function resolveTargetEnv(req: Request): "dev" | "prod" {
+  const explicitEnv = (Deno.env.get("NOTIFICATION_ENV") || "").trim().toLowerCase();
+  if (explicitEnv === "dev" || explicitEnv === "prod") return explicitEnv;
+
+  const hostHeader = (req.headers.get("x-forwarded-host") || req.headers.get("host") || "").toLowerCase();
+  if (hostHeader.includes("localhost") || hostHeader.includes("127.0.0.1") || hostHeader.includes("192.168.")) {
+    return "dev";
+  }
+  return "prod";
+}
+
+function pickByEnv(req: Request, devUrl: string, prodUrl: string): string {
+  const env = resolveTargetEnv(req);
+  if (env === "dev" && devUrl) return devUrl;
+  if (env === "prod" && prodUrl) return prodUrl;
+  return prodUrl || devUrl || "";
+}
+
+function resolvePortalUrl(req: Request): string {
+  const explicit = (Deno.env.get("NOTIFICATION_APP_URL") || "").trim();
+  if (explicit) return explicit;
+
+  const devExplicit = (Deno.env.get("NOTIFICATION_APP_URL_DEV") || "").trim();
+  const prodExplicit = (Deno.env.get("NOTIFICATION_APP_URL_PROD") || "").trim();
+  const byEnv = pickByEnv(req, devExplicit, prodExplicit);
+  if (byEnv) return byEnv;
+
+  let hostname = "";
+  try {
+    hostname = new URL(req.url).hostname.toLowerCase();
+  } catch {
+    hostname = "";
+  }
+
+  const isDevHost = hostname === "localhost"
+    || hostname === "::1"
+    || hostname.startsWith("127.")
+    || hostname.startsWith("192.168.");
+
+  if (isDevHost) {
+    if (devExplicit) return devExplicit;
+    const devHost = hostname.startsWith("127.") ? "localhost" : hostname;
+    return `http://${devHost}:5173`;
+  }
+
+  if (prodExplicit) return prodExplicit;
+  return "https://tedu-vera-demo.vercel.app";
+}
+
+function resolveReviewUrl(req: Request, portalUrl: string): string {
+  const explicit = (Deno.env.get("NOTIFICATION_REVIEW_URL") || "").trim();
+  if (explicit) return explicit;
+
+  const devExplicit = (Deno.env.get("NOTIFICATION_REVIEW_URL_DEV") || "").trim();
+  const prodExplicit = (Deno.env.get("NOTIFICATION_REVIEW_URL_PROD") || "").trim();
+  const byEnv = pickByEnv(req, devExplicit, prodExplicit);
+  if (byEnv) return byEnv;
+
+  return portalUrl;
+}
+
 function buildHtmlTemplate(params: {
   title: string;
   intro: string;
@@ -144,8 +205,9 @@ Deno.serve(async (req: Request) => {
     let to = payload.recipient_email || "";
     let html = "";
     const tenantLabel = payload.tenant_name || "the requested department";
-    const reviewUrl = Deno.env.get("NOTIFICATION_REVIEW_URL") || "";
-    const appUrl = Deno.env.get("NOTIFICATION_APP_URL") || "";
+    const portalUrl = resolvePortalUrl(req);
+    const reviewUrl = resolveReviewUrl(req, portalUrl);
+    const appUrl = portalUrl;
     const logoUrl = Deno.env.get("NOTIFICATION_LOGO_URL") || "";
 
     switch (payload.type) {
@@ -169,39 +231,31 @@ Deno.serve(async (req: Request) => {
       case "application_approved":
         subject = "Your VERA admin application has been approved";
         body = [
-          `Your application for admin access to ${tenantLabel} has been approved.`,
-          "You can now log in to the VERA admin panel with your registered email and password.",
+          `Your application for admin access to ${tenantLabel} has been approved. You can now sign in with your registered email and password.`,
         ].join("\n");
         html = buildHtmlTemplate({
           title: "Application Approved",
-          intro: "Your TEDU VERA admin application has been approved.",
+          intro: "Your VERA admin application has been approved.",
           rawHtmlLines: [
-            `<p style="margin:0 0 8px; font-size:14px; line-height:1.7; color:#a0aec0;">Your application for admin access to ${escapeHtml(tenantLabel)} has been approved.</p>`,
-            appUrl
-              ? `<p style="margin:0 0 8px; font-size:14px; line-height:1.7; color:#a0aec0;">You can now <a href="${escapeHtml(appUrl)}" style="color:#a78bfa; text-decoration:underline;">sign in</a> with your registered email and password.</p>`
-              : `<p style="margin:0 0 8px; font-size:14px; line-height:1.7; color:#a0aec0;">You can now sign in with your registered email and password.</p>`,
+            `<p style="margin:0 0 8px; font-size:14px; line-height:1.7; color:#a0aec0;">Your application for admin access to ${escapeHtml(tenantLabel)} has been approved, and you can now sign in with your registered email and password.</p>`,
           ],
-          ctaLabel: appUrl ? "Open VERA" : undefined,
+          ctaLabel: appUrl ? "Sign In" : undefined,
           ctaUrl: appUrl || undefined,
           logoUrl: logoUrl || undefined,
         });
         break;
 
       case "application_rejected":
-        subject = "VERA admin application update";
+        subject = "Your VERA admin application has been rejected";
         body = [
-          `Your application for admin access to ${tenantLabel} was not approved at this time.`,
-          "Please contact the department administrator for more information.",
+          `Your application for admin access to ${tenantLabel} was not approved at this time. Please contact the department administrator for details.`,
         ].join("\n");
         html = buildHtmlTemplate({
-          title: "Application Update",
-          intro: "There is an update about your TEDU VERA admin application.",
-          lines: [
-            `Your application for admin access to ${tenantLabel} was not approved at this time.`,
-            "Please contact the department administrator for details.",
+          title: "Application Rejected",
+          intro: "Your VERA admin application has been rejected.",
+          rawHtmlLines: [
+            `<p style="margin:0 0 8px; font-size:14px; line-height:1.7; color:#a0aec0;">Your application for admin access to ${escapeHtml(tenantLabel)} was not approved at this time. Please contact the department administrator for details.</p>`,
           ],
-          ctaLabel: appUrl ? "Open VERA" : undefined,
-          ctaUrl: appUrl || undefined,
           logoUrl: logoUrl || undefined,
         });
         break;

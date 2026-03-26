@@ -151,10 +151,23 @@ export default function AuthProvider({ children }) {
   }, []);
 
   const resetPassword = useCallback(async (email) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}?page=admin`,
+    const { data, error } = await supabase.functions.invoke("password-reset-email", {
+      body: { email },
     });
     if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+  }, []);
+
+  const updatePassword = useCallback(async (password) => {
+    const { data, error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+    // Best-effort security notification; never block successful password update.
+    try {
+      await supabase.functions.invoke("password-changed-notify", {
+        body: {},
+      });
+    } catch {}
+    return data;
   }, []);
 
   const signOut = useCallback(async () => {
@@ -208,9 +221,10 @@ export default function AuthProvider({ children }) {
     signUp,
     signOut,
     resetPassword,
+    updatePassword,
     refreshMemberships,
   }), [user, session, tenants, activeTenant, setActiveTenant, displayName,
-       isSuper, isPending, loading, signIn, signUp, signOut, resetPassword, refreshMemberships]);
+       isSuper, isPending, loading, signIn, signUp, signOut, resetPassword, updatePassword, refreshMemberships]);
 
   return (
     <AuthContext.Provider value={value}>
