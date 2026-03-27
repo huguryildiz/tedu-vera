@@ -126,7 +126,7 @@ function AppInner() {
     if (!DEMO_MODE || !DEMO_EMAIL || !DEMO_PASS) return;
     if (page !== "admin" || auth.user) return;
     let active = true;
-    auth.signIn(DEMO_EMAIL, DEMO_PASS).catch(() => {
+    auth.signIn(DEMO_EMAIL, DEMO_PASS, true).catch(() => {
       if (active) setAdminAuthError("Demo auto-login failed.");
     });
     return () => { active = false; };
