@@ -259,19 +259,17 @@ export default function AuthProvider({ children }) {
     });
     if (metaError) throw metaError;
 
-    // Submit tenant application (same RPC as registration)
-    const { submitAdminApplication } = await import("../api/admin/auth");
-    await submitAdminApplication({
-      tenantId,
-      email: user.email,
-      password: crypto.randomUUID() + "Aa1!", // Random password — Google auth user never uses it
-      name,
-      university,
-      department,
+    // Use the 4-param authenticated overload (no email/password needed)
+    const { data, error } = await supabase.rpc("rpc_admin_application_submit", {
+      p_tenant_id: tenantId,
+      p_name: name,
+      p_university: university || "",
+      p_department: department || "",
     });
+    if (error) throw error;
 
     setProfileIncomplete(false);
-  }, [user]);
+  }, []);
 
   const signUp = useCallback(async (email, password, metadata = {}) => {
     const { data, error } = await supabase.auth.signUp({
