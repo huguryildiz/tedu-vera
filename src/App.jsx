@@ -28,6 +28,7 @@ import { AuthProvider, useAuth } from "./shared/auth";
 import LoginForm from "./components/auth/LoginForm";
 import ForgotPasswordForm from "./components/auth/ForgotPasswordForm";
 import RegisterForm from "./components/auth/RegisterForm";
+import CompleteProfileForm from "./components/auth/CompleteProfileForm";
 import ResetPasswordCreateForm from "./components/auth/ResetPasswordCreateForm";
 import PendingReviewGate from "./admin/components/PendingReviewGate";
 import "./styles/home.css";
@@ -131,9 +132,14 @@ function AppInner() {
     return () => { active = false; };
   }, [page, auth.user, auth]);
 
-  async function handleLogin(email, password) {
+  async function handleLogin(email, password, rememberMe) {
     setAdminAuthError("");
-    await auth.signIn(email, password);
+    await auth.signIn(email, password, rememberMe);
+  }
+
+  async function handleGoogleLogin(rememberMe) {
+    setAdminAuthError("");
+    await auth.signInWithGoogle(rememberMe);
   }
 
   async function handleRegister(email, password, metadata) {
@@ -240,6 +246,7 @@ function AppInner() {
             ) : (
               <LoginForm
                 onLogin={handleLogin}
+                onGoogleLogin={handleGoogleLogin}
                 onSwitchToRegister={() => { setAdminAuthPage("register"); setAdminAuthError(""); }}
                 onForgotPassword={() => { setAdminAuthPage("forgot"); setAdminAuthError(""); }}
                 error={adminAuthError}
@@ -266,6 +273,21 @@ function AppInner() {
           onSignOut={handleAdminSignOut}
           onBack={() => setPage("home")}
         />
+      );
+    }
+
+    // Google user needs to complete profile
+    if (auth.profileIncomplete) {
+      return (
+        <div className="premium-screen">
+          <div className="premium-card premium-card--auth-register">
+            <CompleteProfileForm
+              user={auth.user}
+              onComplete={auth.completeProfile}
+              onSignOut={handleAdminSignOut}
+            />
+          </div>
+        </div>
       );
     }
 
