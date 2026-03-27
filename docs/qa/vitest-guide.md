@@ -141,7 +141,6 @@ because `.env.local` is not loaded in the test environment.
 | `src/test/utils.test.js` | 36 | `parseCsv` (delimiter, quoting, escaping, empty input), `tsToMillis`, timestamp formatting, row dedup, completion %, key building |
 | `src/admin/__tests__/ManageSemesterPanel.test.jsx` | 11 | Sort order (name/date/active), set active behavior, delete guard (can't delete active semester), smoke renders |
 | `src/admin/__tests__/smoke.test.jsx` | 11 | CompletionStrip variants (0%/50%/100%), JurorActivity chip states (not started/in-progress/done) |
-| `src/admin/__tests__/ManagePermissionsPanel.test.jsx` | 10 | `canEnableEdit` gate conditions, lock eval toggle, force-close confirmation flow |
 | `src/admin/__tests__/ManageProjectsPanel.test.jsx` | 10 | CSV import validation (missing columns, duplicate IDs, invalid format), import summary display, CRUD smoke |
 | `src/admin/__tests__/ManageJurorsPanel.test.jsx` | 9 | Juror CSV import validation, PIN reset button, CRUD smoke |
 | `src/admin/__tests__/RankingsTab.test.jsx` | 7 | Rankings render, competition ranking (1,1,3 not dense 1,1,2), export button, result consistency |

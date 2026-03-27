@@ -24,7 +24,6 @@ const MODULE_MAP = {
   ManageSemesterPanel:    "Settings / Semesters",
   ManageProjectsPanel:    "Settings / Groups",
   ManageJurorsPanel:      "Settings / Jurors",
-  ManagePermissionsPanel: "Settings / Permissions",
   AdminSecurityPanel:     "Settings / Security",
   RankingsTab:            "Scores / Rankings",
   ScoreDetails:           "Scores / Details",

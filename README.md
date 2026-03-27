@@ -80,7 +80,7 @@ src/
 ├── admin/
 │   ├── hooks/              # 12 focused hooks (useManageSemesters, useManageJurors, etc.)
 │   ├── components/         # analytics/, details/ sub-components
-│   ├── settings/           # PinResetDialog, EvalLockConfirmDialog, AuditLogCard, ExportBackupPanel
+│   ├── settings/           # PinResetDialog, AuditLogCard, ExportBackupPanel
 │   ├── xlsx/               # exportXLSX.js — Excel export utilities
 │   └── utils/              # auditUtils, sorting helpers
 ├── jury/

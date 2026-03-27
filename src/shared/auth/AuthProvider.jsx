@@ -12,7 +12,7 @@
 import { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { getActiveTenantId, setActiveTenantId } from "../storage/adminStorage";
-import { adminProfileUpsert } from "../api/admin/profiles";
+import { adminProfileUpsert, adminProfileGet } from "../api/admin/profiles";
 
 export const AuthContext = createContext(null);
 
@@ -137,10 +137,19 @@ export default function AuthProvider({ children }) {
 
     hasSessionRef.current = true;
 
-    // Upsert admin profile (non-blocking — display name is a nice-to-have).
-    // Skip in demo mode — profile already exists in seed, and write RPCs are blocked.
+    // In demo mode, skip the profile upsert (write RPCs are blocked) but
+    // still read the display name from admin_profiles so the avatar menu
+    // shows the seeded name instead of the fallback "Admin".
     const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
-    if (DEMO_MODE) { setLoading(false); return; }
+    if (DEMO_MODE) {
+      adminProfileGet().then((profile) => {
+        if (mountedRef.current && profile?.display_name) {
+          setDisplayName(profile.display_name);
+        }
+      }).catch(() => {});
+      setLoading(false);
+      return;
+    }
     adminProfileUpsert().then((profile) => {
       if (mountedRef.current && profile?.out_display_name) {
         setDisplayName(profile.out_display_name);

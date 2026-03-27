@@ -62,8 +62,7 @@ App.jsx
     └── SettingsPage.jsx            ← manage semesters, projects, jurors
         ├── ManageSemesterPanel.jsx
         ├── ManageProjectsPanel.jsx
-        ├── ManageJurorsPanel.jsx
-        └── ManagePermissionsPanel.jsx
+        └── ManageJurorsPanel.jsx    ← includes status pills + edit permissions
 ```
 
 ### Admin hooks (`src/admin/hooks/`)
@@ -234,7 +233,7 @@ src/
 │   ├── components/
 │   │   ├── analytics/      ← AnalyticsHeader and related sub-components
 │   │   └── details/        ← ScoreDetailsFilters, ScoreDetailsTable
-│   ├── settings/           ← PinResetDialog, EvalLockConfirmDialog, AuditLogCard, ExportBackupPanel
+│   ├── settings/           ← PinResetDialog, AuditLogCard, ExportBackupPanel
 │   ├── xlsx/               ← exportXLSX.js (all XLSX export functions)
 │   └── utils/              ← auditUtils.js, sorting helpers
 ├── jury/

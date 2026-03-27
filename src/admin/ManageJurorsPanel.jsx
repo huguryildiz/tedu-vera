@@ -6,7 +6,6 @@ import {
   UploadIcon,
   FileUpIcon,
   CloudUploadIcon,
-  CalendarCheckIcon,
   LandmarkIcon,
   UserCheckIcon,
   LockIcon,
@@ -15,24 +14,19 @@ import {
   SearchIcon,
   UserCogIcon,
   CirclePlusIcon,
+  CircleDotIcon,
+  LoaderIcon,
 } from "../shared/Icons";
 import DangerIconButton from "../components/admin/DangerIconButton";
 import LastActivity from "./LastActivity";
-import { buildSemesterSearchText, buildTimestampSearchText, parseCsv } from "./utils";
+import { jurorStatusMeta } from "./scoreHelpers";
+import { buildTimestampSearchText, formatTs, parseCsv } from "./utils";
 import AlertCard from "../shared/AlertCard";
 import Tooltip from "../shared/Tooltip";
 
 function normalizeKey(name, inst) {
   const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
   return `${norm(name)}|${norm(inst)}`;
-}
-
-function getScoredSemesters(juror) {
-  return Array.isArray(juror?.scoredSemesters)
-    ? juror.scoredSemesters.filter(Boolean)
-    : Array.isArray(juror?.scored_semesters)
-      ? juror.scored_semesters.filter(Boolean)
-      : [];
 }
 
 function renderImportMessage(text) {
@@ -53,6 +47,12 @@ export default function ManageJurorsPanel({
   onEditJuror,
   onResetPin,
   onDeleteJuror,
+  // Permissions props (merged from ManagePermissionsPanel)
+  settings,
+  currentSemesterId,
+  currentSemesterName,
+  onToggleEdit,
+  onForceCloseEdit,
 }) {
   const panelRef = useRef(null);
   const fileRef = useRef(null);
@@ -71,7 +71,7 @@ export default function ManageJurorsPanel({
   const [importWarning, setImportWarning] = useState("");
   const [isImporting, setIsImporting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [openSemesterMenuId, setOpenSemesterMenuId] = useState(null);
+  const [pendingEdits, setPendingEdits] = useState(() => new Set());
   const PREVIEW_JUROR_COUNT = 4;
 
   const isDirty =
@@ -97,11 +97,52 @@ export default function ManageJurorsPanel({
   };
   const handleMetaScroll = (e) => updateScrollState(e.currentTarget);
 
-  const tenantSemesterNames = new Set(
-    (semesterList || [])
-      .map((s) => String(s?.semester_name || "").trim().toLowerCase())
-      .filter(Boolean)
-  );
+  // ── Permission helpers (ported from ManagePermissionsPanel) ──
+  const toBool = (v) => v === true || v === "true" || v === "t" || v === 1;
+  const formatProgressLabel = (label, completed, total) => `${label} (${completed}/${total})`;
+  const getProgressMeta = (j) => {
+    const safeTotal = Math.max(0, Number(j.overviewTotalProjects ?? j.totalProjects ?? j.total_projects ?? 0) || 0);
+    const scoredProjectsRaw = Number(j.overviewScoredProjects ?? j.completedProjects ?? j.completed_projects ?? 0) || 0;
+    const startedProjectsRaw = Number(j.overviewStartedProjects ?? scoredProjectsRaw) || 0;
+    const displayCompleted = safeTotal > 0 ? Math.min(Math.max(scoredProjectsRaw, 0), safeTotal) : Math.max(scoredProjectsRaw, 0);
+    const startedProjects = Math.max(startedProjectsRaw, displayCompleted);
+    const editEnabled = toBool(j.editEnabled ?? j.edit_enabled);
+    const isCompleted = Boolean(j.finalSubmittedAt ?? j.final_submitted_at);
+    const hasGroups = safeTotal > 0;
+    const hasStartedAny = startedProjects > 0;
+    const isReadyToSubmit = hasGroups && !editEnabled && !isCompleted && displayCompleted >= safeTotal;
+    const statusKey = j.overviewStatus
+      || (editEnabled ? "editing"
+        : (isCompleted ? "completed"
+          : (isReadyToSubmit ? "ready_to_submit"
+            : (hasStartedAny ? "in_progress" : "not_started"))));
+    return { safeTotal, displayCompleted, editEnabled, isCompleted, hasGroups, hasStartedAny, isReadyToSubmit, statusKey };
+  };
+  const evalLockActive = toBool(settings?.evalLockActive);
+  const hasActiveSemester = !!currentSemesterId;
+
+  const handleToggleEditWithPending = async ({ jurorId, enabled }) => {
+    if (!jurorId || pendingEdits.has(jurorId)) return;
+    const start = Date.now();
+    setPendingEdits((prev) => { const next = new Set(prev); next.add(jurorId); return next; });
+    try {
+      await Promise.resolve(onToggleEdit?.({ jurorId, enabled }));
+    } finally {
+      const remaining = Math.max(0, 1200 - (Date.now() - start));
+      setTimeout(() => setPendingEdits((prev) => { const next = new Set(prev); next.delete(jurorId); return next; }), remaining);
+    }
+  };
+  const handleForceCloseEditWithPending = async ({ jurorId }) => {
+    if (!jurorId || pendingEdits.has(jurorId)) return;
+    const start = Date.now();
+    setPendingEdits((prev) => { const next = new Set(prev); next.add(jurorId); return next; });
+    try {
+      await Promise.resolve(onForceCloseEdit?.({ jurorId }));
+    } finally {
+      const remaining = Math.max(0, 1200 - (Date.now() - start));
+      setTimeout(() => setPendingEdits((prev) => { const next = new Set(prev); next.delete(jurorId); return next; }), remaining);
+    }
+  };
 
   const canSubmit = form.juror_name.trim() && form.juror_inst.trim();
   const canEdit = editForm.juror_name.trim() && editForm.juror_inst.trim();
@@ -128,29 +169,37 @@ export default function ManageJurorsPanel({
     ? orderedJurors.filter((j) => {
       const name = j.juryName || j.juror_name || "";
       const inst = j.juryDept || j.juror_inst || "";
-      const scoredSemesters = getScoredSemesters(j);
-      const semestersText = scoredSemesters.join(" ");
-      const semestersLabel = scoredSemesters.join(" · ");
-      const semestersSearch = scoredSemesters.map((s) => buildSemesterSearchText(s)).join(" ");
+      const { safeTotal, displayCompleted, editEnabled, isCompleted, hasStartedAny, statusKey } = getProgressMeta(j);
+      const statusTokens = statusKey === "completed"
+        ? "completed tamamlandi tamamlandı"
+        : statusKey === "ready_to_submit"
+          ? "ready to submit hazır hazir"
+        : statusKey === "in_progress"
+            ? "in progress devam ediyor"
+            : statusKey === "editing"
+              ? "editing düzenleme"
+              : "not started baslamadi başlamadı";
+      const actionTokens = editEnabled
+        ? "lock editing"
+        : (isCompleted ? "unlock editing" : "");
+      const progressLabel = safeTotal > 0
+        ? formatProgressLabel(
+            statusKey === "editing" ? "Editing"
+              : statusKey === "ready_to_submit" ? "Ready to submit"
+              : isCompleted ? "Completed"
+              : hasStartedAny ? "In progress" : "Not started",
+            displayCompleted, safeTotal)
+        : "";
       const lastActivity =
-        j.lastActivityAt
-        || j.last_activity_at
-        || j.lastSeenAt
-        || j.last_seen_at
-        || j.updatedAt
-        || j.updated_at
-        || "";
+        j.lastActivityAt || j.last_activity_at || j.lastSeenAt || j.last_seen_at || j.updatedAt || j.updated_at || "";
       const lastActivitySearch = buildTimestampSearchText(lastActivity);
+      const formattedActivity = lastActivity ? formatTs(lastActivity) : "";
       const haystack = [
-        name,
-        inst,
-        semestersText,
-        semestersLabel,
-        semestersSearch,
-        lastActivitySearch,
-      ]
-        .join(" ")
-        .toLowerCase();
+        name, inst, statusTokens, actionTokens, progressLabel, lastActivitySearch, formattedActivity,
+      ].join(" ").toLowerCase();
+      const actionQuery = normalizedSearch.replace(/\s+/g, " ").trim();
+      if (actionQuery === "lock editing") return editEnabled;
+      if (actionQuery === "unlock editing") return !editEnabled && isCompleted;
       return haystack.includes(normalizedSearch);
     })
     : orderedJurors;
@@ -177,25 +226,6 @@ export default function ManageJurorsPanel({
     };
   }, [visibleJurors, showAll, searchTerm, isOpen, isMobile]);
 
-  useEffect(() => {
-    if (!openSemesterMenuId) return;
-    const onPointerDown = (e) => {
-      if (!(e.target instanceof Element)) return;
-      if (e.target.closest(".manage-semesters-menu")) return;
-      setOpenSemesterMenuId(null);
-    };
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") setOpenSemesterMenuId(null);
-    };
-    document.addEventListener("mousedown", onPointerDown);
-    document.addEventListener("touchstart", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", onPointerDown);
-      document.removeEventListener("touchstart", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [openSemesterMenuId]);
 
   const MAX_CSV_BYTES = 2 * 1024 * 1024; // 2MB
 
@@ -348,7 +378,7 @@ export default function ManageJurorsPanel({
 
       {(!isMobile || isOpen) && (
         <div className="manage-card-body">
-          <div className="manage-card-desc">Manage jurors, institution/department details, and PIN resets.</div>
+          <div className="manage-card-desc">Manage jurors, evaluation status, edit permissions, and PIN resets.</div>
           {panelError && <AlertCard variant="error">{panelError}</AlertCard>}
           <div className="manage-card-actions">
             <button
@@ -395,25 +425,25 @@ export default function ManageJurorsPanel({
             )}
             {visibleJurors.map((j) => {
               const isLocked = isJurorLocked(j);
-              const scoredSemesters = getScoredSemesters(j);
-              const visibleScoredSemesters = scoredSemesters.filter((s) => {
-                const normalized = String(s || "").trim().toLowerCase();
-                return !tenantSemesterNames.size || tenantSemesterNames.has(normalized);
-              });
-              const dedupedScoredSemesters = [...new Set(visibleScoredSemesters)];
-              const completedCount = dedupedScoredSemesters.length;
               const jurorId = j.jurorId || j.juror_id;
-              const isSemesterMenuOpen = openSemesterMenuId === jurorId;
-              const hasScoredSemester = completedCount > 0;
-              const completedLabel = `${completedCount} semester${completedCount === 1 ? "" : "s"}`;
               const lastActivityAt =
-                j.lastActivityAt
-                || j.last_activity_at
-                || j.lastSeenAt
-                || j.last_seen_at
-                || j.updatedAt
-                || j.updated_at
-                || "";
+                j.lastActivityAt || j.last_activity_at || j.lastSeenAt || j.last_seen_at || j.updatedAt || j.updated_at || "";
+              const { safeTotal, displayCompleted, editEnabled, isCompleted, hasGroups, statusKey } = getProgressMeta(j);
+              const completionStatusKey = hasGroups ? statusKey : "not_started";
+              const meta = jurorStatusMeta[completionStatusKey] || jurorStatusMeta.not_started;
+              const StatusIcon = meta.icon;
+              const chipClass = [
+                "manage-item-completion", "manage-status-chip",
+                completionStatusKey === "completed" ? "is-complete"
+                  : completionStatusKey === "ready_to_submit" ? "is-ready-to-submit"
+                  : completionStatusKey === "in_progress" ? "is-in-progress"
+                  : completionStatusKey === "editing" ? "is-editing"
+                  : "is-not-started",
+              ].join(" ");
+              const isPending = pendingEdits.has(jurorId);
+              const canEnableEdit = hasActiveSemester && !evalLockActive && !editEnabled && isCompleted && !isPending;
+              const canForceClose = hasActiveSemester && editEnabled && !isPending;
+              const showEditControls = editEnabled || (isCompleted && !evalLockActive);
               return (
                 <div
                   key={jurorId}
@@ -438,40 +468,16 @@ export default function ManageJurorsPanel({
                         {j.juryDept || j.juror_inst}
                       </span>
                     </div>
-                    <div className="manage-item-sub manage-meta-line manage-meta-line--juror-completed">
-                      <span className="manage-meta-icon" aria-hidden="true">
-                        <CalendarCheckIcon />
+                    <div className="manage-item-sub manage-meta-line manage-meta-line--status">
+                      <span className="manage-meta-icon manage-status-dot-icon" aria-hidden="true">
+                        <CircleDotIcon />
                       </span>
-                      <div className="manage-semesters-menu">
-                        <button
-                          type="button"
-                          className="manage-completed-summary"
-                          aria-haspopup="dialog"
-                          aria-expanded={isSemesterMenuOpen}
-                          aria-label={isSemesterMenuOpen
-                            ? "Hide completed semesters"
-                            : "Show completed semesters"}
-                          onClick={() => setOpenSemesterMenuId((prev) => (prev === jurorId ? null : jurorId))}
-                        >
-                          {completedLabel}
-                        </button>
-                        {isSemesterMenuOpen && (
-                          <div className="manage-semesters-dropdown manage-semesters-dropdown--list" role="dialog" aria-label="Completed semesters">
-                            <div className="manage-semesters-dropdown-title">
-                            Completed semesters
-                          </div>
-                          {hasScoredSemester ? (
-                              dedupedScoredSemesters.map((s, idx) => (
-                                <div key={`${jurorId}-all-sem-${idx}`} className="manage-semester-row">
-                                  {s}
-                                </div>
-                              ))
-                            ) : (
-                              <div className="manage-semester-row manage-semester-row--empty">No completed semesters yet.</div>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                      <span className={chipClass}>
+                        <span className="manage-status-chip-icon" aria-hidden="true"><StatusIcon /></span>
+                        <span className="manage-status-chip-text">
+                          {hasGroups ? formatProgressLabel(meta.label, displayCompleted, safeTotal) : "No groups assigned"}
+                        </span>
+                      </span>
                     </div>
                   </div>
                   {isLocked && (
@@ -491,7 +497,54 @@ export default function ManageJurorsPanel({
                       <span />
                     )}
                     <div className="manage-item-actions-row manage-item-actions-row--juror-actions">
-                      <Tooltip text={isLocked ? "Reset juror PIN" : "Reset juror PIN"}>
+                      {showEditControls && (
+                        <>
+                          {isPending && (
+                            <span className="manage-toggle-spinner manage-toggle-spinner--left" aria-hidden="true">
+                              <LoaderIcon />
+                            </span>
+                          )}
+                          {editEnabled && !evalLockActive && (
+                            <Tooltip text="Lock editing">
+                              <button
+                                type="button"
+                                className="manage-icon-btn with-label manage-cancel-edit-action"
+                                disabled={!canForceClose || isDemoMode}
+                                title="Lock editing and return juror to completed state."
+                                aria-label="Lock editing"
+                                onClick={() => canForceClose && handleForceCloseEditWithPending({ jurorId })}
+                              >
+                                <span aria-hidden="true"><LockIcon /></span>
+                                <span className="manage-icon-btn-label">Lock</span>
+                              </button>
+                            </Tooltip>
+                          )}
+                          {!editEnabled && isCompleted && !evalLockActive && (
+                            <Tooltip text="Unlock editing">
+                              <button
+                                type="button"
+                                className="manage-icon-btn with-label manage-enable-edit-action"
+                                disabled={!canEnableEdit || isDemoMode}
+                                title="Allow juror to reopen and resubmit the evaluation."
+                                aria-label="Unlock editing"
+                                onClick={() => canEnableEdit && handleToggleEditWithPending({ jurorId, enabled: true })}
+                              >
+                                <span aria-hidden="true">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                                    className="lucide lucide-lock-open-icon lucide-lock-open">
+                                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                                    <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+                                  </svg>
+                                </span>
+                                <span className="manage-icon-btn-label">Unlock</span>
+                              </button>
+                            </Tooltip>
+                          )}
+                        </>
+                      )}
+                      <Tooltip text="Reset juror PIN">
                         <button
                           className={`manage-icon-btn${isLocked ? " is-warning" : ""}`}
                           type="button"

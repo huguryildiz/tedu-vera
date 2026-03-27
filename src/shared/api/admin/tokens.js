@@ -19,18 +19,25 @@ export async function adminGenerateEntryToken(semesterId) {
 
 /**
  * Revokes the active jury entry token for a semester.
+ * Also locks evaluations (is_locked = true) and returns active session count.
+ * @returns {{ success: boolean, active_juror_count: number }}
  */
 export async function adminRevokeEntryToken(semesterId) {
   try {
-    await callAdminRpcV2("rpc_admin_entry_token_revoke", {
+    const rows = await callAdminRpcV2("rpc_admin_entry_token_revoke", {
       p_semester_id: semesterId,
     });
-    return true;
+    const row = rows?.[0] || {};
+    return {
+      success: row.success ?? true,
+      active_juror_count: row.active_juror_count ?? 0,
+    };
   } catch (e) { rethrowUnauthorized(e); throw e; }
 }
 
 /**
  * Returns the current entry token status for a semester.
+ * @returns {{ enabled: boolean, created_at: string, expires_at: string|null, has_token: boolean, active_juror_count: number }|null}
  */
 export async function adminGetEntryTokenStatus(semesterId) {
   try {

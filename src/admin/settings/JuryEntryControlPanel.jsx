@@ -185,12 +185,15 @@ export default function JuryEntryControlPanel({
     setRevoking(true);
     setError("");
     try {
-      await adminRevokeEntryToken(semesterId);
+      const result = await adminRevokeEntryToken(semesterId);
       setRawToken("");
       setShowQR(false);
       storageClearRawToken(semesterId);
       await loadStatus();
-      _toast.success("Jury access revoked");
+      const lockMsg = result.active_juror_count > 0
+        ? `Jury access revoked. ${result.active_juror_count} active session(s) locked.`
+        : "Jury access revoked and evaluations locked.";
+      _toast.success(lockMsg);
       setRevokeModalOpen(false);
     } catch (e) {
       if (e?.unauthorized) {
@@ -419,6 +422,7 @@ export default function JuryEntryControlPanel({
       <JuryRevokeConfirmDialog
         open={revokeModalOpen}
         loading={revoking}
+        activeJurorCount={status?.active_juror_count ?? 0}
         onCancel={() => setRevokeModalOpen(false)}
         onConfirm={handleRevoke}
       />

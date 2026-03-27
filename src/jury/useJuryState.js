@@ -155,6 +155,19 @@ export default function useJuryState() {
     }
   }, [scoring.scores, workflow.step, scoring.groupSynced, editState.editMode, loading.projects, handlers.effectiveCriteria]);
 
+  // ── Session expired: redirect to PIN step ────────────────
+  // When a write fails because the session token is invalid (e.g. another
+  // device opened a new session, or the token expired), redirect the juror
+  // back to the PIN step with an informative error message.
+  useEffect(() => {
+    if (!autosave.sessionExpired || workflow.step !== "eval") return;
+    session.setJurorSessionToken("");
+    session.setPinError("Oturumunuz sona erdi veya başka bir cihazdan açıldı. Devam etmek için PIN'inizi tekrar girin.");
+    session.setPinErrorCode("session_expired");
+    workflow.setStep("pin");
+    autosave.setSessionExpired(false);
+  }, [autosave.sessionExpired, workflow.step]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ─────────────────────────────────────────────────────────
   return {
     // Identity

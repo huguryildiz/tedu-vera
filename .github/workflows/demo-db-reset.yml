@@ -12,7 +12,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Disable IPv6 (GitHub runners lack IPv6 connectivity)
+        run: sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+
       - name: Run seed SQL against demo database
         env:
           DEMO_DATABASE_URL: ${{ secrets.DEMO_DATABASE_URL }}
-        run: psql "$DEMO_DATABASE_URL" -f sql/seeds/002_multi_tenant_seed.sql
+        run: psql "$DEMO_DATABASE_URL" --no-psqlrc -v ON_ERROR_STOP=1 -f sql/seeds/002_multi_tenant_seed.sql

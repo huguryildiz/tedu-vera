@@ -1,6 +1,6 @@
 // src/admin/SettingsPage.jsx
 // ============================================================
-// Admin settings page: semesters, projects, jurors, permissions.
+// Admin settings page: semesters, projects, jurors.
 // Thin orchestrator — state and handlers live in hooks.
 // ============================================================
 
@@ -15,7 +15,6 @@ import {
   adminFullImport,
 } from "../shared/api";
 import PinResetDialog from "./settings/PinResetDialog";
-import EvalLockConfirmDialog from "./settings/EvalLockConfirmDialog";
 import AuditLogCard from "./settings/AuditLogCard";
 import ExportBackupPanel from "./settings/ExportBackupPanel";
 import JuryEntryControlPanel from "./settings/JuryEntryControlPanel";
@@ -23,7 +22,6 @@ import { exportXLSX, buildExportFilename } from "./xlsx/exportXLSX";
 import SemesterSettingsPanel from "./ManageSemesterPanel";
 import ProjectSettingsPanel from "./ManageProjectsPanel";
 import JurorSettingsPanel from "./ManageJurorsPanel";
-import AccessSettingsPanel from "./ManagePermissionsPanel";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import { useSettingsCrud } from "./hooks/useSettingsCrud";
 import { buildCountSummary } from "./hooks/useDeleteConfirm";
@@ -68,7 +66,6 @@ export default function SettingsPage({ tenantId, selectedSemesterId = "", isDemo
       semester: !isSM,
       projects: !isSM,
       jurors: !isSM,
-      permissions: !isSM,
       audit: !isSM,
       export: !isSM,
       dbbackup: !isSM,
@@ -604,25 +601,9 @@ export default function SettingsPage({ tenantId, selectedSemesterId = "", isDemo
                     inst: j?.juryDept || j?.juror_inst || "",
                   })
                 }
-              />
-            )}
-
-            {!isSuper && (
-              <AccessSettingsPanel
                 settings={crud.settings}
-                jurors={crud.jurors}
                 currentSemesterId={crud.viewSemesterId}
                 currentSemesterName={crud.viewSemesterLabel}
-                evalLockError={crud.evalLockError}
-                isDemoMode={isDemoMode}
-                isMobile={isMobile}
-                isOpen={openPanels.permissions}
-                onToggle={() => togglePanel("permissions")}
-                onRequestEvalLockChange={(checked) => {
-                  crud.setEvalLockError("");
-                  crud.setEvalLockConfirmNext(Boolean(checked));
-                  crud.setEvalLockConfirmOpen(true);
-                }}
                 onToggleEdit={crud.handleToggleJurorEdit}
                 onForceCloseEdit={crud.handleForceCloseJurorEdit}
               />
@@ -684,25 +665,9 @@ export default function SettingsPage({ tenantId, selectedSemesterId = "", isDemo
                     inst: j?.juryDept || j?.juror_inst || "",
                   })
                 }
-              />
-            )}
-
-            {isSuper && (
-              <AccessSettingsPanel
                 settings={crud.settings}
-                jurors={crud.jurors}
                 currentSemesterId={crud.viewSemesterId}
                 currentSemesterName={crud.viewSemesterLabel}
-                evalLockError={crud.evalLockError}
-                isDemoMode={isDemoMode}
-                isMobile={isMobile}
-                isOpen={openPanels.permissions}
-                onToggle={() => togglePanel("permissions")}
-                onRequestEvalLockChange={(checked) => {
-                  crud.setEvalLockError("");
-                  crud.setEvalLockConfirmNext(Boolean(checked));
-                  crud.setEvalLockConfirmOpen(true);
-                }}
                 onToggleEdit={crud.handleToggleJurorEdit}
                 onForceCloseEdit={crud.handleForceCloseJurorEdit}
               />
@@ -802,19 +767,6 @@ export default function SettingsPage({ tenantId, selectedSemesterId = "", isDemo
         </section>
       </div>
 
-      <EvalLockConfirmDialog
-        evalLockConfirmOpen={crud.evalLockConfirmOpen}
-        evalLockConfirmNext={crud.evalLockConfirmNext}
-        evalLockConfirmLoading={crud.evalLockConfirmLoading}
-        viewSemesterLabel={crud.viewSemesterLabel}
-        onCancel={() => crud.setEvalLockConfirmOpen(false)}
-        onConfirm={async () => {
-          crud.setEvalLockConfirmLoading(true);
-          await crud.handleSaveSettings({ ...crud.settings, evalLockActive: crud.evalLockConfirmNext });
-          crud.setEvalLockConfirmLoading(false);
-          crud.setEvalLockConfirmOpen(false);
-        }}
-      />
     </div>
   );
 }

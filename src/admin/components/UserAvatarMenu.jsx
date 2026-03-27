@@ -179,10 +179,10 @@ export default function UserAvatarMenu({ onLogout }) {
 
           <div className="ph-avatar-menu-divider" />
 
-          <button className="ph-avatar-menu-item" role="menuitem" onClick={() => handleMenuAction("profile")} disabled={isDemoMode}>
+          <button className="ph-avatar-menu-item" role="menuitem" onClick={() => handleMenuAction("profile")}>
             <UserPenIcon /> My Profile
           </button>
-          <button className="ph-avatar-menu-item" role="menuitem" onClick={() => handleMenuAction("password")} disabled={isDemoMode}>
+          <button className="ph-avatar-menu-item" role="menuitem" onClick={() => handleMenuAction("password")}>
             <KeyRoundIcon /> Change Password
           </button>
 
@@ -197,7 +197,7 @@ export default function UserAvatarMenu({ onLogout }) {
 
       {/* Profile / Password Modal */}
       {profile.modalOpen && (
-        <ProfileModal profile={profile} isSuper={isSuper} activeTenant={activeTenant} avatarBg={avatarBg} initials={initials} />
+        <ProfileModal profile={profile} isSuper={isSuper} activeTenant={activeTenant} avatarBg={avatarBg} initials={initials} isDemoMode={isDemoMode} />
       )}
     </>
   );
@@ -205,7 +205,7 @@ export default function UserAvatarMenu({ onLogout }) {
 
 // ── Profile Modal ────────────────────────────────────────────
 
-function ProfileModal({ profile, isSuper, activeTenant, avatarBg, initials }) {
+function ProfileModal({ profile, isSuper, activeTenant, avatarBg, initials, isDemoMode }) {
   const modalRef = useRef(null);
   const mouseDownTargetRef = useRef(null);
   useFocusTrap({ containerRef: modalRef, isOpen: true, onClose: profile.closeModal });
@@ -228,9 +228,10 @@ function ProfileModal({ profile, isSuper, activeTenant, avatarBg, initials }) {
             activeTenant={activeTenant}
             avatarBg={avatarBg}
             initials={initials}
+            isDemoMode={isDemoMode}
           />
         ) : (
-          <PasswordView profile={profile} />
+          <PasswordView profile={profile} isDemoMode={isDemoMode} />
         )}
       </div>
     </div>,
@@ -240,7 +241,7 @@ function ProfileModal({ profile, isSuper, activeTenant, avatarBg, initials }) {
 
 // ── Profile View ─────────────────────────────────────────────
 
-function ProfileView({ profile, isSuper, activeTenant, avatarBg, initials }) {
+function ProfileView({ profile, isSuper, activeTenant, avatarBg, initials, isDemoMode }) {
   const { form, setField, errors, saving, isDirty, handleSave } = profile;
 
   return (
@@ -267,6 +268,7 @@ function ProfileView({ profile, isSuper, activeTenant, avatarBg, initials }) {
             onChange={(e) => setField("displayName", e.target.value)}
             placeholder="Your full name"
             disabled={saving}
+
             className={`admin-auth-input${errors.displayName ? " input-error" : ""}`}
           />
           {errors.displayName && <AlertCard variant="error">{errors.displayName}</AlertCard>}
@@ -280,6 +282,7 @@ function ProfileView({ profile, isSuper, activeTenant, avatarBg, initials }) {
             onChange={(e) => setField("email", e.target.value)}
             placeholder="your.email@institution.edu"
             disabled={saving}
+
             className={`admin-auth-input${errors.email ? " input-error" : ""}`}
           />
           {errors.email && <AlertCard variant="error">{errors.email}</AlertCard>}
@@ -318,7 +321,7 @@ function ProfileView({ profile, isSuper, activeTenant, avatarBg, initials }) {
           type="button"
           className="manage-btn manage-btn--primary"
           onClick={handleSave}
-          disabled={saving || !isDirty}
+          disabled={saving || !isDirty || isDemoMode}
         >
           {saving ? "Saving…" : "Save"}
         </button>
@@ -329,7 +332,7 @@ function ProfileView({ profile, isSuper, activeTenant, avatarBg, initials }) {
 
 // ── Password View ────────────────────────────────────────────
 
-function PasswordView({ profile }) {
+function PasswordView({ profile, isDemoMode }) {
   const { passwordForm, setPasswordField, passwordErrors, passwordSaving, handlePasswordSave } = profile;
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -354,6 +357,7 @@ function PasswordView({ profile }) {
               placeholder="Min 10 chars, upper, lower, digit, symbol"
               autoComplete="new-password"
               disabled={passwordSaving}
+  
               className={`admin-auth-input${passwordErrors.password ? " input-error" : ""}`}
             />
             <button type="button" onClick={() => setShowPass((v) => !v)} className="admin-auth-toggle-pass" tabIndex={-1}>
@@ -370,9 +374,10 @@ function PasswordView({ profile }) {
               type={showConfirm ? "text" : "password"}
               value={passwordForm.confirmPassword}
               onChange={(e) => setPasswordField("confirmPassword", e.target.value)}
-              placeholder="Re-enter your new password"
+              placeholder="Enter your new password"
               autoComplete="new-password"
               disabled={passwordSaving}
+  
               className={`admin-auth-input${passwordErrors.confirmPassword ? " input-error" : ""}`}
             />
             <button type="button" onClick={() => setShowConfirm((v) => !v)} className="admin-auth-toggle-pass" tabIndex={-1}>
@@ -395,7 +400,7 @@ function PasswordView({ profile }) {
           type="button"
           className="manage-btn manage-btn--primary"
           onClick={handlePasswordSave}
-          disabled={passwordSaving}
+          disabled={passwordSaving || isDemoMode}
         >
           {passwordSaving ? "Updating…" : "Update"}
         </button>

@@ -7,6 +7,7 @@ import AlertCard from "../../shared/AlertCard";
 export default function JuryRevokeConfirmDialog({
   open,
   loading,
+  activeJurorCount = 0,
   onCancel,
   onConfirm,
 }) {
@@ -33,9 +34,15 @@ export default function JuryRevokeConfirmDialog({
           <AlertCard variant="error" icon={BanIcon}>
             <ul style={{ margin: 0, paddingLeft: "1.2rem", textAlign: "left" }}>
               <li>New scans of the current QR code will be <strong>blocked immediately</strong>.</li>
-              <li>Jurors who have already entered may keep access until they close their browser.</li>
+              <li>All evaluations will be <strong>locked</strong> — active jurors will no longer be able to submit scores.</li>
             </ul>
           </AlertCard>
+          {activeJurorCount > 0 && (
+            <AlertCard variant="warning">
+              <strong>{activeJurorCount}</strong> juror{activeJurorCount !== 1 ? "s are" : " is"} currently
+              active and will be locked from further edits.
+            </AlertCard>
+          )}
         </div>
         <div className="manage-modal-actions">
           <button

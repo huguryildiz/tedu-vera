@@ -5,7 +5,7 @@
 //
 // Props:
 //   pinError    : string  — error message (empty = no error)
-//   pinErrorCode: string  — "invalid" | "locked" | "not_found" | "no_pin" | "network" | ""
+//   pinErrorCode: string  — "invalid" | "locked" | "not_found" | "no_pin" | "network" | "session_expired" | ""
 //   pinAttemptsLeft: number
 //   pinLockedUntil: string (timestamptz)
 //   onPinSubmit : (pin: string) => void
@@ -146,17 +146,20 @@ export default function PinStep({
   const [shake,       setShake]       = useState(false);
   const authActiveRef = useRef(false);
   const isLocked = pinErrorCode === "locked";
+  const isSessionExpired = pinErrorCode === "session_expired";
   const attemptsLeft = typeof pinAttemptsLeft === "number" ? Math.max(0, pinAttemptsLeft) : null;
   const errorTitle =
-    pinErrorCode === "locked"
-      ? "Too many login attempts"
-      : pinErrorCode === "network"
-        ? "Connection error"
-      : pinErrorCode === "not_found"
-        ? "Juror not found"
-        : pinErrorCode === "no_pin"
-          ? "PIN required"
-          : "Incorrect PIN";
+    pinErrorCode === "session_expired"
+      ? "Oturum sona erdi"
+      : pinErrorCode === "locked"
+        ? "Too many login attempts"
+        : pinErrorCode === "network"
+          ? "Connection error"
+        : pinErrorCode === "not_found"
+          ? "Juror not found"
+          : pinErrorCode === "no_pin"
+            ? "PIN required"
+            : "Incorrect PIN";
   const lockedUntilText = (() => {
     if (!pinLockedUntil) return "";
     const d = new Date(pinLockedUntil);
