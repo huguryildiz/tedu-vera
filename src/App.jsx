@@ -121,16 +121,6 @@ function AppInner() {
     } catch {}
   }, []);
 
-  // Demo mode: auto-sign-in
-  useEffect(() => {
-    if (!DEMO_MODE || !DEMO_EMAIL || !DEMO_PASS) return;
-    if (page !== "admin" || auth.user) return;
-    let active = true;
-    auth.signIn(DEMO_EMAIL, DEMO_PASS, true).catch(() => {
-      if (active) setAdminAuthError("Demo auto-login failed.");
-    });
-    return () => { active = false; };
-  }, [page, auth.user, auth]);
 
   async function handleLogin(email, password, rememberMe) {
     setAdminAuthError("");
@@ -250,6 +240,8 @@ function AppInner() {
                 onSwitchToRegister={() => { setAdminAuthPage("register"); setAdminAuthError(""); }}
                 onForgotPassword={() => { setAdminAuthPage("forgot"); setAdminAuthError(""); }}
                 error={adminAuthError}
+                initialEmail={DEMO_MODE ? DEMO_EMAIL : ""}
+                initialPassword={DEMO_MODE ? DEMO_PASS : ""}
               />
             )}
             {adminAuthPage === "login" && (

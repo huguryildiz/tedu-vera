@@ -9,9 +9,9 @@ import { EyeIcon, EyeOffIcon, ShieldUserIcon, GoogleIcon } from "../../shared/Ic
 import AlertCard from "../../shared/AlertCard";
 import { KEYS } from "../../shared/storage/keys";
 
-export default function LoginForm({ onLogin, onGoogleLogin, onSwitchToRegister, onForgotPassword, error: externalError, loading: externalLoading }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export default function LoginForm({ onLogin, onGoogleLogin, onSwitchToRegister, onForgotPassword, error: externalError, loading: externalLoading, initialEmail = "", initialPassword = "" }) {
+  const [email, setEmail] = useState(initialEmail);
+  const [password, setPassword] = useState(initialPassword);
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
