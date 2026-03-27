@@ -113,8 +113,16 @@ export default function AuthProvider({ children }) {
     const savedTenantId = getActiveTenantId();
     const hasSaved = tenantList.some((t) => t.id === savedTenantId);
     const isSuper = tenantList.some((t) => t.role === "super_admin");
+    const isDemoMode = import.meta.env.VITE_DEMO_MODE === "true";
+    const preferredDemoTenant = tenantList.find((t) =>
+      String(t.code || "").trim().toLowerCase() === "tedu-ee" ||
+      String(t.name || "").trim().toLowerCase() === "tedu ee"
+    );
 
-    if (hasSaved) {
+    if (isDemoMode && preferredDemoTenant) {
+      setActiveTenantIdState(preferredDemoTenant.id);
+      setActiveTenantId(preferredDemoTenant.id);
+    } else if (hasSaved) {
       setActiveTenantIdState(savedTenantId);
     } else if (isSuper && tenantList.length > 1) {
       // Super-admin: pick first non-null tenant

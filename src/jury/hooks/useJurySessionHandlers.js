@@ -26,6 +26,7 @@ import {
   createOrGetJurorAndIssuePin,
   verifyJurorPin,
   getJurorEditState,
+  verifyEntryToken,
 } from "../../shared/api";
 import {
   isAllFilled,
@@ -171,7 +172,7 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
       const name = identity.juryName.trim();
       const inst = identity.juryDept.trim();
       if (!name || !inst) {
-        identity.setAuthError("Please enter your full name and Institution / Department.");
+        identity.setAuthError("Please enter your full name and institution / department.");
         workflow.setStep("identity");
         return;
       }
@@ -181,7 +182,8 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
       loading.setSemesterName(semester.semester_name);
       loading.setLoadingState({ stage: "loading", message: "Preparing access…" });
       try {
-        const res = await createOrGetJurorAndIssuePin(semester.id, name, inst);
+        const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
+        const res = await createOrGetJurorAndIssuePin(semester.id, name, inst, DEMO_MODE);
         if (res?.juror_name) identity.setJuryName(res.juror_name);
         if (res?.juror_inst) identity.setJuryDept(res.juror_inst);
         if (res?.needs_pin) {
@@ -229,7 +231,7 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
     const name = identity.juryName.trim();
     const inst = identity.juryDept.trim();
     if (!name || !inst) {
-      identity.setAuthError("Please enter your full name and Institution / Department.");
+      identity.setAuthError("Please enter your full name and institution / department.");
       return;
     }
     identity.setAuthError("");
@@ -241,9 +243,21 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
       const semesterList = await listSemesters(ctrl.signal);
       const active = (semesterList || []).filter((s) => s.is_current);
       loading.setSemesters(active);
-      // Demo mode: auto-select first current semester (skip selection screen)
+      // Demo mode: resolve correct semester via entry token (not just active[0])
       const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
-      if (active.length === 1 || DEMO_MODE) {
+      const DEMO_ENTRY_TOKEN = import.meta.env.VITE_DEMO_ENTRY_TOKEN || "";
+      if (DEMO_MODE && DEMO_ENTRY_TOKEN) {
+        const tokenRes = await verifyEntryToken(DEMO_ENTRY_TOKEN);
+        if (ctrl.signal.aborted) return;
+        const target = tokenRes?.ok && tokenRes?.semester_id
+          ? active.find((s) => s.id === tokenRes.semester_id) || active[0]
+          : active[0];
+        if (target) {
+          await handleSemesterSelect(target);
+          return;
+        }
+      }
+      if (active.length === 1) {
         await handleSemesterSelect(active[0]);
         return;
       }
@@ -284,7 +298,7 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
         } else if (res?.error_code === "not_found") {
           session.setPinErrorCode("not_found");
           session.setPinAttemptsLeft(session.MAX_PIN_ATTEMPTS);
-          session.setPinError("No juror found with this name and Institution / Department.");
+          session.setPinError("No juror found with this name and institution / department.");
         } else if (res?.error_code === "no_pin") {
           session.setPinErrorCode("no_pin");
           session.setPinAttemptsLeft(session.MAX_PIN_ATTEMPTS);

@@ -61,7 +61,6 @@ export default function ProjectCard({
               <button
                 className="manage-icon-btn"
                 type="button"
-                disabled={isDemoMode}
                 aria-label={`Edit Group ${groupLabel}`}
                 onClick={() => onEdit(p, groupLabel)}
               >
@@ -72,7 +71,6 @@ export default function ProjectCard({
               ariaLabel={`Delete Group ${groupLabel}`}
               title="Delete group"
               showLabel={false}
-              disabled={isDemoMode}
               onClick={() => onDelete(p, groupLabel)}
             />
           </div>

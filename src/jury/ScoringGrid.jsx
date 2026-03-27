@@ -65,24 +65,28 @@ const ScoringGrid = memo(function ScoringGrid({
         const isInvalid   = !lockActive && showMissing;
 
         return (
-          <div key={cid} className={`crit-card${isInvalid ? " invalid" : ""}${openRubric === cid ? " rubric-open" : ""}${lockActive ? " is-locked" : ""}`}>
+          <div key={cid} className={`crit-card${isInvalid ? " invalid" : ""}${openRubric === cid ? " rubric-open" : ""}${lockActive ? " is-locked" : ""}`} style={crit.color ? { borderLeftColor: crit.color } : undefined}>
             <div className="crit-header">
               <div className="crit-title-row">
                 <div className="crit-label">
                   {crit.label}
                   {Array.isArray(crit.mudek) && crit.mudek.length > 0 && (
                     <div className="mudek-badges-wrap">
-                      {crit.mudek.map((code) => (
-                        <div key={code} className="mudek-tooltip-wrapper">
-                          <span className="mudek-code-badge">{code}</span>
-                          <div className="mudek-tooltip-text">
-                            {(() => {
-                              const entry = Object.values(mudekLookup || {}).find((o) => o.code === code);
-                              return entry ? (entry.desc_en || entry.desc_tr) : (MUDEK_OUTCOMES[code]?.en || "MÜDEK Outcome");
-                            })()}
+                      {crit.mudek.map((code) => {
+                        const entry = Object.values(mudekLookup || {}).find((o) => o.code === code);
+                        const descEn = entry?.desc_en || MUDEK_OUTCOMES[code]?.en || "";
+                        const descTr = entry?.desc_tr || "";
+                        return (
+                          <div key={code} className="mudek-tooltip-wrapper">
+                            <span className="mudek-code-badge">{code}</span>
+                            <div className="mudek-tooltip-text">
+                              <span className="mudek-tooltip-title">{code}</span>
+                              {descEn && <span className="mudek-tooltip-desc">🇬🇧 {descEn}</span>}
+                              {descTr && <span className="mudek-tooltip-desc">🇹🇷 {descTr}</span>}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

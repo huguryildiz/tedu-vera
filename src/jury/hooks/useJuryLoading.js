@@ -32,8 +32,11 @@
 // ============================================================
 
 import { useState, useEffect, useRef } from "react";
-import { getCurrentSemester, listProjects, listSemesters } from "../../shared/api";
+import { getCurrentSemester, listProjects, listSemesters, verifyEntryToken } from "../../shared/api";
 import { getJuryAccess } from "../../shared/storage";
+
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
+const DEMO_ENTRY_TOKEN = import.meta.env.VITE_DEMO_ENTRY_TOKEN || "";
 
 export function useJuryLoading() {
   const [loadingState, setLoadingState] = useState(null);
@@ -57,6 +60,29 @@ export function useJuryLoading() {
     const ctrl = new AbortController();
     const run = async () => {
       try {
+        // Demo mode: resolve semester via entry token so TEDU EE is always shown.
+        if (DEMO_MODE && DEMO_ENTRY_TOKEN) {
+          const tokenRes = await verifyEntryToken(DEMO_ENTRY_TOKEN);
+          if (!alive) return;
+          if (tokenRes?.ok && tokenRes?.semester_id) {
+            const sems = await listSemesters(ctrl.signal);
+            if (!alive) return;
+            const res = (sems || []).find((s) => s.id === tokenRes.semester_id) || null;
+            setCurrentSemesterInfo(res);
+            if (res?.id) {
+              try {
+                const projectList = await listProjects(res.id, null, ctrl.signal);
+                if (!alive) return;
+                setActiveProjectCount(projectList.length);
+              } catch (e) {
+                if (e?.name === "AbortError") return;
+                if (alive) setActiveProjectCount(null);
+              }
+            }
+            return;
+          }
+        }
+
         const grantedSemesterId = getJuryAccess();
         let res = await getCurrentSemester(ctrl.signal, grantedSemesterId);
         if (!res && grantedSemesterId) {

@@ -424,13 +424,13 @@ export default function RankingsTab({ ranked, semesterName = "", criteriaTemplat
   return (
     <div className="rankings-page">
       <div className="admin-section-header">
-        <div className="summary-note">
-          <InfoIcon />
-          <span className="summary-note-text">
-            Ranking is based on finalized submissions only (Total Avg). Ties share the same rank (1,1,3). 
-          </span>
-        </div>
         <div className="admin-section-actions">
+          <span className="info-tooltip-wrap" aria-label="Ranking is based on finalized submissions only (Total Avg). Ties share the same rank (e.g., 1, 1, 3)">
+            <InfoIcon />
+            <span className="info-tooltip-bubble">
+              Ranking is based on finalized submissions only (Total Avg). Ties share the same rank (e.g., 1, 1, 3).
+            </span>
+          </span>
           <button className="xlsx-export-btn" onClick={handleExport} disabled={isExporting}>
             <DownloadIcon />
             <span>{isExporting ? "Exporting…" : "Excel"}</span>

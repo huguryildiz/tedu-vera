@@ -558,8 +558,35 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
             </div>
           </div>
           <div className="ph-utility">
-            <span className="last-updated" style={lastRefresh ? undefined : { visibility: "hidden" }}>
-              <span className="last-updated-time">{lastRefreshTime}</span>
+            <span className="analog-clock-wrap" style={lastRefresh ? undefined : { visibility: "hidden" }}>
+              {(() => {
+                if (!lastRefresh) return null;
+                const d = new Date(lastRefresh);
+                const h = d.getHours() % 12;
+                const m = d.getMinutes();
+                const hAngle = (h + m / 60) * 30;
+                const mAngle = m * 6;
+                return (
+                  <>
+                    <svg className="analog-clock" viewBox="0 0 40 40" aria-label={lastRefreshTime}>
+                      <circle cx="20" cy="20" r="18" fill="none" stroke="var(--gray-300, #cbd5e1)" strokeWidth="1.5" />
+                      {[0,30,60,90,120,150,180,210,240,270,300,330].map((a) => (
+                        <line key={a} x1="20" y1="4" x2="20" y2={a % 90 === 0 ? "7" : "5.5"}
+                          stroke="var(--gray-400, #94a3b8)" strokeWidth={a % 90 === 0 ? "1.2" : "0.7"}
+                          strokeLinecap="round" transform={`rotate(${a} 20 20)`} />
+                      ))}
+                      <line x1="20" y1="20" x2="20" y2="9"
+                        stroke="var(--gray-700, #334155)" strokeWidth="1.8" strokeLinecap="round"
+                        transform={`rotate(${hAngle} 20 20)`} />
+                      <line x1="20" y1="20" x2="20" y2="5.5"
+                        stroke="var(--gray-500, #64748b)" strokeWidth="1.2" strokeLinecap="round"
+                        transform={`rotate(${mAngle} 20 20)`} />
+                      <circle cx="20" cy="20" r="1.5" fill="var(--gray-600, #475569)" />
+                    </svg>
+                    <span className="analog-clock-tooltip">{lastRefreshTime}</span>
+                  </>
+                );
+              })()}
             </span>
             <button
               className={`refresh-btn${loading ? " is-loading" : ""}`}

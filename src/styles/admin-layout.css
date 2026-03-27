@@ -8,9 +8,6 @@
 
 /* ── Demo banner ────────────────────────────────────────────── */
 .demo-banner {
-  position: sticky;
-  top: 0;
-  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,14 +18,13 @@
   font-weight: 400;
   padding: 8px 20px;
   letter-spacing: 0.3px;
-  border-radius: 0 0 10px 10px;
+  border-radius: 12px;
   border: 1px solid rgba(99, 102, 241, 0.15);
-  border-top: none;
   box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  margin: 0 auto;
-  max-width: calc(100% - 24px);
+  white-space: nowrap;
+  margin-bottom: 8px;
 }
 .demo-banner-icon {
   display: flex;
@@ -36,8 +32,7 @@
   flex-shrink: 0;
 }
 .demo-banner-icon svg {
-  stroke: #fff;
-  opacity: 0.85;
+  stroke: #c7d2fe;
 }
 .demo-banner-text {
   display: flex;
@@ -390,7 +385,6 @@
 .premium-header .last-updated {
   min-height: auto;
   font-size: 12px;
-  height: 32px;
   display: inline-flex;
   align-items: center;
 }
@@ -594,6 +588,59 @@
   justify-content: flex-end;
   text-align: right;
   align-self: center;
+  cursor: default;
+}
+.analog-clock-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: default;
+}
+.analog-clock {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+  display: block;
+}
+.analog-clock-wrap:hover .analog-clock {
+  opacity: 1;
+}
+.analog-clock-tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  background: #0f172a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  padding: 5px 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  z-index: 100;
+  transition: all 0.15s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.analog-clock-tooltip::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #0f172a transparent;
+}
+.analog-clock-wrap:hover .analog-clock-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 .last-updated-text {
   display: flex;
@@ -606,7 +653,7 @@
 .last-updated-time {
   font-variant-numeric: tabular-nums;
 }
-.last-updated svg { width: 14px; height: 14px; display: block; }
+.last-updated svg:not(.analog-clock) { width: 14px; height: 14px; display: block; }
 .admin-screen .form-header h2 {
   margin: 0;
   font-size: 16px;

@@ -26,13 +26,15 @@ describe("admin utils", () => {
     );
   });
 
-  it("computes completion percent based on filled criteria count", () => {
+  it("computes completion percent based on rows with non-null total", () => {
     const rows = [
-      { technical: 25, design: 24, delivery: 23, teamwork: 9 },
-      { technical: 20, design: 19, delivery: null, teamwork: null },
+      { total: 81 },
+      { total: null },
     ];
-    expect(adminCompletionPct(rows, 2)).toBe(75);
+    expect(adminCompletionPct(rows, 2)).toBe(50);
     expect(adminCompletionPct([], 0)).toBe(0);
+    expect(adminCompletionPct([{ total: 70 }, { total: 65 }], 2)).toBe(100);
+    expect(adminCompletionPct([{ total: null }], 1)).toBe(0);
   });
 
   it("dedupes by juror/dept/group and keeps newest row", () => {

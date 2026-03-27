@@ -274,7 +274,6 @@ export default function ManageProjectsPanel({
             <button
               className="manage-btn"
               type="button"
-              disabled={isDemoMode}
               onClick={() => {
                 setShowImport(true);
               }}
@@ -285,7 +284,6 @@ export default function ManageProjectsPanel({
             <button
               className="manage-btn primary"
               type="button"
-              disabled={isDemoMode}
               onClick={() => {
                 setAddError("");
                 setForm((f) => ({ ...f, semester_id: currentSemesterId || f.semester_id || "" }));

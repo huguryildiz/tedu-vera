@@ -808,6 +808,7 @@
   padding: var(--crit-pad);
   box-shadow: 0 12px 24px rgba(15,23,42,0.06);
   border: 1px solid #e2e8f0;
+  border-left: 4px solid #94a3b8;
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 .crit-card.rubric-open {
@@ -2064,27 +2065,43 @@
   bottom: calc(100% + 8px);
   left: -12px;
   transform: translateY(4px);
-  background: #1e293b;
+  background: #0f172a;
   color: #fff;
   font-size: 11px;
-  font-weight: 500;
-  line-height: 1.4;
-  padding: 8px 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  padding: 10px 14px;
   border-radius: 8px;
-  width: fit-content;
-  width: -webkit-fit-content;
-  width: -moz-fit-content;
-  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: max-content;
+  max-width: 320px;
   white-space: normal;
   word-wrap: break-word;
-  text-align: justify;
-  text-justify: inter-word;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  text-align: left;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
   pointer-events: none;
   visibility: hidden;
   opacity: 0;
   z-index: 100;
   transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.mudek-tooltip-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+
+.mudek-tooltip-desc {
+  font-size: 11px;
+  font-weight: 400;
+  color: #e2e8f0;
+  line-height: 1.45;
+  text-align: justify;
+  text-justify: inter-word;
 }
 
 .mudek-tooltip-wrapper:hover .mudek-tooltip-text {
@@ -2108,7 +2125,7 @@
   margin-left: -5px;
   border-width: 5px;
   border-style: solid;
-  border-color: #1e293b transparent transparent transparent;
+  border-color: #0f172a transparent transparent transparent;
 }
 
 /* Save error banner + retry button (4D) */

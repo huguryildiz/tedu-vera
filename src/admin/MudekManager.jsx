@@ -233,6 +233,7 @@ export default function MudekManager({
   onDirtyChange,
   disabled = false,
   isLocked = false,
+  saveDisabled = false,
 }) {
   const instanceId = useId();
 
@@ -616,7 +617,7 @@ export default function MudekManager({
           type="button"
           className="manage-btn primary"
           onClick={handleSave}
-          disabled={structurallyLocked || saving}
+          disabled={structurallyLocked || saving || saveDisabled}
         >
           {saving ? "Saving…" : "Save MÜDEK Outcomes"}
         </button>

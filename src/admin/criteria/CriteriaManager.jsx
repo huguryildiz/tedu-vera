@@ -60,6 +60,7 @@ export default function CriteriaManager({
   onDirtyChange,
   disabled = false,
   isLocked = false,
+  saveDisabled = false,
 }) {
   const instanceId = useId();
 
@@ -168,7 +169,7 @@ export default function CriteriaManager({
           type="button"
           className="manage-btn primary"
           onClick={handleSave}
-          disabled={!canSave}
+          disabled={!canSave || saveDisabled}
         >
           {saving ? "Saving…" : "Save Criteria"}
         </button>
@@ -201,6 +202,7 @@ export default function CriteriaManager({
           if (!nextOpen) setPendingDeleteIndex(null);
         }}
         onConfirm={confirmRemoveRow}
+        saveDisabled={saveDisabled}
       />
     </div>
   );

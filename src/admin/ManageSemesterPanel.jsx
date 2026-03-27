@@ -340,7 +340,7 @@ export default function ManageSemesterPanel({
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <button className="manage-btn primary" type="button" onClick={() => setShowCreate(true)} disabled={isDemoMode}>
+              <button className="manage-btn primary" type="button" onClick={() => setShowCreate(true)}>
                 <span aria-hidden="true"><CirclePlusIcon className="manage-btn-icon" /></span>
                 Semester
               </button>
@@ -399,7 +399,6 @@ export default function ManageSemesterPanel({
                       className="manage-icon-btn"
                       type="button"
                       aria-label={`Edit ${s.semester_name}`}
-                      disabled={isDemoMode}
                       onClick={() => {
                         const normalizedDate = normalizeDateInput(s.poster_date);
                         setEditForm({
@@ -429,7 +428,7 @@ export default function ManageSemesterPanel({
                       ? "Cannot delete the current semester"
                       : "Delete semester"}
                     showLabel={false}
-                    disabled={s.id === currentSemesterId || isDemoMode}
+                    disabled={s.id === currentSemesterId}
                     onClick={() => onDeleteSemester?.(s)}
                   />
                 </div>
@@ -630,6 +629,7 @@ export default function ManageSemesterPanel({
                       mudekTemplate={editForm.mudek_template}
                       disabled={false}
                       isLocked={isLockedFn ? isLockedFn(editForm.id) : false}
+                      saveDisabled={isDemoMode}
                       onDirtyChange={setEditCriteriaDirty}
                       onSave={async (template) => {
                         if (!onUpdateCriteriaTemplate) return { ok: false, error: "Not configured" };
@@ -654,6 +654,7 @@ export default function ManageSemesterPanel({
                       criteriaTemplate={editCriteriaTemplate}
                       disabled={false}
                       isLocked={isLockedFn ? isLockedFn(editForm.id) : false}
+                      saveDisabled={isDemoMode}
                       onDirtyChange={setEditMudekDirty}
                       onDraftChange={(template) => {
                         setEditForm((f) => ({

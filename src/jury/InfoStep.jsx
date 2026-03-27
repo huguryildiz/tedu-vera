@@ -123,7 +123,7 @@ export default function InfoStep({
         <div className="premium-info-strip">
           <span className="info-strip-icon" aria-hidden="true"><InfoIcon /></span>
           <span className="premium-info-strip-text">
-            Name and institution cannot be changed once evaluation starts.
+            Name and institution / department cannot be changed once evaluation starts.
           </span>
         </div>
 
@@ -169,7 +169,7 @@ export default function InfoStep({
         {isDemoMode && (
           <div className="premium-info-strip">
             <span className="info-strip-icon" aria-hidden="true"><InfoIcon /></span>
-            <span>In production, jurors enter their real name and department.</span>
+            <span>In production, jurors enter their real name and institution / department.</span>
           </div>
         )}
 

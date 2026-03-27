@@ -4,7 +4,6 @@
 // No React, no side-effects — safe to import anywhere.
 // ============================================================
 
-import { CRITERIA } from "../config";
 
 // ── CSV parser ────────────────────────────────────────────────
 // RFC 4180 compliant. Supports both comma and semicolon as delimiters.
@@ -229,18 +228,15 @@ function hsl2hex(h, s, l) {
 export const jurorBg  = (n) => hsl2hex(hashInt(n || "?") % 360, 55, 95);
 export const jurorDot = (n) => hsl2hex(hashInt(n || "?") % 360, 65, 55);
 
-// ── Completion % — mirrors countFilled / totalFields in useJuryState ─────────
-// r[c.id] > 0 matches admin field names (technical/design/delivery/teamwork)
-// which equal CRITERIA ids. 0 == not filled (toNum default).
-const countAdminFilledCriteria = (rows, criteria = CRITERIA) =>
-  rows.reduce(
-    (t, r) => t + criteria.filter((c) => r[c.id] !== null && r[c.id] !== undefined).length,
-    0
-  );
-
-export const adminCompletionPct = (rows, totalProjects, criteria = CRITERIA) => {
-  const total = (totalProjects || 0) * criteria.length;
-  return total === 0 ? 0 : Math.round((countAdminFilledCriteria(rows, criteria) / total) * 100);
+// ── Completion % ─────────────────────────────────────────────
+// Counts rows with a non-null total (i.e. at least one criterion scored,
+// which causes the DB trigger to compute a total).
+// This works for any criteria template — no hardcoded criterion IDs.
+export const adminCompletionPct = (rows, totalProjects) => {
+  const total = totalProjects || 0;
+  if (total === 0) return 0;
+  const scored = rows.filter((r) => r.total !== null && r.total !== undefined).length;
+  return Math.round((scored / total) * 100);
 };
 
 // ── Row deduplication ─────────────────────────────────────────

@@ -487,6 +487,7 @@ export default function SettingsPage({ tenantId, selectedSemesterId = "", isDemo
         confirmLabel="Delete"
         tone="danger"
         onConfirm={async () => {
+          if (isDemoMode) throw new Error("Demo mode: delete is disabled.");
           try {
             await crud.handleConfirmDelete();
           } catch (e) {
@@ -512,7 +513,7 @@ export default function SettingsPage({ tenantId, selectedSemesterId = "", isDemo
               />
             )}
 
-            <div>
+            <div style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
               <SemesterSettingsPanel
                 semesters={crud.semesterList}
                 currentSemesterId={crud.currentSemesterId}
@@ -583,6 +584,7 @@ export default function SettingsPage({ tenantId, selectedSemesterId = "", isDemo
             {!isSuper && (
               <JurorSettingsPanel
                 jurors={crud.jurors}
+                semesterList={crud.semesterList}
                 panelError={crud.panelErrors.jurors}
                 isDemoMode={isDemoMode}
                 isMobile={isMobile}
@@ -662,6 +664,7 @@ export default function SettingsPage({ tenantId, selectedSemesterId = "", isDemo
             {isSuper && (
               <JurorSettingsPanel
                 jurors={crud.jurors}
+                semesterList={crud.semesterList}
                 panelError={crud.panelErrors.jurors}
                 isDemoMode={isDemoMode}
                 isMobile={isMobile}

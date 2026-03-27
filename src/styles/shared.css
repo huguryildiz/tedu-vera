@@ -427,27 +427,25 @@ body {
   padding: 12px 14px;
   font-size: 14px;
   color: var(--brand-800);
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
   gap: 10px;
   align-items: center;
   text-align: left;
 }
 .premium-info-strip > :not(.info-strip-icon) {
-  flex: 1 1 auto;
   min-width: 0;
   text-align: left;
 }
 .premium-info-strip-text {
-  flex: 1 1 auto;
   min-width: 0;
   text-align: left;
+  line-height: 1.55;
 }
 .premium-info-strip-justify {
-  flex: 1 1 auto;
   min-width: 0;
-  text-align: justify;
-  text-align-last: justify;
-  text-justify: inter-word;
+  text-align: left;
+  line-height: 1.55;
 }
 .premium-error-banner {
   background: #fff1f2;
@@ -459,13 +457,13 @@ body {
   color: var(--error-text);
   display: flex;
   gap: 10px;
-  align-items: flex-start;
+  align-items: center;
 }
 .premium-error-banner.is-critical {
   border-left-color: #ef4444;
   box-shadow: 0 0 0 2px rgba(239,68,68,0.12);
 }
-.premium-error-banner svg { width: 18px; height: 18px; margin-top: 1px; }
+.premium-error-banner svg { width: 18px; height: 18px; margin-top: 0; flex: 0 0 auto; }
 .premium-error-title { font-weight: 700; color: var(--error-text); }
 .premium-error-detail { color: var(--error-text); }
 .premium-overlay {
@@ -860,7 +858,7 @@ body {
     align-items: center;
     justify-content: center;
     color: currentColor;
-    background: transparent;
+    background: var(--surface-bg, var(--card-bg));
     pointer-events: none;
   }
 
@@ -1060,4 +1058,31 @@ body {
 
 .tooltip-text.is-visible {
   opacity: 1;
+}
+
+/* ── Copy-to-clipboard toast ─────────────────────────────── */
+.copy-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: #1e293b;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 10px;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.22);
+  white-space: nowrap;
+  max-width: 90vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.copy-toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }

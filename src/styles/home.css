@@ -89,11 +89,12 @@
 }
 
 .home-demo-desc {
-  color: #94a3b8;
+  color: #1e3a8a;
   font-size: 13px;
   font-weight: 400;
+  font-style: italic;
   line-height: 1.5;
-  margin: 4px 0 0;
+  margin: 16px 0 0;
   margin-bottom: 32px;
 }
 
@@ -184,6 +185,10 @@
   color: rgba(100, 116, 139, 0.7);
   text-align: center;
   line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
 }
 .home-footer-link {
   color: rgba(100, 116, 139, 0.85);
@@ -211,6 +216,7 @@
   .home-card    { padding: 32px 24px; }
   .home-definition { font-size: 12px; letter-spacing: 2px; }
   .home-tagline { font-size: 13px; margin-bottom: 24px; }
+  .home-demo-desc { font-size: 12px; margin-top: 12px; margin-bottom: 24px; }
   .home-primary-btn,
   .home .btn-outline.home-secondary-btn {
     height: 50px;

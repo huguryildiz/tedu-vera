@@ -15,8 +15,10 @@ RETURNS TABLE (juror_id uuid, juror_name text, juror_inst text, updated_at times
   final_submitted_at timestamptz, last_activity_at timestamptz, total_projects integer, completed_projects integer)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions AS $$
 #variable_conflict use_column
+DECLARE v_tid uuid;
 BEGIN
   PERFORM public._assert_semester_access(p_semester_id);
+  SELECT tenant_id INTO v_tid FROM semesters WHERE id = p_semester_id;
   RETURN QUERY
     WITH total AS (SELECT COUNT(*)::int AS total_projects FROM projects p WHERE p.semester_id = p_semester_id),
     completed AS (SELECT sc.juror_id, COUNT(*)::int AS completed_projects FROM scores sc
@@ -34,7 +36,9 @@ BEGIN
     LEFT JOIN LATERAL (SELECT MAX(sc.final_submitted_at) AS final_submitted_at FROM scores sc WHERE sc.juror_id = j.id AND sc.semester_id = p_semester_id) AS fs ON true
     LEFT JOIN LATERAL (SELECT GREATEST(MAX(sc.updated_at), MAX(sc.final_submitted_at)) AS last_activity_at FROM scores sc WHERE sc.juror_id = j.id AND sc.semester_id = p_semester_id) AS la ON true
     LEFT JOIN LATERAL (SELECT array_agg(x.semester_name ORDER BY x.poster_date DESC NULLS LAST) AS scored_semesters FROM (
-      SELECT DISTINCT s.id, s.semester_name, s.poster_date FROM scores sc JOIN semesters s ON s.id = sc.semester_id WHERE sc.juror_id = j.id AND sc.final_submitted_at IS NOT NULL) AS x) AS ss ON true
+      SELECT DISTINCT s.id, s.semester_name, s.poster_date FROM scores sc JOIN semesters s ON s.id = sc.semester_id
+      WHERE sc.juror_id = j.id AND sc.final_submitted_at IS NOT NULL AND s.tenant_id = v_tid) AS x) AS ss ON true
+    WHERE EXISTS (SELECT 1 FROM juror_semester_auth jsa2 WHERE jsa2.juror_id = j.id AND jsa2.semester_id = p_semester_id)
     ORDER BY j.juror_name;
 END; $$;
 
@@ -231,8 +235,10 @@ RETURNS TABLE (juror_id uuid, juror_name text, juror_inst text, updated_at times
   final_submitted_at timestamptz, last_activity_at timestamptz, total_projects integer, completed_projects integer)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions AS $$
 #variable_conflict use_column
+DECLARE v_tid uuid;
 BEGIN
   IF NOT public._verify_admin_password(p_admin_password, p_rpc_secret) THEN RAISE EXCEPTION 'unauthorized' USING ERRCODE = 'P0401'; END IF;
+  SELECT tenant_id INTO v_tid FROM semesters WHERE id = p_semester_id;
   RETURN QUERY
     WITH total AS (SELECT COUNT(*)::int AS total_projects FROM projects p WHERE p.semester_id = p_semester_id),
     completed AS (SELECT sc.juror_id, COUNT(*)::int AS completed_projects FROM scores sc
@@ -250,7 +256,9 @@ BEGIN
     LEFT JOIN LATERAL (SELECT MAX(sc.final_submitted_at) AS final_submitted_at FROM scores sc WHERE sc.juror_id = j.id AND sc.semester_id = p_semester_id) AS fs ON true
     LEFT JOIN LATERAL (SELECT GREATEST(MAX(sc.updated_at), MAX(sc.final_submitted_at)) AS last_activity_at FROM scores sc WHERE sc.juror_id = j.id AND sc.semester_id = p_semester_id) AS la ON true
     LEFT JOIN LATERAL (SELECT array_agg(x.semester_name ORDER BY x.poster_date DESC NULLS LAST) AS scored_semesters FROM (
-      SELECT DISTINCT s.id, s.semester_name, s.poster_date FROM scores sc JOIN semesters s ON s.id = sc.semester_id WHERE sc.juror_id = j.id AND sc.final_submitted_at IS NOT NULL) AS x) AS ss ON true
+      SELECT DISTINCT s.id, s.semester_name, s.poster_date FROM scores sc JOIN semesters s ON s.id = sc.semester_id
+      WHERE sc.juror_id = j.id AND sc.final_submitted_at IS NOT NULL AND s.tenant_id = v_tid) AS x) AS ss ON true
+    WHERE EXISTS (SELECT 1 FROM juror_semester_auth jsa2 WHERE jsa2.juror_id = j.id AND jsa2.semester_id = p_semester_id)
     ORDER BY j.juror_name;
 END; $$;
 

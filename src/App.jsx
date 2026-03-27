@@ -309,7 +309,7 @@ function AppInner() {
 
         {DEMO_MODE && (
           <p className="home-demo-desc">
-            Live demo with sample data. Explore the admin panel or try the jury evaluation flow.
+            Explore VERA with sample data through the admin panel and jury flow.
           </p>
         )}
 
@@ -328,16 +328,19 @@ function AppInner() {
         </div>
 
         <div className="home-footer">
-          © 2026 · TED University · Developed by{" "}
-          <a
-            className="home-footer-link"
-            href="https://huguryildiz.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Huseyin Ugur Yildiz
-          </a>
-          {" "}· v1.0
+          <span>© 2026 TED University</span>
+          <span>
+            Developed by{" "}
+            <a
+              className="home-footer-link"
+              href="https://huguryildiz.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Huseyin Ugur Yildiz
+            </a>
+            {" "}· v1.0
+          </span>
         </div>
       </div>
     </div>

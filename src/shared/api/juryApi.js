@@ -13,11 +13,13 @@ import { dbScoresToUi } from "./fieldMapping";
 
 // ── Juror auth ────────────────────────────────────────────────
 // Returns { juror_name, juror_inst, needs_pin, pin_plain_once, locked_until, failed_attempts }.
-export async function createOrGetJurorAndIssuePin(semesterId, jurorName, jurorInst) {
+// Pass forceReissue=true (demo mode) to always reset the PIN and surface it via pin_reveal.
+export async function createOrGetJurorAndIssuePin(semesterId, jurorName, jurorInst, forceReissue = false) {
   const { data, error } = await supabase.rpc("rpc_create_or_get_juror_and_issue_pin", {
-    p_semester_id: semesterId,
-    p_juror_name:  String(jurorName || "").trim(),
-    p_juror_inst:  String(jurorInst || "").trim(),
+    p_semester_id:   semesterId,
+    p_juror_name:    String(jurorName || "").trim(),
+    p_juror_inst:    String(jurorInst || "").trim(),
+    p_force_reissue: forceReissue,
   });
   if (error) throw error;
   return data?.[0] || null;

@@ -41,6 +41,7 @@ function renderImportMessage(text) {
 
 export default function ManageJurorsPanel({
   jurors,
+  semesterList = [],
   panelError = "",
   isDemoMode = false,
   isMobile,
@@ -95,6 +96,12 @@ export default function ManageJurorsPanel({
     el.classList.toggle("is-scrolled", el.scrollLeft > 0);
   };
   const handleMetaScroll = (e) => updateScrollState(e.currentTarget);
+
+  const tenantSemesterNames = new Set(
+    (semesterList || [])
+      .map((s) => String(s?.semester_name || "").trim().toLowerCase())
+      .filter(Boolean)
+  );
 
   const canSubmit = form.juror_name.trim() && form.juror_inst.trim();
   const canEdit = editForm.juror_name.trim() && editForm.juror_inst.trim();
@@ -347,7 +354,6 @@ export default function ManageJurorsPanel({
             <button
               className="manage-btn"
               type="button"
-              disabled={isDemoMode}
               onClick={() => {
                 setImportError("");
                 setImportWarning("");
@@ -362,7 +368,6 @@ export default function ManageJurorsPanel({
             <button
               className="manage-btn primary"
               type="button"
-              disabled={isDemoMode}
               onClick={() => {
                 setAddError("");
                 setShowAdd(true);
@@ -391,7 +396,12 @@ export default function ManageJurorsPanel({
             {visibleJurors.map((j) => {
               const isLocked = isJurorLocked(j);
               const scoredSemesters = getScoredSemesters(j);
-              const completedCount = scoredSemesters.length;
+              const visibleScoredSemesters = scoredSemesters.filter((s) => {
+                const normalized = String(s || "").trim().toLowerCase();
+                return !tenantSemesterNames.size || tenantSemesterNames.has(normalized);
+              });
+              const dedupedScoredSemesters = [...new Set(visibleScoredSemesters)];
+              const completedCount = dedupedScoredSemesters.length;
               const jurorId = j.jurorId || j.juror_id;
               const isSemesterMenuOpen = openSemesterMenuId === jurorId;
               const hasScoredSemester = completedCount > 0;
@@ -448,10 +458,10 @@ export default function ManageJurorsPanel({
                         {isSemesterMenuOpen && (
                           <div className="manage-semesters-dropdown manage-semesters-dropdown--list" role="dialog" aria-label="Completed semesters">
                             <div className="manage-semesters-dropdown-title">
-                              Completed semesters
-                            </div>
-                            {hasScoredSemester ? (
-                              scoredSemesters.map((s, idx) => (
+                            Completed semesters
+                          </div>
+                          {hasScoredSemester ? (
+                              dedupedScoredSemesters.map((s, idx) => (
                                 <div key={`${jurorId}-all-sem-${idx}`} className="manage-semester-row">
                                   {s}
                                 </div>
@@ -485,7 +495,6 @@ export default function ManageJurorsPanel({
                         <button
                           className={`manage-icon-btn${isLocked ? " is-warning" : ""}`}
                           type="button"
-                          disabled={isDemoMode}
                           aria-label={`Reset PIN for ${j.juryName || j.juror_name}`}
                           onClick={() => {
                             onResetPin?.({
@@ -502,7 +511,6 @@ export default function ManageJurorsPanel({
                         <button
                           className="manage-icon-btn"
                           type="button"
-                          disabled={isDemoMode}
                           aria-label={`Edit ${j.juryName || j.juror_name}`}
                           onClick={() => {
                             setEditTarget(j);
@@ -520,7 +528,6 @@ export default function ManageJurorsPanel({
                         ariaLabel={`Delete ${j.juryName || j.juror_name}`}
                         title="Delete juror"
                         showLabel={false}
-                        disabled={isDemoMode}
                         onClick={() => onDeleteJuror?.(j)}
                       />
                     </div>

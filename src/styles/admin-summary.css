@@ -500,6 +500,43 @@
 .matrix-info-note svg { flex: 0 0 auto; }
 .summary-note { margin-bottom: 16px; }
 
+/* ── Info tooltip (icon + hover bubble) ───────────────────── */
+.info-tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: help;
+  color: #64748b;
+  transition: color 0.15s;
+}
+.info-tooltip-wrap:hover { color: #3b82f6; }
+.info-tooltip-wrap svg { width: 18px; height: 18px; }
+.info-tooltip-bubble {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  min-width: 260px;
+  max-width: 340px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--gray-900, #0f172a);
+  color: #f1f5f9;
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: normal;
+  text-align: justify;
+  box-shadow: 0 4px 16px rgba(0,0,0,.18);
+  z-index: 9999;
+  pointer-events: none;
+  transition: opacity 0.15s, visibility 0.15s;
+}
+.info-tooltip-wrap:hover .info-tooltip-bubble {
+  visibility: visible;
+  opacity: 1;
+}
 
 
 @keyframes evalBlinkStrong {

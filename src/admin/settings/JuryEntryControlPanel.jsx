@@ -100,7 +100,7 @@ export default function JuryEntryControlPanel({
       cornersSquareOptions: { type: "extra-rounded", color: "#1e3a5f" },
       cornersDotOptions:    { type: "dot", color: "#2563eb" },
       backgroundOptions:    { color: "#ffffff" },
-      imageOptions:         { crossOrigin: "anonymous", margin: 6, imageSize: 0.375 },
+      imageOptions:         { crossOrigin: "anonymous", margin: 4, imageSize: 0.46 },
     });
   }, []);
 
@@ -141,6 +141,14 @@ export default function JuryEntryControlPanel({
     setShowQR(!!saved);
     loadStatus();
   }, [semesterId, loadStatus]);
+
+  // Demo mode: show a dummy QR when the semester has an active token
+  useEffect(() => {
+    if (!isDemoMode || !status?.has_token || !status?.enabled) return;
+    if (rawToken) return; // already showing a real/dummy token
+    setRawToken("demo-token-" + (semesterId || "").slice(0, 8));
+    setShowQR(true);
+  }, [isDemoMode, status, rawToken, semesterId]);
 
   // ── Generate / Regenerate ─────────────────────────────────
   async function handleGenerate() {

@@ -5,7 +5,7 @@ import { useFocusTrap } from "../../shared/useFocusTrap";
 import AlertCard from "../../shared/AlertCard";
 import { TrashIcon } from "../../shared/Icons";
 
-export default function CriterionDeleteDialog({ open, rowLabel, onOpenChange, onConfirm }) {
+export default function CriterionDeleteDialog({ open, rowLabel, onOpenChange, onConfirm, saveDisabled = false }) {
   const containerRef = useRef(null);
 
   useFocusTrap({
@@ -48,6 +48,7 @@ export default function CriterionDeleteDialog({ open, rowLabel, onOpenChange, on
             className="manage-btn manage-btn--delete-confirm"
             type="button"
             onClick={onConfirm}
+            disabled={saveDisabled}
           >
             Delete
           </button>

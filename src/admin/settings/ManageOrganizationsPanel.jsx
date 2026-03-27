@@ -47,6 +47,39 @@ function formatTimestamp(iso) {
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function copyEmailToClipboard(email) {
+  if (!email) return;
+  const write = navigator.clipboard?.writeText
+    ? () => navigator.clipboard.writeText(email)
+    : () => {
+        const ta = document.createElement("textarea");
+        ta.value = email;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      };
+  write();
+  showCopyToast(email);
+}
+
+function showCopyToast(email) {
+  const existing = document.querySelector(".copy-toast");
+  if (existing) existing.remove();
+  const toast = document.createElement("div");
+  toast.className = "copy-toast";
+  toast.textContent = `Copied: ${email}`;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("copy-toast--visible"));
+  setTimeout(() => {
+    toast.classList.remove("copy-toast--visible");
+    setTimeout(() => toast.remove(), 250);
+  }, 2000);
+}
+
 // ── Main component ────────────────────────────────────────────
 
 export default function ManageOrganizationsPanel({
@@ -232,6 +265,7 @@ export default function ManageOrganizationsPanel({
   };
 
   const confirmAdminDelete = async () => {
+    if (isDemoMode) throw new Error("Demo mode: delete is disabled.");
     if (!adminDeleteTarget?.tenantId || !adminDeleteTarget?.userId) return;
     await handleDeleteTenantAdmin?.({
       tenantId: adminDeleteTarget.tenantId,
@@ -301,7 +335,7 @@ export default function ManageOrganizationsPanel({
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <button className="manage-btn primary" type="button" onClick={openCreate} disabled={isDemoMode}>
+              <button className="manage-btn primary" type="button" onClick={openCreate}>
                 <span aria-hidden="true"><CirclePlusIcon className="manage-btn-icon" /></span>
                 Organization
               </button>
@@ -318,7 +352,7 @@ export default function ManageOrganizationsPanel({
                   </div>
                   <div className="manage-item-sub manage-meta-line">
                     <span className="manage-meta-icon" aria-hidden="true"><CodeIcon /></span>
-                    <span>{org.code}</span>
+                    <span className="manage-code">{org.code}</span>
                   </div>
                   <div className="manage-item-sub manage-meta-line">
                     <span className="manage-meta-icon" aria-hidden="true"><UniversityIcon /></span>
@@ -338,6 +372,11 @@ export default function ManageOrganizationsPanel({
                       >
                         {(org.pendingApplications?.length || 0)} pending
                       </span>
+                      <span
+                        className={(org.pendingApplications?.length || 0) > 0 ? "manage-org-admin-summary-pending-label" : ""}
+                      >
+                        {" "}admin(s)
+                      </span>
                     </span>
                   </div>
                   <div className="manage-item-sub manage-meta-line">
@@ -351,7 +390,6 @@ export default function ManageOrganizationsPanel({
                       type="button"
                       aria-label={`Edit ${org.shortLabel}`}
                       onClick={() => openEdit(org)}
-                      disabled={isDemoMode}
                     >
                       <PencilIcon />
                     </button>
@@ -362,7 +400,6 @@ export default function ManageOrganizationsPanel({
                       type="button"
                       aria-label={`Review admins for ${org.shortLabel}`}
                       onClick={() => setAdminsDialogOrg(org)}
-                      disabled={isDemoMode}
                     >
                       <UserStarIcon />
                     </button>
@@ -553,10 +590,15 @@ export default function ManageOrganizationsPanel({
                             <span className="manage-org-admin-line-icon" aria-hidden="true"><UserStarIcon /></span>
                             <span className="manage-org-admin-name swipe-x">{admin.name || "—"}</span>
                           </div>
-                          <a className="manage-org-admin-line manage-org-admin-mail-link" href={`mailto:${admin.email}`}>
+                          <button
+                            type="button"
+                            className="manage-org-admin-line manage-org-admin-mail-link"
+                            onClick={() => copyEmailToClipboard(admin.email)}
+                            title="Copy email to clipboard"
+                          >
                             <span className="manage-org-admin-line-icon" aria-hidden="true"><MailIcon /></span>
                             <span className="manage-org-admin-email-text swipe-x">{admin.email}</span>
-                          </a>
+                          </button>
                           <div className="manage-org-admin-line manage-org-admin-line--time">
                             <span className="manage-org-admin-line-icon" aria-hidden="true"><HistoryIcon /></span>
                             <span>{formatTimestamp(admin.updatedAt || admin.updated_at || adminsDialogOrg.updated_at || null)}</span>
@@ -575,7 +617,7 @@ export default function ManageOrganizationsPanel({
                                   className="manage-icon-btn"
                                   aria-label={`Edit admin ${admin.name || admin.email}`}
                                   onClick={() => openAdminEdit(adminsDialogOrg.id, admin)}
-                                  disabled={!admin.userId || isDemoMode}
+                                  disabled={!admin.userId}
                                 >
                                   <PencilIcon />
                                 </button>
@@ -591,7 +633,7 @@ export default function ManageOrganizationsPanel({
                                     name: admin.name,
                                     email: admin.email,
                                   })}
-                                  disabled={!admin.userId || isDemoMode}
+                                  disabled={!admin.userId}
                                 >
                                   <TrashIcon />
                                 </button>
@@ -623,10 +665,15 @@ export default function ManageOrganizationsPanel({
                             <span className="manage-org-admin-line-icon" aria-hidden="true"><UserStarIcon /></span>
                             <span className="manage-org-admin-name swipe-x">{entry.name || "—"}</span>
                           </div>
-                          <a className="manage-org-admin-line manage-org-admin-mail-link" href={`mailto:${entry.email}`}>
+                          <button
+                            type="button"
+                            className="manage-org-admin-line manage-org-admin-mail-link"
+                            onClick={() => copyEmailToClipboard(entry.email)}
+                            title="Copy email to clipboard"
+                          >
                             <span className="manage-org-admin-line-icon" aria-hidden="true"><MailIcon /></span>
                             <span className="manage-org-admin-email-text swipe-x">{entry.email}</span>
-                          </a>
+                          </button>
                           <div className="manage-org-admin-line manage-org-admin-line--time">
                             <span className="manage-org-admin-line-icon" aria-hidden="true"><HistoryIcon /></span>
                             <span>{formatTimestamp(entry.updatedAt || entry.updated_at || entry.createdAt || null)}</span>
@@ -671,7 +718,6 @@ export default function ManageOrganizationsPanel({
                     type="button"
                     className="manage-btn primary manage-org-admin-add-btn"
                     onClick={() => openAdminCreate(adminsDialogOrg)}
-                    disabled={isDemoMode}
                   >
                     <span aria-hidden="true"><CirclePlusIcon className="manage-btn-icon" /></span>
                     Add admin

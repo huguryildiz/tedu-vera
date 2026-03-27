@@ -142,35 +142,40 @@ describe("rowKey", () => {
 });
 
 // ── adminCompletionPct ────────────────────────────────────────
+// Now based on rows with non-null total (works with any criteria template).
 describe("adminCompletionPct", () => {
-  const fullRow = { technical: 25, design: 20, delivery: 20, teamwork: 8, total: 73 };
-  const emptyRow = { technical: null, design: null, delivery: null, teamwork: null, total: null };
-  const zeroRow = { technical: 0, design: 0, delivery: 0, teamwork: 0, total: 0 };
-  const partialRow = { technical: 20, design: null, delivery: null, teamwork: null, total: null };
+  const scoredRow = { total: 73 };
+  const emptyRow = { total: null };
+  const zeroTotalRow = { total: 0 };
 
   it("returns 0 when totalProjects is 0", () => {
-    expect(adminCompletionPct([fullRow], 0)).toBe(0);
+    expect(adminCompletionPct([scoredRow], 0)).toBe(0);
   });
 
-  it("returns 100 when all criteria are filled for all projects", () => {
-    expect(adminCompletionPct([fullRow, fullRow], 2)).toBe(100);
+  it("returns 100 when all rows have a total", () => {
+    expect(adminCompletionPct([scoredRow, scoredRow], 2)).toBe(100);
   });
 
-  it("returns 0 when all criteria are null (empty rows)", () => {
+  it("returns 0 when all rows have null total", () => {
     expect(adminCompletionPct([emptyRow], 1)).toBe(0);
   });
 
-  it("counts zero-value scores as filled (regression: was broken with > 0 check)", () => {
-    expect(adminCompletionPct([zeroRow], 1)).toBe(100);
+  it("counts zero total as scored (juror intentionally scored 0)", () => {
+    expect(adminCompletionPct([zeroTotalRow], 1)).toBe(100);
   });
 
-  it("counts partial rows proportionally", () => {
-    // partialRow has 1 of 4 criteria filled → 25%
-    expect(adminCompletionPct([partialRow], 1)).toBe(25);
+  it("counts scored vs unscored rows proportionally", () => {
+    expect(adminCompletionPct([scoredRow, emptyRow], 2)).toBe(50);
   });
 
   it("handles empty rows array", () => {
     expect(adminCompletionPct([], 3)).toBe(0);
+  });
+
+  it("works with custom criteria keys (multi-tenant)", () => {
+    // Custom criteria keys (not technical/design/delivery/teamwork)
+    const customRow = { algorithm_design: 20, experimentation: 15, demo: 18, total: 53 };
+    expect(adminCompletionPct([customRow], 1)).toBe(100);
   });
 });
 

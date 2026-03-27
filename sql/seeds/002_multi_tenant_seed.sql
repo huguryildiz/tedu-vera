@@ -98,63 +98,101 @@ WHERE EXISTS (SELECT 1 FROM auth.users WHERE id = v.uid)
 ON CONFLICT (user_id) DO NOTHING;
 
 -- ── Section 4: Semesters (3 per tenant) ─────────────────────
--- Poster dates vary per institution. Criteria templates: 4/3/5.
--- Spring 2026 is active for all tenants.
+-- Each tenant × semester gets a unique criteria template (18 total).
+-- MÜDEK outcome dictionaries are auto-derived from criteria mudek_outcomes.
 
 DO $$
 DECLARE
   v_t record;
-  v_template_4 jsonb := '[
-    {"key":"technical","label":"Technical Content","shortLabel":"Technical","max":30,"mudek":["1.2","2","3.1","3.2"],"mudek_outcomes":["po_1_2","po_2","po_3_1","po_3_2"]},
-    {"key":"design","label":"Written Communication","shortLabel":"Written","max":30,"mudek":["9.2"],"mudek_outcomes":["po_9_2"]},
-    {"key":"delivery","label":"Oral Communication","shortLabel":"Oral","max":30,"mudek":["9.1"],"mudek_outcomes":["po_9_1"]},
-    {"key":"teamwork","label":"Teamwork","shortLabel":"Teamwork","max":10,"mudek":["8.1","8.2"],"mudek_outcomes":["po_8_1","po_8_2"]}
+  v_mi int; v_mj int;
+  v_used_pos text[];
+  -- ── Per-semester criteria templates (18 total) ────────────
+  -- Each tenant × semester gets a unique template to demonstrate JSONB flexibility.
+  -- MÜDEK dictionary is auto-derived from template mudek_outcomes (see loop body).
+
+  -- TEDU EE Fall: 4 criteria, balanced EE evaluation
+  v_template_ee_fall jsonb := '[
+    {"key":"technical","color":"#F59E0B","label":"Technical Merit","shortLabel":"Tech","blurb":"Evaluate the depth of circuit/system analysis, theoretical grounding, and correctness of engineering calculations.","max":30,"mudek":["1.2","2","3.1"],"mudek_outcomes":["po_1_2","po_2","po_3_1"],"rubric":[{"level":"Excellent","min":25,"max":30,"range":"25–30","desc":"Thorough analysis with strong theoretical grounding"},{"level":"Good","min":18,"max":24,"range":"18–24","desc":"Solid technical work with minor gaps"},{"level":"Developing","min":10,"max":17,"range":"10–17","desc":"Basic understanding shown but lacks depth"},{"level":"Insufficient","min":0,"max":9,"range":"0–9","desc":"Fundamental technical deficiencies"}]},
+    {"key":"written","color":"#22C55E","label":"Written & Visual Quality","shortLabel":"Written","blurb":"Assess poster layout, figure quality, labelling, and overall visual communication effectiveness.","max":30,"mudek":["9.2","3.2"],"mudek_outcomes":["po_9_2","po_3_2"],"rubric":[{"level":"Excellent","min":25,"max":30,"range":"25–30","desc":"Clear, well-structured poster with effective visuals"},{"level":"Good","min":18,"max":24,"range":"18–24","desc":"Readable poster with adequate figures and layout"},{"level":"Developing","min":10,"max":17,"range":"10–17","desc":"Poster conveys idea but organization is weak"},{"level":"Insufficient","min":0,"max":9,"range":"0–9","desc":"Poor layout, unclear or missing key content"}]},
+    {"key":"oral","color":"#3B82F6","label":"Oral Presentation","shortLabel":"Oral","blurb":"Evaluate presentation clarity, confidence, audience adaptation, and quality of Q&A responses.","max":30,"mudek":["9.1"],"mudek_outcomes":["po_9_1"],"rubric":[{"level":"Excellent","min":25,"max":30,"range":"25–30","desc":"Confident delivery with clear command of material"},{"level":"Good","min":18,"max":24,"range":"18–24","desc":"Good presentation with minor hesitations"},{"level":"Developing","min":10,"max":17,"range":"10–17","desc":"Adequate but lacks fluency or confidence"},{"level":"Insufficient","min":0,"max":9,"range":"0–9","desc":"Unable to explain work or answer questions"}]},
+    {"key":"teamwork","color":"#EF4444","label":"Teamwork","shortLabel":"Team","blurb":"Assess balance of contributions, role clarity, and evidence of collaborative effort across the team.","max":10,"mudek":["8.1","8.2","11"],"mudek_outcomes":["po_8_1","po_8_2","po_11"],"rubric":[{"level":"Excellent","min":9,"max":10,"range":"9–10","desc":"Balanced contributions and strong collaboration"},{"level":"Good","min":6,"max":8,"range":"6–8","desc":"Team functions well with minor imbalances"},{"level":"Developing","min":3,"max":5,"range":"3–5","desc":"Uneven workload distribution evident"},{"level":"Insufficient","min":0,"max":2,"range":"0–2","desc":"Little evidence of collaborative effort"}]}
   ]'::jsonb;
-  v_template_3 jsonb := '[
-    {"key":"technical","label":"Technical Design","shortLabel":"Technical","max":40,"mudek":["1.2","2","3.1","3.2","4"],"mudek_outcomes":["po_1_2","po_2","po_3_1","po_3_2","po_4"]},
-    {"key":"presentation","label":"Presentation","shortLabel":"Presentation","max":35,"mudek":["9.1","9.2"],"mudek_outcomes":["po_9_1","po_9_2"]},
-    {"key":"teamwork","label":"Teamwork","shortLabel":"Teamwork","max":25,"mudek":["8.1","8.2"],"mudek_outcomes":["po_8_1","po_8_2"]}
+  -- TEDU EE Spring: Capstone emphasis with heavier circuit design weight
+  v_template_ee_spring jsonb := '[{"key":"circuit_design","color":"#F59E0B","label":"Circuit Design","shortLabel":"Circuit","blurb":"Evaluate schematic quality, component selection rationale, simulation results, and PCB layout decisions.","max":35,"mudek":["1.2","2","4"],"mudek_outcomes":["po_1_2","po_2","po_4"],"rubric":[{"level":"Outstanding","min":29,"max":35,"range":"29–35","desc":"Innovative circuit with optimized component selection"},{"level":"Proficient","min":22,"max":28,"range":"22–28","desc":"Well-executed circuit meeting specifications with room for minor optimization"},{"level":"Competent","min":14,"max":21,"range":"14–21","desc":"Functional design meeting most specifications"},{"level":"Emerging","min":7,"max":13,"range":"7–13","desc":"Basic circuit works but lacks optimization"},{"level":"Inadequate","min":0,"max":6,"range":"0–6","desc":"Circuit incomplete or fundamentally flawed"}]},{"key":"poster_quality","color":"#22C55E","label":"Poster Quality","shortLabel":"Poster","blurb":"Assess poster organization, technical figure clarity, annotation quality, and visual hierarchy.","max":25,"mudek":["9.2","3.2"],"mudek_outcomes":["po_9_2","po_3_2"],"rubric":[{"level":"Outstanding","min":21,"max":25,"range":"21–25","desc":"Professional poster with clear schematics and data"},{"level":"Proficient","min":16,"max":20,"range":"16–20","desc":"Clean poster with good technical figures and logical layout"},{"level":"Competent","min":10,"max":15,"range":"10–15","desc":"Well-organized poster with adequate detail"},{"level":"Emerging","min":5,"max":9,"range":"5–9","desc":"Poster present but missing key technical figures"},{"level":"Inadequate","min":0,"max":4,"range":"0–4","desc":"Incomplete or poorly structured poster"}]},{"key":"oral_defense","color":"#3B82F6","label":"Oral Defense","shortLabel":"Defense","blurb":"Assess persuasiveness of defense, depth of knowledge demonstrated, and Q&A responsiveness.","max":25,"mudek":["9.1","5"],"mudek_outcomes":["po_9_1","po_5"],"rubric":[{"level":"Outstanding","min":21,"max":25,"range":"21–25","desc":"Defends design choices with strong justification"},{"level":"Proficient","min":16,"max":20,"range":"16–20","desc":"Confident presentation with well-prepared responses to technical probing"},{"level":"Competent","min":10,"max":15,"range":"10–15","desc":"Explains work clearly, answers most questions"},{"level":"Emerging","min":5,"max":9,"range":"5–9","desc":"Presents but struggles with follow-up questions"},{"level":"Inadequate","min":0,"max":4,"range":"0–4","desc":"Cannot articulate design rationale"}]},{"key":"collaboration","color":"#EF4444","label":"Collaboration","shortLabel":"Collab","blurb":"Assess evidence of shared ownership, task division, and coordination throughout the project.","max":15,"mudek":["8.1","8.2","11"],"mudek_outcomes":["po_8_1","po_8_2","po_11"],"rubric":[{"level":"Outstanding","min":12,"max":15,"range":"12–15","desc":"Seamless teamwork with shared ownership of design"},{"level":"Proficient","min":9,"max":11,"range":"9–11","desc":"Effective teamwork with well-defined roles and regular coordination"},{"level":"Competent","min":6,"max":8,"range":"6–8","desc":"Good cooperation with clear role division"},{"level":"Emerging","min":3,"max":5,"range":"3–5","desc":"Some collaboration but uneven contributions"},{"level":"Inadequate","min":0,"max":2,"range":"0–2","desc":"Minimal evidence of team coordination"}]}]'::jsonb;
+  -- TEDU EE Summer: Individual research, no teamwork
+  v_template_ee_summer jsonb := '[{"key":"technical","color":"#F59E0B","label":"Technical Content","shortLabel":"Technical","blurb":"Evaluate the engineering depth of the project, clarity of the problem definition, and justification of technical decisions.","max":30,"mudek":["1.2","2","3.1","3.2"],"mudek_outcomes":["po_1_2","po_2","po_3_1","po_3_2"],"rubric":[{"range":"27–30","level":"Excellent","min":27,"max":30,"desc":"Problem is clearly defined with strong motivation. Design decisions are well-justified with engineering depth. Originality and mastery of relevant tools or methods are evident."},{"range":"21–26","level":"Good","min":21,"max":26,"desc":"Design is mostly clear and technically justified. Engineering decisions are largely supported."},{"range":"13–20","level":"Developing","min":13,"max":20,"desc":"Problem is stated but motivation or technical justification is insufficient."},{"range":"0–12","level":"Insufficient","min":0,"max":12,"desc":"Vague problem definition and unjustified decisions. Superficial technical content."}]},{"key":"design","color":"#22C55E","label":"Written Communication","shortLabel":"Written","blurb":"Evaluate the clarity, structure, and visual effectiveness of the poster and written materials.","max":30,"mudek":["9.2"],"mudek_outcomes":["po_9_2"],"rubric":[{"range":"27–30","level":"Excellent","min":27,"max":30,"desc":"Poster layout is intuitive with clear information flow. Visuals are fully labelled and high quality."},{"range":"21–26","level":"Good","min":21,"max":26,"desc":"Layout is mostly logical. Visuals are readable with minor gaps."},{"range":"13–20","level":"Developing","min":13,"max":20,"desc":"Occasional gaps in information flow. Some visuals are missing labels or captions."},{"range":"0–12","level":"Insufficient","min":0,"max":12,"desc":"Confusing layout. Low-quality or unlabelled visuals. Technical content is unclear or missing."}]},{"key":"delivery","color":"#3B82F6","label":"Oral Communication","shortLabel":"Oral","blurb":"Evaluate the clarity of the presentation, pacing, and the quality of answers during the Q&A.","max":30,"mudek":["9.1"],"mudek_outcomes":["po_9_1"],"rubric":[{"range":"27–30","level":"Excellent","min":27,"max":30,"desc":"Presentation is consciously adapted for both technical and non-technical jury members. Q&A responses are accurate and audience-appropriate."},{"range":"21–26","level":"Good","min":21,"max":26,"desc":"Presentation is mostly clear and well-paced. Most questions answered correctly."},{"range":"13–20","level":"Developing","min":13,"max":20,"desc":"Understandable but inconsistent. Limited audience adaptation. Q&A depth needs improvement."},{"range":"0–12","level":"Insufficient","min":0,"max":12,"desc":"Unclear or disorganised presentation. Most questions answered incorrectly or not at all."}]},{"key":"teamwork","color":"#EF4444","label":"Teamwork","shortLabel":"Teamwork","blurb":"Evaluate how effectively team members collaborate and contribute to the project.","max":10,"mudek":["8.1","8.2"],"mudek_outcomes":["po_8_1","po_8_2"],"rubric":[{"range":"9–10","level":"Excellent","min":9,"max":10,"desc":"All members participate actively and equally. Professional and ethical conduct observed throughout."},{"range":"7–8","level":"Good","min":7,"max":8,"desc":"Most members contribute. Minor knowledge gaps. Professionalism mostly observed."},{"range":"4–6","level":"Developing","min":4,"max":6,"desc":"Uneven participation. Some members are passive or unprepared."},{"range":"0–3","level":"Insufficient","min":0,"max":3,"desc":"Very low participation or dominated by one person. Lack of professionalism observed."}]}]'::jsonb;
+  -- TEDU CE Fall: 4 criteria, code-compliance & fieldwork emphasis
+  v_template_ce_fall jsonb := '[
+    {"key":"structural_analysis","color":"#F59E0B","label":"Structural Analysis","shortLabel":"Analysis","blurb":"Evaluate load path tracing, FEM usage, boundary conditions, and validation of structural calculations.","max":30,"mudek":["1.2","2","3.1"],"mudek_outcomes":["po_1_2","po_2","po_3_1"],"rubric":[{"level":"Excellent","min":25,"max":30,"range":"25–30","desc":"Rigorous analysis with validated load calculations"},{"level":"Good","min":18,"max":24,"range":"18–24","desc":"Sound analysis with minor computational gaps"},{"level":"Developing","min":10,"max":17,"range":"10–17","desc":"Basic calculations present but incomplete"},{"level":"Insufficient","min":0,"max":9,"range":"0–9","desc":"Analysis missing or fundamentally incorrect"}]},
+    {"key":"code_compliance","color":"#22C55E","label":"Code Compliance","shortLabel":"Compliance","blurb":"Assess adherence to applicable building codes (TBDY, Eurocode, ACI) with specific clause references.","max":25,"mudek":["4","7"],"mudek_outcomes":["po_4","po_7"],"rubric":[{"level":"Excellent","min":21,"max":25,"range":"21–25","desc":"Full adherence to relevant building codes"},{"level":"Good","min":15,"max":20,"range":"15–20","desc":"Mostly compliant with minor omissions"},{"level":"Developing","min":8,"max":14,"range":"8–14","desc":"Partial compliance, several standards missed"},{"level":"Insufficient","min":0,"max":7,"range":"0–7","desc":"Ignores applicable codes and standards"}]},
+    {"key":"visual_presentation","color":"#3B82F6","label":"Visual Presentation","shortLabel":"Visual","blurb":"Evaluate quality of engineering drawings including dimensioning, notation, and cross-section details.","max":30,"mudek":["9.2","3.2"],"mudek_outcomes":["po_9_2","po_3_2"],"rubric":[{"level":"Excellent","min":25,"max":30,"range":"25–30","desc":"Professional drawings with clear annotations"},{"level":"Good","min":18,"max":24,"range":"18–24","desc":"Good visual quality with adequate detail"},{"level":"Developing","min":10,"max":17,"range":"10–17","desc":"Drawings present but lack precision"},{"level":"Insufficient","min":0,"max":9,"range":"0–9","desc":"Missing or illegible technical drawings"}]},
+    {"key":"fieldwork","color":"#EF4444","label":"Fieldwork & Site Skills","shortLabel":"Field","blurb":"Assess quality of site observations, soil/material data collection, and field documentation.","max":15,"mudek":["5","8.1"],"mudek_outcomes":["po_5","po_8_1"],"rubric":[{"level":"Excellent","min":13,"max":15,"range":"13–15","desc":"Excellent site observation and data collection"},{"level":"Good","min":9,"max":12,"range":"9–12","desc":"Competent fieldwork with useful observations"},{"level":"Developing","min":5,"max":8,"range":"5–8","desc":"Limited field engagement or incomplete data"},{"level":"Insufficient","min":0,"max":4,"range":"0–4","desc":"No meaningful fieldwork conducted"}]}
   ]'::jsonb;
-  v_template_5 jsonb := '[
-    {"key":"technical","label":"Technical Content","shortLabel":"Technical","max":25,"mudek":["1.2","2"],"mudek_outcomes":["po_1_2","po_2"]},
-    {"key":"design","label":"Design Quality","shortLabel":"Design","max":20,"mudek":["3.1","3.2"],"mudek_outcomes":["po_3_1","po_3_2"]},
-    {"key":"delivery","label":"Oral Delivery","shortLabel":"Oral","max":20,"mudek":["9.1"],"mudek_outcomes":["po_9_1"]},
-    {"key":"report","label":"Written Report","shortLabel":"Report","max":20,"mudek":["9.2","5"],"mudek_outcomes":["po_9_2","po_5"]},
-    {"key":"teamwork","label":"Teamwork","shortLabel":"Teamwork","max":15,"mudek":["8.1","8.2"],"mudek_outcomes":["po_8_1","po_8_2"]}
+  -- TEDU CE Spring: Granular 5-criteria capstone
+  v_template_ce_spring jsonb := '[{"key":"structural_design","color":"#F59E0B","label":"Structural Design","shortLabel":"Struct","blurb":"Evaluate the structural system selection, member sizing, detailing, and design optimization.","max":25,"mudek":["1.2","2","3.1"],"mudek_outcomes":["po_1_2","po_2","po_3_1"],"rubric":[{"level":"Exemplary","min":21,"max":25,"range":"21–25","desc":"Optimized structural system with proper detailing"},{"level":"Accomplished","min":16,"max":20,"range":"16–20","desc":"Sound structural system meeting code requirements with adequate detailing"},{"level":"Satisfactory","min":10,"max":15,"range":"10–15","desc":"Adequate design meeting safety requirements"},{"level":"Marginal","min":5,"max":9,"range":"5–9","desc":"Basic design with significant gaps"},{"level":"Unacceptable","min":0,"max":4,"range":"0–4","desc":"Structural design incomplete or unsafe"}]},{"key":"geotechnical","color":"#22C55E","label":"Geotechnical Assessment","shortLabel":"Geotech","blurb":"Assess soil investigation methodology, foundation design rationale, and bearing capacity analysis.","max":20,"mudek":["2","5"],"mudek_outcomes":["po_2","po_5"],"rubric":[{"level":"Exemplary","min":17,"max":20,"range":"17–20","desc":"Thorough soil analysis with proper foundation design"},{"level":"Accomplished","min":13,"max":16,"range":"13–16","desc":"Strong soil analysis with proper foundation design"},{"level":"Satisfactory","min":8,"max":12,"range":"8–12","desc":"Adequate geotechnical investigation performed"},{"level":"Marginal","min":4,"max":7,"range":"4–7","desc":"Basic soil data with limited interpretation"},{"level":"Unacceptable","min":0,"max":3,"range":"0–3","desc":"No geotechnical assessment conducted"}]},{"key":"engineering_drawings","color":"#3B82F6","label":"Engineering Drawings","shortLabel":"Drawings","blurb":"Evaluate CAD drawing completeness, standards compliance, and technical detailing quality.","max":20,"mudek":["4","9.2"],"mudek_outcomes":["po_4","po_9_2"],"rubric":[{"level":"Exemplary","min":17,"max":20,"range":"17–20","desc":"Complete CAD drawings to professional standards"},{"level":"Accomplished","min":13,"max":16,"range":"13–16","desc":"Detailed CAD drawings with minor standards compliance gaps"},{"level":"Satisfactory","min":8,"max":12,"range":"8–12","desc":"Clear drawings with minor detailing issues"},{"level":"Marginal","min":4,"max":7,"range":"4–7","desc":"Incomplete drawings missing key views"},{"level":"Unacceptable","min":0,"max":3,"range":"0–3","desc":"Drawings absent or unusable"}]},{"key":"oral_defense","color":"#EF4444","label":"Oral Defense","shortLabel":"Defense","blurb":"Assess persuasiveness of defense, depth of knowledge demonstrated, and Q&A responsiveness.","max":20,"mudek":["9.1","3.2"],"mudek_outcomes":["po_9_1","po_3_2"],"rubric":[{"level":"Exemplary","min":17,"max":20,"range":"17–20","desc":"Confident defense of design decisions"},{"level":"Accomplished","min":13,"max":16,"range":"13–16","desc":"Confident presentation with well-prepared responses to technical probing"},{"level":"Satisfactory","min":8,"max":12,"range":"8–12","desc":"Clear presentation with adequate responses"},{"level":"Marginal","min":4,"max":7,"range":"4–7","desc":"Presents but struggles under questioning"},{"level":"Unacceptable","min":0,"max":3,"range":"0–3","desc":"Unable to defend design choices"}]},{"key":"site_work","color":"#8B5CF6","label":"Site Work","shortLabel":"Site","blurb":"Assess field engagement, safety awareness during site visits, and data collection methodology.","max":15,"mudek":["5","8.1","7"],"mudek_outcomes":["po_5","po_8_1","po_7"],"rubric":[{"level":"Exemplary","min":12,"max":15,"range":"12–15","desc":"Exemplary site engagement with safety awareness"},{"level":"Accomplished","min":9,"max":11,"range":"9–11","desc":"Active site participation with thorough safety documentation"},{"level":"Satisfactory","min":6,"max":8,"range":"6–8","desc":"Good field participation and documentation"},{"level":"Marginal","min":3,"max":5,"range":"3–5","desc":"Minimal site involvement observed"},{"level":"Unacceptable","min":0,"max":2,"range":"0–2","desc":"No site work contribution"}]}]'::jsonb;
+  -- TEDU CE Summer: Desk study, no fieldwork
+  v_template_ce_summer jsonb := '[{"key":"analytical_methods","color":"#F59E0B","label":"Analytical Methods","shortLabel":"Analysis","blurb":"Evaluate the rigor of computational methods, model validation, and sensitivity analysis.","max":40,"mudek":["1.2","2","3.1","4"],"mudek_outcomes":["po_1_2","po_2","po_3_1","po_4"],"rubric":[{"level":"Strong","min":28,"max":40,"range":"28–40","desc":"Rigorous methodology with validated computations"},{"level":"Adequate","min":12,"max":27,"range":"12–27","desc":"Sound approach with minor analytical gaps Basic methods applied without verification"},{"level":"Weak","min":0,"max":11,"range":"0–11","desc":"Analytical approach absent or incorrect"}]},{"key":"standards_knowledge","color":"#22C55E","label":"Standards & Codes","shortLabel":"Standards","blurb":"Assess familiarity with applicable codes, standards citations, and regulatory compliance.","max":30,"mudek":["4","7","6"],"mudek_outcomes":["po_4","po_7","po_6"],"rubric":[{"level":"Strong","min":21,"max":30,"range":"21–30","desc":"Comprehensive standards review with proper citations"},{"level":"Adequate","min":9,"max":20,"range":"9–20","desc":"Key standards identified and referenced Limited standards awareness in analysis"},{"level":"Weak","min":0,"max":8,"range":"0–8","desc":"No reference to applicable standards"}]},{"key":"technical_report","color":"#3B82F6","label":"Technical Report","shortLabel":"Report","blurb":"Evaluate report structure, clarity of conclusions, methodology documentation, and references.","max":30,"mudek":["9.2","3.2","10"],"mudek_outcomes":["po_9_2","po_3_2","po_10"],"rubric":[{"level":"Strong","min":21,"max":30,"range":"21–30","desc":"Well-structured report with clear conclusions"},{"level":"Adequate","min":9,"max":20,"range":"9–20","desc":"Readable report covering all required sections Report present but disorganized or incomplete"},{"level":"Weak","min":0,"max":8,"range":"0–8","desc":"Report missing or unacceptable quality"}]}]'::jsonb;
+  -- Boğaziçi CHEM Fall: Process-focused 3-criteria evaluation
+  v_template_chem_fall jsonb := '[
+    {"key":"process_design","color":"#F59E0B","label":"Process Design & Analysis","shortLabel":"Process","blurb":"Evaluate mass/energy balances, equipment sizing, PFD completeness, and simulation validation.","max":40,"mudek":["1.2","2","3.1","4"],"mudek_outcomes":["po_1_2","po_2","po_3_1","po_4"],"rubric":[{"level":"Excellent","min":33,"max":40,"range":"33–40","desc":"Optimized process with mass/energy balance verified"},{"level":"Good","min":24,"max":32,"range":"24–32","desc":"Functional process design with minor issues"},{"level":"Developing","min":14,"max":23,"range":"14–23","desc":"Basic process flow but lacks quantitative rigor"},{"level":"Insufficient","min":0,"max":13,"range":"0–13","desc":"Process design incomplete or infeasible"}]},
+    {"key":"hseq","color":"#22C55E","label":"HSEQ Awareness","shortLabel":"HSEQ","blurb":"Assess hazard identification methodology, environmental impact analysis, and safety mitigation plans.","max":25,"mudek":["6","7"],"mudek_outcomes":["po_6","po_7"],"rubric":[{"level":"Excellent","min":21,"max":25,"range":"21–25","desc":"Thorough hazard analysis with mitigation plans"},{"level":"Good","min":15,"max":20,"range":"15–20","desc":"Good safety awareness with adequate measures"},{"level":"Developing","min":8,"max":14,"range":"8–14","desc":"Safety mentioned but not systematically addressed"},{"level":"Insufficient","min":0,"max":7,"range":"0–7","desc":"No health, safety, or environmental consideration"}]},
+    {"key":"technical_comm","color":"#3B82F6","label":"Technical Communication","shortLabel":"Comm","blurb":"Evaluate clarity of process diagrams, oral fluency, and written report quality.","max":35,"mudek":["9.1","9.2","3.2"],"mudek_outcomes":["po_9_1","po_9_2","po_3_2"],"rubric":[{"level":"Excellent","min":29,"max":35,"range":"29–35","desc":"Exceptional clarity in both written and oral forms"},{"level":"Good","min":21,"max":28,"range":"21–28","desc":"Clear communication with well-prepared materials"},{"level":"Developing","min":12,"max":20,"range":"12–20","desc":"Conveys main ideas but lacks polish"},{"level":"Insufficient","min":0,"max":11,"range":"0–11","desc":"Poor communication impeding understanding"}]}
   ]'::jsonb;
+  -- Boğaziçi CHEM Spring: Lab emphasis with safety review
+  v_template_chem_spring jsonb := '[{"key":"reaction_engineering","color":"#F59E0B","label":"Reaction Engineering","shortLabel":"Reaction","blurb":"Evaluate kinetic modeling, reactor design rationale, and optimization of operating conditions.","max":30,"mudek":["1.2","2","3.1"],"mudek_outcomes":["po_1_2","po_2","po_3_1"],"rubric":[{"level":"Superior","min":25,"max":30,"range":"25–30","desc":"Kinetics and reactor design rigorously analyzed"},{"level":"Proficient","min":19,"max":24,"range":"19–24","desc":"Correct kinetic analysis with well-chosen operating parameters"},{"level":"Developing","min":12,"max":18,"range":"12–18","desc":"Sound reaction analysis with minor omissions"},{"level":"Novice","min":6,"max":11,"range":"6–11","desc":"Basic kinetics applied without optimization"},{"level":"Unsatisfactory","min":0,"max":5,"range":"0–5","desc":"Reaction analysis missing or incorrect"}]},{"key":"lab_technique","color":"#22C55E","label":"Lab Technique","shortLabel":"Lab","blurb":"Assess experimental precision, reproducibility of results, and proper use of lab equipment.","max":25,"mudek":["5","4"],"mudek_outcomes":["po_5","po_4"],"rubric":[{"level":"Superior","min":21,"max":25,"range":"21–25","desc":"Precise technique with reproducible results"},{"level":"Proficient","min":16,"max":20,"range":"16–20","desc":"Consistent lab results with good reproducibility across runs"},{"level":"Developing","min":10,"max":15,"range":"10–15","desc":"Competent lab work with acceptable accuracy"},{"level":"Novice","min":5,"max":9,"range":"5–9","desc":"Lab work completed but lacks precision"},{"level":"Unsatisfactory","min":0,"max":4,"range":"0–4","desc":"Poor technique leading to unreliable data"}]},{"key":"safety_review","color":"#3B82F6","label":"Safety Review","shortLabel":"Safety","blurb":"Evaluate SDS review completeness, risk assessment methodology, and safety protocol adherence.","max":20,"mudek":["6","7"],"mudek_outcomes":["po_6","po_7"],"rubric":[{"level":"Superior","min":17,"max":20,"range":"17–20","desc":"Comprehensive SDS review and risk assessment done"},{"level":"Proficient","min":13,"max":16,"range":"13–16","desc":"Solid hazard review covering major risk scenarios systematically"},{"level":"Developing","min":8,"max":12,"range":"8–12","desc":"Adequate safety protocols identified"},{"level":"Novice","min":4,"max":7,"range":"4–7","desc":"Basic safety awareness but gaps in protocol"},{"level":"Unsatisfactory","min":0,"max":3,"range":"0–3","desc":"Safety considerations absent"}]},{"key":"comm_skills","color":"#EF4444","label":"Communication Skills","shortLabel":"Comm","blurb":"Assess written report quality, oral presentation confidence, and technical figure clarity.","max":25,"mudek":["9.1","9.2"],"mudek_outcomes":["po_9_1","po_9_2"],"rubric":[{"level":"Superior","min":21,"max":25,"range":"21–25","desc":"Professional report and confident oral delivery"},{"level":"Proficient","min":16,"max":20,"range":"16–20","desc":"Well-written report with clear figures and confident delivery"},{"level":"Developing","min":10,"max":15,"range":"10–15","desc":"Clear writing and adequate presentation"},{"level":"Novice","min":5,"max":9,"range":"5–9","desc":"Communication functional but unpolished"},{"level":"Unsatisfactory","min":0,"max":4,"range":"0–4","desc":"Written and oral delivery both weak"}]}]'::jsonb;
+  -- Boğaziçi CHEM Summer: Research focus
+  v_template_chem_summer jsonb := '[{"key":"literature_review","color":"#F59E0B","label":"Literature Review","shortLabel":"LitRev","blurb":"Evaluate breadth of sources, gap identification, and critical analysis of prior work.","max":35,"mudek":["2","5","10"],"mudek_outcomes":["po_2","po_5","po_10"],"rubric":[{"level":"Advanced","min":24,"max":35,"range":"24–35","desc":"Exhaustive review with clear gap identification"},{"level":"Intermediate","min":10,"max":23,"range":"10–23","desc":"Good coverage of relevant prior work Limited sources reviewed, gaps not identified"},{"level":"Beginning","min":0,"max":9,"range":"0–9","desc":"No meaningful literature survey conducted"}]},{"key":"experiment_design","color":"#22C55E","label":"Experiment Design","shortLabel":"ExpDesign","blurb":"Assess experimental plan, control variables, statistical design, and data collection methodology.","max":35,"mudek":["1.2","3.1","5","4"],"mudek_outcomes":["po_1_2","po_3_1","po_5","po_4"],"rubric":[{"level":"Advanced","min":24,"max":35,"range":"24–35","desc":"Well-controlled experiments with statistical rigor"},{"level":"Intermediate","min":10,"max":23,"range":"10–23","desc":"Sound experimental plan with adequate controls Experiments run but design has weaknesses"},{"level":"Beginning","min":0,"max":9,"range":"0–9","desc":"No coherent experimental methodology"}]},{"key":"research_report","color":"#3B82F6","label":"Research Report","shortLabel":"Report","blurb":"Evaluate academic writing quality, results presentation, and discussion of findings.","max":30,"mudek":["9.2","3.2"],"mudek_outcomes":["po_9_2","po_3_2"],"rubric":[{"level":"Advanced","min":21,"max":30,"range":"21–30","desc":"Publication-quality report with clear findings"},{"level":"Intermediate","min":9,"max":20,"range":"9–20","desc":"Well-written report meeting academic standards Report present but lacks academic rigor"},{"level":"Beginning","min":0,"max":8,"range":"0–8","desc":"Report incomplete or poorly written"}]}]'::jsonb;
+  -- Boğaziçi CMPE Fall: Granular 5-criteria CS evaluation
+  v_template_cmpe_fall jsonb := '[
+    {"key":"algorithm_design","color":"#F59E0B","label":"Algorithm Design","shortLabel":"Algo","blurb":"Evaluate algorithmic correctness, complexity analysis, and justification of design choices.","max":25,"mudek":["1.2","2","3.1"],"mudek_outcomes":["po_1_2","po_2","po_3_1"],"rubric":[{"level":"Excellent","min":21,"max":25,"range":"21–25","desc":"Elegant algorithm with proven complexity bounds"},{"level":"Good","min":15,"max":20,"range":"15–20","desc":"Correct algorithm with reasonable efficiency"},{"level":"Developing","min":8,"max":14,"range":"8–14","desc":"Working solution but suboptimal approach"},{"level":"Insufficient","min":0,"max":7,"range":"0–7","desc":"Algorithm incorrect or not implemented"}]},
+    {"key":"experimentation","color":"#22C55E","label":"Experimentation","shortLabel":"Experiment","blurb":"Assess benchmark methodology, dataset selection, metric choices, and statistical significance.","max":20,"mudek":["5","3.2"],"mudek_outcomes":["po_5","po_3_2"],"rubric":[{"level":"Excellent","min":17,"max":20,"range":"17–20","desc":"Thorough benchmarks with statistical validation"},{"level":"Good","min":12,"max":16,"range":"12–16","desc":"Adequate experiments supporting conclusions"},{"level":"Developing","min":7,"max":11,"range":"7–11","desc":"Some experiments but methodology is weak"},{"level":"Insufficient","min":0,"max":6,"range":"0–6","desc":"No experimental evaluation performed"}]},
+    {"key":"demo","color":"#3B82F6","label":"Live Demo","shortLabel":"Demo","blurb":"Evaluate prototype functionality, edge case handling, and ability to explain system architecture live.","max":20,"mudek":["4","9.1"],"mudek_outcomes":["po_4","po_9_1"],"rubric":[{"level":"Excellent","min":17,"max":20,"range":"17–20","desc":"Smooth demo showcasing all key features"},{"level":"Good","min":12,"max":16,"range":"12–16","desc":"Demo works with minor glitches"},{"level":"Developing","min":7,"max":11,"range":"7–11","desc":"Partial demo with significant issues"},{"level":"Insufficient","min":0,"max":6,"range":"0–6","desc":"Demo fails or not attempted"}]},
+    {"key":"writing_quality","color":"#EF4444","label":"Writing Quality","shortLabel":"Writing","blurb":"Assess academic writing structure, related work coverage, and proper citation practices.","max":20,"mudek":["9.2","10"],"mudek_outcomes":["po_9_2","po_10"],"rubric":[{"level":"Excellent","min":17,"max":20,"range":"17–20","desc":"Clear academic writing with proper references"},{"level":"Good","min":12,"max":16,"range":"12–16","desc":"Well-organized paper with minor issues"},{"level":"Developing","min":7,"max":11,"range":"7–11","desc":"Writing present but disorganized"},{"level":"Insufficient","min":0,"max":6,"range":"0–6","desc":"Paper missing or unreadable"}]},
+    {"key":"collab","color":"#8B5CF6","label":"Collaboration","shortLabel":"Collab","blurb":"Evaluate git contribution balance, code review practices, and documentation quality.","max":15,"mudek":["8.1","8.2","11"],"mudek_outcomes":["po_8_1","po_8_2","po_11"],"rubric":[{"level":"Excellent","min":13,"max":15,"range":"13–15","desc":"Equal contributions with effective coordination"},{"level":"Good","min":9,"max":12,"range":"9–12","desc":"Good teamwork with clear role allocation"},{"level":"Developing","min":5,"max":8,"range":"5–8","desc":"Uneven effort among team members"},{"level":"Insufficient","min":0,"max":4,"range":"0–4","desc":"No evidence of collaborative work"}]}
+  ]'::jsonb;
+  -- Boğaziçi CMPE Spring: Systems focus
+  v_template_cmpe_spring jsonb := '[{"key":"system_architecture","color":"#F59E0B","label":"System Architecture","shortLabel":"SysArch","blurb":"Evaluate scalability considerations, design trade-offs, and component interaction design.","max":30,"mudek":["1.2","3.1","3.2"],"mudek_outcomes":["po_1_2","po_3_1","po_3_2"],"rubric":[{"level":"Outstanding","min":25,"max":30,"range":"25–30","desc":"Scalable architecture with justified design trade-offs"},{"level":"Strong","min":19,"max":24,"range":"19–24","desc":"Well-structured system with documented design decisions and trade-offs"},{"level":"Acceptable","min":12,"max":18,"range":"12–18","desc":"Sound architecture meeting functional requirements"},{"level":"Below Expectations","min":6,"max":11,"range":"6–11","desc":"Basic system structure with scalability concerns"},{"level":"Unsatisfactory","min":0,"max":5,"range":"0–5","desc":"No coherent system design presented"}]},{"key":"benchmarking","color":"#22C55E","label":"Benchmarking & Evaluation","shortLabel":"Bench","blurb":"Assess evaluation protocol rigor, baseline comparisons, and performance metric selection.","max":25,"mudek":["2","5","4"],"mudek_outcomes":["po_2","po_5","po_4"],"rubric":[{"level":"Outstanding","min":21,"max":25,"range":"21–25","desc":"Rigorous benchmarks with baseline comparisons"},{"level":"Strong","min":16,"max":20,"range":"16–20","desc":"Solid benchmarks with baseline comparisons"},{"level":"Acceptable","min":10,"max":15,"range":"10–15","desc":"Meaningful performance metrics collected"},{"level":"Below Expectations","min":5,"max":9,"range":"5–9","desc":"Some measurements but no systematic evaluation"},{"level":"Unsatisfactory","min":0,"max":4,"range":"0–4","desc":"No performance evaluation conducted"}]},{"key":"live_demo","color":"#3B82F6","label":"Live Demo","shortLabel":"Demo","blurb":"Evaluate real-time system demonstration, feature coverage, and graceful error handling.","max":25,"mudek":["4","9.1"],"mudek_outcomes":["po_4","po_9_1"],"rubric":[{"level":"Outstanding","min":21,"max":25,"range":"21–25","desc":"Polished demo with real-time interaction"},{"level":"Strong","min":16,"max":20,"range":"16–20","desc":"Functional demo covering all main features with minor rough edges"},{"level":"Acceptable","min":10,"max":15,"range":"10–15","desc":"Functional demo covering main use cases"},{"level":"Below Expectations","min":5,"max":9,"range":"5–9","desc":"Demo partially works, key features missing"},{"level":"Unsatisfactory","min":0,"max":4,"range":"0–4","desc":"System not demonstrable"}]},{"key":"paper_quality","color":"#EF4444","label":"Paper Quality","shortLabel":"Paper","blurb":"Assess paper structure, evaluation completeness, related work positioning, and writing clarity.","max":20,"mudek":["9.2","10"],"mudek_outcomes":["po_9_2","po_10"],"rubric":[{"level":"Outstanding","min":17,"max":20,"range":"17–20","desc":"Conference-ready paper with complete evaluation"},{"level":"Strong","min":13,"max":16,"range":"13–16","desc":"Well-organized paper with thorough evaluation and clear writing"},{"level":"Acceptable","min":8,"max":12,"range":"8–12","desc":"Well-structured paper covering all sections"},{"level":"Below Expectations","min":4,"max":7,"range":"4–7","desc":"Paper present but missing key analysis"},{"level":"Unsatisfactory","min":0,"max":3,"range":"0–3","desc":"Paper incomplete or poorly organized"}]}]'::jsonb;
+  -- Boğaziçi CMPE Summer: Research internship style
+  v_template_cmpe_summer jsonb := '[{"key":"research_novelty","color":"#F59E0B","label":"Research Novelty","shortLabel":"Novelty","blurb":"Evaluate originality of contribution, positioning relative to state of the art, and research significance.","max":40,"mudek":["1.2","2","5","10"],"mudek_outcomes":["po_1_2","po_2","po_5","po_10"],"rubric":[{"level":"Exceptional","min":28,"max":40,"range":"28–40","desc":"Original contribution advancing state of the art"},{"level":"Satisfactory","min":12,"max":27,"range":"12–27","desc":"Meaningful extension of existing research Reproduces known results with minor additions"},{"level":"Needs Improvement","min":0,"max":11,"range":"0–11","desc":"No novel contribution identified"}]},{"key":"implementation","color":"#22C55E","label":"Implementation","shortLabel":"Impl","blurb":"Assess code quality, test coverage, reproducibility, and documentation for replication.","max":30,"mudek":["3.1","3.2","4"],"mudek_outcomes":["po_3_1","po_3_2","po_4"],"rubric":[{"level":"Exceptional","min":21,"max":30,"range":"21–30","desc":"Clean, tested code with reproducible results"},{"level":"Satisfactory","min":9,"max":20,"range":"9–20","desc":"Working implementation with adequate testing Code runs but lacks tests or documentation"},{"level":"Needs Improvement","min":0,"max":8,"range":"0–8","desc":"Implementation incomplete or non-functional"}]},{"key":"tech_writing","color":"#3B82F6","label":"Technical Writing","shortLabel":"Writing","blurb":"Evaluate narrative clarity, figure quality, citation practices, and overall academic writing standard.","max":30,"mudek":["9.2","3.2"],"mudek_outcomes":["po_9_2","po_3_2"],"rubric":[{"level":"Exceptional","min":21,"max":30,"range":"21–30","desc":"Publication-quality writing with clear narrative"},{"level":"Satisfactory","min":9,"max":20,"range":"9–20","desc":"Well-organized report with proper citations Readable but lacks structure or references"},{"level":"Needs Improvement","min":0,"max":8,"range":"0–8","desc":"Writing quality below academic standards"}]}]'::jsonb;
+  -- METU ME Fall: 3-criteria analysis-heavy evaluation
+  v_template_me_fall jsonb := '[
+    {"key":"engineering_merit","color":"#F59E0B","label":"Engineering Merit","shortLabel":"Eng","blurb":"Evaluate depth of engineering analysis, proper tool usage (FEA/CFD), and design validation.","max":40,"mudek":["1.2","2","3.1","4"],"mudek_outcomes":["po_1_2","po_2","po_3_1","po_4"],"rubric":[{"level":"Excellent","min":33,"max":40,"range":"33–40","desc":"Outstanding engineering analysis and tool usage"},{"level":"Good","min":24,"max":32,"range":"24–32","desc":"Solid engineering work with proper methods"},{"level":"Developing","min":14,"max":23,"range":"14–23","desc":"Basic engineering approach with notable gaps"},{"level":"Insufficient","min":0,"max":13,"range":"0–13","desc":"Engineering fundamentals not demonstrated"}]},
+    {"key":"comm_effectiveness","color":"#22C55E","label":"Communication Effectiveness","shortLabel":"Comm","blurb":"Assess poster visual quality, oral delivery confidence, and audience-appropriate communication.","max":35,"mudek":["9.1","9.2","3.2"],"mudek_outcomes":["po_9_1","po_9_2","po_3_2"],"rubric":[{"level":"Excellent","min":29,"max":35,"range":"29–35","desc":"Compelling presentation and polished poster"},{"level":"Good","min":21,"max":28,"range":"21–28","desc":"Clear communication meeting expectations"},{"level":"Developing","min":12,"max":20,"range":"12–20","desc":"Message conveyed but presentation is rough"},{"level":"Insufficient","min":0,"max":11,"range":"0–11","desc":"Fails to communicate project effectively"}]},
+    {"key":"professionalism","color":"#3B82F6","label":"Professionalism","shortLabel":"Prof","blurb":"Evaluate professional conduct, ethical awareness, and consideration of safety/environmental impact.","max":25,"mudek":["6","7","10"],"mudek_outcomes":["po_6","po_7","po_10"],"rubric":[{"level":"Excellent","min":21,"max":25,"range":"21–25","desc":"Exemplary professional conduct and ethics"},{"level":"Good","min":15,"max":20,"range":"15–20","desc":"Professional demeanor with ethical awareness"},{"level":"Developing","min":8,"max":14,"range":"8–14","desc":"Some professional behavior but inconsistent"},{"level":"Insufficient","min":0,"max":7,"range":"0–7","desc":"Unprofessional conduct or ethical lapses"}]}
+  ]'::jsonb;
+  -- METU ME Spring: Manufacturing-focused capstone
+  v_template_me_spring jsonb := '[{"key":"cad_cam_design","color":"#F59E0B","label":"CAD/CAM Design","shortLabel":"CAD","blurb":"Evaluate 3D model completeness, tolerancing, manufacturing feasibility, and CAD standards.","max":30,"mudek":["1.2","3.1","4"],"mudek_outcomes":["po_1_2","po_3_1","po_4"],"rubric":[{"level":"Mastery","min":25,"max":30,"range":"25–30","desc":"Production-ready CAD with proper tolerancing"},{"level":"Proficiency","min":19,"max":24,"range":"19–24","desc":"Detailed 3D model with appropriate tolerances and manufacturing notes"},{"level":"Developing","min":12,"max":18,"range":"12–18","desc":"Complete 3D model with adequate detail"},{"level":"Emerging","min":6,"max":11,"range":"6–11","desc":"Basic CAD model missing critical features"},{"level":"Not Demonstrated","min":0,"max":5,"range":"0–5","desc":"CAD work incomplete or unusable"}]},{"key":"prototyping","color":"#22C55E","label":"Prototyping","shortLabel":"Proto","blurb":"Assess prototype functionality, testing methodology, and alignment with simulation predictions.","max":25,"mudek":["2","3.2","5"],"mudek_outcomes":["po_2","po_3_2","po_5"],"rubric":[{"level":"Mastery","min":21,"max":25,"range":"21–25","desc":"Functional prototype validated through testing"},{"level":"Proficiency","min":16,"max":20,"range":"16–20","desc":"Working prototype demonstrating core functionality through systematic testing"},{"level":"Developing","min":10,"max":15,"range":"10–15","desc":"Prototype built and partially tested"},{"level":"Emerging","min":5,"max":9,"range":"5–9","desc":"Prototype attempted but not fully functional"},{"level":"Not Demonstrated","min":0,"max":4,"range":"0–4","desc":"No working prototype produced"}]},{"key":"poster_oral","color":"#3B82F6","label":"Poster & Oral Presentation","shortLabel":"Present","blurb":"Evaluate poster visual hierarchy and oral presentation structure, clarity, and engagement.","max":25,"mudek":["9.1","9.2"],"mudek_outcomes":["po_9_1","po_9_2"],"rubric":[{"level":"Mastery","min":21,"max":25,"range":"21–25","desc":"Engaging presentation with professional poster"},{"level":"Proficiency","min":16,"max":20,"range":"16–20","desc":"Clear and well-paced presentation with an organized, informative poster"},{"level":"Developing","min":10,"max":15,"range":"10–15","desc":"Clear presentation with informative poster"},{"level":"Emerging","min":5,"max":9,"range":"5–9","desc":"Adequate but lacks visual or oral polish"},{"level":"Not Demonstrated","min":0,"max":4,"range":"0–4","desc":"Poor presentation or missing poster"}]},{"key":"safety_ethics","color":"#EF4444","label":"Safety & Ethics","shortLabel":"Safety","blurb":"Assess safety protocol awareness, risk mitigation measures, and ethical reasoning in design.","max":20,"mudek":["6","7","8.2"],"mudek_outcomes":["po_6","po_7","po_8_2"],"rubric":[{"level":"Mastery","min":17,"max":20,"range":"17–20","desc":"Proactive safety measures and ethical reasoning"},{"level":"Proficiency","min":13,"max":16,"range":"13–16","desc":"Demonstrates consistent safety awareness and sound ethical judgment"},{"level":"Developing","min":8,"max":12,"range":"8–12","desc":"Safety protocols followed appropriately"},{"level":"Emerging","min":4,"max":7,"range":"4–7","desc":"Safety awareness present but incomplete"},{"level":"Not Demonstrated","min":0,"max":3,"range":"0–3","desc":"Safety and ethics not addressed"}]}]'::jsonb;
+  -- METU ME Summer: Individual theoretical project
+  v_template_me_summer jsonb := '[{"key":"analytical_modeling","color":"#F59E0B","label":"Analytical Modeling","shortLabel":"Model","blurb":"Evaluate mathematical model formulation, assumption justification, and validation methodology.","max":40,"mudek":["1.2","2","3.1","5"],"mudek_outcomes":["po_1_2","po_2","po_3_1","po_5"],"rubric":[{"level":"Commendable","min":28,"max":40,"range":"28–40","desc":"Rigorous mathematical model with validation"},{"level":"Acceptable","min":12,"max":27,"range":"12–27","desc":"Sound model with adequate assumptions stated Model attempted but oversimplified"},{"level":"Insufficient","min":0,"max":11,"range":"0–11","desc":"No viable analytical model developed"}]},{"key":"tech_report","color":"#22C55E","label":"Technical Report","shortLabel":"Report","blurb":"Assess report structure, methodology documentation, results clarity, and conclusions quality.","max":35,"mudek":["9.2","3.2","10"],"mudek_outcomes":["po_9_2","po_3_2","po_10"],"rubric":[{"level":"Commendable","min":24,"max":35,"range":"24–35","desc":"Comprehensive report with clear methodology"},{"level":"Acceptable","min":10,"max":23,"range":"10–23","desc":"Well-written report covering key aspects Report present but lacks depth or clarity"},{"level":"Insufficient","min":0,"max":9,"range":"0–9","desc":"Report missing or fundamentally inadequate"}]},{"key":"ethical_awareness","color":"#3B82F6","label":"Ethical Awareness","shortLabel":"Ethics","blurb":"Evaluate consideration of engineering impact on society, environment, and professional responsibility.","max":25,"mudek":["6","7"],"mudek_outcomes":["po_6","po_7"],"rubric":[{"level":"Commendable","min":17,"max":25,"range":"17–25","desc":"Thoughtful ethical analysis of engineering impact"},{"level":"Acceptable","min":7,"max":16,"range":"7–16","desc":"Acknowledges ethical dimensions appropriately Minimal ethical reflection in the work"},{"level":"Insufficient","min":0,"max":6,"range":"0–6","desc":"No consideration of ethical implications"}]}]'::jsonb;
+  -- METU IE Fall: Granular 5-criteria IE evaluation
+  v_template_ie_fall jsonb := '[
+    {"key":"methodology","color":"#F59E0B","label":"Methodology","shortLabel":"Method","blurb":"Evaluate appropriateness of chosen OR/statistical method, formulation rigor, and justification.","max":25,"mudek":["1.2","2","5"],"mudek_outcomes":["po_1_2","po_2","po_5"],"rubric":[{"level":"Excellent","min":21,"max":25,"range":"21–25","desc":"Rigorous methodology with clear justification"},{"level":"Good","min":15,"max":20,"range":"15–20","desc":"Sound approach appropriately applied"},{"level":"Developing","min":8,"max":14,"range":"8–14","desc":"Method chosen but weakly justified"},{"level":"Insufficient","min":0,"max":7,"range":"0–7","desc":"No clear methodology identified"}]},
+    {"key":"quantitative_modeling","color":"#22C55E","label":"Quantitative Modeling","shortLabel":"Model","blurb":"Assess model structure, decision variables, constraint formulation, and solution validation.","max":20,"mudek":["1.2","3.1","4"],"mudek_outcomes":["po_1_2","po_3_1","po_4"],"rubric":[{"level":"Excellent","min":17,"max":20,"range":"17–20","desc":"Validated model with sensitivity analysis"},{"level":"Good","min":12,"max":16,"range":"12–16","desc":"Working model producing reasonable outputs"},{"level":"Developing","min":7,"max":11,"range":"7–11","desc":"Model runs but lacks validation"},{"level":"Insufficient","min":0,"max":6,"range":"0–6","desc":"Model absent or non-functional"}]},
+    {"key":"defense","color":"#3B82F6","label":"Oral Defense","shortLabel":"Defense","blurb":"Evaluate oral articulation of methodology, Q&A handling, and depth of technical understanding.","max":20,"mudek":["9.1","3.2"],"mudek_outcomes":["po_9_1","po_3_2"],"rubric":[{"level":"Excellent","min":17,"max":20,"range":"17–20","desc":"Articulate defense with strong Q&A handling"},{"level":"Good","min":12,"max":16,"range":"12–16","desc":"Clear presentation, answers most questions"},{"level":"Developing","min":7,"max":11,"range":"7–11","desc":"Basic presentation with weak responses"},{"level":"Insufficient","min":0,"max":6,"range":"0–6","desc":"Unable to present or defend the work"}]},
+    {"key":"documentation","color":"#EF4444","label":"Documentation","shortLabel":"Docs","blurb":"Assess report completeness, formatting standards, and traceability of analysis steps.","max":20,"mudek":["9.2","10"],"mudek_outcomes":["po_9_2","po_10"],"rubric":[{"level":"Excellent","min":17,"max":20,"range":"17–20","desc":"Complete documentation with proper formatting"},{"level":"Good","min":12,"max":16,"range":"12–16","desc":"Adequate documentation covering key points"},{"level":"Developing","min":7,"max":11,"range":"7–11","desc":"Partial documentation with gaps"},{"level":"Insufficient","min":0,"max":6,"range":"0–6","desc":"Documentation missing or unusable"}]},
+    {"key":"project_mgmt","color":"#8B5CF6","label":"Project Management","shortLabel":"PM","blurb":"Evaluate project planning evidence, milestone tracking, and task allocation effectiveness.","max":15,"mudek":["8.1","11"],"mudek_outcomes":["po_8_1","po_11"],"rubric":[{"level":"Excellent","min":13,"max":15,"range":"13–15","desc":"On-time delivery with effective task tracking"},{"level":"Good","min":9,"max":12,"range":"9–12","desc":"Reasonable planning and milestone adherence"},{"level":"Developing","min":5,"max":8,"range":"5–8","desc":"Some planning but missed key milestones"},{"level":"Insufficient","min":0,"max":4,"range":"0–4","desc":"No project management evident"}]}
+  ]'::jsonb;
+  -- METU IE Spring: Data-driven capstone
+  v_template_ie_spring jsonb := '[{"key":"optimization_model","color":"#F59E0B","label":"Optimization Model","shortLabel":"OptModel","blurb":"Assess objective function formulation, constraint completeness, and solution optimality.","max":30,"mudek":["1.2","2","3.1","4"],"mudek_outcomes":["po_1_2","po_2","po_3_1","po_4"],"rubric":[{"level":"Exemplary","min":25,"max":30,"range":"25–30","desc":"Well-formulated model with optimal solution found"},{"level":"Accomplished","min":19,"max":24,"range":"19–24","desc":"Correct formulation producing near-optimal solutions with clear constraints"},{"level":"Competent","min":12,"max":18,"range":"12–18","desc":"Correct formulation with feasible solution"},{"level":"Developing","min":6,"max":11,"range":"6–11","desc":"Model defined but solution quality uncertain"},{"level":"Inadequate","min":0,"max":5,"range":"0–5","desc":"No valid optimization model presented"}]},{"key":"data_analytics","color":"#22C55E","label":"Data Analytics","shortLabel":"Analytics","blurb":"Evaluate data collection methodology, statistical analysis rigor, and visualization quality.","max":25,"mudek":["2","5","3.2"],"mudek_outcomes":["po_2","po_5","po_3_2"],"rubric":[{"level":"Exemplary","min":21,"max":25,"range":"21–25","desc":"Insightful analysis with appropriate statistics"},{"level":"Accomplished","min":16,"max":20,"range":"16–20","desc":"Thorough data analysis with appropriate visualizations and statistics"},{"level":"Competent","min":10,"max":15,"range":"10–15","desc":"Competent data handling and visualization"},{"level":"Developing","min":5,"max":9,"range":"5–9","desc":"Data collected but analysis is shallow"},{"level":"Inadequate","min":0,"max":4,"range":"0–4","desc":"No meaningful data analysis performed"}]},{"key":"oral_defense","color":"#3B82F6","label":"Oral Defense","shortLabel":"Defense","blurb":"Assess persuasiveness of defense, depth of knowledge demonstrated, and Q&A responsiveness.","max":25,"mudek":["9.1","8.1"],"mudek_outcomes":["po_9_1","po_8_1"],"rubric":[{"level":"Exemplary","min":21,"max":25,"range":"21–25","desc":"Persuasive defense demonstrating deep knowledge"},{"level":"Accomplished","min":16,"max":20,"range":"16–20","desc":"Confident presentation with well-prepared responses to technical probing"},{"level":"Competent","min":10,"max":15,"range":"10–15","desc":"Solid presentation answering questions well"},{"level":"Developing","min":5,"max":9,"range":"5–9","desc":"Presents adequately but depth lacking"},{"level":"Inadequate","min":0,"max":4,"range":"0–4","desc":"Cannot defend methodology or results"}]},{"key":"final_report","color":"#EF4444","label":"Final Report","shortLabel":"Report","blurb":"Evaluate report professionalism, actionable recommendations, and managerial implications.","max":20,"mudek":["9.2","10","11"],"mudek_outcomes":["po_9_2","po_10","po_11"],"rubric":[{"level":"Exemplary","min":17,"max":20,"range":"17–20","desc":"Professional report with actionable recommendations"},{"level":"Accomplished","min":13,"max":16,"range":"13–16","desc":"Complete report with clear structure and well-supported recommendations"},{"level":"Competent","min":8,"max":12,"range":"8–12","desc":"Complete report covering all required sections"},{"level":"Developing","min":4,"max":7,"range":"4–7","desc":"Report submitted but lacks conclusions"},{"level":"Inadequate","min":0,"max":3,"range":"0–3","desc":"Report missing or incomplete"}]}]'::jsonb;
+  -- METU IE Summer: Research report style
+  v_template_ie_summer jsonb := '[{"key":"lit_and_method","color":"#F59E0B","label":"Literature & Methodology","shortLabel":"LitMethod","blurb":"Evaluate literature coverage, research gap identification, and methodology justification.","max":35,"mudek":["2","5","10"],"mudek_outcomes":["po_2","po_5","po_10"],"rubric":[{"level":"Distinguished","min":24,"max":35,"range":"24–35","desc":"Thorough review with well-justified methodology"},{"level":"Satisfactory","min":10,"max":23,"range":"10–23","desc":"Good literature base with sound approach Some review done but method weakly justified"},{"level":"Unsatisfactory","min":0,"max":9,"range":"0–9","desc":"Inadequate literature review or methodology"}]},{"key":"quant_analysis","color":"#22C55E","label":"Quantitative Analysis","shortLabel":"QuantAnal","blurb":"Assess analytical sophistication, result validation, and interpretation of quantitative outputs.","max":35,"mudek":["1.2","3.1","4"],"mudek_outcomes":["po_1_2","po_3_1","po_4"],"rubric":[{"level":"Distinguished","min":24,"max":35,"range":"24–35","desc":"Sophisticated analysis with validated results"},{"level":"Satisfactory","min":10,"max":23,"range":"10–23","desc":"Competent quantitative work with clear outputs Analysis attempted but results questionable"},{"level":"Unsatisfactory","min":0,"max":9,"range":"0–9","desc":"No quantitative analysis conducted"}]},{"key":"tech_memo","color":"#3B82F6","label":"Technical Memo","shortLabel":"Memo","blurb":"Evaluate memo conciseness, actionability of conclusions, and clarity of findings presentation.","max":30,"mudek":["9.2","3.2","6"],"mudek_outcomes":["po_9_2","po_3_2","po_6"],"rubric":[{"level":"Distinguished","min":21,"max":30,"range":"21–30","desc":"Concise memo with actionable conclusions"},{"level":"Satisfactory","min":9,"max":20,"range":"9–20","desc":"Clear memo covering findings and implications Memo present but lacks focus or structure"},{"level":"Unsatisfactory","min":0,"max":8,"range":"0–8","desc":"Memo missing or fails to convey findings"}]}]'::jsonb;
   v_template jsonb;
-  -- MÜDEK outcome dictionaries per criteria template
-  v_mudek_4 jsonb := '[
+  -- Master MÜDEK outcome dictionary (all POs — subset auto-derived per template)
+  v_all_mudek jsonb := '[
     {"id":"po_1_2","code":"1.2","desc_en":"Ability to apply knowledge of mathematics, natural sciences, fundamental engineering, computation, and discipline-specific topics to solve complex engineering problems.","desc_tr":"Matematik, fen bilimleri, temel mühendislik, bilgisayarla hesaplama ve ilgili mühendislik disiplinine özgü konulardaki bilgileri, karmaşık mühendislik problemlerinin çözümünde kullanabilme becerisi."},
-    {"id":"po_2","code":"2","desc_en":"Ability to identify, formulate, and analyse complex engineering problems using fundamental science, mathematics, and engineering knowledge, with consideration of relevant UN Sustainable Development Goals.","desc_tr":"Karmaşık mühendislik problemlerini, temel bilim, matematik ve mühendislik bilgilerini kullanarak ve ele alınan problemle ilgili BM Sürdürülebilir Kalkınma Amaçlarını gözetarak tanımlama, formüle etme ve analiz becerisi."},
+    {"id":"po_2","code":"2","desc_en":"Ability to identify, formulate, and analyse complex engineering problems using fundamental science, mathematics, and engineering knowledge.","desc_tr":"Karmaşık mühendislik problemlerini, temel bilim, matematik ve mühendislik bilgilerini kullanarak tanımlama, formüle etme ve analiz becerisi."},
     {"id":"po_3_1","code":"3.1","desc_en":"Ability to design creative solutions to complex engineering problems.","desc_tr":"Karmaşık mühendislik problemlerine yaratıcı çözümler tasarlama becerisi."},
-    {"id":"po_3_2","code":"3.2","desc_en":"Ability to design complex systems, processes, devices, or products under realistic constraints and conditions, meeting current and future requirements.","desc_tr":"Karmaşık sistemleri, süreçleri, cihazları veya ürünleri gerçekçi kısıtları ve koşulları gözetarak, mevcut ve gelecekteki gereksinimleri karşılayacak biçimde tasarlama becerisi."},
-    {"id":"po_8_1","code":"8.1","desc_en":"Ability to work effectively as a team member or leader in intra-disciplinary teams (in-person, remote, or hybrid).","desc_tr":"Bireysel olarak disiplin içi takım çalışmalarında (yüz yüze, uzaktan veya karma) takım üyesi veya lideri olarak etkin biçimde çalışabilme becerisi."},
-    {"id":"po_8_2","code":"8.2","desc_en":"Ability to work effectively as a team member or leader in multidisciplinary teams (in-person, remote, or hybrid).","desc_tr":"Bireysel olarak çok disiplinli takımlarda (yüz yüze, uzaktan veya karma) takım üyesi veya lideri olarak etkin biçimde çalışabilme becerisi."},
-    {"id":"po_9_1","code":"9.1","desc_en":"Ability to communicate effectively on technical topics orally, adapting to audience differences (education, language, profession, etc.).","desc_tr":"Hedef kitlenin çeşitli farklılıklarını (eğitim, dil, meslek gibi) dikkate alarak, teknik konularda sözlü etkin iletişim kurma becerisi."},
-    {"id":"po_9_2","code":"9.2","desc_en":"Ability to communicate effectively on technical topics in writing, adapting to audience differences (education, language, profession, etc.).","desc_tr":"Hedef kitlenin çeşitli farklılıklarını (eğitim, dil, meslek gibi) dikkate alarak, teknik konularda yazılı etkin iletişim kurma becerisi."}
-  ]'::jsonb;
-  v_mudek_3 jsonb := '[
-    {"id":"po_1_2","code":"1.2","desc_en":"Ability to apply knowledge of mathematics, natural sciences, fundamental engineering, computation, and discipline-specific topics to solve complex engineering problems.","desc_tr":"Matematik, fen bilimleri, temel mühendislik, bilgisayarla hesaplama ve ilgili mühendislik disiplinine özgü konulardaki bilgileri, karmaşık mühendislik problemlerinin çözümünde kullanabilme becerisi."},
-    {"id":"po_2","code":"2","desc_en":"Ability to identify, formulate, and analyse complex engineering problems using fundamental science, mathematics, and engineering knowledge, with consideration of relevant UN Sustainable Development Goals.","desc_tr":"Karmaşık mühendislik problemlerini, temel bilim, matematik ve mühendislik bilgilerini kullanarak ve ele alınan problemle ilgili BM Sürdürülebilir Kalkınma Amaçlarını gözetarak tanımlama, formüle etme ve analiz becerisi."},
-    {"id":"po_3_1","code":"3.1","desc_en":"Ability to design creative solutions to complex engineering problems.","desc_tr":"Karmaşık mühendislik problemlerine yaratıcı çözümler tasarlama becerisi."},
-    {"id":"po_3_2","code":"3.2","desc_en":"Ability to design complex systems, processes, devices, or products under realistic constraints and conditions, meeting current and future requirements.","desc_tr":"Karmaşık sistemleri, süreçleri, cihazları veya ürünleri gerçekçi kısıtları ve koşulları gözetarak, mevcut ve gelecekteki gereksinimleri karşılayacak biçimde tasarlama becerisi."},
-    {"id":"po_4","code":"4","desc_en":"Ability to select and use appropriate techniques, resources, and modern engineering and IT tools — including estimation and modelling — for the analysis and solution of complex engineering problems, with awareness of their limitations.","desc_tr":"Karmaşık mühendislik problemlerinin analizi ve çözümüne yönelik, tahmin ve modelleme de dahil olmak üzere, uygun teknikleri, kaynakları ve modern mühendislik ve bilişim araçlarını, sınırlamalarının da farkında olarak seçme ve kullanma becerisi."},
-    {"id":"po_8_1","code":"8.1","desc_en":"Ability to work effectively as a team member or leader in intra-disciplinary teams (in-person, remote, or hybrid).","desc_tr":"Bireysel olarak disiplin içi takım çalışmalarında (yüz yüze, uzaktan veya karma) takım üyesi veya lideri olarak etkin biçimde çalışabilme becerisi."},
-    {"id":"po_8_2","code":"8.2","desc_en":"Ability to work effectively as a team member or leader in multidisciplinary teams (in-person, remote, or hybrid).","desc_tr":"Bireysel olarak çok disiplinli takımlarda (yüz yüze, uzaktan veya karma) takım üyesi veya lideri olarak etkin biçimde çalışabilme becerisi."},
-    {"id":"po_9_1","code":"9.1","desc_en":"Ability to communicate effectively on technical topics orally, adapting to audience differences (education, language, profession, etc.).","desc_tr":"Hedef kitlenin çeşitli farklılıklarını (eğitim, dil, meslek gibi) dikkate alarak, teknik konularda sözlü etkin iletişim kurma becerisi."},
-    {"id":"po_9_2","code":"9.2","desc_en":"Ability to communicate effectively on technical topics in writing, adapting to audience differences (education, language, profession, etc.).","desc_tr":"Hedef kitlenin çeşitli farklılıklarını (eğitim, dil, meslek gibi) dikkate alarak, teknik konularda yazılı etkin iletişim kurma becerisi."}
-  ]'::jsonb;
-  v_mudek_5 jsonb := '[
-    {"id":"po_1_2","code":"1.2","desc_en":"Ability to apply knowledge of mathematics, natural sciences, fundamental engineering, computation, and discipline-specific topics to solve complex engineering problems.","desc_tr":"Matematik, fen bilimleri, temel mühendislik, bilgisayarla hesaplama ve ilgili mühendislik disiplinine özgü konulardaki bilgileri, karmaşık mühendislik problemlerinin çözümünde kullanabilme becerisi."},
-    {"id":"po_2","code":"2","desc_en":"Ability to identify, formulate, and analyse complex engineering problems using fundamental science, mathematics, and engineering knowledge, with consideration of relevant UN Sustainable Development Goals.","desc_tr":"Karmaşık mühendislik problemlerini, temel bilim, matematik ve mühendislik bilgilerini kullanarak ve ele alınan problemle ilgili BM Sürdürülebilir Kalkınma Amaçlarını gözetarak tanımlama, formüle etme ve analiz becerisi."},
-    {"id":"po_3_1","code":"3.1","desc_en":"Ability to design creative solutions to complex engineering problems.","desc_tr":"Karmaşık mühendislik problemlerine yaratıcı çözümler tasarlama becerisi."},
-    {"id":"po_3_2","code":"3.2","desc_en":"Ability to design complex systems, processes, devices, or products under realistic constraints and conditions, meeting current and future requirements.","desc_tr":"Karmaşık sistemleri, süreçleri, cihazları veya ürünleri gerçekçi kısıtları ve koşulları gözetarak, mevcut ve gelecekteki gereksinimleri karşılayacak biçimde tasarlama becerisi."},
-    {"id":"po_5","code":"5","desc_en":"Ability to use research methods for investigating complex engineering problems, including literature review, experiment design, experimentation, data collection, and analysis and interpretation of results.","desc_tr":"Karmaşık mühendislik problemlerinin incelenmesi için literatür araştırması, deney tasarlama, deney yapma, veri toplama, sonuçları analiz etme ve yorumlama dahil, araştırma yöntemlerini kullanma becerisi."},
-    {"id":"po_8_1","code":"8.1","desc_en":"Ability to work effectively as a team member or leader in intra-disciplinary teams (in-person, remote, or hybrid).","desc_tr":"Bireysel olarak disiplin içi takım çalışmalarında (yüz yüze, uzaktan veya karma) takım üyesi veya lideri olarak etkin biçimde çalışabilme becerisi."},
-    {"id":"po_8_2","code":"8.2","desc_en":"Ability to work effectively as a team member or leader in multidisciplinary teams (in-person, remote, or hybrid).","desc_tr":"Bireysel olarak çok disiplinli takımlarda (yüz yüze, uzaktan veya karma) takım üyesi veya lideri olarak etkin biçimde çalışabilme becerisi."},
-    {"id":"po_9_1","code":"9.1","desc_en":"Ability to communicate effectively on technical topics orally, adapting to audience differences (education, language, profession, etc.).","desc_tr":"Hedef kitlenin çeşitli farklılıklarını (eğitim, dil, meslek gibi) dikkate alarak, teknik konularda sözlü etkin iletişim kurma becerisi."},
-    {"id":"po_9_2","code":"9.2","desc_en":"Ability to communicate effectively on technical topics in writing, adapting to audience differences (education, language, profession, etc.).","desc_tr":"Hedef kitlenin çeşitli farklılıklarını (eğitim, dil, meslek gibi) dikkate alarak, teknik konularda yazılı etkin iletişim kurma becerisi."}
+    {"id":"po_3_2","code":"3.2","desc_en":"Ability to design complex systems, processes, devices, or products under realistic constraints and conditions.","desc_tr":"Karmaşık sistemleri, süreçleri, cihazları veya ürünleri gerçekçi kısıtları ve koşulları gözetarak tasarlama becerisi."},
+    {"id":"po_4","code":"4","desc_en":"Ability to select and use appropriate techniques, resources, and modern engineering and IT tools for complex engineering problems.","desc_tr":"Karmaşık mühendislik problemlerinin analizi ve çözümüne yönelik uygun teknikleri, kaynakları ve modern araçları seçme ve kullanma becerisi."},
+    {"id":"po_5","code":"5","desc_en":"Ability to use research methods including literature review, experiment design, data collection, and analysis.","desc_tr":"Literatür araştırması, deney tasarlama, veri toplama, sonuçları analiz etme ve yorumlama dahil araştırma yöntemlerini kullanma becerisi."},
+    {"id":"po_6","code":"6","desc_en":"Awareness of professional and ethical responsibility in engineering practice.","desc_tr":"Mühendislik uygulamalarında mesleki ve etik sorumluluk bilinci."},
+    {"id":"po_7","code":"7","desc_en":"Awareness of the impact of engineering solutions on health, safety, and the environment.","desc_tr":"Mühendislik çözümlerinin sağlık, güvenlik ve çevre üzerindeki etkilerinin farkında olma."},
+    {"id":"po_8_1","code":"8.1","desc_en":"Ability to work effectively in intra-disciplinary teams.","desc_tr":"Disiplin içi takımlarda etkin biçimde çalışabilme becerisi."},
+    {"id":"po_8_2","code":"8.2","desc_en":"Ability to work effectively in multidisciplinary teams.","desc_tr":"Çok disiplinli takımlarda etkin biçimde çalışabilme becerisi."},
+    {"id":"po_9_1","code":"9.1","desc_en":"Ability to communicate effectively on technical topics orally.","desc_tr":"Teknik konularda sözlü etkin iletişim kurma becerisi."},
+    {"id":"po_9_2","code":"9.2","desc_en":"Ability to communicate effectively on technical topics in writing.","desc_tr":"Teknik konularda yazılı etkin iletişim kurma becerisi."},
+    {"id":"po_10","code":"10","desc_en":"Recognition of the need for lifelong learning and ability to access information and follow developments.","desc_tr":"Yaşam boyu öğrenmenin gerekliliğinin bilincinde olma; bilgiye erişebilme ve gelişmeleri izleyebilme becerisi."},
+    {"id":"po_11","code":"11","desc_en":"Awareness of project management, entrepreneurship, innovation, and sustainable development practices.","desc_tr":"Proje yönetimi, girişimcilik, yenilikçilik ve sürdürülebilir kalkınma uygulamalarının farkında olma."}
   ]'::jsonb;
   v_mudek jsonb;
   v_semesters text[] := ARRAY['Fall 2025', 'Spring 2026', 'Summer 2026'];
@@ -170,24 +208,40 @@ BEGIN
       v_dates := ARRAY['2025-12-20'::date, '2026-05-25'::date, '2026-08-15'::date];
     END IF;
 
-    IF v_t.code = 'metu-me' THEN
-      v_template := v_template_3;
-      v_mudek := v_mudek_3;
-    ELSIF v_t.code = 'metu-ie' THEN
-      v_template := v_template_5;
-      v_mudek := v_mudek_5;
-    ELSE
-      v_template := v_template_4;
-      v_mudek := v_mudek_4;
-    END IF;
-
     FOR v_idx IN 1..3 LOOP
+      -- Select per-tenant per-semester template (18 unique templates)
+      IF v_t.code = 'tedu-ee' THEN
+        v_template := CASE v_idx WHEN 1 THEN v_template_ee_fall WHEN 2 THEN v_template_ee_spring ELSE v_template_ee_summer END;
+      ELSIF v_t.code = 'tedu-ce' THEN
+        v_template := CASE v_idx WHEN 1 THEN v_template_ce_fall WHEN 2 THEN v_template_ce_spring ELSE v_template_ce_summer END;
+      ELSIF v_t.code = 'boun-chem' THEN
+        v_template := CASE v_idx WHEN 1 THEN v_template_chem_fall WHEN 2 THEN v_template_chem_spring ELSE v_template_chem_summer END;
+      ELSIF v_t.code = 'boun-cmpe' THEN
+        v_template := CASE v_idx WHEN 1 THEN v_template_cmpe_fall WHEN 2 THEN v_template_cmpe_spring ELSE v_template_cmpe_summer END;
+      ELSIF v_t.code = 'metu-me' THEN
+        v_template := CASE v_idx WHEN 1 THEN v_template_me_fall WHEN 2 THEN v_template_me_spring ELSE v_template_me_summer END;
+      ELSIF v_t.code = 'metu-ie' THEN
+        v_template := CASE v_idx WHEN 1 THEN v_template_ie_fall WHEN 2 THEN v_template_ie_spring ELSE v_template_ie_summer END;
+      END IF;
+
+      -- Auto-derive MÜDEK dictionary from template's mudek_outcomes
+      v_used_pos := ARRAY[]::text[];
+      FOR v_mi IN 0..(jsonb_array_length(v_template) - 1) LOOP
+        FOR v_mj IN 0..(jsonb_array_length(v_template->v_mi->'mudek_outcomes') - 1) LOOP
+          v_used_pos := array_append(v_used_pos, v_template->v_mi->'mudek_outcomes'->>v_mj);
+        END LOOP;
+      END LOOP;
+      v_used_pos := ARRAY(SELECT DISTINCT unnest(v_used_pos));
+      SELECT COALESCE(jsonb_agg(po ORDER BY po->>'code'), '[]'::jsonb) INTO v_mudek
+      FROM jsonb_array_elements(v_all_mudek) AS po
+      WHERE po->>'id' = ANY(v_used_pos);
+
       INSERT INTO semesters (tenant_id, semester_name, poster_date, is_current, criteria_template, mudek_template)
       SELECT
         v_t.id,
         v_semesters[v_idx],
         v_dates[v_idx],
-        (v_idx = 2),
+        CASE WHEN v_t.code = 'tedu-ee' THEN (v_idx = 3) ELSE (v_idx = 2) END,
         v_template,
         v_mudek
       WHERE NOT EXISTS (
@@ -195,6 +249,13 @@ BEGIN
         WHERE tenant_id = v_t.id
           AND lower(trim(semester_name)) = lower(trim(v_semesters[v_idx]))
       );
+
+      -- Sync on re-seed (per semester, not per tenant)
+      UPDATE semesters
+      SET criteria_template = v_template,
+          mudek_template    = v_mudek
+      WHERE tenant_id = v_t.id
+        AND lower(trim(semester_name)) = lower(trim(v_semesters[v_idx]));
     END LOOP;
   END LOOP;
 END;
@@ -253,46 +314,144 @@ INSERT INTO settings (key, value, tenant_id) VALUES
   ('timezone', 'UTC', NULL)
 ON CONFLICT DO NOTHING;
 
--- ── Section 6: Jurors (20 total) ────────────────────────────
--- Turkish academic titles + 4 industry jurors (17-20).
--- juror_email column removed; email is no longer part of the jurors table.
--- First 4 jurors are cross-tenant (assigned to all tenants).
+-- ── Section 6: Jurors (107 total) ───────────────────────────
+-- Three categories per tenant:
+--   • Core faculty (5-7): same department, assigned every semester (35 total)
+--   • External academics (7 per discipline): same field, other university, rotating (42 total)
+--   • Industry (5 per discipline): sector professionals, rotating (30 total)
+--
+-- Assignment logic in Section 8 uses juror_inst to categorize:
+--   core     = juror_inst contains tenant's university AND discipline keyword
+--   external = juror_inst contains discipline keyword AND 'University' BUT NOT tenant's university
+--   industry = juror_inst does NOT contain 'University'
 
-DO $$
-DECLARE
-  v_names text[] := ARRAY[
-    'Prof. Ayşe Demir',          'Dr. Mehmet Kaya',
-    'Prof. Elif Yılmaz',         'Dr. Barış Çelik',
-    'Assoc. Prof. Canan Öztürk', 'Prof. Kemal Aksu',
-    'Dr. Selin Kara',            'Prof. Tolga Erdoğan',
-    'Assoc. Prof. Merve Şahin',  'Dr. Hakan Yıldırım',
-    'Prof. Zeynep Acar',         'Dr. Emre Polat',
-    'Prof. Deniz Korkmaz',       'Dr. Burcu Aydın',
-    'Prof. Serkan Önal',         'Dr. Neslihan Tunç',
-    'Oğuz Kaplan, M.Sc.',        'Pınar Güneş',
-    'Volkan Yavuz',              'Esra Kılıç'
-  ];
-  v_insts text[] := ARRAY[
-    'TED University / Electrical & Electronics Engineering',           'Boğaziçi University / Computer Engineering',
-    'Middle East Technical University / Mechanical Eng.','Bilkent University / Industrial Engineering',
-    'Hacettepe University / Physics',                    'İstanbul Technical University / Electronics Eng.',
-    'Ankara University / Computer Science',              'Sabancı University / Mechatronics Engineering',
-    'Koç University / Electrical & Electronics Engineering',           'Gazi University / Civil Engineering',
-    'Yıldız Technical University / Control Engineering', 'TOBB ETU / Software Engineering',
-    'Çankaya University / Computer Engineering',         'Başkent University / Biomedical Engineering',
-    'Atılım University / Electrical & Electronics Engineering',        'Özyeğin University / Computer Science',
-    'Arçelik R&D Center',                                'ASELSAN',
-    'Roketsan',                                          'HAVELSAN'
-  ];
-  v_i int;
-BEGIN
-  FOR v_i IN 1..20 LOOP
-    INSERT INTO jurors (juror_name, juror_inst)
-    VALUES (v_names[v_i], v_insts[v_i])
-    ON CONFLICT DO NOTHING;
-  END LOOP;
-END;
-$$;
+INSERT INTO jurors (juror_name, juror_inst) VALUES
+  -- TEDU EE core faculty (6)
+  ('Prof. Dr. Hasan Göktaş',        'TED University / Electrical & Electronics Eng.'),
+  ('Prof. Dr. Ayşe Karaman',        'TED University / Electrical & Electronics Eng.'),
+  ('Doç. Dr. Mehmet Çelik',         'TED University / Electrical & Electronics Eng.'),
+  ('Doç. Dr. Elif Sönmez',          'TED University / Electrical & Electronics Eng.'),
+  ('Dr. Öğr. Üyesi Burak Aydın',   'TED University / Electrical & Electronics Eng.'),
+  ('Dr. Öğr. Üyesi Zeynep Ertürk', 'TED University / Electrical & Electronics Eng.'),
+  -- TEDU CE core faculty (5)
+  ('Prof. Dr. Kemal Özdemir',        'TED University / Civil Engineering'),
+  ('Prof. Dr. Fatma Aksoy',          'TED University / Civil Engineering'),
+  ('Doç. Dr. Serkan Yılmaz',        'TED University / Civil Engineering'),
+  ('Dr. Öğr. Üyesi Deniz Koçak',    'TED University / Civil Engineering'),
+  ('Dr. Öğr. Üyesi Pınar Taşkın',   'TED University / Civil Engineering'),
+  -- Boğaziçi CHEM core faculty (6)
+  ('Prof. Dr. Oğuz Bahadır',         'Boğaziçi University / Chemical Engineering'),
+  ('Prof. Dr. Selin Türkoğlu',       'Boğaziçi University / Chemical Engineering'),
+  ('Doç. Dr. Emre Kavak',            'Boğaziçi University / Chemical Engineering'),
+  ('Doç. Dr. Gülşen Arslan',         'Boğaziçi University / Chemical Engineering'),
+  ('Dr. Öğr. Üyesi Cem Durmuş',     'Boğaziçi University / Chemical Engineering'),
+  ('Dr. Öğr. Üyesi Berna Şahin',    'Boğaziçi University / Chemical Engineering'),
+  -- Boğaziçi CMPE core faculty (7)
+  ('Prof. Dr. Tolga Kurtuluş',       'Boğaziçi University / Computer Engineering'),
+  ('Prof. Dr. Neslihan Demir',        'Boğaziçi University / Computer Engineering'),
+  ('Doç. Dr. Barış Karagöz',         'Boğaziçi University / Computer Engineering'),
+  ('Doç. Dr. Merve Ünal',            'Boğaziçi University / Computer Engineering'),
+  ('Dr. Öğr. Üyesi Onur Başaran',   'Boğaziçi University / Computer Engineering'),
+  ('Dr. Öğr. Üyesi Canan Erdem',    'Boğaziçi University / Computer Engineering'),
+  ('Dr. Öğr. Üyesi Volkan Sezer',   'Boğaziçi University / Computer Engineering'),
+  -- METU ME core faculty (6)
+  ('Prof. Dr. İlker Tanrıverdi',     'Middle East Technical University / Mechanical Eng.'),
+  ('Prof. Dr. Şebnem Polat',         'Middle East Technical University / Mechanical Eng.'),
+  ('Doç. Dr. Mustafa Gündüz',       'Middle East Technical University / Mechanical Eng.'),
+  ('Doç. Dr. Hülya Kaplan',          'Middle East Technical University / Mechanical Eng.'),
+  ('Dr. Öğr. Üyesi Tuncay Bayram', 'Middle East Technical University / Mechanical Eng.'),
+  ('Dr. Öğr. Üyesi Aslı Çetin',    'Middle East Technical University / Mechanical Eng.'),
+  -- METU IE core faculty (5)
+  ('Prof. Dr. Murat Eroğlu',         'Middle East Technical University / Industrial Eng.'),
+  ('Prof. Dr. Dilek Yıldırım',       'Middle East Technical University / Industrial Eng.'),
+  ('Doç. Dr. Alper Tunga',           'Middle East Technical University / Industrial Eng.'),
+  ('Dr. Öğr. Üyesi Sibel Korkmaz',  'Middle East Technical University / Industrial Eng.'),
+  ('Dr. Öğr. Üyesi Ufuk Sarıca',    'Middle East Technical University / Industrial Eng.'),
+  -- External academics: Electrical (7)
+  ('Prof. Dr. Orhan Kılıç',          'Bilkent University / Electrical & Electronics Eng.'),
+  ('Doç. Dr. Sevgi Demirtaş',       'İstanbul Technical University / Electrical & Electronics Eng.'),
+  ('Prof. Dr. Levent Akdoğan',      'Hacettepe University / Electrical & Electronics Eng.'),
+  ('Doç. Dr. Nurcan Bayer',          'Gazi University / Electrical & Electronics Eng.'),
+  ('Prof. Dr. Cengiz Toraman',       'TOBB ETU University / Electrical & Electronics Eng.'),
+  ('Dr. Öğr. Üyesi Derya Öztürk',  'Çankaya University / Electrical & Electronics Eng.'),
+  ('Doç. Dr. Tamer Uysal',           'Başkent University / Electrical & Electronics Eng.'),
+  -- External academics: Civil (7)
+  ('Prof. Dr. Hikmet Dağlı',         'İstanbul Technical University / Civil Engineering'),
+  ('Doç. Dr. Ebru Güneş',           'Bilkent University / Civil Engineering'),
+  ('Prof. Dr. Nihat Aktaş',          'Ankara University / Civil Engineering'),
+  ('Dr. Öğr. Üyesi Selma Toprak',   'Yıldız Technical University / Civil Engineering'),
+  ('Prof. Dr. Harun Kaya',           'Dokuz Eylül University / Civil Engineering'),
+  ('Doç. Dr. Füsun Ergül',          'Atılım University / Civil Engineering'),
+  ('Dr. Öğr. Üyesi Gökhan Tuncer',  'Ege University / Civil Engineering'),
+  -- External academics: Chemical (7)
+  ('Prof. Dr. Yavuz Keskiner',       'Hacettepe University / Chemical Engineering'),
+  ('Doç. Dr. Aysun Coşkun',         'İstanbul Technical University / Chemical Engineering'),
+  ('Prof. Dr. Halil Erdoğan',        'Ankara University / Chemical Engineering'),
+  ('Dr. Öğr. Üyesi Burcu Albayrak', 'Ege University / Chemical Engineering'),
+  ('Prof. Dr. Zafer Genç',           'Gazi University / Chemical Engineering'),
+  ('Doç. Dr. Meltem Işık',           'Koç University / Chemical Engineering'),
+  ('Dr. Öğr. Üyesi Ferhat Kılınç',  'Yıldız Technical University / Chemical Engineering'),
+  -- External academics: Computer (7)
+  ('Prof. Dr. Uğur Çevik',           'Sabancı University / Computer Engineering'),
+  ('Doç. Dr. İrem Aydınlık',        'Bilkent University / Computer Engineering'),
+  ('Prof. Dr. Altan Koçyiğit',      'Koç University / Computer Engineering'),
+  ('Dr. Öğr. Üyesi Gizem Vatansever', 'İstanbul Technical University / Computer Engineering'),
+  ('Prof. Dr. Necati Boran',          'TOBB ETU University / Computer Engineering'),
+  ('Doç. Dr. Esra Dinçer',           'Özyeğin University / Computer Engineering'),
+  ('Dr. Öğr. Üyesi Ahmet Soydan',   'Hacettepe University / Computer Engineering'),
+  -- External academics: Mechanical (7)
+  ('Prof. Dr. Erdem Karaçay',        'Bilkent University / Mechanical Engineering'),
+  ('Doç. Dr. Hatice Nur Yılmaz',    'İstanbul Technical University / Mechanical Engineering'),
+  ('Prof. Dr. Kürşat Başak',        'Gazi University / Mechanical Engineering'),
+  ('Dr. Öğr. Üyesi Zehra Avcı',     'Sabancı University / Mechanical Engineering'),
+  ('Prof. Dr. Bülent Özer',          'Dokuz Eylül University / Mechanical Engineering'),
+  ('Doç. Dr. Tuğçe Bektaş',        'Atılım University / Mechanical Engineering'),
+  ('Dr. Öğr. Üyesi Sinan Doğru',    'Çankaya University / Mechanical Engineering'),
+  -- External academics: Industrial (7)
+  ('Prof. Dr. Rıza Gürbüz',         'Bilkent University / Industrial Engineering'),
+  ('Doç. Dr. Cemile Özkaya',         'İstanbul Technical University / Industrial Engineering'),
+  ('Prof. Dr. Tarık Sancar',          'Gazi University / Industrial Engineering'),
+  ('Dr. Öğr. Üyesi Elif Metin',     'Hacettepe University / Industrial Engineering'),
+  ('Prof. Dr. Bayram Altıntaş',     'Koç University / Industrial Engineering'),
+  ('Doç. Dr. Nazan Çakır',           'Sabancı University / Industrial Engineering'),
+  ('Dr. Öğr. Üyesi Okan Yurdakul',  'TOBB ETU University / Industrial Engineering'),
+  -- Industry: Electrical & Electronics (5)
+  ('Kadir Tekin',                     'ASELSAN — Radar & Electronic Warfare Division'),
+  ('Müh. Seda Yalçın',              'Arçelik — R&D Center'),
+  ('M.Sc. Ercan Bilgiç',             'Vestel — Electronics R&D'),
+  ('Müh. Gökçe Şimşek',            'STM — Defense Technologies'),
+  ('M.Sc. Furkan Arslan',            'Netaş — Telecom Solutions'),
+  -- Industry: Civil (5)
+  ('Müh. Oğuzhan Kırcı',            'Limak — Infrastructure Projects'),
+  ('M.Sc. Ayça Duman',               'Kalyon — Construction Group'),
+  ('Müh. Hakan Savaş',              'Tekfen — Engineering Division'),
+  ('Müh. Pelin Sarı',                'İGA — Airport Construction'),
+  ('M.Sc. Mert Aktürk',              'MESA — Housing & Urban Development'),
+  -- Industry: Chemical (5)
+  ('Müh. Caner Yüksel',             'Tüpraş — Refinery Technology Center'),
+  ('M.Sc. Özlem Karagöl',           'Petkim — Petrochemical Complex'),
+  ('Müh. Volkan Çınar',             'SOCAR Türkiye — Process Engineering'),
+  ('M.Sc. İlknur Temel',             'Eczacıbaşı — Pharmaceutical Division'),
+  ('Müh. Serhat Ergün',             'Aksa — Acrylic Fiber R&D'),
+  -- Industry: Computer (5)
+  ('M.Sc. Baran Öztop',              'Turkcell Technology — Software Development'),
+  ('Müh. Dilara Akın',               'BGA Security — Cyber Security'),
+  ('Arda Yılmazer',                   'Getir Tech — Engineering'),
+  ('M.Sc. Cansu Topçu',             'Trendyol — Engineering Group'),
+  ('Müh. Umut Korkmaz',             'Peak Games — Game Development'),
+  -- Industry: Mechanical (5)
+  ('Müh. Batuhan Özdil',            'Ford Otosan — R&D Center'),
+  ('M.Sc. Elif Karakuş',            'TUSAŞ — Aerospace Engineering'),
+  ('Müh. Koray Çetin',              'Roketsan — Propulsion Systems'),
+  ('M.Sc. Tuğba Erdal',             'BMC — Armored Vehicles Division'),
+  ('Müh. Selçuk Arat',              'Otokar — Defense Industry'),
+  -- Industry: Industrial (5)
+  ('M.Sc. Güneş Balcı',             'HAVELSAN — Systems Engineering'),
+  ('Burcu Akbaş',                     'McKinsey Türkiye — Operations Consulting'),
+  ('Müh. Tayfun Önal',              'Migros A.Ş. — Supply Chain Management'),
+  ('M.Sc. Damla Şen',               'Turkish Cargo — Logistics Operations'),
+  ('Müh. Yiğit Soylu',              'Arkas Logistics — Planning & Analytics')
+ON CONFLICT DO NOTHING;
 
 -- Normalize juror timestamps
 WITH base AS (
@@ -304,8 +463,8 @@ UPDATE jurors j SET
 FROM base;
 
 -- ── Section 7: Projects (domain-specific curated titles) ────
--- 25 curated titles per domain. Project counts vary by tenant.
--- Student names: 30 Turkish + 50 international, discipline-weighted.
+-- 36 curated titles per domain. Project counts vary by tenant.
+-- Student names: 50 Turkish + 80 international, discipline-weighted.
 
 DO $$
 DECLARE
@@ -318,8 +477,6 @@ DECLARE
 
   v_titles text[];
   v_title text;
-  v_used_titles text[];
-  v_retry int;
 
   v_turkish_names text[];
   v_intl_names text[];
@@ -329,6 +486,9 @@ DECLARE
   v_used_sem_names text[];
   v_candidate text;
   v_i int;
+  v_sem_offset int;
+  v_title_idx int;
+  v_pool_size int;
 BEGIN
   v_turkish_names := ARRAY[
     'Ahmet Yılmaz','Ayşe Demir','Mehmet Koç','Zeynep Arslan','Kerem Öztürk',
@@ -336,7 +496,11 @@ BEGIN
     'Büşra Yıldız','Mert Çelik','Seda Kara','Tarık Güneş','Yasemin Aktaş',
     'Cem Yıldırım','Elif Aksoy','Barış Aydın','Nazlı Tunç','Oğuz Kaplan',
     'Gökçe Aras','Yiğit Başaran','Defne Korucu','Kaan Deniz','İrem Turan',
-    'Alp Güler','Duygu Sezer','Batuhan Ateş','Eylül Yalçın','Berk Sönmez'
+    'Alp Güler','Duygu Sezer','Batuhan Ateş','Eylül Yalçın','Berk Sönmez',
+    'Aslı Demirtaş','Efe Karaca','Cansu Özer','Murat Başak','Pelin Yüksel',
+    'Serhat Koçak','Dilara Aslan','Umut Erdem','Nihan Toprak','Arda Keskin',
+    'Gizem Bayrak','Tolga Sevim','Merve Çakır','Hüseyin Aktürk','Simge Doğan',
+    'Caner Avcı','Ebru Gürbüz','Burak Karadeniz','Zehra Yalın','Koray Duman'
   ];
 
   v_intl_names := ARRAY[
@@ -353,7 +517,12 @@ BEGIN
     'Wei Zhang','Li Huang','Fang Liu','Jing Chen','Hao Wang',
     'Min-jun Kim','Seo-yeon Park','Ji-ho Lee','Ye-jin Choi','Do-yun Jung',
     'Haruto Tanaka','Yui Sato','Ren Suzuki','Hana Yamamoto','Sota Nakamura',
-    'Omar Hassan','Fatima Al-Rashid','Youssef Khalil','Layla Mansour','Karim Nasser'
+    'Omar Hassan','Fatima Al-Rashid','Youssef Khalil','Layla Mansour','Karim Nasser',
+    'Priya Sharma','Ravi Patel','Aisha Mohammed','Dmitri Volkov','Anastasia Petrova',
+    'Pedro Almeida','Ingrid Larsson','Tobias Andersen','Chantal Dubois','Rafael Mendez',
+    'Yuki Watanabe','Nao Kimura','Sven Eriksson','Elena Kowalski','Viktor Horváth',
+    'Aiden O''Brien','Chloe Fitzgerald','Mateo Vargas','Lucia Fernandez','Erik Johansson',
+    'Thiago Costa','Mei-Ling Wu','Arjun Nair','Zara Khan','Ibrahim Diallo'
   ];
 
   FOR v_sem IN
@@ -393,7 +562,18 @@ BEGIN
         'Dual-Band Antenna Design for ISM and Sub-GHz Bands',
         'Smart Plug with Energy Monitoring and Usage Analytics',
         'PID Controller Tuning Platform for Educational Labs',
-        'Ultrasonic Rangefinder with Kalman-Filtered Measurements'
+        'Ultrasonic Rangefinder with Kalman-Filtered Measurements',
+        'Gesture Recognition System Using Radar Micro-Doppler Signatures',
+        'GaN-Based Class-E Power Amplifier for Wireless Charging',
+        'MEMS Accelerometer Signal Conditioning with Digital Filtering',
+        'Autonomous Drone Navigation Using Optical Flow Sensors',
+        'Multi-Channel EEG Acquisition Board with Active Electrodes',
+        'Synchronous Buck Converter with Predictive Dead-Time Control',
+        'Software-Defined Radio Receiver for FM Broadcast Band',
+        'Inductive Position Sensor for Linear Motor Applications',
+        'Thermal Camera Module with Embedded Object Detector',
+        'Resonant Wireless Power Transfer for Implantable Devices',
+        'LVDS-Based High-Speed Data Link for Camera Modules'
       ];
     ELSIF v_tenant_code = 'tedu-ce' THEN
       v_titles := ARRAY[
@@ -421,7 +601,18 @@ BEGIN
         'Soil Liquefaction Potential Mapping for Central Ankara Region',
         'Thermal Performance of Double-Skin Facades in Continental Climates',
         'Dynamic Response Analysis of a Multi-Story Building with TMD',
-        'Water Distribution Network Optimization Using EPANET Modeling'
+        'Water Distribution Network Optimization Using EPANET Modeling',
+        'Concrete Carbonation Depth Prediction Using Machine Learning',
+        'Seismic Isolation Bearing Design for a Cable-Stayed Bridge',
+        'Groundwater Flow Modeling for Dewatering of Deep Excavations',
+        'Fiber-Reinforced Polymer Strengthening of Deficient RC Columns',
+        'Modal Analysis and Health Assessment of a Historical Masonry Arch',
+        'Urban Heat Island Mitigation Through Permeable Pavement Systems',
+        'Scour Risk Assessment Around Bridge Piers Using 2D Hydraulic Modeling',
+        'Prefabricated Modular Housing Design for Post-Disaster Deployment',
+        'Creep and Shrinkage Effects on Post-Tensioned Concrete Box Girders',
+        'Rainwater Harvesting System Design for University Campus Buildings',
+        'Probabilistic Seismic Hazard Analysis for Central Anatolia Region'
       ];
     ELSIF v_tenant_code = 'boun-chem' THEN
       v_titles := ARRAY[
@@ -449,7 +640,18 @@ BEGIN
         'Electrochemical Impedance Spectroscopy of Li-Ion Battery Electrodes',
         'Dynamic Simulation of Absorption Column for Natural Gas Sweetening',
         'Sol-Gel Synthesis of Silica Aerogels for Thermal Insulation',
-        'Process Intensification of Reactive Distillation for Ester Production'
+        'Process Intensification of Reactive Distillation for Ester Production',
+        'Scale-Up Study of Enzymatic Biodiesel Production in a Packed Bed',
+        'Graphene Oxide Membrane Fabrication for Desalination Applications',
+        'Aspen Plus Simulation of Dimethyl Ether Synthesis from Methanol',
+        'Electrocatalytic CO₂ Reduction on Cu-Zn Bimetallic Electrodes',
+        'Freeze-Drying Process Optimization for Pharmaceutical Formulations',
+        'Computational Fluid Dynamics of Gas-Liquid Flow in Bubble Columns',
+        'Lignin Valorization Pathways for Bio-Based Aromatic Chemicals',
+        'Design of a Pilot-Scale Biogas Upgrading Unit Using Amine Scrubbing',
+        'Nanocellulose Reinforced Bioplastic Film Characterization',
+        'Pinch Analysis and Utility Optimization for a Refinery Crude Unit',
+        'Photocatalytic Hydrogen Production Using CdS/TiO₂ Heterojunctions'
       ];
     ELSIF v_tenant_code = 'boun-cmpe' THEN
       v_titles := ARRAY[
@@ -477,7 +679,18 @@ BEGIN
         'Active Learning Pipeline for Image Annotation at Scale',
         'Temporal Action Localization in Untrimmed Lecture Videos',
         'Continual Learning Benchmark for Vision Classification Tasks',
-        'Sparse Mixture-of-Experts Model for Multilingual Translation'
+        'Sparse Mixture-of-Experts Model for Multilingual Translation',
+        'Real-Time Object Tracking with Transformer-Based Architectures',
+        'Privacy-Preserving Machine Learning via Differential Privacy Mechanisms',
+        'Code Generation from Natural Language Using Large Language Models',
+        'Adversarial Robustness Evaluation Framework for Image Classifiers',
+        'Multi-Agent Reinforcement Learning for Cooperative Robotics Tasks',
+        'Efficient Fine-Tuning of Vision-Language Models with LoRA Adapters',
+        'Automated Bug Localization Using Graph Neural Networks on ASTs',
+        'Speech Emotion Recognition with Multi-Modal Fusion Networks',
+        'Unsupervised Domain Adaptation for Autonomous Driving Perception',
+        'Scalable Recommendation System with Approximate Nearest Neighbors',
+        'Byzantine Fault-Tolerant Consensus for Blockchain Sharding'
       ];
     ELSIF v_tenant_code = 'metu-me' THEN
       v_titles := ARRAY[
@@ -505,7 +718,18 @@ BEGIN
         'Planetary Gear Reducer for Compact Servo Actuators',
         'Thermal Runaway Containment Chamber for Li-Ion Cells',
         'Injection Mold Flow Analysis for Thin-Wall Plastic Parts',
-        'Modular Prosthetic Hand with Tendon-Driven Fingers'
+        'Modular Prosthetic Hand with Tendon-Driven Fingers',
+        'Design and Testing of a Small-Scale Horizontal Axis Wind Turbine',
+        'Friction Stir Welding Parameter Optimization for Aluminum Alloys',
+        'Hydraulic Press Frame Topology Optimization with Stress Constraints',
+        'Autonomous Mobile Robot Navigation in Warehouse Environments',
+        'Heat Pipe Performance Characterization for Satellite Thermal Control',
+        'Acoustic Emission Monitoring of Fatigue Crack Growth in Steel',
+        'Variable Geometry Turbocharger Nozzle Ring Design for Diesel Engines',
+        'Biomimetic Surface Texturing for Drag Reduction in Pipe Flow',
+        'Origami-Inspired Deployable Shelter Structure for Field Hospitals',
+        'Flexure-Based Precision Positioning Stage for Micro-Assembly',
+        'Thermoelectric Generator Module for Waste Heat Recovery from Exhaust'
       ];
     ELSE -- metu-ie
       v_titles := ARRAY[
@@ -533,7 +757,18 @@ BEGIN
         'Network Flow Model for Inter-City Cargo Distribution',
         'Statistical Process Control Dashboard with Real-Time Alerts',
         'Workforce Planning Optimization for Seasonal Retail Operations',
-        'Revenue Management Model for Boutique Hotel Booking'
+        'Revenue Management Model for Boutique Hotel Booking',
+        'Appointment Scheduling System for Outpatient Clinics Using Simulation',
+        'Multi-Criteria Decision Analysis for Renewable Energy Site Selection',
+        'Automated Guided Vehicle Fleet Sizing and Routing Optimization',
+        'Reliability-Centered Maintenance Planning for Manufacturing Lines',
+        'Dynamic Pricing Strategy for Ride-Sharing Platforms',
+        'Assembly Line Balancing with Worker Skill Heterogeneity',
+        'Supply Chain Resilience Assessment Under Disruption Scenarios',
+        'Warehouse Slotting Optimization Using Genetic Algorithms',
+        'Service Quality Benchmarking Framework for Public Transportation',
+        'Job Shop Scheduling with Sequence-Dependent Setup Times',
+        'Portfolio Optimization with Conditional Value-at-Risk Constraints'
       ];
     END IF;
 
@@ -558,22 +793,23 @@ BEGIN
       END IF;
     END IF;
 
-    v_used_titles := ARRAY[]::text[];
     v_used_sem_names := ARRAY[]::text[];
 
+    -- Non-overlapping slices of the 36-title pool per semester.
+    -- Fall [1..13], Spring [14..29], Summer [30..34] — zero overlap.
+    v_pool_size := array_length(v_titles, 1);  -- 36
+    IF lower(v_sem.semester_name) LIKE '%fall%' THEN
+      v_sem_offset := 0;
+    ELSIF lower(v_sem.semester_name) LIKE '%spring%' THEN
+      v_sem_offset := 13;
+    ELSE -- summer
+      v_sem_offset := 29;
+    END IF;
+
     FOR v_group_no IN 1..v_project_count LOOP
-      -- Select unique title from curated pool
-      v_retry := 0;
-      LOOP
-        v_title := v_titles[1 + floor(random() * array_length(v_titles, 1))::int];
-        v_retry := v_retry + 1;
-        EXIT WHEN NOT (v_title = ANY(v_used_titles));
-        IF v_retry > 100 THEN
-          v_title := v_title || ' (Group ' || v_group_no || ')';
-          EXIT;
-        END IF;
-      END LOOP;
-      v_used_titles := array_append(v_used_titles, v_title);
+      -- Each semester draws from its own non-overlapping slice of the pool.
+      v_title_idx := v_sem_offset + v_group_no;
+      v_title := v_titles[v_title_idx];
 
       -- Generate student group (2-4 students, discipline-weighted draw)
       v_student_count := 2 + floor(random() * 3)::int;
@@ -600,7 +836,8 @@ BEGIN
 
       INSERT INTO projects (semester_id, tenant_id, group_no, project_title, group_students)
       VALUES (v_sem.id, v_sem.tenant_id, v_group_no, v_title, v_students)
-      ON CONFLICT (semester_id, group_no) DO NOTHING;
+      ON CONFLICT (semester_id, group_no) DO UPDATE
+        SET project_title = EXCLUDED.project_title;
     END LOOP;
   END LOOP;
 END;
@@ -614,8 +851,17 @@ FROM semesters s
 WHERE s.id = p.semester_id;
 
 -- ── Section 8: Juror-semester assignments ───────────────────
--- Juror counts vary by tenant size. First 4 are cross-tenant core.
--- Pre-creates empty score rows (criteria_scores = NULL).
+-- Role-based assignment per tenant-semester:
+--   • Core faculty (same dept): ALL assigned every semester (stable cadre)
+--   • External academics (same discipline, other uni): 4 per semester, rotating from 7
+--   • Industry pool: 3 per semester, rotating from 30
+--   Summer semesters: core + 2 external + 1 industry (smaller panel)
+--
+-- Categorization uses juror_inst pattern matching:
+--   core     = inst LIKE '%{university}%' AND inst LIKE '%{discipline}%'
+--   external = inst LIKE '%{discipline}%' AND inst NOT LIKE '%{university}%'
+--              AND inst LIKE '%University%'
+--   industry = inst NOT LIKE '%University%'
 
 DO $$
 DECLARE
@@ -623,63 +869,111 @@ DECLARE
   v_sem record;
   v_juror record;
   v_juror_idx int;
-  v_pick_count int;
   v_is_summer boolean;
-  v_core_ids uuid[];
+  v_uni text;
+  v_dept_key text;
+  v_ext_pick int;
+  v_ind_pick int;
   v_pin text;
   v_hash text;
 BEGIN
-  SELECT array_agg(id ORDER BY id) INTO v_core_ids
-  FROM (SELECT id FROM jurors ORDER BY id LIMIT 4) core;
-
   FOR v_tenant IN SELECT id, code FROM tenants ORDER BY code LOOP
+    -- Map tenant to university name and discipline keyword for inst matching
+    v_uni := CASE v_tenant.code
+      WHEN 'tedu-ee'   THEN 'TED University'
+      WHEN 'tedu-ce'   THEN 'TED University'
+      WHEN 'boun-chem' THEN 'Boğaziçi University'
+      WHEN 'boun-cmpe' THEN 'Boğaziçi University'
+      WHEN 'metu-me'   THEN 'Middle East Technical University'
+      WHEN 'metu-ie'   THEN 'Middle East Technical University'
+    END;
+    v_dept_key := CASE v_tenant.code
+      WHEN 'tedu-ee'   THEN 'Electrical'
+      WHEN 'tedu-ce'   THEN 'Civil'
+      WHEN 'boun-chem' THEN 'Chemical'
+      WHEN 'boun-cmpe' THEN 'Computer'
+      WHEN 'metu-me'   THEN 'Mechanical'
+      WHEN 'metu-ie'   THEN 'Industrial'
+    END;
+
     FOR v_sem IN
       SELECT id, semester_name, poster_date, tenant_id FROM semesters
       WHERE tenant_id = v_tenant.id ORDER BY poster_date
     LOOP
       v_is_summer := lower(v_sem.semester_name) LIKE '%summer%';
-      IF v_is_summer THEN
-        v_pick_count := 4 + floor(random() * 3)::int;
-      ELSIF v_tenant.code IN ('boun-chem', 'boun-cmpe') THEN
-        v_pick_count := 12 + floor(random() * 3)::int;
-      ELSIF v_tenant.code IN ('metu-me', 'metu-ie') THEN
-        v_pick_count := 8 + floor(random() * 3)::int;
-      ELSE
-        v_pick_count := 10 + floor(random() * 3)::int;
-      END IF;
+      v_ext_pick := CASE WHEN v_is_summer THEN 2 ELSE 4 END;
+      v_ind_pick := CASE WHEN v_is_summer THEN 1 ELSE 3 END;
 
-      v_juror_idx := 0;
-
+      -- 1) Core faculty: ALL assigned every semester (stable cadre)
       FOR v_juror IN
         SELECT id FROM jurors
-        ORDER BY
-          CASE WHEN id = ANY(v_core_ids) THEN 0 ELSE 1 END,
-          hashtext(id::text || v_tenant.code),
-          id
+        WHERE juror_inst LIKE '%' || v_uni || '%'
+          AND juror_inst LIKE '%' || v_dept_key || '%'
+        ORDER BY id
       LOOP
-        v_juror_idx := v_juror_idx + 1;
-        EXIT WHEN v_juror_idx > v_pick_count;
-
-        v_pin := lpad(
-          abs(hashtext(v_juror.id::text || v_sem.id::text) % 10000)::text,
-          4, '0');
-
+        v_pin := lpad(abs(hashtext(v_juror.id::text || v_sem.id::text) % 10000)::text, 4, '0');
         BEGIN
           v_hash := crypt(v_pin, gen_salt('bf'));
-
           INSERT INTO juror_semester_auth (juror_id, semester_id, tenant_id, pin_hash)
           VALUES (v_juror.id, v_sem.id, v_tenant.id, v_hash)
           ON CONFLICT (juror_id, semester_id) DO NOTHING;
-
           INSERT INTO scores (semester_id, project_id, juror_id, tenant_id)
           SELECT v_sem.id, p.id, v_juror.id, v_tenant.id
-          FROM projects p
-          WHERE p.semester_id = v_sem.id
+          FROM projects p WHERE p.semester_id = v_sem.id
           ON CONFLICT ON CONSTRAINT scores_unique_eval DO NOTHING;
-        EXCEPTION WHEN OTHERS THEN
-          NULL;
+        EXCEPTION WHEN OTHERS THEN NULL;
         END;
       END LOOP;
+
+      -- 2) External academics: same discipline, different university, rotating
+      v_juror_idx := 0;
+      FOR v_juror IN
+        SELECT id FROM jurors
+        WHERE juror_inst LIKE '%' || v_dept_key || '%'
+          AND juror_inst NOT LIKE '%' || v_uni || '%'
+          AND juror_inst LIKE '%University%'
+        ORDER BY hashtext(id::text || v_sem.id::text), id
+      LOOP
+        v_juror_idx := v_juror_idx + 1;
+        EXIT WHEN v_juror_idx > v_ext_pick;
+        v_pin := lpad(abs(hashtext(v_juror.id::text || v_sem.id::text) % 10000)::text, 4, '0');
+        BEGIN
+          v_hash := crypt(v_pin, gen_salt('bf'));
+          INSERT INTO juror_semester_auth (juror_id, semester_id, tenant_id, pin_hash)
+          VALUES (v_juror.id, v_sem.id, v_tenant.id, v_hash)
+          ON CONFLICT (juror_id, semester_id) DO NOTHING;
+          INSERT INTO scores (semester_id, project_id, juror_id, tenant_id)
+          SELECT v_sem.id, p.id, v_juror.id, v_tenant.id
+          FROM projects p WHERE p.semester_id = v_sem.id
+          ON CONFLICT ON CONSTRAINT scores_unique_eval DO NOTHING;
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
+      END LOOP;
+
+      -- 3) Industry jurors: rotating from shared pool
+      v_juror_idx := 0;
+      FOR v_juror IN
+        SELECT id FROM jurors
+        WHERE juror_inst NOT LIKE '%University%'
+          AND juror_inst NOT LIKE '%Üniversitesi%'
+        ORDER BY hashtext(id::text || v_sem.id::text), id
+      LOOP
+        v_juror_idx := v_juror_idx + 1;
+        EXIT WHEN v_juror_idx > v_ind_pick;
+        v_pin := lpad(abs(hashtext(v_juror.id::text || v_sem.id::text) % 10000)::text, 4, '0');
+        BEGIN
+          v_hash := crypt(v_pin, gen_salt('bf'));
+          INSERT INTO juror_semester_auth (juror_id, semester_id, tenant_id, pin_hash)
+          VALUES (v_juror.id, v_sem.id, v_tenant.id, v_hash)
+          ON CONFLICT (juror_id, semester_id) DO NOTHING;
+          INSERT INTO scores (semester_id, project_id, juror_id, tenant_id)
+          SELECT v_sem.id, p.id, v_juror.id, v_tenant.id
+          FROM projects p WHERE p.semester_id = v_sem.id
+          ON CONFLICT ON CONSTRAINT scores_unique_eval DO NOTHING;
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
+      END LOOP;
+
     END LOOP;
   END LOOP;
 END;
@@ -983,18 +1277,19 @@ BEGIN
 
             -- Per-tenant criterion-level bias
             v_bias := CASE
-              WHEN v_sem.tenant_code = 'tedu-ee' AND v_key = 'design'       THEN -0.06
-              WHEN v_sem.tenant_code = 'tedu-ee' AND v_key = 'technical'    THEN  0.05
-              WHEN v_sem.tenant_code = 'tedu-ce' AND v_key = 'delivery'     THEN -0.05
-              WHEN v_sem.tenant_code = 'tedu-ce' AND v_key = 'teamwork'     THEN  0.04
-              WHEN v_sem.tenant_code = 'boun-chem' AND v_key = 'design'       THEN -0.07
-              WHEN v_sem.tenant_code = 'boun-chem' AND v_key = 'delivery'     THEN -0.05
-              WHEN v_sem.tenant_code = 'boun-chem' AND v_key = 'technical'    THEN  0.06
-              WHEN v_sem.tenant_code = 'boun-cmpe' AND v_key = 'teamwork'     THEN  0.03
-              WHEN v_sem.tenant_code = 'metu-me' AND v_key = 'technical'    THEN  0.06
-              WHEN v_sem.tenant_code = 'metu-me' AND v_key = 'presentation' THEN -0.05
-              WHEN v_sem.tenant_code = 'metu-ie' AND v_key = 'report'       THEN  0.05
-              WHEN v_sem.tenant_code = 'metu-ie' AND v_key = 'technical'    THEN -0.04
+              -- Bias keys match across semester template variants
+              WHEN v_sem.tenant_code = 'tedu-ee' AND v_key IN ('written','poster_quality')  THEN -0.06
+              WHEN v_sem.tenant_code = 'tedu-ee' AND v_key IN ('technical','circuit_design','research_depth') THEN 0.05
+              WHEN v_sem.tenant_code = 'tedu-ce' AND v_key IN ('code_compliance','standards_knowledge') THEN -0.05
+              WHEN v_sem.tenant_code = 'tedu-ce' AND v_key IN ('fieldwork','site_work')     THEN  0.04
+              WHEN v_sem.tenant_code = 'boun-chem' AND v_key IN ('hseq','safety_review')    THEN -0.07
+              WHEN v_sem.tenant_code = 'boun-chem' AND v_key IN ('technical_comm','comm_skills') THEN -0.05
+              WHEN v_sem.tenant_code = 'boun-chem' AND v_key IN ('process_design','reaction_engineering') THEN 0.06
+              WHEN v_sem.tenant_code = 'boun-cmpe' AND v_key IN ('collab','collaboration')  THEN  0.03
+              WHEN v_sem.tenant_code = 'metu-me' AND v_key IN ('engineering_merit','cad_cam_design','analytical_modeling') THEN 0.06
+              WHEN v_sem.tenant_code = 'metu-me' AND v_key IN ('comm_effectiveness','poster_oral') THEN -0.05
+              WHEN v_sem.tenant_code = 'metu-ie' AND v_key IN ('documentation','final_report','tech_memo') THEN 0.05
+              WHEN v_sem.tenant_code = 'metu-ie' AND v_key IN ('methodology','optimization_model','lit_and_method') THEN -0.04
               ELSE 0.0
             END;
 
