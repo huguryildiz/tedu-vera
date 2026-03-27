@@ -226,7 +226,7 @@ Done ekrani
 
 | Kural | Detay |
 |-------|-------|
-| **Periyodik reset** | GitHub Action ile gunluk seed'den rebuild (`002_multi_tenant_seed.sql`) |
+| **Periyodik reset** | GitHub Action ile gunluk seed'den rebuild (`001_multi_tenant_seed.sql`) |
 | **Sandbox yazma** | Jury scoring demo DB'ye yazabilir — reset'le temizlenir |
 | **Admin write'lar** | rpc-proxy whitelist ile engellenir — dev tools bypass imkansiz |
 | **Sabit demo token** | QR code icin sabit token — regenerate disabled, her zaman ayni link |

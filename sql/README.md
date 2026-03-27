@@ -1,4 +1,4 @@
-# SQL — TEDU VERA
+# SQL — VERA
 
 This directory contains the Supabase database schema, migration files, and seed
 data for the VERA multi-tenant evaluation platform.
@@ -23,7 +23,7 @@ sql/
 │   ├── 012_v1_auth_password_rpcs.sql ← Legacy v1 password management RPCs
 │   └── 013_grants_rls.sql         ← GRANT statements + RLS policies
 └── seeds/
-    └── 002_multi_tenant_seed.sql  ← Multi-tenant demo/dev data (6 tenants)
+    └── 001_multi_tenant_seed.sql  ← Multi-tenant demo/dev data (6 tenants)
 ```
 
 ## Migration Files (apply in order)
@@ -48,7 +48,7 @@ sql/
 
 | File | Purpose |
 |------|---------|
-| `002_multi_tenant_seed.sql` | 6 tenants (TEDU EE, TEDU CE, Boğaziçi CHEM, Boğaziçi CMPE, METU ME, METU IE), 3 semesters each, 20 jurors, curated domain-specific projects, realistic score distributions with workflow-state diversity |
+| `001_multi_tenant_seed.sql` | 6 tenants (TEDU EE, TEDU CE, Boğaziçi CHEM, Boğaziçi CMPE, METU ME, METU IE), 3 semesters each, 20 jurors, curated domain-specific projects, realistic score distributions with workflow-state diversity |
 
 > **Do not apply seeds to production.** For staging, dev, or demo environments only.
 
@@ -85,7 +85,7 @@ for f in sql/migrations/0*.sql; do psql "$DATABASE_URL" -f "$f"; done
 ### Seed data (dev only)
 
 ```bash
-psql "$DATABASE_URL" -f sql/seeds/002_multi_tenant_seed.sql
+psql "$DATABASE_URL" -f sql/seeds/001_multi_tenant_seed.sql
 ```
 
 **Idempotent:** All migrations use `CREATE TABLE IF NOT EXISTS` and `CREATE OR REPLACE FUNCTION` — safe to re-run.

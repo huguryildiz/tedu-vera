@@ -76,34 +76,51 @@ Deno.serve(async (req: Request) => {
     }
 
     // Demo mode guard: only allow read-only RPCs.
+    // Bypass users listed in DEMO_BYPASS_UIDS get full write access (e.g. E2E test admin).
     const DEMO_MODE = Deno.env.get("DEMO_MODE") === "true";
     if (DEMO_MODE) {
-      const DEMO_ALLOWED = new Set([
-        "rpc_admin_login",
-        "rpc_admin_security_state",
-        "rpc_admin_auth_get_session",
-        "rpc_admin_tenant_list_public",
-        "rpc_admin_application_get_mine",
-        "rpc_admin_application_list_pending",
-        "rpc_admin_tenant_list",
-        "rpc_admin_semester_list",
-        "rpc_admin_project_list",
-        "rpc_admin_scores_get",
-        "rpc_admin_juror_list",
-        "rpc_admin_project_summary",
-        "rpc_admin_outcome_trends",
-        "rpc_admin_delete_counts",
-        "rpc_admin_settings_get",
-        "rpc_admin_audit_list",
-        "rpc_admin_profile_get",
-        "rpc_admin_entry_token_status",
-        "rpc_admin_export_full",
-      ]);
-      if (!DEMO_ALLOWED.has(fn)) {
-        return new Response(
-          JSON.stringify({ error: "This action is disabled in demo mode." }),
-          { status: 403, headers: { ...headers, "Content-Type": "application/json" } }
-        );
+      let bypassDemo = false;
+      const bypassUids = (Deno.env.get("DEMO_BYPASS_UIDS") || "").split(",").map(s => s.trim()).filter(Boolean);
+      if (bypassUids.length > 0) {
+        const jwt = req.headers.get("authorization")?.replace("Bearer ", "") || "";
+        if (jwt) {
+          try {
+            const payload = JSON.parse(atob(jwt.split(".")[1]));
+            if (payload.sub && bypassUids.includes(payload.sub)) {
+              bypassDemo = true;
+            }
+          } catch { /* invalid JWT — proceed with demo guard */ }
+        }
+      }
+
+      if (!bypassDemo) {
+        const DEMO_ALLOWED = new Set([
+          "rpc_admin_login",
+          "rpc_admin_security_state",
+          "rpc_admin_auth_get_session",
+          "rpc_admin_tenant_list_public",
+          "rpc_admin_application_get_mine",
+          "rpc_admin_application_list_pending",
+          "rpc_admin_tenant_list",
+          "rpc_admin_semester_list",
+          "rpc_admin_project_list",
+          "rpc_admin_scores_get",
+          "rpc_admin_juror_list",
+          "rpc_admin_project_summary",
+          "rpc_admin_outcome_trends",
+          "rpc_admin_delete_counts",
+          "rpc_admin_settings_get",
+          "rpc_admin_audit_list",
+          "rpc_admin_profile_get",
+          "rpc_admin_entry_token_status",
+          "rpc_admin_export_full",
+        ]);
+        if (!DEMO_ALLOWED.has(fn)) {
+          return new Response(
+            JSON.stringify({ error: "This action is disabled in demo mode." }),
+            { status: 403, headers: { ...headers, "Content-Type": "application/json" } }
+          );
+        }
       }
     }
 

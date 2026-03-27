@@ -1,5 +1,5 @@
 -- ============================================================
--- 002_multi_tenant_seed.sql
+-- 001_multi_tenant_seed.sql
 -- Phase C: Multi-tenant demo/dev seed data — full rewrite.
 --
 -- Database-side only. Does NOT create Supabase Auth users.
@@ -47,10 +47,12 @@ ON CONFLICT ((lower(trim(code)))) DO NOTHING;
 -- run `SELECT id, email FROM auth.users ORDER BY email;` and
 -- update the UUIDs here accordingly.
 --
--- Super-admin (global scope, tenant_id = NULL)
+-- Super-admins (global scope, tenant_id = NULL)
 INSERT INTO tenant_admin_memberships (id, tenant_id, user_id, role) VALUES
   ('e80b938a-4a87-4b3b-b449-62641a08deed', NULL,
-   '88265507-a25d-4cc0-ba22-d57151802bfc', 'super_admin')
+   '88265507-a25d-4cc0-ba22-d57151802bfc', 'super_admin'),
+  ('a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', NULL,
+   'e0376afd-bb7d-41d3-8bcc-68f916a4e85d', 'super_admin')
 ON CONFLICT DO NOTHING;
 
 -- Tenant admins (one per tenant)
@@ -87,6 +89,7 @@ INSERT INTO admin_profiles (user_id, display_name)
 SELECT v.uid, v.dname
 FROM (VALUES
   ('88265507-a25d-4cc0-ba22-d57151802bfc'::uuid, 'Demo Admin'),
+  ('e0376afd-bb7d-41d3-8bcc-68f916a4e85d'::uuid, 'E2E Test Admin'),
   ('ba34acd9-678b-4a40-bf86-cdf96b773cc7'::uuid, 'Dr. Selim Karataş (TEDU EE Admin)'),
   ('0ad71a4f-a424-4d68-8f37-d72df1f176a1'::uuid, 'Assoc. Prof. Dilan Yurt (TEDU CE Admin)'),
   ('97741fa5-430e-4421-85c1-8582e299ce97'::uuid, 'Prof. Cenk Akman (Boğaziçi CHEM Admin)'),

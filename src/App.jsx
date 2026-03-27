@@ -301,7 +301,7 @@ function AppInner() {
             <MinimalLoaderOverlay open={adminInitialLoading} minDuration={400} />
           )}
           <AdminPanel
-            isDemoMode={DEMO_MODE}
+            isDemoMode={DEMO_MODE && !auth.demoBypass}
             onAuthError={() => handleAdminSignOut()}
             onInitialLoadDone={() => setAdminInitialLoading(false)}
             onBack={() => {
@@ -333,7 +333,7 @@ function AppInner() {
 
         {DEMO_MODE && (
           <p className="home-demo-desc">
-            Explore VERA with sample data through the admin panel and jury flow.
+            ✨ Live demo · Sample data · Resets daily
           </p>
         )}
 
@@ -352,9 +352,8 @@ function AppInner() {
         </div>
 
         <div className="home-footer">
-          <span>© 2026 TED University</span>
           <span>
-            Developed by{" "}
+            © 2026 VERA &nbsp;·&nbsp; Developed by{" "}
             <a
               className="home-footer-link"
               href="https://huguryildiz.com"
@@ -365,6 +364,27 @@ function AppInner() {
             </a>
             {" "}· v1.0
           </span>
+          {DEMO_MODE ? (
+            <a
+              className="home-footer-cta"
+              href="https://vera-eval.app"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Visit Production
+            </a>
+          ) : (
+            <a
+              className="home-footer-cta"
+              href="https://demo.vera-eval.app"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Try Live Demo
+            </a>
+          )}
         </div>
       </div>
     </div>

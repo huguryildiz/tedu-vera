@@ -118,7 +118,7 @@ export default function EvalStep({
 
           <div className="eval-body">
             {isDemoMode && (
-              <div className="premium-info-strip" style={{ margin: "0 0 12px" }}>
+              <div className="premium-info-strip demo" style={{ margin: "0 0 12px" }}>
                 <span className="info-strip-icon" aria-hidden="true"><InfoIcon /></span>
                 <span>Demo mode — scores are saved to a sandbox database that resets daily.</span>
               </div>

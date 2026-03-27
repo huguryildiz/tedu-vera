@@ -4,7 +4,7 @@
 // ============================================================
 
 export const KEYS = {
-  PAGE: "tedu_portal_page",
+  PAGE: "vera_portal_page",
   JURY_ACCESS: "jury_access_semester",
   ADMIN_UI_STATE: "jury_admin_ui_state_v1",
   JURY_JUROR_ID: "jury.juror_id",

@@ -78,6 +78,8 @@ export default function DoneStep({
           <div className={`premium-icon-square${isEditMode ? "" : " confetti-icon"}`} aria-hidden="true">
             {!isEditMode && !prefersReducedMotion && <span className="confetti-burst confetti-a" />}
             {!isEditMode && !prefersReducedMotion && <span className="confetti-burst confetti-b" />}
+            {!isEditMode && !prefersReducedMotion && <span className="confetti-burst confetti-c" />}
+            {!isEditMode && !prefersReducedMotion && <span className="confetti-burst confetti-d" />}
             {headerIcon}
           </div>
           <div className="premium-title">{titleText}</div>
@@ -87,7 +89,7 @@ export default function DoneStep({
         </div>
 
         {isDemoMode && (
-          <div className="premium-info-strip" style={{ margin: "0 0 12px" }}>
+          <div className="premium-info-strip demo" style={{ margin: "0 0 12px" }}>
             <span className="info-strip-icon" aria-hidden="true"><InfoIcon /></span>
             <span>This was a demo evaluation. In production, scores are final and visible to admins.</span>
           </div>

@@ -271,7 +271,7 @@ Schema is split into 13 modular migration files in `sql/migrations/`:
 | 012 | `012_v1_auth_password_rpcs.sql` | Legacy password management |
 | 013 | `013_grants_rls.sql` | GRANT + RLS policies |
 
-Seed data: `sql/seeds/002_multi_tenant_seed.sql`
+Seed data: `sql/seeds/001_multi_tenant_seed.sql`
 
 Full SQL source: `sql/migrations/` (13 files, applied in order)
 

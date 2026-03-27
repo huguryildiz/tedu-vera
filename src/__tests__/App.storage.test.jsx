@@ -106,7 +106,7 @@ describe("App page resume / storage flow", () => {
   });
 
   qaTest("phaseA.app.02", async () => {
-    localStorage.setItem("tedu_portal_page", "admin");
+    localStorage.setItem("vera_portal_page", "admin");
     const restore = mockLocation({ search: "", pathname: "/" });
     try {
       render(<App />);
@@ -125,7 +125,7 @@ describe("App page resume / storage flow", () => {
     try {
       render(<App />);
       // App is on jury_gate. The persistence useEffect must not write "jury_gate".
-      const stored = localStorage.getItem("tedu_portal_page");
+      const stored = localStorage.getItem("vera_portal_page");
       expect(stored).not.toBe("jury_gate");
     } finally {
       restore();

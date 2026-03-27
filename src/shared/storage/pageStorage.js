@@ -1,6 +1,6 @@
 // src/shared/storage/pageStorage.js
 // ============================================================
-// Typed helpers for the top-level page key (tedu_portal_page).
+// Typed helpers for the top-level page key (vera_portal_page).
 // ============================================================
 
 import { KEYS } from "./keys";

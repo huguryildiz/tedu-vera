@@ -433,6 +433,19 @@ body {
   align-items: center;
   text-align: left;
 }
+.premium-info-strip.demo {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+  border: none;
+  border-left: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  box-shadow:
+    0 2px 8px rgba(99, 102, 241, 0.25),
+    0 0 16px rgba(139, 92, 246, 0.2);
+}
+.premium-info-strip.demo .info-strip-icon svg {
+  stroke: rgba(255, 255, 255, 0.7);
+}
 .premium-info-strip > :not(.info-strip-icon) {
   min-width: 0;
   text-align: left;

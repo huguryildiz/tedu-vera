@@ -17,6 +17,9 @@ import { KEYS } from "../storage/keys";
 
 export const AuthContext = createContext(null);
 
+const DEMO_BYPASS_UIDS = (import.meta.env.VITE_DEMO_BYPASS_UIDS || "")
+  .split(",").map((s) => s.trim()).filter(Boolean);
+
 function isRecoverableAuthLockError(error) {
   const msg = String(error?.message || "");
   return (
@@ -151,8 +154,10 @@ export default function AuthProvider({ children }) {
     // In demo mode, skip the profile upsert (write RPCs are blocked) but
     // still read the display name from admin_profiles so the avatar menu
     // shows the seeded name instead of the fallback "Admin".
+    // Bypass users (VITE_DEMO_BYPASS_UIDS) are allowed to upsert.
     const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
-    if (DEMO_MODE) {
+    const isBypass = DEMO_BYPASS_UIDS.includes(newSession.user.id);
+    if (DEMO_MODE && !isBypass) {
       adminProfileGet().then((profile) => {
         if (mountedRef.current && profile?.display_name) {
           setDisplayName(profile.display_name);
@@ -338,6 +343,11 @@ export default function AuthProvider({ children }) {
     [user, tenants]
   );
 
+  const demoBypass = useMemo(
+    () => DEMO_BYPASS_UIDS.length > 0 && !!user?.id && DEMO_BYPASS_UIDS.includes(user.id),
+    [user]
+  );
+
   const value = useMemo(() => ({
     user,
     session,
@@ -348,6 +358,7 @@ export default function AuthProvider({ children }) {
     setDisplayName,
     isSuper,
     isPending,
+    demoBypass,
     profileIncomplete,
     loading,
     signIn,
@@ -359,7 +370,7 @@ export default function AuthProvider({ children }) {
     refreshMemberships,
     completeProfile,
   }), [user, session, tenants, activeTenant, setActiveTenant, displayName, setDisplayName,
-       isSuper, isPending, profileIncomplete, loading, signIn, signInWithGoogle, signUp, signOut,
+       isSuper, isPending, demoBypass, profileIncomplete, loading, signIn, signInWithGoogle, signUp, signOut,
        resetPassword, updatePassword, refreshMemberships, completeProfile]);
 
   return (

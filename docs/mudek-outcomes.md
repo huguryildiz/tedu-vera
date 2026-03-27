@@ -1,17 +1,15 @@
-# EE 491 / 492 — Senior Project Poster Day
+# VERA — Evaluation Rubric & MÜDEK Alignment
 
-## Evaluation Rubric & MÜDEK Alignment
-
-**Total: 100 points** | Updated: February 2026
+**Total: 100 points** | Updated: March 2026
 
 ---
 
 ## Overview
 
-The poster day evaluation is designed to assess four competencies that directly
-map to MÜDEK (Mühendislik Eğitim Programları Değerlendirme ve Akreditasyon
-Derneği) programme outcomes. Each juror scores every project group
-independently across the four criteria below.
+VERA's evaluation rubric assesses four competencies that directly map to
+[MÜDEK](https://www.mudek.org.tr/tr/belge/doc.shtm) (Mühendislik Eğitim
+Programları Değerlendirme ve Akreditasyon Derneği) programme outcomes. Each
+juror scores every project group independently across the four criteria below.
 
 | # | Criterion | Max | MÜDEK Outcome |
 |---|-----------|-----|---------------|
@@ -129,19 +127,33 @@ and ethical conduct in interacting with jurors.
 
 ---
 
-## MÜDEK Outcome Reference
+## MÜDEK Program Çıktıları (1–11)
 
-| Code | Full Statement (TR) |
-|------|---------------------|
-| **9.1** | Hedef kitlenin çeşitli farklılıklarını (eğitim, dil, meslek gibi) dikkate alarak, teknik konularda sözlü etkin iletişim kurma becerisi. |
-| **9.2** | Hedef kitlenin çeşitli farklılıklarını (eğitim, dil, meslek gibi) dikkate alarak, teknik konularda yazılı etkin iletişim kurma becerisi. |
-| **1.2** | Matematik, fen bilimleri, temel mühendislik, bilgisayarla hesaplama ve ilgili mühendislik disiplinine özgü konulardaki bilgileri, karmaşık mühendislik problemlerinin çözümünde kullanabilme becerisi. |
-| **2** | Karmaşık mühendislik problemlerini, temel bilim, matematik ve mühendislik bilgilerini kullanarak ve ele alınan problemle ilgili BM Sürdürülebilir Kalkınma Amaçlarını gözeterek tanımlama, formüle etme ve analiz becerisi. |
-| **3.1** | Karmaşık mühendislik problemlerine yaratıcı çözümler tasarlama becerisi. |
-| **3.2** | Karmaşık sistemleri, süreçleri, cihazları veya ürünleri gerçekçi kısıtları ve koşulları gözeterek tasarlama becerisi. |
-| **8.1** | Bireysel olarak disiplin içi takım çalışmalarında takım üyesi veya lideri olarak etkin biçimde çalışabilme becerisi. |
-| **8.2** | Bireysel olarak çok disiplinli takımlarda takım üyesi veya lideri olarak etkin biçimde çalışabilme becerisi. |
+Aşağıdaki tablo, [MÜDEK](https://www.mudek.org.tr/tr/belge/doc.shtm) tarafından mühendislik eğitimi programları için belirlenen standart program çıktılarının tamamını içermektedir.
+
+| Kod | Program Çıktısı | Alt Başlık |
+|-----|-----------------|-----------|
+| **1.1** | Matematik, fen bilimleri, temel mühendislik, bilgisayarla hesaplama ve ilgili mühendislik disiplinine özgü konularda bilgi. | Bilgi ve Uygulama Becerisi |
+| **1.2** | Matematik, fen bilimleri, temel mühendislik, bilgisayarla hesaplama ve ilgili mühendislik disiplinine özgü konulardaki bilgileri, karmaşık mühendislik problemlerinin çözümünde kullanabilme becerisi. | Bilgi ve Uygulama Becerisi |
+| **2** | Karmaşık mühendislik problemlerini, temel bilim, matematik ve mühendislik bilgilerini kullanarak ve ele alınan problemle ilgili BM Sürdürülebilir Kalkınma Amaçlarını\* gözeterek tanımlama, formüle etme ve analiz becerisi. | Problem Analizi |
+| **3.1** | Karmaşık mühendislik problemlerine yaratıcı çözümler tasarlama becerisi. | Tasarım ve Geliştirme |
+| **3.2** | Karmaşık sistemleri, süreçleri, cihazları veya ürünleri gerçekçi kısıtları ve koşulları\* gözeterek, mevcut ve gelecekteki gereksinimleri karşılayacak biçimde tasarlama becerisi. | Tasarım ve Geliştirme |
+| **4** | Karmaşık mühendislik problemlerinin analizi ve çözümüne yönelik, tahmin ve modelleme de dahil olmak üzere, uygun teknikleri, kaynakları ve modern mühendislik ve bilişim araçlarını, sınırlamalarının da farkında olarak seçme ve kullanma becerisi. | Modern Araç Kullanımı |
+| **5** | Karmaşık mühendislik problemlerinin incelenmesi için literatür araştırması, deney tasarlama, deney yapma, veri toplama, sonuçları analiz etme ve yorumlama dahil, araştırma yöntemlerini kullanma becerisi. | Araştırma |
+| **6.1** | Mühendislik uygulamalarının BM Sürdürülebilir Kalkınma Amaçları\* kapsamında, topluma, sağlık ve güvenliğe, ekonomiye, sürdürülebilirlik ve çevreye etkileri hakkında bilgi. | Mühendislik ve Toplum |
+| **6.2** | Mühendislik çözümlerinin hukuksal sonuçları konusunda farkındalık. | Mühendislik ve Toplum |
+| **7.1** | Mühendislik meslek ilkelerine\* uygun davranma, etik sorumluluk hakkında bilgi. | Etik ve Çeşitlilik |
+| **7.2** | Hiçbir konuda ayrımcılık yapmadan, tarafsız davranma ve çeşitliliği kapsayıcı olma konularında farkındalık. | Etik ve Çeşitlilik |
+| **8.1** | Bireysel olarak disiplin içi takım çalışmalarında (yüz yüze, uzaktan veya karma) takım üyesi veya lideri olarak etkin biçimde çalışabilme becerisi. | Takım Çalışması |
+| **8.2** | Bireysel olarak çok disiplinli takımlarda (yüz yüze, uzaktan veya karma) takım üyesi veya lideri olarak etkin biçimde çalışabilme becerisi. | Takım Çalışması |
+| **9.1** | Hedef kitlenin çeşitli farklılıklarını (eğitim, dil, meslek gibi) dikkate alarak, teknik konularda sözlü etkin iletişim kurma becerisi. | İletişim |
+| **9.2** | Hedef kitlenin çeşitli farklılıklarını (eğitim, dil, meslek gibi) dikkate alarak, teknik konularda yazılı etkin iletişim kurma becerisi. | İletişim |
+| **10.1** | Proje yönetimi ve ekonomik yapılabilirlik analizi gibi iş hayatındaki uygulamalar hakkında bilgi. | İş Hayatı ve Girişimcilik |
+| **10.2** | Girişimcilik ve yenilikçilik hakkında farkındalık. | İş Hayatı ve Girişimcilik |
+| **11** | Bağımsız ve sürekli öğrenebilme, yeni ve gelişmekte olan teknolojilere uyum sağlayabilme ve teknolojik değişimlerle ilgili sorgulayıcı düşünebilmeyi kapsayan yaşam boyu öğrenme becerisi. | Yaşam Boyu Öğrenme |
+
+*\* BM Sürdürülebilir Kalkınma Amaçları, MÜDEK değerlendirme kriterlerinin bir parçasıdır.*
 
 ---
 
-EE 491/492 Senior Project — TED University Department of Electrical & Electronics Engineering
+VERA — Verdict & Evaluation Ranking Assistant

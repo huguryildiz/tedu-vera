@@ -3,7 +3,7 @@ node_modules/
 dist/
 .vite/
 
-# Docs
+# Docs (internal / generated)
 docs/audit/
 docs/development/
 docs/misc/
@@ -11,7 +11,7 @@ docs/reports/
 docs/prompts/
 docs/refactor/
 
-# Test output (tümü test-results/ altında toplanıyor)
+# Test output
 test-results/
 coverage/
 
@@ -24,7 +24,8 @@ supabase/functions/.env.local
 # OS
 .DS_Store
 
-# AI / local dev guides (machine-specific, not for repo)
+# AI / local dev guides
 CLAUDE.md
 AGENTS.md
 .claude/
+.superpowers/

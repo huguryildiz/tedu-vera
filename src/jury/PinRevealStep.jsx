@@ -111,7 +111,7 @@ export default function PinRevealStep({ pin, onContinue, onBack }) {
         </div>
 
         {isDemoMode && (
-          <div className="premium-info-strip">
+          <div className="premium-info-strip demo">
             <span className="info-strip-icon" aria-hidden="true"><InfoIcon /></span>
             <span>In production, each juror receives a unique 4-digit PIN for secure access.</span>
           </div>

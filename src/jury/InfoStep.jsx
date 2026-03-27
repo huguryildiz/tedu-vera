@@ -167,7 +167,7 @@ export default function InfoStep({
         </div>
 
         {isDemoMode && (
-          <div className="premium-info-strip">
+          <div className="premium-info-strip demo">
             <span className="info-strip-icon" aria-hidden="true"><InfoIcon /></span>
             <span>In production, jurors enter their real name and institution / department.</span>
           </div>

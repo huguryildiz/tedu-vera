@@ -59,7 +59,7 @@ export default function QRShowcaseStep({ onContinue }) {
           </svg>
         </div>
 
-        <div className="premium-info-strip">
+        <div className="premium-info-strip demo">
           <span className="info-strip-icon" aria-hidden="true"><InfoIcon /></span>
           <span>This step is skipped in the demo. In production, scanning the QR grants semester-scoped access.</span>
         </div>
