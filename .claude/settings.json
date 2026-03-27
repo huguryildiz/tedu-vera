@@ -43,7 +43,13 @@
       "Bash(ls -la /Users/huguryildiz/Documents/GitHub/VERA/src/styles/admin-*.css)",
       "Bash(grep -n --ring- /Users/huguryildiz/Documents/GitHub/VERA/src/styles/*.css)",
       "Bash(npx shadcn@latest init --preset b1Ymqvgiu --template vite)",
-      "Bash(yes)"
+      "Bash(yes)",
+      "Bash(npx shadcn@latest add --preset b1Ymqvgiu --all --overwrite)",
+      "Bash(npx shadcn@latest add --help)",
+      "Bash(npx shadcn@latest add \"https://v0.dev/chat/b1Ymqvgiu\" --overwrite --yes)",
+      "Bash(npx shadcn@latest add \"https://v0.dev/chat/b1Ymqvgiu?token=v0_token\" --overwrite --yes)",
+      "Bash(npx shadcn@latest init --help)",
+      "Bash(npx shadcn@latest init --template vite --defaults --force --reinstall)"
     ]
   }
 }
