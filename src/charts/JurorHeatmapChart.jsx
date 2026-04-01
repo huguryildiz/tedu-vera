@@ -198,7 +198,7 @@ export function JurorConsistencyHeatmap({ stats, data, outcomes: oc = OUTCOMES }
 // viewBox dynamic × dynamic  (full-width card)
 // ════════════════════════════════════════════════════════════
 export function JurorConsistencyHeatmapPrint({ stats, data, outcomes: oc = OUTCOMES }) {
-  const colors = useMemo(() => getChartColors(), []);
+  const colors = useChartColors();
   const groups = stats.filter((s) => s.count > 0);
   const rows   = data || [];
   if (!groups.length || !rows.length) return null;

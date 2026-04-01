@@ -237,7 +237,7 @@ export function OutcomeTrendChart({
 // viewBox dynamic × dynamic
 // ════════════════════════════════════════════════════════════
 export function OutcomeTrendChartPrint({ data = [], semesters = [], selectedIds = [], outcomes: outcomesOverride }) {
-  const colors = useMemo(() => getChartColors(), []);
+  const colors = useChartColors();
   const oc = outcomesOverride || OUTCOMES;
   const ocByKey = Object.fromEntries(oc.map((o) => [o.key, o]));
   const series = [

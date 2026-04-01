@@ -163,7 +163,7 @@ export function OutcomeByGroupChart({ stats, outcomes: oc = OUTCOMES }) {
 // viewBox 700 × 205  (full-width card)
 // ════════════════════════════════════════════════════════════
 export function OutcomeByGroupChartPrint({ stats, outcomes: oc = OUTCOMES }) {
-  const colors = useMemo(() => getChartColors(), []);
+  const colors = useChartColors();
   const data = stats.filter((s) => s.count > 0);
   if (!data.length) return null;
 
