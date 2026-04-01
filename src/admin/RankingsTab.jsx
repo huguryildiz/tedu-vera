@@ -4,6 +4,18 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import AutoSizer from "react-virtualized-auto-sizer";
 import { VariableSizeList as List } from "react-window";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { APP_CONFIG, CRITERIA, TOTAL_MAX } from "../config";
 import { InfoIcon, ChevronDownIcon, DownloadIcon, ArrowUpIcon, ArrowDownIcon, SearchIcon, FilterIcon } from "../shared/Icons";
 import { GroupLabel, ProjectTitle, StudentNames } from "../components/EntityMeta";
@@ -62,6 +74,45 @@ function buildSearchText(p) {
 
 // ── Sub-components (module level — stable identity across renders) ─────────
 
+function MedalBadge({ rank }) {
+  if (rank >= 1 && rank <= 3) {
+    return (
+      <div className="flex items-center justify-center">
+        <img
+          src={MEDALS[rank - 1]}
+          alt={`${rank}${rank === 1 ? "st" : rank === 2 ? "nd" : "rd"} place`}
+          className="h-6 w-6"
+        />
+      </div>
+    );
+  }
+  return (
+    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+      {rank ?? "—"}
+    </span>
+  );
+}
+
+function CriterionBar({ value, max, color }) {
+  const pct = max > 0 && Number.isFinite(value) ? (value / max) * 100 : 0;
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="h-1.5 w-10 overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${Math.min(100, pct)}%`,
+            backgroundColor: color,
+          }}
+        />
+      </div>
+      <span className="w-8 text-right text-xs text-muted-foreground tabular-nums">
+        {formatScore(value)}
+      </span>
+    </div>
+  );
+}
+
 function RankCard({ p, index, rankMap, expandedGroups, onToggleGroup, criteriaList: critList = CRITERIA_LIST }) {
   const rankKey = getRankKey(p, index);
   const dr = rankMap.get(rankKey) ?? null;
@@ -76,110 +127,106 @@ function RankCard({ p, index, rankMap, expandedGroups, onToggleGroup, criteriaLi
   const isExpanded = expandedGroups.has(groupKey);
   const hasScores = Number.isFinite(p.totalAvg);
   const isTop3 = hasScores && dr !== null && dr <= 3;
-  const rankClass = isTop3 ? `rank-top${dr}` : "rank-rest";
   const panelId = `summary-group-panel-${groupKey}`;
+
   return (
     <div
       key={p.id ?? index}
-      className={`rank-card ${rankClass}${isTop3 ? ` rank-${dr}` : ""}`}
+      className={cn(
+        "rounded-lg border border-border bg-card p-4 transition-colors",
+        isTop3 && "bg-amber-500/5"
+      )}
     >
-      {isTop3 && (
-        <span className={`rank-accent rank-${dr}`} aria-hidden="true" />
-      )}
-      {isTop3 ? (
-        <div className={`rank-badge rank-medal-wrap rank-${dr}`} aria-hidden="true">
-          <span className="rank-medal-ring" aria-hidden="true" />
-          <img className="rank-medal" src={MEDALS[dr - 1]} alt={`${dr} place medal`} />
-        </div>
-      ) : (
-        <div className="rank-badge rank-num">{dr ?? "—"}</div>
-      )}
-
-      <div className="rank-info">
-        <div className="group-card-wrap">
-          <div className="group-card-header">
-            <div className="group-card-left">
-              <button
-                className="group-card-toggle group-accordion-header"
-                tabIndex={hasDetails ? 0 : -1}
-                aria-expanded={hasDetails ? isExpanded : undefined}
-                aria-controls={hasDetails ? panelId : undefined}
-                type="button"
-                onClick={() => { if (hasDetails) onToggleGroup(groupKey); }}
-                onKeyDown={(e) => {
-                  if ((e.key === "Enter" || e.key === " ") && hasDetails) {
-                    e.preventDefault();
-                    onToggleGroup(groupKey);
-                  }
-                }}
-                style={{ cursor: hasDetails ? "pointer" : "default" }}
-              >
-                <span className="group-card-name">
-                  <GroupLabel text={groupLabel} shortText={`Group ${p.groupNo}`} />
-                </span>
-                {hasDetails && (
-                  <span className={`group-accordion-chevron${isExpanded ? " open" : ""}`}>
-                    <ChevronDownIcon />
-                  </span>
-                )}
-              </button>
-            </div>
-            <div className="group-card-score">
-              <small className="group-card-score-label">Avg /{TOTAL_MAX}</small>
-              <span className="group-card-score-value avg-score">
-                {hasScores ? formatScore(p.totalAvg) : "—"}
-              </span>
-            </div>
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="flex flex-1 items-start gap-3">
+          <div className="shrink-0">
+            <MedalBadge rank={dr} />
           </div>
+          <div className="min-w-0 flex-1">
+            <button
+              className={cn(
+                "w-full text-left text-sm font-medium transition-colors",
+                hasDetails ? "cursor-pointer hover:text-primary" : "cursor-default"
+              )}
+              tabIndex={hasDetails ? 0 : -1}
+              aria-expanded={hasDetails ? isExpanded : undefined}
+              aria-controls={hasDetails ? panelId : undefined}
+              type="button"
+              onClick={() => { if (hasDetails) onToggleGroup(groupKey); }}
+              onKeyDown={(e) => {
+                if ((e.key === "Enter" || e.key === " ") && hasDetails) {
+                  e.preventDefault();
+                  onToggleGroup(groupKey);
+                }
+              }}
+            >
+              <span className="flex items-center gap-1">
+                <GroupLabel text={groupLabel} shortText={`Group ${p.groupNo}`} />
+                {hasDetails && (
+                  <ChevronDownIcon className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")} />
+                )}
+              </span>
+            </button>
+          </div>
+        </div>
+        <div className="shrink-0 text-right">
+          <div className="text-xs text-muted-foreground">Avg /{TOTAL_MAX}</div>
+          <div className="text-lg font-semibold tabular-nums">
+            {hasScores ? formatScore(p.totalAvg) : "—"}
+          </div>
+        </div>
+      </div>
 
-          {!hasScores && (
-            <div className="rank-meta">
-              <span className="rank-empty-badge">No finalized evaluations</span>
+      {!hasScores && (
+        <div className="mb-4">
+          <Badge variant="secondary">No finalized evaluations</Badge>
+        </div>
+      )}
+
+      {hasDetails && (
+        <div
+          id={panelId}
+          className={cn(
+            "space-y-3 overflow-hidden transition-all",
+            isExpanded ? "max-h-96" : "max-h-0"
+          )}
+        >
+          {showTitle && (
+            <div className="border-t border-border pt-3">
+              <ProjectTitle text={projectTitle} />
             </div>
           )}
-
-          <div
-            id={panelId}
-            className={`group-accordion-panel${isExpanded ? " open" : ""}`}
-          >
-            <div className="group-accordion-panel-inner group-card-accordion-inner">
-              {showTitle && (
-                <div className="group-card-full-title">
-                  <ProjectTitle text={projectTitle} />
-                </div>
-              )}
-              {APP_CONFIG.showStudents && studentList.length > 0 && (
-                <div className="group-card-students">
-                  <StudentNames names={studentList} />
-                </div>
-              )}
+          {APP_CONFIG.showStudents && studentList.length > 0 && (
+            <div>
+              <StudentNames names={studentList} />
             </div>
-          </div>
+          )}
         </div>
+      )}
 
-        <div className="rank-bars">
+      {hasScores && (
+        <div className="space-y-2.5">
           {critList.map((c) => {
             const val = p.avg?.[c.id];
             const hasVal = Number.isFinite(val) && c.max > 0;
-            const pct = hasVal ? Math.min((val / c.max) * 100, 100) : 0;
             return (
-              <div key={c.id} className="mini-bar-row">
-                <span className="mini-label">{c.shortLabel}</span>
-                <div className="mini-bar-track">
-                  <div
-                    className="mini-bar-fill"
-                    style={{ width: `${pct}%`, background: c.color || "#3b82f6" }}
-                  />
-                </div>
-                <span className="mini-val">
-                  {hasVal ? `${formatScore(val)} / ${c.max}` : "—"}
+              <div key={c.id} className="flex items-center gap-2">
+                <span className="w-12 text-xs font-medium text-muted-foreground">
+                  {c.shortLabel}
                 </span>
+                <div className="flex-1">
+                  <CriterionBar value={val} max={c.max} color={c.color} />
+                </div>
+                {hasVal && (
+                  <span className="w-12 text-right text-xs text-muted-foreground tabular-nums">
+                    {formatScore(val)}/{c.max}
+                  </span>
+                )}
               </div>
             );
           })}
         </div>
-
-      </div>
+      )}
     </div>
   );
 }
@@ -204,7 +251,7 @@ function Row({ index, style, data }) {
   }, [index, onMeasure]);
 
   return (
-    <div style={{ ...style, width: "100%", paddingBottom: 14 }}>
+    <div style={{ ...style, width: "100%", paddingRight: "1rem", paddingLeft: "1rem", paddingBottom: "0.75rem" }}>
       <div ref={rowRef}>
         <RankCard
           p={items[index]}
@@ -418,88 +465,110 @@ export default function RankingsTab({ ranked, semesterName = "", criteriaTemplat
 
   // Guard: ranked may be undefined during initial render
   if (!finalized.length) {
-    return <div className="empty-msg">No finalized evaluations yet.</div>;
+    return <div className="rounded-lg border border-border bg-muted/50 p-8 text-center text-sm text-muted-foreground">No finalized evaluations yet.</div>;
   }
 
   return (
-    <div className="rankings-page">
-      <div className="admin-section-header">
-        <div className="admin-section-actions">
-          <span className="info-tooltip-wrap" aria-label="Ranking is based on finalized submissions only (Total Avg). Ties share the same rank (e.g., 1, 1, 3)">
-            <InfoIcon />
-            <span className="info-tooltip-bubble">
+    <div className="space-y-4">
+      {/* Header with info tooltip and export */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <div className="relative group">
+            <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help" />
+            <div className="absolute bottom-full left-0 mb-2 hidden w-max rounded-lg bg-popover p-2 text-xs text-popover-foreground border border-border shadow-md group-hover:block z-10">
               Ranking is based on finalized submissions only (Total Avg). Ties share the same rank (e.g., 1, 1, 3).
-            </span>
-          </span>
-          <button className="xlsx-export-btn" onClick={handleExport} disabled={isExporting}>
-            <DownloadIcon />
-            <span>{isExporting ? "Exporting…" : "Excel"}</span>
-          </button>
+            </div>
+          </div>
+          <span className="text-xs text-muted-foreground">Ranking is based on finalized submissions only (Total Avg). Ties share the same rank (e.g., 1, 1, 3).</span>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExport}
+          disabled={isExporting}
+        >
+          <DownloadIcon className="mr-1.5 h-4 w-4" />
+          {isExporting ? "Exporting…" : "Excel"}
+        </Button>
       </div>
 
-      <div className="rankings-toolbar">
-        <div className="rankings-toolbar-header">
-          <span className="rankings-toolbar-title">
-            <span className="rankings-toolbar-icon" aria-hidden="true"><FilterIcon /></span>
+      {/* Filters toolbar */}
+      <div className="rounded-lg border border-border bg-card">
+        <button
+          type="button"
+          className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors"
+          onClick={() => setFiltersOpen((v) => !v)}
+          aria-expanded={filtersOpen}
+          aria-label={filtersOpen ? "Collapse filters" : "Expand filters"}
+        >
+          <span className="flex items-center gap-2 font-medium text-sm">
+            <FilterIcon className="h-4 w-4" />
             Filters
           </span>
-          <button
-            type="button"
-            className={`rankings-toolbar-toggle${filtersOpen ? " is-open" : ""}`}
-            onClick={() => setFiltersOpen((v) => !v)}
-            aria-expanded={filtersOpen}
-            aria-label={filtersOpen ? "Collapse filters" : "Expand filters"}
-          >
-            <ChevronDownIcon />
-          </button>
-        </div>
-        <div className={`rankings-toolbar-body${filtersOpen ? "" : " is-collapsed"}`}>
-          <div className="rankings-toolbar-main">
-            <label className="rankings-control rankings-search">
-              <span className="rankings-label">Search</span>
-              <div className="rankings-input-wrap">
-                <span className="rankings-input-icon" aria-hidden="true"><SearchIcon /></span>
-                <input
+          <ChevronDownIcon className={cn("h-4 w-4 transition-transform", filtersOpen && "rotate-180")} />
+        </button>
+
+        {filtersOpen && (
+          <div className="border-t border-border px-4 py-3 space-y-4">
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground">Search</label>
+              <div className="relative">
+                <SearchIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search groups, projects, or students"
                   aria-label="Search groups, projects, or students"
+                  className="pl-9"
                 />
               </div>
-            </label>
-            <label className="rankings-control">
-              <span className="rankings-label">Sort</span>
-              <div className="rankings-sort-row">
-                <select value={sortKey} onChange={(e) => setSortKey(e.target.value)} aria-label="Sort by">
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground">Sort</label>
+              <div className="flex gap-2">
+                <select
+                  value={sortKey}
+                  onChange={(e) => setSortKey(e.target.value)}
+                  aria-label="Sort by"
+                  className={cn(
+                    "flex-1 rounded-md border border-input bg-background px-3 py-2",
+                    "text-sm focus:outline-none focus:ring-2 focus:ring-ring/50"
+                  )}
+                >
                   {sortOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
-                <button
+                <Button
                   type="button"
-                  className="rankings-sort-dir"
+                  variant="outline"
+                  size="icon"
                   onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
                   aria-label={`Sort ${sortDir === "desc" ? "descending" : "ascending"}`}
                 >
-                  {sortDir === "desc" ? <ArrowDownIcon /> : <ArrowUpIcon />}
-                </button>
+                  {sortDir === "desc" ? <ArrowDownIcon className="h-4 w-4" /> : <ArrowUpIcon className="h-4 w-4" />}
+                </Button>
               </div>
-            </label>
+            </div>
+
+            <div className="border-t border-border pt-3 text-xs text-muted-foreground">
+              Showing {sorted.length} of {finalized.length}
+            </div>
           </div>
-          <div className="rankings-toolbar-meta">
-            Showing {sorted.length} of {finalized.length}
-          </div>
-        </div>
+        )}
       </div>
 
-      <div className={`rank-list${useVirtual ? " rank-list--virtual" : ""}`}>
+      {/* Results list */}
+      <div>
         {sorted.length === 0 ? (
-          <div className="empty-msg">No results for the current filters.</div>
+          <div className="rounded-lg border border-border bg-muted/50 p-8 text-center text-sm text-muted-foreground">
+            No results for the current filters.
+          </div>
         ) : useVirtual ? (
           <div
-            className="rank-virtual-wrap"
+            className="rounded-lg border border-border overflow-hidden"
             ref={virtualWrapRef}
             style={virtualHeight ? { height: virtualHeight } : undefined}
           >
@@ -519,7 +588,9 @@ export default function RankingsTab({ ranked, semesterName = "", criteriaTemplat
             </AutoSizer>
           </div>
         ) : (
-          sorted.map((p, i) => <RankCard key={p.id ?? i} p={p} index={i} rankMap={rankMap} expandedGroups={expandedGroups} onToggleGroup={toggleGroup} criteriaList={criteriaList} />)
+          <div className="space-y-3">
+            {sorted.map((p, i) => <RankCard key={p.id ?? i} p={p} index={i} rankMap={rankMap} expandedGroups={expandedGroups} onToggleGroup={toggleGroup} criteriaList={criteriaList} />)}
+          </div>
         )}
       </div>
     </div>
