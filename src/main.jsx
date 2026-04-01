@@ -5,7 +5,6 @@ import { ThemeProvider } from "./shared/theme/ThemeProvider";
 import { ToastProvider } from "./components/toast/useToast";
 import { Toaster } from "./components/ui/sonner";
 import "./styles/globals.css";
-import "./styles/shared.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

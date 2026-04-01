@@ -33,6 +33,10 @@
   html {
     @apply font-sans;
   }
+  /* Skip navigation (a11y) */
+  .skip-link {
+    @apply absolute -top-full -left-full z-[9999] rounded bg-primary px-4 py-2 text-sm text-primary-foreground no-underline focus:top-3 focus:left-3;
+  }
 }
 
 @theme inline {
