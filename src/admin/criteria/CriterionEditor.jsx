@@ -216,11 +216,11 @@ export default function CriterionEditor({
           <div className="criterion-row-expanded-fields">
             {/* Label */}
             <div className="criterion-field criterion-field--label">
-              <label className="criteria-manager-cell-label">Label</label>
+              <label className="text-sm font-medium">Label</label>
               <input
                 className={cn(
-                  "h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
-                  (saveAttempted || row._fieldTouched?.label) && errors[`label_${i}`] && "border-destructive"
+                  "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
+                  (saveAttempted || row._fieldTouched?.label) && errors[`label_${i}`] && "border-destructive ring-destructive/20 ring-2"
                 )}
                 value={row.label}
                 onChange={(e) => setRow(i, "label", e.target.value)}
@@ -235,11 +235,11 @@ export default function CriterionEditor({
 
             {/* ShortLabel */}
             <div className="criterion-field criterion-field--short">
-              <label className="criteria-manager-cell-label">Short label</label>
+              <label className="text-sm font-medium">Short label</label>
               <input
                 className={cn(
-                  "h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
-                  (saveAttempted || row._fieldTouched?.shortLabel) && errors[`shortLabel_${i}`] && "border-destructive"
+                  "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
+                  (saveAttempted || row._fieldTouched?.shortLabel) && errors[`shortLabel_${i}`] && "border-destructive ring-destructive/20 ring-2"
                 )}
                 value={row.shortLabel}
                 onChange={(e) => setRow(i, "shortLabel", e.target.value)}
@@ -254,13 +254,13 @@ export default function CriterionEditor({
 
             {/* Max */}
             <div className="criterion-field criterion-field--max relative">
-              <label className="criteria-manager-cell-label">Max</label>
+              <label className="text-sm font-medium">Max</label>
               <div className="relative">
                 <input
                   className={cn(
-                    "h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
+                    "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
                     fullyLocked && "opacity-60 cursor-not-allowed",
-                    (saveAttempted || row._fieldTouched?.max) && errors[`max_${i}`] && "border-destructive"
+                    (saveAttempted || row._fieldTouched?.max) && errors[`max_${i}`] && "border-destructive ring-destructive/20 ring-2"
                   )}
                   type="number"
                   min="1"

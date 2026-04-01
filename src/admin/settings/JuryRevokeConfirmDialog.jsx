@@ -18,19 +18,19 @@ export default function JuryRevokeConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[400] grid place-items-center bg-slate-900/40 backdrop-blur-sm"
+      className="fixed inset-0 z-[400] grid place-items-center bg-black/40 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="jury-revoke-dialog-title"
     >
       <div
-        className="relative flex w-[min(520px,92vw)] max-w-[100vw] max-h-[90vh] flex-col gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_32px_rgba(15,23,42,0.12),0_0_0_1px_rgba(15,23,42,0.08)]"
+        className="relative flex w-[min(520px,92vw)] max-w-[100vw] max-h-[90vh] flex-col gap-3 overflow-hidden rounded-2xl border border-destructive/20 bg-card p-5 shadow-lg"
         ref={containerRef}
       >
         {/* Header */}
-        <div className="flex items-center gap-2.5 text-slate-900">
+        <div className="flex items-center gap-2.5">
           <span
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-200 bg-rose-50 text-red-600 [&_svg]:h-[18px] [&_svg]:w-[18px]"
+            className="inline-flex items-center justify-center size-9 rounded-lg bg-destructive/10 text-destructive [&_svg]:h-[18px] [&_svg]:w-[18px]"
             aria-hidden="true"
           >
             <BanIcon />
@@ -45,7 +45,7 @@ export default function JuryRevokeConfirmDialog({
 
         {/* Body */}
         <div className="mt-0.5 flex flex-col gap-2.5">
-          <div className="text-[13px] leading-snug text-slate-600">
+          <div className="text-sm leading-snug text-muted-foreground">
             Are you sure you want to revoke jury entry access?
           </div>
           <AlertCard variant="error" icon={BanIcon}>
@@ -63,9 +63,9 @@ export default function JuryRevokeConfirmDialog({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-2.5">
+        <div className="flex justify-end gap-2.5 border-t pt-4">
           <button
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-transparent px-3.5 py-2 text-[13px] font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600/20 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-full border border-input bg-background px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
             type="button"
             disabled={loading}
             onClick={onCancel}
@@ -73,7 +73,7 @@ export default function JuryRevokeConfirmDialog({
             Cancel
           </button>
           <button
-            className="inline-flex items-center gap-1.5 rounded-lg border border-red-600 bg-red-600 px-3.5 py-2 text-[13px] font-semibold text-white shadow-sm transition-all hover:bg-red-700 hover:border-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600/30 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-full bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:pointer-events-none disabled:opacity-50"
             type="button"
             disabled={loading}
             onClick={onConfirm}

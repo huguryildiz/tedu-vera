@@ -146,11 +146,11 @@ export default function ProjectForm({
           {isAdd && (
             <>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-muted-foreground">Period</label>
+                <label className="text-sm font-medium">Period</label>
                 <select
                   className={cn(
-                    "h-9 w-full rounded-lg border border-input bg-background px-2.5 text-sm",
-                    error && !form.semester_id && "border-destructive"
+                    "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm",
+                    error && !form.semester_id && "border-destructive ring-destructive/20 ring-2"
                   )}
                   value={form.semester_id || ""}
                   onChange={(e) => {
@@ -170,11 +170,11 @@ export default function ProjectForm({
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-muted-foreground">Group number</label>
+                <label className="text-sm font-medium">Group number</label>
                 <input
                   className={cn(
-                    "h-9 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
-                    error && "border-destructive"
+                    "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
+                    error && "border-destructive ring-destructive/20 ring-2"
                   )}
                   value={form.group_no}
                   onChange={(e) => {
@@ -189,9 +189,9 @@ export default function ProjectForm({
               </div>
               {error && <div className="rounded-xl border border-destructive/30 border-l-4 border-l-destructive bg-destructive/5 px-2.5 py-2 text-xs text-destructive">{error}</div>}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-muted-foreground">Title</label>
+                <label className="text-sm font-medium">Title</label>
                 <input
-                  className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring"
+                  className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring"
                   value={form.project_title}
                   onChange={(e) => {
                     setForm((f) => ({ ...f, project_title: e.target.value }));
@@ -204,23 +204,26 @@ export default function ProjectForm({
           )}
           {!isAdd && (
             <>
-              <label className="text-xs font-semibold text-muted-foreground">Group number <span className="font-medium text-muted-foreground/60">(locked)</span></label>
+              <label className="text-sm font-medium">
+                Group number
+                <span className="ml-1.5 font-normal text-muted-foreground">(locked)</span>
+              </label>
               <input
-                className="h-9 w-full rounded-lg border border-destructive/40 bg-destructive/5 px-2.5 text-sm cursor-not-allowed"
+                className="h-9 w-full rounded-lg border border-destructive/40 bg-destructive/5 px-3 text-sm cursor-not-allowed shadow-sm"
                 value={form.group_no}
                 disabled
               />
-              <label className="text-xs font-semibold text-muted-foreground">Title</label>
+              <label className="text-sm font-medium">Title</label>
               <input
-                className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring"
+                className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring"
                 value={form.project_title}
                 onChange={(e) => setForm((f) => ({ ...f, project_title: e.target.value }))}
               />
             </>
           )}
-          <label className="text-xs font-semibold text-muted-foreground">
-            Team Members{" "}
-            <span className="font-medium text-muted-foreground/60">
+          <label className="text-sm font-medium">
+            Team Members
+            <span className="ml-1.5 font-normal text-muted-foreground">
               (one team member per line item)
             </span>
           </label>
@@ -247,7 +250,7 @@ export default function ProjectForm({
                         </button>
                       </Tooltip>
                       <input
-                        className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring"
+                        className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring"
                         value={student}
                         onChange={(e) => {
                           updateStudentInput(setForm, idx, e.target.value);

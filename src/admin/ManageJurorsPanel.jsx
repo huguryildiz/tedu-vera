@@ -263,6 +263,7 @@ export default function ManageJurorsPanel({
           <button
             className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
             type="button"
+            variant="outline"
             onClick={() => {
               setImportError("");
               setImportWarning("");
@@ -308,7 +309,7 @@ export default function ManageJurorsPanel({
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="w-full max-w-lg rounded-lg border bg-card shadow-lg">
               <div className="flex items-center gap-3 border-b px-6 py-4">
-                <span className="text-muted-foreground" aria-hidden="true">
+                <span className="size-9 inline-flex items-center justify-center rounded-lg bg-muted text-muted-foreground" aria-hidden="true">
                   <CirclePlusIcon />
                 </span>
                 <div className="text-base font-semibold">Create Juror</div>
@@ -318,8 +319,8 @@ export default function ManageJurorsPanel({
                   <label className="text-sm font-medium">Full name</label>
                   <input
                     className={cn(
-                      "h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
-                      addError && "border-destructive"
+                      "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
+                      addError && "border-destructive ring-destructive/20 ring-2"
                     )}
                     value={form.juror_name}
                     onChange={(e) => {
@@ -333,8 +334,8 @@ export default function ManageJurorsPanel({
                   <label className="text-sm font-medium">Affiliation</label>
                   <input
                     className={cn(
-                      "h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
-                      addError && "border-destructive"
+                      "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
+                      addError && "border-destructive ring-destructive/20 ring-2"
                     )}
                     value={form.juror_inst}
                     onChange={(e) => {
@@ -347,7 +348,7 @@ export default function ManageJurorsPanel({
                 {addError && <div className="text-sm text-destructive">{addError}</div>}
               </div>
               <div className="flex justify-end gap-3 border-t px-6 py-4">
-                <button className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50" type="button" onClick={() => setShowAdd(false)}>
+                <button className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50" type="button" variant="outline" onClick={() => setShowAdd(false)}>
                   Cancel
                 </button>
                 <button
@@ -387,29 +388,34 @@ export default function ManageJurorsPanel({
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="w-full max-w-lg rounded-lg border bg-card shadow-lg">
               <div className="flex items-center gap-3 border-b px-6 py-4">
-                <span className="text-muted-foreground" aria-hidden="true">
+                <span className="size-9 inline-flex items-center justify-center rounded-lg bg-muted text-muted-foreground" aria-hidden="true">
                   <PencilIcon />
                 </span>
                 <div className="text-base font-semibold">Edit Juror</div>
               </div>
               <div className="flex flex-col gap-3 px-6 py-4">
-                <label className="text-sm font-medium">Full name</label>
-                <input
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring"
-                  value={editForm.juror_name}
-                  onChange={(e) => setEditForm((f) => ({ ...f, juror_name: e.target.value }))}
-                />
-                <label className="text-sm font-medium">Affiliation</label>
-                <input
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring"
-                  value={editForm.juror_inst}
-                  onChange={(e) => setEditForm((f) => ({ ...f, juror_inst: e.target.value }))}
-                />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium">Full name</label>
+                  <input
+                    className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring"
+                    value={editForm.juror_name}
+                    onChange={(e) => setEditForm((f) => ({ ...f, juror_name: e.target.value }))}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium">Affiliation</label>
+                  <input
+                    className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring"
+                    value={editForm.juror_inst}
+                    onChange={(e) => setEditForm((f) => ({ ...f, juror_inst: e.target.value }))}
+                  />
+                </div>
               </div>
               <div className="flex justify-end gap-3 border-t px-6 py-4">
                 <button
                   className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
                   type="button"
+                  variant="outline"
                   onClick={() => {
                     setShowEdit(false);
                     setEditTarget(null);
@@ -444,12 +450,12 @@ export default function ManageJurorsPanel({
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="w-full max-w-lg rounded-lg border bg-card shadow-lg">
               <div className="flex items-center gap-3 border-b px-6 py-4">
-                <span className="text-muted-foreground" aria-hidden="true">
+                <span className="size-9 inline-flex items-center justify-center rounded-lg bg-muted text-muted-foreground" aria-hidden="true">
                   <FileUpIcon />
                 </span>
                 <div className="text-base font-semibold">Import CSV</div>
               </div>
-              <div className="block text-xs leading-snug text-muted-foreground px-6 pt-2">
+              <div className="block text-xs leading-snug text-muted-foreground px-6 pt-3">
                 Jurors will be added to the global juror pool.
               </div>
               <div className="flex flex-col gap-3 px-6 py-4">
@@ -536,7 +542,7 @@ export default function ManageJurorsPanel({
                 </details>
               </div>
               <div className="flex justify-end gap-3 border-t px-6 py-4">
-                <button className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50" type="button" onClick={() => setShowImport(false)} disabled={isImporting}>
+                <button className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50" type="button" variant="outline" onClick={() => setShowImport(false)} disabled={isImporting}>
                   {isImporting ? "Importing..." : "Cancel"}
                 </button>
               </div>

@@ -481,8 +481,8 @@ export default function ManageSemesterPanel({
                       <label className="text-sm font-medium">Period name</label>
                       <input
                         className={cn(
-                          "h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
-                          createError && "border-destructive"
+                          "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
+                          createError && "border-destructive ring-destructive/20 ring-2"
                         )}
                         value={createForm.semester_name}
                         onChange={(e) => {
@@ -497,9 +497,9 @@ export default function ManageSemesterPanel({
                         <input
                           type="date"
                           className={cn(
-                            "h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
+                            "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
                             !createForm.poster_date && "text-muted-foreground",
-                            createMeta.yearError && "border-destructive"
+                            createMeta.yearError && "border-destructive ring-destructive/20 ring-2"
                           )}
                           value={createForm.poster_date}
                           onChange={(e) => setCreateForm((f) => ({ ...f, poster_date: e.target.value }))}
@@ -555,11 +555,11 @@ export default function ManageSemesterPanel({
                 </div>
 
                 <div className="flex justify-end gap-3 border-t px-6 py-4 shrink-0 mt-auto pt-3">
-                  <button className="inline-flex items-center gap-1.5 rounded-full border border-input bg-muted px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm hover:-translate-y-px hover:border-border hover:shadow-md disabled:pointer-events-none disabled:opacity-60" type="button" onClick={closeCreate}>
+                  <button className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50" type="button" variant="outline" onClick={closeCreate}>
                     Cancel
                   </button>
                   <button
-                    className="inline-flex items-center gap-1.5 rounded-full bg-primary border-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-md hover:shadow-lg disabled:pointer-events-none disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
                     type="button"
                     disabled={!createMeta.canSubmit || isDemoMode}
                     onClick={async () => {
@@ -619,8 +619,8 @@ export default function ManageSemesterPanel({
                       <label className="text-sm font-medium">Period name</label>
                       <input
                         className={cn(
-                          "h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
-                          editError && "border-destructive"
+                          "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
+                          editError && "border-destructive ring-destructive/20 ring-2"
                         )}
                         value={editForm.semester_name}
                         onChange={(e) => {
@@ -635,9 +635,9 @@ export default function ManageSemesterPanel({
                         <input
                           type="date"
                           className={cn(
-                            "h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
+                            "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
                             !editForm.poster_date && "text-muted-foreground",
-                            editMeta.yearError && "border-destructive"
+                            editMeta.yearError && "border-destructive ring-destructive/20 ring-2"
                           )}
                           value={editForm.poster_date}
                           onChange={(e) => setEditForm((f) => ({ ...f, poster_date: e.target.value }))}
@@ -733,19 +733,19 @@ export default function ManageSemesterPanel({
                   )}
                 </div>
 
-                <div className="flex justify-end gap-3 border-t px-6 py-4 shrink-0 mt-auto pt-3">
+                <div className="flex justify-end gap-2.5 border-t pt-4">
                   {editTab !== "semester" && (
                     <div className="text-xs text-muted-foreground">
                       Save template changes with the tab-specific button ({editTab === "criteria" ? "Save Criteria" : "Save MÜDEK Outcomes"}).
                     </div>
                   )}
-                  <button className="inline-flex items-center gap-1.5 rounded-full border border-input bg-muted px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm hover:-translate-y-px hover:border-border hover:shadow-md disabled:pointer-events-none disabled:opacity-60" type="button" onClick={closeEdit}>
+                  <button className="inline-flex items-center gap-1.5 rounded-full border border-input bg-background px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50" type="button" onClick={closeEdit}>
                     Cancel
                   </button>
                   {/* Save button on Semester tab saves name/date only */}
                   {editTab === "semester" && (
                     <button
-                      className="inline-flex items-center gap-1.5 rounded-full bg-primary border-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-md hover:shadow-lg disabled:pointer-events-none disabled:opacity-60"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
                       type="button"
                       disabled={!editMeta.canSubmit || staleSemester || isDemoMode}
                       title={staleSemester ? "Reload the page before saving — this period was updated externally" : undefined}
