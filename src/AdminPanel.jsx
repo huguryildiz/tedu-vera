@@ -42,9 +42,9 @@ import { AdminHeader } from "./admin/layout/AdminHeader";
 // admin-jurors.css — juror activity restyled in Phase 3
 // admin-dashboard.css — charts wrapped in Phase 5A
 // admin-responsive.css — Tailwind responsive utilities replace breakpoints
-// Kept: admin-details.css, admin-matrix.css, admin-manage.css (deep restyle pending)
+// admin-matrix.css — migrated to Tailwind in Phase 5C
+// Kept: admin-details.css, admin-manage.css (deep restyle pending)
 import "./styles/admin-details.css";
-import "./styles/admin-matrix.css";
 
 const CRITERIA_LIST = CRITERIA.map((c) => ({
   id: c.id, label: c.label, shortLabel: c.shortLabel, max: c.max,

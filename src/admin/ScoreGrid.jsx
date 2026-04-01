@@ -187,9 +187,15 @@ function hasActiveValidRange(range) {
 
 // ── Cell helpers ───────────────────────────────────────────────
 const cellClassName = (state, isFinal = false) => {
-  if (state === "scored") return isFinal ? "matrix-cell matrix-cell-scored-final" : "matrix-cell matrix-cell-scored";
-  if (state === "partial") return "matrix-cell matrix-cell-partial";
-  return "matrix-cell matrix-cell-empty";
+  if (state === "scored") {
+    return isFinal
+      ? "relative px-2 py-1.5 border-b border-r border-slate-200 dark:border-slate-700 text-center bg-green-100 dark:bg-green-900 text-green-900 dark:text-green-50 font-bold"
+      : "relative px-2 py-1.5 border-b border-r border-slate-200 dark:border-slate-700 text-center bg-green-50 dark:bg-green-950 text-green-600 dark:text-green-300 font-semibold";
+  }
+  if (state === "partial") {
+    return "relative px-2 py-1.5 border-b border-r border-slate-200 dark:border-slate-700 text-center bg-amber-50 dark:bg-amber-950 text-amber-900 dark:text-amber-200 font-bold";
+  }
+  return "relative px-2 py-1.5 border-b border-r border-slate-200 dark:border-slate-700 text-center bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-500";
 };
 
 const cellText = (state, entry) => {
@@ -223,11 +229,11 @@ class GridErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="matrix-wrap">
-          <div className="admin-section-header">
-            <div className="section-label">Evaluation Grid</div>
+        <div className="py-1">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="text-sm font-bold text-slate-700 dark:text-slate-300">Evaluation Grid</div>
           </div>
-          <div className="empty-msg" style={{ color: "#dc2626" }}>
+          <div className="text-sm text-red-600">
             Grid could not be displayed. Try refreshing the page.
           </div>
         </div>
@@ -249,24 +255,24 @@ const JurorCell = memo(function JurorCell({ juror, workflowState, isTouchInput =
     updateNativeInlineScrollState(nativeNameRef.current);
   }, [isTouchInput, fullName]);
   return (
-    <div className="matrix-juror-inner">
+    <div className="flex items-center gap-1.5 w-full h-full overflow-hidden -webkit-tap-highlight-color-transparent">
       <span
-        className={`matrix-status-icon ${meta.colorClass}`}
+        className={`inline-flex items-center flex-shrink-0 w-3.5 h-3.5 ${meta.colorClass}`}
         title={meta.label}
         aria-hidden="true"
       >
         <Icon />
       </span>
       <span
-        className={`matrix-juror-name${isTouchInput ? " is-native-scroll" : ""}`}
+        className={`flex items-baseline w-full min-w-0 max-w-full flex-1 gap-0.5 overflow-hidden touch-pan-y -webkit-tap-highlight-color-transparent${isTouchInput ? " is-native-scroll" : ""}`}
         title={fullName}
         {...(isTouchInput ? {} : INLINE_SCROLL_PROPS)}
         ref={nativeNameRef}
         onScroll={handleNativeInlineScroll}
       >
-        <span className="matrix-juror-name-inner">
-          <span className="matrix-juror-name-text">{juror.name}</span>
-          {juror.dept && <span className="matrix-juror-dept">({juror.dept})</span>}
+        <span className="flex items-baseline gap-0.5 flex-1 min-w-0">
+          <span className="flex-shrink-0 max-w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-slate-900 dark:text-slate-100">{juror.name}</span>
+          {juror.dept && <span className="flex-grow min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-xs text-slate-400 dark:text-slate-500 font-medium">({juror.dept})</span>}
         </span>
       </span>
     </div>
@@ -300,26 +306,26 @@ function MatrixLegend({
   })();
 
   return (
-    <div className="matrix-subtitle">
+    <div className="flex flex-col gap-3.5 items-start text-xs text-slate-500 mb-3">
       {/* Cell state legend */}
-      <div className="matrix-legend-row legend-scroll-row">
-        <div className="matrix-legend-scroll" aria-label="Cell state legend">
-          <span className="matrix-legend-label">Cells</span>
-          <span className="matrix-legend-item"><span className="matrix-legend-dot scored-dot" />Scored</span>
-          <span className="matrix-legend-item"><span className="matrix-legend-dot partial-dot" />Partial</span>
-          <span className="matrix-legend-item"><span className="matrix-legend-dot empty-dot" />Empty</span>
+      <div className="flex items-center gap-3 flex-wrap w-full relative">
+        <div className="flex items-center gap-2 flex-nowrap overflow-x-auto overflow-y-hidden -webkit-overflow-scrolling-touch touch-pan-x overscroll-x-contain whitespace-nowrap scrollbar-none w-full" aria-label="Cell state legend">
+          <span className="text-10px uppercase tracking-widest text-slate-500 font-bold mr-1 flex-shrink-0 px-2 py-1 border border-slate-200 dark:border-slate-700 rounded-full bg-slate-100 dark:bg-slate-800">Cells</span>
+          <span className="inline-flex items-center gap-1.5 flex-shrink-0 px-2 py-1 border border-slate-200 dark:border-slate-700 rounded-full bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400"><span className="inline-block w-2.5 h-2.5 rounded-full bg-green-100 dark:bg-green-900 border border-green-300 dark:border-green-500" />Scored</span>
+          <span className="inline-flex items-center gap-1.5 flex-shrink-0 px-2 py-1 border border-slate-200 dark:border-slate-700 rounded-full bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400"><span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-700" />Partial</span>
+          <span className="inline-flex items-center gap-1.5 flex-shrink-0 px-2 py-1 border border-slate-200 dark:border-slate-700 rounded-full bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400"><span className="inline-block w-2.5 h-2.5 rounded-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700" />Empty</span>
         </div>
       </div>
       {/* Juror workflow state legend */}
-      <div className="matrix-legend-row matrix-icon-legend legend-scroll-row">
-        <div className="matrix-legend-scroll" aria-label="Juror status legend">
-          <span className="matrix-legend-label">Juror</span>
+      <div className="flex items-center gap-3 flex-wrap w-full relative">
+        <div className="flex items-center gap-2 flex-nowrap overflow-x-auto overflow-y-hidden -webkit-overflow-scrolling-touch touch-pan-x overscroll-x-contain whitespace-nowrap scrollbar-none w-full" aria-label="Juror status legend">
+          <span className="text-10px uppercase tracking-widest text-slate-500 font-bold mr-1 flex-shrink-0 px-2 py-1 border border-slate-200 dark:border-slate-700 rounded-full bg-slate-100 dark:bg-slate-800">Juror</span>
           {LEGEND_JUROR_STATES.map((key) => {
             const meta = jurorStatusMeta[key];
             const Icon = meta.icon;
             return (
-              <span key={key} className="matrix-icon-legend-item">
-                <span className={`matrix-status-icon ${meta.colorClass}`}><Icon /></span>
+              <span key={key} className="inline-flex items-center gap-1.5 flex-shrink-0 px-2 py-1 border border-slate-200 dark:border-slate-700 rounded-full bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs whitespace-nowrap">
+                <span className={`inline-flex items-center w-3.5 h-3.5 ${meta.colorClass}`}><Icon /></span>
                 {meta.label}
               </span>
             );
@@ -327,62 +333,62 @@ function MatrixLegend({
         </div>
       </div>
       {/* Toolbar: filter count + active filter/sort indicators */}
-      <div className="matrix-legend-row matrix-toolbar-row">
+      <div className="flex items-center justify-start w-full flex-wrap gap-3">
         {(hasAnyFilter || sortValueLabel) && (
           <button
             type="button"
-            className="filter-chip filter-chip-clear-all"
+            className="inline-flex items-center px-2 py-1 border border-slate-200 dark:border-slate-700 rounded-full bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-xs gap-1.5 cursor-pointer"
             onClick={onClearAllFilters}
             title="Clear all filters"
             aria-label="Clear all filters"
           >
-            <span className="chip-label">Clear all</span>
-            <XIcon />
+            <span>Clear all</span>
+            <XIcon className="w-3 h-3" />
           </button>
         )}
         {sortValueLabel && (
           <button
             type="button"
-            className="matrix-sort-indicator"
+            className="inline-flex items-center gap-1.5 px-2 py-1 border border-slate-200 dark:border-slate-700 rounded-full bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-xs cursor-pointer whitespace-nowrap flex-shrink-0"
             onClick={onClearSort}
             title="Clear sort"
             aria-label="Clear sort"
           >
-            <span className="chip-label">Sorted By</span>
-            <span className="chip-value">{sortValueLabel}</span>
-            <span className="matrix-sort-close" aria-hidden="true">×</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100">Sorted By</span>
+            <span className="text-slate-500 dark:text-slate-400">{sortValueLabel}</span>
+            <span aria-hidden="true" className="text-xs leading-none">×</span>
           </button>
         )}
         {filterLabel && (
           <button
             type="button"
-            className="filter-chip"
+            className="inline-flex items-center px-2 py-1 border border-slate-200 dark:border-slate-700 rounded-full bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-xs gap-1.5 cursor-pointer"
             onClick={onClearFilter}
             title={`Clear filter: ${filterLabel}`}
             aria-label={`Clear filter: ${filterLabel}`}
           >
-            <span className="chip-label">Juror</span>
-            <span className="chip-value">{filterLabel}</span>
-            <XIcon />
+            <span className="font-bold text-slate-900 dark:text-slate-100">Juror</span>
+            <span className="text-slate-500 dark:text-slate-400">{filterLabel}</span>
+            <XIcon className="w-3 h-3" />
           </button>
         )}
         {groupFilterChips.map((chip) => (
           <button
             key={chip.id}
             type="button"
-            className="filter-chip"
+            className="inline-flex items-center px-2 py-1 border border-slate-200 dark:border-slate-700 rounded-full bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-xs gap-1.5 cursor-pointer"
             onClick={() => onClearGroupFilter(chip.id)}
             title={`Clear filter: ${chip.label}${chip.value ? ` ${chip.value}` : ""}`}
             aria-label={`Clear filter: ${chip.label}${chip.value ? ` ${chip.value}` : ""}`}
           >
-            <span className="chip-label">{chip.label}</span>
-            {chip.value && <span className="chip-value">{chip.value}</span>}
-            <XIcon />
+            <span className="font-bold text-slate-900 dark:text-slate-100">{chip.label}</span>
+            {chip.value && <span className="text-slate-500 dark:text-slate-400">{chip.value}</span>}
+            <XIcon className="w-3 h-3" />
           </button>
         ))}
       </div>
-      <div className="matrix-scroll-hint">
-        <span className="matrix-scroll-icon" aria-hidden="true"><InfoIcon /></span>
+      <div className="hidden text-11px text-slate-400 items-center gap-1.5">
+        <span className="inline-flex items-center text-slate-500" aria-hidden="true"><InfoIcon className="w-3 h-3" /></span>
         <span>Swipe to view more columns. Long text scrolls on touch.</span>
       </div>
     </div>
@@ -395,12 +401,12 @@ const AVG_TIP_TEXT = "Averages include only completed jurors.";
 const AverageRow = memo(function AverageRow({ groups, averages, onShowTip, onHideTip }) {
   return (
     <tfoot>
-      <tr className="matrix-avg-row">
-        <td className="matrix-juror matrix-avg-label">
-          <div className="matrix-juror-inner">
+      <tr className="bg-red-50 dark:bg-red-950">
+        <td className="text-left font-semibold text-orange-700 dark:text-orange-300 whitespace-nowrap min-w-0 overflow-hidden px-2 py-1.5 border-b border-r border-slate-200 dark:border-slate-700 sticky left-0 z-20 bg-red-50 dark:bg-red-950 box-shadow-sm overflow-visible">
+          <div className="flex items-center gap-1.5 w-full h-full overflow-hidden -webkit-tap-highlight-color-transparent">
             <span>Average</span>
             <span
-              className="matrix-avg-tooltip"
+              className="inline-flex items-center text-orange-700 dark:text-orange-300 cursor-help relative w-3.5 h-3.5"
               aria-label={AVG_TIP_TEXT}
               tabIndex={0}
               onMouseEnter={(e) => onShowTip(e, AVG_TIP_TEXT)}
@@ -413,7 +419,7 @@ const AverageRow = memo(function AverageRow({ groups, averages, onShowTip, onHid
           </div>
         </td>
         {averages.map((avg, i) => (
-          <td key={groups[i].id} className="matrix-avg-cell">
+          <td key={groups[i].id} className="text-orange-700 dark:text-orange-300 font-semibold text-sm px-2 py-1.5 border-b border-r border-slate-200 dark:border-slate-700 text-center">
             {avg !== null ? avg : "—"}
           </td>
         ))}
@@ -520,8 +526,6 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
   const tableStyle = {
     width: "100%",
     minWidth: `${minTableWidth}px`,
-    "--matrix-first-col": `${minFirstCol}px`,
-    "--matrix-score-col": `${scoreColWidth}px`,
   };
 
   const handleMatrixWheel = useCallback((e) => {
@@ -586,11 +590,11 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
 
   if (!jurors.length) {
     return (
-      <div className="matrix-wrap">
-        <div className="admin-section-header">
-          <div className="section-label">Evaluation Grid</div>
+      <div className="py-1">
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="text-sm font-bold text-slate-700 dark:text-slate-300">Evaluation Grid</div>
         </div>
-        <div className="empty-msg">No data yet.</div>
+        <div className="text-sm text-slate-500">No data yet.</div>
       </div>
     );
   }
@@ -613,7 +617,7 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
         anchorRect={anchorRect}
         anchorEl={anchorEl}
         onClose={closePopover}
-        className="col-filter-popover col-filter-popover-portal col-filter-popover-number"
+        className="space-y-4"
         contentKey={`${draftMin}|${draftMax}`}
         id={`filter-popover-group-${groupId}`}
         trapFocus
@@ -630,8 +634,8 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
           />
         ) : null}
       >
-        <div className="range-field">
-          <label>Min</label>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Min</label>
           <input
             autoFocus={!useSheetFilters}
             type="number"
@@ -639,7 +643,7 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
             min={0}
             max={TOTAL_MAX}
             value={draftMin}
-            className="filter-input-active"
+            className="px-2 py-1 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             onChange={(e) => {
               const nextMin = clampRangeInput(e.target.value);
               setGroupScoreDraft((p) => {
@@ -650,15 +654,15 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
             }}
           />
         </div>
-        <div className="range-field">
-          <label>Max</label>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Max</label>
           <input
             type="number"
             inputMode="decimal"
             min={0}
             max={100}
             value={draftMax}
-            className="filter-input-active"
+            className="px-2 py-1 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             onChange={(e) => {
               const nextMax = clampRangeInput(e.target.value);
               setGroupScoreDraft((p) => {
@@ -669,11 +673,11 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
             }}
           />
         </div>
-        {hasError && <div className="range-error">Min must be ≤ Max.</div>}
+        {hasError && <div className="text-sm text-red-600 dark:text-red-400">Min must be ≤ Max.</div>}
         {!useSheetFilters && hasDraftValues && (
           <button
             type="button"
-            className="col-filter-clear"
+            className="px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             onClick={() => {
               clearGroupScoreFilter(groupId);
               setGroupScoreDraft({ min: "", max: "" });
@@ -688,12 +692,12 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
   })();
 
   return (
-    <div className="matrix-wrap">
-      <div className="admin-section-header">
-        <div className="section-label">Evaluation Grid</div>
-        <div className="admin-section-actions">
-          <button className="xlsx-export-btn matrix-export-btn" onClick={requestExport}>
-            <DownloadIcon />
+    <div className="py-1">
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="text-sm font-bold text-slate-700 dark:text-slate-300">Evaluation Grid</div>
+        <div className="flex items-center gap-2">
+          <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onClick={requestExport}>
+            <DownloadIcon className="w-4 h-4" />
             <span>Excel</span>
           </button>
         </div>
@@ -718,13 +722,13 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
         onClearGroupFilter={(groupId) => { clearGroupScoreFilter(groupId); }}
       />
 
-      <div className="matrix-scroll-top" ref={topScrollRef} aria-hidden="true">
-        <div className="matrix-scroll-top-inner" />
+      <div className="overflow-hidden h-0 max-w-full m-0 scrollbar-none" ref={topScrollRef} aria-hidden="true">
+        <div className="h-0" />
       </div>
-      <div className="matrix-scroll-wrap">
-        <div className="matrix-scroll" ref={tableScrollRef} onWheel={handleMatrixWheel}>
+      <div className="rounded-xl border border-border bg-background overflow-visible shadow-sm">
+        <div className="overflow-x-auto overflow-y-visible -webkit-overflow-scrolling-touch touch-pan-x overscroll-x-contain scrollbar-none w-full" ref={tableScrollRef} onWheel={handleMatrixWheel}>
           <table
-            className="matrix-table"
+            className="w-full border-collapse text-sm bg-white dark:bg-slate-950 table-fixed"
             style={tableStyle}
             role="grid"
             aria-rowcount={visibleJurors.length + 1}
@@ -734,32 +738,32 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
               <tr>
                 {/* Juror column — sort + text filter */}
                 <th
-                  className="matrix-corner"
+                  className="sticky left-0 z-30 relative text-left bg-slate-100 dark:bg-slate-800 px-2 py-1.5 font-bold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700 whitespace-nowrap text-center"
                   aria-sort={
                     sortMode === "juror"
                       ? (sortJurorDir === "asc" ? "ascending" : "descending")
                       : "none"
                   }
                 >
-                  <div className="matrix-corner-head">
+                  <div className="flex flex-row items-center justify-start gap-1 flex-nowrap">
                     <button
                       type="button"
-                      className={`matrix-col-sort matrix-col-sort--juror${sortMode === "juror" ? " active" : ""}`}
+                      className="bg-none border-none p-0 cursor-pointer text-sm font-semibold text-slate-700 dark:text-slate-300 inline-flex items-center gap-0.5 whitespace-nowrap justify-start"
                       onClick={toggleJurorSort}
                       title="Sort by juror name"
                     >
-                      <span className={`col-sort-label${isJurorFilterActive ? " filtered" : ""}`}>
+                      <span className={`${isJurorFilterActive ? "text-blue-600 dark:text-blue-400 font-bold" : ""}`}>
                         Juror / Group
                       </span>
                     </button>
                     <button
                       type="button"
-                      className={`col-filter-hotspot${isJurorFilterActive ? " active filter-icon-active" : ""}`}
+                      className={`bg-none border-none p-1 cursor-pointer text-slate-500 dark:text-slate-400 ${isJurorFilterActive ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 rounded-lg shadow-inner-sm" : ""}`}
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFilterCol("juror", e); }}
                       title="Filter jurors"
                       aria-label="Filter jurors"
                     >
-                      <FilterIcon />
+                      <FilterIcon className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </th>
@@ -770,23 +774,23 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
                   const gFilter        = groupScoreFilters[g.id] || { min: "", max: "" };
                   const isFilterActive = hasActiveValidRange(gFilter) || activeFilterCol === g.id;
                   return (
-                    <th key={g.id} scope="col">
-                      <div className="matrix-group-th-inner">
+                    <th key={g.id} scope="col" className="bg-slate-100 dark:bg-slate-800 px-2 py-1.5 font-bold text-slate-700 dark:text-slate-300 border-b border-r border-slate-200 dark:border-slate-700 whitespace-nowrap text-center sticky top-0 z-10">
+                      <div className="flex flex-row items-center justify-center gap-1 flex-nowrap">
                         <button
-                          className={`matrix-col-sort${isSortActive ? " active" : ""}`}
+                          className="bg-none border-none p-0 cursor-pointer text-sm font-semibold text-slate-700 dark:text-slate-300 inline-flex items-center justify-center gap-0.5 whitespace-nowrap"
                           onClick={() => toggleGroupSort(g.id)}
                           title={`Sort by ${g.label} — click again to reverse, third click to reset`}
                         >
-                          <span>{g.groupNo ?? g.label}</span>
+                          <span className={isSortActive ? "text-blue-600 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-950 px-1.5 py-0.5 rounded-lg shadow-inner-sm" : ""}>{g.groupNo ?? g.label}</span>
                         </button>
                         <button
                           type="button"
-                          className={`col-filter-hotspot${isFilterActive ? " active filter-icon-active" : ""}`}
+                          className={`bg-none border-none p-1 cursor-pointer text-slate-500 dark:text-slate-400 ${isFilterActive ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 rounded-lg shadow-inner-sm" : ""}`}
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); openGroupFilter(g.id, e); }}
                           title={`Filter by group ${g.groupNo ?? g.label} score`}
                           aria-label={`Filter group ${g.groupNo ?? g.label} scores`}
                         >
-                          <FilterIcon />
+                          <FilterIcon className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </th>
@@ -800,7 +804,7 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
                 const isFinal = jurorFinalMap.get(juror.key) && !juror.editEnabled;
                 return (
                   <tr key={juror.key}>
-                    <td className="matrix-juror" role="rowheader" scope="row">
+                    <td className="text-left font-semibold text-slate-900 dark:text-slate-50 whitespace-nowrap min-w-0 overflow-hidden px-2 py-1.5 border-b border-r border-slate-200 dark:border-slate-700 sticky left-0 z-20 bg-white dark:bg-slate-950 overflow-visible" role="rowheader" scope="row">
                       <JurorCell
                         juror={juror}
                         workflowState={jurorWorkflowMap.get(juror.key)}
@@ -839,9 +843,14 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
 
       {cellTip && (
         <div
-          className={`matrix-cell-tip${cellTip.placement === "bottom" ? " is-bottom" : ""}`}
+          className="fixed z-50 px-2.5 py-1.5 rounded-md bg-slate-900 dark:bg-slate-800 text-slate-50 dark:text-slate-100 text-xs font-medium whitespace-pre-wrap leading-relaxed shadow-lg pointer-events-none"
           role="tooltip"
-          style={{ left: cellTip.x, top: cellTip.y, maxWidth: `${cellTip.maxWidth}px` }}
+          style={{
+            left: cellTip.x,
+            top: cellTip.y,
+            maxWidth: `${cellTip.maxWidth}px`,
+            transform: cellTip.placement === "bottom" ? "translate(-50%, 0)" : "translate(-50%, -100%)",
+          }}
         >
           {cellTip.text}
         </div>
@@ -869,8 +878,8 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
         <label htmlFor="juror-filter-input" className="sr-only">
           Filter jurors by name or Affiliation
         </label>
-        <div className="col-filter-search-wrap">
-          <span className="col-filter-search-icon" aria-hidden="true"><SearchIcon /></span>
+        <div className="relative w-full">
+          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" aria-hidden="true"><SearchIcon className="w-4 h-4" /></span>
           <input
             id="juror-filter-input"
             autoFocus={!useSheetFilters}
@@ -878,11 +887,15 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
             aria-label="Filter jurors by name or Affiliation"
             value={jurorFilter}
             onChange={(e) => setJurorFilter(e.target.value)}
-            className={`col-filter-search-input${isJurorFilterActive ? " filter-input-active" : ""}`}
+            className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 placeholder-slate-500 dark:placeholder-slate-400 px-2.5 pl-8 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
         {!useSheetFilters && jurorFilter && (
-          <button className="col-filter-clear" onClick={() => { setJurorFilter(""); closePopover(); }}>
+          <button
+            type="button"
+            className="px-2 py-1 rounded-md border border-red-300 dark:border-red-700 bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 text-xs font-medium hover:bg-red-200 dark:hover:bg-red-900 cursor-pointer"
+            onClick={() => { setJurorFilter(""); closePopover(); }}
+          >
             Clear
           </button>
         )}

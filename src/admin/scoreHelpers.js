@@ -65,64 +65,62 @@ export function getJurorWorkflowState(juror, groups, lookup, jurorFinalMap) {
 }
 
 // ── Juror status meta ─────────────────────────────────────────
-// Single shared lookup for labels, icons, and CSS color classes.
-// colorClass values map to:
-//   .matrix-status-icon.{colorClass}  in admin-matrix.css
-//   .status-badge.{colorClass}        in admin-layout.css
+// Single shared lookup for labels, icons, and Tailwind color utilities.
+// colorClass values are Tailwind text-color classes (e.g. "text-green-700 dark:text-green-400")
+// Applied directly to icon elements via className.
 
 // ── Juror workflow states + cell states used by StatusBadge ──
-// colorClass values map to:
-//   .matrix-status-icon.{colorClass}  in admin-matrix.css
-//   .status-badge.{colorClass}        in admin-layout.css
+// colorClass values are Tailwind text-color classes (e.g. "text-green-700 dark:text-green-400")
+// Applied directly to icon elements via className.
 export const jurorStatusMeta = {
   // Juror workflow states
   completed: {
     label:      "Completed",
     icon:       CheckCircle2Icon,
-    colorClass: "status-green",
+    colorClass: "text-green-700 dark:text-green-400",
     description: "Final submission completed.",
   },
   ready_to_submit: {
     label:      "Ready to Submit",
     icon:       SendIcon,
-    colorClass: "status-blue",
+    colorClass: "text-blue-600 dark:text-blue-400",
     description: "All groups scored.",
   },
   in_progress: {
     label:      "In Progress",
     icon:       Clock3Icon,
-    colorClass: "status-amber",
+    colorClass: "text-amber-600 dark:text-amber-400",
     description: "Scoring has started.",
   },
   not_started: {
     label:      "Not Started",
     icon:       CircleIcon,
-    colorClass: "status-gray",
+    colorClass: "text-slate-300 dark:text-slate-600",
     description: "No scoring activity yet.",
   },
   editing: {
     label:      "Editing",
     icon:       PencilIcon,
-    colorClass: "status-purple",
+    colorClass: "text-violet-600 dark:text-violet-400",
     description: "Editing mode enabled.",
   },
   // Cell states (used in per-group row badges in JurorActivity)
   scored: {
     label:      "Scored",
     icon:       CheckIcon,
-    colorClass: "status-green-soft",
+    colorClass: "text-green-600 dark:text-green-300",
     description: "All criteria are scored.",
   },
   partial: {
     label:      "Partial",
     icon:       CircleDotDashedIcon,
-    colorClass: "status-amber",
+    colorClass: "text-amber-600 dark:text-amber-400",
     description: "At least one criterion is missing.",
   },
   empty: {
     label:      "Empty",
     icon:       CircleIcon,
-    colorClass: "status-gray",
+    colorClass: "text-slate-300 dark:text-slate-600",
     description: "No score entered yet.",
   },
 };
