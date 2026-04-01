@@ -3,10 +3,12 @@
 // Collapsible sidebar navigation for admin panel.
 // Uses shadcn/ui Sidebar components and lucide-react icons.
 //
-// Navigation is organized into three collapsible sections:
-//   Analytics  — Overview, Scores (with sub-views)
-//   Manage     — Jurors, Projects, Semesters
-//   System     — Entry Control, Audit Log, Export, Settings
+// Navigation is organized into five sections:
+//   Overview      — standalone (non-collapsible)
+//   Evaluation    — Rankings, Analytics, Grid, Details
+//   Manage        — Jurors, Projects, Periods
+//   Configuration — Evaluation Criteria, Outcomes & Mapping
+//   System        — Entry Control, Audit Log, Export, Settings
 // ============================================================
 
 import { useMemo, useState } from "react";
