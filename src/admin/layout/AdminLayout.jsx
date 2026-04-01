@@ -1,25 +1,23 @@
 // src/admin/layout/AdminLayout.jsx
 // ============================================================
 // Top-level layout wrapper for the admin panel.
-// Combines the sidebar navigation with the main content area
-// using shadcn's SidebarProvider for responsive behavior
-// (auto-collapses to sheet on mobile via useIsMobile).
+// Combines the premium dark sidebar with the main content area.
 // ============================================================
 
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AdminSidebar from "./AdminSidebar";
 
 /**
  * @param {object} props
- * @param {React.ReactNode} props.children — page content rendered inside SidebarInset
+ * @param {React.ReactNode} props.children — page content rendered in main area
  * @param {object}          [props.sidebarProps] — forwarded to AdminSidebar (active tab, handlers, etc.)
- * @param {boolean}         [props.defaultOpen=true] — initial sidebar open state on desktop
  */
-export function AdminLayout({ children, sidebarProps, defaultOpen = true }) {
+export function AdminLayout({ children, sidebarProps }) {
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
+    <div className="flex h-screen">
       <AdminSidebar {...sidebarProps} />
-      <SidebarInset>{children}</SidebarInset>
-    </SidebarProvider>
+      <main className="flex-1 overflow-auto ml-60">
+        {children}
+      </main>
+    </div>
   );
 }

@@ -1,62 +1,30 @@
 // src/admin/layout/AdminSidebar.jsx
 // ============================================================
-// Collapsible sidebar navigation for admin panel.
-// Uses shadcn/ui Sidebar components and lucide-react icons.
-//
-// Navigation is organized into five sections:
-//   Overview      — standalone (non-collapsible)
-//   Evaluation    — Rankings, Analytics, Grid, Details
+// Premium dark sidebar for admin panel.
+// Navigation organized into five sections:
+//   Overview      — standalone
+//   Evaluation    — Rankings, Analytics, Heatmap, Reviews
 //   Manage        — Jurors, Projects, Periods
 //   Configuration — Evaluation Criteria, Outcomes & Mapping
-//   System        — Entry Control, Audit Log, Export, Settings
+//   System        — Entry Control, PIN Blocking, Audit Log, Settings
 // ============================================================
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  SidebarRail,
-  SidebarSeparator,
-} from "@/components/ui/sidebar";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  LayoutDashboard,
   BarChart3,
   Users,
   FolderKanban,
   Calendar,
   Shield,
   ScrollText,
-  Download,
   Settings,
   ChevronDown,
-  ChevronsUpDown,
-  Building2,
+  LayoutDashboard,
   Sun,
   Moon,
+  Lock,
+  CheckCircle,
 } from "lucide-react";
 import veraLogo from "../../assets/vera_logo.png";
 import { useTheme } from "../../shared/theme/ThemeProvider";
@@ -66,31 +34,24 @@ import SidebarProfileMenu from "../components/SidebarProfileMenu";
 // Navigation configuration
 // ---------------------------------------------------------------------------
 
-const EVALUATION_SUB_VIEWS = [
-  { id: "rankings", label: "Rankings" },
-  { id: "analytics", label: "Analytics" },
-  { id: "grid", label: "Grid" },
-  { id: "details", label: "Details" },
-];
-
 const NAV_SECTIONS = [
   {
     label: "Overview",
-    collapsible: false,
     items: [
       { id: "overview", label: "Overview", icon: LayoutDashboard },
     ],
   },
   {
     label: "Evaluation",
-    collapsible: true,
     items: [
-      { id: "scores", label: "Rankings", icon: BarChart3, hasSubItems: true },
+      { id: "rankings", label: "Rankings", icon: BarChart3 },
+      { id: "analytics", label: "Analytics", icon: BarChart3 },
+      { id: "heatmap", label: "Heatmap", icon: BarChart3 },
+      { id: "reviews", label: "Reviews", icon: ScrollText },
     ],
   },
   {
     label: "Manage",
-    collapsible: true,
     items: [
       { id: "jurors", label: "Jurors", icon: Users },
       { id: "projects", label: "Projects", icon: FolderKanban },
@@ -99,27 +60,36 @@ const NAV_SECTIONS = [
   },
   {
     label: "Configuration",
-    collapsible: true,
     items: [
       { id: "criteria", label: "Evaluation Criteria", icon: Settings },
-      { id: "outcomes", label: "Outcomes & Mapping", icon: Settings },
+      { id: "outcomes", label: "Outcomes & Mapping", icon: CheckCircle },
     ],
   },
   {
     label: "System",
-    collapsible: true,
     items: [
       { id: "entry-control", label: "Entry Control", icon: Shield },
+      { id: "pin-lock", label: "PIN Blocking", icon: Lock },
       { id: "audit-log", label: "Audit Log", icon: ScrollText },
-      { id: "export", label: "Export", icon: Download },
       { id: "settings", label: "Settings", icon: Settings },
     ],
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+// Map tab IDs to section navigation IDs
+const TAB_TO_NAV_ID = {
+  overview: "overview",
+  scores: "rankings", // scores tab displays under Evaluation > Rankings
+  jurors: "jurors",
+  projects: "projects",
+  periods: "periods",
+  criteria: "criteria",
+  outcomes: "outcomes",
+  "entry-control": "entry-control",
+  "pin-lock": "pin-lock",
+  "audit-log": "audit-log",
+  settings: "settings",
+};
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -127,190 +97,119 @@ const NAV_SECTIONS = [
 
 function SidebarBrand() {
   return (
-    <div className="flex items-center gap-2.5 px-2 py-1">
-      <img src={veraLogo} alt="" className="size-7 shrink-0" aria-hidden="true" />
-      <span className="text-base font-semibold tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-        VERA
-      </span>
+    <div className="flex items-center gap-3 px-4 py-4 border-b border-white/5">
+      <img src={veraLogo} alt="" className="w-8 h-8 shrink-0 rounded-lg" aria-hidden="true" />
+      <div className="flex flex-col min-w-0">
+        <span className="text-lg font-bold tracking-tight text-blue-300">VERA</span>
+      </div>
     </div>
   );
 }
 
-function SidebarTenantSwitcher({ activeOrganization, organizations, onTenantSwitch, isSuper }) {
-  const tenantLabel = activeOrganization?.short_label || activeOrganization?.name || "No organization";
+function NavSection({ section, adminTab, scoresView, onNavigate, onScoresViewChange }) {
+  const sectionItemIds = section.items.map((i) => i.id);
+  const isSectionActive = sectionItemIds.some((id) => {
+    if (adminTab === "scores") return id === "rankings";
+    return id === TAB_TO_NAV_ID[adminTab];
+  });
+  const [isOpen, setIsOpen] = useState(isSectionActive);
+  const open = isOpen || isSectionActive;
 
-  if (!isSuper || !organizations || organizations.length <= 1) {
+  // Overview section is not collapsible
+  if (section.label === "Overview") {
     return (
-      <div className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/80 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-        <Building2 className="size-4 shrink-0 text-sidebar-foreground/60" />
-        <span className="truncate group-data-[collapsible=icon]:hidden">
-          {tenantLabel}
-        </span>
+      <div className="px-2">
+        {section.items.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => onNavigate(item.id)}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors mb-1",
+              adminTab === item.id
+                ? "bg-blue-500/15 text-blue-300"
+                : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+            )}
+          >
+            <item.icon className="w-4 h-4 flex-shrink-0 opacity-70" />
+            <span>{item.label}</span>
+          </button>
+        ))}
       </div>
     );
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/80 ring-sidebar-ring outline-hidden transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-        <Building2 className="size-4 shrink-0 text-sidebar-foreground/60" />
-        <span className="flex-1 truncate text-left group-data-[collapsible=icon]:hidden">
-          {tenantLabel}
-        </span>
-        <ChevronsUpDown className="size-3.5 shrink-0 text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent side="right" align="start" sideOffset={8} className="min-w-48">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Switch Organization</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {organizations
-            .filter((t) => t.id != null)
-            .map((t) => (
-              <DropdownMenuItem
-                key={t.id}
-                className={cn(activeOrganization?.id === t.id && "bg-accent font-medium")}
-                onClick={() => onTenantSwitch(t)}
+    <div>
+      <button
+        onClick={() => setIsOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:text-slate-300 transition-colors"
+      >
+        <span>{section.label}</span>
+        <ChevronDown
+          className={cn("w-3 h-3 transition-transform", open && "rotate-180")}
+        />
+      </button>
+      {open && (
+        <div className="px-2 pb-2">
+          {section.items.map((item) => {
+            const isActive = adminTab === "scores"
+              ? item.id === "rankings"
+              : item.id === TAB_TO_NAV_ID[adminTab];
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  if (item.id === "rankings" && adminTab !== "scores") {
+                    onNavigate("scores");
+                    onScoresViewChange("rankings");
+                  } else if (item.id !== "rankings") {
+                    onNavigate(item.id);
+                  }
+                }}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors mb-1",
+                  isActive
+                    ? "bg-blue-500/15 text-blue-300"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                )}
               >
-                {t.name}
-              </DropdownMenuItem>
-            ))}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+                <item.icon className="w-4 h-4 flex-shrink-0 opacity-70" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
-/** Collapsible Evaluation menu item with sub-views (Rankings, Analytics, Grid, Details). */
-function EvaluationCollapsible({ adminTab, scoresView, onNavigate, onScoresViewChange }) {
-  const isScoresActive = adminTab === "scores";
-  const [isOpen, setIsOpen] = useState(isScoresActive);
-  const open = isOpen || isScoresActive;
-
-  return (
-    <Collapsible open={open} onOpenChange={setIsOpen}>
-      <SidebarMenuItem>
-        <CollapsibleTrigger className="w-full">
-          <SidebarMenuButton
-            isActive={isScoresActive}
-            onClick={() => {
-              onNavigate("scores");
-              if (!isScoresActive) setIsOpen(true);
-            }}
-            tooltip="Evaluation Scores"
-          >
-            <BarChart3 />
-            <span>Scores</span>
-            <ChevronDown
-              className={cn(
-                "ml-auto size-4 shrink-0 transition-transform duration-200",
-                open && "rotate-180"
-              )}
-            />
-          </SidebarMenuButton>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <SidebarMenuSub>
-            {EVALUATION_SUB_VIEWS.map((view) => (
-              <SidebarMenuSubItem key={view.id}>
-                <SidebarMenuSubButton
-                  isActive={isScoresActive && scoresView === view.id}
-                  onClick={() => {
-                    if (adminTab !== "scores") onNavigate("scores");
-                    onScoresViewChange(view.id);
-                  }}
-                >
-                  <span>{view.label}</span>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            ))}
-          </SidebarMenuSub>
-        </CollapsibleContent>
-      </SidebarMenuItem>
-    </Collapsible>
-  );
-}
-
-/** Collapsible section group with animated chevron trigger. */
-function CollapsibleNavSection({ section, adminTab, scoresView, onNavigate, onScoresViewChange }) {
-  const sectionItemIds = section.items.map((i) => i.id);
-  const isSectionActive = sectionItemIds.includes(adminTab);
-  const [isOpen, setIsOpen] = useState(isSectionActive);
-  const open = isOpen || isSectionActive;
-
-  return (
-    <SidebarGroup>
-      <Collapsible open={open} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger className="flex h-8 w-full shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 transition-[margin,opacity] duration-200 ease-linear hover:text-sidebar-foreground group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">
-          <span className="flex-1 text-left">{section.label}</span>
-          <ChevronDown
-            className={cn(
-              "size-3.5 shrink-0 transition-transform duration-200",
-              open && "rotate-180"
-            )}
-          />
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <SidebarMenu>
-            {section.items.map((item) => {
-              if (item.hasSubItems) {
-                return (
-                  <EvaluationCollapsible
-                    key={item.id}
-                    adminTab={adminTab}
-                    scoresView={scoresView}
-                    onNavigate={onNavigate}
-                    onScoresViewChange={onScoresViewChange}
-                  />
-                );
-              }
-
-              return (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton
-                    isActive={adminTab === item.id}
-                    onClick={() => onNavigate(item.id)}
-                    tooltip={item.label}
-                  >
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
-          </SidebarMenu>
-        </CollapsibleContent>
-      </Collapsible>
-    </SidebarGroup>
-  );
-}
-
-function SidebarUserFooter({ user, displayName, activeOrganization, isSuper, onLogout }) {
+function SidebarFooter({ user, displayName, activeOrganization, isSuper, onLogout }) {
   const { theme, setTheme } = useTheme();
 
   return (
-    <SidebarFooter>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            tooltip={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {theme === "dark" ? <Sun /> : <Moon />}
-            <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+    <div className="px-3 py-3 space-y-2 border-t border-white/5">
+      <button
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
+      >
+        {theme === "dark" ? (
+          <Sun className="w-4 h-4 flex-shrink-0" />
+        ) : (
+          <Moon className="w-4 h-4 flex-shrink-0" />
+        )}
+        <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+      </button>
 
-        <SidebarMenuItem>
-          <SidebarProfileMenu
-            user={user}
-            displayName={displayName}
-            activeOrganization={activeOrganization}
-            isSuper={isSuper}
-            onLogout={onLogout}
-          />
-        </SidebarMenuItem>
-      </SidebarMenu>
-    </SidebarFooter>
+      <SidebarProfileMenu
+        user={user}
+        displayName={displayName}
+        activeOrganization={activeOrganization}
+        isSuper={isSuper}
+        onLogout={onLogout}
+      />
+    </div>
   );
 }
 
@@ -331,62 +230,33 @@ export default function AdminSidebar({
   displayName,
   onLogout,
 }) {
-  const sections = useMemo(() => NAV_SECTIONS, []);
-
   return (
-    <Sidebar collapsible="icon" className="border-r-0">
-      <SidebarHeader>
-        <SidebarBrand />
-        <SidebarSeparator />
-        <SidebarTenantSwitcher
-          activeOrganization={activeOrganization}
-          organizations={organizations}
-          onTenantSwitch={onTenantSwitch}
-          isSuper={isSuper}
-        />
-      </SidebarHeader>
+    <aside className="w-60 bg-slate-950 border-r border-white/5 flex flex-col fixed left-0 top-0 bottom-0 z-50">
+      {/* Header */}
+      <SidebarBrand />
 
-      <SidebarContent>
-        {sections.map((section) =>
-          section.collapsible ? (
-            <CollapsibleNavSection
-              key={section.label}
-              section={section}
-              adminTab={adminTab}
-              scoresView={scoresView}
-              onNavigate={onNavigate}
-              onScoresViewChange={onScoresViewChange}
-            />
-          ) : (
-            <SidebarGroup key={section.label}>
-              <SidebarMenu>
-                {section.items.map((item) => (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton
-                      isActive={adminTab === item.id}
-                      onClick={() => onNavigate(item.id)}
-                      tooltip={item.label}
-                    >
-                      <item.icon />
-                      <span>{item.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroup>
-          )
-        )}
-      </SidebarContent>
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-4 space-y-6">
+        {NAV_SECTIONS.map((section) => (
+          <NavSection
+            key={section.label}
+            section={section}
+            adminTab={adminTab}
+            scoresView={scoresView}
+            onNavigate={onNavigate}
+            onScoresViewChange={onScoresViewChange}
+          />
+        ))}
+      </nav>
 
-      <SidebarUserFooter
+      {/* Footer */}
+      <SidebarFooter
         user={user}
         displayName={displayName}
         activeOrganization={activeOrganization}
         isSuper={isSuper}
         onLogout={onLogout}
       />
-
-      <SidebarRail />
-    </Sidebar>
+    </aside>
   );
 }
