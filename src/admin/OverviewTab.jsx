@@ -2,7 +2,7 @@
 // Overview dashboard following shadcn-studio dashboard-shell-01 layout pattern.
 
 import { useMemo } from "react";
-import { Users, FolderKanban, PenLine, TrendingUp } from "lucide-react";
+import { Users, FolderKanban } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import KpiCard from "./overview/KpiCard";
