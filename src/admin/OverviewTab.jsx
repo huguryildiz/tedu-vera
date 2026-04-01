@@ -11,7 +11,8 @@ import JurorActivityTable from "./overview/JurorActivityTable";
 import CriteriaProgress from "./overview/CriteriaProgress";
 import NeedsAttentionCard from "./overview/NeedsAttentionCard";
 import PeriodSnapshotCard from "./overview/PeriodSnapshotCard";
-import { computeNeedsAttention } from "./selectors/overviewMetrics";
+import TopProjectsCard from "./overview/TopProjectsCard";
+import { computeNeedsAttention, computeTopProjects } from "./selectors/overviewMetrics";
 
 export default function OverviewTab({
   jurorStats,
@@ -56,6 +57,11 @@ export default function OverviewTab({
   const needsAttention = useMemo(
     () => computeNeedsAttention(enrichedJurorStats, enrichedGroups, metrics),
     [enrichedJurorStats, enrichedGroups, metrics]
+  );
+
+  const topProjects = useMemo(
+    () => computeTopProjects(groups),
+    [groups]
   );
 
   const clamp = (v) => Math.min(100, Math.max(0, v));
@@ -162,6 +168,15 @@ export default function OverviewTab({
           criteriaTemplate={criteriaTemplate}
         />
       </div>
+
+      {/* Top Projects Card */}
+      <TopProjectsCard
+        topProjects={topProjects}
+        onViewRankings={() => {
+          // Stub for now — could navigate to Rankings tab
+          console.log("[stub] View Rankings clicked");
+        }}
+      />
 
       {/* Juror Activity */}
       <Card className="py-0">

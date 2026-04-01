@@ -37,3 +37,32 @@ export function computeNeedsAttention(jurorStats, groups, metrics) {
     incompleteProjects,
   };
 }
+
+/**
+ * Compute top-performing projects for the Overview dashboard highlight card.
+ * Returns empty array when fewer than 5 projects exist (threshold for meaningful ranking).
+ *
+ * @param {object[]} summaryData - project summary array from adminProjectSummary
+ *   Each entry should have: { id, groupNo, name, totalAvg, ... }
+ * @param {number} [limit=3] - number of top projects to return
+ * @returns {object[]} array of top projects sorted by totalAvg descending,
+ *   each with { rank, id, groupNo, name, totalAvg, count, ... }
+ */
+export function computeTopProjects(summaryData, limit = 3) {
+  const safeData = summaryData ?? [];
+
+  // Only show rankings when there are at least 5 projects (prevents trivial rankings)
+  if (safeData.length < 5) {
+    return [];
+  }
+
+  // Filter projects with valid totalAvg, sort by totalAvg descending, take top N
+  return safeData
+    .filter((p) => p.totalAvg != null)
+    .sort((a, b) => b.totalAvg - a.totalAvg)
+    .slice(0, limit)
+    .map((p, idx) => ({
+      rank: idx + 1,
+      ...p,
+    }));
+}

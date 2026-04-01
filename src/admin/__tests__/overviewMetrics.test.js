@@ -6,7 +6,7 @@
 
 import { describe, expect } from "vitest";
 import { computeOverviewMetrics } from "../scoreHelpers";
-import { computeNeedsAttention } from "../selectors/overviewMetrics";
+import { computeNeedsAttention, computeTopProjects } from "../selectors/overviewMetrics";
 import { qaTest } from "../../test/qaTest.js";
 
 // Helpers to build minimal test fixtures
@@ -131,5 +131,63 @@ describe("computeNeedsAttention", () => {
     const result = computeNeedsAttention([], groups, metrics);
     expect(result.incompleteProjects).toHaveLength(1);
     expect(result.incompleteProjects[0].id).toBe("g1");
+  });
+});
+
+describe("computeTopProjects", () => {
+  function makeProject(id, groupNo, name, totalAvg) {
+    return { id, groupNo, name, totalAvg, count: 5 };
+  }
+
+  qaTest("overview.top-projects.01", () => {
+    // Fewer than 5 projects → return empty array
+    const result = computeTopProjects([
+      makeProject("g1", 1, "Project A", 85),
+      makeProject("g2", 2, "Project B", 90),
+      makeProject("g3", 3, "Project C", 80),
+    ]);
+    expect(result).toEqual([]);
+  });
+
+  qaTest("overview.top-projects.02", () => {
+    // 6 projects → return top 3 sorted by totalAvg descending
+    const projects = [
+      makeProject("g1", 1, "Project A", 85),
+      makeProject("g2", 2, "Project B", 92),
+      makeProject("g3", 3, "Project C", 88),
+      makeProject("g4", 4, "Project D", 78),
+      makeProject("g5", 5, "Project E", 95),
+      makeProject("g6", 6, "Project F", 80),
+    ];
+    const result = computeTopProjects(projects, 3);
+    expect(result).toHaveLength(3);
+    expect(result[0].rank).toBe(1);
+    expect(result[0].totalAvg).toBe(95);
+    expect(result[0].name).toBe("Project E");
+    expect(result[1].rank).toBe(2);
+    expect(result[1].totalAvg).toBe(92);
+    expect(result[1].name).toBe("Project B");
+    expect(result[2].rank).toBe(3);
+    expect(result[2].totalAvg).toBe(88);
+    expect(result[2].name).toBe("Project C");
+  });
+
+  qaTest("overview.top-projects.03", () => {
+    // Projects with null totalAvg are excluded
+    const projects = [
+      makeProject("g1", 1, "Project A", 85),
+      makeProject("g2", 2, "Project B", 92),
+      makeProject("g3", 3, "Project C", null),
+      makeProject("g4", 4, "Project D", 88),
+      makeProject("g5", 5, "Project E", 95),
+      makeProject("g6", 6, "Project F", 80),
+    ];
+    const result = computeTopProjects(projects, 3);
+    // Should have 3 results (5 projects with valid avgScore)
+    expect(result).toHaveLength(3);
+    // Top 3 should be 95, 92, 88 (skipping null)
+    expect(result[0].totalAvg).toBe(95);
+    expect(result[1].totalAvg).toBe(92);
+    expect(result[2].totalAvg).toBe(88);
   });
 });
