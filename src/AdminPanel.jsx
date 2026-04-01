@@ -341,6 +341,7 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
             <OverviewTab
               jurorStats={jurorStats}
               groups={groups}
+              summaryData={summaryData}
               metrics={overviewMetrics}
               rawScores={rawScores}
               criteriaTemplate={activeCriteria}

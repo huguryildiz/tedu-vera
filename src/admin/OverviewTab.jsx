@@ -17,6 +17,7 @@ import { computeNeedsAttention, computeTopProjects } from "./selectors/overviewM
 export default function OverviewTab({
   jurorStats,
   groups,
+  summaryData,
   metrics,
   rawScores,
   criteriaTemplate,
@@ -60,8 +61,8 @@ export default function OverviewTab({
   );
 
   const topProjects = useMemo(
-    () => computeTopProjects(groups),
-    [groups]
+    () => computeTopProjects(summaryData),
+    [summaryData]
   );
 
   const clamp = (v) => Math.min(100, Math.max(0, v));
