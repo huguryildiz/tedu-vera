@@ -5,7 +5,6 @@
 // horizontal dashed 70% reference line
 // ════════════════════════════════════════════════════════════
 
-import { useMemo } from "react";
 import { MUDEK_THRESHOLD } from "../config";
 import { mean, stdDev, outcomeValues } from "../shared/stats";
 import {
@@ -14,11 +13,11 @@ import {
   OutcomeLabelSvg,
   ChartEmpty,
   ChartDataTable,
-  getChartColors,
+  useChartColors,
 } from "./chartUtils";
 
 export function OutcomeOverviewChart({ data, outcomes: oc = OUTCOMES }) {
-  const colors = useMemo(() => getChartColors(), []);
+  const colors = useChartColors();
   const rows = data || [];
   if (!rows.length) return <ChartEmpty />;
 
@@ -186,7 +185,7 @@ export function OutcomeOverviewChart({ data, outcomes: oc = OUTCOMES }) {
 // viewBox 340 × 210  (half-width card)
 // ════════════════════════════════════════════════════════════
 export function OutcomeOverviewChartPrint({ data, outcomes: oc = OUTCOMES }) {
-  const colors = useMemo(() => getChartColors(), []);
+  const colors = useChartColors();
   const rows = data || [];
   if (!rows.length) return null;
 

@@ -13,11 +13,11 @@ import {
   OutcomeLabelSvg,
   ChartEmpty,
   ChartDataTable,
-  getChartColors,
+  useChartColors,
 } from "./chartUtils";
 
 export function RubricAchievementChart({ data, outcomes: oc = OUTCOMES }) {
-  const colors = useMemo(() => getChartColors(), []);
+  const colors = useChartColors();
   const rows = data || [];
   if (!rows.length) return <ChartEmpty />;
 
@@ -165,7 +165,7 @@ export function RubricAchievementChart({ data, outcomes: oc = OUTCOMES }) {
 // viewBox 340 × 220  (half-width card)
 // ════════════════════════════════════════════════════════════
 export function RubricAchievementChartPrint({ data, outcomes: oc = OUTCOMES }) {
-  const colors = useMemo(() => getChartColors(), []);
+  const colors = useChartColors();
   const rows = data || [];
   if (!rows.length) return null;
 

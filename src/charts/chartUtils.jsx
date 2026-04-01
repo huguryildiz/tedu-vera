@@ -1,8 +1,9 @@
 // src/charts/chartUtils.jsx
 // ── Shared helpers, constants, and small components used by all chart files ──
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { CRITERIA } from "../config";
+import { useTheme } from "../shared/theme/ThemeProvider";
 
 // ── CSS token helpers ───────────────────────────────────────────
 function getCSSVar(name) {
@@ -212,4 +213,10 @@ export function ChartDataTable({ caption, headers, rows, defaultOpen }) {
       </div>
     </details>
   );
+}
+
+// ── useChartColors hook — updates colors when theme changes ───────────
+export function useChartColors() {
+  const { theme } = useTheme();
+  return useMemo(() => getChartColors(), [theme]);
 }

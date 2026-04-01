@@ -4,7 +4,7 @@
 // CHART 3b — RadarPrintAll
 // ════════════════════════════════════════════════════════════
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { mean } from "../shared/stats";
 import {
   OUTCOMES,
@@ -12,11 +12,11 @@ import {
   OutcomeLabelSvg,
   ChartEmpty,
   ChartDataTable,
-  getChartColors,
+  useChartColors,
 } from "./chartUtils";
 
 export function CompetencyRadarChart({ stats, outcomes: oc = OUTCOMES }) {
-  const colors = useMemo(() => getChartColors(), []);
+  const colors = useChartColors();
   const available = stats.filter((s) => s.count > 0);
   const [selId, setSelId] = useState(available[0]?.id ?? null);
   if (!available.length) return <ChartEmpty />;
@@ -156,7 +156,7 @@ export function CompetencyRadarChart({ stats, outcomes: oc = OUTCOMES }) {
 // Shown in @media print.
 // ════════════════════════════════════════════════════════════
 export function RadarPrintAll({ stats, outcomes: oc = OUTCOMES }) {
-  const colors = useMemo(() => getChartColors(), []);
+  const colors = useChartColors();
   const available = stats.filter((s) => s.count > 0);
   if (!available.length) return null;
 

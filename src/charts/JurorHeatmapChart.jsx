@@ -12,11 +12,11 @@ import {
   OutcomeLabelSvg,
   ChartEmpty,
   ChartDataTable,
-  getChartColors,
+  useChartColors,
 } from "./chartUtils";
 
 export function JurorConsistencyHeatmap({ stats, data, outcomes: oc = OUTCOMES }) {
-  const colors = useMemo(() => getChartColors(), []);
+  const colors = useChartColors();
   const groups = stats.filter((s) => s.count > 0);
   const rows   = data || [];
   if (!groups.length || !rows.length) return <ChartEmpty />;

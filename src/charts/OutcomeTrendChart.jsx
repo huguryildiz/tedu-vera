@@ -11,7 +11,7 @@ import {
   OutcomeLegendLabel,
   ChartEmpty,
   ChartDataTable,
-  getChartColors,
+  useChartColors,
 } from "./chartUtils";
 
 export function OutcomeTrendChart({
@@ -24,7 +24,7 @@ export function OutcomeTrendChart({
   hint = "",
   outcomes: outcomesOverride,
 }) {
-  const colors = useMemo(() => getChartColors(), []);
+  const colors = useChartColors();
   const oc = outcomesOverride || OUTCOMES;
   const outcomeByKey = useMemo(
     () => Object.fromEntries(oc.map((o) => [o.key, o])),

@@ -4,7 +4,7 @@
 // Each group = one cluster; each bar in cluster = one outcome (normalized %)
 // ════════════════════════════════════════════════════════════
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MUDEK_THRESHOLD } from "../config";
 import {
   OUTCOMES,
@@ -13,11 +13,11 @@ import {
   OutcomeLabelSvg,
   ChartEmpty,
   ChartDataTable,
-  getChartColors,
+  useChartColors,
 } from "./chartUtils";
 
 export function OutcomeByGroupChart({ stats, outcomes: oc = OUTCOMES }) {
-  const colors = useMemo(() => getChartColors(), []);
+  const colors = useChartColors();
   const data = stats.filter((s) => s.count > 0);
   if (!data.length) return <ChartEmpty />;
 

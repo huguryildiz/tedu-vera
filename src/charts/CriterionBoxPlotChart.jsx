@@ -4,7 +4,6 @@
 // Normalized to 0–100% for comparability
 // ════════════════════════════════════════════════════════════
 
-import { useMemo } from "react";
 import { quantile } from "../shared/stats";
 import {
   OUTCOMES,
@@ -12,11 +11,11 @@ import {
   OutcomeLabelSvg,
   ChartEmpty,
   ChartDataTable,
-  getChartColors,
+  useChartColors,
 } from "./chartUtils";
 
 export function CriterionBoxPlotChart({ data, outcomes: oc = OUTCOMES }) {
-  const colors = useMemo(() => getChartColors(), []);
+  const colors = useChartColors();
   const rows = data || [];
   if (!rows.length) return <ChartEmpty />;
 
@@ -192,7 +191,7 @@ export function CriterionBoxPlotChart({ data, outcomes: oc = OUTCOMES }) {
 // viewBox 340 × 215  (half-width card)
 // ════════════════════════════════════════════════════════════
 export function CriterionBoxPlotChartPrint({ data, outcomes: oc = OUTCOMES }) {
-  const colors = useMemo(() => getChartColors(), []);
+  const colors = useChartColors();
   const rows = data || [];
   if (!rows.length) return null;
 
