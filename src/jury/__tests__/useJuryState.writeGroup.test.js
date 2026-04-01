@@ -15,14 +15,14 @@ vi.mock("../../components/toast/useToast", () => ({
 }));
 
 vi.mock("../../shared/api", () => ({
-  listSemesters:               vi.fn(),
-  createOrGetJurorAndIssuePin: vi.fn(),
+  listPeriods:               vi.fn(),
+  authenticateJuror: vi.fn(),
   verifyJurorPin:              vi.fn(),
   listProjects:                vi.fn(),
   upsertScore:                 vi.fn(),
   getJurorEditState:           vi.fn().mockResolvedValue({ edit_allowed: false, lock_active: false }),
   finalizeJurorSubmission:     vi.fn(),
-  getCurrentSemester:           vi.fn().mockResolvedValue(null),
+  getCurrentPeriod:           vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock("../../config", () => ({
@@ -43,7 +43,7 @@ import useJuryState from "../useJuryState";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────
 
-const SEMESTER = { id: "sem-1", semester_name: "2024-2025 Spring", is_current: true };
+const SEMESTER = { id: "sem-1", name: "2024-2025 Spring", is_current: true };
 
 const makeProjects = (overrides = []) => {
   const defaults = [
@@ -69,8 +69,8 @@ const makeProjects = (overrides = []) => {
 // identity → semester(auto) → pin → PIN verify → eval
 async function advanceToEval(result, projectOverrides = []) {
   const projects = makeProjects(projectOverrides);
-  api.listSemesters.mockResolvedValue([SEMESTER]);
-  api.createOrGetJurorAndIssuePin.mockResolvedValue({
+  api.listPeriods.mockResolvedValue([SEMESTER]);
+  api.authenticateJuror.mockResolvedValue({
     juror_id: "j-1",
     needs_pin: true,
   });
@@ -80,13 +80,13 @@ async function advanceToEval(result, projectOverrides = []) {
     ok: true,
     juror_id: "j-1",
     juror_name: "Test Juror",
-    juror_inst: "EE",
+    affiliation: "EE",
     session_token: "sess-1",
   });
 
   act(() => {
     result.current.setJuryName("Test Juror");
-    result.current.setJuryDept("EE");
+    result.current.setAffiliation("EE");
   });
 
   await act(async () => {
@@ -117,7 +117,7 @@ async function advanceToEval(result, projectOverrides = []) {
 describe("writeGroup — happy path", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    api.getCurrentSemester.mockResolvedValue(null);
+    api.getCurrentPeriod.mockResolvedValue(null);
     api.upsertScore.mockResolvedValue({ ok: true });
   });
 
@@ -198,7 +198,7 @@ describe("writeGroup — happy path", () => {
 describe("writeGroup — error paths", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    api.getCurrentSemester.mockResolvedValue(null);
+    api.getCurrentPeriod.mockResolvedValue(null);
   });
 
   it("sets saveStatus to 'error' when upsertScore fails", async () => {
@@ -218,7 +218,7 @@ describe("writeGroup — error paths", () => {
   });
 
   it("sets editLockActive=true when upsertScore returns semester_locked error", async () => {
-    api.upsertScore.mockRejectedValue(new Error("semester_locked"));
+    api.upsertScore.mockRejectedValue(new Error("period_locked"));
 
     const { result } = renderHook(() => useJuryState());
     await advanceToEval(result);
@@ -238,7 +238,7 @@ describe("writeGroup — error paths", () => {
 describe("score normalization on blur", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    api.getCurrentSemester.mockResolvedValue(null);
+    api.getCurrentPeriod.mockResolvedValue(null);
     api.upsertScore.mockResolvedValue({ ok: true });
   });
 
@@ -281,7 +281,7 @@ describe("score normalization on blur", () => {
 describe("auto-done transition", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    api.getCurrentSemester.mockResolvedValue(null);
+    api.getCurrentPeriod.mockResolvedValue(null);
     api.upsertScore.mockResolvedValue({ ok: true });
     api.getJurorEditState.mockResolvedValue({ edit_allowed: false, lock_active: false });
   });
@@ -313,7 +313,7 @@ describe("auto-done transition", () => {
 describe("edit mode flow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    api.getCurrentSemester.mockResolvedValue(null);
+    api.getCurrentPeriod.mockResolvedValue(null);
     api.upsertScore.mockResolvedValue({ ok: true });
   });
 
@@ -321,8 +321,8 @@ describe("edit mode flow", () => {
     const fullScores = { technical: 20, design: 20, delivery: 20, teamwork: 20 };
     const submitted = new Date().toISOString();
 
-    api.listSemesters.mockResolvedValue([SEMESTER]);
-    api.createOrGetJurorAndIssuePin.mockResolvedValue({
+    api.listPeriods.mockResolvedValue([SEMESTER]);
+    api.authenticateJuror.mockResolvedValue({
       juror_id: "j-1", needs_pin: true,
     });
     api.listProjects.mockResolvedValue([
@@ -343,14 +343,14 @@ describe("edit mode flow", () => {
     ]);
     api.getJurorEditState.mockResolvedValue({ edit_allowed: true, lock_active: false });
     api.verifyJurorPin.mockResolvedValue({
-      ok: true, juror_id: "j-1", juror_name: "Test Juror", juror_inst: "EE", session_token: "sess-1",
+      ok: true, juror_id: "j-1", juror_name: "Test Juror", affiliation: "EE", session_token: "sess-1",
     });
 
     const { result } = renderHook(() => useJuryState());
 
     act(() => {
       result.current.setJuryName("Test Juror");
-      result.current.setJuryDept("EE");
+      result.current.setAffiliation("EE");
     });
 
     await act(async () => {
@@ -381,7 +381,7 @@ describe("edit mode flow", () => {
 describe("handleCancelSubmit", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    api.getCurrentSemester.mockResolvedValue(null);
+    api.getCurrentPeriod.mockResolvedValue(null);
     api.upsertScore.mockResolvedValue({ ok: true });
     api.getJurorEditState.mockResolvedValue({ edit_allowed: false, lock_active: false });
   });
@@ -415,7 +415,7 @@ describe("handleCancelSubmit", () => {
 describe("jury.sync — save payload and sync state", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    api.getCurrentSemester.mockResolvedValue(null);
+    api.getCurrentPeriod.mockResolvedValue(null);
     api.upsertScore.mockResolvedValue({ ok: true });
     api.getJurorEditState.mockResolvedValue({ edit_allowed: false, lock_active: false });
   });
@@ -495,25 +495,25 @@ describe("jury.sync — save payload and sync state", () => {
 describe("permissions.lock — edit lock behavior", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    api.getCurrentSemester.mockResolvedValue(null);
+    api.getCurrentPeriod.mockResolvedValue(null);
     api.upsertScore.mockResolvedValue({ ok: true });
   });
 
   qaTest("permissions.lock.01", async () => {
     // Lock active from server → writeGroup must not call upsertScore.
     // Manual advance avoids the advanceToEval helper overwriting lock_active mock.
-    api.listSemesters.mockResolvedValue([SEMESTER]);
-    api.createOrGetJurorAndIssuePin.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
+    api.listPeriods.mockResolvedValue([SEMESTER]);
+    api.authenticateJuror.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
     api.listProjects.mockResolvedValue(makeProjects());
     api.getJurorEditState.mockResolvedValue({ edit_allowed: false, lock_active: true });
     api.verifyJurorPin.mockResolvedValue({
-      ok: true, juror_id: "j-1", juror_name: "Test Juror", juror_inst: "EE", session_token: "sess-1",
+      ok: true, juror_id: "j-1", juror_name: "Test Juror", affiliation: "EE", session_token: "sess-1",
     });
 
     const { result } = renderHook(() => useJuryState());
     act(() => {
       result.current.setJuryName("Test Juror");
-      result.current.setJuryDept("EE");
+      result.current.setAffiliation("EE");
     });
     await act(async () => { await result.current.handleIdentitySubmit(); });
     await waitFor(() => expect(result.current.step).toBe("pin"));
@@ -535,7 +535,7 @@ describe("permissions.lock — edit lock behavior", () => {
   qaTest("permissions.lock.02", async () => {
     // Server returns semester_locked error → client sets editLockActive = true
     api.getJurorEditState.mockResolvedValue({ edit_allowed: false, lock_active: false });
-    api.upsertScore.mockRejectedValue(new Error("semester_locked"));
+    api.upsertScore.mockRejectedValue(new Error("period_locked"));
 
     const { result } = renderHook(() => useJuryState());
     await advanceToEval(result);
@@ -551,8 +551,8 @@ describe("permissions.lock — edit lock behavior", () => {
     const fullScores = { technical: 20, design: 20, delivery: 20, teamwork: 20 };
     const submitted = new Date().toISOString();
 
-    api.listSemesters.mockResolvedValue([SEMESTER]);
-    api.createOrGetJurorAndIssuePin.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
+    api.listPeriods.mockResolvedValue([SEMESTER]);
+    api.authenticateJuror.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
     api.listProjects.mockResolvedValue([
       {
         project_id: "p-1", group_no: 1, project_title: "Alpha", group_students: "Alice",
@@ -562,13 +562,13 @@ describe("permissions.lock — edit lock behavior", () => {
     ]);
     api.getJurorEditState.mockResolvedValue({ edit_allowed: true, lock_active: false });
     api.verifyJurorPin.mockResolvedValue({
-      ok: true, juror_id: "j-1", juror_name: "Test Juror", juror_inst: "EE", session_token: "sess-1",
+      ok: true, juror_id: "j-1", juror_name: "Test Juror", affiliation: "EE", session_token: "sess-1",
     });
 
     const { result } = renderHook(() => useJuryState());
     act(() => {
       result.current.setJuryName("Test Juror");
-      result.current.setJuryDept("EE");
+      result.current.setAffiliation("EE");
     });
     await act(async () => { await result.current.handleIdentitySubmit(); });
     await waitFor(() => expect(result.current.step).toBe("pin"));
@@ -591,14 +591,14 @@ describe("permissions.lock — edit lock behavior", () => {
     await advanceToEval(result);
 
     // Trigger semester_locked error to set editLockActive=true
-    api.upsertScore.mockRejectedValueOnce(new Error("semester_locked"));
+    api.upsertScore.mockRejectedValueOnce(new Error("period_locked"));
     act(() => { result.current.handleScore("p-1", "technical", "20"); });
     await act(async () => { result.current.handleScoreBlur("p-1", "technical"); });
     expect(result.current.editLockActive).toBe(true);
 
     // New hook instance simulates loading a fresh semester — editLockActive resets
     vi.clearAllMocks();
-    api.getCurrentSemester.mockResolvedValue(null);
+    api.getCurrentPeriod.mockResolvedValue(null);
     api.upsertScore.mockResolvedValue({ ok: true });
     api.getJurorEditState.mockResolvedValue({ edit_allowed: false, lock_active: false });
 

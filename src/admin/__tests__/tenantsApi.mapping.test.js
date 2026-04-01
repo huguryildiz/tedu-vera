@@ -1,51 +1,75 @@
+// src/admin/__tests__/tenantsApi.mapping.test.js
+// ============================================================
+// Organizations API (PostgREST) — mapping and normalization.
+// Replaced legacy tenants RPC test after PostgREST migration.
+// ============================================================
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../../shared/api/transport", () => ({
-  callAdminRpcV2: vi.fn(),
+// ── PostgREST chainable mock (same pattern as adminApi.shaping.test.js) ────
+function makeChain(rows, error = null) {
+  const data = Array.isArray(rows) ? rows : [rows];
+  const p = Promise.resolve({ data, error });
+  const chain = {
+    select:  vi.fn().mockReturnThis(),
+    eq:      vi.fn().mockReturnThis(),
+    order:   vi.fn().mockReturnThis(),
+    single:  vi.fn().mockResolvedValue({ data: data[0] ?? null, error }),
+    then:    p.then.bind(p),
+    catch:   p.catch.bind(p),
+    finally: p.finally.bind(p),
+  };
+  return chain;
+}
+
+vi.mock("../../lib/supabaseClient", () => ({
+  supabase: { from: vi.fn() },
 }));
 
-import { callAdminRpcV2 } from "../../shared/api/transport";
-import { adminListTenants, mapTenantRow } from "../../shared/api/admin/tenants";
+import { supabase } from "../../lib/supabaseClient";
+import { listOrganizations } from "../../shared/api/admin/organizations";
 
-describe("admin tenant API mapping", () => {
+// ── Tests ─────────────────────────────────────────────────────────────────
+
+describe("admin organization API mapping", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("maps tenant_admins and pending_applications into UI shape", async () => {
-    callAdminRpcV2.mockResolvedValueOnce([
+  it("maps memberships and tenant_applications into UI shape", async () => {
+    supabase.from.mockReturnValue(makeChain([
       {
         id: "t1",
-        code: "tedu-ee",
-        short_label: "TEDU EE",
-        university: "TED University",
-        department: "Electrical Engineering",
+        name: "TED University EE",
+        short_name: "TEDU EE",
         status: "active",
         created_at: "2026-03-01T10:00:00Z",
         updated_at: "2026-03-02T10:00:00Z",
-        tenant_admins: [
+        memberships: [
           {
             user_id: "u1",
-            name: "Alice Smith",
-            email: "alice@tedu.edu",
-            status: "approved",
-            updated_at: "2026-03-02T12:00:00Z",
+            role: "admin",
+            created_at: "2026-03-02T12:00:00Z",
+            profiles: {
+              display_name: "Alice Smith",
+              email: "alice@tedu.edu",
+            },
           },
         ],
-        pending_applications: [
+        tenant_applications: [
           {
-            application_id: "app-1",
-            name: "Bob Jones",
-            email: "bob@tedu.edu",
+            id: "app-1",
+            applicant_name: "Bob Jones",
+            contact_email: "bob@tedu.edu",
             status: "pending",
             created_at: "2026-03-03T10:00:00Z",
           },
         ],
       },
-    ]);
+    ]));
 
-    const result = await adminListTenants();
-    expect(callAdminRpcV2).toHaveBeenCalledWith("rpc_admin_tenant_list");
+    const result = await listOrganizations();
+    expect(supabase.from).toHaveBeenCalledWith("organizations");
     expect(result).toHaveLength(1);
     expect(result[0].shortLabel).toBe("TEDU EE");
     expect(result[0].tenantAdmins).toEqual([
@@ -53,6 +77,7 @@ describe("admin tenant API mapping", () => {
         name: "Alice Smith",
         userId: "u1",
         email: "alice@tedu.edu",
+        role: "admin",
         status: "approved",
         updatedAt: "2026-03-02T12:00:00Z",
       },
@@ -68,15 +93,18 @@ describe("admin tenant API mapping", () => {
     ]);
   });
 
-  it("normalizes missing json fields to empty arrays", () => {
-    const row = mapTenantRow({
-      id: "t2",
-      code: "tedu-cs",
-      short_label: "TEDU CS",
-      tenant_admins: null,
-      pending_applications: null,
-    });
+  it("normalizes null memberships and tenant_applications to empty arrays", async () => {
+    supabase.from.mockReturnValue(makeChain([
+      {
+        id: "t2",
+        name: "TEDU CS",
+        short_name: "TEDU CS",
+        memberships: null,
+        tenant_applications: null,
+      },
+    ]));
 
+    const [row] = await listOrganizations();
     expect(row.tenantAdmins).toEqual([]);
     expect(row.pendingApplications).toEqual([]);
   });

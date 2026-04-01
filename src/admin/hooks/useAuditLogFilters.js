@@ -5,7 +5,7 @@
 // ============================================================
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { adminListAuditLogs } from "../../shared/api";
+import { listAuditLogs } from "../../shared/api";
 import {
   AUDIT_PAGE_SIZE,
   formatAuditTimestamp,
@@ -26,13 +26,13 @@ const defaultAuditFilters = {
  * Manages all audit log state, pagination, search, and export.
  *
  * @param {object} params
- * @param {string} params.tenantId
+ * @param {string} params.organizationId
  * @param {boolean} params.isMobile
  * @param {function} params.setMessage  - Toast message setter
  */
-export function useAuditLogFilters({ tenantId, isMobile, setMessage }) {
-  const { activeTenant } = useAuth();
-  const tenantCode = activeTenant?.code || "";
+export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
+  const { activeOrganization } = useAuth();
+  const organizationCode = activeOrganization?.code || "";
   const supportsInfiniteScroll =
     typeof window !== "undefined" && "IntersectionObserver" in window;
 
@@ -81,7 +81,7 @@ export function useAuditLogFilters({ tenantId, isMobile, setMessage }) {
 
   // ── Core load function ────────────────────────────────────
   const loadAuditLogs = useCallback(async (filters, options = {}) => {
-    if (!tenantId) return;
+    if (!organizationId) return;
     const mode = options.mode || "replace";
     const cursor = options.cursor || null;
     const searchTerm = options.search ?? auditSearchRef.current;
@@ -98,7 +98,7 @@ export function useAuditLogFilters({ tenantId, isMobile, setMessage }) {
     }
     try {
       const params = buildAuditParams(filters || defaultAuditFilters, AUDIT_PAGE_SIZE, cursor, searchTerm);
-      const rawRows = await adminListAuditLogs({ ...params, tenantId });
+      const rawRows = await listAuditLogs({ ...params, organizationId });
       const rows = (rawRows || []).filter((row) => row?.action !== "admin_login_success");
       if (mode === "append") {
         setAuditLogs((prev) => [...prev, ...(rows || [])]);
@@ -115,27 +115,27 @@ export function useAuditLogFilters({ tenantId, isMobile, setMessage }) {
     } finally {
       setAuditLoading(false);
     }
-  }, [tenantId]);
+  }, [organizationId]);
 
   // ── scheduleAuditRefresh (called from Realtime subscription) ──
   const scheduleAuditRefresh = useCallback(() => {
-    if (!tenantId) return;
+    if (!organizationId) return;
     if (auditTimerRef.current) clearTimeout(auditTimerRef.current);
     auditTimerRef.current = setTimeout(() => {
       auditTimerRef.current = null;
       loadAuditLogs(auditFilters, { mode: "replace", cursor: null }).catch(() => {});
     }, 600);
-  }, [tenantId, auditFilters, loadAuditLogs]);
+  }, [organizationId, auditFilters, loadAuditLogs]);
 
   // ── Load on filter change ─────────────────────────────────
   useEffect(() => {
-    if (!tenantId) return;
+    if (!organizationId) return;
     loadAuditLogs(auditFilters, { mode: "replace", cursor: null });
-  }, [tenantId, auditFilters, loadAuditLogs]);
+  }, [organizationId, auditFilters, loadAuditLogs]);
 
   // ── Debounced search refetch ──────────────────────────────
   useEffect(() => {
-    if (!tenantId) return;
+    if (!organizationId) return;
     if (auditTimerRef.current) clearTimeout(auditTimerRef.current);
     setAuditCursor(null);
     setAuditHasMore(true);
@@ -149,7 +149,7 @@ export function useAuditLogFilters({ tenantId, isMobile, setMessage }) {
         auditTimerRef.current = null;
       }
     };
-  }, [auditSearch, tenantId, auditFilters, loadAuditLogs]);
+  }, [auditSearch, organizationId, auditFilters, loadAuditLogs]);
 
   // ── Infinite scroll ───────────────────────────────────────
   useEffect(() => {
@@ -190,7 +190,7 @@ export function useAuditLogFilters({ tenantId, isMobile, setMessage }) {
   };
 
   const handleAuditExport = async () => {
-    if (!tenantId) return;
+    if (!organizationId) return;
     setAuditExporting(true);
     setAuditError("");
     try {
@@ -200,7 +200,7 @@ export function useAuditLogFilters({ tenantId, isMobile, setMessage }) {
       let loops = 0;
       while (true) {
         const params = buildAuditParams(auditFilters, pageSize, cursor, auditSearch);
-        const rows = await adminListAuditLogs({ ...params, tenantId });
+        const rows = await adminListAuditLogs({ ...params, organizationId });
         if (!rows || rows.length === 0) break;
         all = [...all, ...rows];
         if (rows.length < pageSize) break;
@@ -213,7 +213,7 @@ export function useAuditLogFilters({ tenantId, isMobile, setMessage }) {
         setMessage("No audit entries found for export");
         return;
       }
-      await exportAuditLogsXLSX(all, { filters: auditFilters, search: auditSearch, tenantCode });
+      await exportAuditLogsXLSX(all, { filters: auditFilters, search: auditSearch, organizationCode });
       setMessage("Audit log exported");
     } catch (e) {
       setAuditError(e?.message || "Could not export audit logs.");

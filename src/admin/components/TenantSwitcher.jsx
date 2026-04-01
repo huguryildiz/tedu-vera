@@ -33,13 +33,13 @@ function useAnchoredPopover(isOpen, deps = []) {
   return { triggerRef, panelRef, panelStyle, panelPlacement };
 }
 
-export default function TenantSwitcher({ tenants, activeTenant, onSwitch }) {
+export default function TenantSwitcher({ tenants, activeOrganization, onSwitch }) {
   const [open, setOpen] = useState(false);
   const tenantOptions = tenants.filter((t) => t.id != null);
 
   const { triggerRef, panelRef, panelStyle, panelPlacement } = useAnchoredPopover(
     open,
-    [activeTenant?.id, tenantOptions.length]
+    [activeOrganization?.id, tenantOptions.length]
   );
 
   useEffect(() => {
@@ -56,22 +56,22 @@ export default function TenantSwitcher({ tenants, activeTenant, onSwitch }) {
   if (tenantOptions.length <= 1) return null;
 
   return (
-    <div className="semester-dropdown tenant-dropdown">
+    <div className="period-dropdown tenant-dropdown">
       <button
         type="button"
-        className={`status-chip status-chip--semester semester-dropdown-trigger${open ? " open" : ""}`}
+        className={`status-chip status-chip--period period-dropdown-trigger${open ? " open" : ""}`}
         ref={triggerRef}
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="semester-dropdown-label">{activeTenant?.name || "Select"}</span>
-        <span className="semester-dropdown-chevron" aria-hidden="true"><ChevronDownIcon /></span>
+        <span className="period-dropdown-label">{activeOrganization?.name || "Select"}</span>
+        <span className="period-dropdown-chevron" aria-hidden="true"><ChevronDownIcon /></span>
       </button>
       {open && createPortal(
         <ul
           ref={panelRef}
-          className={`semester-dropdown-panel semester-dropdown-panel--${panelPlacement}`}
+          className={`period-dropdown-panel period-dropdown-panel--${panelPlacement}`}
           style={panelStyle || undefined}
           role="listbox"
           aria-label="Select organization"
@@ -80,16 +80,16 @@ export default function TenantSwitcher({ tenants, activeTenant, onSwitch }) {
             <li
               key={t.id}
               role="option"
-              aria-selected={activeTenant?.id === t.id}
-              className={`semester-dropdown-item${activeTenant?.id === t.id ? " active" : ""}`}
+              aria-selected={activeOrganization?.id === t.id}
+              className={`period-dropdown-item${activeOrganization?.id === t.id ? " active" : ""}`}
               onClick={() => {
                 onSwitch(t.id);
                 setOpen(false);
               }}
             >
               {t.name}
-              {activeTenant?.id === t.id && (
-                <span className="semester-dropdown-check" aria-hidden="true">✓</span>
+              {activeOrganization?.id === t.id && (
+                <span className="period-dropdown-check" aria-hidden="true">✓</span>
               )}
             </li>
           ))}

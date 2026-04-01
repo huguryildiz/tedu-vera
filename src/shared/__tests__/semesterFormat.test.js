@@ -5,7 +5,7 @@
 
 import { describe, expect } from "vitest";
 import { qaTest } from "../../test/qaTest.js";
-import { stripSlugPrefix } from "../semesterFormat";
+import { stripSlugPrefix } from "../periodFormat";
 
 describe("stripSlugPrefix", () => {
   qaTest("semesterFormat.strip.01", () => {

@@ -3,7 +3,7 @@
 // Pure function for building the progress-check data shown to
 // returning jurors who have partially completed their scoring.
 //
-// Extracted from the _loadSemester inner function in
+// Extracted from the _loadPeriod inner function in
 // src/jury/useJuryState.js.
 // ============================================================
 

@@ -2,7 +2,7 @@
 // ============================================================
 // Helpers for building a normalized score snapshot (used for
 // deduplication via lastWrittenRef) and for classifying
-// semester-lock errors.
+// period-lock errors.
 // ============================================================
 
 import { CRITERIA } from "../../config";
@@ -19,7 +19,7 @@ const _id = (c) => c.id ?? c.key;
 // the last successful write, avoiding redundant RPC calls.
 //
 // Accepts optional `criteria` (defaults to CRITERIA from config.js)
-// so it works with both static config and dynamic semester templates.
+// so it works with both static config and dynamic period templates.
 
 export const buildScoreSnapshot = (scores, comment, criteria = CRITERIA) => {
   const normalizedScores = {};
@@ -50,19 +50,19 @@ export const buildScoreSnapshot = (scores, comment, criteria = CRITERIA) => {
 // acquires a prefix/suffix.
 //
 // SQLSTATE reference (sql/000_bootstrap.sql):
-//   semester_locked       — P0001 (default) — rpc_upsert_score semester lock check
+//   period_locked       — P0001 (default) — rpc_upsert_score period lock check
 //   juror_session_*       — P0401           — _assert_juror_session
 //
 // If the DB exception text ever changes, update the constants below.
 
-// rpc_upsert_score: RAISE EXCEPTION 'semester_locked' (SQLSTATE P0001)
-export const isSemesterLockedError = (err) =>
-  String(err?.message || "") === "semester_locked";
+// rpc_upsert_score: RAISE EXCEPTION 'period_locked' (SQLSTATE P0001)
+export const isPeriodLockedError = (err) =>
+  String(err?.message || "") === "period_locked";
 
 // _assert_juror_session: all four cases use SQLSTATE P0401
 // juror_session_expired   — session_expires_at <= now()
 // juror_session_missing   — empty token string
-// juror_session_not_found — no matching row in juror_semester_auth
+// juror_session_not_found — no matching row in juror_period_auth
 // juror_session_invalid   — null hash, or bcrypt mismatch
 const SESSION_EXPIRED_MESSAGES = new Set([
   "juror_session_expired",

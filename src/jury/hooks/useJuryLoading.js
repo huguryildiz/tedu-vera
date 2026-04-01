@@ -1,38 +1,38 @@
 // src/jury/hooks/useJuryLoading.js
 // ============================================================
-// Owns semester/project loading state and the abort/lock refs
+// Owns period/project loading state and the abort/lock refs
 // that protect in-flight requests.
 //
 // State:
 //   loadingState         — null | { stage: "loading"|"error", message: string }
-//   semesters            — active semester list (from listSemesters)
-//   semesterId           — selected semester UUID
-//   semesterName         — selected semester display name
-//   criteriaTemplate     — criteria_template from the selected semester ([])
-//   currentSemesterInfo   — result of getCurrentSemester() (for landing page)
-//   activeProjectCount   — project count in the active semester (landing page)
+//   periods              — active period list (from listPeriods)
+//   periodId             — selected period UUID
+//   periodName           — selected period display name
+//   criteriaConfig       — criteria_config from the selected period ([])
+//   currentPeriodInfo    — result of getCurrentPeriod() (for landing page)
+//   activeProjectCount   — project count in the active period (landing page)
 //   progressCheck        — null | progress data for SheetsProgressDialog
 //   projects             — current project list for eval step
 //
 // Refs:
-//   loadAbortRef          — AbortController for active data-load; replaced on
-//                           each new _loadSemester or listSemesters call so
-//                           stale in-flight fetches are cancelled.
-//   semesterSelectLockRef — Prevents concurrent semester selections (e.g. double-
-//                           tap). Intentionally NOT reset on success: once the
-//                           juror advances past semester selection the lock is
-//                           permanent for the session. Only reset on error or
-//                           on resetAll().
+//   loadAbortRef         — AbortController for active data-load; replaced on
+//                          each new _loadPeriod or listPeriods call so
+//                          stale in-flight fetches are cancelled.
+//   periodSelectLockRef  — Prevents concurrent period selections (e.g. double-
+//                          tap). Intentionally NOT reset on success: once the
+//                          juror advances past period selection the lock is
+//                          permanent for the session. Only reset on error or
+//                          on resetAll().
 //
-// The _loadSemester function itself lives in the orchestrator because it writes
+// The _loadPeriod function itself lives in the orchestrator because it writes
 // to state owned by multiple hooks (scoring, editState, workflow, identity).
 //
-// The on-mount useEffect that fetches currentSemesterInfo lives here because
+// The on-mount useEffect that fetches currentPeriodInfo lives here because
 // all its state is owned by this hook.
 // ============================================================
 
 import { useState, useEffect, useRef } from "react";
-import { getCurrentSemester, listProjects, listSemesters, verifyEntryToken } from "../../shared/api";
+import { getCurrentPeriod, listProjects, listPeriods, verifyEntryToken } from "../../shared/api";
 import { getJuryAccess } from "../../shared/storage";
 
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
@@ -40,35 +40,35 @@ const DEMO_ENTRY_TOKEN = import.meta.env.VITE_DEMO_ENTRY_TOKEN || "";
 
 export function useJuryLoading() {
   const [loadingState, setLoadingState] = useState(null);
-  const [semesters, setSemesters] = useState([]);
-  const [semesterId, setSemesterId] = useState("");
-  const [semesterName, setSemesterName] = useState("");
-  const [criteriaTemplate, setCriteriaTemplate] = useState([]);
-  const [mudekTemplate, setMudekTemplate] = useState([]);
-  const [currentSemesterInfo, setCurrentSemesterInfo] = useState(null);
+  const [periods, setPeriods] = useState([]);
+  const [periodId, setPeriodId] = useState("");
+  const [periodName, setPeriodName] = useState("");
+  const [criteriaConfig, setCriteriaConfig] = useState([]);
+  const [outcomeConfig, setOutcomeConfig] = useState([]);
+  const [currentPeriodInfo, setCurrentPeriodInfo] = useState(null);
   const [activeProjectCount, setActiveProjectCount] = useState(null);
   const [progressCheck, setProgressCheck] = useState(null);
   const [projects, setProjects] = useState([]);
 
   const loadAbortRef = useRef(null);
-  const semesterSelectLockRef = useRef(false);
+  const periodSelectLockRef = useRef(false);
 
-  // Fetch the active semester info on mount for the landing page display.
+  // Fetch the active period info on mount for the landing page display.
   // This effect is independent of all other state and can safely live here.
   useEffect(() => {
     let alive = true;
     const ctrl = new AbortController();
     const run = async () => {
       try {
-        // Demo mode: resolve semester via entry token so demo tenant is always shown.
+        // Demo mode: resolve period via entry token so demo tenant is always shown.
         if (DEMO_MODE && DEMO_ENTRY_TOKEN) {
           const tokenRes = await verifyEntryToken(DEMO_ENTRY_TOKEN);
           if (!alive) return;
-          if (tokenRes?.ok && tokenRes?.semester_id) {
-            const sems = await listSemesters(ctrl.signal);
+          if (tokenRes?.ok && tokenRes?.period_id) {
+            const periods = await listPeriods(ctrl.signal);
             if (!alive) return;
-            const res = (sems || []).find((s) => s.id === tokenRes.semester_id) || null;
-            setCurrentSemesterInfo(res);
+            const res = (periods || []).find((p) => p.id === tokenRes.period_id) || null;
+            setCurrentPeriodInfo(res);
             if (res?.id) {
               try {
                 const projectList = await listProjects(res.id, null, ctrl.signal);
@@ -83,14 +83,14 @@ export function useJuryLoading() {
           }
         }
 
-        const grantedSemesterId = getJuryAccess();
-        let res = await getCurrentSemester(ctrl.signal, grantedSemesterId);
-        if (!res && grantedSemesterId) {
-          const sems = await listSemesters(ctrl.signal);
-          res = (sems || []).find((s) => s.id === grantedSemesterId) || null;
+        const grantedPeriodId = getJuryAccess();
+        let res = await getCurrentPeriod(ctrl.signal, grantedPeriodId);
+        if (!res && grantedPeriodId) {
+          const periods = await listPeriods(ctrl.signal);
+          res = (periods || []).find((p) => p.id === grantedPeriodId) || null;
         }
         if (!alive) return;
-        setCurrentSemesterInfo(res || null);
+        setCurrentPeriodInfo(res || null);
         if (res?.id) {
           try {
             const projectList = await listProjects(res.id, null, ctrl.signal);
@@ -117,16 +117,16 @@ export function useJuryLoading() {
 
   return {
     loadingState, setLoadingState,
-    semesters, setSemesters,
-    semesterId, setSemesterId,
-    semesterName, setSemesterName,
-    criteriaTemplate, setCriteriaTemplate,
-    mudekTemplate, setMudekTemplate,
-    currentSemesterInfo,
+    periods, setPeriods,
+    periodId, setPeriodId,
+    periodName, setPeriodName,
+    criteriaConfig, setCriteriaConfig,
+    outcomeConfig, setOutcomeConfig,
+    currentPeriodInfo,
     activeProjectCount, setActiveProjectCount,
     progressCheck, setProgressCheck,
     projects, setProjects,
     loadAbortRef,
-    semesterSelectLockRef,
+    periodSelectLockRef,
   };
 }

@@ -1,12 +1,12 @@
 // src/jury/hooks/useJuryEditState.js
 // ============================================================
-// Owns edit mode and semester lock state, and the polling
+// Owns edit mode and period lock state, and the polling
 // effect that keeps lock status fresh during evaluation.
 //
 // State:
 //   editMode      — true while the juror is re-editing after finalization
 //   editAllowed   — true when the DB allows the juror to re-edit
-//   editLockActive — true when the semester is locked (blocks all writes)
+//   editLockActive — true when the period is locked (blocks all writes)
 //
 // The polling effect runs every 10s during "eval" and every 15s during
 // "done". It calls getJurorEditState with the current session token.
@@ -16,24 +16,24 @@
 // Parameters (from orchestrator):
 //   step               — current step name ("eval"|"done"|…)
 //   jurorId            — UUID
-//   semesterId         — UUID
+//   periodId           — UUID
 //   jurorSessionToken  — current session token
 // ============================================================
 
 import { useState, useEffect } from "react";
 import { getJurorEditState } from "../../shared/api";
 
-export function useJuryEditState({ step, jurorId, semesterId, jurorSessionToken }) {
+export function useJuryEditState({ step, jurorId, periodId, jurorSessionToken }) {
   const [editMode, setEditMode] = useState(false);
   const [editAllowed, setEditAllowed] = useState(false);
   const [editLockActive, setEditLockActive] = useState(false);
 
   useEffect(() => {
-    if ((step !== "done" && step !== "eval") || !jurorId || !semesterId) return;
+    if ((step !== "done" && step !== "eval") || !jurorId || !periodId) return;
     let alive = true;
     const refreshEditState = async () => {
       try {
-        const editState = await getJurorEditState(semesterId, jurorId, jurorSessionToken);
+        const editState = await getJurorEditState(periodId, jurorId, jurorSessionToken);
         if (!alive) return;
         if (step === "done") setEditAllowed(!!editState?.edit_allowed);
         setEditLockActive(!!editState?.lock_active);
@@ -46,7 +46,7 @@ export function useJuryEditState({ step, jurorId, semesterId, jurorSessionToken 
       alive = false;
       clearInterval(timer);
     };
-  }, [step, jurorId, semesterId, jurorSessionToken]);
+  }, [step, jurorId, periodId, jurorSessionToken]);
 
   return {
     editMode, setEditMode,

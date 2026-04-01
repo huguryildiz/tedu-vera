@@ -3,12 +3,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useToast } from "../../components/toast/useToast";
-import { useManageSemesters } from "../hooks/useManageSemesters";
+import { useManagePeriods } from "../hooks/useManagePeriods";
 import MudekManager from "../MudekManager";
 import PageShell from "./PageShell";
 
 export default function OutcomesPage({
-  tenantId,
+  organizationId,
   selectedSemesterId,
   isDemoMode = false,
   onDirtyChange,
@@ -26,8 +26,8 @@ export default function OutcomesPage({
   const decLoading = useCallback(() => setLoadingCount((c) => Math.max(0, c - 1)), []);
 
   // ── Semesters ──
-  const semesters = useManageSemesters({
-    tenantId,
+  const periods = useManagePeriods({
+    organizationId,
     selectedSemesterId,
     setMessage,
     incLoading,
@@ -37,29 +37,29 @@ export default function OutcomesPage({
     clearPanelError,
   });
 
-  // Load semesters on mount
+  // Load periods on mount
   useEffect(() => {
     incLoading();
-    semesters
-      .loadSemesters()
+    periods
+      .loadPeriods()
       .catch(() =>
-        setPanelError("semester", "Could not load semesters. Try refreshing or check your connection.")
+        setPanelError("period", "Could not load periods. Try refreshing or check your connection.")
       )
       .finally(() => decLoading());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [semesters.loadSemesters]);
+  }, [periods.loadPeriods]);
 
-  // Get current semester being edited
-  const viewSemester = semesters.semesterList.find((s) => s.id === semesters.viewSemesterId);
-  const isLocked = !!(viewSemester?.is_locked);
+  // Get current period being edited
+  const viewPeriod = periods.periodList.find((s) => s.id === periods.viewPeriodId);
+  const isLocked = !!(viewPeriod?.is_locked);
 
   const handleSave = async (newTemplate) => {
-    if (!semesters.viewSemesterId) {
-      return { ok: false, error: "No semester selected" };
+    if (!periods.viewPeriodId) {
+      return { ok: false, error: "No period selected" };
     }
     try {
       incLoading();
-      await semesters.updateMudekTemplate(semesters.viewSemesterId, newTemplate);
+      await periods.updateMudekTemplate(periods.viewPeriodId, newTemplate);
       setMessage("MÜDEK outcomes updated successfully");
       return { ok: true };
     } catch (err) {
@@ -81,7 +81,7 @@ export default function OutcomesPage({
           {panelError}
         </div>
       )}
-      {!semesters.viewSemesterId ? (
+      {!periods.viewPeriodId ? (
         <div className="rounded-lg border border-border p-8 text-center text-sm text-muted-foreground">
           Select an evaluation period to manage its outcomes.
         </div>
@@ -89,11 +89,11 @@ export default function OutcomesPage({
         <div className="space-y-6">
           <div className="rounded-lg border border-border p-4">
             <p className="text-sm font-medium">
-              Period: <span className="text-foreground">{semesters.viewSemesterLabel}</span>
+              Period: <span className="text-foreground">{periods.viewPeriodLabel}</span>
             </p>
           </div>
           <MudekManager
-            mudekTemplate={viewSemester?.mudek_template || []}
+            outcomeConfig={viewPeriod?.outcome_config || []}
             onSave={handleSave}
             disabled={loadingCount > 0}
             isLocked={isLocked}

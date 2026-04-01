@@ -1,31 +1,30 @@
 // src/shared/api/admin/profiles.js
-// ============================================================
-// Admin profile functions (v2 — JWT-based auth).
-// ============================================================
+// Admin profile functions (PostgREST).
 
-import { callAdminRpcV2 } from "../transport";
+import { supabase } from "../core/client";
 
-/**
- * Upserts the calling user's admin profile.
- * Creates a profile on first call; subsequent calls update display_name
- * only if a non-empty value is provided.
- *
- * @param {string} [displayName]  Optional display name override.
- * @returns {Promise<{user_id: string, display_name: string|null}>}
- */
-export async function adminProfileUpsert(displayName) {
-  const params = {};
-  if (displayName != null) params.p_display_name = displayName;
-  const data = await callAdminRpcV2("rpc_admin_profile_upsert", params);
-  return data?.[0] || null;
+export async function upsertProfile(displayName) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.id) throw new Error("Not authenticated");
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .upsert({ id: user.id, display_name: displayName })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }
 
-/**
- * Returns the calling user's admin profile.
- *
- * @returns {Promise<{user_id: string, display_name: string|null}|null>}
- */
-export async function adminProfileGet() {
-  const data = await callAdminRpcV2("rpc_admin_profile_get");
-  return data?.[0] || null;
+export async function getProfile() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.id) return null;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
 }

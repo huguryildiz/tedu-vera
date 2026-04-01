@@ -8,17 +8,17 @@ import { formatAuditTimestamp } from "../utils/auditUtils";
 import AuditLogCard from "../settings/AuditLogCard";
 import PageShell from "./PageShell";
 
-export default function AuditLogPage({ tenantId }) {
+export default function AuditLogPage({ organizationId }) {
   const _toast = useToast();
   const setMessage = (msg) => { if (msg) _toast.success(msg); };
 
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 900;
 
-  const audit = useAuditLogFilters({ tenantId, isMobile, setMessage });
+  const audit = useAuditLogFilters({ organizationId, isMobile, setMessage });
 
   // Realtime: refresh audit log on new entries
   usePageRealtime({
-    tenantId,
+    organizationId,
     channelName: "audit-page-live",
     subscriptions: [
       {

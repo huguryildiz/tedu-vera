@@ -23,7 +23,7 @@ const MEDALS = [medalFirst, medalSecond, medalThird];
 const SORT_OPTIONS = [
   { value: "totalAvg", label: "Total Avg" },
   { value: "groupNo", label: "Group No" },
-  { value: "projectTitle", label: "Title" },
+  { value: "title", label: "Title" },
   ...CRITERIA_LIST.map((c) => ({ value: c.id, label: `${c.shortLabel || c.label} Avg` })),
 ];
 const VIRTUAL_THRESHOLD = 40;
@@ -109,8 +109,8 @@ function RankCard({ p, index, rankMap, expandedGroups, onToggleGroup, criteriaLi
   const rankKey = getRankKey(p, index);
   const dr = rankMap.get(rankKey) ?? null;
   const groupLabel = `Group ${p.groupNo}`;
-  const projectTitle = (p.name || "").trim();
-  const showTitle = !!projectTitle && projectTitle !== groupLabel;
+  const title = (p.name || "").trim();
+  const showTitle = !!title && title !== groupLabel;
   const studentList = p.students
     ? p.students.split(",").map((s) => s.trim()).filter(Boolean)
     : [];
@@ -185,7 +185,7 @@ function RankCard({ p, index, rankMap, expandedGroups, onToggleGroup, criteriaLi
         >
           {showTitle && (
             <div className="border-t border-border pt-3">
-              <ProjectTitle text={projectTitle} />
+              <ProjectTitle text={title} />
             </div>
           )}
           {APP_CONFIG.showStudents && studentList.length > 0 && (
@@ -260,23 +260,23 @@ function Row({ index, style, data }) {
 
 // ── Main component ────────────────────────────────────────
 
-export default function RankingsTab({ ranked, semesterName = "", criteriaTemplate }) {
-  const { activeTenant } = useAuth();
-  const tenantCode = activeTenant?.code || "";
+export default function RankingsTab({ ranked, periodName = "", criteriaConfig }) {
+  const { activeOrganization } = useAuth();
+  const tenantCode = activeOrganization?.code || "";
   const criteriaList = useMemo(
-    () => (criteriaTemplate || CRITERIA_LIST).map((c) => ({
+    () => (criteriaConfig || CRITERIA_LIST).map((c) => ({
       id: c.id ?? c.key,
       label: c.label,
       shortLabel: c.shortLabel,
       max: c.max,
       color: c.color,
     })),
-    [criteriaTemplate] // eslint-disable-line react-hooks/exhaustive-deps
+    [criteriaConfig] // eslint-disable-line react-hooks/exhaustive-deps
   );
   const sortOptions = useMemo(() => [
     { value: "totalAvg", label: "Total Avg" },
     { value: "groupNo", label: "Group No" },
-    { value: "projectTitle", label: "Title" },
+    { value: "title", label: "Title" },
     ...criteriaList.map((c) => ({ value: c.id, label: `${c.shortLabel || c.label} Avg` })),
   ], [criteriaList]);
   const [isExporting, setIsExporting] = useState(false);
@@ -306,10 +306,10 @@ export default function RankingsTab({ ranked, semesterName = "", criteriaTemplat
   const virtualWrapRef = useRef(null);
   const [virtualHeight, setVirtualHeight] = useState(null);
 
-  // Reset accordion state when the semester changes (ranked data replaced).
+  // Reset accordion state when the period changes (ranked data replaced).
   useEffect(() => {
     setExpandedGroups(new Set());
-  }, [semesterName]);
+  }, [periodName]);
 
   useEffect(() => {
     writeSection("rankings", { search, sortKey, sortDir, filtersOpen });
@@ -333,7 +333,7 @@ export default function RankingsTab({ ranked, semesterName = "", criteriaTemplat
     const dir = sortDir === "desc" ? -1 : 1;
     items.sort((a, b) => {
       let base = 0;
-      if (sortKey === "projectTitle") {
+      if (sortKey === "title") {
         const aStr = String(a?.name ?? "").toLowerCase();
         const bStr = String(b?.name ?? "").toLowerCase();
         base = aStr.localeCompare(bStr, "tr", { numeric: true });
@@ -449,7 +449,7 @@ export default function RankingsTab({ ranked, semesterName = "", criteriaTemplat
     if (isExporting) return;
     setIsExporting(true);
     try {
-      await exportRankingsXLSX(sorted, criteriaList, { semesterName, tenantCode });
+      await exportRankingsXLSX(sorted, criteriaList, { periodName, tenantCode });
     } finally {
       setIsExporting(false);
     }

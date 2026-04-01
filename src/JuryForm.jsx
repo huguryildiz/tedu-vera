@@ -9,7 +9,7 @@ import InfoStep                from "./jury/InfoStep";
 import PinStep                 from "./jury/PinStep";
 import PinRevealStep           from "./jury/PinRevealStep";
 import SheetsProgressDialog    from "./jury/SheetsProgressDialog";
-import SemesterStep            from "./jury/SemesterStep";
+import PeriodStep            from "./jury/PeriodStep";
 import EvalStep                from "./jury/EvalStep";
 import DoneStep                from "./jury/DoneStep";
 import MinimalLoaderOverlay    from "./shared/MinimalLoaderOverlay";
@@ -21,12 +21,12 @@ import "./styles/jury-pin.css";
 export default function JuryForm({ onBack }) {
   const {
     step, setStep,
-    juryName, juryDept,
-    setJuryName, setJuryDept,
+    juryName, affiliation,
+    setJuryName, setAffiliation,
     authError,
     issuedPin,
-    semesters,
-    currentSemesterInfo,
+    periods,
+    currentPeriodInfo,
     activeProjectCount,
     progressCheck,
     projects,
@@ -49,7 +49,7 @@ export default function JuryForm({ onBack }) {
     handleIdentitySubmit,
     handlePinRevealContinue,
     handleProgressContinue,
-    handleSemesterSelect,
+    handlePeriodSelect,
     confirmingSubmit,
     handleRequestSubmit, handleConfirmSubmit, handleCancelSubmit,
     handleEditScores,
@@ -90,9 +90,9 @@ export default function JuryForm({ onBack }) {
         <InfoStep
           juryName={juryName}
           setJuryName={setJuryName}
-          juryDept={juryDept}
-          setJuryDept={setJuryDept}
-          currentSemester={currentSemesterInfo}
+          affiliation={affiliation}
+          setAffiliation={setAffiliation}
+          currentPeriod={currentPeriodInfo}
           activeProjectCount={activeProjectCount}
           onStart={handleIdentitySubmit}
           onBack={handleExitHome}
@@ -146,13 +146,13 @@ export default function JuryForm({ onBack }) {
     );
   }
 
-  // ── Semester selection ────────────────────────────────────
-  if (step === "semester") {
+  // ── Period selection ────────────────────────────────────
+  if (step === "period") {
     return (
       <>
-        <SemesterStep
-          semesters={semesters}
-          onSelect={handleSemesterSelect}
+        <PeriodStep
+          periods={periods}
+          onSelect={handlePeriodSelect}
           onBack={handleExitHome}
         />
         <MinimalLoaderOverlay open={isLoading} />
@@ -180,7 +180,7 @@ export default function JuryForm({ onBack }) {
     <>
       <EvalStep
         juryName={juryName}
-        juryDept={juryDept}
+        affiliation={affiliation}
         projects={projects}
         current={current}
         onNavigate={handleNavigate}

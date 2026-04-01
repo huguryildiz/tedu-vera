@@ -61,11 +61,11 @@ const EVALUATION_VIEWS = [
 
 export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialLoadDone, onLogout }) {
   // ── Auth context (Phase C) ──────────────────────────────────
-  const { activeTenant, isSuper, tenants, setActiveTenant, displayName, signOut, user } = useAuth();
-  const tenantId = activeTenant?.id || "";
+  const { activeOrganization, isSuper, organizations, setActiveOrganization, displayName, signOut, user } = useAuth();
+  const organizationId = activeOrganization?.id || "";
 
-  // ── Semester selection (UI state — drives dropdown + hook) ─
-  const [selectedSemesterId, setSelectedSemesterId] = useState("");
+  // ── Period selection (UI state — drives dropdown + hook) ─
+  const [selectedPeriodId, setSelectedPeriodId] = useState("");
 
   // settingsDirtyRef — passed to useAdminTabs for the unsaved-change guard
   // and used in the tab click handler JSX below.
@@ -84,13 +84,13 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
     rawScores,
     summaryData,
     allJurors,
-    semesterList,
-    sortedSemesters,
+    periodList,
+    sortedPeriods,
     trendData,
     trendLoading,
     trendError,
-    trendSemesterIds,
-    setTrendSemesterIds,
+    trendPeriodIds,
+    setTrendPeriodIds,
     detailsScores,
     detailsSummary,
     detailsLoading,
@@ -100,9 +100,9 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
     lastRefresh,
     fetchData,
   } = useAdminData({
-    tenantId,
-    selectedSemesterId,
-    onSelectedSemesterChange: setSelectedSemesterId,
+    organizationId,
+    selectedPeriodId,
+    onSelectedPeriodChange: setSelectedPeriodId,
     onAuthError,
     onInitialLoadDone,
     scoresView,
@@ -146,7 +146,7 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
         seen.set(key, {
           key,
           name: j.juryName.trim(),
-          dept: j.juryDept.trim(),
+          dept: j.affiliation.trim(),
           jurorId: j.jurorId,
           editEnabled: !!j.editEnabled,
           finalSubmittedAt: j.finalSubmittedAt || j.final_submitted_at || "",
@@ -162,7 +162,7 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
       seen.set(key, {
         key,
         name: d.juryName.trim(),
-        dept: d.juryDept.trim(),
+        dept: d.affiliation.trim(),
         jurorId: d.jurorId,
         editEnabled: prev?.editEnabled ?? false,
         finalSubmittedAt: prev?.finalSubmittedAt || "",
@@ -201,7 +201,7 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
         id: p.id,
         name: `Group ${p.groupNo}`,
         groupNo: p.groupNo,
-        projectTitle: p.name ?? "",
+        title: p.name ?? "",
         students: p.students,
         count: p.count,
         avg: p.avg,
@@ -257,10 +257,10 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
     } catch { }
   }, [overviewMetrics.totalJurors, overviewMetrics.completedJurors, lastRefresh]);
 
-  const selectedSemester = sortedSemesters.find((s) => s.id === selectedSemesterId) ?? null;
-  const selectedSemesterName = selectedSemester?.semester_name ?? "—";
-  const selectedSemesterLocked = !!(selectedSemester?.is_locked);
-  const activeCriteria = getActiveCriteria(selectedSemester?.criteria_template);
+  const selectedPeriod = sortedPeriods.find((s) => s.id === selectedPeriodId) ?? null;
+  const selectedPeriodName = selectedPeriod?.period_name ?? "—";
+  const selectedPeriodLocked = !!(selectedPeriod?.is_locked);
+  const activeCriteria = getActiveCriteria(selectedPeriod?.criteria_config);
 
   // ── Page title for header ─────────────────────────────────
   const pageTitle = useMemo(() => {
@@ -269,7 +269,7 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
       settings: "Settings",
       jurors: "Jurors",
       projects: "Projects",
-      semesters: "Evaluation Periods",
+      periods: "Evaluation Periods",
       "entry-control": "Entry Control",
       "audit-log": "Audit Log",
       export: "Export",
@@ -297,9 +297,9 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
           setAdminTab("scores");
           switchScoresView(viewId);
         },
-        activeTenant,
-        tenants,
-        onTenantSwitch: setActiveTenant,
+        activeOrganization,
+        organizations,
+        onTenantSwitch: setActiveOrganization,
         isSuper,
         user,
         displayName,
@@ -308,16 +308,16 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
     >
       <AdminHeader
         title={pageTitle}
-        subtitle={selectedSemesterName !== "—" ? selectedSemesterName : undefined}
+        subtitle={selectedPeriodName !== "—" ? selectedPeriodName : undefined}
         loading={loading}
         lastRefresh={lastRefresh}
         onRefresh={() => fetchData()}
         isDemoMode={isDemoMode}
-        semesterList={semesterList}
-        sortedSemesters={sortedSemesters}
-        selectedSemesterId={selectedSemesterId}
-        selectedSemesterName={selectedSemesterName}
-        onSemesterChange={setSelectedSemesterId}
+        periodList={periodList}
+        sortedPeriods={sortedPeriods}
+        selectedPeriodId={selectedPeriodId}
+        selectedPeriodName={selectedPeriodName}
+        onPeriodChange={setSelectedPeriodId}
         onFetchData={fetchData}
       />
 
@@ -331,9 +331,9 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
       {/* Tab content */}
       {!loading && (
         <div className="p-6 md:p-8 lg:p-10">
-          {selectedSemesterLocked && (adminTab === "overview" || adminTab === "scores") && (
+          {selectedPeriodLocked && (adminTab === "overview" || adminTab === "scores") && (
             <AlertCard variant="warning" className="admin-lock-banner">
-              Evaluations are locked for this semester. Jurors cannot submit or edit scores.
+              Evaluations are locked for this period. Jurors cannot submit or edit scores.
             </AlertCard>
           )}
           {(authError || loadError) && (
@@ -348,8 +348,8 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
               summaryData={summaryData}
               metrics={overviewMetrics}
               rawScores={rawScores}
-              criteriaTemplate={activeCriteria}
-              semester={selectedSemester}
+              criteriaConfig={activeCriteria}
+              period={selectedPeriod}
               onGoToSettings={() => setAdminTab("settings")}
             />
           )}
@@ -359,13 +359,13 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
               ranked={ranked}
               submittedData={submittedData}
               rawScores={rawScores}
-              criteriaTemplate={activeCriteria}
-              mudekTemplate={selectedSemester?.mudek_template}
+              criteriaConfig={activeCriteria}
+              outcomeConfig={selectedPeriod?.outcome_config}
               detailsScores={detailsScores}
               jurors={uniqueJurors}
               matrixJurors={matrixJurors}
               groups={groups}
-              semesterName={selectedSemesterName}
+              periodName={selectedPeriodName}
               summaryData={summaryData}
               detailsSummary={detailsSummary}
               dashboardStats={dashboardStats}
@@ -374,9 +374,9 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
               loading={loading}
               error={loadError || null}
               detailsLoading={detailsLoading}
-              semesterOptions={sortedSemesters}
-              trendSemesterIds={trendSemesterIds}
-              onTrendSelectionChange={setTrendSemesterIds}
+              periodOptions={sortedPeriods}
+              trendPeriodIds={trendPeriodIds}
+              onTrendSelectionChange={setTrendPeriodIds}
               trendData={trendData}
               trendLoading={trendLoading}
               trendError={trendError}
@@ -384,82 +384,82 @@ export default function AdminPanel({ isDemoMode, onBack, onAuthError, onInitialL
           )}
           {adminTab === "entry-control" && (
             <EntryControlPage
-              tenantId={tenantId}
-              semesterId={selectedSemesterId}
-              semesterName={selectedSemesterName}
+              organizationId={organizationId}
+              periodId={selectedPeriodId}
+              periodName={selectedPeriodName}
               isDemoMode={isDemoMode}
             />
           )}
           {adminTab === "audit-log" && (
-            <AuditLogPage tenantId={tenantId} />
+            <AuditLogPage organizationId={organizationId} />
           )}
           {adminTab === "export" && (
-            <ExportPage tenantId={tenantId} isDemoMode={isDemoMode} />
+            <ExportPage organizationId={organizationId} isDemoMode={isDemoMode} />
           )}
           {adminTab === "jurors" && (
             <JurorsPage
-              tenantId={tenantId}
-              selectedSemesterId={selectedSemesterId}
+              organizationId={organizationId}
+              selectedPeriodId={selectedPeriodId}
               isDemoMode={isDemoMode}
               onDirtyChange={(dirty) => { settingsDirtyRef.current = dirty; }}
-              onCurrentSemesterChange={(semesterId) => {
-                setSelectedSemesterId(semesterId);
-                fetchData(semesterId);
+              onCurrentSemesterChange={(periodId) => {
+                setSelectedSemesterId(periodId);
+                fetchData(periodId);
               }}
             />
           )}
           {adminTab === "projects" && (
             <ProjectsPage
-              tenantId={tenantId}
-              selectedSemesterId={selectedSemesterId}
+              organizationId={organizationId}
+              selectedPeriodId={selectedPeriodId}
               isDemoMode={isDemoMode}
               onDirtyChange={(dirty) => { settingsDirtyRef.current = dirty; }}
-              onCurrentSemesterChange={(semesterId) => {
-                setSelectedSemesterId(semesterId);
-                fetchData(semesterId);
+              onCurrentSemesterChange={(periodId) => {
+                setSelectedSemesterId(periodId);
+                fetchData(periodId);
               }}
             />
           )}
-          {adminTab === "semesters" && (
+          {adminTab === "periods" && (
             <SemestersPage
-              tenantId={tenantId}
-              selectedSemesterId={selectedSemesterId}
+              organizationId={organizationId}
+              selectedPeriodId={selectedPeriodId}
               isDemoMode={isDemoMode}
               onDirtyChange={(dirty) => { settingsDirtyRef.current = dirty; }}
-              onCurrentSemesterChange={(semesterId) => {
-                setSelectedSemesterId(semesterId);
-                fetchData(semesterId);
+              onCurrentSemesterChange={(periodId) => {
+                setSelectedSemesterId(periodId);
+                fetchData(periodId);
               }}
             />
           )}
           {adminTab === "settings" && (
             <OrgSettingsPage
-              tenantId={tenantId}
+              organizationId={organizationId}
               isDemoMode={isDemoMode}
               onDirtyChange={(dirty) => { settingsDirtyRef.current = dirty; }}
             />
           )}
           {adminTab === "criteria" && (
             <CriteriaPage
-              tenantId={tenantId}
-              selectedSemesterId={selectedSemesterId}
+              organizationId={organizationId}
+              selectedPeriodId={selectedPeriodId}
               isDemoMode={isDemoMode}
               onDirtyChange={(dirty) => { settingsDirtyRef.current = dirty; }}
-              onCurrentSemesterChange={(semesterId) => {
-                setSelectedSemesterId(semesterId);
-                fetchData(semesterId);
+              onCurrentSemesterChange={(periodId) => {
+                setSelectedSemesterId(periodId);
+                fetchData(periodId);
               }}
             />
           )}
           {adminTab === "outcomes" && (
             <OutcomesPage
-              tenantId={tenantId}
-              selectedSemesterId={selectedSemesterId}
+              organizationId={organizationId}
+              selectedPeriodId={selectedPeriodId}
               isDemoMode={isDemoMode}
               onDirtyChange={(dirty) => { settingsDirtyRef.current = dirty; }}
-              onCurrentSemesterChange={(semesterId) => {
-                setSelectedSemesterId(semesterId);
-                fetchData(semesterId);
+              onCurrentSemesterChange={(periodId) => {
+                setSelectedSemesterId(periodId);
+                fetchData(periodId);
               }}
             />
           )}

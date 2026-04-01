@@ -11,8 +11,8 @@ import ProjectsTable from "./ProjectsTable";
 
 export default function ManageProjectsPanel({
   projects,
-  semesterName,
-  currentSemesterId,
+  periodName,
+  currentPeriodId,
   semesterOptions = [],
   panelError = "",
   isDemoMode = false,
@@ -31,20 +31,20 @@ export default function ManageProjectsPanel({
   const [showImport, setShowImport] = useState(false);
   const [form, setForm] = useState({
     group_no: "",
-    project_title: "",
-    group_students: [""],
-    semester_id: currentSemesterId || "",
+    title: "",
+    members: [""],
+    period_id: currentPeriodId || "",
   });
   const [addError, setAddError] = useState("");
   const [addSaving, setAddSaving] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
-  const [editForm, setEditForm] = useState({ group_no: "", project_title: "", group_students: [""], semesterId: null, _id: null, _updatedAt: null });
+  const [editForm, setEditForm] = useState({ group_no: "", title: "", members: [""], periodId: null, _id: null, _updatedAt: null });
   const [editError, setEditError] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [guardError, setGuardError] = useState("");
   const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
   const isDirty =
-    (showAdd && (form.group_no.trim() !== "" || form.project_title.trim() !== "" || form.group_students.some((s) => s.trim() !== ""))) ||
+    (showAdd && (form.group_no.trim() !== "" || form.title.trim() !== "" || form.members.some((s) => s.trim() !== ""))) ||
     showEdit;
 
   useEffect(() => {
@@ -59,17 +59,17 @@ export default function ManageProjectsPanel({
     onToggle();
   };
 
-  const normalizedAddStudents = normalizeStudents(form.group_students);
-  const normalizedEditStudents = normalizeStudents(editForm.group_students);
+  const normalizedAddStudents = normalizeStudents(form.members);
+  const normalizedEditStudents = normalizeStudents(editForm.members);
 
   const canAddSubmit =
     String(form.group_no).trim() &&
-    form.project_title.trim() &&
+    form.title.trim() &&
     String(normalizedAddStudents).trim() &&
-    String(form.semester_id || "").trim();
+    String(form.period_id || "").trim();
   const canEditSubmit =
     String(editForm.group_no).trim() &&
-    editForm.project_title.trim() &&
+    editForm.title.trim() &&
     String(normalizedEditStudents).trim();
 
   // Detect external delete while edit modal is open and close it safely.
@@ -94,8 +94,8 @@ export default function ManageProjectsPanel({
       setAddError("Group number must be between 1 and 999.");
       return;
     }
-    if (!form.semester_id) {
-      setAddError("Please select a semester.");
+    if (!form.period_id) {
+      setAddError("Please select a period.");
       return;
     }
     const existingGroupNos = new Set(
@@ -103,7 +103,7 @@ export default function ManageProjectsPanel({
         .map((p) => Number(p.group_no))
         .filter((n) => Number.isFinite(n) && n > 0)
     );
-    if (form.semester_id === currentSemesterId && Number.isFinite(groupNo) && existingGroupNos.has(groupNo)) {
+    if (form.period_id === currentPeriodId && Number.isFinite(groupNo) && existingGroupNos.has(groupNo)) {
       setAddError(`Group ${groupNo} already exists. Use 'Edit' to update.`);
       return;
     }
@@ -112,9 +112,9 @@ export default function ManageProjectsPanel({
     try {
       res = await onAddGroup({
         group_no: groupNo,
-        project_title: form.project_title.trim(),
-        group_students: normalizedAddStudents,
-        semesterId: form.semester_id,
+        title: form.title.trim(),
+        members: normalizedAddStudents,
+        periodId: form.period_id,
       });
     } finally {
       setAddSaving(false);
@@ -127,9 +127,9 @@ export default function ManageProjectsPanel({
     if (res?.ok === false) return;
     setForm({
       group_no: "",
-      project_title: "",
-      group_students: [""],
-      semester_id: currentSemesterId || "",
+      title: "",
+      members: [""],
+      period_id: currentPeriodId || "",
     });
   };
 
@@ -147,9 +147,9 @@ export default function ManageProjectsPanel({
     }
     const res = await onEditGroup?.({
       group_no: Number(editForm.group_no),
-      project_title: editForm.project_title.trim(),
-      group_students: normalizedEditStudents,
-      semesterId: editForm.semesterId,
+      title: editForm.title.trim(),
+      members: normalizedEditStudents,
+      periodId: editForm.periodId,
     });
     setEditSaving(false);
     if (res?.ok === false) {
@@ -163,9 +163,9 @@ export default function ManageProjectsPanel({
     setEditError("");
     setEditForm({
       group_no: p.group_no ?? "",
-      project_title: p.project_title || "",
-      group_students: parseStudentInputList(p.group_students || ""),
-      semesterId: p.semester_id || null,
+      title: p.title || "",
+      members: parseStudentInputList(p.members || ""),
+      periodId: p.period_id || null,
       _id: p.id || null,
       _updatedAt: p.updated_at || p.updatedAt || null,
     });
@@ -191,8 +191,8 @@ export default function ManageProjectsPanel({
       <div className="flex flex-col gap-3">
         <p className="text-xs text-muted-foreground -mt-0.5 leading-relaxed">
           Manage groups, projects, and students for{" "}
-          <span className="font-bold text-destructive animate-pulse">{semesterName || "the selected"}</span>{" "}
-          semester.
+          <span className="font-bold text-destructive animate-pulse">{periodName || "the selected"}</span>{" "}
+          period.
         </p>
         {(panelError || guardError) && (
           <AlertCard variant="error">
@@ -209,7 +209,7 @@ export default function ManageProjectsPanel({
           </AlertCard>
         )}
         <p className="text-xs text-muted-foreground">
-          Use the header to switch semesters and view other groups.
+          Use the header to switch periods and view other groups.
         </p>
         <div className="flex gap-2.5 flex-wrap">
           <button
@@ -227,7 +227,7 @@ export default function ManageProjectsPanel({
             type="button"
             onClick={() => {
               setAddError("");
-              setForm((f) => ({ ...f, semester_id: currentSemesterId || f.semester_id || "" }));
+              setForm((f) => ({ ...f, period_id: currentPeriodId || f.period_id || "" }));
               setShowAdd(true);
             }}
           >
@@ -238,7 +238,7 @@ export default function ManageProjectsPanel({
 
         <ProjectsTable
           projects={projects}
-          semesterName={semesterName}
+          periodName={periodName}
           isDemoMode={isDemoMode}
           onEdit={handleEditProject}
           onDelete={handleDeleteProject}
@@ -279,7 +279,7 @@ export default function ManageProjectsPanel({
           show={showImport}
           onClose={() => setShowImport(false)}
           onImport={onImport}
-          semesterName={semesterName}
+          periodName={periodName}
           projects={projects}
         />
       </div>

@@ -1,40 +1,46 @@
 // src/shared/api/fieldMapping.js
-// ============================================================
-// Helpers for converting DB JSONB score data to the shapes
-// that UI hooks and components expect.
+// Score field mapping between DB columns and UI display names.
 //
-// After the JSONB migration, `criteria_scores` keys in the DB
-// match config.js criterion ids directly (e.g. "technical",
-// "design", "delivery", "teamwork"), so no renaming is needed.
+// DB columns: technical, written, oral, teamwork (individual NUMERIC)
+// UI names:   technical, design, delivery, teamwork
 //
-// dbScoresToUi    — used by listProjects to hydrate jury state
-// dbAvgScoresToUi — used by adminProjectSummary / adminOutcomeTrends
-// ============================================================
+// "written" in DB = "design" in UI
+// "oral" in DB = "delivery" in UI
 
 /**
- * Map `criteria_scores` JSONB from a score row to the UI criterion-keyed
- * object expected by jury hooks. Keys are passed through directly.
- *
- * @param {{ criteria_scores?: Record<string, number|null> }} row
- * @returns {Record<string, number|null>}
+ * Maps DB score row to UI field names.
+ * DB: written, oral → UI: design, delivery
  */
 export function dbScoresToUi(row) {
-  const cs = row.criteria_scores || {};
-  return Object.fromEntries(
-    Object.entries(cs).map(([k, v]) => [k, v ?? null])
-  );
+  return {
+    technical: row.technical ?? null,
+    design: row.written ?? null,
+    delivery: row.oral ?? null,
+    teamwork: row.teamwork ?? null,
+  };
 }
 
 /**
- * Map `criteria_avgs` JSONB from an aggregate row to the UI criterion-keyed
- * averages object. Numeric strings from the DB are converted to Number.
- *
- * @param {{ criteria_avgs?: Record<string, string|number|null> }} row
- * @returns {Record<string, number|null>}
+ * Maps UI field names back to DB columns for writes.
+ * UI: design, delivery → DB: written, oral
+ */
+export function uiScoresToDb(scores) {
+  return {
+    technical: scores.technical ?? null,
+    written: scores.design ?? null,
+    oral: scores.delivery ?? null,
+    teamwork: scores.teamwork ?? null,
+  };
+}
+
+/**
+ * Maps DB average scores to UI (same mapping as dbScoresToUi).
  */
 export function dbAvgScoresToUi(row) {
-  const avgs = row.criteria_avgs || {};
-  return Object.fromEntries(
-    Object.entries(avgs).map(([k, v]) => [k, v == null ? null : Number(v)])
-  );
+  return {
+    technical: row.technical != null ? Number(row.technical) : null,
+    design: row.written != null ? Number(row.written) : null,
+    delivery: row.oral != null ? Number(row.oral) : null,
+    teamwork: row.teamwork != null ? Number(row.teamwork) : null,
+  };
 }

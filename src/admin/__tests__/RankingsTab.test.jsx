@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 vi.mock("../../shared/auth", () => ({
-  useAuth: () => ({ activeTenant: null }),
+  useAuth: () => ({ activeOrganization: null }),
 }));
 
 import RankingsTab from "../RankingsTab";
@@ -22,7 +22,7 @@ describe("RankingsTab", () => {
       { id: "p5", groupNo: 5, name: "E", students: "", totalAvg: null, avg: {} },
     ];
 
-    const { container } = render(<RankingsTab ranked={ranked} semesterName="2026 Spring" />);
+    const { container } = render(<RankingsTab ranked={ranked} periodName="2026 Spring" />);
 
     expect(screen.queryByText("Group 5")).toBeNull();
     expect(screen.getAllByAltText(/1st place/i)).toHaveLength(2);
@@ -45,7 +45,7 @@ describe("RankingsTab", () => {
       { id: "p4", groupNo: 4, name: "Delta", students: "", totalAvg: 60, avg: {} }, // rank 4 → num badge
     ];
     render(
-      <RankingsTab ranked={ranked} semesterName="2026 Spring" />
+      <RankingsTab ranked={ranked} periodName="2026 Spring" />
     );
 
     // Filter to show only Delta — its rank must remain 4, not reset to 1
@@ -63,7 +63,7 @@ describe("RankingsTab", () => {
       { id: "p1", groupNo: 1, name: "Alpha", students: "", totalAvg: 88, avg: {} },
       { id: "p2", groupNo: 2, name: "Beta", students: "", totalAvg: 77, avg: {} },
     ];
-    render(<RankingsTab ranked={ranked} semesterName="2026 Spring" />);
+    render(<RankingsTab ranked={ranked} periodName="2026 Spring" />);
 
     screen.getByRole("button", { name: /excel/i }).click();
     expect(exportSpy).toHaveBeenCalledTimes(1);
@@ -76,7 +76,7 @@ describe("RankingsTab", () => {
       { id: "p1", groupNo: 11, name: "AlphaUniq", students: "", totalAvg: 85, avg: {} },
       { id: "p2", groupNo: 22, name: "BetaNull",  students: "", totalAvg: null, avg: {} },
     ];
-    render(<RankingsTab ranked={ranked} semesterName="2026 Spring" />);
+    render(<RankingsTab ranked={ranked} periodName="2026 Spring" />);
 
     // Only the ranked project (AlphaUniq) should appear, not BetaNull
     expect(screen.getByText(/AlphaUniq/)).toBeTruthy();
@@ -92,7 +92,7 @@ describe("RankingsTab", () => {
       { id: "p3", groupNo: 3, name: "Gamma", students: "", totalAvg: 80, avg: {} },
       { id: "p4", groupNo: 4, name: "Delta", students: "", totalAvg: 70, avg: {} },
     ];
-    render(<RankingsTab ranked={ranked} semesterName="2026 Spring" />);
+    render(<RankingsTab ranked={ranked} periodName="2026 Spring" />);
 
     // Both tied projects at score 90 get rank 1 medal
     expect(screen.getAllByAltText(/1st place/i)).toHaveLength(2);
@@ -112,7 +112,7 @@ describe("RankingsTab", () => {
       { id: "p3", groupNo: 3, name: "Gamma", students: "", totalAvg: 70, avg: {} },
       { id: "p4", groupNo: 4, name: "Delta", students: "", totalAvg: 60, avg: {} },
     ];
-    render(<RankingsTab ranked={ranked} semesterName="2026 Spring" />);
+    render(<RankingsTab ranked={ranked} periodName="2026 Spring" />);
 
     // Filter to show only Delta (rank 4)
     const searchInput = screen.getByPlaceholderText(/Search groups/i);
@@ -131,7 +131,7 @@ describe("RankingsTab", () => {
       { id: "p3", groupNo: 3, name: "Gamma", students: "", totalAvg: 75, avg: {} },
       { id: "p4", groupNo: 4, name: "Delta", students: "", totalAvg: 65, avg: {} },
     ];
-    render(<RankingsTab ranked={ranked} semesterName="2026 Spring" />);
+    render(<RankingsTab ranked={ranked} periodName="2026 Spring" />);
 
     // Only 3 ranked projects visible (null excluded)
     expect(screen.queryByText(/Beta/)).toBeNull();

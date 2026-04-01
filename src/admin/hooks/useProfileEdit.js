@@ -7,7 +7,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../shared/auth";
 import { useToast } from "../../components/toast/useToast";
-import { adminProfileUpsert } from "../../shared/api/admin/profiles";
+import { upsertProfile } from "../../shared/api";
 import { supabase } from "../../lib/supabaseClient";
 
 const isStrongPassword = (v) => {
@@ -90,7 +90,7 @@ export function useProfileEdit() {
       const emailChanged = form.email.trim() !== initialRef.current.email;
 
       if (nameChanged) {
-        const result = await adminProfileUpsert(trimmedName || null);
+        const result = await upsertProfile(trimmedName || null);
         if (result?.out_display_name != null) {
           setDisplayName(result.out_display_name);
         }

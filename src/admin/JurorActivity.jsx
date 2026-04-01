@@ -91,7 +91,7 @@ export default function JurorActivity({ jurorStats = [], groups = [] }) {
     let list = jurorStats.slice().sort((a, b) => cmp(a.jury, b.jury));
     if (normalizedSearch) {
       list = list.filter((s) => {
-        const dept = s.latestRow?.juryDept || s.dept || "";
+        const dept = s.latestRow?.affiliation || s.dept || "";
         const status = getOverallStatus(s, groups.length);
         const statusLabel = jurorStatusMeta[status]?.label ?? status;
         const statusText = `${status} ${statusLabel} ${String(status).replace(/_/g, " ")}`;
@@ -150,14 +150,14 @@ export default function JurorActivity({ jurorStats = [], groups = [] }) {
             pct > 33    ? "#eab308" :
             pct > 0     ? "#f97316" : "#e2e8f0";
 
-          const deptLine = String(latestRow?.juryDept || dept || "").trim();
+          const deptLine = String(latestRow?.affiliation || dept || "").trim();
           const lastActivity = (latestRow?.finalSubmittedAt || latestRow?.updatedAt)
             ? formatTs(latestRow?.finalSubmittedAt || latestRow?.updatedAt)
             : "—";
           const rowMap = new Map((rows || []).map((r) => [r.projectId, r]));
           const perGroupRows = groups.map((g) => {
             const row = rowMap.get(g.id);
-            const projectTitle = String(g.title ?? g.project_title ?? "").trim();
+            const title = String(g.title ?? g.title ?? "").trim();
             const studentsList = Array.isArray(g.students)
               ? g.students
               : String(g.students ?? "")
@@ -184,7 +184,7 @@ export default function JurorActivity({ jurorStats = [], groups = [] }) {
               id: g.id,
               label: g.label || `Group ${g.groupNo}`,
               shortLabel: `Group ${g.groupNo}`,
-              projectTitle,
+              title,
               students: studentsList,
               updatedAt,
               state,
@@ -263,7 +263,7 @@ export default function JurorActivity({ jurorStats = [], groups = [] }) {
                   {perGroupRows.map((row) => {
                     const scoreLabel = Number.isFinite(row.score) ? row.score : "—";
                     const groupKey = `${key}-${row.id}`;
-                    const hasDetails = Boolean(row.projectTitle) || row.students.length > 0;
+                    const hasDetails = Boolean(row.title) || row.students.length > 0;
                     const isGroupOpen = expandedGroups.has(groupKey);
                     const groupPanelId = `juror-group-panel-${safeKey}-${row.id}`;
                     const meta = jurorStatusMeta[row.state] ?? jurorStatusMeta.not_started;
@@ -306,9 +306,9 @@ export default function JurorActivity({ jurorStats = [], groups = [] }) {
                           >
                             <div className="group-accordion-panel-inner">
                               <div className="juror-eval-details">
-                                {row.projectTitle && (
+                                {row.title && (
                                   <div className="juror-eval-detail">
-                                    <ProjectTitle text={row.projectTitle} />
+                                    <ProjectTitle text={row.title} />
                                   </div>
                                 )}
                                 {row.students.length > 0 && (

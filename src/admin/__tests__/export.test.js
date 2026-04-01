@@ -38,7 +38,7 @@ describe("buildExportFilename", () => {
 
     const name = buildExportFilename("rankings", "2026 Spring");
 
-    // Pattern: vera_{type}_{semester}_{YYYY-MM-DD}_{HHMM}.xlsx
+    // Pattern: vera_{type}_{period}_{YYYY-MM-DD}_{HHMM}.xlsx
     expect(name).toMatch(/^vera_rankings_2026-spring_\d{4}-\d{2}-\d{2}_\d{4}\.xlsx$/);
     expect(name).toContain("vera_rankings_2026-spring_");
     expect(name).toContain(".xlsx");
@@ -65,7 +65,7 @@ describe("exportGridXLSX", () => {
       { name: "Alice", dept: "EE", statusLabel: "Completed", scores: { g1: 80, g2: 75 } },
     ];
 
-    await exportGridXLSX(exportRows, groups, { semesterName: "2026 Spring" });
+    await exportGridXLSX(exportRows, groups, { periodName: "2026 Spring" });
 
     // aoa_to_sheet is called with [headers, ...dataRows]
     const XLSX = await import("xlsx-js-style");
@@ -88,7 +88,7 @@ describe("exportGridXLSX", () => {
       { name: "Bob", dept: "CS", statusLabel: "Completed", scores: { g1: 90 } },
     ];
 
-    await exportGridXLSX(filteredRows, groups, { semesterName: "2026 Spring" });
+    await exportGridXLSX(filteredRows, groups, { periodName: "2026 Spring" });
 
     const XLSX = await import("xlsx-js-style");
     const sheetData = XLSX.utils.aoa_to_sheet.mock.calls[0][0];
@@ -115,7 +115,7 @@ describe("exportRankingsXLSX", () => {
       { groupNo: 3, name: "Gamma", students: "", totalAvg: 80, avg: { technical: 20 } },
     ];
 
-    await exportRankingsXLSX(ranked, criteria, { semesterName: "2026 Spring" });
+    await exportRankingsXLSX(ranked, criteria, { periodName: "2026 Spring" });
 
     const XLSX = await import("xlsx-js-style");
     const sheetData = XLSX.utils.aoa_to_sheet.mock.calls[0][0];

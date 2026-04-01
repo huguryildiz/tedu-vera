@@ -94,7 +94,7 @@ const NAV_SECTIONS = [
     items: [
       { id: "jurors", label: "Jurors", icon: Users },
       { id: "projects", label: "Projects", icon: FolderKanban },
-      { id: "semesters", label: "Periods", icon: Calendar },
+      { id: "periods", label: "Periods", icon: Calendar },
     ],
   },
   {
@@ -136,10 +136,10 @@ function SidebarBrand() {
   );
 }
 
-function SidebarTenantSwitcher({ activeTenant, tenants, onTenantSwitch, isSuper }) {
-  const tenantLabel = activeTenant?.short_label || activeTenant?.name || "No organization";
+function SidebarTenantSwitcher({ activeOrganization, organizations, onTenantSwitch, isSuper }) {
+  const tenantLabel = activeOrganization?.short_label || activeOrganization?.name || "No organization";
 
-  if (!isSuper || !tenants || tenants.length <= 1) {
+  if (!isSuper || !organizations || organizations.length <= 1) {
     return (
       <div className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/80 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
         <Building2 className="size-4 shrink-0 text-sidebar-foreground/60" />
@@ -163,12 +163,12 @@ function SidebarTenantSwitcher({ activeTenant, tenants, onTenantSwitch, isSuper 
         <DropdownMenuGroup>
           <DropdownMenuLabel>Switch Organization</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {tenants
+          {organizations
             .filter((t) => t.id != null)
             .map((t) => (
               <DropdownMenuItem
                 key={t.id}
-                className={cn(activeTenant?.id === t.id && "bg-accent font-medium")}
+                className={cn(activeOrganization?.id === t.id && "bg-accent font-medium")}
                 onClick={() => onTenantSwitch(t)}
               >
                 {t.name}
@@ -284,7 +284,7 @@ function CollapsibleNavSection({ section, adminTab, scoresView, onNavigate, onSc
   );
 }
 
-function SidebarUserFooter({ user, displayName, activeTenant, isSuper, onLogout }) {
+function SidebarUserFooter({ user, displayName, activeOrganization, isSuper, onLogout }) {
   const { theme, setTheme } = useTheme();
 
   return (
@@ -304,7 +304,7 @@ function SidebarUserFooter({ user, displayName, activeTenant, isSuper, onLogout 
           <SidebarProfileMenu
             user={user}
             displayName={displayName}
-            activeTenant={activeTenant}
+            activeOrganization={activeOrganization}
             isSuper={isSuper}
             onLogout={onLogout}
           />
@@ -323,8 +323,8 @@ export default function AdminSidebar({
   scoresView,
   onNavigate,
   onScoresViewChange,
-  activeTenant,
-  tenants,
+  activeOrganization,
+  organizations,
   onTenantSwitch,
   isSuper,
   user,
@@ -339,8 +339,8 @@ export default function AdminSidebar({
         <SidebarBrand />
         <SidebarSeparator />
         <SidebarTenantSwitcher
-          activeTenant={activeTenant}
-          tenants={tenants}
+          activeOrganization={activeOrganization}
+          organizations={organizations}
           onTenantSwitch={onTenantSwitch}
           isSuper={isSuper}
         />
@@ -381,7 +381,7 @@ export default function AdminSidebar({
       <SidebarUserFooter
         user={user}
         displayName={displayName}
-        activeTenant={activeTenant}
+        activeOrganization={activeOrganization}
         isSuper={isSuper}
         onLogout={onLogout}
       />

@@ -20,7 +20,7 @@ import {
   ClipboardIcon,
   ShieldUserIcon,
 } from "./shared/Icons";
-import { submitAdminApplication } from "./shared/api";
+import { submitApplication } from "./shared/api";
 import { initScrollIndicators } from "./shared/scrollIndicators";
 import MinimalLoaderOverlay from "./shared/MinimalLoaderOverlay";
 import { getPage, setPage as persistPage, getJuryAccess } from "./shared/storage";
@@ -145,7 +145,7 @@ function AppInner() {
     setAdminAuthError("");
     // No auth.signUp — application is submitted as anon.
     // auth.users entry is created when super-admin approves.
-    await submitAdminApplication({
+    await submitApplication({
       tenantId: metadata.tenantId,
       email,
       password,

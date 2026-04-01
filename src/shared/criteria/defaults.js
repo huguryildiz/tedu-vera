@@ -1,18 +1,18 @@
 // src/shared/criteria/defaults.js
 // ============================================================
-// Seed builders for criteria_template and mudek_template.
-// Used when creating a new semester.
+// Seed builders for criteria_config and outcome_config.
+// Used when creating a new evaluation period.
 // ============================================================
 
 import { CRITERIA, MUDEK_OUTCOMES } from "../../config";
 import { _codeToId } from "./criteriaHelpers";
 
 /**
- * Build the default `criteria_template` seed array from config.
- * Used when creating a new semester. Includes the full rich shape
+ * Build the default `criteria_config` seed array from config.
+ * Used when creating a new evaluation period. Includes the full rich shape
  * (shortLabel, color, blurb, mudek, rubric) + legacy compat fields.
  */
-export function defaultCriteriaTemplate() {
+export function defaultCriteriaConfig() {
   return CRITERIA.map((c) => ({
     key:            c.id,
     label:          c.label,
@@ -27,10 +27,10 @@ export function defaultCriteriaTemplate() {
 }
 
 /**
- * Build the default `mudek_template` seed array from config.
- * Used when creating a new semester.
+ * Build the default `outcome_config` seed array from config.
+ * Used when creating a new evaluation period.
  */
-export function defaultMudekTemplate() {
+export function defaultOutcomeConfig() {
   return Object.entries(MUDEK_OUTCOMES).map(([code, desc]) => ({
     id:      _codeToId(code),
     code,

@@ -21,7 +21,7 @@ function renderManager() {
   render(
     <CriteriaManager
       template={template}
-      mudekTemplate={[]}
+      outcomeConfig={[]}
       onSave={onSave}
       disabled={false}
       isLocked={false}

@@ -102,22 +102,22 @@ import ScoreGrid from "../ScoreGrid";
 
 // ── Fixtures ──────────────────────────────────────────────────
 
-const JURORS = [{ juror_id: "j1", juror_name: "Alice", juror_inst: "EE", key: "j1" }];
-const GROUPS = [{ id: "g1", group_no: 1, project_title: "Alpha", group_students: "Bob" }];
+const JURORS = [{ juror_id: "j1", juror_name: "Alice", affiliation: "EE", key: "j1" }];
+const GROUPS = [{ id: "g1", group_no: 1, title: "Alpha", members: "Bob" }];
 
 // ── Tests ─────────────────────────────────────────────────────
 
 describe("ScoreGrid — ARIA roles", () => {
   qaTest("scoregrid.aria.01", () => {
     const { container } = render(
-      <ScoreGrid data={[]} jurors={JURORS} groups={GROUPS} semesterName="2026 Spring" />
+      <ScoreGrid data={[]} jurors={JURORS} groups={GROUPS} periodName="2026 Spring" />
     );
     expect(container.querySelector('[role="grid"]')).not.toBeNull();
   });
 
   qaTest("scoregrid.aria.02", () => {
     const { container } = render(
-      <ScoreGrid data={[]} jurors={JURORS} groups={GROUPS} semesterName="2026 Spring" />
+      <ScoreGrid data={[]} jurors={JURORS} groups={GROUPS} periodName="2026 Spring" />
     );
     expect(container.querySelector('[role="rowheader"]')).not.toBeNull();
   });
@@ -135,7 +135,7 @@ describe("ScoreGrid — ARIA sort", () => {
     // Sortable column headers must always carry an aria-sort attribute.
     // Valid values are: ascending | descending | none (required on all sortable headers).
     const { container } = render(
-      <ScoreGrid data={[]} jurors={JURORS} groups={GROUPS} semesterName="2026 Spring" />
+      <ScoreGrid data={[]} jurors={JURORS} groups={GROUPS} periodName="2026 Spring" />
     );
 
     // The juror column header must have aria-sort at all times (even when "none")

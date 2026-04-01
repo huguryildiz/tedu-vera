@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useToast } from "../../components/toast/useToast";
-import { useManageSemesters } from "../hooks/useManageSemesters";
+import { useManagePeriods } from "../hooks/useManagePeriods";
 import { useManageProjects } from "../hooks/useManageProjects";
 import { useManageJurors } from "../hooks/useManageJurors";
 import { useDeleteConfirm, buildCountSummary } from "../hooks/useDeleteConfirm";
@@ -15,7 +15,7 @@ import ManageJurorsPanel from "../ManageJurorsPanel";
 import PageShell from "./PageShell";
 
 export default function JurorsPage({
-  tenantId,
+  organizationId,
   selectedSemesterId,
   isDemoMode = false,
   onDirtyChange,
@@ -32,9 +32,9 @@ export default function JurorsPage({
   const incLoading = useCallback(() => setLoadingCount((c) => c + 1), []);
   const decLoading = useCallback(() => setLoadingCount((c) => Math.max(0, c - 1)), []);
 
-  // ── Semester context ──
-  const semesters = useManageSemesters({
-    tenantId,
+  // ── Period context ──
+  const periods = useManagePeriods({
+    organizationId,
     selectedSemesterId,
     setMessage,
     incLoading,
@@ -44,18 +44,18 @@ export default function JurorsPage({
     clearPanelError: () => {},
   });
 
-  // Load semesters on mount
+  // Load periods on mount
   useEffect(() => {
-    semesters.loadSemesters().catch(() => {});
+    periods.loadPeriods().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [semesters.loadSemesters]);
+  }, [periods.loadPeriods]);
 
   // ── Projects (needed for juror enrichment — total_projects count) ──
   const projectsHook = useManageProjects({
-    tenantId,
-    viewSemesterId: semesters.viewSemesterId,
-    viewSemesterLabel: semesters.viewSemesterLabel,
-    semesterList: semesters.semesterList,
+    organizationId,
+    viewPeriodId: periods.viewPeriodId,
+    viewPeriodLabel: periods.viewPeriodLabel,
+    periodList: periods.periodList,
     setMessage: () => {},
     incLoading: () => {},
     decLoading: () => {},
@@ -65,24 +65,24 @@ export default function JurorsPage({
 
   // ── Jurors ──
   const jurors = useManageJurors({
-    tenantId,
-    viewSemesterId: semesters.viewSemesterId,
-    viewSemesterLabel: semesters.viewSemesterLabel,
+    organizationId,
+    viewPeriodId: periods.viewPeriodId,
+    viewPeriodLabel: periods.viewPeriodLabel,
     projects: projectsHook.projects,
     setMessage,
     incLoading,
     decLoading,
     setPanelError,
     clearPanelError,
-    setEvalLockError: semesters.setEvalLockError,
+    setEvalLockError: periods.setEvalLockError,
   });
 
-  // Load projects + jurors when viewSemesterId changes
+  // Load projects + jurors when viewPeriodId changes
   useEffect(() => {
-    if (!semesters.viewSemesterId || !tenantId) return;
+    if (!periods.viewPeriodId || !organizationId) return;
     incLoading();
     Promise.allSettled([
-      projectsHook.loadProjects(semesters.viewSemesterId),
+      projectsHook.loadProjects(periods.viewPeriodId),
       jurors.loadJurors(),
     ])
       .then((results) => {
@@ -98,11 +98,11 @@ export default function JurorsPage({
     }, 100);
     return () => clearTimeout(enrichTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [semesters.viewSemesterId, tenantId]);
+  }, [periods.viewPeriodId, organizationId]);
 
   // ── Delete confirmation ──
   const deleteConfirm = useDeleteConfirm({
-    tenantId,
+    organizationId,
     setMessage,
     clearAllPanelErrors: clearPanelError,
     onJurorDeleted: jurors.removeJuror,
@@ -112,7 +112,7 @@ export default function JurorsPage({
 
   // ── Realtime ──
   usePageRealtime({
-    tenantId,
+    organizationId,
     channelName: "jurors-page-live",
     subscriptions: [
       { table: "jurors", event: "*", onPayload: jurors.scheduleJurorRefresh },
@@ -132,7 +132,7 @@ export default function JurorsPage({
         resetPinInfo={jurors.resetPinInfo}
         pinResetLoading={jurors.pinResetLoading}
         pinCopied={jurors.pinCopied}
-        viewSemesterLabel={semesters.viewSemesterLabel}
+        viewPeriodLabel={periods.viewPeriodLabel}
         onCopyPin={jurors.handleCopyPin}
         onClose={jurors.closeResetPinDialog}
         onConfirmReset={jurors.confirmResetPin}
@@ -173,7 +173,7 @@ export default function JurorsPage({
 
       <ManageJurorsPanel
         jurors={jurors.jurors}
-        semesterList={semesters.semesterList}
+        periodList={periods.periodList}
         panelError={panelError}
         isDemoMode={isDemoMode}
         isMobile={false}
@@ -190,12 +190,12 @@ export default function JurorsPage({
             id: j?.jurorId || j?.juror_id,
             label: `Juror ${j?.juryName || j?.juror_name || ""}`.trim(),
             name: j?.juryName || j?.juror_name || "",
-            inst: j?.juryDept || j?.juror_inst || "",
+            inst: j?.affiliation || j?.affiliation || "",
           })
         }
-        settings={semesters.settings}
-        currentSemesterId={semesters.viewSemesterId}
-        currentSemesterName={semesters.viewSemesterLabel}
+        settings={periods.settings}
+        currentSemesterId={periods.viewPeriodId}
+        currentSemesterName={periods.viewPeriodLabel}
         onToggleEdit={jurors.handleToggleJurorEdit}
         onForceCloseEdit={jurors.handleForceCloseJurorEdit}
       />

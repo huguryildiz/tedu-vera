@@ -45,7 +45,7 @@ function buildAuditExportFilename(filters = {}, search = "", tenantCode = "") {
 
 // ── Public API ────────────────────────────────────────────────
 
-export function buildExportFilename(type, semesterName, ext = "xlsx", tenantCode = "") {
+export function buildExportFilename(type, periodName, ext = "xlsx", tenantCode = "") {
   const now = new Date();
   const yyyy = now.getFullYear();
   const mm   = String(now.getMonth() + 1).padStart(2, "0");
@@ -54,7 +54,7 @@ export function buildExportFilename(type, semesterName, ext = "xlsx", tenantCode
   const min  = String(now.getMinutes()).padStart(2, "0");
   const safeTenant = String(tenantCode || "").trim().toLowerCase()
     .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-  const safeSem  = String(semesterName || "semester").trim().toLowerCase()
+  const safeSem  = String(periodName || "period").trim().toLowerCase()
     .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
   const safeType = String(type || "export").trim().toLowerCase()
     .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
@@ -91,13 +91,13 @@ export async function exportAuditLogsXLSX(rows, { filters = {}, search = "", ten
   XLSX.writeFile(wb, buildAuditExportFilename(filters, search, tenantCode));
 }
 
-export async function exportXLSX(rows, { semesterName = "", summaryData = [], jurors = [], includeEmptyRows = false, criteria, tenantCode = "" } = {}) {
+export async function exportXLSX(rows, { periodName = "", summaryData = [], jurors = [], includeEmptyRows = false, criteria, tenantCode = "" } = {}) {
   const activeCriteria = criteria || CRITERIA;
   const XLSX = await import("xlsx-js-style");
 
-  // Build projectId → group_students lookup from summaryData
+  // Build projectId → members lookup from summaryData
   const studentsMap = new Map(
-    (summaryData || []).map((p) => [p.id, p.students ?? p.group_students ?? ""])
+    (summaryData || []).map((p) => [p.id, p.students ?? p.members ?? ""])
   );
 
   const projectList = Array.isArray(summaryData) ? summaryData : [];
@@ -115,9 +115,9 @@ export async function exportXLSX(rows, { semesterName = "", summaryData = [], ju
     jurors.forEach((j) => {
       const jurorId = j.jurorId ?? j.juror_id;
       const juryName = String(j.juryName ?? j.juror_name ?? "").trim();
-      const juryDept = String(j.juryDept ?? j.juror_inst ?? "").trim();
+      const affiliation = String(j.affiliation ?? j.affiliation ?? "").trim();
       if (!jurorId && !juryName) return;
-      const jurorKey = rowKey({ jurorId, juryName, juryDept });
+      const jurorKey = rowKey({ jurorId, juryName, affiliation });
       projectList.forEach((p) => {
         const projectId = p.id ?? p.projectId;
         if (!projectId) return;
@@ -126,11 +126,11 @@ export async function exportXLSX(rows, { semesterName = "", summaryData = [], ju
         generated.push({
           jurorId,
           juryName,
-          juryDept,
+          affiliation,
           projectId,
           groupNo: p.groupNo ?? p.group_no ?? null,
-          projectName: String(p.name ?? p.project_title ?? "").trim(),
-          students: p.students ?? p.group_students ?? "",
+          projectName: String(p.name ?? p.title ?? "").trim(),
+          students: p.students ?? p.members ?? "",
           ...Object.fromEntries(activeCriteria.map((c) => [c.id, null])),
           total: null,
           comments: "",
@@ -174,8 +174,8 @@ export async function exportXLSX(rows, { semesterName = "", summaryData = [], ju
   (jurors || []).forEach((j) => {
     const jurorId = j.jurorId ?? j.juror_id;
     const juryName = j.juryName ?? j.juror_name ?? "";
-    const juryDept = j.juryDept ?? j.juror_inst ?? "";
-    const key = rowKey({ jurorId, juryName, juryDept });
+    const affiliation = j.affiliation ?? j.affiliation ?? "";
+    const key = rowKey({ jurorId, juryName, affiliation });
     const enabled = j.editEnabled ?? j.edit_enabled;
     const isEditing = enabled === true || String(enabled).toLowerCase() === "true";
     if (jurorId) jurorEditMap.set(jurorId, isEditing);
@@ -231,12 +231,12 @@ export async function exportXLSX(rows, { semesterName = "", summaryData = [], ju
       ?? jurorStatusMap.get(jurorKey)
       ?? normalizeJurorStatus(r.status);
     return [
-    r.semester ?? semesterName ?? "",
+    r.period ?? periodName ?? "",
     r.groupNo     ?? "",
     r.projectName ?? "",
     studentsMap.get(r.projectId) ?? "",
     r.juryName    ?? "",
-    r.juryDept    ?? "",
+    r.affiliation    ?? "",
     cellStatus ?? "",
     jurorStatus ?? "",
     ...activeCriteria.map((c) => exportScoreValue(r[c.id])),
@@ -253,12 +253,12 @@ export async function exportXLSX(rows, { semesterName = "", summaryData = [], ju
     .map((w) => ({ wch: w }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Jury Evaluations");
-  XLSX.writeFile(wb, buildExportFilename("details", semesterName, "xlsx", tenantCode));
+  XLSX.writeFile(wb, buildExportFilename("details", periodName, "xlsx", tenantCode));
 }
 
 // exportRows: { name, dept, statusLabel, scores: { [groupId]: number|null } }[]
 // groups:     { id, label, groupNo }[]
-export async function exportGridXLSX(exportRows, groups, { semesterName = "", tenantCode = "" } = {}) {
+export async function exportGridXLSX(exportRows, groups, { periodName = "", tenantCode = "" } = {}) {
   const XLSX = await import("xlsx-js-style");
 
   const groupHeaders = groups.map((g) => g.groupNo != null ? `Group ${g.groupNo}` : g.label);
@@ -279,10 +279,10 @@ export async function exportGridXLSX(exportRows, groups, { semesterName = "", te
   ws["!cols"] = colWidths.map((w) => ({ wch: w }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Evaluation Grid");
-  XLSX.writeFile(wb, buildExportFilename("grid", semesterName, "xlsx", tenantCode));
+  XLSX.writeFile(wb, buildExportFilename("grid", periodName, "xlsx", tenantCode));
 }
 
-export async function exportRankingsXLSX(ranked, criteria, { semesterName = "", tenantCode = "" } = {}) {
+export async function exportRankingsXLSX(ranked, criteria, { periodName = "", tenantCode = "" } = {}) {
   const XLSX = await import("xlsx-js-style");
   const headers = [
     "Rank", "Group", "Title", "Team Members",
@@ -323,5 +323,5 @@ export async function exportRankingsXLSX(ranked, criteria, { semesterName = "", 
   ws["!cols"] = [6, 10, 36, 32, ...criteria.flatMap(() => [10, 8]), 10].map((w) => ({ wch: w }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Rankings");
-  XLSX.writeFile(wb, buildExportFilename("rankings", semesterName, "xlsx", tenantCode));
+  XLSX.writeFile(wb, buildExportFilename("rankings", periodName, "xlsx", tenantCode));
 }

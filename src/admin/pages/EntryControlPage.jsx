@@ -6,9 +6,9 @@ import PageShell from "./PageShell";
 import JuryEntryControlPanel from "../settings/JuryEntryControlPanel";
 
 export default function EntryControlPage({
-  tenantId,
-  semesterId,
-  semesterName,
+  organizationId,
+  periodId,
+  periodName,
   isDemoMode = false,
 }) {
   return (
@@ -17,9 +17,9 @@ export default function EntryControlPage({
       description="Manage jury entry tokens and QR access codes"
     >
       <JuryEntryControlPanel
-        semesterId={semesterId}
-        semesterName={semesterName}
-        tenantId={tenantId}
+        periodId={periodId}
+        periodName={periodName}
+        organizationId={organizationId}
         isDemoMode={isDemoMode}
         isOpen={true}
         onToggle={() => {}}

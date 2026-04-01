@@ -1,6 +1,6 @@
 // src/admin/scores/RankingsTable.jsx
 // Phase 4 — shadcn Table for project rankings with dynamic criteria columns.
-// Columns adapt to the active semester's criteria template.
+// Columns adapt to the active period's criteria template.
 
 import { useState, useMemo, useCallback } from "react";
 import { cn } from "@/lib/utils";
@@ -87,27 +87,27 @@ function CriterionBar({ value, max, color }) {
 
 /**
  * @param {object[]} props.ranked             Sorted project summaries
- * @param {string}   props.semesterName       Current semester name
- * @param {object[]} [props.criteriaTemplate] Active criteria (falls back to CRITERIA)
+ * @param {string}   props.periodName       Current period name
+ * @param {object[]} [props.criteriaConfig] Active criteria (falls back to CRITERIA)
  */
 export default function RankingsTable({
   ranked = [],
-  semesterName,
-  criteriaTemplate,
+  periodName,
+  criteriaConfig,
 }) {
-  const { activeTenant } = useAuth();
+  const { activeOrganization } = useAuth();
 
   // Resolve criteria
   const criteriaList = useMemo(
     () =>
-      (criteriaTemplate || CRITERIA_LIST).map((c) => ({
+      (criteriaConfig || CRITERIA_LIST).map((c) => ({
         id: c.id ?? c.key,
         label: c.label,
         shortLabel: c.shortLabel,
         max: c.max,
         color: c.color,
       })),
-    [criteriaTemplate]
+    [criteriaConfig]
   );
 
   const totalMax = useMemo(
@@ -165,7 +165,7 @@ export default function RankingsTable({
       const getVal = (p) => {
         if (sortKey === "totalAvg") return p.totalAvg ?? -Infinity;
         if (sortKey === "groupNo") return p.groupNo ?? 0;
-        if (sortKey === "projectTitle") return (p.name || "").toLowerCase();
+        if (sortKey === "title") return (p.name || "").toLowerCase();
         // Criterion key
         const av = p.avg?.[sortKey];
         return typeof av === "number" ? av : -Infinity;
@@ -207,8 +207,8 @@ export default function RankingsTable({
     setExporting(true);
     try {
       await exportRankingsXLSX(sorted, criteriaList, {
-        semesterName,
-        tenantCode: activeTenant?.code,
+        periodName,
+        tenantCode: activeOrganization?.code,
       });
     } finally {
       setExporting(false);
@@ -272,7 +272,7 @@ export default function RankingsTable({
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-12 text-center">Rank</TableHead>
               <SortHead id="groupNo" className="w-16">Group</SortHead>
-              <SortHead id="projectTitle">Project</SortHead>
+              <SortHead id="title">Project</SortHead>
               {criteriaList.map((c) => (
                 <SortHead key={c.id} id={c.id} className="hidden lg:table-cell">
                   <span

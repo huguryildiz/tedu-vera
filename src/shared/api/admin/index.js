@@ -1,77 +1,79 @@
 // src/shared/api/admin/index.js
-// ============================================================
 // Barrel re-export for all admin domain modules.
-// ============================================================
 
-export { adminLogin, adminSecurityState } from "./auth";
-
-// v2 Auth (Phase C — JWT-based)
 export {
-  adminGetSession,
-  listTenantsPublic,
-  submitAdminApplication,
+  getSession,
+  listOrganizationsPublic,
+  submitApplication,
   getMyApplications,
-  cancelAdminApplication,
-  approveAdminApplication,
-  rejectAdminApplication,
+  cancelApplication,
+  approveApplication,
+  rejectApplication,
   listPendingApplications,
 } from "./auth";
 
 export {
-  adminListSemesters,
-  adminSetCurrentSemester,
-  adminCreateSemester,
-  adminUpdateSemester,
-  adminUpdateSemesterCriteriaTemplate,
-  adminUpdateSemesterMudekTemplate,
-  adminDeleteSemester,
-} from "./semesters";
+  listPeriods,
+  setCurrentPeriod,
+  createPeriod,
+  updatePeriod,
+  deletePeriod,
+  setEvalLock,
+  updatePeriodCriteriaConfig,
+  updatePeriodOutcomeConfig,
+} from "./periods";
 
 export {
-  adminListProjects,
-  adminCreateProject,
-  adminUpsertProject,
-  adminDeleteProject,
+  listProjects as adminListProjects,
+  createProject,
+  upsertProject,
+  deleteProject,
 } from "./projects";
 
 export {
-  adminCreateJuror,
-  adminUpdateJuror,
-  adminResetJurorPin,
-  adminSetJurorEditMode,
-  adminForceCloseJurorEditMode,
-  adminDeleteJuror,
+  createJuror,
+  updateJuror,
+  deleteJuror,
+  resetJurorPin,
+  setJurorEditMode,
+  forceCloseJurorEditMode,
 } from "./jurors";
 
 export {
-  adminGetScores,
-  adminListJurors,
-  adminProjectSummary,
-  adminGetOutcomeTrends,
-  adminDeleteCounts,
-  adminDeleteEntity,
-  adminGetSettings,
-  adminSetSetting,
-  adminSetSemesterEvalLock,
+  listOrganizations,
+  createOrganization,
+  updateOrganization,
+  listOrganizationsPublic as listOrganizationsPublicDirect,
+  updateMemberAdmin,
+  deleteMemberHard,
+} from "./organizations";
+
+export {
+  getScores,
+  listJurorsSummary,
+  getProjectSummary,
+  getOutcomeTrends,
+  getDeleteCounts,
+  deleteEntity,
 } from "./scores";
 
-export { adminFullExport, adminFullImport } from "./export";
+export { generateEntryToken, revokeEntryToken, getEntryTokenStatus } from "./tokens";
+
+export { listAuditLogs } from "./audit";
+
+export { fullExport } from "./export";
+
+export { upsertProfile, getProfile } from "./profiles";
 
 export {
-  adminGenerateEntryToken,
-  adminRevokeEntryToken,
-  adminGetEntryTokenStatus,
-} from "./tokens";
-
-export { adminListAuditLogs } from "./audit";
-
-export { adminProfileUpsert, adminProfileGet } from "./profiles";
-
-// Tenant/Organization management (super-admin only)
-export {
-  adminListTenants,
-  adminCreateTenant,
-  adminUpdateTenant,
-  adminUpdateTenantAdmin,
-  adminDeleteTenantAdminHard,
-} from "./tenants";
+  listFrameworks,
+  createFramework,
+  deleteFramework,
+  listOutcomes,
+  createOutcome,
+  updateOutcome,
+  deleteOutcome,
+  listCriterionOutcomeMappings,
+  upsertCriterionOutcomeMapping,
+  deleteCriterionOutcomeMapping,
+} from "./frameworks";

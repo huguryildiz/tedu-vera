@@ -5,13 +5,13 @@ import { useCallback } from "react";
 import { exportGridXLSX } from "./xlsx/exportXLSX";
 import { useAuth } from "../shared/auth";
 
-export function useGridExport({ buildExportRows, groups, semesterName, visibleJurors }) {
-  const { activeTenant } = useAuth();
-  const tenantCode = activeTenant?.code || "";
+export function useGridExport({ buildExportRows, groups, periodName, visibleJurors }) {
+  const { activeOrganization } = useAuth();
+  const tenantCode = activeOrganization?.code || "";
   const doExport = useCallback((jurorList) => {
     const exportRows = buildExportRows(jurorList);
-    void exportGridXLSX(exportRows, groups, { semesterName, tenantCode });
-  }, [buildExportRows, groups, semesterName, tenantCode]);
+    void exportGridXLSX(exportRows, groups, { periodName, tenantCode });
+  }, [buildExportRows, groups, periodName, tenantCode]);
 
   const requestExport = useCallback(() => {
     doExport(visibleJurors);

@@ -20,8 +20,8 @@ describe("admin utils", () => {
   });
 
   it("builds stable row key with jurorId priority", () => {
-    expect(rowKey({ jurorId: "abc-123", juryName: "A", juryDept: "B" })).toBe("abc-123");
-    expect(rowKey({ juryName: "  Alice  ", juryDept: " TEDU / EE " })).toBe(
+    expect(rowKey({ jurorId: "abc-123", juryName: "A", affiliation: "B" })).toBe("abc-123");
+    expect(rowKey({ juryName: "  Alice  ", affiliation: " TEDU / EE " })).toBe(
       "alice__tedu / ee"
     );
   });
@@ -41,21 +41,21 @@ describe("admin utils", () => {
     const rows = [
       {
         juryName: "Alice",
-        juryDept: "EE",
+        affiliation: "EE",
         projectId: "g1",
         updatedMs: 1000,
         total: 60,
       },
       {
         juryName: "Alice",
-        juryDept: "EE",
+        affiliation: "EE",
         projectId: "g1",
         updatedMs: 2000,
         total: 70,
       },
       {
         juryName: "Bob",
-        juryDept: "EE",
+        affiliation: "EE",
         projectId: "g2",
         updatedMs: 1500,
         total: 80,

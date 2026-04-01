@@ -4,78 +4,78 @@
 //
 // Extracted from useAdminData.js (Phase 5 — Final Decomposition).
 //
-// Owns: trendSemesterIds selection (with localStorage persistence),
-// stale-ID cleanup when semesterList changes, and the trend fetch.
+// Owns: trendPeriodIds selection (with localStorage persistence),
+// stale-ID cleanup when periodList changes, and the trend fetch.
 // ============================================================
 
 import { useEffect, useRef, useState } from "react";
-import { adminGetOutcomeTrends } from "../../shared/api";
+import { getOutcomeTrends } from "../../shared/api";
 import { readSection, writeSection } from "../persist";
 
 /**
  * useAnalyticsData — trend/analytics loading for the admin panel.
  *
  * @param {object} opts
- * @param {string}    opts.tenantId         Current tenant ID (JWT-based auth).
- * @param {object[]}  opts.semesterList     Full semester list (for stale-ID cleanup).
- * @param {object[]}  opts.sortedSemesters  Sorted semesters (for initial seed).
- * @param {Date|null} opts.lastRefresh      Bumped by useAdminData after a fresh fetch;
- *                                          causes the trend to re-fetch with latest data.
+ * @param {string}    opts.organizationId         Current organization ID (JWT-based auth).
+ * @param {object[]}  opts.periodList             Full period list (for stale-ID cleanup).
+ * @param {object[]}  opts.sortedPeriods         Sorted periods (for initial seed).
+ * @param {Date|null} opts.lastRefresh           Bumped by useAdminData after a fresh fetch;
+ *                                               causes the trend to re-fetch with latest data.
  *
  * @returns {{
  *   trendData: object[],
  *   trendLoading: boolean,
  *   trendError: string,
- *   trendSemesterIds: string[],
- *   setTrendSemesterIds: Function,
+ *   trendPeriodIds: string[],
+ *   setTrendPeriodIds: Function,
  * }}
  */
-export function useAnalyticsData({ tenantId, semesterList, sortedSemesters, lastRefresh }) {
-  const [trendSemesterIds, setTrendSemesterIds] = useState(() => {
+export function useAnalyticsData({ organizationId, periodList, sortedPeriods, lastRefresh }) {
+  const [trendPeriodIds, setTrendPeriodIds] = useState(() => {
     const s = readSection("trend");
-    return Array.isArray(s.semesterIds) ? s.semesterIds : [];
+    return Array.isArray(s.periodIds) ? s.periodIds : [];
   });
   const [trendData, setTrendData] = useState([]);
   const [trendLoading, setTrendLoading] = useState(false);
   const [trendError, setTrendError] = useState("");
 
-  // Ensures trendSemesterIds is seeded from sortedSemesters exactly once.
+  // Ensures trendPeriodIds is seeded from sortedPeriods exactly once.
   const trendInitRef = useRef(false);
 
   // ── Trend initialization ──────────────────────────────────
-  // Seed from sortedSemesters once (if not already set by localStorage).
+  // Seed from sortedPeriods once (if not already set by localStorage).
   useEffect(() => {
     if (trendInitRef.current) return;
-    if (!sortedSemesters.length) return;
-    setTrendSemesterIds((prev) => (
-      prev.length ? prev : sortedSemesters.map((s) => s.id)
+    if (!sortedPeriods.length) return;
+    setTrendPeriodIds((prev) => (
+      prev.length ? prev : sortedPeriods.map((p) => p.id)
     ));
     trendInitRef.current = true;
-  }, [sortedSemesters]);
+  }, [sortedPeriods]);
 
   // Persist trend selection to localStorage.
   useEffect(() => {
-    writeSection("trend", { semesterIds: trendSemesterIds });
-  }, [trendSemesterIds]);
+    writeSection("trend", { periodIds: trendPeriodIds });
+  }, [trendPeriodIds]);
 
-  // Remove stale semester IDs when semesterList changes.
+  // Remove stale period IDs when periodList changes.
   useEffect(() => {
-    if (!trendSemesterIds.length) return;
-    const valid = new Set(semesterList.map((s) => s.id));
-    const filtered = trendSemesterIds.filter((id) => valid.has(id));
-    if (filtered.length !== trendSemesterIds.length) {
-      setTrendSemesterIds(filtered);
+    if (!trendPeriodIds.length) return;
+    const valid = new Set(periodList.map((p) => p.id));
+    const filtered = trendPeriodIds.filter((id) => valid.has(id));
+    if (filtered.length !== trendPeriodIds.length) {
+      setTrendPeriodIds(filtered);
     }
-  }, [semesterList, trendSemesterIds]);
+  }, [periodList, trendPeriodIds]);
 
   // ── Trend fetch ────────────────────────────────────────────
   useEffect(() => {
-    if (!tenantId) {
+    if (!organizationId) {
       setTrendData([]);
       setTrendError("");
       return;
     }
-    if (!trendSemesterIds.length) {
+    if (!trendPeriodIds.length) {
       setTrendData([]);
       setTrendError("");
       return;
@@ -83,7 +83,7 @@ export function useAnalyticsData({ tenantId, semesterList, sortedSemesters, last
     let cancelled = false;
     setTrendLoading(true);
     setTrendError("");
-    adminGetOutcomeTrends(trendSemesterIds)
+    getOutcomeTrends(trendPeriodIds)
       .then((data) => {
         if (cancelled) return;
         setTrendData(data);
@@ -101,7 +101,7 @@ export function useAnalyticsData({ tenantId, semesterList, sortedSemesters, last
         setTrendLoading(false);
       });
     return () => { cancelled = true; };
-  }, [trendSemesterIds, tenantId, lastRefresh]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [trendPeriodIds, organizationId, lastRefresh]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { trendData, trendLoading, trendError, trendSemesterIds, setTrendSemesterIds };
+  return { trendData, trendLoading, trendError, trendPeriodIds, setTrendPeriodIds };
 }

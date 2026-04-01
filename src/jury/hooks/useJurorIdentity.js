@@ -1,6 +1,6 @@
 // src/jury/hooks/useJurorIdentity.js
 // ============================================================
-// Owns juror identity form state: name, department, and the
+// Owns juror identity form state: name, affiliation, and the
 // auth/identity-step error message.
 //
 // This hook has no effects and no async behavior. Handlers
@@ -15,12 +15,12 @@ const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
 
 export function useJurorIdentity() {
   const [juryName, setJuryName] = useState(DEMO_MODE ? "Demo Juror" : "");
-  const [juryDept, setJuryDept] = useState(DEMO_MODE ? "TED University / Electrical and Electronics Engineering" : "");
+  const [affiliation, setAffiliation] = useState(DEMO_MODE ? "TED University / Electrical and Electronics Engineering" : "");
   const [authError, setAuthError] = useState("");
 
   return {
     juryName, setJuryName,
-    juryDept, setJuryDept,
+    affiliation, setAffiliation,
     authError, setAuthError,
   };
 }

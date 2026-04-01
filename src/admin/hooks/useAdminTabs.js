@@ -4,7 +4,7 @@
 // localStorage persistence.
 //
 // Phase 2B: Extended with new sidebar pages (jurors, projects,
-// semesters, entry-control, audit-log, export). The old 3-tab
+// periods, entry-control, audit-log, export). The old 3-tab
 // system is preserved as a subset.
 // ============================================================
 
@@ -25,7 +25,7 @@ const VALID_TABS = new Set([
   // Phase 2B — decomposed from Settings
   "jurors",
   "projects",
-  "semesters",
+  "periods",
   "entry-control",
   "audit-log",
   "export",
@@ -35,7 +35,7 @@ const VALID_TABS = new Set([
 ]);
 
 // Tabs that have editable forms — dirty guard applies
-const DIRTY_TABS = new Set(["settings", "jurors", "projects", "semesters", "criteria", "outcomes"]);
+const DIRTY_TABS = new Set(["settings", "jurors", "projects", "periods", "criteria", "outcomes"]);
 
 const normalizeTab = (value) => {
   if (value === "results" || value === "analysis") return "scores";

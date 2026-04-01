@@ -6,12 +6,11 @@ import { useCallback, useRef, useState } from "react";
 import { useToast } from "../../components/toast/useToast";
 import { useAuth } from "../../shared/auth";
 import {
-  adminListSemesters,
-  adminListJurors,
-  adminGetScores,
-  adminProjectSummary,
-  adminFullExport,
-  adminFullImport,
+  listPeriods,
+  listJurorsSummary,
+  getScores,
+  getProjectSummary,
+  fullExport,
 } from "../../shared/api";
 import { exportXLSX, buildExportFilename } from "../xlsx/exportXLSX";
 import ExportBackupPanel from "../settings/ExportBackupPanel";
@@ -20,9 +19,9 @@ import PageShell from "./PageShell";
 const MAX_BACKUP_BYTES = 10 * 1024 * 1024;
 const MIN_BACKUP_DELAY = 1200;
 
-export default function ExportPage({ tenantId, isDemoMode = false }) {
-  const { activeTenant } = useAuth();
-  const tenantCode = activeTenant?.code || "";
+export default function ExportPage({ organizationId, isDemoMode = false }) {
+  const { activeOrganization } = useAuth();
+  const tenantCode = activeOrganization?.code || "";
   const _toast = useToast();
   const setMessage = (msg) => { if (msg) _toast.success(msg); };
 
@@ -47,45 +46,45 @@ export default function ExportPage({ tenantId, isDemoMode = false }) {
     });
 
   const handleExportProjects = useCallback(async () => {
-    if (!tenantId) return;
-    const sems = (await adminListSemesters(tenantId)) || [];
+    if (!organizationId) return;
+    const sems = (await listPeriods(organizationId)) || [];
     if (!sems.length) return;
     const orderedSemesters = sortSemesters(sems);
     const projectsBySemester = await Promise.all(
       orderedSemesters.map(async (sem) => {
         const { adminListProjects } = await import("../../shared/api");
         return {
-          semesterName: sem?.semester_name || "",
+          periodName: sem?.period_name || "",
           rows: await adminListProjects(sem.id),
         };
       }),
     );
     const XLSX = await import("xlsx-js-style");
     const headers = ["Period", "Group No", "Title", "Team Members"];
-    const data = projectsBySemester.flatMap(({ semesterName, rows }) =>
+    const data = projectsBySemester.flatMap(({ periodName, rows }) =>
       (rows || []).map((p) => [
-        semesterName,
+        periodName,
         p?.group_no ?? "",
-        p?.project_title ?? "",
-        p?.group_students || "",
+        p?.title ?? "",
+        p?.members || "",
       ]),
     );
     const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
     ws["!cols"] = [18, 8, 36, 42].map((w) => ({ wch: w }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Groups");
-    XLSX.writeFile(wb, buildExportFilename("groups", "all-semesters", "xlsx", tenantCode));
-  }, [tenantId, tenantCode]);
+    XLSX.writeFile(wb, buildExportFilename("groups", "all-periods", "xlsx", tenantCode));
+  }, [organizationId, tenantCode]);
 
   const handleExportJurors = useCallback(async () => {
-    if (!tenantId) return;
-    const sems = (await adminListSemesters(tenantId)) || [];
+    if (!organizationId) return;
+    const sems = (await listPeriods(organizationId)) || [];
     if (!sems.length) return;
     const orderedSemesters = sortSemesters(sems);
     const jurorsBySemester = await Promise.all(
       orderedSemesters.map(async (sem) => ({
-        semesterName: sem?.semester_name || "",
-        rows: await adminListJurors(sem.id),
+        periodName: sem?.period_name || "",
+        rows: await listJurorsSummary(sem.id),
       })),
     );
     const isAssignedJuror = (j) => {
@@ -98,8 +97,8 @@ export default function ExportPage({ tenantId, isDemoMode = false }) {
       return false;
     };
     const XLSX = await import("xlsx-js-style");
-    const headers = ["Semester", "Juror Name", "Institution / Department"];
-    const data = jurorsBySemester.flatMap(({ semesterName, rows }) => {
+    const headers = ["Period", "Juror Name", "Institution / Department"];
+    const data = jurorsBySemester.flatMap(({ periodName, rows }) => {
       const hasAssignedFlag = (rows || []).some(
         (j) =>
           (j?.isAssigned !== undefined && j?.isAssigned !== null) ||
@@ -109,44 +108,44 @@ export default function ExportPage({ tenantId, isDemoMode = false }) {
         ? (rows || []).filter(isAssignedJuror)
         : rows || [];
       return exportRows.map((j) => [
-        semesterName,
+        periodName,
         j?.juryName || j?.juror_name || j?.jurorName || "",
-        j?.juryDept || j?.juror_inst || j?.jurorInst || "",
+        j?.affiliation || j?.affiliation || j?.affiliation || "",
       ]);
     });
     const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
     ws["!cols"] = [18, 28, 32].map((w) => ({ wch: w }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Jurors");
-    XLSX.writeFile(wb, buildExportFilename("jurors", "all-semesters", "xlsx", tenantCode));
-  }, [tenantId, tenantCode]);
+    XLSX.writeFile(wb, buildExportFilename("jurors", "all-periods", "xlsx", tenantCode));
+  }, [organizationId, tenantCode]);
 
   const handleExportScores = useCallback(async () => {
-    if (!tenantId) return;
-    const sems = (await adminListSemesters(tenantId)) || [];
+    if (!organizationId) return;
+    const sems = (await listPeriods(organizationId)) || [];
     if (!sems.length) return;
     const orderedSemesters = sortSemesters(sems);
     const results = await Promise.all(
       orderedSemesters.map(async (sem) => {
         const [rows, summary] = await Promise.all([
-          adminGetScores(sem.id),
-          adminProjectSummary(sem.id).catch(() => []),
+          getScores(sem.id),
+          getProjectSummary(sem.id).catch(() => []),
         ]);
         const summaryMap = new Map((summary || []).map((p) => [p.id, p]));
         const mappedRows = (rows || []).map((r) => ({
           ...r,
-          semester: sem?.semester_name || "",
+          period: sem?.period_name || "",
           students: summaryMap.get(r.projectId)?.students ?? "",
         }));
         return { rows: mappedRows, summary: summary || [] };
       }),
     );
     await exportXLSX(results.flatMap((x) => x.rows), {
-      semesterName: "all-semesters",
+      periodName: "all-periods",
       summaryData: results.flatMap((x) => x.summary),
       tenantCode,
     });
-  }, [tenantId, tenantCode]);
+  }, [organizationId, tenantCode]);
 
   // ── DB backup helpers ────────────────────────────────────
   const handleDbExportStart = () => {
@@ -179,7 +178,7 @@ export default function ExportPage({ tenantId, isDemoMode = false }) {
     if (!payload || typeof payload !== "object") return "Invalid backup file format.";
     if (!Number.isFinite(Number(payload.schema_version)))
       return "Missing schema_version in backup file.";
-    const required = ["semesters", "jurors", "projects", "scores", "juror_semester_auth"];
+    const required = ["periods", "jurors", "projects", "scores", "juror_semester_auth"];
     for (const key of required) {
       if (!Array.isArray(payload[key])) return `Backup file is missing '${key}' data.`;
     }
@@ -187,7 +186,7 @@ export default function ExportPage({ tenantId, isDemoMode = false }) {
   };
 
   const buildBackupLoadFeedback = (payload) => {
-    const semesters = Array.isArray(payload?.semesters) ? payload.semesters.length : 0;
+    const periods = Array.isArray(payload?.periods) ? payload.periods.length : 0;
     const jurors = Array.isArray(payload?.jurors) ? payload.jurors.length : 0;
     const projects = Array.isArray(payload?.projects) ? payload.projects.length : 0;
     const scores = Array.isArray(payload?.scores) ? payload.scores.length : 0;
@@ -197,10 +196,10 @@ export default function ExportPage({ tenantId, isDemoMode = false }) {
     const schemaVersion = Number(payload?.schema_version);
     const success = [
       "\u2022 Backup file loaded successfully.",
-      `\u2022 Found: ${semesters} semesters, ${jurors} jurors, ${projects} groups, ${scores} scores, ${assignments} assignments (schema v${Number.isFinite(schemaVersion) ? schemaVersion : "?"}).`,
+      `\u2022 Found: ${periods} periods, ${jurors} jurors, ${projects} groups, ${scores} scores, ${assignments} assignments (schema v${Number.isFinite(schemaVersion) ? schemaVersion : "?"}).`,
     ].join("\n");
     const emptySections = [];
-    if (semesters === 0) emptySections.push("semesters");
+    if (periods === 0) emptySections.push("periods");
     if (jurors === 0) emptySections.push("jurors");
     if (projects === 0) emptySections.push("groups");
     if (scores === 0) emptySections.push("scores");
@@ -271,12 +270,12 @@ export default function ExportPage({ tenantId, isDemoMode = false }) {
   };
 
   const handleDbExportConfirm = async () => {
-    if (!tenantId) return;
+    if (!organizationId) return;
     const start = Date.now();
     setDbBackupLoading(true);
     setDbBackupError("");
     try {
-      const data = await adminFullExport(tenantId);
+      const data = await fullExport(organizationId);
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -298,7 +297,7 @@ export default function ExportPage({ tenantId, isDemoMode = false }) {
   };
 
   const handleDbImportConfirm = async () => {
-    if (!dbImportData || !tenantId) return;
+    if (!dbImportData || !organizationId) return;
     if (dbBackupConfirmText.trim() !== "RESTORE") {
       setDbBackupError("Type RESTORE to confirm.");
       return;
@@ -307,7 +306,7 @@ export default function ExportPage({ tenantId, isDemoMode = false }) {
     setDbBackupLoading(true);
     setDbBackupError("");
     try {
-      await adminFullImport(dbImportData, tenantId);
+      throw new Error("Full import is not supported in this version.");
       setDbBackupMode(null);
       setDbBackupConfirmText("");
       setDbImportDragging(false);

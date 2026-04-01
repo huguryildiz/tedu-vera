@@ -20,8 +20,8 @@ export default function OverviewTab({
   summaryData,
   metrics,
   rawScores,
-  criteriaTemplate,
-  semester,
+  criteriaConfig,
+  period,
   onGoToSettings,
 }) {
   const {
@@ -154,7 +154,7 @@ export default function OverviewTab({
 
       {/* Criteria Progress + Needs Attention + Period Snapshot */}
       <div className="grid gap-6 lg:grid-cols-3">
-        <CriteriaProgress rawScores={rawScores} criteriaTemplate={criteriaTemplate} />
+        <CriteriaProgress rawScores={rawScores} criteriaConfig={criteriaConfig} />
         <NeedsAttentionCard
           staleJurors={needsAttention.staleJurors}
           incompleteProjects={needsAttention.incompleteProjects}
@@ -164,9 +164,9 @@ export default function OverviewTab({
           }}
         />
         <PeriodSnapshotCard
-          semester={semester}
+          period={period}
           metrics={metrics}
-          criteriaTemplate={criteriaTemplate}
+          criteriaConfig={criteriaConfig}
         />
       </div>
 

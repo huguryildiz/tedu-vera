@@ -26,7 +26,7 @@ export default function ScoresTab({
   jurors,
   matrixJurors,
   groups,
-  semesterName,
+  periodName,
   summaryData,
   detailsSummary,
   dashboardStats,
@@ -41,13 +41,13 @@ export default function ScoresTab({
   trendData,
   trendLoading,
   trendError,
-  criteriaTemplate,
-  mudekTemplate,
+  criteriaConfig,
+  outcomeConfig,
 }) {
   return (
     <div className="scores-tab">
       {view === "rankings" && (
-        <RankingsTable ranked={ranked} semesterName={semesterName} criteriaTemplate={criteriaTemplate} />
+        <RankingsTable ranked={ranked} periodName={periodName} criteriaConfig={criteriaConfig} />
       )}
       {view === "analytics" && (
         <ErrorBoundary fallback={<AnalyticsFallback />}>
@@ -59,15 +59,15 @@ export default function ScoresTab({
               lastRefresh={lastRefresh}
               loading={loading}
               error={error}
-              semesterName={semesterName}
+              periodName={periodName}
               semesterOptions={semesterOptions}
               trendSemesterIds={trendSemesterIds}
               onTrendSelectionChange={onTrendSelectionChange}
               trendData={trendData}
               trendLoading={trendLoading}
               trendError={trendError}
-              criteriaTemplate={criteriaTemplate}
-              mudekTemplate={mudekTemplate}
+              criteriaConfig={criteriaConfig}
+              outcomeConfig={outcomeConfig}
             />
           </Suspense>
         </ErrorBoundary>
@@ -78,11 +78,11 @@ export default function ScoresTab({
           jurors={jurors}
           assignedJurors={matrixJurors || jurors}
           groups={groups}
-          semesterName={semesterName}
+          periodName={periodName}
           semesterOptions={semesterOptions}
           summaryData={detailsSummary && detailsSummary.length ? detailsSummary : summaryData}
           loading={detailsLoading}
-          criteriaTemplate={criteriaTemplate}
+          criteriaConfig={criteriaConfig}
         />
       )}
       {view === "grid" && (
@@ -90,8 +90,8 @@ export default function ScoresTab({
           data={rawScores}
           jurors={matrixJurors || jurors}
           groups={groups}
-          semesterName={semesterName}
-          criteriaTemplate={criteriaTemplate}
+          periodName={periodName}
+          criteriaConfig={criteriaConfig}
         />
       )}
     </div>

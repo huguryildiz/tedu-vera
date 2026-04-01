@@ -4,7 +4,7 @@
 // progress values.
 //
 // State:
-//   step             — current step name ("identity"|"semester"|"pin"|
+//   step             — current step name ("identity"|"period"|"pin"|
 //                      "pin_reveal"|"progress_check"|"eval"|"done")
 //   current          — index into the projects array (active group)
 //   confirmingSubmit — true when the submit confirmation dialog is open
@@ -14,7 +14,7 @@
 //                      prevents double-triggering the submit confirmation.
 //   submitPendingRef — true while a submit sequence is in flight;
 //                      prevents concurrent submits.
-//   justLoadedRef    — set to true by _loadSemester after seeding state;
+//   justLoadedRef    — set to true by _loadPeriod after seeding state;
 //                      cleared on the first auto-done check so a fully-scored
 //                      returning juror is not immediately thrown into submit.
 //
@@ -63,7 +63,7 @@ export function useJuryWorkflow({ scores, groupSynced, projects }) {
 
   const doneFiredRef = useRef(false);
   const submitPendingRef = useRef(false);
-  // justLoadedRef: set by _loadSemester after seeding scores from DB.
+  // justLoadedRef: set by _loadPeriod after seeding scores from DB.
   // Consumed (cleared) on the first auto-done check to prevent a fully-scored
   // returning juror from being immediately thrown into the submit confirmation.
   const justLoadedRef = useRef(false);

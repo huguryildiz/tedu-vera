@@ -40,22 +40,22 @@ export function clearRawToken(semesterId) {
   } catch {}
 }
 
-// ── Active tenant persistence (Phase C) ──────────────────────
+// ── Active organization persistence ──────────────────────
 
-/** Read persisted active tenant ID. */
-export function getActiveTenantId() {
+/** Read persisted active organization ID. */
+export function getActiveOrganizationId() {
   try {
-    return localStorage.getItem(KEYS.ADMIN_ACTIVE_TENANT) || null;
+    return localStorage.getItem(KEYS.ADMIN_ACTIVE_ORGANIZATION) || null;
   } catch { return null; }
 }
 
-/** Persist active tenant ID. */
-export function setActiveTenantId(tenantId) {
+/** Persist active organization ID. */
+export function setActiveOrganizationId(organizationId) {
   try {
-    if (tenantId) {
-      localStorage.setItem(KEYS.ADMIN_ACTIVE_TENANT, tenantId);
+    if (organizationId) {
+      localStorage.setItem(KEYS.ADMIN_ACTIVE_ORGANIZATION, organizationId);
     } else {
-      localStorage.removeItem(KEYS.ADMIN_ACTIVE_TENANT);
+      localStorage.removeItem(KEYS.ADMIN_ACTIVE_ORGANIZATION);
     }
   } catch {}
 }

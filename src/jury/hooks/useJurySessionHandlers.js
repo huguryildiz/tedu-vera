@@ -3,16 +3,16 @@
 // Auth/session flow handlers extracted from useJuryHandlers.
 //
 // Handlers:
-//   handleIdentitySubmit    — name + dept -> load semesters
-//   handleSemesterSelect    — semester -> create/get juror, issue PIN
-//   handlePinSubmit         — verify PIN, then call _loadSemester
+//   handleIdentitySubmit    — name + affiliation -> load periods
+//   handlePeriodSelect      — period -> create/get juror, issue PIN
+//   handlePinSubmit         — verify PIN, then call _loadPeriod
 //   handlePinRevealContinue — auto-submit the revealed PIN
 //   handleProgressContinue  — advance from progress_check step
 //
 // Internal:
-//   _loadSemester(semester, overrideJurorId, _identityOverride, options)
+//   _loadPeriod(period, overrideJurorId, _identityOverride, options)
 //     Shared async function used by handlePinSubmit and
-//     handleSemesterSelect. Intentionally NOT useCallback — including
+//     handlePeriodSelect. Intentionally NOT useCallback — including
 //     it in any deps array causes infinite render loops. All reads use
 //     stateRef.current for safe access outside the render cycle.
 // ============================================================
@@ -21,9 +21,9 @@ import { useCallback } from "react";
 import { getActiveCriteria } from "../../shared/criteriaHelpers";
 
 import {
-  listSemesters,
+  listPeriods,
   listProjects,
-  createOrGetJurorAndIssuePin,
+  authenticateJuror,
   verifyJurorPin,
   getJurorEditState,
   verifyEntryToken,
@@ -36,11 +36,11 @@ import { buildScoreSnapshot } from "../utils/scoreSnapshot";
 import { buildProgressCheck } from "../utils/progress";
 
 export function useJurySessionHandlers({ identity, session, scoring, loading, workflow, editState, autosave, stateRef }) {
-  // ── Internal: load semester + projects ────────────────────
-  // Shared by handlePinSubmit and handleSemesterSelect.
+  // ── Internal: load period + projects ─────────────────────
+  // Shared by handlePinSubmit and handlePeriodSelect.
   // Kept as a plain async function (intentionally NOT useCallback):
   // including it in any deps array causes infinite render loops.
-  const _loadSemester = async (semester, overrideJurorId, _identityOverride, options = {}) => {
+  const _loadPeriod = async (period, overrideJurorId, _identityOverride, options = {}) => {
     const jid = overrideJurorId || stateRef.current.jurorId;
     const { showProgressCheck = false, showEmptyProgress = false } = options;
 
@@ -52,30 +52,30 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
 
     loading.setLoadingState({ stage: "loading", message: "Loading projects…" });
     try {
-      const projectList = await listProjects(semester.id, jid, signal);
+      const projectList = await listProjects(period.id, jid, signal);
       let editStateResult = null;
       try {
         const sessionToken = stateRef.current.jurorSessionToken;
-        editStateResult = await getJurorEditState(semester.id, jid, sessionToken, signal);
+        editStateResult = await getJurorEditState(period.id, jid, sessionToken, signal);
       } catch (e) {
         if (e?.name === "AbortError") throw e; // propagate abort
       }
 
-      loading.setSemesterId(semester.id);
-      loading.setSemesterName(semester.semester_name);
+      loading.setPeriodId(period.id);
+      loading.setPeriodName(period.name);
 
-      // Store the semester's criteria template so the eval UI renders dynamically.
-      // `semester` comes from the listSemesters result which now includes criteria_template.
-      const semTemplate = semester.criteria_template || [];
-      if (!semester.criteria_template || semester.criteria_template.length === 0) {
+      // Store the period's criteria config so the eval UI renders dynamically.
+      // `period` comes from the listPeriods result which now includes criteria_config.
+      const periodConfig = period.criteria_config || [];
+      if (!period.criteria_config || period.criteria_config.length === 0) {
         console.warn(
-          `[_loadSemester] Semester "${semester.semester_name}" (${semester.id}) has no criteria_template — falling back to global CRITERIA from config.js`
+          `[_loadPeriod] Period "${period.period_name}" (${period.id}) has no criteria_config — falling back to global CRITERIA from config.js`
         );
       }
-      const mudekTemplate = semester.mudek_template || [];
-      loading.setCriteriaTemplate(semTemplate);
-      loading.setMudekTemplate(mudekTemplate);
-      const semCriteria = getActiveCriteria(semTemplate);
+      const outcomeConfig = period.outcome_config || [];
+      loading.setCriteriaConfig(periodConfig);
+      loading.setOutcomeConfig(outcomeConfig);
+      const periodCriteria = getActiveCriteria(periodConfig);
 
       // Seed scores / comments from existing DB data
       const seedScores = Object.fromEntries(
@@ -84,11 +84,11 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
       const seedComments = Object.fromEntries(
         projectList.map((p) => [p.project_id, p.comment || ""])
       );
-      const seedTouched = makeEmptyTouched(projectList, semCriteria);
+      const seedTouched = makeEmptyTouched(projectList, periodCriteria);
       // A project is "synced" if all criteria are filled
       const seedSynced = Object.fromEntries(
         projectList
-          .filter((p) => isAllFilled(seedScores, p.project_id, semCriteria))
+          .filter((p) => isAllFilled(seedScores, p.project_id, periodCriteria))
           .map((p) => [p.project_id, true])
       );
 
@@ -96,8 +96,8 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
       const uiProjects = projectList.map((p) => ({
         project_id:         p.project_id,
         group_no:           p.group_no,
-        project_title:      p.project_title,
-        group_students:     p.group_students,
+        title:              p.title,
+        members:            p.members,
         final_submitted_at: p.final_submitted_at,
         updated_at:         p.updated_at,
       }));
@@ -106,7 +106,7 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
       scoring.pendingCommentsRef.current = seedComments;
       autosave.lastWrittenRef.current    = Object.fromEntries(
         projectList.map((p) => {
-          const snapshot = buildScoreSnapshot(seedScores[p.project_id], seedComments[p.project_id], semCriteria);
+          const snapshot = buildScoreSnapshot(seedScores[p.project_id], seedComments[p.project_id], periodCriteria);
           return [p.project_id, { key: snapshot.key }];
         })
       );
@@ -157,35 +157,35 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
     }
   };
 
-  // ── Semester selection ─────────────────────────────────────
-  const handleSemesterSelect = useCallback(
-    async (semester) => {
-      // semesterSelectLockRef: intentionally NOT reset on success — once the juror
-      // advances past semester selection they cannot navigate back, so the lock is
+  // ── Period selection ──────────────────────────────────────
+  const handlePeriodSelect = useCallback(
+    async (period) => {
+      // periodSelectLockRef: intentionally NOT reset on success — once the juror
+      // advances past period selection they cannot navigate back, so the lock is
       // permanent for the session. Reset only on error (to allow retry) or resetAll.
-      if (loading.semesterSelectLockRef.current) return;
-      if (!semester?.is_current) {
-        identity.setAuthError("Only the current semester can be evaluated.");
+      if (loading.periodSelectLockRef.current) return;
+      if (!period?.is_current) {
+        identity.setAuthError("Only the current period can be evaluated.");
         workflow.setStep("identity");
         return;
       }
       const name = identity.juryName.trim();
-      const inst = identity.juryDept.trim();
-      if (!name || !inst) {
-        identity.setAuthError("Please enter your full name and institution / department.");
+      const affiliation = identity.affiliation.trim();
+      if (!name || !affiliation) {
+        identity.setAuthError("Please enter your full name and affiliation.");
         workflow.setStep("identity");
         return;
       }
-      loading.semesterSelectLockRef.current = true;
+      loading.periodSelectLockRef.current = true;
       identity.setAuthError("");
-      loading.setSemesterId(semester.id);
-      loading.setSemesterName(semester.semester_name);
+      loading.setPeriodId(period.id);
+      loading.setPeriodName(period.name);
       loading.setLoadingState({ stage: "loading", message: "Preparing access…" });
       try {
         const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
-        const res = await createOrGetJurorAndIssuePin(semester.id, name, inst, DEMO_MODE);
+        const res = await authenticateJuror(period.id, name, affiliation, DEMO_MODE);
         if (res?.juror_name) identity.setJuryName(res.juror_name);
-        if (res?.juror_inst) identity.setJuryDept(res.juror_inst);
+        if (res?.affiliation) identity.setAffiliation(res.affiliation);
         if (res?.needs_pin) {
           session.setIssuedPin("");
           session.setPinError("");
@@ -213,64 +213,64 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
         loading.setLoadingState(null);
         workflow.setStep("pin_reveal");
       } catch (e) {
-        loading.semesterSelectLockRef.current = false;
+        loading.periodSelectLockRef.current = false;
         loading.setLoadingState(null);
-        if (String(e?.message || "").includes("semester_inactive")) {
-          identity.setAuthError("This semester is no longer active. Please try again.");
+        if (String(e?.message || "").includes("period_inactive")) {
+          identity.setAuthError("This period is no longer active. Please try again.");
         } else {
           identity.setAuthError("Could not start the evaluation. Please try again.");
         }
         workflow.setStep("identity");
       }
     },
-    [identity.juryName, identity.juryDept]
+    [identity.juryName, identity.affiliation]
   );
 
   // ── Identity submit ────────────────────────────────────────
   const handleIdentitySubmit = useCallback(async () => {
     const name = identity.juryName.trim();
-    const inst = identity.juryDept.trim();
-    if (!name || !inst) {
-      identity.setAuthError("Please enter your full name and institution / department.");
+    const affiliation = identity.affiliation.trim();
+    if (!name || !affiliation) {
+      identity.setAuthError("Please enter your full name and affiliation.");
       return;
     }
     identity.setAuthError("");
     loading.loadAbortRef.current?.abort();
     const ctrl = new AbortController();
     loading.loadAbortRef.current = ctrl;
-    loading.setLoadingState({ stage: "loading", message: "Loading semesters…" });
+    loading.setLoadingState({ stage: "loading", message: "Loading periods…" });
     try {
-      const semesterList = await listSemesters(ctrl.signal);
-      const active = (semesterList || []).filter((s) => s.is_current);
-      loading.setSemesters(active);
-      // Demo mode: resolve correct semester via entry token (not just active[0])
+      const periodList = await listPeriods(ctrl.signal);
+      const active = (periodList || []).filter((p) => p.is_current);
+      loading.setPeriods(active);
+      // Demo mode: resolve correct period via entry token (not just active[0])
       const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
       const DEMO_ENTRY_TOKEN = import.meta.env.VITE_DEMO_ENTRY_TOKEN || "";
       if (DEMO_MODE && DEMO_ENTRY_TOKEN) {
         const tokenRes = await verifyEntryToken(DEMO_ENTRY_TOKEN);
         if (ctrl.signal.aborted) return;
-        const target = tokenRes?.ok && tokenRes?.semester_id
-          ? active.find((s) => s.id === tokenRes.semester_id) || active[0]
+        const target = tokenRes?.ok && tokenRes?.period_id
+          ? active.find((p) => p.id === tokenRes.period_id) || active[0]
           : active[0];
         if (target) {
-          await handleSemesterSelect(target);
+          await handlePeriodSelect(target);
           return;
         }
       }
       if (active.length === 1) {
-        await handleSemesterSelect(active[0]);
+        await handlePeriodSelect(active[0]);
         return;
       }
       loading.setLoadingState(null);
-      workflow.setStep("semester");
+      workflow.setStep("period");
     } catch (e) {
       if (e?.name === "AbortError") return;
       loading.setLoadingState(null);
-      identity.setAuthError("Could not load semesters. Please try again.");
+      identity.setAuthError("Could not load periods. Please try again.");
     }
-  // _loadSemester (via handleSemesterSelect) intentionally omitted from deps:
+  // _loadPeriod (via handlePeriodSelect) intentionally omitted from deps:
   // it is a plain async function and would cause an infinite loop if included.
-  }, [identity.juryName, identity.juryDept]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [identity.juryName, identity.affiliation]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── PIN submit ─────────────────────────────────────────────
   const handlePinSubmit = useCallback(async (enteredPin) => {
@@ -280,7 +280,7 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
     loading.setLoadingState({ stage: "loading", message: "Verifying…" });
     try {
       const res = await verifyJurorPin(
-        loading.semesterId, identity.juryName, identity.juryDept, enteredPin
+        loading.periodId, identity.juryName, identity.affiliation, enteredPin
       );
       if (!res?.ok) {
         loading.setLoadingState(null);
@@ -291,18 +291,18 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
         const isLocked    =
           res?.error_code === "locked"
           || (lockedDate && !Number.isNaN(lockedDate.getTime()) && lockedDate > new Date());
-        if (res?.error_code === "semester_inactive") {
-          session.setPinErrorCode("semester_inactive");
+        if (res?.error_code === "period_inactive") {
+          session.setPinErrorCode("period_inactive");
           session.setPinAttemptsLeft(session.MAX_PIN_ATTEMPTS);
-          session.setPinError("This semester is no longer active. Please start a new evaluation.");
+          session.setPinError("This period is no longer active. Please start a new evaluation.");
         } else if (res?.error_code === "not_found") {
           session.setPinErrorCode("not_found");
           session.setPinAttemptsLeft(session.MAX_PIN_ATTEMPTS);
-          session.setPinError("No juror found with this name and institution / department.");
+          session.setPinError("No juror found with this name and affiliation.");
         } else if (res?.error_code === "no_pin") {
           session.setPinErrorCode("no_pin");
           session.setPinAttemptsLeft(session.MAX_PIN_ATTEMPTS);
-          session.setPinError("No PIN found for this semester. Please start a new evaluation.");
+          session.setPinError("No PIN found for this period. Please start a new evaluation.");
         } else if (isLocked) {
           session.setPinErrorCode("locked");
           session.setPinAttemptsLeft(0);
@@ -328,9 +328,9 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
         return;
       }
       const nextName = res.juror_name || identity.juryName;
-      const nextInst = res.juror_inst || identity.juryDept;
+      const nextAffiliation = res.affiliation || identity.affiliation;
       if (res.juror_name) identity.setJuryName(res.juror_name);
-      if (res.juror_inst) identity.setJuryDept(res.juror_inst);
+      if (res.affiliation) identity.setAffiliation(res.affiliation);
       session.setJurorId(jid);
       session.setJurorSessionToken(sessionToken);
       if (res?.pin_plain_once) {
@@ -347,16 +347,16 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
       session.setPinAttemptsLeft(session.MAX_PIN_ATTEMPTS);
       session.setPinLockedUntil("");
       loading.setLoadingState(null);
-      // Resolve the full semester object (with criteria_template) from the loaded list.
-      // Passing only { id, semester_name } loses criteria_template, causing effectiveCriteria to
-      // fall back to hardcoded config CRITERIA and crash for custom-criteria semesters.
-      const fullSemester =
-        loading.semesters.find((s) => s.id === loading.semesterId)
-        || { id: loading.semesterId, semester_name: loading.semesterName };
-      await _loadSemester(
-        fullSemester,
+      // Resolve the full period object (with criteria_config) from the loaded list.
+      // Passing only { id, period_name } loses criteria_config, causing effectiveCriteria to
+      // fall back to hardcoded config CRITERIA and crash for custom-criteria periods.
+      const fullPeriod =
+        loading.periods.find((p) => p.id === loading.periodId)
+        || { id: loading.periodId, name: loading.periodName };
+      await _loadPeriod(
+        fullPeriod,
         jid,
-        { name: nextName, inst: nextInst },
+        { name: nextName, affiliation: nextAffiliation },
         { showProgressCheck: true, showEmptyProgress: false }
       );
     } catch (_) {
@@ -366,10 +366,10 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
       session.setPinLockedUntil("");
       session.setPinError("Connection error. Please try again.");
     }
-  // _loadSemester intentionally omitted — plain async function; inclusion
-  // causes infinite render loops. The semesterId/Name deps already capture
+  // _loadPeriod intentionally omitted — plain async function; inclusion
+  // causes infinite render loops. The periodId/Name deps already capture
   // the meaningful state changes that should re-trigger this handler.
-  }, [loading.semesterId, loading.semesterName, identity.juryName, identity.juryDept]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loading.periodId, loading.periodName, identity.juryName, identity.affiliation]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePinRevealContinue = useCallback(async () => {
     if (!session.issuedPin) return;
@@ -384,7 +384,7 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
 
   return {
     handleIdentitySubmit,
-    handleSemesterSelect,
+    handlePeriodSelect,
     handlePinSubmit,
     handlePinRevealContinue,
     handleProgressContinue,

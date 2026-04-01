@@ -6,8 +6,8 @@
 // Phase 5: Realtime subscription extracted to useAdminRealtime.js;
 // trend/analytics loading extracted to useAnalyticsData.js.
 //
-// sortedSemesters is returned from this hook (not AdminPanel.jsx)
-// because it is derived purely from semesterList state, which lives
+// sortedPeriods is returned from this hook (not AdminPanel.jsx)
+// because it is derived purely from periodList state, which lives
 // here. All other derived useMemo values (groups, ranked, etc.)
 // remain in AdminPanel.jsx because they are tightly coupled to the
 // rendering layer and use data from multiple sources.
@@ -15,12 +15,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  adminGetScores,
-  adminListJurors,
-  adminListSemesters,
-  adminProjectSummary,
+  getScores,
+  listJurorsSummary,
+  listPeriods,
+  getProjectSummary,
 } from "../../shared/api";
-import { sortSemestersByPosterDateDesc } from "../../shared/semesterSort";
+import { sortPeriodsByStartDateDesc } from "../../shared/periodSort";
 import { useAdminRealtime } from "./useAdminRealtime";
 import { useAnalyticsData } from "./useAnalyticsData";
 
@@ -33,9 +33,9 @@ import { useAnalyticsData } from "./useAnalyticsData";
  * Trend/analytics loading is delegated to useAnalyticsData.
  *
  * @param {object} opts
- * @param {string}   opts.tenantId                  Current tenant ID for scoping admin queries.
- * @param {string}   opts.selectedSemesterId        Controlled by AdminPanel (UI state).
- * @param {Function} opts.onSelectedSemesterChange  Setter for selectedSemesterId in AdminPanel.
+ * @param {string}   opts.organizationId             Current organization ID for scoping admin queries.
+ * @param {string}   opts.selectedPeriodId           Controlled by AdminPanel (UI state).
+ * @param {Function} opts.onSelectedPeriodChange     Setter for selectedPeriodId in AdminPanel.
  * @param {Function} [opts.onAuthError]             Called on auth failure during initial load.
  * @param {Function} [opts.onInitialLoadDone]       Called once after the first successful fetch.
  * @param {string}   opts.scoresView                Current scores view; used to gate details fetch.
@@ -44,13 +44,13 @@ import { useAnalyticsData } from "./useAnalyticsData";
  *   rawScores: object[],
  *   summaryData: object[],
  *   allJurors: object[],
- *   semesterList: object[],
- *   sortedSemesters: object[],
+ *   periodList: object[],
+ *   sortedPeriods: object[],
  *   trendData: object[],
  *   trendLoading: boolean,
  *   trendError: string,
- *   trendSemesterIds: string[],
- *   setTrendSemesterIds: Function,
+ *   trendPeriodIds: string[],
+ *   setTrendPeriodIds: Function,
  *   detailsScores: object[],
  *   detailsSummary: object[],
  *   detailsLoading: boolean,
@@ -58,13 +58,13 @@ import { useAnalyticsData } from "./useAnalyticsData";
  *   loadError: string,
  *   authError: string,
  *   lastRefresh: Date | null,
- *   fetchData: (forceSemesterId?: string) => Promise<void>,
+ *   fetchData: (forcePeriodId?: string) => Promise<void>,
  * }}
  */
 export function useAdminData({
-  tenantId,
-  selectedSemesterId,
-  onSelectedSemesterChange,
+  organizationId,
+  selectedPeriodId,
+  onSelectedPeriodChange,
   onAuthError,
   onInitialLoadDone,
   scoresView,
@@ -73,9 +73,9 @@ export function useAdminData({
   const [rawScores, setRawScores] = useState([]);
   const [summaryData, setSummaryData] = useState([]);
   const [allJurors, setAllJurors] = useState([]);
-  const [semesterList, setSemesterList] = useState([]);
+  const [periodList, setPeriodList] = useState([]);
 
-  // ── Details view state (all-semesters lazy load) ──────────
+  // ── Details view state (all-periods lazy load) ──────────
   const [detailsScores, setDetailsScores] = useState([]);
   const [detailsSummary, setDetailsSummary] = useState([]);
   const [detailsLoading, setDetailsLoading] = useState(false);
@@ -88,14 +88,14 @@ export function useAdminData({
   const [lastRefresh, setLastRefresh] = useState(null);
 
   // ── Refs for async closures ────────────────────────────────
-  // tenantRef: always reflects the latest tenantId without re-creating
+  // organizationIdRef: always reflects the latest organizationId without re-creating
   // callbacks on every change.
-  const tenantRef = useRef(tenantId);
-  useEffect(() => { tenantRef.current = tenantId; }, [tenantId]);
+  const organizationIdRef = useRef(organizationId);
+  useEffect(() => { organizationIdRef.current = organizationId; }, [organizationId]);
 
-  // selectedSemesterRef: latest selection without stale closure risk.
-  const selectedSemesterRef = useRef(selectedSemesterId);
-  useEffect(() => { selectedSemesterRef.current = selectedSemesterId; }, [selectedSemesterId]);
+  // selectedPeriodRef: latest selection without stale closure risk.
+  const selectedPeriodRef = useRef(selectedPeriodId);
+  useEffect(() => { selectedPeriodRef.current = selectedPeriodId; }, [selectedPeriodId]);
 
   // initialLoadFiredRef: ensures onInitialLoadDone is called exactly once.
   const initialLoadFiredRef = useRef(false);
@@ -104,24 +104,24 @@ export function useAdminData({
   // Passed to useAdminRealtime so the subscription stays stable.
   const bgRefresh = useRef(null);
 
-  // ── sortedSemesters ────────────────────────────────────────
-  // Derived from semesterList (owned here). Returned to AdminPanel so
-  // it can pass it to SemesterDropdown and the details fetch key.
-  const sortedSemesters = useMemo(
-    () => sortSemestersByPosterDateDesc(semesterList),
-    [semesterList]
+  // ── sortedPeriods ─────────────────────────────────────────
+  // Derived from periodList (owned here). Returned to AdminPanel so
+  // it can pass it to PeriodDropdown and the details fetch key.
+  const sortedPeriods = useMemo(
+    () => sortPeriodsByStartDateDesc(periodList),
+    [periodList]
   );
 
   // ── fetchData ──────────────────────────────────────────────
   // Stable via useCallback; all mutable reads go through refs so the
   // dependency array only includes the stable prop callbacks.
-  const fetchData = useCallback(async (forceSemesterId) => {
+  const fetchData = useCallback(async (forcePeriodId) => {
     setLoading(true);
     setError("");
     try {
-      if (!tenantRef.current) {
-        // Tenant not yet resolved (e.g. super-admin initial load).
-        // Release the initial overlay; the effect re-triggers when tenant resolves.
+      if (!organizationIdRef.current) {
+        // Organization not yet resolved (e.g. super-admin initial load).
+        // Release the initial overlay; the effect re-triggers when organization resolves.
         if (!initialLoadFiredRef.current) {
           initialLoadFiredRef.current = true;
           onInitialLoadDone?.();
@@ -129,20 +129,20 @@ export function useAdminData({
         return;
       }
 
-      // Always refresh semester list (IDs change after reseed).
-      // Uses the v2 tenant-scoped RPC for server-side filtering.
-      let sems = await adminListSemesters(tenantRef.current);
-      setSemesterList(sems);
+      // Always refresh period list (IDs change after reseed).
+      // Uses the v2 organization-scoped RPC for server-side filtering.
+      let periods = await listPeriods(organizationIdRef.current);
+      setPeriodList(periods);
 
-      // Determine target semester
-      const activeId = sems.find((s) => s.is_current)?.id || "";
-      const selectedId = selectedSemesterRef.current;
-      const selectedIsValid = !!selectedId && sems.some((s) => s.id === selectedId);
+      // Determine target period
+      const activeId = periods.find((p) => p.is_current)?.id || "";
+      const selectedId = selectedPeriodRef.current;
+      const selectedIsValid = !!selectedId && periods.some((p) => p.id === selectedId);
       const targetId =
-        forceSemesterId ||
+        forcePeriodId ||
         (selectedIsValid ? selectedId : "") ||
         activeId ||
-        sems[0]?.id;
+        periods[0]?.id;
 
       if (!targetId) {
         setRawScores([]);
@@ -150,14 +150,14 @@ export function useAdminData({
         setLoading(false);
         return;
       }
-      onSelectedSemesterChange(targetId);
+      onSelectedPeriodChange(targetId);
 
       // Fetch scores + summary + juror list in parallel.
-      // adminListJurors is non-fatal: degrades gracefully if RPC not yet deployed.
+      // listJurorsSummary is non-fatal: degrades gracefully if RPC not yet deployed.
       const [scores, summary, jurors] = await Promise.all([
-        adminGetScores(targetId),
-        adminProjectSummary(targetId),
-        adminListJurors(targetId).catch(() => []),
+        getScores(targetId),
+        getProjectSummary(targetId),
+        listJurorsSummary(targetId).catch(() => []),
       ]);
 
       setRawScores(scores);
@@ -186,25 +186,25 @@ export function useAdminData({
     } finally {
       setLoading(false);
     }
-  }, [onSelectedSemesterChange, onAuthError, onInitialLoadDone]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [onSelectedPeriodChange, onAuthError, onInitialLoadDone]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch data when tenant is available; re-fetch when tenant changes.
-  // Super-admin: tenantId starts as "" (resolves after AuthProvider
+  // Fetch data when organization is available; re-fetch when organization changes.
+  // Super-admin: organizationId starts as "" (resolves after AuthProvider
   // processes memberships). When empty, clear loading so the UI isn't
-  // stuck behind loading indicators while the tenant resolves.
+  // stuck behind loading indicators while the organization resolves.
   useEffect(() => {
-    if (tenantId) {
+    if (organizationId) {
       fetchData();
     } else {
-      // No tenant yet — release loading indicators so the UI isn't
-      // stuck. fetchData will run once tenantId becomes available.
+      // No organization yet — release loading indicators so the UI isn't
+      // stuck. fetchData will run once organizationId becomes available.
       setLoading(false);
       if (!initialLoadFiredRef.current) {
         initialLoadFiredRef.current = true;
         onInitialLoadDone?.();
       }
     }
-  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [organizationId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Failsafe for first paint: release the App-level initial overlay even if
   // initial network/auth requests hang and never resolve.
@@ -223,22 +223,22 @@ export function useAdminData({
   // Assigned each render so the Realtime hook always calls the latest
   // closure without needing to rebuild the subscription.
   bgRefresh.current = async () => {
-    if (!tenantRef.current) return;
+    if (!organizationIdRef.current) return;
     try {
-      let sems = await adminListSemesters(tenantRef.current);
-      setSemesterList(sems);
-      const activeId = sems.find((s) => s.is_current)?.id || sems[0]?.id || "";
-      const selectedId = selectedSemesterRef.current;
-      const selectedIsValid = !!selectedId && sems.some((s) => s.id === selectedId);
-      const semId = selectedIsValid ? selectedId : activeId;
-      if (!semId) return;
-      if (semId !== selectedSemesterRef.current) {
-        onSelectedSemesterChange(semId);
+      let periods = await listPeriods(organizationIdRef.current);
+      setPeriodList(periods);
+      const activeId = periods.find((p) => p.is_current)?.id || periods[0]?.id || "";
+      const selectedId = selectedPeriodRef.current;
+      const selectedIsValid = !!selectedId && periods.some((p) => p.id === selectedId);
+      const periodId = selectedIsValid ? selectedId : activeId;
+      if (!periodId) return;
+      if (periodId !== selectedPeriodRef.current) {
+        onSelectedPeriodChange(periodId);
       }
       const [scores, summary, jurors] = await Promise.all([
-        adminGetScores(semId),
-        adminProjectSummary(semId),
-        adminListJurors(semId).catch(() => []),
+        getScores(periodId),
+        getProjectSummary(periodId),
+        listJurorsSummary(periodId).catch(() => []),
       ]);
       setRawScores(scores);
       setSummaryData(summary);
@@ -250,7 +250,7 @@ export function useAdminData({
   };
 
   // ── Realtime subscription (delegated) ─────────────────────
-  useAdminRealtime({ tenantId, onRefreshRef: bgRefresh });
+  useAdminRealtime({ organizationId, onRefreshRef: bgRefresh });
 
   // ── Details invalidation ───────────────────────────────────
   // Reset the cache key when rawScores changes so the next visit to
@@ -261,29 +261,29 @@ export function useAdminData({
 
   // ── Details fetch (lazy, triggered by scoresView === "details") ─
   const detailsKey = useMemo(
-    () => sortedSemesters.map((s) => s.id).join("|"),
-    [sortedSemesters]
+    () => sortedPeriods.map((p) => p.id).join("|"),
+    [sortedPeriods]
   );
 
   useEffect(() => {
     if (scoresView !== "details") return;
-    if (!sortedSemesters.length) return;
-    if (!tenantRef.current) return;
+    if (!sortedPeriods.length) return;
+    if (!organizationIdRef.current) return;
     if (detailsKeyRef.current === detailsKey && detailsScores.length) return;
     let cancelled = false;
     setDetailsLoading(true);
     (async () => {
       try {
         const results = await Promise.all(
-          sortedSemesters.map(async (sem) => {
+          sortedPeriods.map(async (period) => {
             const [scores, summary] = await Promise.all([
-              adminGetScores(sem.id),
-              adminProjectSummary(sem.id).catch(() => []),
+              getScores(period.id),
+              getProjectSummary(period.id).catch(() => []),
             ]);
             const summaryMap = new Map(summary.map((p) => [p.id, p]));
             const rows = scores.map((r) => ({
               ...r,
-              semester: sem.semester_name || "",
+              period: period.name || "",
               students: summaryMap.get(r.projectId)?.students ?? "",
             }));
             return { rows, summary };
@@ -303,23 +303,23 @@ export function useAdminData({
       }
     })();
     return () => { cancelled = true; };
-  }, [scoresView, detailsKey, sortedSemesters, detailsScores.length, rawScores]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [scoresView, detailsKey, sortedPeriods, detailsScores.length, rawScores]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Trend / analytics (delegated) ─────────────────────────
-  const { trendData, trendLoading, trendError, trendSemesterIds, setTrendSemesterIds } =
-    useAnalyticsData({ tenantId, semesterList, sortedSemesters, lastRefresh });
+  const { trendData, trendLoading, trendError, trendPeriodIds, setTrendPeriodIds } =
+    useAnalyticsData({ organizationId, periodList, sortedPeriods, lastRefresh });
 
   return {
     rawScores,
     summaryData,
     allJurors,
-    semesterList,
-    sortedSemesters,
+    periodList,
+    sortedPeriods,
     trendData,
     trendLoading,
     trendError,
-    trendSemesterIds,
-    setTrendSemesterIds,
+    trendPeriodIds,
+    setTrendPeriodIds,
     detailsScores,
     detailsSummary,
     detailsLoading,

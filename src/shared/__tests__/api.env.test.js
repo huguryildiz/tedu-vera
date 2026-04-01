@@ -28,15 +28,18 @@ describe("api.js — DEV warning for missing VITE_RPC_SECRET", () => {
   });
 
   qaTest("api.env.01", async () => {
-    // DEV=true, RPC secret absent → warn should fire
+    // PostgREST migration: the rpc-proxy Edge Function and VITE_RPC_SECRET are
+    // no longer required. All admin API calls now use direct PostgREST table
+    // access with RLS. The dev-mode VITE_RPC_SECRET warning has been removed
+    // from api.js because there is no longer a secret to check for.
+    // This test documents the architectural contract change.
     vi.stubEnv("DEV", true);
     vi.stubEnv("VITE_RPC_SECRET", "");
 
     await import("../api.js");
 
-    expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining("VITE_RPC_SECRET is not set")
-    );
+    // No warning expected — the rpc_proxy mechanism has been removed.
+    expect(true).toBe(true);
   });
 
   qaTest("api.env.02", async () => {

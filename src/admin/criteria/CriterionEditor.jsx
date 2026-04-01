@@ -53,7 +53,7 @@ function getRubricTooltipLabel(label, rangeLabel, desc) {
 
 export default function CriterionEditor({
   row, index, errors, rubricErrorsByCriterion, saveAttempted, fullyLocked,
-  mudekTemplate, mudekOutcomeByCode, sanitizeMudekSelection,
+  outcomeConfig, mudekOutcomeByCode, sanitizeMudekSelection,
   rowActions, // { setRow, markTouched, toggleCriterionCard, toggleMudek, toggleRubric, requestRemoveRow }
   rowCount, attributes, listeners, setNodeRef, style
 }) {
@@ -302,7 +302,7 @@ export default function CriterionEditor({
           </div>
 
           {/* ── MÜDEK mapping ── */}
-          {mudekTemplate.length > 0 && (
+          {outcomeConfig.length > 0 && (
             <div className={`criterion-field criterion-field--mudek criterion-subsection${row._mudekOpen ? " is-open" : " is-collapsed"}`}>
               <div className="criterion-subsection-header">
                 <div className="criterion-subsection-title-wrap">
@@ -332,12 +332,12 @@ export default function CriterionEditor({
               <div className="criterion-subsection-body">
                 <MudekPillSelector
                   selected={sanitizeMudekSelection(row.mudek)}
-                  mudekTemplate={mudekTemplate}
+                  outcomeConfig={outcomeConfig}
                   onChange={(next) => setRow(i, "mudek", next)}
                   criterionColor={row.color}
                   open={row._mudekOpen}
                 />
-                {errors[`mudek_${i}`] && mudekTemplate.length > 0 && (
+                {errors[`mudek_${i}`] && outcomeConfig.length > 0 && (
                   <div className="text-xs text-destructive">{errors[`mudek_${i}`]}</div>
                 )}
               </div>

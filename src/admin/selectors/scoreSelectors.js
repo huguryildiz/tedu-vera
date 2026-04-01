@@ -53,10 +53,10 @@ export function normalizeScoreRow(row) {
   return {
     jurorId:     row.juror_id,
     juryName:    row.juror_name,
-    juryDept:    row.juror_inst,
+    affiliation:    row.affiliation,
     projectId:   row.project_id,
     groupNo:     row.group_no,
-    projectName: row.project_title,
+    projectName: row.title,
     posterDate:  row.poster_date || "",
     ...dbScoresToUi(row),
     total:       row.total ?? null,

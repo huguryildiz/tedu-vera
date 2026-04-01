@@ -1,6 +1,6 @@
 // src/admin/__tests__/PinResetDialog.test.jsx
 // ============================================================
-// PinResetDialog — confirmation step semester context (TC-020)
+// PinResetDialog — confirmation step period context (TC-020)
 //                  and result step juror context (TC-021).
 // ============================================================
 
@@ -18,7 +18,7 @@ vi.mock("../../shared/Icons", () => ({
   InfoIcon:                "span",
 }));
 
-const BASE_TARGET = { juror_id: "j1", juror_name: "Alice", juror_inst: "EE" };
+const BASE_TARGET = { juror_id: "j1", juror_name: "Alice", affiliation: "EE" };
 
 function renderDialog(overrides = {}) {
   const defaults = {
@@ -26,7 +26,7 @@ function renderDialog(overrides = {}) {
     resetPinInfo: null,
     pinResetLoading: false,
     pinCopied: false,
-    viewSemesterLabel: "2026 Spring",
+    viewPeriodLabel: "2026 Spring",
     onCopyPin: vi.fn(),
     onClose: vi.fn(),
     onConfirmReset: vi.fn(),
@@ -41,7 +41,7 @@ describe("PinResetDialog — confirmation step", () => {
   });
 
   qaTest("pin.reset.02", () => {
-    renderDialog({ viewSemesterLabel: "2026 Spring" });
+    renderDialog({ viewPeriodLabel: "2026 Spring" });
     expect(screen.getByText("2026 Spring")).toBeInTheDocument();
   });
 
@@ -85,7 +85,7 @@ describe("PinResetDialog — loading and stale state", () => {
         resetPinInfo={{ pin_plain_once: "9999" }}
         pinResetLoading={false}
         pinCopied={false}
-        viewSemesterLabel="2026 Spring"
+        viewPeriodLabel="2026 Spring"
         onCopyPin={vi.fn()}
         onClose={vi.fn()}
         onConfirmReset={vi.fn()}
@@ -102,11 +102,11 @@ describe("PinResetDialog — loading and stale state", () => {
 
     rerender(
       <PinResetDialog
-        pinResetTarget={{ juror_id: "j2", juror_name: "Carol", juror_inst: "CS" }}
+        pinResetTarget={{ juror_id: "j2", juror_name: "Carol", affiliation: "CS" }}
         resetPinInfo={null}
         pinResetLoading={false}
         pinCopied={false}
-        viewSemesterLabel="2026 Spring"
+        viewPeriodLabel="2026 Spring"
         onCopyPin={vi.fn()}
         onClose={vi.fn()}
         onConfirmReset={vi.fn()}

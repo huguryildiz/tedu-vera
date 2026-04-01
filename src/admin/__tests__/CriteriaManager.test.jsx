@@ -20,7 +20,7 @@ function renderManager(rubric, criterionMax = 100, onSave = vi.fn(async () => ({
   render(
     <CriteriaManager
       template={template}
-      mudekTemplate={[]}
+      outcomeConfig={[]}
       onSave={onSave}
       disabled={false}
       isLocked={false}
@@ -51,7 +51,7 @@ describe("CriteriaManager rubric range validation UX", () => {
     render(
       <CriteriaManager
         template={template}
-        mudekTemplate={[]}
+        outcomeConfig={[]}
         onSave={vi.fn(async () => ({ ok: true }))}
         disabled={false}
         isLocked={false}
@@ -84,7 +84,7 @@ describe("CriteriaManager rubric range validation UX", () => {
     render(
       <CriteriaManager
         template={template}
-        mudekTemplate={[{ id: "po_1_2", code: "1.2", desc_en: "x", desc_tr: "x" }]}
+        outcomeConfig={[{ id: "po_1_2", code: "1.2", desc_en: "x", desc_tr: "x" }]}
         onSave={vi.fn(async () => ({ ok: true }))}
         disabled={false}
         isLocked={false}
@@ -172,7 +172,7 @@ describe("CriteriaManager rubric range validation UX", () => {
             ],
           },
         ]}
-        mudekTemplate={[{ id: "po_1_2", code: "1.2", desc_en: "x", desc_tr: "x" }]}
+        outcomeConfig={[{ id: "po_1_2", code: "1.2", desc_en: "x", desc_tr: "x" }]}
         onSave={vi.fn(async () => ({ ok: true }))}
         disabled={false}
         isLocked={false}
@@ -201,7 +201,7 @@ describe("CriteriaManager rubric range validation UX", () => {
             ],
           },
         ]}
-        mudekTemplate={[{ id: "po_1_2", code: "1.2", desc_en: "x", desc_tr: "x" }]}
+        outcomeConfig={[{ id: "po_1_2", code: "1.2", desc_en: "x", desc_tr: "x" }]}
         onSave={vi.fn(async () => ({ ok: true }))}
         disabled={false}
         isLocked={false}
@@ -250,7 +250,7 @@ describe("CriteriaManager rubric range validation UX", () => {
             ],
           },
         ]}
-        mudekTemplate={[{ id: "po_1_2", code: "1.2", desc_en: "x", desc_tr: "x" }]}
+        outcomeConfig={[{ id: "po_1_2", code: "1.2", desc_en: "x", desc_tr: "x" }]}
         onSave={vi.fn(async () => ({ ok: true }))}
         disabled={false}
         isLocked={false}
@@ -303,7 +303,7 @@ describe("CriteriaManager rubric range validation UX", () => {
     render(
       <CriteriaManager
         template={template}
-        mudekTemplate={[{ id: "po_1_1", code: "1.1", desc_en: "x", desc_tr: "x" }]}
+        outcomeConfig={[{ id: "po_1_1", code: "1.1", desc_en: "x", desc_tr: "x" }]}
         onSave={vi.fn()}
       />
     );
@@ -335,7 +335,7 @@ describe("CriteriaManager rubric range validation UX", () => {
     render(
       <CriteriaManager
         template={template}
-        mudekTemplate={[]}
+        outcomeConfig={[]}
         onSave={vi.fn(async () => ({ ok: true }))}
         disabled={false}
         isLocked={false}
@@ -369,7 +369,7 @@ describe("CriteriaManager rubric range validation UX", () => {
     render(
       <CriteriaManager
         template={template}
-        mudekTemplate={[
+        outcomeConfig={[
           {
             id: "po_1_2",
             code: "1.2",
@@ -415,7 +415,7 @@ describe("CriteriaManager rubric range validation UX", () => {
     render(
       <CriteriaManager
         template={template}
-        mudekTemplate={[
+        outcomeConfig={[
           { id: "po_1_1", code: "1.1", desc_en: "x", desc_tr: "x" },
           { id: "po_1_2", code: "1.2", desc_en: "x", desc_tr: "x" },
           { id: "po_2", code: "2", desc_en: "x", desc_tr: "x" },
@@ -458,7 +458,7 @@ describe("CriteriaManager rubric range validation UX", () => {
     render(
       <CriteriaManager
         template={template}
-        mudekTemplate={[
+        outcomeConfig={[
           {
             id: "po_3_1",
             code: "3.1",
@@ -506,7 +506,7 @@ describe("CriteriaManager rubric range validation UX", () => {
             rubric: [],
           },
         ]}
-        mudekTemplate={[]}
+        outcomeConfig={[]}
         onSave={vi.fn(async () => ({ ok: true }))}
         disabled={false}
         isLocked={false}

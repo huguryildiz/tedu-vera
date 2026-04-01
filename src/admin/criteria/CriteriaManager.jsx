@@ -1,6 +1,6 @@
 // src/admin/criteria/CriteriaManager.jsx
 // ============================================================
-// Rich evaluation criteria editor for semester settings.
+// Rich evaluation criteria editor for period settings.
 //
 // Admin-facing canonical model per criterion:
 //   label, shortLabel, color, max, blurb, mudek[], rubric[]
@@ -14,7 +14,7 @@
 //
 // Props:
 //   template      — current criteria array (any stored shape)
-//   mudekTemplate — semester's MÜDEK outcomes [{ id, code, ... }]
+//   outcomeConfig — period's MÜDEK outcomes [{ id, code, ... }]
 //   onSave        — (newTemplate) => Promise<{ ok, error? }>
 //   disabled      — disables all inputs and the save button
 //   isLocked      — when true, the entire template is read-only; no field or action is editable
@@ -55,7 +55,7 @@ function SortableCriterionRow({ id, disabled, children }) {
 
 export default function CriteriaManager({
   template = [],
-  mudekTemplate = [],
+  outcomeConfig = [],
   onSave,
   onDirtyChange,
   disabled = false,
@@ -92,7 +92,7 @@ export default function CriteriaManager({
     sensors,
     handleDragEnd,
     handleSave,
-  } = useCriteriaForm({ template, mudekTemplate, onSave, onDirtyChange, disabled, isLocked });
+  } = useCriteriaForm({ template, outcomeConfig, onSave, onDirtyChange, disabled, isLocked });
 
   const rowIds = activeRows.map((r) => r._id);
 
@@ -116,7 +116,7 @@ export default function CriteriaManager({
 
       {isLocked && (
         <AlertCard variant="warning">
-          Evaluation template locked — scoring has started for this semester. No criteria changes are allowed.
+          Evaluation template locked — scoring has started for this period. No criteria changes are allowed.
         </AlertCard>
       )}
 
@@ -145,7 +145,7 @@ export default function CriteriaManager({
                     rubricErrorsByCriterion={rubricErrorsByCriterion}
                     saveAttempted={saveAttempted}
                     fullyLocked={fullyLocked}
-                    mudekTemplate={mudekTemplate}
+                    outcomeConfig={outcomeConfig}
                     mudekOutcomeByCode={mudekOutcomeByCode}
                     sanitizeMudekSelection={sanitizeMudekSelection}
                     rowActions={rowActions}

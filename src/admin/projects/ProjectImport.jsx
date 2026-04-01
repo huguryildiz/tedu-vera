@@ -12,7 +12,7 @@ export default function ProjectImport({
   show,
   onClose,
   onImport,
-  semesterName,
+  periodName,
   projects,
 }) {
   const fileRef = useRef(null);
@@ -47,10 +47,10 @@ export default function ProjectImport({
     }
     const header = rows[0].map((h) => h.toLowerCase());
     const idxGroup = header.indexOf("group_no");
-    const idxTitle = header.indexOf("project_title");
-    const idxStudents = header.indexOf("group_students");
+    const idxTitle = header.indexOf("title");
+    const idxStudents = header.indexOf("members");
     if (idxGroup < 0 || idxTitle < 0 || idxStudents < 0) {
-      setImportError("Header row is required and must include: group_no, project_title, group_students.");
+      setImportError("Header row is required and must include: group_no, title, members.");
       return;
     }
     const invalidGroupRows = [];
@@ -67,8 +67,8 @@ export default function ProjectImport({
       const hasExtraValues = r.slice(idxStudents + 1).some((cell) => String(cell || "").trim() !== "");
       return {
         group_no: groupNo,
-        project_title: title,
-        group_students: studentsText,
+        title: title,
+        members: studentsText,
         has_extra_values: hasExtraValues,
       };
     }).filter((r, idx) => {
@@ -78,16 +78,16 @@ export default function ProjectImport({
         invalidGroupRows.push(rowNo);
         isValid = false;
       }
-      if (!r.project_title) {
+      if (!r.title) {
         invalidTitleRows.push(rowNo);
         isValid = false;
       }
-      if (!r.group_students) {
+      if (!r.members) {
         invalidStudentsRows.push(rowNo);
         isValid = false;
       }
-      const invalidSeparators = getInvalidStudentSeparators(r.group_students);
-      if (r.group_students.includes(",") || r.has_extra_values) {
+      const invalidSeparators = getInvalidStudentSeparators(r.members);
+      if (r.members.includes(",") || r.has_extra_values) {
         invalidSeparators.push(",");
       }
       const uniqueInvalidSeparators = [...new Set(invalidSeparators)];
@@ -119,10 +119,10 @@ export default function ProjectImport({
         parts.push(`Invalid group_no at rows: ${invalidGroupRows.slice(0, 6).join(", ")}.`);
       }
       if (invalidTitleRows.length) {
-        parts.push(`Missing project_title at rows: ${invalidTitleRows.slice(0, 6).join(", ")}.`);
+        parts.push(`Missing title at rows: ${invalidTitleRows.slice(0, 6).join(", ")}.`);
       }
       if (invalidStudentsRows.length) {
-        parts.push(`Missing group_students at rows: ${invalidStudentsRows.slice(0, 6).join(", ")}.`);
+        parts.push(`Missing members at rows: ${invalidStudentsRows.slice(0, 6).join(", ")}.`);
       }
       if (duplicateGroupRows.length) {
         parts.push(`Duplicate group_no at rows: ${duplicateGroupRows.slice(0, 6).join(", ")}.`);
@@ -227,8 +227,8 @@ export default function ProjectImport({
         </div>
         <p className="-mt-1 mb-0.5 block text-xs leading-snug text-muted-foreground whitespace-nowrap">
           Groups will be added to{" "}
-          <span className="font-bold text-destructive animate-pulse">{semesterName || "selected"}</span>{" "}
-          semester.
+          <span className="font-bold text-destructive animate-pulse">{periodName || "selected"}</span>{" "}
+          period.
         </p>
         <div className="flex flex-col gap-2.5">
           <input
@@ -295,7 +295,7 @@ export default function ProjectImport({
               <ChevronDownIcon className="size-3.5 text-muted-foreground/60 transition-transform [[open]>&]:rotate-180" aria-hidden="true" />
             </summary>
             <div className="px-3 pb-3 flex flex-col gap-1.5">
-              <div className="font-mono text-xs text-muted-foreground">group_no,project_title,group_students</div>
+              <div className="font-mono text-xs text-muted-foreground">group_no,title,members</div>
               <div className="font-mono text-xs text-muted-foreground">1,Autonomous Drone Navigation,Ali Yilmaz</div>
               <div className="font-mono text-xs text-muted-foreground">2,Power Quality Monitoring,Elif Kaya; Mert Arslan</div>
               <div className="font-mono text-xs text-muted-foreground">3,Embedded Vision for Robots,Zeynep Acar; Kerem Sahin; Ayse Demir</div>
@@ -308,10 +308,10 @@ export default function ProjectImport({
             </summary>
             <div className="px-3 pb-3 flex flex-col gap-1.5">
               <ul className="text-xs text-muted-foreground leading-relaxed list-disc pl-4 space-y-0.5">
-                <li>Header row is required with exact field names: <code className="rounded bg-muted px-1 text-foreground text-[0.9em]">group_no</code>, <code className="rounded bg-muted px-1 text-foreground text-[0.9em]">project_title</code>, <code className="rounded bg-muted px-1 text-foreground text-[0.9em]">group_students</code>.</li>
+                <li>Header row is required with exact field names: <code className="rounded bg-muted px-1 text-foreground text-[0.9em]">group_no</code>, <code className="rounded bg-muted px-1 text-foreground text-[0.9em]">title</code>, <code className="rounded bg-muted px-1 text-foreground text-[0.9em]">members</code>.</li>
                 <li><code className="rounded bg-muted px-1 text-foreground text-[0.9em]">group_no</code> must be a positive number and unique in the CSV.</li>
-                <li><code className="rounded bg-muted px-1 text-foreground text-[0.9em]">project_title</code> and <code className="rounded bg-muted px-1 text-foreground text-[0.9em]">group_students</code> cannot be empty.</li>
-                <li>One row must represent one group. Separate students with <code className="rounded bg-muted px-1 text-foreground text-[0.9em]">;</code> in <code className="rounded bg-muted px-1 text-foreground text-[0.9em]">group_students</code>.</li>
+                <li><code className="rounded bg-muted px-1 text-foreground text-[0.9em]">title</code> and <code className="rounded bg-muted px-1 text-foreground text-[0.9em]">members</code> cannot be empty.</li>
+                <li>One row must represent one group. Separate students with <code className="rounded bg-muted px-1 text-foreground text-[0.9em]">;</code> in <code className="rounded bg-muted px-1 text-foreground text-[0.9em]">members</code>.</li>
                 <li>Existing <code className="rounded bg-muted px-1 text-foreground text-[0.9em]">group_no</code> values are skipped during import.</li>
               </ul>
             </div>

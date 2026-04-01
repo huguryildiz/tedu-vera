@@ -11,8 +11,9 @@
 
 import { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase, clearPersistedSession } from "../../lib/supabaseClient";
-import { getActiveTenantId, setActiveTenantId } from "../storage/adminStorage";
-import { adminProfileUpsert, adminProfileGet } from "../api/admin/profiles";
+import { getActiveOrganizationId, setActiveOrganizationId } from "../storage/adminStorage";
+import { getProfile, upsertProfile } from "../api/admin/profiles";
+import { getSession } from "../api";
 import { KEYS } from "../storage/keys";
 
 export const AuthContext = createContext(null);
@@ -61,8 +62,8 @@ async function getSessionWithRetry(maxAttempts = 3) {
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
-  const [tenants, setTenants] = useState([]);
-  const [activeTenantId, setActiveTenantIdState] = useState(null);
+  const [organizations, setOrganizations] = useState([]);
+  const [activeOrganizationId, setActiveOrganizationIdState] = useState(null);
   const [displayName, setDisplayName] = useState(null);
   const [profileIncomplete, setProfileIncomplete] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -72,11 +73,7 @@ export default function AuthProvider({ children }) {
   // Fetch tenant memberships from the session RPC.
   const fetchMemberships = useCallback(async () => {
     try {
-      const { data, error } = await supabase.rpc("rpc_admin_auth_get_session");
-      if (error) {
-        console.error("Failed to fetch session memberships:", error.message);
-        return [];
-      }
+      const data = await getSession();
       return data || [];
     } catch (e) {
       console.error("fetchMemberships error:", e);
@@ -91,8 +88,8 @@ export default function AuthProvider({ children }) {
     if (!newSession?.user) {
       setUser(null);
       setSession(null);
-      setTenants([]);
-      setActiveTenantIdState(null);
+      setOrganizations([]);
+      setActiveOrganizationIdState(null);
       setLoading(false);
       return;
     }
@@ -117,59 +114,59 @@ export default function AuthProvider({ children }) {
     const memberships = await fetchMemberships();
     if (!mountedRef.current) return;
 
-    const tenantList = memberships.map((m) => ({
+    const organizationList = memberships.map((m) => ({
       id: m.tenant_id,
       code: m.tenant_code,
       name: m.tenant_short_label,
       role: m.role,
     }));
-    setTenants(tenantList);
+    setOrganizations(organizationList);
 
     // Detect first-time Google user needing profile completion
     const provider = newSession.user.app_metadata?.provider;
     const profileCompleted = newSession.user.user_metadata?.profile_completed;
-    if (provider === "google" && tenantList.length === 0 && !profileCompleted) {
+    if (provider === "google" && organizationList.length === 0 && !profileCompleted) {
       setProfileIncomplete(true);
     } else {
       setProfileIncomplete(false);
     }
 
-    // Restore or pick active tenant
-    const savedTenantId = getActiveTenantId();
-    const hasSaved = tenantList.some((t) => t.id === savedTenantId);
-    const isSuper = tenantList.some((t) => t.role === "super_admin");
+    // Restore or pick active organization
+    const savedOrganizationId = getActiveOrganizationId();
+    const hasSaved = organizationList.some((o) => o.id === savedOrganizationId);
+    const isSuper = organizationList.some((o) => o.role === "super_admin");
     const isDemoMode = import.meta.env.VITE_DEMO_MODE === "true";
-    const preferredDemoTenant = tenantList.find((t) =>
-      String(t.code || "").trim().toLowerCase() === "tedu-ee" ||
-      String(t.name || "").trim().toLowerCase() === "tedu ee"
+    const preferredDemoOrganization = organizationList.find((o) =>
+      String(o.code || "").trim().toLowerCase() === "tedu-ee" ||
+      String(o.name || "").trim().toLowerCase() === "tedu ee"
     );
 
-    if (isDemoMode && preferredDemoTenant) {
-      setActiveTenantIdState(preferredDemoTenant.id);
-      setActiveTenantId(preferredDemoTenant.id);
+    if (isDemoMode && preferredDemoOrganization) {
+      setActiveOrganizationIdState(preferredDemoOrganization.id);
+      setActiveOrganizationId(preferredDemoOrganization.id);
     } else if (hasSaved) {
-      setActiveTenantIdState(savedTenantId);
-    } else if (isSuper && tenantList.length > 1) {
-      // Super-admin: pick first non-null tenant
-      const firstTenant = tenantList.find((t) => t.id != null);
-      setActiveTenantIdState(firstTenant?.id || null);
-    } else if (tenantList.length > 0) {
-      const firstTenant = tenantList.find((t) => t.id != null);
-      setActiveTenantIdState(firstTenant?.id || null);
+      setActiveOrganizationIdState(savedOrganizationId);
+    } else if (isSuper && organizationList.length > 1) {
+      // Super-admin: pick first non-null organization
+      const firstOrganization = organizationList.find((o) => o.id != null);
+      setActiveOrganizationIdState(firstOrganization?.id || null);
+    } else if (organizationList.length > 0) {
+      const firstOrganization = organizationList.find((o) => o.id != null);
+      setActiveOrganizationIdState(firstOrganization?.id || null);
     } else {
-      setActiveTenantIdState(null);
+      setActiveOrganizationIdState(null);
     }
 
     hasSessionRef.current = true;
 
     // In demo mode, skip the profile upsert (write RPCs are blocked) but
-    // still read the display name from admin_profiles so the avatar menu
+    // still read the display name from profiles so the avatar menu
     // shows the seeded name instead of the fallback "Admin".
     // Bypass users (VITE_DEMO_BYPASS_UIDS) are allowed to upsert.
     const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
     const isBypass = DEMO_BYPASS_UIDS.includes(newSession.user.id);
     if (DEMO_MODE && !isBypass) {
-      adminProfileGet().then((profile) => {
+      getProfile().then((profile) => {
         if (mountedRef.current && profile?.display_name) {
           setDisplayName(profile.display_name);
         }
@@ -177,9 +174,10 @@ export default function AuthProvider({ children }) {
       setLoading(false);
       return;
     }
-    adminProfileUpsert().then((profile) => {
-      if (mountedRef.current && profile?.out_display_name) {
-        setDisplayName(profile.out_display_name);
+    const displayNameFromUser = newSession.user.user_metadata?.name || newSession.user.email;
+    upsertProfile(displayNameFromUser).then((profile) => {
+      if (mountedRef.current && profile?.display_name) {
+        setDisplayName(profile.display_name);
       }
     }).catch(() => {});
 
@@ -240,9 +238,9 @@ export default function AuthProvider({ children }) {
     };
   }, [handleAuthChange]);
 
-  const setActiveTenant = useCallback((tenantId) => {
-    setActiveTenantIdState(tenantId);
-    setActiveTenantId(tenantId);
+  const setActiveOrganization = useCallback((organizationId) => {
+    setActiveOrganizationIdState(organizationId);
+    setActiveTenantId(organizationId);
   }, []);
 
   const signIn = useCallback(async (email, password, rememberMe = false) => {
@@ -275,7 +273,8 @@ export default function AuthProvider({ children }) {
     });
     if (metaError) throw metaError;
 
-    // Use the 4-param authenticated overload (no email/password needed)
+    // Use the authenticated RPC for application submission
+    // This RPC uses auth.uid() for authentication
     const { data, error } = await supabase.rpc("rpc_admin_application_submit", {
       p_tenant_id: tenantId,
       p_name: name,
@@ -322,36 +321,36 @@ export default function AuthProvider({ children }) {
     hasSessionRef.current = false;
     setUser(null);
     setSession(null);
-    setTenants([]);
-    setActiveTenantIdState(null);
+    setOrganizations([]);
+    setActiveOrganizationIdState(null);
   }, []);
 
   // Refresh memberships (e.g., after approval)
   const refreshMemberships = useCallback(async () => {
     const memberships = await fetchMemberships();
     if (!mountedRef.current) return;
-    const tenantList = memberships.map((m) => ({
+    const organizationList = memberships.map((m) => ({
       id: m.tenant_id,
       code: m.tenant_code,
       name: m.tenant_short_label,
       role: m.role,
     }));
-    setTenants(tenantList);
+    setOrganizations(organizationList);
   }, [fetchMemberships]);
 
-  const activeTenant = useMemo(
-    () => tenants.find((t) => t.id === activeTenantId) || null,
-    [tenants, activeTenantId]
+  const activeOrganization = useMemo(
+    () => organizations.find((o) => o.id === activeOrganizationId) || null,
+    [organizations, activeOrganizationId]
   );
 
   const isSuper = useMemo(
-    () => tenants.some((t) => t.role === "super_admin"),
-    [tenants]
+    () => organizations.some((o) => o.role === "super_admin"),
+    [organizations]
   );
 
   const isPending = useMemo(
-    () => !!user && tenants.length === 0,
-    [user, tenants]
+    () => !!user && organizations.length === 0,
+    [user, organizations]
   );
 
   const demoBypass = useMemo(
@@ -362,9 +361,9 @@ export default function AuthProvider({ children }) {
   const value = useMemo(() => ({
     user,
     session,
-    tenants,
-    activeTenant,
-    setActiveTenant,
+    organizations,
+    activeOrganization,
+    setActiveOrganization,
     displayName,
     setDisplayName,
     isSuper,
@@ -380,7 +379,7 @@ export default function AuthProvider({ children }) {
     updatePassword,
     refreshMemberships,
     completeProfile,
-  }), [user, session, tenants, activeTenant, setActiveTenant, displayName, setDisplayName,
+  }), [user, session, organizations, activeOrganization, setActiveOrganization, displayName, setDisplayName,
        isSuper, isPending, demoBypass, profileIncomplete, loading, signIn, signInWithGoogle, signUp, signOut,
        resetPassword, updatePassword, refreshMemberships, completeProfile]);
 

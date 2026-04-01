@@ -7,9 +7,9 @@
 // before — JuryForm.jsx and all tests require zero changes.
 //
 // Sub-hooks (each owns a single concern):
-//   useJurorIdentity  — juror name, dept, auth error
+//   useJurorIdentity  — juror name, affiliation, auth error
 //   useJurorSession   — PIN/session token state
-//   useJuryLoading    — semester/project loading + abort ref
+//   useJuryLoading    — period/project loading + abort ref
 //   useJuryScoring    — scoring state + pending refs
 //   useJuryEditState  — edit/lock state + polling effect
 //   useJuryWorkflow   — step navigation, derived values
@@ -37,8 +37,8 @@
 //     values regardless of render cycle.
 //
 // ── Step flow ─────────────────────────────────────────────────
-//   "identity" → "semester" → ("pin" | "pin_reveal") → "progress_check" → "eval" → "done"
-//   (semester step auto-advances when exactly one active semester)
+//   "identity" → "period" → ("pin" | "pin_reveal") → "progress_check" → "eval" → "done"
+//   (period step auto-advances when exactly one active period)
 // ============================================================
 
 import { useEffect, useRef } from "react";
@@ -81,7 +81,7 @@ export default function useJuryState() {
   const editState = useJuryEditState({
     step:              workflow.step,
     jurorId:           session.jurorId,
-    semesterId:        loading.semesterId,
+    periodId:          loading.periodId,
     jurorSessionToken: session.jurorSessionToken,
   });
 
@@ -93,12 +93,12 @@ export default function useJuryState() {
   stateRef.current = {
     jurorId:           session.jurorId,
     jurorSessionToken: session.jurorSessionToken,
-    semesterId:        loading.semesterId,
+    periodId:          loading.periodId,
     projects:          loading.projects,
     scores:            scoring.scores,
     comments:          scoring.comments,
     current:           workflow.current,
-    criteriaTemplate:  loading.criteriaTemplate,
+    criteriaConfig:    loading.criteriaConfig,
   };
 
   const autosave = useJuryAutosave({
@@ -130,7 +130,7 @@ export default function useJuryState() {
     if (workflow.step !== "eval" || workflow.doneFiredRef.current || editState.editMode) return;
     if (workflow.submitPendingRef.current) return;
     if (loading.projects.length === 0) return;
-    // Skip the first render after _loadSemester seeds state so a fully-scored
+    // Skip the first render after _loadPeriod seeds state so a fully-scored
     // juror who resumes isn't immediately thrown into the submit confirmation.
     if (workflow.justLoadedRef.current) { workflow.justLoadedRef.current = false; return; }
     if (!loading.projects.every((p) => scoring.groupSynced[p.project_id])) return;
@@ -175,23 +175,23 @@ export default function useJuryState() {
     jurorSessionToken: session.jurorSessionToken,
     juryName:          identity.juryName,
     setJuryName:       identity.setJuryName,
-    juryDept:          identity.juryDept,
-    setJuryDept:       identity.setJuryDept,
+    affiliation:       identity.affiliation,
+    setAffiliation:    identity.setAffiliation,
     authError:         identity.authError,
     issuedPin:         session.issuedPin,
 
-    // Semester
-    semesters:          loading.semesters,
-    semesterId:         loading.semesterId,
-    semesterName:       loading.semesterName,
-    currentSemesterInfo: loading.currentSemesterInfo,
+    // Period
+    periods:            loading.periods,
+    periodId:           loading.periodId,
+    periodName:         loading.periodName,
+    currentPeriodInfo:  loading.currentPeriodInfo,
     activeProjectCount: loading.activeProjectCount,
     progressCheck:      loading.progressCheck,
 
     // Projects (dynamic)
     projects:         loading.projects,
     effectiveCriteria: handlers.effectiveCriteria,
-    mudekLookup:       handlers.mudekLookup,
+    outcomeLookup:     handlers.outcomeLookup,
 
     // Step / navigation
     step:           workflow.step,
@@ -234,8 +234,8 @@ export default function useJuryState() {
     handlePinRevealContinue:  handlers.handlePinRevealContinue,
     handleProgressContinue:   handlers.handleProgressContinue,
 
-    // Semester
-    handleSemesterSelect: handlers.handleSemesterSelect,
+    // Period
+    handlePeriodSelect: handlers.handlePeriodSelect,
 
     // Submit
     confirmingSubmit:    workflow.confirmingSubmit,

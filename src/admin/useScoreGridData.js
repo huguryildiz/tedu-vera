@@ -15,8 +15,8 @@ import {
   buildExportRowsData,
 } from "./selectors/gridSelectors";
 
-export function useScoreGridData({ data, jurors, groups, criteriaTemplate }) {
-  const activeCriteria = criteriaTemplate || CRITERIA;
+export function useScoreGridData({ data, jurors, groups, criteriaConfig }) {
+  const activeCriteria = criteriaConfig || CRITERIA;
 
   const lookup = useMemo(
     () => buildLookup(data, activeCriteria),

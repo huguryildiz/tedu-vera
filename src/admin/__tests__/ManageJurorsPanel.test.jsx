@@ -58,7 +58,7 @@ describe("ManageJurorsPanel — CSV import validation", () => {
 
   qaTest("jurors.csv.03", async () => {
     const { container } = render(<ManageJurorsPanel {...DEFAULT_PROPS} />);
-    const csv = makeCSV("juror_name,juror_inst", ",EE");
+    const csv = makeCSV("juror_name,affiliation", ",EE");
     const file = new File([csv], "jurors.csv", { type: "text/csv" });
     await uploadFile(container, file);
     await waitFor(() => {
@@ -68,17 +68,17 @@ describe("ManageJurorsPanel — CSV import validation", () => {
 
   qaTest("jurors.csv.04", async () => {
     const { container } = render(<ManageJurorsPanel {...DEFAULT_PROPS} />);
-    const csv = makeCSV("juror_name,juror_inst", "Alice,");
+    const csv = makeCSV("juror_name,affiliation", "Alice,");
     const file = new File([csv], "jurors.csv", { type: "text/csv" });
     await uploadFile(container, file);
     await waitFor(() => {
-      expect(screen.getByText(/missing juror_inst/i)).toBeInTheDocument();
+      expect(screen.getByText(/missing affiliation/i)).toBeInTheDocument();
     });
   });
 
   qaTest("jurors.csv.05", async () => {
     const { container } = render(<ManageJurorsPanel {...DEFAULT_PROPS} />);
-    const csv = makeCSV("juror_name,juror_inst", "Alice,EE", "Alice,EE");
+    const csv = makeCSV("juror_name,affiliation", "Alice,EE", "Alice,EE");
     const file = new File([csv], "jurors.csv", { type: "text/csv" });
     await uploadFile(container, file);
     await waitFor(() => {
@@ -87,11 +87,11 @@ describe("ManageJurorsPanel — CSV import validation", () => {
   });
 
   qaTest("jurors.csv.06", async () => {
-    const existing = [{ juror_id: "j1", juror_name: "Alice", juror_inst: "EE" }];
+    const existing = [{ juror_id: "j1", juror_name: "Alice", affiliation: "EE" }];
     const { container } = render(
       <ManageJurorsPanel {...DEFAULT_PROPS} jurors={existing} />
     );
-    const csv = makeCSV("juror_name,juror_inst", "Alice,EE");
+    const csv = makeCSV("juror_name,affiliation", "Alice,EE");
     const file = new File([csv], "jurors.csv", { type: "text/csv" });
     await uploadFile(container, file);
     await waitFor(() => {
@@ -104,7 +104,7 @@ describe("ManageJurorsPanel — CSV import validation", () => {
 
 describe("ManageJurorsPanel — PIN reset", () => {
   qaTest("jurors.pin.01", async () => {
-    const juror = { juror_id: "j1", juror_name: "Alice", juror_inst: "EE" };
+    const juror = { juror_id: "j1", juror_name: "Alice", affiliation: "EE" };
     const onResetPin = vi.fn();
     render(<ManageJurorsPanel {...DEFAULT_PROPS} jurors={[juror]} onResetPin={onResetPin} />);
     // Open actions dropdown within table
@@ -121,7 +121,7 @@ describe("ManageJurorsPanel — PIN reset", () => {
 
 describe("ManageJurorsPanel — CRUD smoke tests", () => {
   qaTest("jurors.crud.01", async () => {
-    const juror = { juror_id: "j1", juror_name: "Alice", juror_inst: "EE" };
+    const juror = { juror_id: "j1", juror_name: "Alice", affiliation: "EE" };
     const onDeleteJuror = vi.fn();
     render(
       <ManageJurorsPanel {...DEFAULT_PROPS} jurors={[juror]} onDeleteJuror={onDeleteJuror} />
@@ -155,7 +155,7 @@ describe("ManageJurorsPanel — CRUD smoke tests", () => {
     await waitFor(() => expect(onAddJuror).toHaveBeenCalledTimes(1));
     expect(onAddJuror).toHaveBeenCalledWith({
       juror_name: "Bob Smith",
-      juror_inst: "Computer Science",
+      affiliation: "Computer Science",
     });
   });
 });

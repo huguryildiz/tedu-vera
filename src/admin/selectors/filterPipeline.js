@@ -45,7 +45,7 @@ export function buildJurorEditMap(jurors) {
     const name = String(j.name ?? j.juryName ?? "")
       .trim()
       .toLowerCase();
-    const dept = String(j.dept ?? j.juryDept ?? "")
+    const dept = String(j.dept ?? j.affiliation ?? "")
       .trim()
       .toLowerCase();
     if (name || dept) map.set(`${name}__${dept}`, editEnabled);
@@ -105,9 +105,9 @@ export function generateMissingRows(
     assignedList.forEach((j) => {
       const jurorId = j.jurorId ?? j.key;
       const juryName = String(j.name ?? j.juryName ?? "").trim();
-      const juryDept = String(j.dept ?? j.juryDept ?? "").trim();
+      const affiliation = String(j.dept ?? j.affiliation ?? "").trim();
       if (!jurorId && !juryName) return;
-      const jurorKey = rowKey({ jurorId, juryName, juryDept });
+      const jurorKey = rowKey({ jurorId, juryName, affiliation });
       groupList.forEach((g) => {
         const projectId = g.id ?? g.projectId;
         if (!projectId) return;
@@ -117,7 +117,7 @@ export function generateMissingRows(
         generated.push({
           jurorId,
           juryName,
-          juryDept,
+          affiliation,
           projectId,
           groupNo: g.groupNo ?? g.group_no ?? null,
           projectName: String(meta?.title ?? g.title ?? "").trim(),
@@ -145,16 +145,16 @@ export function generateMissingRows(
 }
 
 // ── enrichRows ───────────────────────────────────────────────
-// Adds derived fields to combined rows: projectTitle, students,
+// Adds derived fields to combined rows: title, students,
 // isEditing, effectiveStatus, jurorStatus.
 //
 // @param {Array}  rows          - combined data + generated rows
 // @param {Map}    projectMeta   - output of buildProjectMetaMap
 // @param {Map}    jurorEditMap  - output of buildJurorEditMap
 // @param {Array}  groups        - project/group list (for totalGroups count)
-// @param {string} semesterName  - current semester name
+// @param {string} periodName  - current period name
 // @returns {Array}
-export function enrichRows(rows, projectMeta, jurorEditMap, groups, semesterName) {
+export function enrichRows(rows, projectMeta, jurorEditMap, groups, periodName) {
   const groupList = Array.isArray(groups) ? groups : [];
   const totalGroups = groupList.length;
 
@@ -203,7 +203,7 @@ export function enrichRows(rows, projectMeta, jurorEditMap, groups, semesterName
 
   return rows.map((row) => {
     const meta = projectMeta.get(row.projectId);
-    const projectTitle = String(row.projectName ?? meta?.title ?? "").trim();
+    const title = String(row.projectName ?? meta?.title ?? "").trim();
     const studentsRaw = row.students ?? meta?.students ?? "";
     const students = Array.isArray(studentsRaw)
       ? studentsRaw
@@ -217,8 +217,8 @@ export function enrichRows(rows, projectMeta, jurorEditMap, groups, semesterName
     );
     return {
       ...row,
-      semester: row.semester ?? semesterName ?? "",
-      projectTitle,
+      period: row.period ?? periodName ?? "",
+      title,
       students,
       isEditing,
       effectiveStatus: getCellState(row),
@@ -235,7 +235,7 @@ export function enrichRows(rows, projectMeta, jurorEditMap, groups, semesterName
 // @returns {Array}
 export function applyFilters(rows, filterState) {
   const {
-    semesterName,
+    periodName,
     filterGroupNo,
     filterJuror,
     filterDept,
@@ -264,10 +264,10 @@ export function applyFilters(rows, filterState) {
 
   let list = rows;
 
-  if (semesterName) {
-    const q = String(semesterName).trim().toLowerCase();
+  if (periodName) {
+    const q = String(periodName).trim().toLowerCase();
     list = list.filter(
-      (r) => String(r.semester || "").trim().toLowerCase() === q
+      (r) => String(r.period || "").trim().toLowerCase() === q
     );
   }
   if (Array.isArray(filterGroupNo)) {
@@ -282,13 +282,13 @@ export function applyFilters(rows, filterState) {
   if (filterJuror) {
     const q = filterJuror.toLowerCase();
     list = list.filter((r) =>
-      `${r.juryName ?? ""} ${r.juryDept ?? ""}`.toLowerCase().includes(q)
+      `${r.juryName ?? ""} ${r.affiliation ?? ""}`.toLowerCase().includes(q)
     );
   }
   if (filterDept) {
     const q = filterDept.toLowerCase();
     list = list.filter((r) =>
-      String(r.juryDept ?? "")
+      String(r.affiliation ?? "")
         .toLowerCase()
         .includes(q)
     );
@@ -306,7 +306,7 @@ export function applyFilters(rows, filterState) {
   if (filterProjectTitle) {
     const q = filterProjectTitle.toLowerCase();
     list = list.filter((r) =>
-      (r.projectTitle || "").toLowerCase().includes(q)
+      (r.title || "").toLowerCase().includes(q)
     );
   }
   if (filterStudents) {

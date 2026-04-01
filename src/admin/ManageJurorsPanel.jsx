@@ -26,7 +26,7 @@ function renderImportMessage(text) {
 
 export default function ManageJurorsPanel({
   jurors,
-  semesterList = [],
+  periodList = [],
   panelError = "",
   isDemoMode = false,
   isMobile,
@@ -48,11 +48,11 @@ export default function ManageJurorsPanel({
   const panelRef = useRef(null);
   const fileRef = useRef(null);
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ juror_name: "", juror_inst: "" });
+  const [form, setForm] = useState({ juror_name: "", affiliation: "" });
   const [addError, setAddError] = useState("");
   const [showEdit, setShowEdit] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
-  const [editForm, setEditForm] = useState({ juror_name: "", juror_inst: "" });
+  const [editForm, setEditForm] = useState({ juror_name: "", affiliation: "" });
   const [editSaving, setEditSaving] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -63,7 +63,7 @@ export default function ManageJurorsPanel({
   const [pendingEdits, setPendingEdits] = useState(() => new Set());
 
   const isDirty =
-    (showAdd && (form.juror_name.trim() !== "" || form.juror_inst.trim() !== "")) ||
+    (showAdd && (form.juror_name.trim() !== "" || form.affiliation.trim() !== "")) ||
     showEdit;
 
   useEffect(() => {
@@ -105,11 +105,11 @@ export default function ManageJurorsPanel({
     }
   };
 
-  const canSubmit = form.juror_name.trim() && form.juror_inst.trim();
-  const canEdit = editForm.juror_name.trim() && editForm.juror_inst.trim();
+  const canSubmit = form.juror_name.trim() && form.affiliation.trim();
+  const canEdit = editForm.juror_name.trim() && editForm.affiliation.trim();
   const existingJurorKeys = new Set(
     (jurors || []).map((j) =>
-      normalizeKey(j.juryName || j.juror_name, j.juryDept || j.juror_inst)
+      normalizeKey(j.juryName || j.juror_name, j.affiliation || j.affiliation)
     )
   );
 
@@ -134,9 +134,9 @@ export default function ManageJurorsPanel({
     if (!rows.length) return;
     const header = rows[0].map((h) => h.toLowerCase());
     const idxName = header.indexOf("juror_name");
-    const idxInst = header.indexOf("juror_inst");
+    const idxInst = header.indexOf("affiliation");
     if (idxName < 0 || idxInst < 0) {
-      setImportError("Header row is required and must include: juror_name, juror_inst.");
+      setImportError("Header row is required and must include: juror_name, affiliation.");
       return;
     }
     const invalidNameRows = [];
@@ -149,7 +149,7 @@ export default function ManageJurorsPanel({
       const inst = String(instRaw || "").trim();
       return {
         juror_name: name,
-        juror_inst: inst,
+        affiliation: inst,
         _row: idx + 2,
         _key: normalizeKey(name, inst),
       };
@@ -159,7 +159,7 @@ export default function ManageJurorsPanel({
         invalidNameRows.push(r._row);
         isValid = false;
       }
-      if (!r.juror_inst) {
+      if (!r.affiliation) {
         invalidInstRows.push(r._row);
         isValid = false;
       }
@@ -178,7 +178,7 @@ export default function ManageJurorsPanel({
         parts.push(`Missing juror_name at rows: ${invalidNameRows.slice(0, 6).join(", ")}.`);
       }
       if (invalidInstRows.length) {
-        parts.push(`Missing juror_inst at rows: ${invalidInstRows.slice(0, 6).join(", ")}.`);
+        parts.push(`Missing affiliation at rows: ${invalidInstRows.slice(0, 6).join(", ")}.`);
       }
       if (duplicateRows.length) {
         parts.push(`Duplicate juror rows at: ${duplicateRows.slice(0, 6).join(", ")}.`);
@@ -192,7 +192,7 @@ export default function ManageJurorsPanel({
     }
 
     const existingKeys = new Set(
-      (jurors || []).map((j) => normalizeKey(j.juryName || j.juror_name, j.juryDept || j.juror_inst))
+      (jurors || []).map((j) => normalizeKey(j.juryName || j.juror_name, j.affiliation || j.affiliation))
     );
     const skippedExisting = data.filter((r) => existingKeys.has(r._key));
     const toImport = data.filter((r) => !existingKeys.has(r._key));
@@ -206,7 +206,7 @@ export default function ManageJurorsPanel({
     if (skippedExisting.length) {
       const preview = skippedExisting
         .slice(0, 4)
-        .map((r) => `${r.juror_name} / ${r.juror_inst}`)
+        .map((r) => `${r.juror_name} / ${r.affiliation}`)
         .join("; ");
       const more = skippedExisting.length > 4 ? ` (+${skippedExisting.length - 4} more)` : "";
       warningParts.push(`• Skipped existing jurors: ${preview}${more}.`);
@@ -221,7 +221,7 @@ export default function ManageJurorsPanel({
     setIsImporting(true);
     let res;
     try {
-      res = await onImport?.(toImport.map(({ juror_name, juror_inst }) => ({ juror_name, juror_inst })));
+      res = await onImport?.(toImport.map(({ juror_name, affiliation }) => ({ juror_name, affiliation })));
     } finally {
       setIsImporting(false);
     }
@@ -294,9 +294,9 @@ export default function ManageJurorsPanel({
           evalLockActive={evalLockActive}
           hasActiveSemester={hasActiveSemester}
           pendingEdits={pendingEdits}
-          onEdit={({ jurorId, juror_name, juror_inst }) => {
-            setEditTarget({ jurorId, juror_name, juror_inst });
-            setEditForm({ juror_name, juror_inst });
+          onEdit={({ jurorId, juror_name, affiliation }) => {
+            setEditTarget({ jurorId, juror_name, affiliation });
+            setEditForm({ juror_name, affiliation });
             setShowEdit(true);
           }}
           onDelete={(j) => onDeleteJuror?.(j)}
@@ -337,9 +337,9 @@ export default function ManageJurorsPanel({
                       "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring",
                       addError && "border-destructive ring-destructive/20 ring-2"
                     )}
-                    value={form.juror_inst}
+                    value={form.affiliation}
                     onChange={(e) => {
-                      setForm((f) => ({ ...f, juror_inst: e.target.value }));
+                      setForm((f) => ({ ...f, affiliation: e.target.value }));
                       if (addError) setAddError("");
                     }}
                     placeholder="Middle East Technical University / Electrical Engineering"
@@ -357,7 +357,7 @@ export default function ManageJurorsPanel({
                   disabled={!canSubmit || isDemoMode}
                   onClick={async () => {
                     const name = form.juror_name.trim();
-                    const inst = form.juror_inst.trim();
+                    const inst = form.affiliation.trim();
                     const key = normalizeKey(name, inst);
                     if (existingJurorKeys.has(key)) {
                       setAddError("A juror with the same name and institution/department already exists.");
@@ -365,7 +365,7 @@ export default function ManageJurorsPanel({
                     }
                     const res = await onAddJuror({
                       juror_name: name,
-                      juror_inst: inst,
+                      affiliation: inst,
                     });
                     if (res?.fieldErrors?.duplicate) {
                       setAddError(res.fieldErrors.duplicate);
@@ -373,7 +373,7 @@ export default function ManageJurorsPanel({
                     }
                     setShowAdd(false);
                     if (res?.ok === false) return;
-                    setForm({ juror_name: "", juror_inst: "" });
+                    setForm({ juror_name: "", affiliation: "" });
                     setAddError("");
                   }}
                 >
@@ -406,8 +406,8 @@ export default function ManageJurorsPanel({
                   <label className="text-sm font-medium">Affiliation</label>
                   <input
                     className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring"
-                    value={editForm.juror_inst}
-                    onChange={(e) => setEditForm((f) => ({ ...f, juror_inst: e.target.value }))}
+                    value={editForm.affiliation}
+                    onChange={(e) => setEditForm((f) => ({ ...f, affiliation: e.target.value }))}
                   />
                 </div>
               </div>
@@ -432,7 +432,7 @@ export default function ManageJurorsPanel({
                     await onEditJuror?.({
                       jurorId: editTarget?.jurorId || editTarget?.juror_id,
                       juror_name: editForm.juror_name.trim(),
-                      juror_inst: editForm.juror_inst.trim(),
+                      affiliation: editForm.affiliation.trim(),
                     });
                     setEditSaving(false);
                     setShowEdit(false);
@@ -520,7 +520,7 @@ export default function ManageJurorsPanel({
                     <ChevronDownIcon className="size-3.5 text-muted-foreground/60 transition-transform duration-200 [[open]>&]:rotate-180" aria-hidden="true" />
                   </summary>
                   <div className="flex flex-col gap-1.5 px-3 pb-3">
-                    <div className="font-mono text-xs font-medium text-slate-600 whitespace-nowrap">juror_name,juror_inst</div>
+                    <div className="font-mono text-xs font-medium text-slate-600 whitespace-nowrap">juror_name,affiliation</div>
                     <div className="font-mono text-xs font-medium text-slate-600 whitespace-nowrap">Ava Johnson,Harvard University / Applied Physics</div>
                     <div className="font-mono text-xs font-medium text-slate-600 whitespace-nowrap">Ayse Demir,Middle East Technical University / Electrical Engineering</div>
                     <div className="font-mono text-xs font-medium text-slate-600 whitespace-nowrap">Kerem Yildiz,TED University / Electrical and Electronics Engineering</div>
@@ -533,8 +533,8 @@ export default function ManageJurorsPanel({
                   </summary>
                   <div className="flex flex-col gap-1.5 px-3 pb-3">
                     <ul className="m-0 list-disc pl-4 text-xs leading-relaxed text-muted-foreground">
-                      <li>Header row is required with exact field names: <span className="font-mono text-[0.9em] rounded-md border border-border bg-muted/50 px-1 text-foreground whitespace-nowrap">juror_name</span>, <span className="font-mono text-[0.9em] rounded-md border border-border bg-muted/50 px-1 text-foreground whitespace-nowrap">juror_inst</span>.</li>
-                      <li><span className="font-mono text-[0.9em] rounded-md border border-border bg-muted/50 px-1 text-foreground whitespace-nowrap">juror_name</span> and <span className="font-mono text-[0.9em] rounded-md border border-border bg-muted/50 px-1 text-foreground whitespace-nowrap">juror_inst</span> cannot be empty.</li>
+                      <li>Header row is required with exact field names: <span className="font-mono text-[0.9em] rounded-md border border-border bg-muted/50 px-1 text-foreground whitespace-nowrap">juror_name</span>, <span className="font-mono text-[0.9em] rounded-md border border-border bg-muted/50 px-1 text-foreground whitespace-nowrap">affiliation</span>.</li>
+                      <li><span className="font-mono text-[0.9em] rounded-md border border-border bg-muted/50 px-1 text-foreground whitespace-nowrap">juror_name</span> and <span className="font-mono text-[0.9em] rounded-md border border-border bg-muted/50 px-1 text-foreground whitespace-nowrap">affiliation</span> cannot be empty.</li>
                       <li>One row must represent one juror.</li>
                       <li>Existing jurors with the same name and institution / department are skipped during import.</li>
                     </ul>

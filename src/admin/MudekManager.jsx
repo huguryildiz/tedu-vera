@@ -1,6 +1,6 @@
 // src/admin/MudekManager.jsx
 // ============================================================
-// MÜDEK outcome template editor for semester settings.
+// MÜDEK outcome template editor for period settings.
 //
 // Admin-facing canonical editor model per outcome:
 //   code, en, tr
@@ -14,7 +14,7 @@
 // Rows support drag-and-drop reordering via @dnd-kit.
 //
 // Props:
-//   mudekTemplate — current outcomes array [{ id, code, desc_en, desc_tr }]
+//   outcomeConfig — current outcomes array [{ id, code, desc_en, desc_tr }]
 //   onSave        — (newTemplate) => Promise<{ ok, error? }>
 //   disabled      — disables all inputs and the save button
 //   isLocked      — when true, the entire template is read-only;
@@ -227,8 +227,8 @@ function SortableMudekRow({ id, disabled, children }) {
 // ── Main component ───────────────────────────────────────────
 
 export default function MudekManager({
-  mudekTemplate = [],
-  criteriaTemplate = [],
+  outcomeConfig = [],
+  criteriaConfig = [],
   onSave,
   onDraftChange,
   onDirtyChange,
@@ -241,7 +241,7 @@ export default function MudekManager({
   const buildRows = (tpl) =>
     tpl.length > 0 ? tpl.map((o, i) => templateToRow(o, i)) : [];
 
-  const [rows, setRows] = useState(() => buildRows(mudekTemplate));
+  const [rows, setRows] = useState(() => buildRows(outcomeConfig));
   const [saveError, setSaveError] = useState("");
   const [saving, setSaving] = useState(false);
   const [touched, setTouched] = useState(() => new Set());
@@ -250,17 +250,17 @@ export default function MudekManager({
   const draftChangeRef = useRef(onDraftChange);
   const lastEmittedRowsSigRef = useRef("");
   const rowsSignature = JSON.stringify(rows.map((r) => [r.code.trim(), r.en.trim(), r.tr.trim()]));
-  const templateSignature = mudekTemplateSignature(mudekTemplate);
+  const templateSignature = mudekTemplateSignature(outcomeConfig);
 
   useEffect(() => {
     draftChangeRef.current = onDraftChange;
   }, [onDraftChange, draftChangeRef]);
 
-  // Sync when mudekTemplate prop changes; reset all interaction state
+  // Sync when outcomeConfig prop changes; reset all interaction state
   useEffect(() => {
     if (templateSignature === rowsSignature) return;
     if (lastEmittedRowsSigRef.current === rowsSignature) return;
-    setRows(buildRows(mudekTemplate));
+    setRows(buildRows(outcomeConfig));
     setSaveError("");
     setTouched(new Set());
     setSaveAttempted(false);
@@ -382,7 +382,7 @@ export default function MudekManager({
   const handleSave = async () => {
     // Guard: if template is locked (scoring started), reject any save attempt.
     if (isLocked) {
-      setSaveError("This semester's evaluation template is locked because scoring has already started.");
+      setSaveError("This period's evaluation template is locked because scoring has already started.");
       return;
     }
     if (disabled) return;
@@ -425,7 +425,7 @@ export default function MudekManager({
 
   const removeRowCode = removeConfirmIdx !== null ? rows[removeConfirmIdx]?.code.trim() : "";
   const usageCount = removeRowCode
-    ? criteriaTemplate.filter(c => Array.isArray(c.mudek) && c.mudek.includes(removeRowCode)).length
+    ? criteriaConfig.filter(c => Array.isArray(c.mudek) && c.mudek.includes(removeRowCode)).length
     : 0;
 
   return (
@@ -439,14 +439,14 @@ export default function MudekManager({
 
       {isLocked && (
         <AlertCard variant="warning">
-          Evaluation template locked — scoring has started for this semester. No criteria changes are allowed.
+          Evaluation template locked — scoring has started for this period. No criteria changes are allowed.
         </AlertCard>
       )}
 
       {rows.length === 0 && (
         <div className="text-xs text-muted-foreground" role="status">
           No custom MÜDEK Outcomes defined. Using default outcomes from config as fallback.
-          Add rows below to define semester-specific outcomes.
+          Add rows below to define period-specific outcomes.
         </div>
       )}
 

@@ -3,15 +3,15 @@
 // Core normalization + criteria resolution helpers.
 //
 // Source-of-truth hierarchy:
-//   1. Semester JSONB criteria_template (operational)
+//   1. Evaluation period JSONB criteria_config (operational)
 //   2. config.js CRITERIA (seed defaults + fallback only)
 //
 // Canonical view-model fields per criterion:
 //   label, shortLabel, color, max, blurb, mudek (display codes), rubric[]
 //
 // Legacy fields (key, mudek_outcomes) are handled in adapters only:
-//   - normalizeCriterion()  : any stored shape → view model
-//   - criterionToTemplate() : view model → stored shape (emits legacy compat)
+//   - normalizeCriterion()      : any stored shape → view model
+//   - criterionToConfig()      : view model → stored shape (emits legacy compat)
 // ============================================================
 
 import { CRITERIA, MUDEK_OUTCOMES } from "../../config";
@@ -42,7 +42,7 @@ function _labelToKey(label) {
 /**
  * Convert any stored criterion shape (old or new) to the canonical
  * view-model shape. This is the single adapter used by getActiveCriteria,
- * MudekBadge, and all consumers.
+ * OutcomeBadge, and all consumers.
  *
  * Old shape: { key, label, max, mudek_outcomes[] }
  * New shape: { key, label, shortLabel, color, max, blurb, mudek[], rubric[] }
@@ -89,7 +89,7 @@ export function normalizeCriterion(c) {
  * row._key is the silently-preserved stable key; only derive from label
  * for new rows that have no existing key.
  */
-export function criterionToTemplate(row) {
+export function criterionToConfig(row) {
   const key = row._key ? row._key : _labelToKey(row.label);
   const criterionMax = Number(row.max);
   const boundedMax = Number.isFinite(criterionMax) && criterionMax >= 0 ? criterionMax : 0;
@@ -122,26 +122,26 @@ export function criterionToTemplate(row) {
 // ── Criteria helpers ─────────────────────────────────────────
 
 /**
- * Convert a `criteria_template` array (DB shape) to the canonical view-model
+ * Convert a `criteria_config` array (DB shape) to the canonical view-model
  * shape via normalizeCriterion. Falls back to `CRITERIA` from config when the
- * template is null, not an array, or empty.
+ * config is null, not an array, or empty.
  */
-export function getActiveCriteria(template) {
-  if (!Array.isArray(template) || template.length === 0) return CRITERIA;
-  return template.map(normalizeCriterion);
+export function getActiveCriteria(config) {
+  if (!Array.isArray(config) || config.length === 0) return CRITERIA;
+  return config.map(normalizeCriterion);
 }
 
 /**
  * Same as getActiveCriteria but only converts — does not fall back to
- * config. Returns an empty array when template is null/empty.
+ * config. Returns an empty array when config is null/empty.
  */
-export function templateToCriteria(template) {
-  if (!Array.isArray(template) || template.length === 0) return [];
-  return template.map(normalizeCriterion);
+export function configToCriteria(config) {
+  if (!Array.isArray(config) || config.length === 0) return [];
+  return config.map(normalizeCriterion);
 }
 
 /**
- * Structure-normalizing adapter for semester criteria templates.
+ * Structure-normalizing adapter for evaluation period criteria configs.
  * Fills missing structural fields with safe defaults via normalizeCriterion.
  *
  * Contract:
@@ -152,29 +152,29 @@ export function templateToCriteria(template) {
  * - Missing color → "#94A3B8".
  * - Missing blurb → "".
  *
- * @param {Array} template - Raw criteria_template from DB (any stored shape)
+ * @param {Array} config - Raw criteria_config from DB (any stored shape)
  * @returns {Array} Normalized view-model array
  */
-export function normalizeSemesterCriteria(template) {
-  if (!Array.isArray(template)) return [];
-  return template.map(normalizeCriterion);
+export function normalizePeriodCriteria(config) {
+  if (!Array.isArray(config)) return [];
+  return config.map(normalizeCriterion);
 }
 
-// ── MÜDEK helpers ─────────────────────────────────────────────
+// ── Outcome helpers ────────────────────────────────────────────
 
 /**
- * Build a lookup object keyed by internal MÜDEK id (e.g. "po_1_1").
- * This is the primary adapter for semester-specific MÜDEK outcome data.
+ * Build a lookup object keyed by internal outcome id (e.g. "po_1_1").
+ * This is the primary adapter for period-specific outcome data.
  *
  * Output shape: { [id]: { id, code, desc_en, desc_tr } }
  *
- * Falls back to config MUDEK_OUTCOMES when template is null or empty
- * (intended for new semesters or legacy migration only).
+ * Falls back to config MUDEK_OUTCOMES when config is null or empty
+ * (intended for new periods or legacy migration only).
  */
-export function buildMudekLookup(mudekTemplate) {
-  if (Array.isArray(mudekTemplate) && mudekTemplate.length > 0) {
+export function buildOutcomeLookup(outcomeConfig) {
+  if (Array.isArray(outcomeConfig) && outcomeConfig.length > 0) {
     return Object.fromEntries(
-      mudekTemplate.map((o) => [
+      outcomeConfig.map((o) => [
         o.id,
         { id: o.id, code: o.code, desc_en: o.desc_en, desc_tr: o.desc_tr },
       ])
@@ -193,12 +193,12 @@ export function buildMudekLookup(mudekTemplate) {
  * A criterion may have an empty mapping (mudek: []).
  *
  * @param {Array} criteria - Array of semantic criteria objects
- * @param {Array} mudekTemplate - Current valid MÜDEK outcomes
+ * @param {Array} outcomeConfig - Current valid outcome config
  * @returns {Array} A new criteria array with cleaned mappings (if changed), or the original array
  */
-export function pruneCriteriaMudekMappings(criteria, mudekTemplate) {
+export function pruneCriteriaMudekMappings(criteria, outcomeConfig) {
   if (!Array.isArray(criteria)) return [];
-  const validCodes = new Set((mudekTemplate || []).map((o) => o.code));
+  const validCodes = new Set((outcomeConfig || []).map((o) => o.code));
 
   let changed = false;
   const pruned = criteria.map((c) => {

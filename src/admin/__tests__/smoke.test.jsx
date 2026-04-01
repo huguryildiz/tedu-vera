@@ -4,7 +4,7 @@ import { qaTest } from "../../test/qaTest.js";
 import { render, screen } from "@testing-library/react";
 
 vi.mock("../../shared/auth", () => ({
-  useAuth: () => ({ activeTenant: null }),
+  useAuth: () => ({ activeOrganization: null }),
 }));
 
 import { ChartDataTable } from "../../charts/chartUtils";
@@ -72,7 +72,7 @@ describe("AnalyticsTab smoke tests", () => {
           lastRefresh={null}
           loading={false}
           error={null}
-          semesterName=""
+          periodName=""
           semesterOptions={[]}
           trendSemesterIds={[]}
           onTrendSelectionChange={() => {}}
@@ -90,7 +90,7 @@ describe("AnalyticsTab smoke tests", () => {
         lastRefresh={null}
         loading={true}
         error={null}
-        semesterName="2026 Spring"
+        periodName="2026 Spring"
       />
     );
     // Just verify it renders without crashing

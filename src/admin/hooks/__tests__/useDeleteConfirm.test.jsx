@@ -3,11 +3,11 @@ import { act, renderHook } from "@testing-library/react";
 import { useDeleteConfirm } from "../useDeleteConfirm";
 
 vi.mock("../../../shared/api", () => ({
-  adminDeleteEntity: vi.fn(),
-  adminDeleteCounts: vi.fn(),
+  deleteEntity:    vi.fn(),
+  getDeleteCounts: vi.fn(),
 }));
 
-import { adminDeleteEntity } from "../../../shared/api";
+import { deleteEntity } from "../../../shared/api";
 
 describe("useDeleteConfirm", () => {
   beforeEach(() => {
@@ -18,11 +18,11 @@ describe("useDeleteConfirm", () => {
     const onSemesterDeleted = vi.fn();
     const setMessage = vi.fn();
 
-    adminDeleteEntity.mockResolvedValueOnce({ ok: true });
+    deleteEntity.mockResolvedValueOnce(true);
 
     const { result } = renderHook(() =>
       useDeleteConfirm({
-        tenantId: "test-tenant-id",
+        organizationId: "test-org-id",
         setMessage,
         clearAllPanelErrors: vi.fn(),
         onSemesterDeleted,
@@ -33,7 +33,7 @@ describe("useDeleteConfirm", () => {
 
     await act(async () => {
       result.current.setDeleteTarget({
-        type: "semester",
+        type: "period",
         id: "s1",
         label: "Period 2025 Fall",
       });

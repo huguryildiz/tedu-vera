@@ -5,7 +5,7 @@
 //
 // All exported functions accept an optional `criteria` param
 // (defaults to CRITERIA from config.js) so they work with both
-// the static config and semester-specific dynamic templates.
+// the static config and period-specific dynamic templates.
 // Template objects use `key`; config.js objects use `id`.
 // The helper `_id(c)` normalises both shapes.
 // ============================================================

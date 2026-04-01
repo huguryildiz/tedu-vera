@@ -96,11 +96,11 @@ function IdentityBlock({ initials, avatarClass, displayName, email, tenantLabel,
   );
 }
 
-function AccountDialog({ open, onOpenChange, profile, identity, activeTenant, isSuper }) {
+function AccountDialog({ open, onOpenChange, profile, identity, activeOrganization, isSuper }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const roleText = roleLabel(isSuper);
-  const tenantLabel = activeTenant?.name || "No organization";
+  const tenantLabel = activeOrganization?.name || "No organization";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -300,7 +300,7 @@ function AccountDialog({ open, onOpenChange, profile, identity, activeTenant, is
 export default function SidebarProfileMenu({
   user,
   displayName,
-  activeTenant,
+  activeOrganization,
   isSuper,
   onLogout,
 }) {
@@ -319,7 +319,7 @@ export default function SidebarProfileMenu({
   }, [displayName, user?.email]);
 
   const roleText = roleLabel(isSuper);
-  const tenantLabel = activeTenant?.name || "No organization";
+  const tenantLabel = activeOrganization?.name || "No organization";
 
   const openAccount = () => {
     setMenuOpen(false);
@@ -432,7 +432,7 @@ export default function SidebarProfileMenu({
         onOpenChange={handleDialogOpenChange}
         profile={profile}
         identity={identity}
-        activeTenant={activeTenant}
+        activeOrganization={activeOrganization}
         isSuper={isSuper}
       />
     </>

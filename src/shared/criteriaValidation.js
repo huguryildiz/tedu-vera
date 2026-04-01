@@ -1,6 +1,6 @@
 // src/shared/criteriaValidation.js
 // ============================================================
-// Centralized, pure validation helpers for the semester
+// Centralized, pure validation helpers for the evaluation period
 // criteria editor (CriteriaManager).
 //
 // All functions are side-effect-free and testable in isolation.
@@ -166,13 +166,13 @@ export function validateRubric(rubric, criterionMax) {
 /**
  * Validate a single criterion row.
  *
- * @param {Object}  row           - The criterion row (view-model shape)
- * @param {Array}   allRows       - All criterion rows (for uniqueness checks)
- * @param {Array}   mudekTemplate - MÜDEK outcome objects { id, code, desc_en, desc_tr }
- * @param {number}  index         - Row index within allRows
+ * @param {Object}  row             - The criterion row (view-model shape)
+ * @param {Array}   allRows         - All criterion rows (for uniqueness checks)
+ * @param {Array}   outcomeConfig - Outcome objects { id, code, desc_en, desc_tr }
+ * @param {number}  index           - Row index within allRows
  * @returns {{ errors: Object, rubricErrors: Object }}
  */
-export function validateCriterion(row, allRows, mudekTemplate, index) {
+export function validateCriterion(row, allRows, outcomeConfig, index) {
   const errors = {};
 
   // label
@@ -234,19 +234,19 @@ export function validateCriterion(row, allRows, mudekTemplate, index) {
   return { errors, rubricErrors };
 }
 
-// ── validateSemesterCriteria ──────────────────────────────────
+// ── validatePeriodCriteria ──────────────────────────────────
 
 /**
- * Validate all criterion rows for a semester.
+ * Validate all criterion rows for an evaluation period.
  *
  * Error keys are namespaced by index (camelCase field name + "_" + index):
  * label_0, shortLabel_1, blurb_2, max_0, mudek_1, mudek_dup_2
  *
- * @param {Array}  rows          - All criterion rows
- * @param {Array}  mudekTemplate - MÜDEK outcome objects
+ * @param {Array}  rows            - All criterion rows
+ * @param {Array}  outcomeConfig - Outcome objects
  * @returns {{ errors: Object, rubricErrorsByCriterion: Object, totalMax: number, totalError: string|null }}
  */
-export function validateSemesterCriteria(rows, mudekTemplate) {
+export function validatePeriodCriteria(rows, outcomeConfig) {
   const errors                  = {};
   const rubricErrorsByCriterion = {};
   let   totalMax                = 0;
@@ -256,7 +256,7 @@ export function validateSemesterCriteria(rows, mudekTemplate) {
     const { errors: rowErrors, rubricErrors } = validateCriterion(
       row,
       rows,
-      mudekTemplate,
+      outcomeConfig,
       i
     );
 

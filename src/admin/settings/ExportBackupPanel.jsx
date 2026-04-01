@@ -15,7 +15,7 @@ import AlertCard from "../../shared/AlertCard";
 
 const SAMPLE_DB_BACKUP_JSON = `{
   "schema_version": 1,
-  "semesters": [{ "...": "..." }],
+  "periods": [{ "...": "..." }],
   "jurors": [{ "...": "..." }],
   "projects": [{ "...": "..." }],
   "scores": [{ "...": "..." }],
@@ -159,7 +159,7 @@ export default function ExportBackupPanel({
             <div className="mt-4 space-y-4">
               <AlertCard variant="info">
                 {dbBackupMode === "export"
-                  ? "Export a full backup of semesters, jurors, groups, and scores."
+                  ? "Export a full backup of periods, jurors, groups, and scores."
                   : "Upload a backup JSON exported from this portal to restore all data."}
               </AlertCard>
               {dbBackupMode === "import" && (
@@ -241,7 +241,7 @@ export default function ExportBackupPanel({
                     <div className="px-4 pb-3">
                       <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
                         <li>Only .json files exported from this portal are supported.</li>
-                        <li>Backup contains semesters, jurors, groups, scores, and assignments.</li>
+                        <li>Backup contains periods, jurors, groups, scores, and assignments.</li>
                         <li>Maximum file size: 10 MB.</li>
                         <li>This operation overwrites existing data.</li>
                         <li>Type RESTORE to confirm import.</li>

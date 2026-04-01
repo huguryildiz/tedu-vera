@@ -1,19 +1,19 @@
-// src/jury/SemesterStep.jsx
-// Semester selection step. Phase 7 restyle.
+// src/jury/PeriodStep.jsx
+// Evaluation Period selection step. Phase 7 restyle.
 
 import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
 
-export default function SemesterStep({ semesters, onSelect, onBack }) {
+export default function PeriodStep({ periods, onSelect, onBack }) {
   useEffect(() => {
-    if (semesters.length === 0) return;
-    const active = semesters.filter((s) => s.is_current);
+    if (periods.length === 0) return;
+    const active = periods.filter((s) => s.is_current);
     if (active.length === 1) onSelect(active[0]);
-  }, [semesters]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [periods]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (semesters.length === 0) {
+  if (periods.length === 0) {
     return (
       <div className="flex min-h-dvh items-center justify-center p-4">
         <Card className="w-full max-w-lg">
@@ -21,7 +21,7 @@ export default function SemesterStep({ semesters, onSelect, onBack }) {
             <div className="jury-step-icon">
               <Clock />
             </div>
-            <h1 className="text-xl font-semibold">No Semesters Available</h1>
+            <h1 className="text-xl font-semibold">No Evaluation Periods Available</h1>
             <p className="text-sm text-muted-foreground">Please contact the administrator.</p>
             <button type="button" className="text-sm text-muted-foreground hover:text-foreground hover:underline" onClick={onBack}>
               &larr; Return Home
@@ -40,19 +40,19 @@ export default function SemesterStep({ semesters, onSelect, onBack }) {
             <div className="jury-step-icon">
               <Clock />
             </div>
-            <h1 className="text-xl font-semibold tracking-tight">Select Semester</h1>
+            <h1 className="text-xl font-semibold tracking-tight">Select Evaluation Period</h1>
             <p className="text-sm text-muted-foreground">Choose the evaluation period to continue.</p>
           </div>
 
           <div className="flex flex-col gap-2.5">
-            {semesters.map((s) => (
+            {periods.map((s) => (
               <Button
                 key={s.id}
                 variant={s.is_current ? "default" : "outline"}
                 className="w-full justify-center"
                 onClick={() => onSelect(s)}
               >
-                {s.semester_name}
+                {s.name}
                 {s.is_current && (
                   <span className="ml-2 text-xs opacity-75">(Current)</span>
                 )}

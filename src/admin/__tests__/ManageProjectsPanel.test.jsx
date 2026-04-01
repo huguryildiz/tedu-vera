@@ -6,9 +6,9 @@ import { act } from "react";
 
 const DEFAULT_PROPS = {
   projects: [],
-  semesterName: "2026 Spring",
-  currentSemesterId: "s1",
-  semesterOptions: [{ id: "s1", semester_name: "2026 Spring" }],
+  periodName: "2026 Spring",
+  currentPeriodId: "s1",
+  semesterOptions: [{ id: "s1", period_name: "2026 Spring" }],
   panelError: "",
   isMobile: false,
   isOpen: true,
@@ -59,7 +59,7 @@ describe("ManageProjectsPanel — CSV import validation", () => {
 
   qaTest("groups.csv.03", async () => {
     const { container } = render(<ManageProjectsPanel {...DEFAULT_PROPS} />);
-    const csv = makeCSV("group_no,project_title,group_students", "0,Project A,Alice");
+    const csv = makeCSV("group_no,title,members", "0,Project A,Alice");
     const file = new File([csv], "groups.csv", { type: "text/csv" });
     await uploadFile(container, file);
     await waitFor(() => {
@@ -69,7 +69,7 @@ describe("ManageProjectsPanel — CSV import validation", () => {
 
   qaTest("groups.csv.04", async () => {
     const { container } = render(<ManageProjectsPanel {...DEFAULT_PROPS} />);
-    const csv = makeCSV("group_no,project_title,group_students", "-1,Project A,Alice");
+    const csv = makeCSV("group_no,title,members", "-1,Project A,Alice");
     const file = new File([csv], "groups.csv", { type: "text/csv" });
     await uploadFile(container, file);
     await waitFor(() => {
@@ -79,7 +79,7 @@ describe("ManageProjectsPanel — CSV import validation", () => {
 
   qaTest("groups.csv.05", async () => {
     const { container } = render(<ManageProjectsPanel {...DEFAULT_PROPS} />);
-    const csv = makeCSV("group_no,project_title,group_students", "abc,Project A,Alice");
+    const csv = makeCSV("group_no,title,members", "abc,Project A,Alice");
     const file = new File([csv], "groups.csv", { type: "text/csv" });
     await uploadFile(container, file);
     await waitFor(() => {
@@ -90,7 +90,7 @@ describe("ManageProjectsPanel — CSV import validation", () => {
   qaTest("groups.csv.06", async () => {
     const { container } = render(<ManageProjectsPanel {...DEFAULT_PROPS} />);
     // Quoted field with comma inside — parseCsv treats it as one field but contains comma
-    const csv = `group_no,project_title,group_students\n1,Project A,"Alice, Bob"\n`;
+    const csv = `group_no,title,members\n1,Project A,"Alice, Bob"\n`;
     const file = new File([csv], "groups.csv", { type: "text/csv" });
     await uploadFile(container, file);
     await waitFor(() => {
@@ -101,7 +101,7 @@ describe("ManageProjectsPanel — CSV import validation", () => {
   qaTest("groups.csv.07", async () => {
     const { container } = render(<ManageProjectsPanel {...DEFAULT_PROPS} />);
     const csv = makeCSV(
-      "group_no,project_title,group_students",
+      "group_no,title,members",
       "1,Project A,Alice",
       "1,Project B,Bob"
     );
@@ -118,7 +118,7 @@ describe("ManageProjectsPanel — CSV import validation", () => {
       <ManageProjectsPanel {...DEFAULT_PROPS} onImport={onImport} />
     );
     // Semicolons must be quoted — parseCsv treats unquoted ; as a column delimiter
-    const csv = `group_no,project_title,group_students\n1,Project A,"Alice; Bob"\n`;
+    const csv = `group_no,title,members\n1,Project A,"Alice; Bob"\n`;
     const file = new File([csv], "groups.csv", { type: "text/csv" });
     await uploadFile(container, file);
     await waitFor(() => expect(onImport).toHaveBeenCalledTimes(1));
@@ -133,7 +133,7 @@ describe("ManageProjectsPanel — import summary", () => {
 
   qaTest("groups.csv.summary.01", async () => {
     const existing = [
-      { id: "p1", group_no: 1, project_title: "Existing Project", group_students: "Alice" },
+      { id: "p1", group_no: 1, title: "Existing Project", members: "Alice" },
     ];
     const onImport = vi.fn().mockResolvedValue({});
     const { container } = render(
@@ -141,7 +141,7 @@ describe("ManageProjectsPanel — import summary", () => {
     );
     // CSV: group 1 already exists (will be skipped), group 2 is new (will be added)
     const csv = makeCSV(
-      "group_no,project_title,group_students",
+      "group_no,title,members",
       "1,Old Project,Alice",
       "2,New Project,Bob"
     );
@@ -164,7 +164,7 @@ describe("ManageProjectsPanel — edit modal safety", () => {
     render(
       <ManageProjectsPanel
         {...DEFAULT_PROPS}
-        projects={[{ id: "p1", group_no: 1, project_title: "Test", group_students: "Alice", semester_id: "s1" }]}
+        projects={[{ id: "p1", group_no: 1, title: "Test", members: "Alice", period_id: "s1" }]}
         onEditGroup={onEditGroup}
       />
     );
@@ -192,7 +192,7 @@ describe("ManageProjectsPanel — group_no upper bound validation", () => {
   qaTest("groups.csv.09", async () => {
     const { container } = render(<ManageProjectsPanel {...DEFAULT_PROPS} />);
     const csv = makeCSV(
-      "group_no,project_title,group_students",
+      "group_no,title,members",
       "1000,Project A,Alice"
     );
     const file = new File([csv], "groups.csv", { type: "text/csv" });
@@ -245,7 +245,7 @@ describe("ManageProjectsPanel — delete guard", () => {
       <ManageProjectsPanel
         {...DEFAULT_PROPS}
         // project without server-confirmed id
-        projects={[{ group_no: 1, project_title: "No-ID Group", group_students: "Alice", semester_id: "s1" }]}
+        projects={[{ group_no: 1, title: "No-ID Group", members: "Alice", period_id: "s1" }]}
         onDeleteProject={onDeleteProject}
       />
     );
@@ -265,7 +265,7 @@ describe("ManageProjectsPanel — CRUD smoke tests", () => {
   beforeEach(() => localStorage.clear());
 
   qaTest("groups.crud.01", async () => {
-    const project = { id: "p1", group_no: 1, project_title: "Project A", group_students: "Alice" };
+    const project = { id: "p1", group_no: 1, title: "Project A", members: "Alice" };
     const onDeleteProject = vi.fn();
     render(
       <ManageProjectsPanel {...DEFAULT_PROPS} projects={[project]} onDeleteProject={onDeleteProject} />
@@ -290,9 +290,9 @@ describe("ManageProjectsPanel — stale edit conflict", () => {
     const project = {
       id: "p1",
       group_no: 1,
-      project_title: "Test",
-      group_students: "Alice",
-      semester_id: "s1",
+      title: "Test",
+      members: "Alice",
+      period_id: "s1",
       updated_at: "2024-01-01T00:00:00Z",
     };
     const onEditGroup = vi.fn().mockResolvedValue({ ok: true });
@@ -326,9 +326,9 @@ describe("ManageProjectsPanel — external delete during edit", () => {
     const project = {
       id: "p1",
       group_no: 1,
-      project_title: "Test",
-      group_students: "Alice",
-      semester_id: "s1",
+      title: "Test",
+      members: "Alice",
+      period_id: "s1",
     };
     const { rerender } = render(
       <ManageProjectsPanel {...DEFAULT_PROPS} projects={[project]} />
@@ -353,7 +353,7 @@ describe("ManageProjectsPanel — external delete during edit", () => {
   });
 });
 
-describe("ManageProjectsPanel — no semesters create UX", () => {
+describe("ManageProjectsPanel — no periods create UX", () => {
   beforeEach(() => localStorage.clear());
 
   qaTest("groups.create.02", async () => {

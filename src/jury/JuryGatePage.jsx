@@ -35,7 +35,7 @@ export default function JuryGatePage({ token, onGranted, onBack }) {
       .then((res) => {
         if (!active) return;
         if (res?.ok) {
-          setJuryAccess(res.semester_id);
+          setJuryAccess(res.period_id);
           window.history.replaceState(null, "", "/jury-entry");
           onGranted();
         } else {

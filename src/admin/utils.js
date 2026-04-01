@@ -149,7 +149,7 @@ export function buildTimestampSearchText(value) {
   return Array.from(new Set(tokens.filter(Boolean))).join(" ");
 }
 
-// ── Search tokens for semester/chip queries ───────────────────
+// ── Search tokens for period/chip queries ───────────────────
 // Produces variants so search can match:
 // - "2025 Fall" / "Fall 2025"
 // - "2025-Fall" / "2025/Fall"
@@ -203,7 +203,7 @@ export function cmp(a, b) {
 export const rowKey = (r) =>
   r.jurorId
     ? r.jurorId
-    : `${(r.juryName || "").trim().toLowerCase()}__${(r.juryDept || "").trim().toLowerCase()}`;
+    : `${(r.juryName || "").trim().toLowerCase()}__${(r.affiliation || "").trim().toLowerCase()}`;
 
 // ── Deterministic pastel colour from a name string ───────────
 function hashInt(str) {
@@ -257,7 +257,7 @@ export function dedupeAndSort(rows) {
 
   for (const r of cleaned) {
     const jur = String(r.juryName ?? "").trim().toLowerCase();
-    const dep = String(r.juryDept ?? "").trim().toLowerCase();
+    const dep = String(r.affiliation ?? "").trim().toLowerCase();
     const grp = r.projectId
       ? String(r.projectId).trim()
       : String(r.projectName ?? "").trim().toLowerCase();

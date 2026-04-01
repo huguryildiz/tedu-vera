@@ -9,7 +9,7 @@ import { supabase } from "../../lib/supabaseClient";
  * Creates a scoped Supabase Realtime subscription for a single admin page.
  *
  * @param {object}   params
- * @param {string}   params.tenantId      — current tenant (skips subscription if falsy)
+ * @param {string}   params.organizationId      — current tenant (skips subscription if falsy)
  * @param {string}   params.channelName   — unique channel name (e.g. "jurors-page-live")
  * @param {Array}    params.subscriptions — list of table subscriptions:
  *   [{ table, event?, schema?, onPayload }]
@@ -19,9 +19,9 @@ import { supabase } from "../../lib/supabaseClient";
  *   - onPayload: callback receiving the Realtime payload
  * @param {Array}    [params.deps=[]]     — additional dependency array entries for the effect
  */
-export function usePageRealtime({ tenantId, channelName, subscriptions, deps = [] }) {
+export function usePageRealtime({ organizationId, channelName, subscriptions, deps = [] }) {
   useEffect(() => {
-    if (!tenantId) return;
+    if (!organizationId) return;
     if (!subscriptions || subscriptions.length === 0) return;
 
     let channel = supabase.channel(channelName);
@@ -44,5 +44,5 @@ export function usePageRealtime({ tenantId, channelName, subscriptions, deps = [
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tenantId, channelName, ...deps]);
+  }, [organizationId, channelName, ...deps]);
 }

@@ -14,14 +14,14 @@ vi.mock("../../components/toast/useToast", () => ({
 }));
 
 vi.mock("../../shared/api", () => ({
-  listSemesters:               vi.fn(),
-  createOrGetJurorAndIssuePin: vi.fn(),
+  listPeriods:               vi.fn(),
+  authenticateJuror: vi.fn(),
   verifyJurorPin:              vi.fn(),
   listProjects:                vi.fn(),
   upsertScore:                 vi.fn(),
   getJurorEditState:           vi.fn().mockResolvedValue({ edit_allowed: false, lock_active: false }),
   finalizeJurorSubmission:     vi.fn(),
-  getCurrentSemester:           vi.fn().mockResolvedValue(null),
+  getCurrentPeriod:           vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock("../../config", () => ({
@@ -43,7 +43,7 @@ import useJuryState from "../useJuryState";
 
 // ── Helper: advance hook to eval step ─────────────────────────────────────
 
-const SEMESTER_T = { id: "sem-1", semester_name: "2024-2025 Spring", is_current: true };
+const SEMESTER_T = { id: "sem-1", name: "2024-2025 Spring", is_current: true };
 
 const makeProjects2 = (overrides = []) => {
   const defaults = [
@@ -65,18 +65,18 @@ const makeProjects2 = (overrides = []) => {
 
 async function advanceToEval2(result, projectOverrides = []) {
   const projects = makeProjects2(projectOverrides);
-  api.listSemesters.mockResolvedValue([SEMESTER_T]);
-  api.createOrGetJurorAndIssuePin.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
+  api.listPeriods.mockResolvedValue([SEMESTER_T]);
+  api.authenticateJuror.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
   api.listProjects.mockResolvedValue(projects);
   api.getJurorEditState.mockResolvedValue({ edit_allowed: false, lock_active: false });
   api.verifyJurorPin.mockResolvedValue({
-    ok: true, juror_id: "j-1", juror_name: "Test Juror", juror_inst: "EE",
+    ok: true, juror_id: "j-1", juror_name: "Test Juror", affiliation: "EE",
     session_token: "sess-1",
   });
 
   act(() => {
     result.current.setJuryName("Test Juror");
-    result.current.setJuryDept("EE");
+    result.current.setAffiliation("EE");
   });
   await act(async () => { await result.current.handleIdentitySubmit(); });
   await waitFor(() => expect(result.current.step).toBe("pin"));
@@ -90,7 +90,7 @@ async function advanceToEval2(result, projectOverrides = []) {
 
 // ── Fixtures ──────────────────────────────────────────────────────────────
 
-const SEMESTER = { id: "sem-1", semester_name: "2024-2025 Spring", is_current: true };
+const SEMESTER = { id: "sem-1", name: "2024-2025 Spring", is_current: true };
 
 const makeProject = (overrides = {}) => ({
   project_id:     "p-1",
@@ -158,14 +158,14 @@ describe("PIN lockout flow — useJuryState hook", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default: getCurrentSemester returns null (identity step stays clean)
-    api.getCurrentSemester.mockResolvedValue(null);
+    api.getCurrentPeriod.mockResolvedValue(null);
     api.getJurorEditState.mockResolvedValue({ edit_allowed: false, lock_active: false });
   });
 
   qaTest("jury.pin.01", async () => {
     // Advance through identity → semester (auto) → pin, then submit wrong PIN
-    api.listSemesters.mockResolvedValue([SEMESTER]);
-    api.createOrGetJurorAndIssuePin.mockResolvedValue({
+    api.listPeriods.mockResolvedValue([SEMESTER]);
+    api.authenticateJuror.mockResolvedValue({
       juror_id: "j-1",
       needs_pin: true,
     });
@@ -180,7 +180,7 @@ describe("PIN lockout flow — useJuryState hook", () => {
     // Set identity fields
     act(() => {
       result.current.setJuryName("Test Juror");
-      result.current.setJuryDept("EE");
+      result.current.setAffiliation("EE");
     });
 
     // Submit identity — auto-advances to "pin" (single active semester)
@@ -201,8 +201,8 @@ describe("PIN lockout flow — useJuryState hook", () => {
 
   qaTest("jury.pin.02", async () => {
     // PIN submission with error_code="locked" → lockout state
-    api.listSemesters.mockResolvedValue([SEMESTER]);
-    api.createOrGetJurorAndIssuePin.mockResolvedValue({
+    api.listPeriods.mockResolvedValue([SEMESTER]);
+    api.authenticateJuror.mockResolvedValue({
       juror_id: "j-1",
       needs_pin: true,
     });
@@ -218,7 +218,7 @@ describe("PIN lockout flow — useJuryState hook", () => {
 
     act(() => {
       result.current.setJuryName("Test Juror");
-      result.current.setJuryDept("EE");
+      result.current.setAffiliation("EE");
     });
 
     await act(async () => {
@@ -238,8 +238,8 @@ describe("PIN lockout flow — useJuryState hook", () => {
 
   qaTest("jury.pin.03", async () => {
     // 2 failed attempts → 1 remaining (singular form data-level check)
-    api.listSemesters.mockResolvedValue([SEMESTER]);
-    api.createOrGetJurorAndIssuePin.mockResolvedValue({
+    api.listPeriods.mockResolvedValue([SEMESTER]);
+    api.authenticateJuror.mockResolvedValue({
       juror_id: "j-1",
       needs_pin: true,
     });
@@ -253,7 +253,7 @@ describe("PIN lockout flow — useJuryState hook", () => {
 
     act(() => {
       result.current.setJuryName("Test Juror");
-      result.current.setJuryDept("EE");
+      result.current.setAffiliation("EE");
     });
 
     await act(async () => {
@@ -276,7 +276,7 @@ describe("PIN lockout flow — useJuryState hook", () => {
 describe("jury.flow — flow mechanics", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    api.getCurrentSemester.mockResolvedValue(null);
+    api.getCurrentPeriod.mockResolvedValue(null);
     api.upsertScore.mockResolvedValue({ ok: true });
     api.getJurorEditState.mockResolvedValue({ edit_allowed: false, lock_active: false });
   });
@@ -316,8 +316,8 @@ describe("jury.flow — flow mechanics", () => {
     const fullScores = { technical: 20, design: 20, delivery: 20, teamwork: 20 };
     const submitted = new Date().toISOString();
 
-    api.listSemesters.mockResolvedValue([SEMESTER_T]);
-    api.createOrGetJurorAndIssuePin.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
+    api.listPeriods.mockResolvedValue([SEMESTER_T]);
+    api.authenticateJuror.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
     api.listProjects.mockResolvedValue([
       {
         project_id: "p-1", group_no: 1, project_title: "Alpha", group_students: "Alice",
@@ -327,13 +327,13 @@ describe("jury.flow — flow mechanics", () => {
     ]);
     api.getJurorEditState.mockResolvedValue({ edit_allowed: true, lock_active: false });
     api.verifyJurorPin.mockResolvedValue({
-      ok: true, juror_id: "j-1", juror_name: "Test Juror", juror_inst: "EE", session_token: "sess-1",
+      ok: true, juror_id: "j-1", juror_name: "Test Juror", affiliation: "EE", session_token: "sess-1",
     });
 
     const { result } = renderHook(() => useJuryState());
     act(() => {
       result.current.setJuryName("Test Juror");
-      result.current.setJuryDept("EE");
+      result.current.setAffiliation("EE");
     });
     await act(async () => { await result.current.handleIdentitySubmit(); });
     await waitFor(() => expect(result.current.step).toBe("pin"));
@@ -374,14 +374,14 @@ describe("jury.flow — flow mechanics", () => {
 describe("justLoadedRef guard — resume flow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    api.getCurrentSemester.mockResolvedValue(null);
+    api.getCurrentPeriod.mockResolvedValue(null);
   });
 
   qaTest("jury.resume.01", async () => {
     // A fully-scored juror resuming via PIN should land on "eval" without
     // confirmingSubmit being triggered on the very first render after load.
-    api.listSemesters.mockResolvedValue([SEMESTER]);
-    api.createOrGetJurorAndIssuePin.mockResolvedValue({
+    api.listPeriods.mockResolvedValue([SEMESTER]);
+    api.authenticateJuror.mockResolvedValue({
       juror_id: "j-1",
       needs_pin: true,
     });
@@ -397,7 +397,7 @@ describe("justLoadedRef guard — resume flow", () => {
       ok: true,
       juror_id: "j-1",
       juror_name: "Test Juror",
-      juror_inst: "EE",
+      affiliation: "EE",
       session_token: "sess-1",
     });
 
@@ -405,7 +405,7 @@ describe("justLoadedRef guard — resume flow", () => {
 
     act(() => {
       result.current.setJuryName("Test Juror");
-      result.current.setJuryDept("EE");
+      result.current.setAffiliation("EE");
     });
 
     await act(async () => {

@@ -51,7 +51,7 @@ function roleBadgeLabel(isSuper) {
 const isDemoMode = import.meta.env.VITE_DEMO_MODE === "true";
 
 export default function UserAvatarMenu({ onLogout }) {
-  const { user, displayName, activeTenant, isSuper } = useAuth();
+  const { user, displayName, activeOrganization, isSuper } = useAuth();
   const profile = useProfileEdit();
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -171,8 +171,8 @@ export default function UserAvatarMenu({ onLogout }) {
               <span className={`ph-avatar-role-badge${isSuper ? " ph-avatar-role-badge--super" : ""}`}>
                 {roleBadgeLabel(isSuper)}
               </span>
-              {!isSuper && activeTenant && (
-                <span className="ph-avatar-menu-tenant">{activeTenant.name}</span>
+              {!isSuper && activeOrganization && (
+                <span className="ph-avatar-menu-tenant">{activeOrganization.name}</span>
               )}
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function UserAvatarMenu({ onLogout }) {
 
       {/* Profile / Password Modal */}
       {profile.modalOpen && (
-        <ProfileModal profile={profile} isSuper={isSuper} activeTenant={activeTenant} avatarBg={avatarBg} initials={initials} isDemoMode={isDemoMode} />
+        <ProfileModal profile={profile} isSuper={isSuper} activeOrganization={activeOrganization} avatarBg={avatarBg} initials={initials} isDemoMode={isDemoMode} />
       )}
     </>
   );
@@ -205,7 +205,7 @@ export default function UserAvatarMenu({ onLogout }) {
 
 // ── Profile Modal ────────────────────────────────────────────
 
-function ProfileModal({ profile, isSuper, activeTenant, avatarBg, initials, isDemoMode }) {
+function ProfileModal({ profile, isSuper, activeOrganization, avatarBg, initials, isDemoMode }) {
   const modalRef = useRef(null);
   const mouseDownTargetRef = useRef(null);
   useFocusTrap({ containerRef: modalRef, isOpen: true, onClose: profile.closeModal });
@@ -225,7 +225,7 @@ function ProfileModal({ profile, isSuper, activeTenant, avatarBg, initials, isDe
           <ProfileView
             profile={profile}
             isSuper={isSuper}
-            activeTenant={activeTenant}
+            activeOrganization={activeOrganization}
             avatarBg={avatarBg}
             initials={initials}
             isDemoMode={isDemoMode}
@@ -241,7 +241,7 @@ function ProfileModal({ profile, isSuper, activeTenant, avatarBg, initials, isDe
 
 // ── Profile View ─────────────────────────────────────────────
 
-function ProfileView({ profile, isSuper, activeTenant, avatarBg, initials, isDemoMode }) {
+function ProfileView({ profile, isSuper, activeOrganization, avatarBg, initials, isDemoMode }) {
   const { form, setField, errors, saving, isDirty, handleSave } = profile;
 
   return (
@@ -291,10 +291,10 @@ function ProfileView({ profile, isSuper, activeTenant, avatarBg, initials, isDem
 
         {/* Read-only fields */}
         <div className="profile-readonly-section">
-          {!isSuper && activeTenant && (
+          {!isSuper && activeOrganization && (
             <div className="profile-readonly-field">
               <span className="profile-readonly-label"><BuildingIcon /> Organization</span>
-              <span className="profile-readonly-value">{activeTenant.name}</span>
+              <span className="profile-readonly-value">{activeOrganization.name}</span>
             </div>
           )}
           <div className="profile-readonly-field">

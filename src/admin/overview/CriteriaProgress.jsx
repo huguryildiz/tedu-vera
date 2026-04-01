@@ -35,10 +35,10 @@ function computeCriteriaAverages(rawScores, criteria) {
 
 /**
  * @param {object[]} rawScores  Raw score rows from adminGetScores
- * @param {object[]} [criteriaTemplate]  Active semester criteria (falls back to CRITERIA)
+ * @param {object[]} [criteriaConfig]  Active period criteria (falls back to CRITERIA)
  */
-export default function CriteriaProgress({ rawScores = [], criteriaTemplate }) {
-  const criteria = getActiveCriteria(criteriaTemplate) || CRITERIA;
+export default function CriteriaProgress({ rawScores = [], criteriaConfig }) {
+  const criteria = getActiveCriteria(criteriaConfig) || CRITERIA;
 
   const averages = useMemo(
     () => computeCriteriaAverages(rawScores, criteria),

@@ -33,7 +33,7 @@ export default function CriterionDeleteDialog({ open, rowLabel, onOpenChange, on
             {" will be deleted. Are you sure?"}
           </div>
           <AlertCard variant="error">
-            This action removes the criterion from the semester settings. It cannot be undone.
+            This action removes the criterion from the period settings. It cannot be undone.
           </AlertCard>
         </div>
         <div className="flex gap-2.5 justify-end">

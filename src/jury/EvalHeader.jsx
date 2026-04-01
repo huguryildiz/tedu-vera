@@ -84,7 +84,7 @@ function groupLabel(p, scores, criteria) {
 
 // -- EvalHeader -----------------------------------------------
 const EvalHeader = memo(function EvalHeader({
-  juryName, juryDept,
+  juryName, affiliation,
   saveStatus,
   lockActive,
   onGoHome,
@@ -103,8 +103,8 @@ const EvalHeader = memo(function EvalHeader({
   // Reset group info panel when navigating to a new group
   useEffect(() => { setGroupInfoOpen(false); }, [current]);
 
-  const studentList = project.group_students
-    ? project.group_students.split(",").map((s) => s.trim()).filter(Boolean)
+  const studentList = project.members
+    ? project.members.split(",").map((s) => s.trim()).filter(Boolean)
     : [];
 
   const goPrev = () => { if (current > 0) onNavigate(current - 1); };
@@ -123,9 +123,9 @@ const EvalHeader = memo(function EvalHeader({
             <span className="inline-flex shrink-0 items-center text-primary [&_svg]:size-[18px]" aria-hidden="true"><UserCheckIcon /></span>
             <span className="truncate text-sm font-semibold text-foreground">{juryName}</span>
           </div>
-          {juryDept && (
+          {affiliation && (
             <span className="truncate text-xs text-muted-foreground pl-[26px]">
-              {juryDept}
+              {affiliation}
             </span>
           )}
         </div>
@@ -175,9 +175,9 @@ const EvalHeader = memo(function EvalHeader({
             groupInfoOpen ? "grid-rows-[1fr] mt-2" : "grid-rows-[0fr] overflow-hidden"
           )}>
             <div className="min-h-0 overflow-hidden">
-              {project.project_title && (
+              {project.title && (
                 <div className="flex items-start gap-1.5 text-sm text-muted-foreground py-0.5">
-                  <ProjectTitle text={project.project_title} size={16} />
+                  <ProjectTitle text={project.title} size={16} />
                 </div>
               )}
               {APP_CONFIG.showStudents && studentList.length > 0 && (

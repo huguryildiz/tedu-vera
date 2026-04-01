@@ -1,5 +1,5 @@
 // src/admin/overview/PeriodSnapshotCard.jsx
-// Period Snapshot summary card — displays key semester metadata.
+// Period Snapshot summary card — displays key period metadata.
 // Shows period name, criteria count, total points, evaluation status, and last submission.
 
 import { Lock, Unlock } from "lucide-react";
@@ -7,16 +7,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 
 export default function PeriodSnapshotCard({
-  semester,
+  period,
   metrics,
-  criteriaTemplate,
+  criteriaConfig,
 }) {
   // Derive period name
-  const periodName = semester?.semester_name || "—";
+  const periodName = period?.period_name || "—";
 
   // Derive period dates if available
-  const startDate = semester?.start_date;
-  const endDate = semester?.end_date;
+  const startDate = period?.start_date;
+  const endDate = period?.end_date;
   const dateRange = startDate && endDate
     ? `${new Date(startDate).toLocaleDateString("en-US", {
         month: "short",
@@ -28,16 +28,16 @@ export default function PeriodSnapshotCard({
     : "—";
 
   // Count criteria from template
-  const criteriaCount = criteriaTemplate?.length ?? 0;
+  const criteriaCount = criteriaConfig?.length ?? 0;
 
   // Calculate total points from criteria template
-  const totalPoints = (criteriaTemplate ?? []).reduce(
+  const totalPoints = (criteriaConfig ?? []).reduce(
     (sum, c) => sum + (Number(c.max) || 0),
     0
   );
 
   // Derive evaluation status (locked/open)
-  const isLocked = !!semester?.is_locked;
+  const isLocked = !!period?.is_locked;
   const statusLabel = isLocked ? "Locked" : "Open";
   const statusIcon = isLocked ? (
     <Lock className="size-4" />

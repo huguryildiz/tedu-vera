@@ -55,7 +55,7 @@ vi.mock("../../shared/MinimalLoaderOverlay", () => ({ default: () => null }));
 
 // ── Imports (after mocks) ─────────────────────────────────────
 import PinStep              from "../PinStep";
-import SemesterStep         from "../SemesterStep";
+import PeriodStep           from "../PeriodStep";
 import InfoStep             from "../InfoStep";
 import DoneStep             from "../DoneStep";
 import SheetsProgressDialog from "../SheetsProgressDialog";
@@ -78,13 +78,13 @@ describe("Jury step components — smoke renders", () => {
     ).not.toThrow();
 
     expect(() =>
-      render(<SemesterStep semesters={[]} onSelect={noop} onBack={noop} />)
+      render(<PeriodStep periods={[]} onSelect={noop} onBack={noop} />)
     ).not.toThrow();
 
     expect(() =>
       render(<InfoStep
-        juryName="" setJuryName={noop} juryDept="" setJuryDept={noop}
-        currentSemester={null} activeProjectCount={null}
+        juryName="" setJuryName={noop} affiliation="" setAffiliation={noop}
+        currentPeriod={null} activeProjectCount={null}
         onStart={noop} onBack={noop} error=""
       />)
     ).not.toThrow();

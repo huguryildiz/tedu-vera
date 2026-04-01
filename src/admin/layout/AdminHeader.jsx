@@ -2,7 +2,7 @@
 // ============================================================
 // Content-area header bar for the admin panel.
 // Sits at the top of SidebarInset — provides page title,
-// semester selector, refresh control, and demo banner.
+// period selector, refresh control, and demo banner.
 // ============================================================
 
 import { useCallback, useMemo } from "react";
@@ -45,17 +45,17 @@ function DemoBanner() {
   );
 }
 
-// ── Semester Selector ────────────────────────────────────────
+// ── Period Selector ────────────────────────────────────────
 
 function SemesterSelector({
-  semesterList,
+  periodList,
   sortedSemesters,
-  selectedSemesterId,
-  selectedSemesterName,
+  selectedPeriodId,
+  selectedPeriodName,
   onSemesterChange,
   onFetchData,
 }) {
-  const semesters = sortedSemesters || semesterList || [];
+  const periods = sortedSemesters || periodList || [];
 
   const handleChange = useCallback(
     (e) => {
@@ -66,22 +66,22 @@ function SemesterSelector({
     [onSemesterChange, onFetchData],
   );
 
-  if (semesters.length === 0) return null;
+  if (periods.length === 0) return null;
 
   return (
     <div className="relative inline-flex items-center">
       <select
-        value={selectedSemesterId || ""}
+        value={selectedPeriodId || ""}
         onChange={handleChange}
-        aria-label="Select semester"
+        aria-label="Select period"
         className={cn(
           "h-8 cursor-pointer appearance-none rounded-md border border-border bg-background py-1 pl-3 pr-8 text-sm font-medium text-foreground shadow-sm transition-colors",
           "hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
         )}
       >
-        {semesters.map((s) => (
+        {periods.map((s) => (
           <option key={s.id} value={s.id}>
-            {s.semester_name || s.name}
+            {s.period_name || s.name}
           </option>
         ))}
       </select>
@@ -103,12 +103,12 @@ function SemesterSelector({
  * @param {Date}     [props.lastRefresh]           — Timestamp of the last data refresh
  * @param {function} [props.onRefresh]             — Callback to trigger a data refresh
  * @param {boolean}  [props.isDemoMode=false]      — Show demo banner
- * @param {Array}    [props.semesterList]           — Full semester list
- * @param {Array}    [props.sortedSemesters]        — Sorted semester list (preferred for display)
- * @param {string}   [props.selectedSemesterId]     — Currently selected semester ID
- * @param {string}   [props.selectedSemesterName]   — Currently selected semester display name
- * @param {function} [props.onSemesterChange]       — Callback when semester selection changes
- * @param {function} [props.onFetchData]            — Callback to fetch data for a semester
+ * @param {Array}    [props.periodList]           — Full period list
+ * @param {Array}    [props.sortedSemesters]        — Sorted period list (preferred for display)
+ * @param {string}   [props.selectedPeriodId]     — Currently selected period ID
+ * @param {string}   [props.selectedPeriodName]   — Currently selected period display name
+ * @param {function} [props.onSemesterChange]       — Callback when period selection changes
+ * @param {function} [props.onFetchData]            — Callback to fetch data for a period
  */
 export function AdminHeader({
   title,
@@ -117,10 +117,10 @@ export function AdminHeader({
   lastRefresh,
   onRefresh,
   isDemoMode = false,
-  semesterList,
+  periodList,
   sortedSemesters,
-  selectedSemesterId,
-  selectedSemesterName,
+  selectedPeriodId,
+  selectedPeriodName,
   onSemesterChange,
   onFetchData,
 }) {
@@ -131,7 +131,7 @@ export function AdminHeader({
 
   const hasSemesters =
     (sortedSemesters && sortedSemesters.length > 0) ||
-    (semesterList && semesterList.length > 0);
+    (periodList && periodList.length > 0);
 
   return (
     <>
@@ -154,14 +154,14 @@ export function AdminHeader({
           </div>
         </div>
 
-        {/* Right side — semester selector + refresh */}
+        {/* Right side — period selector + refresh */}
         <div className="ml-auto flex items-center gap-2">
           {hasSemesters && (
             <SemesterSelector
-              semesterList={semesterList}
+              periodList={periodList}
               sortedSemesters={sortedSemesters}
-              selectedSemesterId={selectedSemesterId}
-              selectedSemesterName={selectedSemesterName}
+              selectedPeriodId={selectedPeriodId}
+              selectedPeriodName={selectedPeriodName}
               onSemesterChange={onSemesterChange}
               onFetchData={onFetchData}
             />

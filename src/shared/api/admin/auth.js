@@ -1,85 +1,54 @@
 // src/shared/api/admin/auth.js
-// ============================================================
-// Admin authentication functions.
-// v1: password-based (legacy, kept for backward compatibility).
-// v2: JWT-based via Supabase Auth (Phase C).
-// ============================================================
+// Admin authentication and application management (PostgREST).
 
 import { supabase } from "../core/client";
-import { callAdminRpc, callAdminRpcV2 } from "../transport";
 
 /**
- * Validates an admin password against the database.
- *
- * @param {string} password - The admin password to validate.
- * @returns {Promise<boolean>} True when the password is correct.
- * @throws {Error} With `adminLocked=true` and `lockedUntil` if too many attempts.
+ * Returns current user's memberships with organization info.
  */
-export async function adminLogin(password) {
-  const data = await callAdminRpc("rpc_admin_login", { p_password: password });
-  const row = data?.[0] ?? {};
-  if (!row.ok && row.locked_until) {
-    const e = new Error("Too many failed attempts.");
-    e.adminLocked = true;
-    e.lockedUntil = row.locked_until;
-    throw e;
-  }
-  return !!row.ok;
-}
+export async function getSession() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.id) return null;
 
-/**
- * Returns the current admin security configuration state.
- * Does not require an admin password.
- *
- * @returns {Promise<{admin_password_set: boolean, delete_password_set: boolean, backup_password_set: boolean}>}
- */
-export async function adminSecurityState() {
-  const { data, error } = await supabase.rpc("rpc_admin_security_state");
+  const { data, error } = await supabase
+    .from("memberships")
+    .select("*, organization:organizations(id, name, short_name, status)")
+    .eq("user_id", user.id);
   if (error) throw error;
-  return data?.[0] || {
-    admin_password_set:  false,
-    delete_password_set: false,
-    backup_password_set: false,
-  };
-}
-
-// ── v2 Auth Functions (Phase C) ──────────────────────────────
-
-/**
- * Returns the current user's tenant memberships and roles.
- * Requires a valid Supabase Auth session (JWT).
- */
-export async function adminGetSession() {
-  return callAdminRpcV2("rpc_admin_auth_get_session");
+  return data;
 }
 
 /**
- * Lists active tenants for the application form dropdown.
- * Public RPC (works before authentication).
+ * Lists active organizations for public dropdown.
  */
-export async function listTenantsPublic() {
-  return callAdminRpcV2("rpc_admin_tenant_list_public");
+export async function listOrganizationsPublic() {
+  const { data, error } = await supabase
+    .from("organizations")
+    .select("id, name, short_name")
+    .eq("status", "active")
+    .order("name");
+  if (error) throw error;
+  return data || [];
 }
 
 /**
- * Submit a tenant admin application (anon-accessible — no auth required).
- * Password is hashed server-side and stored until approval.
+ * Submit a tenant admin application.
  */
-export async function submitAdminApplication({ tenantId, email, password, name, university, department }) {
-  const { data, error } = await supabase.rpc("rpc_admin_application_submit", {
-    p_tenant_id: tenantId,
-    p_email: email,
-    p_password: password,
-    p_name: name,
-    p_university: university || "",
-    p_department: department || "",
-  });
+export async function submitApplication(payload) {
+  const { data, error } = await supabase
+    .from("tenant_applications")
+    .insert({
+      organization_name: payload.organization_name || payload.organizationName,
+      contact_email: payload.contact_email || payload.email,
+      applicant_name: payload.applicant_name || payload.name,
+      message: payload.message || null,
+    })
+    .select()
+    .single();
   if (error) {
-    const msg = String(error.message || "").toLowerCase();
-    const details = String(error.details || "").toLowerCase();
-    if (error.code === "23505" && (msg.includes("taa_pending_email_tenant_unique") || details.includes("taa_pending_email_tenant_unique"))) {
-      const e = new Error("application_already_pending");
-      e.code = error.code;
+    if (error.code === "23505") {
+      const e = new Error("Application already pending");
+      e.code = "application_already_pending";
       throw e;
     }
     throw error;
@@ -88,82 +57,71 @@ export async function submitAdminApplication({ tenantId, email, password, name, 
 }
 
 /**
- * Get the current user's applications.
+ * Get current user's applications.
  */
 export async function getMyApplications() {
-  return callAdminRpcV2("rpc_admin_application_get_mine");
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.email) return [];
+
+  const { data, error } = await supabase
+    .from("tenant_applications")
+    .select("*")
+    .eq("contact_email", user.email)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
 }
 
 /**
- * Cancel a pending application (own only).
+ * Cancel a pending application.
  */
-export async function cancelAdminApplication(applicationId) {
-  return callAdminRpcV2("rpc_admin_application_cancel", {
-    p_application_id: applicationId,
-  });
+export async function cancelApplication(applicationId) {
+  const { error } = await supabase
+    .from("tenant_applications")
+    .update({ status: "cancelled" })
+    .eq("id", applicationId);
+  if (error) throw error;
 }
 
 /**
- * Approve a pending admin application (tenant-admin or super-admin).
+ * Approve application via Edge Function (creates Supabase Auth user).
  */
-export async function approveAdminApplication(applicationId) {
+export async function approveApplication(applicationId) {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token || "";
-  try {
-    const { data, error } = await supabase.functions.invoke("approve-admin-application", {
-      body: { application_id: applicationId },
-      headers: token
-        ? { Authorization: `Bearer ${token}` }
-        : undefined,
-    });
-    if (error) throw error;
-    if (data?.error) {
-      const e = new Error(data.error);
-      e.code = data.code;
-      throw e;
-    }
-    return data?.data ?? true;
-  } catch (err) {
-    // FunctionsHttpError.message is generic ("Edge Function returned a non-2xx status code").
-    // Try to surface the JSON body from the function response.
-    const fallback = String(err?.message || "Could not approve application.");
-    const response = err?.context;
-    if (!response || typeof response.text !== "function") {
-      throw err;
-    }
-    try {
-      const raw = await response.text();
-      if (!raw) throw err;
-      let parsed;
-      try {
-        parsed = JSON.parse(raw);
-      } catch {
-        parsed = null;
-      }
-      const detailed = parsed?.error || parsed?.message || raw;
-      const e = new Error(String(detailed || fallback));
-      if (parsed?.code) e.code = parsed.code;
-      throw e;
-    } catch {
-      throw err;
-    }
+  const { data, error } = await supabase.functions.invoke("approve-admin-application", {
+    body: { application_id: applicationId },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (error) throw error;
+  if (data?.error) {
+    const e = new Error(data.error);
+    e.code = data.code;
+    throw e;
   }
+  return data?.data ?? true;
 }
 
 /**
- * Reject a pending admin application (tenant-admin or super-admin).
+ * Reject application.
  */
-export async function rejectAdminApplication(applicationId) {
-  return callAdminRpcV2("rpc_admin_application_reject", {
-    p_application_id: applicationId,
-  });
+export async function rejectApplication(applicationId) {
+  const { error } = await supabase
+    .from("tenant_applications")
+    .update({ status: "rejected", reviewed_at: new Date().toISOString() })
+    .eq("id", applicationId);
+  if (error) throw error;
 }
 
 /**
- * List pending applications for a tenant (admin dashboard).
+ * List pending applications for an organization.
  */
-export async function listPendingApplications(tenantId) {
-  return callAdminRpcV2("rpc_admin_application_list_pending", {
-    p_tenant_id: tenantId,
-  });
+export async function listPendingApplications(organizationId) {
+  const { data, error } = await supabase
+    .from("tenant_applications")
+    .select("*")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
 }

@@ -9,7 +9,7 @@ import ManageOrganizationsPanel from "../settings/ManageOrganizationsPanel";
 import PageShell from "./PageShell";
 
 export default function OrgSettingsPage({
-  tenantId,
+  organizationId,
   isDemoMode = false,
   onDirtyChange,
 }) {

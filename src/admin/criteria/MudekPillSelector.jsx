@@ -36,9 +36,9 @@ function getMudekTooltipLabel(code, outcome) {
 
 export { getMudekTooltipContent, getMudekTooltipLabel };
 
-export default function MudekPillSelector({ selected, mudekTemplate, onChange, disabled, criterionColor, open = false }) {
+export default function MudekPillSelector({ selected, outcomeConfig, onChange, disabled, criterionColor, open = false }) {
   const [query, setQuery] = useState("");
-  const options = (mudekTemplate || []);
+  const options = (outcomeConfig || []);
   const outcomeByCode = new Map(options.map((o) => [o.code, o]));
   const color = criterionColor || "#94A3B8";
 

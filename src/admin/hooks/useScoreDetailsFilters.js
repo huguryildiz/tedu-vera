@@ -262,7 +262,7 @@ export function useScoreDetailsFilters(currentCriteria = CRITERIA) {
     if (_s.sortKey === null) return null;
     const rawKey = typeof _s.sortKey === "string" && _s.sortKey ? _s.sortKey : DEFAULT_SORT_KEY;
     const key = rawKey === "tsMs" ? "updatedMs" : rawKey;
-    return key === "projectId" ? "projectTitle" : key;
+    return key === "projectId" ? "title" : key;
   });
   const [sortDir, setSortDir] = useState(() => VALID_SORT_DIRS.includes(_s.sortDir) ? _s.sortDir : DEFAULT_SORT_DIR);
   const [pageSize, setPageSize] = useState(15);

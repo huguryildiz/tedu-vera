@@ -1,22 +1,41 @@
 // src/admin/__tests__/adminApi.shaping.test.js
 // ============================================================
 // Phase A safety tests — lock the data-shaping behavior of
-// adminApi.js before any refactoring begins.
+// the PostgREST admin API.
 //
-// Strategy: Vitest runs with import.meta.env.DEV = true, so
-// USE_PROXY is false and callAdminRpc takes the dev path that
-// calls supabase.rpc() directly. Mocking supabase.rpc lets us
-// supply raw DB rows and verify the UI-shape output without any
-// network calls.
+// Strategy: Mock supabase.from() with a chainable builder that
+// resolves with fixture data. Verify the UI-shape output
+// without any network calls.
 // ============================================================
 
 import { describe, expect, vi, beforeEach } from "vitest";
 import { qaTest } from "../../test/qaTest.js";
 
+// ── Chainable PostgREST mock ───────────────────────────────────────────────
+
+/**
+ * Returns a chainable mock that resolves to { data: rows, error }.
+ * .single() resolves to { data: rows[0], error }.
+ */
+function makeChain(rows, error = null) {
+  const data = Array.isArray(rows) ? rows : [rows];
+  const p = Promise.resolve({ data, error });
+  const chain = {
+    select:  vi.fn().mockReturnThis(),
+    eq:      vi.fn().mockReturnThis(),
+    order:   vi.fn().mockReturnThis(),
+    single:  vi.fn().mockResolvedValue({ data: data[0] ?? null, error }),
+    then:    p.then.bind(p),
+    catch:   p.catch.bind(p),
+    finally: p.finally.bind(p),
+  };
+  return chain;
+}
+
 // Must be declared before any import that touches the mocked module.
 vi.mock("../../lib/supabaseClient", () => ({
   supabase: {
-    rpc: vi.fn(),
+    from: vi.fn(),
   },
 }));
 
@@ -25,20 +44,11 @@ import { supabase } from "../../lib/supabaseClient";
 
 // Import the functions under test.
 import {
-  adminGetScores,
-  adminListJurors,
-  adminProjectSummary,
-  adminGetOutcomeTrends,
-} from "../../shared/api/adminApi";
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-
-/**
- * Make supabase.rpc resolve with the given rows for the next call.
- */
-function mockRpc(rows) {
-  supabase.rpc.mockResolvedValueOnce({ data: rows, error: null });
-}
+  getScores,
+  listJurorsSummary,
+  getProjectSummary,
+  getOutcomeTrends,
+} from "../../shared/api/admin";
 
 // ── Tests ─────────────────────────────────────────────────────────────────
 
@@ -47,152 +57,80 @@ describe("adminApi — data shaping (Phase A safety)", () => {
     vi.clearAllMocks();
   });
 
-  // ── phaseA.api.01 — adminGetScores field mapping ──────────────────────
+  // ── phaseA.api.01 — getScores field mapping ───────────────────────────
 
   qaTest("phaseA.api.01", async () => {
-    const updatedAtIso = "2026-03-24T10:00:00.000Z";
-    const finalAtIso   = "2026-03-24T12:00:00.000Z";
-
     const rawRow = {
-      juror_id:          "juror-uuid-1",
-      juror_name:        "Alice Smith",
-      juror_inst:        "EE Dept",
-      project_id:        "proj-uuid-1",
-      group_no:          3,
-      project_title:     "Solar Panel Project",
-      poster_date:       "2026-03-24",
-      criteria_scores:   { technical: 25, design: 20, delivery: 15, teamwork: 8 },
-      total:             68,
-      comment:           "Good work",
-      updated_at:        updatedAtIso,
-      final_submitted_at: finalAtIso,
-      status:            null,
+      id:          "score-uuid-1",
+      juror_id:    "juror-uuid-1",
+      project_id:  "proj-uuid-1",
+      technical:   25,
+      written:     20,   // maps to design
+      oral:        15,   // maps to delivery
+      teamwork:    8,
+      comments:    "Good work",
+      created_at:  "2026-03-24T09:00:00.000Z",
+      updated_at:  "2026-03-24T10:00:00.000Z",
+      juror:   { id: "juror-uuid-1", juror_name: "Alice Smith", affiliation: "EE Dept" },
+      project: { id: "proj-uuid-1",  title: "Solar Panel Project", members: "Eve\nFrank" },
     };
 
-    mockRpc([rawRow]);
+    supabase.from.mockReturnValue(makeChain([rawRow]));
 
-    const result = await adminGetScores("sem-1", "password");
+    const result = await getScores("period-1");
 
     expect(result).toHaveLength(1);
     const row = result[0];
 
-    // Juror identity mapping
+    // Score identity
+    expect(row.id).toBe("score-uuid-1");
     expect(row.jurorId).toBe("juror-uuid-1");
-    expect(row.juryName).toBe("Alice Smith");
-    expect(row.juryDept).toBe("EE Dept");
+    expect(row.jurorName).toBe("Alice Smith");
+    expect(row.jurorAffiliation).toBe("EE Dept");
 
-    // Project identity mapping
+    // Project identity
     expect(row.projectId).toBe("proj-uuid-1");
-    expect(row.groupNo).toBe(3);
-    expect(row.projectName).toBe("Solar Panel Project");
-    expect(row.posterDate).toBe("2026-03-24");
+    expect(row.projectTitle).toBe("Solar Panel Project");
+    expect(row.projectMembers).toBe("Eve\nFrank");
 
-    // Criteria scores spread via dbScoresToUi (keys pass through unchanged)
+    // Field mapping: written→design, oral→delivery
     expect(row.technical).toBe(25);
     expect(row.design).toBe(20);
     expect(row.delivery).toBe(15);
     expect(row.teamwork).toBe(8);
 
-    // Total and comments
+    // Total and comment
     expect(row.total).toBe(68);
-    expect(row.comments).toBe("Good work");
+    expect(row.comment).toBe("Good work");
 
-    // Timestamp normalization
-    expect(row.updatedAt).toBe(new Date(updatedAtIso).toISOString());
-    expect(row.updatedMs).toBe(new Date(updatedAtIso).getTime());
-    expect(row.finalSubmittedAt).toBe(new Date(finalAtIso).toISOString());
-    expect(row.finalSubmittedMs).toBe(new Date(finalAtIso).getTime());
-
-    // Legacy aliases
-    expect(row.timestamp).toBe(row.updatedAt);
-    expect(row.tsMs).toBe(row.updatedMs);
+    // Timestamps pass through as-is
+    expect(row.updatedAt).toBe("2026-03-24T10:00:00.000Z");
+    expect(row.createdAt).toBe("2026-03-24T09:00:00.000Z");
   });
 
-  // ── phaseA.api.04 — adminGetScores status derivation ─────────────────
-
-  qaTest("phaseA.api.04", async () => {
-    const BASE = {
-      juror_id: "j-1", juror_name: "Bob", juror_inst: "CS",
-      project_id: "p-1", group_no: 1, project_title: "P1",
-      poster_date: "2026-03-24", total: null, comment: "",
-      updated_at: null, final_submitted_at: null, status: null,
-    };
-
-    // Case 1: all scores null + no comment → not_started
-    mockRpc([{
-      ...BASE,
-      criteria_scores: { technical: null, design: null, delivery: null, teamwork: null },
-      comment: "",
-    }]);
-    const [notStarted] = await adminGetScores("sem-1", "pw");
-    expect(notStarted.status).toBe("not_started");
-
-    // Case 2: some scores filled → in_progress
-    mockRpc([{
-      ...BASE,
-      criteria_scores: { technical: 20, design: null, delivery: null, teamwork: null },
-      comment: "",
-    }]);
-    const [inProgress] = await adminGetScores("sem-1", "pw");
-    expect(inProgress.status).toBe("in_progress");
-
-    // Case 3: all scores filled (none null) → submitted
-    mockRpc([{
-      ...BASE,
-      criteria_scores: { technical: 25, design: 20, delivery: 15, teamwork: 8 },
-      comment: "done",
-    }]);
-    const [submitted] = await adminGetScores("sem-1", "pw");
-    expect(submitted.status).toBe("submitted");
-
-    // Case 4: final_submitted_at present → completed
-    mockRpc([{
-      ...BASE,
-      criteria_scores: { technical: 25, design: 20, delivery: 15, teamwork: 8 },
-      final_submitted_at: "2026-03-24T12:00:00.000Z",
-    }]);
-    const [completed] = await adminGetScores("sem-1", "pw");
-    expect(completed.status).toBe("completed");
-
-    // Case 5: DB supplies status explicitly → used as-is
-    mockRpc([{
-      ...BASE,
-      criteria_scores: { technical: 25, design: 20, delivery: 15, teamwork: 8 },
-      status: "editing",
-    }]);
-    const [editing] = await adminGetScores("sem-1", "pw");
-    expect(editing.status).toBe("editing");
-    expect(editing.editingFlag).toBe("editing");
-  });
-
-  // ── phaseA.api.02 — adminListJurors field mapping ─────────────────────
+  // ── phaseA.api.02 — listJurorsSummary field mapping ───────────────────
 
   qaTest("phaseA.api.02", async () => {
-    const lastActivityIso  = "2026-03-24T09:30:00.000Z";
-    const finalSubmittedIso = "2026-03-24T11:00:00.000Z";
     const lastSeenIso       = "2026-03-24T11:05:00.000Z";
-    const updatedAtIso      = "2026-03-24T11:10:00.000Z";
+    const finalSubmittedIso = "2026-03-24T11:00:00.000Z";
 
-    const rawJuror = {
+    const authRow = {
       juror_id:           "juror-uuid-2",
-      juror_name:         "Carol Jones",
-      juror_inst:         "ME Dept",
-      scored_semesters:   ["sem-1"],
-      is_assigned:        true,
+      period_id:          "period-1",
       edit_enabled:       false,
       final_submitted_at: finalSubmittedIso,
-      last_activity_at:   lastActivityIso,
       last_seen_at:       lastSeenIso,
-      updated_at:         updatedAtIso,
-      total_projects:     5,
-      completed_projects: 5,
       locked_until:       null,
-      is_locked:          false,
+      is_blocked:         false,
+      juror: { id: "juror-uuid-2", juror_name: "Carol Jones", affiliation: "ME Dept" },
     };
 
-    mockRpc([rawJuror]);
+    supabase.from
+      .mockReturnValueOnce(makeChain([authRow]))              // juror_period_auth
+      .mockReturnValueOnce(makeChain([{ juror_id: "juror-uuid-2", id: "score-1" }])) // scores
+      .mockReturnValueOnce(makeChain([{ id: "proj-1" }]));   // projects
 
-    const result = await adminListJurors("sem-1", "password");
+    const result = await listJurorsSummary("period-1");
 
     expect(result).toHaveLength(1);
     const juror = result[0];
@@ -200,114 +138,110 @@ describe("adminApi — data shaping (Phase A safety)", () => {
     // Identity mapping
     expect(juror.jurorId).toBe("juror-uuid-2");
     expect(juror.juryName).toBe("Carol Jones");
-    expect(juror.juryDept).toBe("ME Dept");
+    expect(juror.affiliation).toBe("ME Dept");
 
-    // Timestamp ms conversion
-    expect(juror.lastActivityMs).toBe(new Date(lastActivityIso).getTime());
-    expect(juror.lastSeenMs).toBe(new Date(lastSeenIso).getTime());
-    expect(juror.updatedMs).toBe(new Date(updatedAtIso).getTime());
-
-    // Boolean coercion for finalSubmitted
+    // Submission state
     expect(juror.finalSubmitted).toBe(true);
     expect(juror.finalSubmittedAt).toBe(finalSubmittedIso);
 
-    // Pass-through fields
-    expect(juror.isAssigned).toBe(true);
-    expect(juror.editEnabled).toBe(false);
-    expect(juror.totalProjects).toBe(5);
-    expect(juror.completedProjects).toBe(5);
+    // Timestamps
+    expect(juror.lastSeenMs).toBe(new Date(lastSeenIso).getTime());
+
+    // Project counts
+    expect(juror.totalProjects).toBe(1);
+    expect(juror.completedProjects).toBe(1);
+
+    // Lock state
     expect(juror.lockedUntil).toBeNull();
     expect(juror.isLocked).toBe(false);
-    expect(juror.scoredSemesters).toEqual(["sem-1"]);
+    expect(juror.editEnabled).toBe(false);
 
-    // Edge: null timestamps → ms = 0, boolean false, empty strings
-    mockRpc([{
-      juror_id: "j-null", juror_name: "Dave", juror_inst: "",
-      scored_semesters: [], is_assigned: false, edit_enabled: false,
-      final_submitted_at: null, last_activity_at: null,
-      last_seen_at: null, updated_at: null,
-      total_projects: 0, completed_projects: 0,
-      locked_until: null, is_locked: false,
-    }]);
-    const [nullJuror] = await adminListJurors("sem-1", "pw");
-    expect(nullJuror.lastActivityMs).toBe(0);
+    // Edge: null timestamps → ms = 0, finalSubmitted = false
+    supabase.from
+      .mockReturnValueOnce(makeChain([{
+        juror_id: "j-null", period_id: "period-1",
+        edit_enabled: false, final_submitted_at: null, last_seen_at: null,
+        locked_until: null, is_blocked: false,
+        juror: { id: "j-null", juror_name: "Dave", affiliation: "" },
+      }]))
+      .mockReturnValueOnce(makeChain([]))  // no scores
+      .mockReturnValueOnce(makeChain([])); // no projects
+
+    const [nullJuror] = await listJurorsSummary("period-1");
+    expect(nullJuror.lastSeenMs).toBe(0);
     expect(nullJuror.finalSubmitted).toBe(false);
     expect(nullJuror.finalSubmittedAt).toBe("");
   });
 
-  // ── phaseA.api.03 — adminProjectSummary field mapping ────────────────
+  // ── phaseA.api.03 — getProjectSummary field mapping ───────────────────
 
   qaTest("phaseA.api.03", async () => {
-    const rawSummary = {
-      project_id:     "proj-uuid-3",
-      group_no:       2,
-      project_title:  "Robotics Arm",
-      group_students: "Eve\nFrank",
-      juror_count:    "4",
-      criteria_avgs:  { technical: "25.5", design: "18.75", delivery: "22.0", teamwork: "7.5" },
-      avg_total:      "73.75",
-      min_total:      "70.0",
-      max_total:      "78.0",
-      note:           "High variance",
+    const project = {
+      id:        "proj-uuid-3",
+      title:     "Robotics Arm",
+      members:   "Eve\nFrank",
+      advisor:   "Dr. Smith",
+      period_id: "period-1",
     };
 
-    mockRpc([rawSummary]);
+    const scores = [
+      { project_id: "proj-uuid-3", technical: 25, written: 20, oral: 18, teamwork: 8 },
+      { project_id: "proj-uuid-3", technical: 22, written: 19, oral: 16, teamwork: 7 },
+    ];
 
-    const result = await adminProjectSummary("sem-1", "password");
+    supabase.from
+      .mockReturnValueOnce(makeChain([project])) // projects
+      .mockReturnValueOnce(makeChain(scores));   // scores
+
+    const result = await getProjectSummary("period-1");
 
     expect(result).toHaveLength(1);
     const proj = result[0];
 
-    // Identity mapping
+    // Identity
     expect(proj.id).toBe("proj-uuid-3");
-    expect(proj.groupNo).toBe(2);
-    expect(proj.name).toBe("Robotics Arm");
-    expect(proj.students).toBe("Eve\nFrank");
-    expect(proj.count).toBe(4);
-    expect(proj.note).toBe("High variance");
+    expect(proj.title).toBe("Robotics Arm");
+    expect(proj.members).toBe("Eve\nFrank");
+    expect(proj.advisor).toBe("Dr. Smith");
+    expect(proj.count).toBe(2);
 
-    // criteria_avgs → avg object with numeric values (string→number coercion)
-    expect(proj.avg.technical).toBe(25.5);
-    expect(proj.avg.design).toBe(18.75);
-    expect(proj.avg.delivery).toBe(22.0);
-    expect(proj.avg.teamwork).toBe(7.5);
+    // avg uses dbAvgScoresToUi: written→design, oral→delivery
+    expect(proj.avg.technical).toBeCloseTo(23.5);
+    expect(proj.avg.design).toBeCloseTo(19.5);    // written avg
+    expect(proj.avg.delivery).toBeCloseTo(17.0);  // oral avg
+    expect(proj.avg.teamwork).toBeCloseTo(7.5);
 
-    // avg_total string → totalAvg number
-    expect(proj.totalAvg).toBe(73.75);
-    expect(proj.totalMin).toBe(70.0);
-    expect(proj.totalMax).toBe(78.0);
+    // totalAvg = ((25+20+18+8) + (22+19+16+7)) / 2 = (71 + 64) / 2
+    expect(proj.totalAvg).toBeCloseTo(67.5);
   });
 
-  // ── phaseA.api.05 — adminGetOutcomeTrends field mapping ──────────────
+  // ── phaseA.api.05 — getOutcomeTrends field mapping ────────────────────
 
   qaTest("phaseA.api.05", async () => {
-    const rawTrend = {
-      semester_id:   "sem-uuid-1",
-      semester_name: "2026 Spring",
-      poster_date:   "2026-03-24",
-      criteria_avgs: { technical: "27.0", design: "21.5", delivery: "19.0", teamwork: "8.0" },
-      n_evals:       "12",
-    };
+    const period = { id: "sem-uuid-1", name: "2026 Spring" };
+    const scores = [
+      { technical: 27, written: 21, oral: 19, teamwork: 8 },
+      { technical: 25, written: 22, oral: 20, teamwork: 9 },
+    ];
 
-    mockRpc([rawTrend]);
+    supabase.from
+      .mockReturnValueOnce(makeChain([period])) // periods (.single())
+      .mockReturnValueOnce(makeChain(scores));  // scores
 
-    const result = await adminGetOutcomeTrends(["sem-uuid-1"], "password");
+    const result = await getOutcomeTrends(["sem-uuid-1"]);
 
     expect(result).toHaveLength(1);
     const trend = result[0];
 
-    // Identity mapping
-    expect(trend.semesterId).toBe("sem-uuid-1");
-    expect(trend.semesterName).toBe("2026 Spring");
-    expect(trend.posterDate).toBe("2026-03-24");
+    // Identity
+    expect(trend.periodId).toBe("sem-uuid-1");
+    expect(trend.periodName).toBe("2026 Spring");
+    expect(trend.nEvals).toBe(2);
 
-    // criteria_avgs → criteriaAvgs via dbAvgScoresToUi (string→number)
-    expect(trend.criteriaAvgs.technical).toBe(27.0);
-    expect(trend.criteriaAvgs.design).toBe(21.5);
-    expect(trend.criteriaAvgs.delivery).toBe(19.0);
-    expect(trend.criteriaAvgs.teamwork).toBe(8.0);
-
-    // n_evals string → nEvals number
-    expect(trend.nEvals).toBe(12);
+    // criteriaAvgs uses dbAvgScoresToUi: written→design, oral→delivery
+    expect(trend.criteriaAvgs.technical).toBeCloseTo(26.0);
+    expect(trend.criteriaAvgs.design).toBeCloseTo(21.5);    // written avg
+    expect(trend.criteriaAvgs.delivery).toBeCloseTo(19.5);  // oral avg
+    expect(trend.criteriaAvgs.teamwork).toBeCloseTo(8.5);
   });
 });

@@ -29,7 +29,7 @@ import { cn } from "../lib/utils";
 const isDemoMode = import.meta.env.VITE_DEMO_MODE === "true";
 
 export default function EvalStep({
-  juryName, juryDept,
+  juryName, affiliation,
   projects,
   current, onNavigate,
   scores, comments, touched,
@@ -72,7 +72,7 @@ export default function EvalStep({
     return (
       <div className="flex min-h-dvh items-center justify-center p-[var(--screen-pad,16px)]">
         <div className="mx-auto max-w-3xl rounded-2xl bg-card shadow-lg overflow-hidden flex items-center justify-center min-h-[200px] text-sm text-muted-foreground">
-          {projects.length === 0 ? "No projects found for this semester." : "Loading\u2026"}
+          {projects.length === 0 ? "No projects found for this evaluation period." : "Loading\u2026"}
         </div>
       </div>
     );
@@ -102,7 +102,7 @@ export default function EvalStep({
 
           <EvalHeader
             juryName={juryName}
-            juryDept={juryDept}
+            affiliation={affiliation}
             saveStatus={saveStatus}
             lockActive={lockActive}
             onGoHome={onGoHome}

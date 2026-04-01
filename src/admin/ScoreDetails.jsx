@@ -46,16 +46,16 @@ export default function ScoreDetails({
   jurors,
   assignedJurors = null,
   groups = [],
-  semesterName = "",
+  periodName = "",
   summaryData = [],
   loading = false,
-  criteriaTemplate,
+  criteriaConfig,
 }) {
-  const { activeTenant } = useAuth();
-  const tenantCode = activeTenant?.code || "";
+  const { activeOrganization } = useAuth();
+  const tenantCode = activeOrganization?.code || "";
   const activeCriteria = useMemo(
-    () => getActiveCriteria(criteriaTemplate),
-    [criteriaTemplate]
+    () => getActiveCriteria(criteriaConfig),
+    [criteriaConfig]
   );
   const {
     scoreCols,
@@ -165,7 +165,7 @@ export default function ScoreDetails({
   const isDeptFilterActive = !!filterDept || activeFilterCol === "dept";
   const isStatusFilterActive = Array.isArray(filterStatus) || activeFilterCol === "status";
   const isJurorStatusFilterActive = Array.isArray(filterJurorStatus) || activeFilterCol === "jurorStatus";
-  const isProjectTitleFilterActive = !!filterProjectTitle || activeFilterCol === "projectTitle";
+  const isProjectTitleFilterActive = !!filterProjectTitle || activeFilterCol === "title";
   const isStudentsFilterActive = !!filterStudents || activeFilterCol === "students";
   const isUpdatedDateFilterActive = isUpdatedDateFilterValid || activeFilterCol === "updatedAt";
   const isCompletedDateFilterActive = isCompletedDateFilterValid || activeFilterCol === "completedAt";
@@ -227,10 +227,10 @@ export default function ScoreDetails({
 
     const generated = generateMissingRows(assignedList, groups, data, projectMetaById);
     const combinedRows = [...data, ...generated];
-    const enriched = enrichRows(combinedRows, projectMetaById, jurorEditMap, groups, semesterName);
+    const enriched = enrichRows(combinedRows, projectMetaById, jurorEditMap, groups, periodName);
 
     const filtered = applyFilters(enriched, {
-      semesterName, filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus,
+      periodName, filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus,
       filterProjectTitle, filterStudents,
       updatedFrom, updatedTo, updatedParsedFrom, updatedParsedTo,
       updatedParsedFromMs, updatedParsedToMs, isUpdatedInvalidRange,
@@ -240,7 +240,7 @@ export default function ScoreDetails({
     });
 
     return sortRows(filtered, sortKey, sortDir);
-  }, [data, projectMetaById, semesterName, filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus, filterProjectTitle, filterStudents,
+  }, [data, projectMetaById, periodName, filterGroupNo, filterJuror, filterDept, filterStatus, filterJurorStatus, filterProjectTitle, filterStudents,
       updatedFrom, updatedTo, completedFrom, completedTo, updatedParsedFrom, updatedParsedTo, completedParsedFrom, completedParsedTo,
       updatedParsedFromMs, updatedParsedToMs, completedParsedFromMs, completedParsedToMs, isUpdatedInvalidRange, isCompletedInvalidRange,
       scoreFilters, filterComment, sortKey, sortDir, jurorEditMap, assignedJurors, jurors, groups]);
@@ -358,7 +358,7 @@ export default function ScoreDetails({
         filteredCount={filteredData.length}
         onExport={() => {
           exportXLSX(filteredData, {
-            semesterName: semesterName || "VERA",
+            periodName: periodName || "VERA",
             criteria: activeCriteria,
             summaryData,
             tenantCode,

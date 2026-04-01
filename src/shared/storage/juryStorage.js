@@ -13,10 +13,10 @@ export function getJuryAccess() {
 }
 
 /** Write jury access grant to both sessionStorage and localStorage. */
-export function setJuryAccess(semesterId) {
+export function setJuryAccess(periodId) {
   try {
-    sessionStorage.setItem(KEYS.JURY_ACCESS, semesterId);
-    localStorage.setItem(KEYS.JURY_ACCESS, semesterId);
+    sessionStorage.setItem(KEYS.JURY_ACCESS, periodId);
+    localStorage.setItem(KEYS.JURY_ACCESS, periodId);
   } catch {}
 }
 
@@ -32,9 +32,9 @@ export function clearJuryAccess() {
 export function getJurySessionKeys() {
   return {
     jurorId: KEYS.JURY_JUROR_ID,
-    semesterId: KEYS.JURY_SEMESTER_ID,
+    periodId: KEYS.JURY_PERIOD_ID,
     jurorName: KEYS.JURY_JUROR_NAME,
-    jurorInst: KEYS.JURY_JUROR_INST,
+    affiliation: KEYS.JURY_AFFILIATION,
   };
 }
 
@@ -42,8 +42,8 @@ export function getJurySessionKeys() {
 export function clearJurySession() {
   try {
     localStorage.removeItem(KEYS.JURY_JUROR_ID);
-    localStorage.removeItem(KEYS.JURY_SEMESTER_ID);
+    localStorage.removeItem(KEYS.JURY_PERIOD_ID);
     localStorage.removeItem(KEYS.JURY_JUROR_NAME);
-    localStorage.removeItem(KEYS.JURY_JUROR_INST);
+    localStorage.removeItem(KEYS.JURY_AFFILIATION);
   } catch {}
 }

@@ -28,7 +28,7 @@ describe("useScoreGridData — Phase A safety", () => {
     const groups = [{ id: "g1", groupNo: 1, label: "Group 1" }];
 
     const { result } = renderHook(() =>
-      useScoreGridData({ data, jurors, groups, criteriaTemplate: customCriteria })
+      useScoreGridData({ data, jurors, groups, criteriaConfig: customCriteria })
     );
 
     expect(result.current.lookup.j1.g1.research).toBe(30);

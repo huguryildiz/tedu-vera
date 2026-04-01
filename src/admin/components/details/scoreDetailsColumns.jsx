@@ -74,9 +74,9 @@ export function buildColumns({
       className: "cell-group-no",
     },
     {
-      id: "projectTitle",
+      id: "title",
       label: "Title",
-      sortKey: "projectTitle",
+      sortKey: "title",
       filter: {
         type: "text",
         value: filterProjectTitle,
@@ -121,7 +121,7 @@ export function buildColumns({
     {
       id: "dept",
       label: "Affiliation",
-      sortKey: "juryDept",
+      sortKey: "affiliation",
       filter: {
         type: "text",
         value: filterDept,

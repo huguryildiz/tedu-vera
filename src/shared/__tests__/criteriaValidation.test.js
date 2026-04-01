@@ -4,7 +4,7 @@ import { qaTest } from "../../test/qaTest.js";
 import {
   validateRubric,
   validateCriterion,
-  validateSemesterCriteria,
+  validatePeriodCriteria as validateSemesterCriteria,
   isDisposableEmptyDraftCriterion,
 } from "../criteriaValidation.js";
 

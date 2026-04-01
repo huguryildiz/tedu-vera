@@ -9,7 +9,7 @@ export default function PinResetDialog({
   resetPinInfo,
   pinResetLoading,
   pinCopied,
-  viewSemesterLabel,
+  viewPeriodLabel,
   onCopyPin,
   onClose,
   onConfirmReset,
@@ -53,11 +53,11 @@ export default function PinResetDialog({
                   <span className="pin-reset-target-highlight">
                     {pinResetTarget.juror_name || pinResetTarget.juryName || "this juror"}
                   </span>
-                  {(pinResetTarget.juror_inst || pinResetTarget.juryDept)
+                  {(pinResetTarget.affiliation || pinResetTarget.affiliation)
                     ? (
                       <span className="pin-reset-target-highlight pin-reset-target-highlight--inst">
                         {" ("}
-                        {pinResetTarget.juror_inst || pinResetTarget.juryDept}
+                        {pinResetTarget.affiliation || pinResetTarget.affiliation}
                         {")"}
                       </span>
                     )
@@ -65,8 +65,8 @@ export default function PinResetDialog({
                 </div>
                 <div className="delete-dialog__line pin-reset-detail-line">
                   <span className="pin-reset-detail-label">Period:</span>
-                  <span className="pin-reset-target-highlight pin-reset-target-highlight--semester">
-                    {viewSemesterLabel}
+                  <span className="pin-reset-target-highlight pin-reset-target-highlight--period">
+                    {viewPeriodLabel}
                   </span>
                 </div>
               </div>

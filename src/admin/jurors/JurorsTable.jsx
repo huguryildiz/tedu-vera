@@ -175,7 +175,7 @@ export default function JurorsTable({
         return {
           ...j,
           _name: j.juryName || j.juror_name || "",
-          _dept: j.juryDept || j.juror_inst || "",
+          _dept: j.affiliation || j.affiliation || "",
           _jurorId: j.jurorId || j.juror_id,
           _locked: isJurorLocked(j),
           _lastActivity: lastActivity,
@@ -377,7 +377,7 @@ export default function JurorsTable({
                             onEdit?.({
                               jurorId: j._jurorId,
                               juror_name: j._name,
-                              juror_inst: j._dept,
+                              affiliation: j._dept,
                             })
                           }
                         >
@@ -389,7 +389,7 @@ export default function JurorsTable({
                             onResetPin?.({
                               jurorId: j._jurorId,
                               juror_name: j._name,
-                              juror_inst: j._dept,
+                              affiliation: j._dept,
                             })
                           }
                         >

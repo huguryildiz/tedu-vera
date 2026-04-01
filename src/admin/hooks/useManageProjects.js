@@ -9,29 +9,29 @@
 import { useCallback, useRef, useState } from "react";
 import {
   adminListProjects,
-  adminCreateProject,
-  adminUpsertProject,
+  createProject,
+  upsertProject,
 } from "../../shared/api";
 import { normalizeStudentNames } from "../utils/auditUtils";
 
 /**
- * useManageProjects — project CRUD for the viewed semester.
+ * useManageProjects — project CRUD for the viewed period.
  *
  * @param {object} opts
- * @param {string}   opts.tenantId
- * @param {string}   opts.viewSemesterId    Controlled by useManageSemesters.
- * @param {string}   opts.viewSemesterLabel Human-readable label for toast messages.
- * @param {Array}    opts.semesterList      Used for target semester name lookup.
+ * @param {string}   opts.organizationId
+ * @param {string}   opts.viewPeriodId      Controlled by useManagePeriods.
+ * @param {string}   opts.viewPeriodLabel   Human-readable label for toast messages.
+ * @param {Array}    opts.periodList        Used for target period name lookup.
  * @param {Function} opts.setMessage        Toast setter from SettingsPage.
  * @param {Function} opts.setLoading        Loading setter from SettingsPage.
  * @param {Function} opts.setPanelError     (panel, msg) → sets a panel-level error.
  * @param {Function} opts.clearPanelError   (panel) → clears a panel-level error.
  */
 export function useManageProjects({
-  tenantId,
-  viewSemesterId,
-  viewSemesterLabel,
-  semesterList,
+  organizationId,
+  viewPeriodId,
+  viewPeriodLabel,
+  periodList,
   setMessage,
   incLoading,
   decLoading,
@@ -53,9 +53,9 @@ export function useManageProjects({
         (p) =>
           (patch.id && p.id === patch.id) ||
           (patch.group_no != null &&
-            patch.semester_id &&
+            patch.period_id &&
             p.group_no === patch.group_no &&
-            p.semester_id === patch.semester_id)
+            p.period_id === patch.period_id)
       );
       const updated = {
         ...((idx >= 0 ? next[idx] : {}) || {}),
@@ -78,10 +78,10 @@ export function useManageProjects({
 
   // ── Load function (stable identity — uses refs) ──────────
   const loadProjects = useCallback(
-    async (semesterId) => {
-      if (!semesterId) return;
+    async (periodId) => {
+      if (!periodId) return;
       try {
-        const rows = await adminListProjects(semesterId);
+        const rows = await adminListProjects(periodId);
         setProjects(rows || []);
       } catch (e) {
         const msg = e?.message || "Could not load groups. Check your session or refresh.";
@@ -93,18 +93,18 @@ export function useManageProjects({
 
   // ── Project CRUD handlers ────────────────────────────────
   const handleImportProjects = async (rows, { cancelRef } = {}) => {
-    if (!viewSemesterId) {
-      setPanelError("projects", "Select a semester from the header before importing groups.");
+    if (!viewPeriodId) {
+      setPanelError("projects", "Select a period from the header before importing groups.");
       return { ok: false };
     }
     setMessage("");
     clearPanelError("projects");
     incLoading();
     try {
-      const semesterContext =
-        viewSemesterLabel && viewSemesterLabel !== "—"
-          ? viewSemesterLabel
-          : "selected semester";
+      const periodContext =
+        viewPeriodLabel && viewPeriodLabel !== "—"
+          ? viewPeriodLabel
+          : "selected period";
       let skipped = 0;
       for (const row of rows) {
         if (cancelRef?.current) {
@@ -112,24 +112,24 @@ export function useManageProjects({
           // Note: true request abort is not feasible with current Supabase RPC wrappers.
           return { ok: false, cancelled: true };
         }
-        const normalizedStudents = normalizeStudentNames(row.group_students);
+        const normalizedMembers = normalizeStudentNames(row.members);
         try {
-          const res = await adminCreateProject(
-            { ...row, group_students: normalizedStudents, semesterId: viewSemesterId }
+          const res = await createProject(
+            { ...row, members: normalizedMembers, periodId: viewPeriodId }
           );
           applyProjectPatch({
             id: res?.project_id || res?.projectId || undefined,
-            semester_id: viewSemesterId,
+            period_id: viewPeriodId,
             group_no: row.group_no,
-            project_title: row.project_title,
-            group_students: normalizedStudents,
+            title: row.title,
+            members: normalizedMembers,
           });
         } catch (e) {
           const msg = String(e?.message || "");
           const msgLower = msg.toLowerCase();
           if (
             msg.includes("project_group_exists") ||
-            msgLower.includes("projects_semester_group_no_key") ||
+            msgLower.includes("projects_period_group_no_key") ||
             msgLower.includes("duplicate key value violates unique constraint")
           ) {
             skipped += 1;
@@ -139,11 +139,11 @@ export function useManageProjects({
         }
       }
       // Full refresh to get server-confirmed IDs and normalize client state
-      await loadProjects(viewSemesterId);
+      await loadProjects(viewPeriodId);
       setMessage(
         skipped > 0
-          ? `Groups imported for Semester ${semesterContext}, skipped ${skipped} existing groups`
-          : `Groups imported for Semester ${semesterContext}`
+          ? `Groups imported for Period ${periodContext}, skipped ${skipped} existing groups`
+          : `Groups imported for Period ${periodContext}`
       );
       return { ok: true, skipped };
     } catch (e) {
@@ -151,7 +151,7 @@ export function useManageProjects({
       const msgLower = msg.toLowerCase();
       if (
         msg.includes("project_group_exists") ||
-        msgLower.includes("projects_semester_group_no_key") ||
+        msgLower.includes("projects_period_group_no_key") ||
         msgLower.includes("duplicate key value violates unique constraint")
       ) {
         return { ok: false, formError: "Some groups already exist. Refresh and try again." };
@@ -167,38 +167,38 @@ export function useManageProjects({
   };
 
   const handleAddProject = async (row) => {
-    const targetSemesterId = row?.semesterId || viewSemesterId;
-    if (!targetSemesterId) {
-      setPanelError("projects", "Select a semester before adding a group.");
+    const targetPeriodId = row?.periodId || viewPeriodId;
+    if (!targetPeriodId) {
+      setPanelError("projects", "Select a period before adding a group.");
       return { ok: false };
     }
     setMessage("");
     clearPanelError("projects");
     incLoading();
     try {
-      const normalizedStudents = normalizeStudentNames(row.group_students);
-      const targetSemesterName =
-        (semesterList || []).find((s) => s.id === targetSemesterId)?.name || "";
-      const res = await adminCreateProject(
-        { ...row, group_students: normalizedStudents, semesterId: targetSemesterId }
+      const normalizedMembers = normalizeStudentNames(row.members);
+      const targetPeriodName =
+        (periodList || []).find((s) => s.id === targetPeriodId)?.name || "";
+      const res = await createProject(
+        { ...row, members: normalizedMembers, periodId: targetPeriodId }
       );
       const projectId = res?.project_id || res?.projectId;
       if (!projectId) {
         throw new Error("Could not create group. Please refresh and try again.");
       }
-      if (targetSemesterId === viewSemesterId) {
+      if (targetPeriodId === viewPeriodId) {
         applyProjectPatch({
           id: projectId,
-          semester_id: targetSemesterId,
+          period_id: targetPeriodId,
           group_no: row.group_no,
-          project_title: row.project_title,
-          group_students: normalizedStudents,
+          title: row.title,
+          members: normalizedMembers,
         });
-        await loadProjects(targetSemesterId);
+        await loadProjects(targetPeriodId);
       }
       setMessage(
-        targetSemesterName
-          ? `Group ${row.group_no} created in Semester ${targetSemesterName}`
+        targetPeriodName
+          ? `Group ${row.group_no} created in Period ${targetPeriodName}`
           : `Group ${row.group_no} created`
       );
       return { ok: true };
@@ -207,7 +207,7 @@ export function useManageProjects({
       const msgLower = msg.toLowerCase();
       if (
         msg.includes("project_group_exists") ||
-        msgLower.includes("projects_semester_group_no_key") ||
+        msgLower.includes("projects_period_group_no_key") ||
         msgLower.includes("duplicate key value violates unique constraint")
       ) {
         return {
@@ -229,23 +229,23 @@ export function useManageProjects({
   };
 
   const handleEditProject = async (row) => {
-    const targetSemesterId = row?.semesterId || viewSemesterId;
-    if (!targetSemesterId) return;
+    const targetPeriodId = row?.periodId || viewPeriodId;
+    if (!targetPeriodId) return;
     setMessage("");
     clearPanelError("projects");
     incLoading();
     try {
-      const normalizedStudents = normalizeStudentNames(row.group_students);
-      const res = await adminUpsertProject(
-        { ...row, group_students: normalizedStudents, semesterId: targetSemesterId }
+      const normalizedMembers = normalizeStudentNames(row.members);
+      const res = await upsertProject(
+        { ...row, members: normalizedMembers, periodId: targetPeriodId }
       );
-      if (targetSemesterId === viewSemesterId) {
+      if (targetPeriodId === viewPeriodId) {
         applyProjectPatch({
           id: res?.project_id || res?.projectId || undefined,
-          semester_id: targetSemesterId,
+          period_id: targetPeriodId,
           group_no: row.group_no,
-          project_title: row.project_title,
-          group_students: normalizedStudents,
+          title: row.title,
+          members: normalizedMembers,
         });
       }
       setMessage(`Group ${row.group_no} updated`);

@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useToast } from "../../components/toast/useToast";
-import { useManageSemesters } from "../hooks/useManageSemesters";
+import { useManagePeriods } from "../hooks/useManagePeriods";
 import { useManageProjects } from "../hooks/useManageProjects";
 import { useDeleteConfirm } from "../hooks/useDeleteConfirm";
 import { usePageRealtime } from "../hooks/usePageRealtime";
@@ -14,7 +14,7 @@ import ManageProjectsPanel from "../ManageProjectsPanel";
 import PageShell from "./PageShell";
 
 export default function ProjectsPage({
-  tenantId,
+  organizationId,
   selectedSemesterId,
   isDemoMode = false,
   onDirtyChange,
@@ -31,9 +31,9 @@ export default function ProjectsPage({
   const incLoading = useCallback(() => setLoadingCount((c) => c + 1), []);
   const decLoading = useCallback(() => setLoadingCount((c) => Math.max(0, c - 1)), []);
 
-  // ── Semester context ──
-  const semesters = useManageSemesters({
-    tenantId,
+  // ── Period context ──
+  const periods = useManagePeriods({
+    organizationId,
     selectedSemesterId,
     setMessage,
     incLoading,
@@ -43,18 +43,18 @@ export default function ProjectsPage({
     clearPanelError: () => {},
   });
 
-  // Load semesters on mount
+  // Load periods on mount
   useEffect(() => {
-    semesters.loadSemesters().catch(() => {});
+    periods.loadPeriods().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [semesters.loadSemesters]);
+  }, [periods.loadPeriods]);
 
   // ── Projects ──
   const projects = useManageProjects({
-    tenantId,
-    viewSemesterId: semesters.viewSemesterId,
-    viewSemesterLabel: semesters.viewSemesterLabel,
-    semesterList: semesters.semesterList,
+    organizationId,
+    viewPeriodId: periods.viewPeriodId,
+    viewPeriodLabel: periods.viewPeriodLabel,
+    periodList: periods.periodList,
     setMessage,
     incLoading,
     decLoading,
@@ -62,20 +62,20 @@ export default function ProjectsPage({
     clearPanelError,
   });
 
-  // Load projects when viewSemesterId changes
+  // Load projects when viewPeriodId changes
   useEffect(() => {
-    if (!semesters.viewSemesterId || !tenantId) return;
+    if (!periods.viewPeriodId || !organizationId) return;
     incLoading();
     projects
-      .loadProjects(semesters.viewSemesterId)
+      .loadProjects(periods.viewPeriodId)
       .catch(() => setPanelError("projects", "Could not load groups."))
       .finally(() => decLoading());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [semesters.viewSemesterId, tenantId]);
+  }, [periods.viewPeriodId, organizationId]);
 
   // ── Delete confirmation ──
   const deleteConfirm = useDeleteConfirm({
-    tenantId,
+    organizationId,
     setMessage,
     clearAllPanelErrors: clearPanelError,
     onProjectDeleted: projects.removeProject,
@@ -85,14 +85,14 @@ export default function ProjectsPage({
 
   // ── Realtime ──
   usePageRealtime({
-    tenantId,
+    organizationId,
     channelName: "projects-page-live",
     subscriptions: [
       {
         table: "projects",
         event: "INSERT",
         onPayload: (payload) => {
-          if (payload.new?.semester_id === semesters.viewSemesterId) {
+          if (payload.new?.period_id === periods.viewPeriodId) {
             projects.applyProjectPatch(payload.new);
           }
         },
@@ -101,7 +101,7 @@ export default function ProjectsPage({
         table: "projects",
         event: "UPDATE",
         onPayload: (payload) => {
-          if (payload.new?.semester_id === semesters.viewSemesterId) {
+          if (payload.new?.period_id === periods.viewPeriodId) {
             projects.applyProjectPatch(payload.new);
           }
         },
@@ -116,7 +116,7 @@ export default function ProjectsPage({
       },
     ],
     deps: [
-      semesters.viewSemesterId,
+      periods.viewPeriodId,
       projects.applyProjectPatch,
       projects.removeProject,
     ],
@@ -160,9 +160,9 @@ export default function ProjectsPage({
 
       <ManageProjectsPanel
         projects={projects.projects}
-        semesterName={semesters.viewSemesterLabel}
-        currentSemesterId={semesters.viewSemesterId}
-        semesterOptions={semesters.semesterList}
+        periodName={periods.viewPeriodLabel}
+        currentSemesterId={periods.viewPeriodId}
+        semesterOptions={periods.periodList}
         panelError={panelError}
         isDemoMode={isDemoMode}
         isMobile={false}
@@ -172,7 +172,7 @@ export default function ProjectsPage({
         onImport={projects.handleImportProjects}
         onAddGroup={projects.handleAddProject}
         onEditGroup={projects.handleEditProject}
-        onRetry={() => projects.loadProjects(semesters.viewSemesterId)}
+        onRetry={() => projects.loadProjects(periods.viewPeriodId)}
         onDeleteProject={(p, groupLabel) =>
           deleteConfirm.handleRequestDelete({
             type: "project",

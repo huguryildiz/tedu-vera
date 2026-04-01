@@ -7,7 +7,7 @@
 // Accepts a ref object whose .current holds the background-refresh
 // callback. Using a ref (instead of a plain function) keeps this
 // effect's dependency array stable — the subscription is only
-// torn down and rebuilt when tenantId changes, not on every render.
+// torn down and rebuilt when organizationId changes, not on every render.
 // ============================================================
 
 import { useEffect, useRef } from "react";
@@ -20,16 +20,16 @@ import { supabase } from "../../lib/supabaseClient";
  * (debounced 600 ms) on any change.
  *
  * @param {object} opts
- * @param {string} opts.tenantId               Current tenant ID for scoping the subscription.
+ * @param {string} opts.organizationId               Current tenant ID for scoping the subscription.
  * @param {React.MutableRefObject<Function>} opts.onRefreshRef
  *   Ref whose .current is the background-refresh callback. Using a ref
  *   keeps the subscription stable across renders.
  */
-export function useAdminRealtime({ tenantId, onRefreshRef }) {
+export function useAdminRealtime({ organizationId, onRefreshRef }) {
   const bgTimerRef = useRef(null);
 
   useEffect(() => {
-    if (!tenantId) return;
+    if (!organizationId) return;
 
     const scheduleBgRefresh = () => {
       if (bgTimerRef.current) return;
@@ -44,7 +44,7 @@ export function useAdminRealtime({ tenantId, onRefreshRef }) {
       .on("postgres_changes", { event: "*", schema: "public", table: "scores" }, scheduleBgRefresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "juror_semester_auth" }, scheduleBgRefresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, scheduleBgRefresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "semesters" }, scheduleBgRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "periods" }, scheduleBgRefresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "jurors" }, scheduleBgRefresh)
       .subscribe();
 
@@ -55,5 +55,5 @@ export function useAdminRealtime({ tenantId, onRefreshRef }) {
       }
       supabase.removeChannel(channel);
     };
-  }, [tenantId, onRefreshRef]);
+  }, [organizationId, onRefreshRef]);
 }

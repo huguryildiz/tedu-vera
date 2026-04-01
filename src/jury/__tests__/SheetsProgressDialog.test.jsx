@@ -46,7 +46,7 @@ vi.mock("../../shared/MinimalLoaderOverlay", () => ({ default: () => null }));
 // ── Imports (after mocks) ─────────────────────────────────────────────────
 
 import SheetsProgressDialog from "../SheetsProgressDialog";
-import SemesterStep from "../SemesterStep";
+import PeriodStep from "../PeriodStep";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────
 
@@ -98,13 +98,13 @@ describe("SheetsProgressDialog — juror status chip", () => {
 
 // ── SemesterStep auto-advance ─────────────────────────────────────────────
 
-describe("SemesterStep — single semester auto-advance", () => {
+describe("PeriodStep — single semester auto-advance", () => {
   qaTest("jury.semester.01", async () => {
     const semester = { id: "sem-1", semester_name: "2024-2025 Spring", is_current: true };
     const onSelect = vi.fn();
 
     render(
-      <SemesterStep semesters={[semester]} onSelect={onSelect} onBack={noop} />
+      <PeriodStep periods={[semester]} onSelect={onSelect} onBack={noop} />
     );
 
     await waitFor(() => expect(onSelect).toHaveBeenCalledWith(semester));

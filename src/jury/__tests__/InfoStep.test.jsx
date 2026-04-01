@@ -27,9 +27,9 @@ function renderInfo(overrides = {}) {
   const defaults = {
     juryName:           "",
     setJuryName:        noop,
-    juryDept:           "",
-    setJuryDept:        noop,
-    currentSemester:    null,
+    affiliation:        "",
+    setAffiliation:     noop,
+    currentPeriod:    null,
     activeProjectCount: null,
     onStart:            noop,
     onBack:             noop,
@@ -43,23 +43,23 @@ function renderInfo(overrides = {}) {
 describe("InfoStep — submit guard", () => {
   qaTest("jury.info.01", () => {
     // Both fields empty → Start disabled
-    renderInfo({ juryName: "", juryDept: "" });
+    renderInfo({ juryName: "", affiliation: "" });
     expect(screen.getByRole("button", { name: /start evaluation/i })).toBeDisabled();
   });
 
   qaTest("jury.info.02", () => {
     // Both fields filled → Start enabled
-    renderInfo({ juryName: "Alice", juryDept: "EE" });
+    renderInfo({ juryName: "Alice", affiliation: "EE" });
     expect(screen.getByRole("button", { name: /start evaluation/i })).not.toBeDisabled();
   });
 
   it("Start button is disabled when only name is filled", () => {
-    renderInfo({ juryName: "Alice", juryDept: "" });
+    renderInfo({ juryName: "Alice", affiliation: "" });
     expect(screen.getByRole("button", { name: /start evaluation/i })).toBeDisabled();
   });
 
   it("Start button is disabled when only dept is filled", () => {
-    renderInfo({ juryName: "", juryDept: "EE" });
+    renderInfo({ juryName: "", affiliation: "EE" });
     expect(screen.getByRole("button", { name: /start evaluation/i })).toBeDisabled();
   });
 });
@@ -92,9 +92,9 @@ describe("InfoStep — project count label", () => {
 describe("InfoStep — Enter key submission", () => {
   qaTest("jury.info.05", () => {
     const onStart = vi.fn();
-    renderInfo({ juryName: "Alice", juryDept: "EE", onStart });
+    renderInfo({ juryName: "Alice", affiliation: "EE", onStart });
 
-    const deptInput = screen.getByLabelText(/institution \/ department/i);
+    const deptInput = screen.getByLabelText(/affiliation/i);
     fireEvent.keyDown(deptInput, { key: "Enter" });
 
     expect(onStart).toHaveBeenCalledTimes(1);
@@ -102,9 +102,9 @@ describe("InfoStep — Enter key submission", () => {
 
   it("Enter key does NOT trigger onStart when fields are empty", () => {
     const onStart = vi.fn();
-    renderInfo({ juryName: "", juryDept: "", onStart });
+    renderInfo({ juryName: "", affiliation: "", onStart });
 
-    const deptInput = screen.getByLabelText(/institution \/ department/i);
+    const deptInput = screen.getByLabelText(/affiliation/i);
     fireEvent.keyDown(deptInput, { key: "Enter" });
 
     expect(onStart).not.toHaveBeenCalled();

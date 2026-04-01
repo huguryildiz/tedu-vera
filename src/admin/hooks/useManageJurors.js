@@ -8,13 +8,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  adminListJurors,
-  adminGetScores,
-  adminCreateJuror,
-  adminUpdateJuror,
-  adminResetJurorPin,
-  adminSetJurorEditMode,
-  adminForceCloseJurorEditMode,
+  listJurorsSummary,
+  getScores,
+  createJuror,
+  updateJuror,
+  resetJurorPin,
+  setJurorEditMode,
+  forceCloseJurorEditMode,
 } from "../../shared/api";
 import { getCellState } from "../scoreHelpers";
 
@@ -29,20 +29,20 @@ const getJurorNameById = (list, jurorId) => {
  * useManageJurors — juror CRUD, PIN reset, and edit-mode toggles.
  *
  * @param {object} opts
- * @param {string}   opts.tenantId
- * @param {string}   opts.viewSemesterId    Controlled by useManageSemesters.
- * @param {string}   opts.viewSemesterLabel Human-readable label for toast messages.
+ * @param {string}   opts.organizationId
+ * @param {string}   opts.viewPeriodId      Controlled by useManagePeriods.
+ * @param {string}   opts.viewPeriodLabel   Human-readable label for toast messages.
  * @param {Array}    opts.projects          Current project list (for total_projects count).
  * @param {Function} opts.setMessage        Toast setter from SettingsPage.
  * @param {Function} opts.setLoading        Loading setter from SettingsPage.
  * @param {Function} opts.setPanelError     (panel, msg) → sets a panel-level error.
  * @param {Function} opts.clearPanelError   (panel) → clears a panel-level error.
- * @param {Function} opts.setEvalLockError  Owned by useManageSemesters; juror edit errors go here.
+ * @param {Function} opts.setEvalLockError  Owned by useManagePeriods; juror edit errors go here.
  */
 export function useManageJurors({
-  tenantId,
-  viewSemesterId,
-  viewSemesterLabel,
+  organizationId,
+  viewPeriodId,
+  viewPeriodLabel,
   projects,
   setMessage,
   incLoading,
@@ -63,10 +63,10 @@ export function useManageJurors({
   // ── Stable refs for values used inside callbacks ─────────
   // These refs allow loadJurors / enrichJurorScores identity to remain
   // stable across renders, preventing effect re-triggers.
-  const tenantIdRef = useRef(tenantId);
-  tenantIdRef.current = tenantId;
-  const viewSemesterIdRef = useRef(viewSemesterId);
-  viewSemesterIdRef.current = viewSemesterId;
+  const organizationIdRef = useRef(organizationId);
+  organizationIdRef.current = organizationId;
+  const viewPeriodIdRef = useRef(viewPeriodId);
+  viewPeriodIdRef.current = viewPeriodId;
 
   // ── Reset pinCopied when resetPinInfo changes ─────────────
   useEffect(() => {
@@ -148,10 +148,10 @@ export function useManageJurors({
   // ── Fast load: juror list only (no score fetch) ──────────
   // Renders the juror panel immediately.  Score enrichment is deferred.
   const loadJurors = useCallback(async () => {
-    const tid = tenantIdRef.current;
-    const semId = viewSemesterIdRef.current;
-    if (!tid) return;
-    const rows = await adminListJurors(semId);
+    const oid = organizationIdRef.current;
+    const pid = viewPeriodIdRef.current;
+    if (!oid) return;
+    const rows = await listJurorsSummary(pid);
     // Map without score data — overview fields default to "not_started"
     setJurors(_buildEnrichedJurors(rows, []));
   }, []); // stable identity — reads from refs
@@ -159,24 +159,24 @@ export function useManageJurors({
   // ── Deferred enrichment: fetch scores and update overview ──
   // Called separately after initial render, or by Realtime refresh.
   const enrichJurorScores = useCallback(async () => {
-    const tid = tenantIdRef.current;
-    const semId = viewSemesterIdRef.current;
-    if (!tid) return;
+    const oid = organizationIdRef.current;
+    const pid = viewPeriodIdRef.current;
+    if (!oid) return;
     const [rows, scoreRows] = await Promise.all([
-      adminListJurors(semId),
-      adminGetScores(semId),
+      listJurorsSummary(pid),
+      getScores(pid),
     ]);
     setJurors(_buildEnrichedJurors(rows, scoreRows));
   }, []); // stable identity — reads from refs
 
   // ── Full load: list + enrich in one call (for CRUD/Realtime) ──
   const loadJurorsAndEnrich = useCallback(async () => {
-    const tid = tenantIdRef.current;
-    const semId = viewSemesterIdRef.current;
-    if (!tid) return;
+    const oid = organizationIdRef.current;
+    const pid = viewPeriodIdRef.current;
+    if (!oid) return;
     const [rows, scoreRows] = await Promise.all([
-      adminListJurors(semId),
-      adminGetScores(semId),
+      listJurorsSummary(pid),
+      getScores(pid),
     ]);
     setJurors(_buildEnrichedJurors(rows, scoreRows));
   }, []); // stable identity — reads from refs
@@ -184,7 +184,7 @@ export function useManageJurors({
   // ── scheduleJurorRefresh ──────────────────────────────────
   // Uses the full load+enrich path (Realtime changes may be score changes).
   const scheduleJurorRefresh = useCallback(() => {
-    if (!tenantIdRef.current) return;
+    if (!organizationIdRef.current) return;
     if (jurorTimerRef.current) return;
     jurorTimerRef.current = setTimeout(() => {
       jurorTimerRef.current = null;
@@ -198,17 +198,17 @@ export function useManageJurors({
     clearPanelError("jurors");
     incLoading();
     try {
-      const created = await adminCreateJuror({ ...row, semesterId: viewSemesterId });
+      const created = await createJuror({ ...row, periodId: viewPeriodId });
       if (created?.juror_id) {
         applyJurorPatch({
           juror_id: created.juror_id,
           juror_name: created.juror_name,
-          juror_inst: created.juror_inst,
+          affiliation: created.affiliation,
           locked_until: null,
           last_seen_at: null,
           is_locked: false,
           is_assigned: false,
-          scored_semesters: [],
+          scored_periods: [],
           edit_enabled: false,
           final_submitted_at: null,
           last_activity_at: null,
@@ -224,14 +224,14 @@ export function useManageJurors({
       const msgLower = msg.toLowerCase();
       if (
         msg.includes("juror_exists") ||
-        msgLower.includes("jurors_name_inst_norm_uniq") ||
+        msgLower.includes("jurors_name_affiliation_norm_uniq") ||
         msgLower.includes("duplicate key value violates unique constraint")
       ) {
         return {
           ok: false,
           fieldErrors: {
             duplicate:
-              "A juror with the same name and institution / department already exists.",
+              "A juror with the same name and affiliation already exists.",
           },
         };
       } else {
@@ -254,17 +254,17 @@ export function useManageJurors({
       let skipped = 0;
       for (const row of rows) {
         try {
-          const created = await adminCreateJuror({ ...row, semesterId: viewSemesterId });
+          const created = await createJuror({ ...row, periodId: viewPeriodId });
           if (created?.juror_id) {
             applyJurorPatch({
               juror_id: created.juror_id,
               juror_name: created.juror_name,
-              juror_inst: created.juror_inst,
+              affiliation: created.affiliation,
               locked_until: null,
               last_seen_at: null,
               is_locked: false,
               is_assigned: false,
-              scored_semesters: [],
+              scored_periods: [],
               edit_enabled: false,
               final_submitted_at: null,
               last_activity_at: null,
@@ -277,7 +277,7 @@ export function useManageJurors({
           const msgLower = msg.toLowerCase();
           if (
             msg.includes("juror_exists") ||
-            msgLower.includes("jurors_name_inst_norm_uniq") ||
+            msgLower.includes("jurors_name_affiliation_norm_uniq") ||
             msgLower.includes("duplicate key value violates unique constraint")
           ) {
             skipped += 1;
@@ -297,7 +297,7 @@ export function useManageJurors({
       const msgLower = msg.toLowerCase();
       if (
         msg.includes("juror_exists") ||
-        msgLower.includes("jurors_name_inst_norm_uniq") ||
+        msgLower.includes("jurors_name_affiliation_norm_uniq") ||
         msgLower.includes("duplicate key value violates unique constraint")
       ) {
         return { ok: false, formError: "Some jurors already exist. Refresh and try again." };
@@ -318,11 +318,11 @@ export function useManageJurors({
     clearPanelError("jurors");
     incLoading();
     try {
-      await adminUpdateJuror(row);
+      await updateJuror(row);
       applyJurorPatch({
         juror_id: row.jurorId,
         juror_name: row.juror_name,
-        juror_inst: row.juror_inst,
+        affiliation: row.affiliation,
       });
       const jurorName = String(row?.juror_name || "").trim();
       setMessage(jurorName ? `Juror ${jurorName} updated` : "Juror updated");
@@ -368,20 +368,20 @@ export function useManageJurors({
   const handleResetPin = async (juror) => {
     const jurorId = juror?.jurorId || juror?.juror_id;
     const jurorName = juror?.juror_name || juror?.juryName;
-    const jurorInst = juror?.juror_inst || juror?.juryDept;
-    if (!viewSemesterId || !jurorId) {
-      setPanelError("jurors", "Select a semester from the header before resetting a PIN.");
+    const jurorAffiliation = juror?.affiliation || juror?.affiliation;
+    if (!viewPeriodId || !jurorId) {
+      setPanelError("jurors", "Select a period from the header before resetting a PIN.");
       return { ok: false };
     }
     setMessage("");
     clearPanelError("jurors");
     incLoading();
     try {
-      const res = await adminResetJurorPin({ semesterId: viewSemesterId, jurorId });
+      const res = await resetJurorPin({ periodId: viewPeriodId, jurorId });
       setResetPinInfo({
         ...res,
         juror_name: jurorName || res?.juror_name || null,
-        juror_inst: jurorInst || res?.juror_inst || null,
+        affiliation: jurorAffiliation || res?.affiliation || null,
       });
       applyJurorPatch({
         juror_id: jurorId,
@@ -391,18 +391,18 @@ export function useManageJurors({
         last_seen_at: null,
       });
       const jurorDisplayName = String(jurorName || res?.juror_name || "").trim();
-      const semesterLabel = viewSemesterLabel || "";
+      const periodLabel = viewPeriodLabel || "";
       const toastJuror = jurorDisplayName || "juror";
       setMessage(
-        semesterLabel
-          ? `PIN reset for ${toastJuror} — ${semesterLabel}`
+        periodLabel
+          ? `PIN reset for ${toastJuror} — ${periodLabel}`
           : `PIN reset for ${toastJuror}`
       );
       return { ok: true, data: res };
     } catch (e) {
       const msg = String(e?.message || "");
-      if (msg.includes("semester_inactive")) {
-        setPanelError("jurors", "Only the semester selected in header can be edited.");
+      if (msg.includes("period_inactive")) {
+        setPanelError("jurors", "Only the period selected in header can be edited.");
       } else if (msg.includes("unauthorized")) {
         setPanelError("jurors", "Admin password is invalid. Please re-login.");
       } else {
@@ -460,7 +460,7 @@ export function useManageJurors({
 
   // ── Juror edit-mode handlers ──────────────────────────────
   const handleToggleJurorEdit = async ({ jurorId, enabled }) => {
-    if (!viewSemesterId || !jurorId) return;
+    if (!viewPeriodId || !jurorId) return;
     setMessage("");
     setEvalLockError?.("");
     if (!enabled) {
@@ -477,8 +477,8 @@ export function useManageJurors({
     });
     incLoading();
     try {
-      await adminSetJurorEditMode(
-        { semesterId: viewSemesterId, jurorId, enabled: true }
+      await setJurorEditMode(
+        { periodId: viewPeriodId, jurorId, enabled: true }
       );
       const jurorName = getJurorNameById(jurors, jurorId);
       setMessage(
@@ -498,14 +498,14 @@ export function useManageJurors({
           "Juror must have a completed submission before edit mode can be enabled."
         );
       } else if (msg.includes("no_pin")) {
-        setEvalLockError?.("Juror PIN is missing for this semester. Reset the PIN first.");
+        setEvalLockError?.("Juror PIN is missing for this period. Reset the PIN first.");
       } else if (
-        msg.includes("semester_not_found") ||
-        msg.includes("semester_inactive")
+        msg.includes("period_not_found") ||
+        msg.includes("period_inactive")
       ) {
-        setEvalLockError?.("Selected semester could not be found. Refresh and try again.");
-      } else if (msg.includes("semester_locked")) {
-        setEvalLockError?.("Evaluation lock is active. Unlock the semester first.");
+        setEvalLockError?.("Selected period could not be found. Refresh and try again.");
+      } else if (msg.includes("period_locked")) {
+        setEvalLockError?.("Evaluation lock is active. Unlock the period first.");
       } else if (msg.includes("unauthorized")) {
         setEvalLockError?.("Admin password is invalid. Please re-login.");
       } else {
@@ -519,7 +519,7 @@ export function useManageJurors({
   };
 
   const handleForceCloseJurorEdit = async ({ jurorId }) => {
-    if (!viewSemesterId || !jurorId) return;
+    if (!viewPeriodId || !jurorId) return;
     setMessage("");
     setEvalLockError?.("");
     applyJurorPatch({
@@ -532,8 +532,8 @@ export function useManageJurors({
     });
     incLoading();
     try {
-      await adminForceCloseJurorEditMode(
-        { semesterId: viewSemesterId, jurorId }
+      await forceCloseJurorEditMode(
+        { periodId: viewPeriodId, jurorId }
       );
       const jurorName = getJurorNameById(jurors, jurorId);
       setMessage(
@@ -544,12 +544,12 @@ export function useManageJurors({
       scheduleJurorRefresh();
       const msg = String(e?.message || "");
       if (msg.includes("no_pin")) {
-        setEvalLockError?.("Juror PIN is missing for this semester. Reset the PIN first.");
+        setEvalLockError?.("Juror PIN is missing for this period. Reset the PIN first.");
       } else if (
-        msg.includes("semester_not_found") ||
-        msg.includes("semester_inactive")
+        msg.includes("period_not_found") ||
+        msg.includes("period_inactive")
       ) {
-        setEvalLockError?.("Selected semester could not be found. Refresh and try again.");
+        setEvalLockError?.("Selected period could not be found. Refresh and try again.");
       } else if (msg.includes("unauthorized")) {
         setEvalLockError?.("Admin password is invalid. Please re-login.");
       } else {

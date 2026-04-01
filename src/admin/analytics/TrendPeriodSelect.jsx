@@ -1,27 +1,27 @@
-// src/admin/analytics/TrendSemesterSelect.jsx
-// Semester multi-select dropdown for trend chart.
+// src/admin/analytics/TrendPeriodSelect.jsx
+// Period multi-select dropdown for trend chart.
 // Extracted from AnalyticsTab.jsx — structural refactor only.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDownIcon, SearchIcon } from "../../shared/Icons";
 
-export default function TrendSemesterSelect({ semesters, selectedIds, onChange, loading }) {
+export default function TrendPeriodSelect({ periods, selectedIds, onChange, loading }) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const wrapRef = useRef(null);
   const allCheckboxRef = useRef(null);
-  const semesterList = useMemo(() => {
-    if (Array.isArray(semesters)) return semesters;
-    if (semesters && typeof semesters === "object") return Object.values(semesters);
+  const periodList = useMemo(() => {
+    if (Array.isArray(periods)) return periods;
+    if (periods && typeof periods === "object") return Object.values(periods);
     return [];
-  }, [semesters]);
+  }, [periods]);
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredSemesterList = useMemo(() => {
-    if (!normalizedSearch) return semesterList;
-    return semesterList.filter((s) =>
-      String(s?.semester_name || "").toLowerCase().includes(normalizedSearch)
+    if (!normalizedSearch) return periodList;
+    return periodList.filter((s) =>
+      String(s?.period_name || "").toLowerCase().includes(normalizedSearch)
     );
-  }, [semesterList, normalizedSearch]);
+  }, [periodList, normalizedSearch]);
 
   useEffect(() => {
     if (!open) setSearchTerm("");
@@ -46,7 +46,7 @@ export default function TrendSemesterSelect({ semesters, selectedIds, onChange, 
   }, [open]);
 
   const selectedSet = useMemo(() => new Set(selectedIds || []), [selectedIds]);
-  const allSelected = semesterList.length > 0 && selectedSet.size === semesterList.length;
+  const allSelected = periodList.length > 0 && selectedSet.size === periodList.length;
   const partiallySelected = selectedSet.size > 0 && !allSelected;
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function TrendSemesterSelect({ semesters, selectedIds, onChange, 
       onChange([]);
       return;
     }
-    onChange(semesterList.map((s) => s.id));
+    onChange(periodList.map((s) => s.id));
   };
 
   const toggle = (id) => {
@@ -91,7 +91,7 @@ export default function TrendSemesterSelect({ semesters, selectedIds, onChange, 
       </button>
 
       {open && (
-        <div className="trend-select-panel" role="dialog" aria-label="Trend semester selection">
+        <div className="trend-select-panel" role="dialog" aria-label="Trend period selection">
           <div className="trend-select-list">
             <div className="trend-select-search-wrap">
               <span className="trend-select-search-icon" aria-hidden="true">
@@ -106,10 +106,10 @@ export default function TrendSemesterSelect({ semesters, selectedIds, onChange, 
                 aria-label="Search periods"
               />
             </div>
-            {semesterList.length === 0 && (
+            {periodList.length === 0 && (
               <div className="trend-select-empty">No periods available.</div>
             )}
-            {semesterList.length > 0 && (
+            {periodList.length > 0 && (
               <>
                 <label className="trend-select-option trend-select-option-all">
                   <input
@@ -132,7 +132,7 @@ export default function TrendSemesterSelect({ semesters, selectedIds, onChange, 
                         onChange={() => toggle(s.id)}
                         disabled={loading}
                       />
-                      <span>{s.semester_name || "—"}</span>
+                      <span>{s.period_name || "—"}</span>
                     </label>
                   ))
                 )}

@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 vi.mock("../../shared/auth", () => ({
-  useAuth: () => ({ activeTenant: null }),
+  useAuth: () => ({ activeOrganization: null }),
 }));
 
 import ScoreDetails from "../ScoreDetails";
@@ -30,10 +30,10 @@ function createMatchMedia() {
 function renderDetails() {
   const data = [
     {
-      semester: "2026 Spring",
+      period: "2026 Spring",
       jurorId: "j1",
       juryName: "Alice",
-      juryDept: "EE",
+      affiliation: "EE",
       projectId: "p1",
       groupNo: 1,
       projectName: "Project Alpha",
@@ -50,10 +50,10 @@ function renderDetails() {
       finalSubmittedMs: new Date("2026-03-10T11:00:00.000Z").getTime(),
     },
     {
-      semester: "2026 Spring",
+      period: "2026 Spring",
       jurorId: "j2",
       juryName: "Bob",
-      juryDept: "EE",
+      affiliation: "EE",
       projectId: "p2",
       groupNo: 2,
       projectName: "Project Beta",
@@ -71,10 +71,10 @@ function renderDetails() {
       editingFlag: "editing",
     },
     {
-      semester: "2026 Spring",
+      period: "2026 Spring",
       jurorId: "j3",
       juryName: "Cara",
-      juryDept: "EE",
+      affiliation: "EE",
       projectId: "p3",
       groupNo: 3,
       projectName: "Project Gamma",
@@ -103,7 +103,7 @@ function renderDetails() {
       jurors={jurors}
       assignedJurors={jurors}
       groups={[]}
-      semesterName="2026 Spring"
+      periodName="2026 Spring"
       summaryData={[]}
       loading={false}
     />
@@ -114,28 +114,28 @@ function renderDetails2() {
   // Extended fixture with 4 rows for consistency tests
   const data = [
     {
-      semester: "2026 Spring", jurorId: "j1", juryName: "Alice", juryDept: "EE",
+      period: "2026 Spring", jurorId: "j1", juryName: "Alice", affiliation: "EE",
       projectId: "p1", groupNo: 1, projectName: "Project Alpha", students: "A Student",
       technical: 25, design: 25, delivery: 20, teamwork: 8, total: 78, comments: "good",
       updatedAt: "2026-03-10T10:00:00.000Z", updatedMs: new Date("2026-03-10T10:00:00.000Z").getTime(),
       finalSubmittedAt: "2026-03-10T11:00:00.000Z", finalSubmittedMs: new Date("2026-03-10T11:00:00.000Z").getTime(),
     },
     {
-      semester: "2026 Spring", jurorId: "j2", juryName: "Bob", juryDept: "EE",
+      period: "2026 Spring", jurorId: "j2", juryName: "Bob", affiliation: "EE",
       projectId: "p2", groupNo: 2, projectName: "Project Beta", students: "B Student",
       technical: 20, design: null, delivery: null, teamwork: null, total: null, comments: "",
       updatedAt: "2026-03-11T09:00:00.000Z", updatedMs: new Date("2026-03-11T09:00:00.000Z").getTime(),
       finalSubmittedAt: "", finalSubmittedMs: 0, editingFlag: "editing",
     },
     {
-      semester: "2026 Spring", jurorId: "j3", juryName: "Cara", juryDept: "EE",
+      period: "2026 Spring", jurorId: "j3", juryName: "Cara", affiliation: "EE",
       projectId: "p3", groupNo: 3, projectName: "Project Gamma", students: "C Student",
       technical: null, design: null, delivery: null, teamwork: null, total: null, comments: "",
       updatedAt: "2026-03-12T12:00:00.000Z", updatedMs: new Date("2026-03-12T12:00:00.000Z").getTime(),
       finalSubmittedAt: "", finalSubmittedMs: 0,
     },
     {
-      semester: "2026 Spring", jurorId: "j4", juryName: "Dave", juryDept: "CS",
+      period: "2026 Spring", jurorId: "j4", juryName: "Dave", affiliation: "CS",
       projectId: "p4", groupNo: 4, projectName: "Project Delta", students: "D Student",
       technical: null, design: null, delivery: null, teamwork: null, total: null, comments: "",
       updatedAt: "2026-03-13T08:00:00.000Z", updatedMs: new Date("2026-03-13T08:00:00.000Z").getTime(),
@@ -151,7 +151,7 @@ function renderDetails2() {
   return render(
     <ScoreDetails
       data={data} jurors={jurors} assignedJurors={jurors}
-      groups={[]} semesterName="2026 Spring" summaryData={[]} loading={false}
+      groups={[]} periodName="2026 Spring" summaryData={[]} loading={false}
     />
   );
 }

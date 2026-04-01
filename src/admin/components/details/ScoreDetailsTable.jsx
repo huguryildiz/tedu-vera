@@ -375,12 +375,12 @@ export default function ScoreDetailsTable({
                     const content = col.renderCell
                       ? col.renderCell(row)
                       : (() => {
-                          if (col.id === "semester") return row.semester ? row.semester : "—";
+                          if (col.id === "period") return row.period ? row.period : "—";
                           if (col.id === "groupNo") return row.groupNo ?? "—";
-                          if (col.id === "projectTitle") return row.projectTitle || "—";
+                          if (col.id === "title") return row.title || "—";
                           if (col.id === "students") return row.students || "—";
                           if (col.id === "juror") return row.juryName;
-                          if (col.id === "dept") return row.juryDept;
+                          if (col.id === "dept") return row.affiliation;
                           if (col.id === "status") {
                             return (
                               <StatusBadge
@@ -404,7 +404,7 @@ export default function ScoreDetailsTable({
                           return row[col.id] ?? "";
                         })();
                     const cellTitle = typeof col.cellTitle === "function" ? col.cellTitle(row) : undefined;
-                    const isTextCell = ["semester", "groupNo", "projectTitle", "students", "juror", "dept"].includes(col.id);
+                    const isTextCell = ["period", "groupNo", "title", "students", "juror", "dept"].includes(col.id);
                     return (
                       <td
                         key={`${col.id}-${row.projectId}`}

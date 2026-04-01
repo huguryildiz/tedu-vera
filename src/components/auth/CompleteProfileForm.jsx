@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ShieldCheck } from "lucide-react";
 import AlertCard from "../../shared/AlertCard";
 import TenantSearchDropdown from "./TenantSearchDropdown";
-import { listTenantsPublic } from "../../shared/api";
+import { listOrganizationsPublic } from "../../shared/api";
 
 export default function CompleteProfileForm({ user, onComplete, onSignOut }) {
   const [fullName, setFullName] = useState(user?.name || "");
@@ -23,7 +23,7 @@ export default function CompleteProfileForm({ user, onComplete, onSignOut }) {
 
   useEffect(() => {
     let active = true;
-    listTenantsPublic()
+    listOrganizationsPublic()
       .then((data) => { if (active) setTenants(data || []); })
       .catch(() => {})
       .finally(() => { if (active) setTenantsLoading(false); });

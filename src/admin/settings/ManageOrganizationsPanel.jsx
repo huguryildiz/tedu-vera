@@ -237,12 +237,12 @@ export default function ManageOrganizationsPanel({
   const [adminEditOpen, setAdminEditOpen] = useState(false);
   const [adminEditError, setAdminEditError] = useState("");
   const [adminEditSaving, setAdminEditSaving] = useState(false);
-  const [adminEditForm, setAdminEditForm] = useState({ tenantId: "", userId: "", name: "", email: "" });
+  const [adminEditForm, setAdminEditForm] = useState({ organizationId: "", userId: "", name: "", email: "" });
   const [adminCreateOpen, setAdminCreateOpen] = useState(false);
   const [adminCreateSaving, setAdminCreateSaving] = useState(false);
   const [adminCreateError, setAdminCreateError] = useState("");
   const [adminCreateForm, setAdminCreateForm] = useState({
-    tenantId: "",
+    organizationId: "",
     name: "",
     email: "",
     password: "",
@@ -270,7 +270,7 @@ export default function ManageOrganizationsPanel({
   const openAdminCreate = (org) => {
     setAdminCreateError("");
     setAdminCreateForm({
-      tenantId: org?.id || "",
+      organizationId: org?.id || "",
       name: "",
       email: "",
       password: "",
@@ -279,12 +279,12 @@ export default function ManageOrganizationsPanel({
   };
 
   const saveAdminCreate = async () => {
-    const tenantId = adminCreateForm.tenantId;
+    const organizationId = adminCreateForm.organizationId;
     const name = adminCreateForm.name.trim();
     const email = adminCreateForm.email.trim().toLowerCase();
     const password = adminCreateForm.password;
 
-    if (!tenantId) { setAdminCreateError("Organization is missing."); return; }
+    if (!organizationId) { setAdminCreateError("Organization is missing."); return; }
     if (!name) { setAdminCreateError("Name is required."); return; }
     if (!email || !email.includes("@")) { setAdminCreateError("A valid email is required."); return; }
     if (!password || password.length < 10) { setAdminCreateError("Password must be at least 10 characters."); return; }
@@ -292,7 +292,7 @@ export default function ManageOrganizationsPanel({
     setAdminCreateSaving(true);
     setAdminCreateError("");
     const result = await handleCreateTenantAdminApplication?.({
-      tenantId,
+      organizationId,
       name,
       email,
       password,
@@ -304,10 +304,10 @@ export default function ManageOrganizationsPanel({
     setAdminCreateError(result?.error || "Could not create admin application.");
   };
 
-  const openAdminEdit = (tenantId, admin) => {
+  const openAdminEdit = (organizationId, admin) => {
     setAdminEditError("");
     setAdminEditForm({
-      tenantId,
+      organizationId,
       userId: admin?.userId || "",
       name: admin?.name || "",
       email: admin?.email || "",
@@ -318,13 +318,13 @@ export default function ManageOrganizationsPanel({
   const saveAdminEdit = async () => {
     const name = adminEditForm.name.trim();
     const email = adminEditForm.email.trim().toLowerCase();
-    if (!adminEditForm.tenantId || !adminEditForm.userId) { setAdminEditError("Admin identity is missing."); return; }
+    if (!adminEditForm.organizationId || !adminEditForm.userId) { setAdminEditError("Admin identity is missing."); return; }
     if (!name) { setAdminEditError("Name is required."); return; }
     if (!email || !email.includes("@")) { setAdminEditError("A valid email is required."); return; }
     setAdminEditSaving(true);
     setAdminEditError("");
     const ok = await handleUpdateTenantAdmin?.({
-      tenantId: adminEditForm.tenantId,
+      organizationId: adminEditForm.organizationId,
       userId: adminEditForm.userId,
       name,
       email,
@@ -336,9 +336,9 @@ export default function ManageOrganizationsPanel({
 
   const confirmAdminDelete = async () => {
     if (isDemoMode) throw new Error("Demo mode: delete is disabled.");
-    if (!adminDeleteTarget?.tenantId || !adminDeleteTarget?.userId) return;
+    if (!adminDeleteTarget?.organizationId || !adminDeleteTarget?.userId) return;
     await handleDeleteTenantAdmin?.({
-      tenantId: adminDeleteTarget.tenantId,
+      organizationId: adminDeleteTarget.organizationId,
       userId: adminDeleteTarget.userId,
     });
     setAdminDeleteTarget(null);
@@ -622,7 +622,7 @@ export default function ManageOrganizationsPanel({
                               danger
                               aria-label={`Delete admin ${admin.name || admin.email}`}
                               onClick={() => setAdminDeleteTarget({
-                                tenantId: adminsDialogOrg.id,
+                                organizationId: adminsDialogOrg.id,
                                 userId: admin.userId,
                                 name: admin.name,
                                 email: admin.email,

@@ -25,7 +25,7 @@ import {
   isAllComplete,
   makeAllTouched,
 } from "../utils/scoreState";
-import { buildScoreSnapshot, isSemesterLockedError, isSessionExpiredError } from "../utils/scoreSnapshot";
+import { buildScoreSnapshot, isPeriodLockedError, isSessionExpiredError } from "../utils/scoreSnapshot";
 import { getJurySessionKeys } from "../../shared/storage";
 
 export function useJuryLifecycleHandlers({ identity, session, scoring, loading, workflow, editState, autosave, stateRef, effectiveCriteria, setSubmitError }) {
@@ -44,7 +44,7 @@ export function useJuryLifecycleHandlers({ identity, session, scoring, loading, 
   const handleRequestSubmit = useCallback(async () => {
     setSubmitError("");
     if (editState.editLockActive) {
-      setSubmitError("Evaluations are locked for this semester.");
+      setSubmitError("Evaluations are locked for this period.");
       return;
     }
     const { scores: s, projects: projs } = stateRef.current;
@@ -68,12 +68,12 @@ export function useJuryLifecycleHandlers({ identity, session, scoring, loading, 
 
     loading.setLoadingState(null);
     if (!allSaved) {
-      const { jurorId: jid, jurorSessionToken: sessionToken, semesterId: sid } = stateRef.current;
+      const { jurorId: jid, jurorSessionToken: sessionToken, periodId: sid } = stateRef.current;
       try {
         const editStateResult = await getJurorEditState(sid, jid, sessionToken);
         if (editStateResult?.lock_active) {
           editState.setEditLockActive(true);
-          setSubmitError("Evaluations are locked for this semester.");
+          setSubmitError("Evaluations are locked for this period.");
         } else {
           setSubmitError("Could not save all scores. Please check your connection and try again.");
         }
@@ -97,7 +97,7 @@ export function useJuryLifecycleHandlers({ identity, session, scoring, loading, 
       scores: s,
       comments: c,
       jurorId: jid,
-      semesterId: sid,
+      periodId: sid,
       projects: projs,
     } = stateRef.current;
 
@@ -156,9 +156,9 @@ export function useJuryLifecycleHandlers({ identity, session, scoring, loading, 
         autosave.setSessionExpired(true);
         editState.setEditLockActive(true);
         setSubmitError("Your session has expired. Please refresh and re-enter your PIN.");
-      } else if (isSemesterLockedError(e)) {
+      } else if (isPeriodLockedError(e)) {
         editState.setEditLockActive(true);
-        setSubmitError("Evaluations are locked for this semester.");
+        setSubmitError("Evaluations are locked for this period.");
       } else {
         setSubmitError("Final submission failed. Please try again.");
       }
@@ -209,10 +209,10 @@ export function useJuryLifecycleHandlers({ identity, session, scoring, loading, 
     session.setJurorSessionToken("");
     identity.setJuryName("");
     identity.setJuryDept("");
-    loading.setSemesters([]);
-    loading.setSemesterId("");
-    loading.setSemesterName("");
-    loading.setCriteriaTemplate([]);
+    loading.setPeriods([]);
+    loading.setPeriodId("");
+    loading.setPeriodName("");
+    loading.setCriteriaConfig([]);
     loading.setActiveProjectCount(null);
     loading.setProgressCheck(null);
     loading.setProjects([]);
@@ -240,7 +240,7 @@ export function useJuryLifecycleHandlers({ identity, session, scoring, loading, 
     scoring.pendingScoresRef.current      = {};
     scoring.pendingCommentsRef.current    = {};
     autosave.lastWrittenRef.current       = {};
-    loading.semesterSelectLockRef.current = false;
+    loading.periodSelectLockRef.current   = false;
     workflow.doneFiredRef.current         = false;
     workflow.submitPendingRef.current     = false;
     workflow.justLoadedRef.current        = false;

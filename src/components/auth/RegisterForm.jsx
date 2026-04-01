@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, CheckCircle2 } from "lucide-react";
-import { listTenantsPublic } from "../../shared/api";
+import { listOrganizationsPublic } from "../../shared/api";
 
 function generateTemporaryPassword() {
   const rand =
@@ -28,7 +28,7 @@ export default function RegisterForm({ onRegister, onSwitchToLogin, error: exter
 
   useEffect(() => {
     let active = true;
-    listTenantsPublic()
+    listOrganizationsPublic()
       .then((data) => {
         if (!active) return;
         setTenants(Array.isArray(data) ? data : []);

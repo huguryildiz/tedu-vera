@@ -53,13 +53,13 @@ const dragHandle = (
 function updateStudentInput(setter, index, nextValue) {
   setter((prev) => ({
     ...prev,
-    group_students: prev.group_students.map((entry, idx) => (idx === index ? nextValue : entry)),
+    members: prev.members.map((entry, idx) => (idx === index ? nextValue : entry)),
   }));
 }
 
 function blurStudentInput(setter, index) {
   setter((prev) => {
-    const current = [...prev.group_students];
+    const current = [...prev.members];
     const expanded = splitStudents(current[index]);
     if (expanded.length > 1) {
       current.splice(index, 1, ...expanded);
@@ -68,7 +68,7 @@ function blurStudentInput(setter, index) {
     }
     return {
       ...prev,
-      group_students: current,
+      members: current,
     };
   });
 }
@@ -76,30 +76,30 @@ function blurStudentInput(setter, index) {
 function addStudentInputRow(setter) {
   setter((prev) => ({
     ...prev,
-    group_students: [...prev.group_students, ""],
+    members: [...prev.members, ""],
   }));
 }
 
 function moveStudentInput(setter, fromIndex, toIndex) {
   if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
   setter((prev) => {
-    const list = [...prev.group_students];
+    const list = [...prev.members];
     if (fromIndex >= list.length || toIndex >= list.length) return prev;
     const [moved] = list.splice(fromIndex, 1);
     list.splice(toIndex, 0, moved);
     return {
       ...prev,
-      group_students: list,
+      members: list,
     };
   });
 }
 
 function removeStudentInput(setter, index) {
   setter((prev) => {
-    const next = prev.group_students.filter((_, idx) => idx !== index);
+    const next = prev.members.filter((_, idx) => idx !== index);
     return {
       ...prev,
-      group_students: next.length ? next : [""],
+      members: next.length ? next : [""],
     };
   });
 }
@@ -117,7 +117,7 @@ export default function ProjectForm({
   isDemoMode = false,
   semesterOptions,
 }) {
-  const studentIds = form.group_students.map((_, idx) => `${mode}-${idx}`);
+  const studentIds = form.members.map((_, idx) => `${mode}-${idx}`);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 8 } })
@@ -150,17 +150,17 @@ export default function ProjectForm({
                 <select
                   className={cn(
                     "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm",
-                    error && !form.semester_id && "border-destructive ring-destructive/20 ring-2"
+                    error && !form.period_id && "border-destructive ring-destructive/20 ring-2"
                   )}
-                  value={form.semester_id || ""}
+                  value={form.period_id || ""}
                   onChange={(e) => {
-                    setForm((f) => ({ ...f, semester_id: e.target.value }));
+                    setForm((f) => ({ ...f, period_id: e.target.value }));
                     if (error) onClearError();
                   }}
                 >
                   <option value="" disabled>Select period</option>
                   {(semesterOptions || []).map((s) => (
-                    <option key={s.id} value={s.id}>{s.semester_name}</option>
+                    <option key={s.id} value={s.id}>{s.period_name}</option>
                   ))}
                 </select>
                 {semesterOptions.length === 0 && (
@@ -192,9 +192,9 @@ export default function ProjectForm({
                 <label className="text-sm font-medium">Title</label>
                 <input
                   className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring"
-                  value={form.project_title}
+                  value={form.title}
                   onChange={(e) => {
-                    setForm((f) => ({ ...f, project_title: e.target.value }));
+                    setForm((f) => ({ ...f, title: e.target.value }));
                     if (error) onClearError();
                   }}
                   placeholder="Smart Traffic AI"
@@ -216,8 +216,8 @@ export default function ProjectForm({
               <label className="text-sm font-medium">Title</label>
               <input
                 className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring"
-                value={form.project_title}
-                onChange={(e) => setForm((f) => ({ ...f, project_title: e.target.value }))}
+                value={form.title}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               />
             </>
           )}
@@ -229,7 +229,7 @@ export default function ProjectForm({
           </label>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={studentIds} strategy={verticalListSortingStrategy}>
-              {form.group_students.map((student, idx) => (
+              {form.members.map((student, idx) => (
                 <SortableStudentRow key={studentIds[idx]} id={studentIds[idx]}>
                   {({ attributes, listeners, setNodeRef, style }) => (
                     <div
@@ -263,7 +263,7 @@ export default function ProjectForm({
                         className="inline-flex items-center gap-1.5 rounded-full border border-destructive/30 bg-destructive/5 px-3 py-1.5 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
                         type="button"
                         onClick={() => removeStudentInput(setForm, idx)}
-                        disabled={form.group_students.length === 1}
+                        disabled={form.members.length === 1}
                         title="Remove student"
                         aria-label={`Remove student ${idx + 1}`}
                       >

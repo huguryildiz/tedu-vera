@@ -130,8 +130,8 @@ export const jurorStatusMeta = {
 // so it can be unit-tested independently.
 //
 // @param {object[]} rawScores       - flat score rows from adminGetScores
-// @param {object[]} assignedJurors  - jurors assigned to the current semester
-// @param {number}   totalProjects   - total groups in the semester
+// @param {object[]} assignedJurors  - jurors assigned to the current period
+// @param {number}   totalProjects   - total groups in the period
 // @returns {object} counts for each dashboard metric
 export function computeOverviewMetrics(rawScores, assignedJurors, totalProjects) {
   const safeScores  = rawScores      || [];

@@ -1,34 +1,38 @@
 // src/shared/api/admin/export.js
-// ============================================================
-// Admin export / import functions (v2 — JWT-based, tenant-scoped).
-// ============================================================
+// Admin data export (PostgREST).
 
-import { callAdminRpcV2 } from "../transport";
+import { supabase } from "../core/client";
 
-/**
- * Exports the full database for a tenant as a serialized backup blob.
- *
- * @param {string} tenantId - Tenant UUID to export.
- * @returns {Promise<object>} Serialized backup data.
- */
-export async function adminFullExport(tenantId) {
-  return callAdminRpcV2("rpc_admin_export_full", {
-    p_tenant_id: tenantId,
-  });
-}
+export async function fullExport(organizationId) {
+  const [periodsRes, jurorsRes, auditRes] = await Promise.all([
+    supabase.from("periods").select("*").eq("organization_id", organizationId),
+    supabase.from("jurors").select("*").eq("organization_id", organizationId),
+    supabase.from("audit_logs").select("*").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(500),
+  ]);
 
-/**
- * Imports a full backup, replacing all data for a tenant.
- *
- * @param {object} backup   - Backup data returned by `adminFullExport`.
- * @param {string} tenantId - Tenant UUID to import into.
- * @returns {Promise<void>}
- */
-export async function adminFullImport(backup, tenantId) {
-  // Note: v2 import RPC is not yet implemented in 015_tenant_scoped_rpcs.sql.
-  // Using the v1 RPC path until v2 import is added.
-  // For Phase C closure, export is the critical path; import can be completed later.
-  return callAdminRpcV2("rpc_admin_export_full", {
-    p_tenant_id: tenantId,
-  });
+  if (periodsRes.error) throw periodsRes.error;
+  if (jurorsRes.error) throw jurorsRes.error;
+
+  const periodIds = (periodsRes.data || []).map((p) => p.id);
+
+  let projects = [];
+  let scores = [];
+  if (periodIds.length > 0) {
+    const [projRes, scoreRes] = await Promise.all([
+      supabase.from("projects").select("*").in("period_id", periodIds),
+      supabase.from("scores").select("*").in("period_id", periodIds),
+    ]);
+    if (projRes.error) throw projRes.error;
+    if (scoreRes.error) throw scoreRes.error;
+    projects = projRes.data || [];
+    scores = scoreRes.data || [];
+  }
+
+  return {
+    periods: periodsRes.data || [],
+    projects,
+    jurors: jurorsRes.data || [],
+    scores,
+    audit_logs: auditRes.data || [],
+  };
 }

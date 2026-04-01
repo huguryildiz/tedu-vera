@@ -116,7 +116,7 @@ function ProgressBar({ pct }) {
 
 // ── Expanded group row ────────────────────────────────────────
 function GroupDetailRow({ row, isOpen, onToggle }) {
-  const hasDetails = Boolean(row.projectTitle) || row.students.length > 0;
+  const hasDetails = Boolean(row.title) || row.students.length > 0;
   const scoreLabel = Number.isFinite(row.score) ? row.score : "\u2014";
 
   return (
@@ -171,10 +171,10 @@ function GroupDetailRow({ row, isOpen, onToggle }) {
         <TableRow className="bg-muted/20">
           <TableCell colSpan={5} className="pl-16 py-2">
             <div className="space-y-1 text-xs text-muted-foreground">
-              {row.projectTitle && (
+              {row.title && (
                 <div className="flex items-center gap-1.5">
                   <FileText className="size-3" />
-                  <span>{row.projectTitle}</span>
+                  <span>{row.title}</span>
                 </div>
               )}
               {row.students.length > 0 && (
@@ -247,7 +247,7 @@ export default function JurorActivityTable({ jurorStats = [], groups = [] }) {
       ...stat,
       _status: getOverallStatus(stat, groups.length),
       _pct: adminCompletionPct(stat.rows, groups.length),
-      _dept: String(stat.latestRow?.juryDept || stat.dept || "").trim(),
+      _dept: String(stat.latestRow?.affiliation || stat.dept || "").trim(),
       _lastActivity:
         stat.latestRow?.finalSubmittedAt || stat.latestRow?.updatedAt || "",
     }));
@@ -294,7 +294,7 @@ export default function JurorActivityTable({ jurorStats = [], groups = [] }) {
       const rowMap = new Map((stat.rows || []).map((r) => [r.projectId, r]));
       return groups.map((g) => {
         const row = rowMap.get(g.id);
-        const projectTitle = String(g.title ?? g.project_title ?? "").trim();
+        const title = String(g.title ?? g.title ?? "").trim();
         const studentsList = Array.isArray(g.students)
           ? g.students
           : String(g.students ?? "")
@@ -322,7 +322,7 @@ export default function JurorActivityTable({ jurorStats = [], groups = [] }) {
         return {
           id: g.id,
           label: g.label || `Group ${g.groupNo}`,
-          projectTitle,
+          title,
           students: studentsList,
           updatedAt: updatedAtRaw ? formatTs(updatedAtRaw) : "\u2014",
           state,

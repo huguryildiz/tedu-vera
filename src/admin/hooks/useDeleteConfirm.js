@@ -8,7 +8,7 @@
 // ============================================================
 
 import { useState } from "react";
-import { adminDeleteEntity, adminDeleteCounts } from "../../shared/api";
+import { deleteEntity, getDeleteCounts } from "../../shared/api";
 
 // ── Count summary (moved from DeleteConfirmDialog) ────────────
 
@@ -17,13 +17,13 @@ export function buildCountSummary(counts) {
   const parts = [];
   if (counts.active_semesters > 0) {
     if ((counts.scores || 0) === 0) {
-      parts.push(`${counts.active_semesters} semester${counts.active_semesters !== 1 ? "s" : ""} with no completed evaluations`);
+      parts.push(`${counts.active_semesters} period${counts.active_semesters !== 1 ? "s" : ""} with no completed evaluations`);
     } else {
-      parts.push(`${counts.active_semesters} semester${counts.active_semesters !== 1 ? "s" : ""} with ${counts.scores || 0} completed evaluation${counts.scores !== 1 ? "s" : ""}`);
+      parts.push(`${counts.active_semesters} period${counts.active_semesters !== 1 ? "s" : ""} with ${counts.scores || 0} completed evaluation${counts.scores !== 1 ? "s" : ""}`);
     }
   } else if (counts.juror_auths > 0) {
     if ((counts.scores || 0) === 0) {
-      parts.push(`${counts.juror_auths} semester${counts.juror_auths !== 1 ? "s" : ""} with no completed evaluations`);
+      parts.push(`${counts.juror_auths} period${counts.juror_auths !== 1 ? "s" : ""} with no completed evaluations`);
     } else {
       parts.push(`${counts.juror_auths} juror assignment${counts.juror_auths !== 1 ? "s" : ""}`);
     }
@@ -54,7 +54,7 @@ const buildDeleteToastMessage = (type, label) => {
     const jurorName = raw.replace(/^Juror\s+/i, "").trim();
     return jurorName ? `Juror ${jurorName} deleted` : "Juror deleted";
   }
-  if (type === "semester") {
+  if (type === "period") {
     const periodName = raw.replace(/^Period\s+/i, "").trim();
     return periodName ? `Period ${periodName} deleted` : "Period deleted";
   }
@@ -63,14 +63,14 @@ const buildDeleteToastMessage = (type, label) => {
 
 /**
  * Derives a typed-confirmation string for high-impact deletes.
- * Semesters require typing the exact semester name.
+ * Semesters require typing the exact period name.
  * Other entities use simple confirmation (null = no typed input).
  */
 const deriveTypedConfirmation = (target) => {
   if (!target) return null;
   const raw = String(target.name || target.label || "").trim();
-  if (target.type === "semester") {
-    return raw.replace(/^Semester\s+/i, "").trim() || null;
+  if (target.type === "period") {
+    return raw.replace(/^Period\s+/i, "").trim() || null;
   }
   if (target.type === "juror") {
     return raw.replace(/^Juror\s+/i, "").trim() || null;
@@ -85,15 +85,15 @@ const deriveTypedConfirmation = (target) => {
  * useDeleteConfirm — cross-cutting delete dialog.
  *
  * @param {object} opts
- * @param {string}   opts.tenantId
+ * @param {string}   opts.organizationId
  * @param {Function} opts.setMessage          Toast setter from SettingsPage.
  * @param {Function} opts.clearAllPanelErrors Clears all panel-level errors before delete.
- * @param {Function} opts.onSemesterDeleted   (id) → called after semester delete.
+ * @param {Function} opts.onSemesterDeleted   (id) → called after period delete.
  * @param {Function} opts.onProjectDeleted    (id) → called after project delete.
  * @param {Function} opts.onJurorDeleted      (id) → called after juror delete.
  */
 export function useDeleteConfirm({
-  tenantId,
+  organizationId,
   setMessage,
   clearAllPanelErrors,
   onSemesterDeleted,
@@ -108,9 +108,9 @@ export function useDeleteConfirm({
     const typedConfirmation = deriveTypedConfirmation(target);
     setDeleteTarget({ ...target, typedConfirmation });
     setDeleteCounts(null);
-    if (!tenantId) return;
+    if (!organizationId) return;
     try {
-      const counts = await adminDeleteCounts(target.type, target.id);
+      const counts = await getDeleteCounts(target.type, target.id);
       setDeleteCounts(counts);
     } catch (_) {
       // counts are optional — dialog still opens
@@ -123,7 +123,7 @@ export function useDeleteConfirm({
       return "Item not found. Refresh the list and try again.";
     }
     if (msg.includes("semester_locked")) {
-      return "Cannot delete: semester is locked.";
+      return "Cannot delete: period is locked.";
     }
     if (msg.includes("project_has_scored_data")) {
       return "Cannot delete: project has scored data.";
@@ -136,8 +136,8 @@ export function useDeleteConfirm({
     const { type, id, label } = deleteTarget;
     setMessage("");
     clearAllPanelErrors?.();
-    await adminDeleteEntity({ targetType: type, targetId: id });
-    if (type === "semester") {
+    await deleteEntity({ targetType: type, targetId: id });
+    if (type === "period") {
       onSemesterDeleted?.(id);
     } else if (type === "project") {
       onProjectDeleted?.(id);

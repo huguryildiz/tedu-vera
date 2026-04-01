@@ -1,6 +1,6 @@
 // src/admin/settings/JuryEntryControlPanel.jsx
 // ============================================================
-// Phase 3.5 — Admin panel section for semester-level QR access control.
+// Phase 3.5 — Admin panel section for period-level QR access control.
 //
 // Admin can:
 //   - generate (or regenerate) a jury entry token / QR
@@ -17,9 +17,9 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import QRCodeStyling from "qr-code-styling";
 import veraLogo from "../../assets/vera_logo.png";
 import {
-  adminGenerateEntryToken,
-  adminRevokeEntryToken,
-  adminGetEntryTokenStatus,
+  generateEntryToken,
+  revokeEntryToken,
+  getEntryTokenStatus,
 } from "../../shared/api";
 import { useToast } from "../../components/toast/useToast";
 import JuryRevokeConfirmDialog from "./JuryRevokeConfirmDialog";
@@ -65,8 +65,8 @@ function fmtDate(ts) {
 
 // ── Main component ────────────────────────────────────────────
 export default function JuryEntryControlPanel({
-  semesterId,
-  semesterName,
+  periodId,
+  periodName,
   isOpen,
   onToggle,
   isMobile,
@@ -115,10 +115,10 @@ export default function JuryEntryControlPanel({
 
   // ── Load status when panel opens ──────────────────────────
   const loadStatus = useCallback(async () => {
-    if (!semesterId) return;
+    if (!periodId) return;
     setError("");
     try {
-      const s = await adminGetEntryTokenStatus(semesterId);
+      const s = await adminGetEntryTokenStatus(periodId);
       setStatus(s);
     } catch (e) {
       if (e?.unauthorized) {
@@ -127,43 +127,43 @@ export default function JuryEntryControlPanel({
         setError("Could not load token status.");
       }
     }
-  }, [semesterId]);
+  }, [periodId]);
 
-  // Restore token and load status whenever semesterId changes (independent of isOpen).
+  // Restore token and load status whenever periodId changes (independent of isOpen).
   useEffect(() => {
-    if (!semesterId) {
+    if (!periodId) {
       setRawToken("");
       setShowQR(false);
       return;
     }
-    const saved = storageGetRawToken(semesterId);
+    const saved = storageGetRawToken(periodId);
     setRawToken(saved || "");
     setShowQR(!!saved);
     loadStatus();
-  }, [semesterId, loadStatus]);
+  }, [periodId, loadStatus]);
 
-  // Demo mode: show a dummy QR when the semester has an active token
+  // Demo mode: show a dummy QR when the period has an active token
   useEffect(() => {
     if (!isDemoMode || !status?.has_token || !status?.enabled) return;
     if (rawToken) return; // already showing a real/dummy token
-    setRawToken("demo-token-" + (semesterId || "").slice(0, 8));
+    setRawToken("demo-token-" + (periodId || "").slice(0, 8));
     setShowQR(true);
-  }, [isDemoMode, status, rawToken, semesterId]);
+  }, [isDemoMode, status, rawToken, periodId]);
 
   // ── Generate / Regenerate ─────────────────────────────────
   async function handleGenerate() {
-    if (!semesterId) return;
+    if (!periodId) return;
     setRegenerating(true);
     setError("");
     setRawToken("");
     setShowQR(false);
-    storageClearRawToken(semesterId);
+    storageClearRawToken(periodId);
     try {
-      const token = await adminGenerateEntryToken(semesterId);
+      const token = await generateEntryToken(periodId);
       if (token) {
         setRawToken(token);
         setShowQR(true);
-        storageSetRawToken(semesterId, token);
+        storageSetRawToken(periodId, token);
         await loadStatus();
       } else {
         setError("Token generation failed — please try again.");
@@ -181,14 +181,14 @@ export default function JuryEntryControlPanel({
 
   // ── Revoke ────────────────────────────────────────────────
   async function handleRevoke() {
-    if (!semesterId) return;
+    if (!periodId) return;
     setRevoking(true);
     setError("");
     try {
-      const result = await adminRevokeEntryToken(semesterId);
+      const result = await revokeEntryToken(periodId);
       setRawToken("");
       setShowQR(false);
-      storageClearRawToken(semesterId);
+      storageClearRawToken(periodId);
       await loadStatus();
       const lockMsg = result.active_juror_count > 0
         ? `Jury access revoked. ${result.active_juror_count} active session(s) locked.`
@@ -238,7 +238,7 @@ export default function JuryEntryControlPanel({
   function handleDownload() {
     if (!qrInstance.current) return;
     qrInstance.current.download({
-      name: `jury-qr-${semesterName || semesterId || "access"}`,
+      name: `jury-qr-${periodName || periodId || "access"}`,
       extension: "png",
     });
   }
@@ -268,24 +268,24 @@ export default function JuryEntryControlPanel({
       {(!isMobile || isOpen) && (
         <div className="flex flex-col gap-3 max-w-full min-w-0">
           <div className="text-xs text-muted-foreground">
-            Generate a semester-level QR code that jurors must scan to begin the
+            Generate a period-level QR code that jurors must scan to begin the
             evaluation flow. Show the QR on the coordinator&apos;s phone on poster day.
           </div>
 
-          {!semesterId && (
+          {!periodId && (
             <div className="text-[13px] text-slate-400 py-2.5">
-              Select a semester to manage its jury access token.
+              Select a period to manage its jury access token.
             </div>
           )}
 
-          {semesterId && (
+          {periodId && (
             <>
               {/* Status row */}
               {status && (
                 <div className="flex flex-col gap-1.5 mb-4 px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-[10px] text-[13px]">
                   <div className="flex items-baseline gap-2">
                     <span className="text-slate-400 min-w-[110px] font-medium">Period:</span>
-                    <span>{semesterName || semesterId}</span>
+                    <span>{periodName || periodId}</span>
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-slate-400 min-w-[110px] font-medium">Status:</span>

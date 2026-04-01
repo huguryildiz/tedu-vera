@@ -17,13 +17,13 @@
 //     to skip redundant RPC calls (deduplication).
 //
 // writeGroup(pid):
-//   - Reads jurorId, sessionToken, semesterId, current from stateRef.current
+//   - Reads jurorId, sessionToken, periodId, current from stateRef.current
 //     (always fresh — avoids stale closure problems in async callbacks).
 //   - Reads scores and comment from pendingScoresRef / pendingCommentsRef
 //     (always fresh — updated synchronously in onChange handlers).
 //   - Builds a normalized snapshot and compares its key to lastWrittenRef.
 //   - Skips the RPC if data is unchanged or truly untouched.
-//   - On semester lock error: sets editLockActive = true.
+//   - On period lock error: sets editLockActive = true.
 //   - On session expired error: sets sessionExpired = true and
 //     editLockActive = true (prevents further writes until re-auth).
 //   - Returns true on success or skip, false on error.
@@ -49,7 +49,7 @@ import { getActiveCriteria } from "../../shared/criteriaHelpers";
 import { upsertScore } from "../../shared/api";
 import {
   buildScoreSnapshot,
-  isSemesterLockedError,
+  isPeriodLockedError,
   isSessionExpiredError,
 } from "../utils/scoreSnapshot";
 import { isAllFilled } from "../utils/scoreState";
@@ -71,7 +71,7 @@ export function useJuryAutosave({
   // Reads from refs (never from React state) for stale-closure safety.
   const writeGroup = useCallback(
     async (pid) => {
-      const { jurorId: jid, jurorSessionToken: sessionToken, semesterId: sid } =
+      const { jurorId: jid, jurorSessionToken: sessionToken, periodId: sid } =
         stateRef.current;
       if (!jid || !sessionToken || !sid || !pid) return false;
       if (editLockActive) return false;
@@ -79,8 +79,8 @@ export function useJuryAutosave({
       const s = pendingScoresRef.current;
       const c = pendingCommentsRef.current;
       const currentComment = String(c[pid] || "");
-      const { criteriaTemplate } = stateRef.current;
-      const effectiveCriteria = getActiveCriteria(criteriaTemplate);
+      const { criteriaConfig } = stateRef.current;
+      const effectiveCriteria = getActiveCriteria(criteriaConfig);
       const snapshot = buildScoreSnapshot(s[pid], currentComment, effectiveCriteria);
 
       if (!snapshot.hasAnyScores && !snapshot.hasComment && !lastWrittenRef.current[pid]) {
@@ -106,11 +106,11 @@ export function useJuryAutosave({
       } catch (e) {
         if (isSessionExpiredError(e)) {
           // Session token has expired or is invalid. Block further writes
-          // (same mechanism as semester lock) and raise the distinct state
+          // (same mechanism as period lock) and raise the distinct state
           // so the UI can show a targeted "session expired" message.
           setSessionExpired(true);
           setEditLockActive(true);
-        } else if (isSemesterLockedError(e)) {
+        } else if (isPeriodLockedError(e)) {
           setEditLockActive(true);
         }
         setSaveStatus("error");

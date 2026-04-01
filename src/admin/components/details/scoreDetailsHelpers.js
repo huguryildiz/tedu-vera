@@ -31,11 +31,11 @@ export function buildSortLabel(columns, sortKey, sortDir) {
   const colLabel = col?.label || "Column";
   const isDateSort = sortKey === "updatedMs" || sortKey === "finalSubmittedMs";
   const isTextSort = [
-    "semester",
-    "projectTitle",
+    "period",
+    "title",
     "students",
     "juryName",
-    "juryDept",
+    "affiliation",
     "effectiveStatus",
     "jurorStatus",
   ].includes(sortKey);

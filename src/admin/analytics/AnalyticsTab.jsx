@@ -6,7 +6,7 @@ import * as XLSX from "xlsx-js-style";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDashboardTs } from "../utils";
 import { buildExportFilename } from "../xlsx/exportXLSX";
-import { buildMudekLookup, getActiveCriteria } from "../../shared/criteriaHelpers";
+import { buildOutcomeLookup, getActiveCriteria } from "../../shared/criteriaHelpers";
 import { useAuth } from "../../shared/auth";
 import { AnalyticsHeader } from "../components/analytics/AnalyticsHeader";
 import {
@@ -21,7 +21,7 @@ import {
 
 import { getCriterionColor, computeOverallAvg } from "./analyticsDatasets";
 import { buildAnalyticsWorkbook } from "./analyticsExport";
-import TrendSemesterSelect from "./TrendSemesterSelect";
+import TrendPeriodSelect from "./TrendPeriodSelect";
 import { DashboardSkeleton, DashboardError, DashboardEmpty } from "./AnalyticsDashboardStates";
 import AnalyticsPrintReport from "./AnalyticsPrintReport";
 
@@ -32,25 +32,25 @@ export default function AnalyticsTab({
   lastRefresh,
   loading,
   error,
-  semesterName = "",
+  periodName = "",
   semesterOptions = [],
   trendSemesterIds = [],
   onTrendSelectionChange = () => {},
   trendData = [],
   trendLoading = false,
   trendError = "",
-  mudekTemplate,
-  criteriaTemplate,
+  outcomeConfig,
+  criteriaConfig,
 }) {
-  const { activeTenant } = useAuth();
-  const tenantCode = activeTenant?.code || "";
-  const mudekLookup = useMemo(() => buildMudekLookup(mudekTemplate), [mudekTemplate]); // eslint-disable-line react-hooks/exhaustive-deps
-  const activeCriteria = useMemo(() => getActiveCriteria(criteriaTemplate), [criteriaTemplate]); // eslint-disable-line react-hooks/exhaustive-deps
+  const { activeOrganization } = useAuth();
+  const tenantCode = activeOrganization?.code || "";
+  const outcomeLookup = useMemo(() => buildOutcomeLookup(outcomeConfig), [outcomeConfig]); // eslint-disable-line react-hooks/exhaustive-deps
+  const activeCriteria = useMemo(() => getActiveCriteria(criteriaConfig), [criteriaConfig]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const FALLBACK_COLORS = ["#f59e0b", "#22c55e", "#3b82f6", "#ef4444", "#a855f7", "#06b6d4"];
   const activeOutcomes = useMemo(() => {
-    if (!Array.isArray(criteriaTemplate) || criteriaTemplate.length === 0) return [];
-    return criteriaTemplate.map((c, i) => ({
+    if (!Array.isArray(criteriaConfig) || criteriaConfig.length === 0) return [];
+    return criteriaConfig.map((c, i) => ({
       key: c.key,
       label: c.shortLabel || c.label,
       max: c.max,
@@ -59,7 +59,7 @@ export default function AnalyticsTab({
       mudek_outcomes: c.mudek_outcomes || [],
       color: getCriterionColor(c.key, FALLBACK_COLORS[i % FALLBACK_COLORS.length]),
     }));
-  }, [criteriaTemplate]);
+  }, [criteriaConfig]);
 
   const activeTrendLegend = useMemo(() =>
     activeOutcomes.map((o) => ({
@@ -80,7 +80,7 @@ export default function AnalyticsTab({
 
     let done = false;
     const originalTitle = document.title;
-    document.title = buildExportFilename("report", semesterName, "pdf", tenantCode);
+    document.title = buildExportFilename("report", periodName, "pdf", tenantCode);
 
     const restore = () => {
       if (done) return;
@@ -135,9 +135,9 @@ export default function AnalyticsTab({
         semesterOptions,
         trendSemesterIds,
         activeOutcomes,
-        mudekLookup,
+        outcomeLookup,
       });
-      XLSX.writeFile(wb, buildExportFilename("analytics", semesterName, "xlsx", tenantCode));
+      XLSX.writeFile(wb, buildExportFilename("analytics", periodName, "xlsx", tenantCode));
     } finally {
       setExportingExcel(false);
     }
@@ -182,7 +182,7 @@ export default function AnalyticsTab({
     });
     return `${datePart} · ${timePart}`;
   })();
-  const semesterLabel = semesterName ? `${semesterName} Period` : "Period";
+  const semesterLabel = periodName ? `${periodName} Period` : "Period";
   const totalJurors = overviewMetrics?.totalJurors ?? 0;
   const completedJurors = overviewMetrics?.completedJurors ?? 0;
   const totalGroups = dashboardStats?.length ?? 0;
@@ -214,7 +214,7 @@ export default function AnalyticsTab({
     const rows = (dashboardStats || []).map((p) => ({
       groupNo: Number.isFinite(p.groupNo) ? p.groupNo : null,
       groupLabel: p.name || (Number.isFinite(p.groupNo) ? `Group ${p.groupNo}` : "Group —"),
-      projectTitle: String(p.projectTitle || "").trim(),
+      title: String(p.title || "").trim(),
       students: normalizeStudents(p.students),
     }));
     return rows.sort((a, b) => {
@@ -238,7 +238,7 @@ export default function AnalyticsTab({
       }
       codes.forEach((code, idx) => {
         let text = "—";
-        const entry = mudekLookup?.[code];
+        const entry = outcomeLookup?.[code];
         if (entry) {
           text = entry.desc_en || entry.desc_tr || "—";
         }
@@ -253,7 +253,7 @@ export default function AnalyticsTab({
       });
     });
     return rows;
-  }, [activeOutcomes, mudekLookup]);
+  }, [activeOutcomes, outcomeLookup]);
 
   if (loading) {
     return (
@@ -296,7 +296,7 @@ export default function AnalyticsTab({
           exportingExcel={exportingExcel}
           onExportPdf={handleExportPdf}
           onExportExcel={exportExcelAll}
-          mudekLookup={mudekLookup}
+          outcomeLookup={outcomeLookup}
           criteria={activeCriteria}
         />
 
@@ -335,19 +335,19 @@ export default function AnalyticsTab({
             <CardContent>
               <OutcomeTrendChart
                 data={trendData}
-                semesters={semesterOptions}
+                periods={semesterOptions}
                 selectedIds={trendSemesterIds}
                 loading={trendLoading}
                 error={trendError}
                 headerRight={(
-                  <TrendSemesterSelect
-                    semesters={semesterOptions}
+                  <TrendPeriodSelect
+                    periods={semesterOptions}
                     selectedIds={trendSemesterIds}
                     onChange={onTrendSelectionChange}
                     loading={trendLoading}
                   />
                 )}
-                hint={trendTooMany ? "Many semesters selected — scroll horizontally to compare." : ""}
+                hint={trendTooMany ? "Many periods selected — scroll horizontally to compare." : ""}
                 outcomes={activeOutcomes}
               />
             </CardContent>

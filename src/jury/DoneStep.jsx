@@ -111,10 +111,10 @@ export default function DoneStep({
                   ? getPartialTotal(rowEntry)
                   : "—";
             const timestamp = groupTimestamp(p);
-            const studentList = p.group_students
-              ? p.group_students.split(",").map((s) => s.trim()).filter(Boolean)
+            const studentList = p.members
+              ? p.members.split(",").map((s) => s.trim()).filter(Boolean)
               : [];
-            const hasDetails = Boolean(p.project_title) || studentList.length > 0;
+            const hasDetails = Boolean(p.title) || studentList.length > 0;
 
             return (
               <div key={pid} className="flex flex-col border-b border-border/40 last:border-b-0">
@@ -154,9 +154,9 @@ export default function DoneStep({
                 {hasDetails && (
                   <div id={panelId} className={cn("grid transition-[grid-template-rows,opacity] duration-200", isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
                     <div className="overflow-hidden mt-0.5 grid gap-1">
-                      {p.project_title && (
+                      {p.title && (
                         <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                          <ProjectTitle text={p.project_title} />
+                          <ProjectTitle text={p.title} />
                         </div>
                       )}
                       <div className="flex items-start gap-1.5 text-xs text-muted-foreground">

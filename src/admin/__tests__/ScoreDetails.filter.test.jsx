@@ -7,7 +7,7 @@ import { beforeAll, beforeEach, describe, expect, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 vi.mock("../../shared/auth", () => ({
-  useAuth: () => ({ activeTenant: null }),
+  useAuth: () => ({ activeOrganization: null }),
 }));
 
 import ScoreDetails from "../ScoreDetails";
@@ -39,10 +39,10 @@ function createMatchMedia() {
 function makeMultiGroupData() {
   return [
     {
-      semester: "2026 Spring",
+      period: "2026 Spring",
       jurorId: "j1",
       juryName: "Alice",
-      juryDept: "EE",
+      affiliation: "EE",
       projectId: "p1",
       groupNo: 1,
       projectName: "Project Alpha",
@@ -59,10 +59,10 @@ function makeMultiGroupData() {
       finalSubmittedMs: new Date("2026-03-10T11:00:00.000Z").getTime(),
     },
     {
-      semester: "2026 Spring",
+      period: "2026 Spring",
       jurorId: "j2",
       juryName: "Bob",
-      juryDept: "EE",
+      affiliation: "EE",
       projectId: "p2",
       groupNo: 2,
       projectName: "Project Beta",
@@ -79,10 +79,10 @@ function makeMultiGroupData() {
       finalSubmittedMs: 0,
     },
     {
-      semester: "2026 Spring",
+      period: "2026 Spring",
       jurorId: "j3",
       juryName: "Cara",
-      juryDept: "EE",
+      affiliation: "EE",
       projectId: "p3",
       groupNo: 3,
       projectName: "Project Gamma",
@@ -118,7 +118,7 @@ function renderMultiGroupDetails() {
       jurors={jurors}
       assignedJurors={jurors}
       groups={[]}
-      semesterName="2026 Spring"
+      periodName="2026 Spring"
       summaryData={[]}
       loading={false}
     />

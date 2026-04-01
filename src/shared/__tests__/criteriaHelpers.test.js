@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { criterionToTemplate } from "../criteriaHelpers";
+import { criterionToConfig as criterionToTemplate } from "../criteriaHelpers";
 
 describe("criterionToTemplate rubric max-bounding", () => {
   it("clamps rubric band min/max to criterion max before save", () => {

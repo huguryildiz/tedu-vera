@@ -2965,6 +2965,28 @@
     "severity": "normal"
   },
   {
+    "id": "phaseA.sql.migration.001_schema",
+    "module": "Phase A / Safety",
+    "area": "SQL \u2014 Migration Idempotency",
+    "story": "PostgREST schema migration uses idempotent patterns",
+    "scenario": "001_schema.sql uses IF NOT EXISTS and CREATE OR REPLACE",
+    "whyItMatters": "Migration files must be safe to re-run.",
+    "risk": "Non-idempotent migration would fail on re-apply.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
+    "id": "phaseA.sql.migration.002_rls_policies",
+    "module": "Phase A / Safety",
+    "area": "SQL \u2014 Migration Idempotency",
+    "story": "RLS policies migration uses idempotent patterns",
+    "scenario": "002_rls_policies.sql uses IF EXISTS for drops and CREATE OR REPLACE",
+    "whyItMatters": "Migration files must be safe to re-run.",
+    "risk": "Non-idempotent migration would fail on re-apply.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
     "id": "phaseA.sql.migration.002_triggers",
     "module": "Phase C / Safety",
     "area": "SQL \u2014 Migration Idempotency",
@@ -2987,11 +3009,33 @@
     "severity": "normal"
   },
   {
+    "id": "phaseA.sql.migration.003_jury_rpcs",
+    "module": "Phase A / Safety",
+    "area": "SQL \u2014 Migration Idempotency",
+    "story": "PostgREST jury RPCs migration uses idempotent patterns",
+    "scenario": "003_jury_rpcs.sql uses CREATE OR REPLACE for all functions",
+    "whyItMatters": "Migration files must be safe to re-run.",
+    "risk": "Non-idempotent migration would fail on re-apply.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
     "id": "phaseA.sql.migration.004_jury_session_rpcs",
     "module": "Phase C / Safety",
     "area": "SQL \u2014 Migration Idempotency",
     "story": "jury session RPCs migration uses idempotent patterns",
     "scenario": "004_jury_session_rpcs.sql uses CREATE OR REPLACE for all functions",
+    "whyItMatters": "Migration files must be safe to re-run.",
+    "risk": "Non-idempotent migration would fail on re-apply.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
+    "id": "phaseA.sql.migration.004_triggers",
+    "module": "Phase A / Safety",
+    "area": "SQL \u2014 Migration Idempotency",
+    "story": "PostgREST triggers migration uses idempotent patterns",
+    "scenario": "004_triggers.sql uses IF EXISTS for drops and CREATE OR REPLACE",
     "whyItMatters": "Migration files must be safe to re-run.",
     "risk": "Non-idempotent migration would fail on re-apply.",
     "coverageStrength": "Medium",
@@ -3336,6 +3380,171 @@
     "whyItMatters": "Projects with no completed evaluations have no average and should not skew rankings.",
     "risk": "Including null values could break the ranking sort or display.",
     "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "period.sort.01",
+    "module": "Admin / Periods",
+    "area": "Period Sort Order",
+    "story": "periods render newest first by poster_date descending",
+    "scenario": "two periods with different dates render with newer date first",
+    "whyItMatters": "Admins need most recent period at top of list for quick access.",
+    "risk": "Wrong sort would show outdated periods first, causing confusion.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "period.sort.02",
+    "module": "Admin / Periods",
+    "area": "Period Sort Order",
+    "story": "same-year periods sort by poster_date within the year",
+    "scenario": "Spring and Fall of same year: Fall renders before Spring",
+    "whyItMatters": "Intra-year ordering must follow chronological sequence.",
+    "risk": "Wrong intra-year order would confuse semester navigation.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "period.sort.03",
+    "module": "Admin / Periods",
+    "area": "Period Sort Order",
+    "story": "four periods within same year sort correctly descending",
+    "scenario": "Winter < Spring < Summer < Fall — renders Fall first",
+    "whyItMatters": "All four season slots must respect poster_date ordering.",
+    "risk": "Misordered periods could select wrong default or confuse CRUD operations.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "period.sort.04",
+    "module": "Admin / Periods",
+    "area": "Period Sort Order",
+    "story": "period with no poster_date sorts to end",
+    "scenario": "Pilot period with empty poster_date renders after dated period",
+    "whyItMatters": "Undated periods (pilots, drafts) should not push dated periods down.",
+    "risk": "Null poster_date could sort to top and hide current period.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "period.active.01",
+    "module": "Admin / Periods",
+    "area": "Active Period",
+    "story": "current period badge is shown on the active period",
+    "scenario": "is_current=true period renders with active badge",
+    "whyItMatters": "Admins must be able to identify the live evaluation period at a glance.",
+    "risk": "Missing badge causes confusion about which period is active.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "period.active.02",
+    "module": "Admin / Periods",
+    "area": "Active Period",
+    "story": "inactive period does not show current badge",
+    "scenario": "is_current=false period has no active badge",
+    "whyItMatters": "Badge must only appear on the active period to avoid misleading state.",
+    "risk": "Stale badge on an old period would confuse admins.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "period.active.03",
+    "module": "Admin / Periods",
+    "area": "Active Period",
+    "story": "set-active button triggers onSetCurrent callback",
+    "scenario": "clicking set-active button calls onSetCurrent with period id",
+    "whyItMatters": "Promoting a period to current must invoke the correct callback.",
+    "risk": "Broken callback would leave the active period unchanged.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "period.crud.01",
+    "module": "Admin / Periods",
+    "area": "Period CRUD",
+    "story": "create period form submits with correct data",
+    "scenario": "form submission calls onCreateSemester with name and date",
+    "whyItMatters": "Period creation is the primary admin workflow for starting a new evaluation cycle.",
+    "risk": "Wrong payload would create malformed period records.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "period.crud.02",
+    "module": "Admin / Periods",
+    "area": "Period CRUD",
+    "story": "edit period inline form pre-fills existing values",
+    "scenario": "editing a period pre-fills name and date fields",
+    "whyItMatters": "Pre-filled values prevent accidental data loss during edits.",
+    "risk": "Empty edit form would overwrite existing data with blanks.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "period.crud.03",
+    "module": "Admin / Periods",
+    "area": "Period CRUD",
+    "story": "update period form submits with changed data",
+    "scenario": "saving edited values calls onUpdateSemester with updated payload",
+    "whyItMatters": "Period updates must persist changes to the correct record.",
+    "risk": "Wrong ID or payload would silently corrupt period data.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "period.crud.04",
+    "module": "Admin / Periods",
+    "area": "Period CRUD",
+    "story": "delete period triggers onDeleteSemester callback",
+    "scenario": "delete button press calls onDeleteSemester with period id",
+    "whyItMatters": "Delete must invoke the correct handler to cascade to downstream cleanup.",
+    "risk": "Wrong id or missing callback leaves orphaned data.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "period.crud.05",
+    "module": "Admin / Periods",
+    "area": "Period CRUD",
+    "story": "empty period list renders add-period prompt",
+    "scenario": "no periods → shows empty state message",
+    "whyItMatters": "Empty state guides admin to create first period.",
+    "risk": "Missing empty state would show a blank panel with no affordance.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
+    "id": "period.lock.01",
+    "module": "Admin / Periods",
+    "area": "Eval Lock",
+    "story": "eval lock toggle calls setEvalLock with correct args",
+    "scenario": "lock toggle button triggers setEvalLock(periodId, isLocked)",
+    "whyItMatters": "Locking freezes juror edits; wrong args would lock the wrong period.",
+    "risk": "Wrong period locked/unlocked would allow unintended score edits.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "period.realtime.01",
+    "module": "Admin / Periods",
+    "area": "Realtime",
+    "story": "period list updates when realtime event fires",
+    "scenario": "Supabase INSERT channel event triggers period list refresh",
+    "whyItMatters": "Admins on multiple devices must see period changes without refresh.",
+    "risk": "Stale list after concurrent period creation would cause duplicate create attempts.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
+    "id": "period.template.01",
+    "module": "Admin / Periods",
+    "area": "Period Template",
+    "story": "new period inherits criteria config from most recent period",
+    "scenario": "create period with template copies criteria_config from latest period",
+    "whyItMatters": "Copying criteria from previous period saves manual setup each cycle.",
+    "risk": "Missing template copy forces admins to re-enter all criteria manually.",
+    "coverageStrength": "Medium",
     "severity": "normal"
   }
 ]

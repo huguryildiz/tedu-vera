@@ -38,14 +38,14 @@ const PAGE_SIZE = 15;
 /**
  * @param {object}   props
  * @param {object[]} props.projects        Sorted project list
- * @param {string}   props.semesterName    Current semester display name
+ * @param {string}   props.periodName    Current period display name
  * @param {boolean}  props.isDemoMode
  * @param {function} props.onEdit          (project) => void
  * @param {function} props.onDelete        (project, groupLabel) => void
  */
 export default function ProjectsTable({
   projects = [],
-  semesterName,
+  periodName,
   isDemoMode,
   onEdit,
   onDelete,
@@ -67,8 +67,8 @@ export default function ProjectsTable({
   const enriched = useMemo(
     () =>
       projects.map((p) => {
-        const title = p.project_title || p.name || "";
-        const studentsRaw = p.group_students || p.students || "";
+        const title = p.title || p.name || "";
+        const studentsRaw = p.members || p.students || "";
         const studentsList = Array.isArray(studentsRaw)
           ? studentsRaw
           : String(studentsRaw)
@@ -95,10 +95,10 @@ export default function ProjectsTable({
     if (!normalizedSearch) return enriched;
     return enriched.filter((p) => {
       const tsText = buildTimestampSearchText(p._lastActivity);
-      const haystack = `group ${p._groupNo} ${p._groupNo} ${p._title} ${p._studentsText} ${semesterName || ""} ${tsText}`.toLowerCase();
+      const haystack = `group ${p._groupNo} ${p._groupNo} ${p._title} ${p._studentsText} ${periodName || ""} ${tsText}`.toLowerCase();
       return haystack.includes(normalizedSearch);
     });
-  }, [enriched, normalizedSearch, semesterName]);
+  }, [enriched, normalizedSearch, periodName]);
 
   // Sort
   const sorted = useMemo(() => {

@@ -1,10 +1,10 @@
 // src/admin/pages/SemestersPage.jsx
-// Standalone page for semester management including criteria and MÜDEK templates.
+// Standalone page for period management including criteria and MÜDEK templates.
 // Initializes its own domain hooks directly (bypasses useSettingsCrud).
 
 import { useCallback, useEffect, useState } from "react";
 import { useToast } from "../../components/toast/useToast";
-import { useManageSemesters } from "../hooks/useManageSemesters";
+import { useManagePeriods } from "../hooks/useManagePeriods";
 import { useManageJurors } from "../hooks/useManageJurors";
 import { useDeleteConfirm, buildCountSummary } from "../hooks/useDeleteConfirm";
 import { usePageRealtime } from "../hooks/usePageRealtime";
@@ -13,7 +13,7 @@ import SemesterSettingsPanel from "../ManageSemesterPanel";
 import PageShell from "./PageShell";
 
 export default function SemestersPage({
-  tenantId,
+  organizationId,
   selectedSemesterId,
   isDemoMode = false,
   onDirtyChange,
@@ -31,8 +31,8 @@ export default function SemestersPage({
   const decLoading = useCallback(() => setLoadingCount((c) => Math.max(0, c - 1)), []);
 
   // ── Semesters ──
-  const semesters = useManageSemesters({
-    tenantId,
+  const periods = useManagePeriods({
+    organizationId,
     selectedSemesterId,
     setMessage,
     incLoading,
@@ -42,103 +42,103 @@ export default function SemestersPage({
     clearPanelError,
   });
 
-  // Load semesters on mount
+  // Load periods on mount
   useEffect(() => {
     incLoading();
-    semesters
-      .loadSemesters()
+    periods
+      .loadPeriods()
       .catch(() =>
-        setPanelError("semester", "Could not load semesters. Try refreshing or check your connection.")
+        setPanelError("period", "Could not load periods. Try refreshing or check your connection.")
       )
       .finally(() => decLoading());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [semesters.loadSemesters]);
+  }, [periods.loadPeriods]);
 
   // ── Jurors (lightweight — only for isLockedFn check) ──
   const jurorsHook = useManageJurors({
-    tenantId,
-    viewSemesterId: semesters.viewSemesterId,
-    viewSemesterLabel: semesters.viewSemesterLabel,
+    organizationId,
+    viewPeriodId: periods.viewPeriodId,
+    viewPeriodLabel: periods.viewPeriodLabel,
     projects: [],
     setMessage: () => {},
     incLoading: () => {},
     decLoading: () => {},
     setPanelError: () => {},
     clearPanelError: () => {},
-    setEvalLockError: semesters.setEvalLockError,
+    setEvalLockError: periods.setEvalLockError,
   });
 
-  // Load jurors when viewSemesterId changes (for isLockedFn)
+  // Load jurors when viewPeriodId changes (for isLockedFn)
   useEffect(() => {
-    if (!semesters.viewSemesterId || !tenantId) return;
+    if (!periods.viewPeriodId || !organizationId) return;
     jurorsHook.loadJurors().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [semesters.viewSemesterId, tenantId]);
+  }, [periods.viewPeriodId, organizationId]);
 
-  // isLockedFn: true when semester is eval-locked or has submitted scores
+  // isLockedFn: true when period is eval-locked or has submitted scores
   const isLockedFn = useCallback(
-    (semesterId) => {
-      const semester = semesters.semesterList.find((s) => s.id === semesterId);
-      if (semester?.is_locked) return true;
+    (periodId) => {
+      const period = periods.periodList.find((s) => s.id === periodId);
+      if (period?.is_locked) return true;
       return (
-        semesterId === semesters.viewSemesterId &&
+        periodId === periods.viewPeriodId &&
         (jurorsHook.jurors || []).some((j) => j.finalSubmitted)
       );
     },
-    [semesters.semesterList, semesters.viewSemesterId, jurorsHook.jurors],
+    [periods.periodList, periods.viewPeriodId, jurorsHook.jurors],
   );
 
   // ── Delete confirmation ──
   const deleteConfirm = useDeleteConfirm({
-    tenantId,
+    organizationId,
     setMessage,
     clearAllPanelErrors: clearPanelError,
-    onSemesterDeleted: semesters.removeSemester,
+    onSemesterDeleted: periods.removePeriod,
     onProjectDeleted: () => {},
     onJurorDeleted: () => {},
   });
 
   // ── Realtime ──
   usePageRealtime({
-    tenantId,
-    channelName: "semesters-page-live",
+    organizationId,
+    channelName: "periods-page-live",
     subscriptions: [
       {
-        table: "semesters",
+        table: "periods",
         event: "INSERT",
         onPayload: (payload) => {
-          if (payload.new?.id && payload.new?.tenant_id === tenantId) {
-            semesters.applySemesterPatch(payload.new);
+          if (payload.new?.id && payload.new?.organization_id === organizationId) {
+            periods.applyPeriodPatch(payload.new);
           }
         },
       },
       {
-        table: "semesters",
+        table: "periods",
         event: "UPDATE",
         onPayload: (payload) => {
-          if (payload.new?.id && payload.new?.tenant_id === tenantId) {
-            semesters.applySemesterPatch(payload.new);
-            semesters.notifyExternalSemesterUpdate(payload.new.id);
+          if (payload.new?.id && payload.new?.organization_id === organizationId) {
+            periods.applyPeriodPatch(payload.new);
+            periods.notifyExternalPeriodUpdate(payload.new.id);
           }
         },
       },
       {
-        table: "semesters",
+        table: "periods",
         event: "DELETE",
         onPayload: (payload) => {
           const deletedId = payload.old?.id;
           if (deletedId) {
-            semesters.removeSemester(deletedId);
-            semesters.notifyExternalSemesterDelete(deletedId);
+            periods.removePeriod(deletedId);
+            periods.notifyExternalPeriodDelete(deletedId);
           }
         },
       },
     ],
     deps: [
-      semesters.applySemesterPatch,
-      semesters.removeSemester,
-      semesters.notifyExternalSemesterUpdate,
-      semesters.notifyExternalSemesterDelete,
+      periods.applyPeriodPatch,
+      periods.removePeriod,
+      periods.notifyExternalPeriodUpdate,
+      periods.notifyExternalPeriodDelete,
     ],
   });
 
@@ -164,7 +164,7 @@ export default function SemestersPage({
             </>
           ) : ""
         }
-        warning="This will permanently delete all jurors, groups, and scores associated with this semester. This action cannot be undone."
+        warning="This will permanently delete all jurors, groups, and scores associated with this period. This action cannot be undone."
         typedConfirmation={deleteConfirm.deleteTarget?.typedConfirmation || undefined}
         confirmLabel="Delete"
         tone="danger"
@@ -179,9 +179,9 @@ export default function SemestersPage({
       />
 
       <SemesterSettingsPanel
-        semesters={semesters.semesterList}
-        currentSemesterId={semesters.currentSemesterId}
-        currentSemesterName={semesters.currentSemesterLabel}
+        periods={periods.periodList}
+        currentSemesterId={periods.currentPeriodId}
+        currentSemesterName={periods.currentPeriodLabel}
         formatSemesterName={(n) => n || ""}
         panelError={panelError}
         isDemoMode={isDemoMode}
@@ -189,31 +189,31 @@ export default function SemestersPage({
         isOpen={true}
         onToggle={() => {}}
         onDirtyChange={onDirtyChange}
-        onSetCurrent={semesters.handleSetCurrentSemester}
-        onCreateSemester={semesters.handleCreateSemester}
-        onUpdateSemester={semesters.handleUpdateSemester}
-        onUpdateCriteriaTemplate={semesters.handleUpdateCriteriaTemplate}
-        onUpdateMudekTemplate={semesters.handleUpdateMudekTemplate}
+        onSetCurrent={periods.handleSetCurrentPeriod}
+        onCreateSemester={periods.handleCreatePeriod}
+        onUpdateSemester={periods.handleUpdatePeriod}
+        onUpdateCriteriaTemplate={periods.handleUpdateCriteriaConfig}
+        onUpdateMudekTemplate={periods.handleUpdateOutcomeConfig}
         isLockedFn={isLockedFn}
-        externalUpdatedSemesterId={semesters.externalUpdatedSemesterId}
-        externalDeletedSemesterId={semesters.externalDeletedSemesterId}
+        externalUpdatedPeriodId={periods.externalUpdatedPeriodId}
+        externalDeletedPeriodId={periods.externalDeletedPeriodId}
         onDeleteSemester={(s) => {
-          if (s?.id === semesters.currentSemesterId) {
-            setPanelError("semester", "Current semester cannot be deleted. Select another semester first.");
+          if (s?.id === periods.currentPeriodId) {
+            setPanelError("period", "Current period cannot be deleted. Select another period first.");
             return;
           }
-          if (semesters.semesterList.length === 1) {
-            setPanelError("semester", "Cannot delete the only remaining semester.");
+          if (periods.periodList.length === 1) {
+            setPanelError("period", "Cannot delete the only remaining period.");
             return;
           }
-          if (!tenantId) {
-            setPanelError("semester", "Organization ID missing. Please re-login.");
+          if (!organizationId) {
+            setPanelError("period", "Organization ID missing. Please re-login.");
             return;
           }
           deleteConfirm.handleRequestDelete({
-            type: "semester",
+            type: "period",
             id: s?.id,
-            label: `Period ${(s?.semester_name) || ""}`.trim(),
+            label: `Period ${(s?.period_name) || ""}`.trim(),
           });
         }}
       />

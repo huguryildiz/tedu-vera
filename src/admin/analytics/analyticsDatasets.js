@@ -91,7 +91,7 @@ export function buildProgrammeAveragesDataset(submittedData, outcomes = OUTCOMES
 }
 
 export function buildTrendDataset(trendData, semesterOptions, selectedIds, outcomes = OUTCOMES) {
-  const dataMap = new Map((trendData || []).map((row) => [row.semesterId, row]));
+  const dataMap = new Map((trendData || []).map((row) => [row.periodId, row]));
   const orderIndex = new Map((semesterOptions || []).map((s, i) => [s.id, i]));
   const ordered = (semesterOptions || [])
     .filter((s) => (selectedIds || []).includes(s.id))
@@ -109,7 +109,7 @@ export function buildTrendDataset(trendData, semesterOptions, selectedIds, outco
       const raw = dbKey ? row?.[dbKey] : undefined;
       return pct(raw, o.max);
     });
-    return [s.semester_name || row?.semesterName || "—", row?.nEvals ?? 0, ...cells];
+    return [s.period_name || row?.periodName || "—", row?.nEvals ?? 0, ...cells];
   });
   return {
     sheet: "Period Trend",
@@ -250,7 +250,7 @@ export function buildRubricAchievementDataset(submittedData, outcomes = OUTCOMES
     "Insufficient (%)",
   ];
   const dataRows = outcomes.map((o) => {
-    // rubric comes from the outcome object itself (criteria_template carries rubric array)
+    // rubric comes from the outcome object itself (criteria_config carries rubric array)
     const criterion = CRITERIA.find((c) => c.id === o.key);
     const rubric = criterion?.rubric || [];
     // Derive band keys from config — not hardcoded — so renaming a level auto-adapts.
@@ -298,7 +298,7 @@ export function buildMudekMappingDataset(outcomes = OUTCOMES, mudekLookup = null
   const alignments = [];
   let rowIndex = 0;
   outcomes.forEach((o) => {
-    // mudek_outcomes is stored as array of MÜDEK internal ids in criteria_template
+    // mudek_outcomes is stored as array of MÜDEK internal ids in criteria_config
     // For config-derived OUTCOMES, o.code is a slash-joined string of display codes
     const ids = Array.isArray(o.mudek_outcomes) ? o.mudek_outcomes : [];
     const codes = ids.length > 0 ? ids : (o.code ? String(o.code).split("/").map((c) => c.trim()).filter(Boolean) : []);

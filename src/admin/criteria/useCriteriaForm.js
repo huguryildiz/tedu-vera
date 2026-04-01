@@ -8,8 +8,8 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { validateSemesterCriteria, isDisposableEmptyDraftCriterion } from "../../shared/criteriaValidation";
-import { criterionToTemplate } from "../../shared/criteria/criteriaHelpers";
+import { validatePeriodCriteria, isDisposableEmptyDraftCriterion } from "../../shared/criteriaValidation";
+import { criterionToConfig } from "../../shared/criteria/criteriaHelpers";
 import {
   templateToRow,
   emptyRow,
@@ -18,11 +18,11 @@ import {
   getConfigRubricSeed,
 } from "./criteriaFormHelpers";
 
-export function useCriteriaForm({ template, mudekTemplate, onSave, onDirtyChange, disabled, isLocked }) {
-  const mudekOutcomeByCode = new Map((mudekTemplate || []).map((o) => [o.code, o]));
+export function useCriteriaForm({ template, outcomeConfig, onSave, onDirtyChange, disabled, isLocked }) {
+  const mudekOutcomeByCode = new Map((outcomeConfig || []).map((o) => [o.code, o]));
   const mudekOutcomeCodes = useMemo(
-    () => new Set((mudekTemplate || []).map((o) => o.code)),
-    [mudekTemplate]
+    () => new Set((outcomeConfig || []).map((o) => o.code)),
+    [outcomeConfig]
   );
   const sanitizeMudekSelection = useCallback(
     (selected = []) => (Array.isArray(selected) ? selected.filter((code) => mudekOutcomeCodes.has(code)) : []),
@@ -59,7 +59,7 @@ export function useCriteriaForm({ template, mudekTemplate, onSave, onDirtyChange
     onDirtyChange?.(false);
   }, [JSON.stringify(template)]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { errors, rubricErrorsByCriterion, totalMax } = validateSemesterCriteria(activeRows, mudekTemplate);
+  const { errors, rubricErrorsByCriterion, totalMax } = validatePeriodCriteria(activeRows, outcomeConfig);
   const totalOk = totalMax === 100;
   const hasValidationErrors =
     Object.keys(errors).length > 0 ||
@@ -227,7 +227,7 @@ export function useCriteriaForm({ template, mudekTemplate, onSave, onDirtyChange
   const handleSave = async () => {
     // Guard: if template is locked (scoring started), reject any save attempt.
     if (isLocked) {
-      setSaveError("This semester's evaluation template is locked because scoring has already started.");
+      setSaveError("This period's evaluation template is locked because scoring has already started.");
       return;
     }
 
@@ -251,7 +251,7 @@ export function useCriteriaForm({ template, mudekTemplate, onSave, onDirtyChange
       errors: localErrors,
       rubricErrorsByCriterion: localRubricErrors,
       totalMax: localTotal,
-    } = validateSemesterCriteria(activeRows, mudekTemplate);
+    } = validatePeriodCriteria(activeRows, outcomeConfig);
 
     // Auto-expand sections that have errors
     setRows((prev) =>
@@ -295,7 +295,7 @@ export function useCriteriaForm({ template, mudekTemplate, onSave, onDirtyChange
           return {
             ...r,
             _expanded: true,
-            _mudekOpen: mudekTemplate.length > 0 ? true : r._mudekOpen,
+            _mudekOpen: outcomeConfig.length > 0 ? true : r._mudekOpen,
             _rubricOpen: true,
           };
         })
@@ -309,7 +309,7 @@ export function useCriteriaForm({ template, mudekTemplate, onSave, onDirtyChange
     try {
       const normalized = activeRows.map((r) => {
         const boundedRubric = clampRubricBandsToCriterionMax(r.rubric, Number(r.max));
-        return criterionToTemplate({ ...r, mudek: sanitizeMudekSelection(r.mudek), rubric: boundedRubric });
+        return criterionToConfig({ ...r, mudek: sanitizeMudekSelection(r.mudek), rubric: boundedRubric });
       });
       const result = await onSave(normalized);
       if (!result?.ok) {

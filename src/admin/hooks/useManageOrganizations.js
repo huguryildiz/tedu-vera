@@ -3,21 +3,21 @@
 // Organization/tenant CRUD state management.
 // Super-admin only — hook no-ops when `enabled` is false.
 //
-// Follows useManageSemesters.js pattern but is self-contained
-// (no cross-domain dependencies on semester selection or
+// Follows useManagePeriods.js pattern but is self-contained
+// (no cross-domain dependencies on period selection or
 // useSettingsCrud orchestration).
 // ============================================================
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  adminListTenants,
-  adminCreateTenant,
-  adminUpdateTenant,
-  adminUpdateTenantAdmin,
-  adminDeleteTenantAdminHard,
-  submitAdminApplication,
-  approveAdminApplication,
-  rejectAdminApplication,
+  listOrganizations,
+  createOrganization,
+  updateOrganization,
+  updateMemberAdmin,
+  deleteMemberHard,
+  submitApplication,
+  approveApplication,
+  rejectApplication,
 } from "../../shared/api";
 
 const EMPTY_CREATE = { code: "", shortLabel: "", university: "", department: "" };
@@ -45,7 +45,7 @@ const normalizeAdminApplicationError = (raw) => {
 };
 
 /**
- * useManageOrganizations — tenant identity CRUD for super-admins.
+ * useManageOrganizations — organization identity CRUD for super-admins.
  *
  * @param {object}   opts
  * @param {boolean}  opts.enabled        When false, hook issues no RPCs and returns inert state.
@@ -82,7 +82,7 @@ export function useManageOrganizations({
   const loadOrgs = useCallback(async () => {
     if (!enabled) return;
     try {
-      const data = await adminListTenants();
+      const data = await listOrganizations();
       setOrgList(data);
     } catch (e) {
       setError(e?.message || "Could not load organizations.");
@@ -217,7 +217,7 @@ export function useManageOrganizations({
     setError("");
     incLoading();
     try {
-      await adminCreateTenant({
+      await createOrganization({
         code: createForm.code.trim().toLowerCase(),
         shortLabel: createForm.shortLabel.trim(),
         university: createForm.university.trim(),
@@ -250,8 +250,8 @@ export function useManageOrganizations({
     setError("");
     incLoading();
     try {
-      await adminUpdateTenant({
-        tenantId: editForm.id,
+      await updateOrganization({
+        organizationId: editForm.id,
         shortLabel: editForm.shortLabel.trim(),
         university: editForm.university.trim(),
         department: editForm.department.trim(),
@@ -262,7 +262,7 @@ export function useManageOrganizations({
       setMessage?.("Organization updated.");
     } catch (e) {
       const msg = String(e?.message || "");
-      if (msg.includes("tenant_not_found")) {
+      if (msg.includes("organization_not_found")) {
         setEditError("Organization not found. It may have been removed.");
       } else {
         setEditError(msg || "Could not update organization.");
@@ -278,7 +278,7 @@ export function useManageOrganizations({
     setApplicationActionLoading({ id: applicationId, action: "approve" });
     incLoading();
     try {
-      await approveAdminApplication(applicationId);
+      await approveApplication(applicationId);
       await loadOrgs();
       setMessage?.("Application approved.");
     } catch (e) {
@@ -296,7 +296,7 @@ export function useManageOrganizations({
     setApplicationActionLoading({ id: applicationId, action: "reject" });
     incLoading();
     try {
-      await rejectAdminApplication(applicationId);
+      await rejectApplication(applicationId);
       await loadOrgs();
       setMessage?.("Application rejected.");
     } catch (e) {
@@ -308,13 +308,13 @@ export function useManageOrganizations({
     }
   }, [enabled, loadOrgs, setMessage, incLoading, decLoading]);
 
-  const handleUpdateTenantAdmin = useCallback(async ({ tenantId, userId, name, email }) => {
-    if (!enabled || !tenantId || !userId) return false;
+  const handleUpdateTenantAdmin = useCallback(async ({ organizationId, userId, name, email }) => {
+    if (!enabled || !organizationId || !userId) return false;
     setError("");
     incLoading();
     try {
-      await adminUpdateTenantAdmin({
-        tenantId,
+      await updateMemberAdmin({
+        organizationId,
         userId,
         name: String(name || "").trim(),
         email: String(email || "").trim().toLowerCase(),
@@ -331,12 +331,12 @@ export function useManageOrganizations({
     }
   }, [enabled, loadOrgs, setMessage, incLoading, decLoading]);
 
-  const handleDeleteTenantAdmin = useCallback(async ({ tenantId, userId }) => {
-    if (!enabled || !tenantId || !userId) return false;
+  const handleDeleteTenantAdmin = useCallback(async ({ organizationId, userId }) => {
+    if (!enabled || !organizationId || !userId) return false;
     setError("");
     incLoading();
     try {
-      await adminDeleteTenantAdminHard({ tenantId, userId });
+      await deleteMemberHard({ organizationId, userId });
       await loadOrgs();
       setMessage?.("Admin deleted.");
       return true;
@@ -350,19 +350,19 @@ export function useManageOrganizations({
   }, [enabled, loadOrgs, setMessage, incLoading, decLoading]);
 
   const handleCreateTenantAdminApplication = useCallback(async ({
-    tenantId,
+    organizationId,
     name,
     email,
     password,
     university,
     department,
   }) => {
-    if (!enabled || !tenantId) return { ok: false, error: "Organization is missing." };
+    if (!enabled || !organizationId) return { ok: false, error: "Organization is missing." };
     setError("");
     incLoading();
     try {
-      await submitAdminApplication({
-        tenantId,
+      await submitApplication({
+        organizationId,
         name: String(name || "").trim(),
         email: String(email || "").trim().toLowerCase(),
         password: String(password || ""),

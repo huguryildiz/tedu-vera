@@ -58,7 +58,7 @@ export default function AnalyticsPrintReport({
         </div>
       </section>
 
-      {/* Page 3: Semester Trend */}
+      {/* Page 3: Period Trend */}
       {trendSemesterIds.length > 0 && (
         <section className="print-page report-chart page-chart">
           <h2 className="print-card-title">{CHART_COPY.semesterTrend.title}</h2>
@@ -66,7 +66,7 @@ export default function AnalyticsPrintReport({
           <div className="chart-wrapper">
             <OutcomeTrendChartPrint
               data={trendData}
-              semesters={semesterOptions}
+              periods={semesterOptions}
               selectedIds={trendSemesterIds}
               outcomes={activeOutcomes}
             />
@@ -182,7 +182,7 @@ export default function AnalyticsPrintReport({
             {appendixRows.map((row, idx) => (
               <tr key={`${row.groupLabel}-${idx}`}>
                 <td>{row.groupLabel}</td>
-                <td>{row.projectTitle || "—"}</td>
+                <td>{row.title || "—"}</td>
                 <td>{row.students.length ? row.students.join(" · ") : "—"}</td>
               </tr>
             ))}

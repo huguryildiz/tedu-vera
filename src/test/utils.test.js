@@ -125,15 +125,15 @@ describe("cmp", () => {
 // ── rowKey ────────────────────────────────────────────────────
 describe("rowKey", () => {
   it("returns jurorId when present", () => {
-    expect(rowKey({ jurorId: "uuid-123", juryName: "Alice", juryDept: "EE" })).toBe("uuid-123");
+    expect(rowKey({ jurorId: "uuid-123", juryName: "Alice", affiliation: "EE" })).toBe("uuid-123");
   });
 
   it("builds name__dept key when jurorId is absent", () => {
-    expect(rowKey({ juryName: "Alice Smith", juryDept: "EE" })).toBe("alice smith__ee");
+    expect(rowKey({ juryName: "Alice Smith", affiliation: "EE" })).toBe("alice smith__ee");
   });
 
   it("normalises name and dept to lowercase and trimmed", () => {
-    expect(rowKey({ juryName: "  BOB  ", juryDept: "  CS  " })).toBe("bob__cs");
+    expect(rowKey({ juryName: "  BOB  ", affiliation: "  CS  " })).toBe("bob__cs");
   });
 
   it("handles missing dept", () => {

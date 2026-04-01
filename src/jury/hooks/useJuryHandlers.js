@@ -6,17 +6,17 @@
 //
 // Sub-hooks:
 //   useJuryScoreHandlers     — score onChange/onBlur + comment handlers
-//   useJurySessionHandlers   — identity, semester, PIN, progress flow
+//   useJurySessionHandlers   — identity, period, PIN, progress flow
 //   useJuryLifecycleHandlers — navigation, submission, edit-mode, reset
 //
 // Utilities:
-//   juryHandlerUtils         — deriveEffectiveCriteria, deriveMudekLookup
+//   juryHandlerUtils         — deriveEffectiveCriteria, deriveOutcomeLookup
 // ============================================================
 
 import { useJuryScoreHandlers } from "./useJuryScoreHandlers";
 import { useJurySessionHandlers } from "./useJurySessionHandlers";
 import { useJuryLifecycleHandlers } from "./useJuryLifecycleHandlers";
-import { deriveEffectiveCriteria, deriveMudekLookup } from "./juryHandlerUtils";
+import { deriveEffectiveCriteria, deriveOutcomeLookup } from "./juryHandlerUtils";
 
 export function useJuryHandlers({
   identity,
@@ -29,9 +29,9 @@ export function useJuryHandlers({
   stateRef,
   setSubmitError,
 }) {
-  // Derive effective criteria: semester template (if set) or static config fallback.
-  const effectiveCriteria = deriveEffectiveCriteria(loading.criteriaTemplate);
-  const mudekLookup = deriveMudekLookup(loading.mudekTemplate);
+  // Derive effective criteria: period config (if set) or static config fallback.
+  const effectiveCriteria = deriveEffectiveCriteria(loading.criteriaConfig);
+  const outcomeLookup = deriveOutcomeLookup(loading.outcomeConfig);
 
   const scoreHandlers = useJuryScoreHandlers({
     scoring,
@@ -69,6 +69,6 @@ export function useJuryHandlers({
     ...sessionHandlers,
     ...lifecycleHandlers,
     effectiveCriteria,
-    mudekLookup,
+    outcomeLookup,
   };
 }

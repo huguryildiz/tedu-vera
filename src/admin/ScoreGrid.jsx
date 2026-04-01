@@ -433,7 +433,7 @@ const AverageRow = memo(function AverageRow({ groups, averages, onShowTip, onHid
 //   data    – raw rows
 //   jurors  – { key, name, dept }[]  (from AdminPanel uniqueJurors)
 //   groups  – { id, label }[]
-function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTemplate }) {
+function ScoreGridInner({ data, jurors, groups, periodName = "", criteriaConfig }) {
   const filterPresentation = useResponsiveFilterPresentation();
   const useSheetFilters = filterPresentation.mode === "sheet";
   const [isTouchInput, setIsTouchInput] = useState(() => (
@@ -498,7 +498,7 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
     jurorWorkflowMap,
     groupAverages,
     buildExportRows,
-  } = useScoreGridData({ data, jurors, groups, criteriaTemplate });
+  } = useScoreGridData({ data, jurors, groups, criteriaConfig });
 
   // All sort + filter logic extracted to custom hook
   const {
@@ -512,7 +512,7 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
   } = useGridExport({
     buildExportRows,
     groups,
-    semesterName,
+    periodName,
     visibleJurors,
   });
 
@@ -814,7 +814,7 @@ function ScoreGridInner({ data, jurors, groups, semesterName = "", criteriaTempl
                     {groups.map((g) => {
                       const entry = lookup[juror.key]?.[g.id] ?? null;
                       const state = getCellState(entry);
-                      const tooltip = cellTooltip(state, entry, criteriaTemplate || CRITERIA);
+                      const tooltip = cellTooltip(state, entry, criteriaConfig || CRITERIA);
                       return (
                         <td
                           key={g.id}
