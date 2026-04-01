@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VERA — Interactive Admin Panel Concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #ffffff;
+    --bg-sidebar: #f8fafc;
+    --bg-card: #f8fafc;
+    --border: #e2e8f0;
+    --border-subtle: #f1f5f9;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --text-tertiary: #94a3b8;
+    --text-ghost: #cbd5e1;
+    --primary: #4f46e5;
+    --primary-soft: rgba(79,70,229,0.08);
+    --primary-fg: #ffffff;
+    --green: #22c55e; --green-soft: rgba(34,197,94,0.08);
+    --amber: #f59e0b; --amber-soft: rgba(245,158,11,0.08);
+    --blue: #3b82f6; --red: #ef4444;
+    --radius: 12px; --radius-sm: 8px;
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+  }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ═══ Sidebar ═══ */
+  .sidebar {
+    width: 240px; background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 20px 12px; flex-shrink: 0;
+    height: 100vh; position: sticky; top: 0;
+    overflow-y: auto;
+  }
+  .sb-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px; margin-bottom: 8px; }
+  .sb-brand-icon { width: 28px; height: 28px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 12px; }
+  .sb-brand-text { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+  .sb-sep { height: 1px; background: var(--border); margin: 8px 0 12px; }
+  .sb-tenant { display: flex; align-items: center; gap: 8px; padding: 6px 8px; font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+  .sb-section { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-tertiary); padding: 0 8px; margin: 16px 0 6px; user-select: none; }
+  .sb-section:first-of-type { margin-top: 0; }
+  .sb-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500; color: var(--text-secondary);
+    cursor: pointer; transition: all 120ms; margin-bottom: 1px;
+    user-select: none;
+  }
+  .sb-item:hover { background: rgba(0,0,0,0.03); color: var(--text-primary); }
+  .sb-item.active { background: #fff; color: var(--text-primary); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .sb-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sb-sub { margin-left: 20px; padding-left: 12px; border-left: 2px solid var(--border); }
+  .sb-sub .sb-item { font-size: 12px; padding: 5px 10px; color: var(--text-tertiary); }
+  .sb-sub .sb-item:hover { color: var(--text-primary); background: transparent; }
+  .sb-sub .sb-item.active { color: var(--primary); font-weight: 600; background: transparent; box-shadow: none; }
+  .sb-footer { margin-top: auto; }
+  .sb-user { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: var(--radius-sm); cursor: pointer; }
+  .sb-user:hover { background: rgba(0,0,0,0.03); }
+  .sb-avatar { width: 32px; height: 32px; background: var(--primary); border-radius: 999px; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .sb-uname { font-size: 13px; font-weight: 600; }
+  .sb-uemail { font-size: 11px; color: var(--text-tertiary); }
+
+  /* ═══ Main ═══ */
+  .main { flex: 1; min-width: 0; padding: 32px 40px; }
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 32px; }
+  .page-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .page-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .semester-select { height: 34px; padding: 0 32px 0 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; background: white; appearance: none; cursor: pointer; font-family: inherit; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+  .refresh-btn { width: 34px; height: 34px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-secondary); }
+  .refresh-btn:hover { background: var(--bg-card); color: var(--text-primary); }
+  .refresh-btn svg { width: 14px; height: 14px; }
+  .last-refresh { font-size: 11px; color: var(--text-tertiary); }
+
+  /* ═══ Cards ═══ */
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-card); overflow: hidden; }
+  .card-header { padding: 16px 20px 12px; display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 14px; font-weight: 700; }
+
+  /* ═══ KPI ═══ */
+  .hero-kpi { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; margin-bottom: 24px; }
+  .kpi-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow-card); }
+  .kpi-ring { position: relative; width: 56px; height: 56px; flex-shrink: 0; }
+  .kpi-ring-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .kpi-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .kpi-icon svg { width: 20px; height: 20px; }
+  .kpi-label { font-size: 12px; font-weight: 500; color: var(--text-tertiary); margin-bottom: 2px; }
+  .kpi-value { font-size: 28px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; }
+  .kpi-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 3px; }
+  .kpi-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+  .hero-side { display: flex; flex-direction: column; gap: 16px; }
+  .hero-side .kpi-card { flex: 1; }
+  .hero-side .kpi-value { font-size: 24px; }
+
+  /* ═══ Table ═══ */
+  .content-split { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { padding: 8px 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); text-align: left; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.015); }
+  td { padding: 10px 20px; font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); }
+  tr:last-child td { border-bottom: none; }
+  .j-name { font-weight: 600; color: var(--text-primary); }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .badge-dot { width: 6px; height: 6px; border-radius: 999px; }
+  .badge-green { background: var(--green-soft); color: #16a34a; }
+  .badge-green .badge-dot { background: var(--green); }
+  .badge-amber { background: var(--amber-soft); color: #d97706; }
+  .badge-amber .badge-dot { background: var(--amber); }
+  .badge-gray { background: rgba(0,0,0,0.04); color: var(--text-tertiary); }
+  .badge-gray .badge-dot { background: var(--text-ghost); }
+  .progress-bar { height: 6px; background: var(--border-subtle); border-radius: 999px; overflow: hidden; width: 80px; }
+  .progress-fill { height: 100%; border-radius: 999px; }
+  .criteria-list { padding: 0 20px 16px; }
+  .criteria-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+  .criteria-item:last-child { border-bottom: none; }
+  .criteria-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .criteria-name { font-size: 13px; font-weight: 500; color: var(--text-secondary); flex: 1; }
+  .criteria-avg { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .criteria-max { font-size: 11px; color: var(--text-ghost); margin-left: 2px; }
+  .criteria-bar { width: 80px; flex-shrink: 0; }
+
+  /* ═══ Manage Pages ═══ */
+  .manage-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .search-wrap { position: relative; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); }
+  .search-icon svg { width: 14px; height: 14px; }
+  .search-input { height: 36px; padding: 0 12px 0 36px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; width: 240px; background: white; font-family: inherit; outline: none; }
+  .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.08); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; transition: all 120ms; }
+  .btn-primary { background: var(--primary); color: var(--primary-fg); }
+  .btn-primary:hover { background: #4338ca; }
+  .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-primary); }
+  .btn-outline:hover { background: var(--bg-card); }
+  .btn svg { width: 14px; height: 14px; }
+  .item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .item-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-card); }
+  .item-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .item-meta { font-size: 12px; color: var(--text-tertiary); margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+  .item-meta svg { width: 12px; height: 12px; }
+  .item-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-subtle); }
+  .item-btn { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; background: var(--bg); color: var(--text-secondary); transition: all 120ms; display: flex; align-items: center; gap: 4px; }
+  .item-btn:hover { background: var(--primary-soft); color: var(--primary); }
+  .item-btn svg { width: 12px; height: 12px; }
+
+  /* ═══ Page content areas ═══ */
+  .page-content { display: none; }
+  .page-content.active { display: block; }
+
+  /* ═══ Empty state ═══ */
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--text-tertiary); }
+  .empty-state svg { width: 40px; height: 40px; margin: 0 auto 12px; color: var(--text-ghost); }
+  .empty-state-text { font-size: 14px; margin-bottom: 16px; }
+
+  /* ═══ Settings list ═══ */
+  .settings-list { display: flex; flex-direction: column; gap: 12px; }
+  .settings-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-card); }
+  .settings-card-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .settings-card-desc { font-size: 13px; color: var(--text-secondary); }
+  .field { margin-top: 12px; }
+  .field-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .field-input { width: 100%; height: 38px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; background: white; outline: none; }
+  .field-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.08); }
+</style>
+</head>
+<body>
+  <!-- ═══ Sidebar ═══ -->
+  <aside class="sidebar">
+    <div class="sb-brand"><div class="sb-brand-icon">V</div><div class="sb-brand-text">VERA</div></div>
+    <div class="sb-sep"></div>
+    <div class="sb-tenant">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg>
+      TEDU EE
+    </div>
+
+    <div class="sb-section">Analytics</div>
+    <div class="sb-item active" onclick="showPage('overview')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+      Overview
+    </div>
+    <div class="sb-item" onclick="showPage('scores')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      Scores
+    </div>
+
+    <div class="sb-section">Manage</div>
+    <div class="sb-item" onclick="showPage('jurors')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Jurors
+    </div>
+    <div class="sb-item" onclick="showPage('projects')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+      Projects
+    </div>
+    <div class="sb-item" onclick="showPage('semesters')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+      Semesters
+    </div>
+
+    <div class="sb-section">System</div>
+    <div class="sb-item" onclick="showPage('entry')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+      Entry Control
+    </div>
+    <div class="sb-item" onclick="showPage('settings')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      Settings
+    </div>
+
+    <div class="sb-footer">
+      <div class="sb-sep"></div>
+      <div class="sb-user">
+        <div class="sb-avatar">HY</div>
+        <div><div class="sb-uname">Hugur Yıldız</div><div class="sb-uemail">hugur@tedu.edu.tr</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ Main Content ═══ -->
+  <main class="main">
+    <!-- ─── Overview ─── -->
+    <div class="page-content active" id="page-overview">
+      <div class="page-header">
+        <div><div class="page-title">Overview</div><div class="page-subtitle">2025 Fall · 15 Nov 2025</div></div>
+        <div class="header-actions">
+          <span class="last-refresh">Updated 2 min ago</span>
+          <select class="semester-select"><option>2025 Fall</option><option>2025 Spring</option></select>
+          <button class="refresh-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
+        </div>
+      </div>
+      <div class="hero-kpi">
+        <div class="kpi-card">
+          <div class="kpi-ring"><svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="24" fill="none" stroke="#e2e8f0" stroke-width="4"/><circle cx="28" cy="28" r="24" fill="none" stroke="#84cc16" stroke-width="4" stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="49.76" transform="rotate(-90 28 28)"/></svg><div class="kpi-ring-pct" style="color:#84cc16">67%</div></div>
+          <div><div class="kpi-label">Juror Completion</div><div class="kpi-value">16 / 24</div><div class="kpi-sub">8 remaining</div><div class="kpi-meta">3 in progress · 2 ready · 3 not started</div></div>
+        </div>
+        <div class="hero-side">
+          <div class="kpi-card"><div class="kpi-icon" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg></div><div><div class="kpi-label">Project Groups</div><div class="kpi-value" style="font-size:24px">8</div></div></div>
+          <div class="kpi-card"><div class="kpi-ring" style="width:48px;height:48px"><svg width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="none" stroke="#e2e8f0" stroke-width="4"/><circle cx="24" cy="24" r="20" fill="none" stroke="#eab308" stroke-width="4" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="50.26" transform="rotate(-90 24 24)"/></svg><div class="kpi-ring-pct" style="color:#eab308;font-size:11px">60%</div></div><div><div class="kpi-label">Scored Evaluations</div><div class="kpi-value" style="font-size:24px">115</div><div class="kpi-sub">192 total</div></div></div>
+        </div>
+      </div>
+      <div class="content-split">
+        <div class="card"><div class="card-header"><div class="card-title">Juror Activity</div></div>
+          <table><thead><tr><th>Juror</th><th>Dept</th><th>Progress</th><th>Status</th><th>Last</th></tr></thead><tbody>
+            <tr><td class="j-name">Dr. Ahmet K.</td><td>EE</td><td><div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div></td><td><span class="badge badge-green"><span class="badge-dot"></span>Done</span></td><td style="font-size:12px;color:var(--text-tertiary)">14:32</td></tr>
+            <tr><td class="j-name">Prof. Elif Y.</td><td>CS</td><td><div class="progress-bar"><div class="progress-fill" style="width:75%;background:var(--amber)"></div></div></td><td><span class="badge badge-amber"><span class="badge-dot"></span>Active</span></td><td style="font-size:12px;color:var(--text-tertiary)">13:45</td></tr>
+            <tr><td class="j-name">Dr. Ayşe D.</td><td>IE</td><td><div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div></td><td><span class="badge badge-gray"><span class="badge-dot"></span>Waiting</span></td><td style="font-size:12px;color:var(--text-tertiary)">—</td></tr>
+          </tbody></table>
+        </div>
+        <div class="card"><div class="card-header"><div class="card-title">Criteria Breakdown</div></div>
+          <div class="criteria-list">
+            <div class="criteria-item"><div class="criteria-dot" style="background:var(--amber)"></div><div class="criteria-name">Technical</div><div><span class="criteria-avg">24.2</span><span class="criteria-max">/30</span></div><div class="criteria-bar"><div class="progress-bar"><div class="progress-fill" style="width:80%;background:var(--amber)"></div></div></div></div>
+            <div class="criteria-item"><div class="criteria-dot" style="background:var(--green)"></div><div class="criteria-name">Written</div><div><span class="criteria-avg">22.1</span><span class="criteria-max">/30</span></div><div class="criteria-bar"><div class="progress-bar"><div class="progress-fill" style="width:74%;background:var(--green)"></div></div></div></div>
+            <div class="criteria-item"><div class="criteria-dot" style="background:var(--blue)"></div><div class="criteria-name">Oral</div><div><span class="criteria-avg">21.8</span><span class="criteria-max">/30</span></div><div class="criteria-bar"><div class="progress-bar"><div class="progress-fill" style="width:73%;background:var(--blue)"></div></div></div></div>
+            <div class="criteria-item"><div class="criteria-dot" style="background:var(--red)"></div><div class="criteria-name">Teamwork</div><div><span class="criteria-avg">7.6</span><span class="criteria-max">/10</span></div><div class="criteria-bar"><div class="progress-bar"><div class="progress-fill" style="width:76%;background:var(--red)"></div></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Scores ─── -->
+    <div class="page-content" id="page-scores">
+      <div class="page-header"><div><div class="page-title">Scores · Rankings</div><div class="page-subtitle">2025 Fall</div></div></div>
+      <div class="card" style="padding:20px;">
+        <table><thead><tr><th>#</th><th>Group</th><th>Project</th><th>Avg Score</th><th>Jurors</th></tr></thead><tbody>
+          <tr><td style="font-weight:700;color:var(--amber)">🥇</td><td class="j-name">Group 3</td><td>Smart Home Energy</td><td style="font-weight:700">82.4</td><td>16/24</td></tr>
+          <tr><td style="font-weight:700;color:var(--text-tertiary)">🥈</td><td class="j-name">Group 1</td><td>Autonomous Drone</td><td style="font-weight:700">78.9</td><td>16/24</td></tr>
+          <tr><td style="font-weight:700;color:var(--amber)">🥉</td><td class="j-name">Group 5</td><td>IoT Weather Station</td><td style="font-weight:700">75.2</td><td>14/24</td></tr>
+          <tr><td>4</td><td class="j-name">Group 2</td><td>Robot Arm Control</td><td style="font-weight:700">72.1</td><td>16/24</td></tr>
+          <tr><td>5</td><td class="j-name">Group 7</td><td>Solar Tracker</td><td style="font-weight:700">69.8</td><td>12/24</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- ─── Jurors ─── -->
+    <div class="page-content" id="page-jurors">
+      <div class="page-header"><div><div class="page-title">Jurors</div><div class="page-subtitle">Manage jury members and evaluation permissions</div></div></div>
+      <div class="manage-toolbar">
+        <div class="search-wrap"><div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div><input class="search-input" placeholder="Search jurors..."></div>
+        <button class="btn btn-primary"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg> Add Juror</button>
+      </div>
+      <div class="card" style="padding:0;"><table><thead><tr><th>Name</th><th>Department</th><th>PIN</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+        <tr><td class="j-name">Dr. Ahmet Karaoğlu</td><td>EE</td><td style="font-family:monospace;font-size:12px;color:var(--text-tertiary)">••••</td><td><span class="badge badge-green"><span class="badge-dot"></span>Completed</span></td><td><button class="item-btn"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit</button></td></tr>
+        <tr><td class="j-name">Prof. Elif Yılmaz</td><td>CS</td><td style="font-family:monospace;font-size:12px;color:var(--text-tertiary)">••••</td><td><span class="badge badge-amber"><span class="badge-dot"></span>In Progress</span></td><td><button class="item-btn"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit</button></td></tr>
+        <tr><td class="j-name">Doç. Dr. Mehmet Kaya</td><td>ME</td><td style="font-family:monospace;font-size:12px;color:var(--text-tertiary)">••••</td><td><span class="badge badge-green"><span class="badge-dot"></span>Completed</span></td><td><button class="item-btn"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit</button></td></tr>
+        <tr><td class="j-name">Prof. Can Özkan</td><td>EE</td><td style="font-family:monospace;font-size:12px;color:var(--text-tertiary)">••••</td><td><span class="badge badge-gray"><span class="badge-dot"></span>Not Started</span></td><td><button class="item-btn"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit</button></td></tr>
+      </tbody></table></div>
+    </div>
+
+    <!-- ─── Projects ─── -->
+    <div class="page-content" id="page-projects">
+      <div class="page-header"><div><div class="page-title">Projects</div><div class="page-subtitle">Manage student groups and project assignments</div></div></div>
+      <div class="manage-toolbar">
+        <div class="search-wrap"><div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div><input class="search-input" placeholder="Search projects..."></div>
+        <div style="display:flex;gap:8px;"><button class="btn btn-outline"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Import CSV</button><button class="btn btn-primary"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg> Add Project</button></div>
+      </div>
+      <div class="item-grid">
+        <div class="item-card"><div class="item-title">Group 1 — Autonomous Drone Navigation</div><div class="item-meta"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Ali V., Zeynep K., Burak T.</div><div class="item-actions"><button class="item-btn"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit</button><button class="item-btn" style="color:var(--red)"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Delete</button></div></div>
+        <div class="item-card"><div class="item-title">Group 2 — Robot Arm Control System</div><div class="item-meta"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Deniz A., Selin M.</div><div class="item-actions"><button class="item-btn"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit</button><button class="item-btn" style="color:var(--red)"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Delete</button></div></div>
+        <div class="item-card"><div class="item-title">Group 3 — Smart Home Energy Mgmt</div><div class="item-meta"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Ahmet Y., Elif K., Can D.</div><div class="item-actions"><button class="item-btn"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit</button><button class="item-btn" style="color:var(--red)"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Delete</button></div></div>
+      </div>
+    </div>
+
+    <!-- ─── Semesters ─── -->
+    <div class="page-content" id="page-semesters">
+      <div class="page-header"><div><div class="page-title">Semesters</div><div class="page-subtitle">Manage evaluation periods, criteria, and MÜDEK outcomes</div></div></div>
+      <div class="manage-toolbar"><div></div><button class="btn btn-primary"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg> Semester</button></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="item-card" style="border-left:3px solid var(--primary);display:flex;justify-content:space-between;align-items:center;"><div><div class="item-title">2025 Fall</div><div class="item-meta">📅 15 Nov 2025 · <span class="badge badge-green" style="font-size:10px"><span class="badge-dot"></span>Current</span></div></div><button class="item-btn"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit</button></div>
+        <div class="item-card" style="display:flex;justify-content:space-between;align-items:center;"><div><div class="item-title">2025 Spring</div><div class="item-meta">📅 20 May 2025</div></div><button class="item-btn"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit</button></div>
+        <div class="item-card" style="display:flex;justify-content:space-between;align-items:center;"><div><div class="item-title">2024 Fall</div><div class="item-meta">📅 14 Nov 2024</div></div><button class="item-btn"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit</button></div>
+      </div>
+    </div>
+
+    <!-- ─── Entry Control ─── -->
+    <div class="page-content" id="page-entry">
+      <div class="page-header"><div><div class="page-title">Entry Control</div><div class="page-subtitle">Manage jury entry tokens and QR access codes</div></div></div>
+      <div class="card" style="padding:24px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;"><div style="width:40px;height:40px;background:var(--green-soft);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:18px;">🔗</div><div><div style="font-weight:700;">Active Entry Token</div><div style="font-size:12px;color:var(--text-tertiary);">Created 2 hours ago · Expires in 22 hours</div></div></div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-family:monospace;font-size:13px;color:var(--text-secondary);word-break:break-all;">https://vera-eval.app/?t=abc123def456</div>
+        <div style="display:flex;gap:8px;margin-top:12px;"><button class="btn btn-outline">📋 Copy Link</button><button class="btn btn-outline">📱 Show QR</button><button class="btn btn-outline" style="color:var(--red);border-color:rgba(239,68,68,0.3);">Revoke Token</button></div>
+      </div>
+    </div>
+
+    <!-- ─── Settings ─── -->
+    <div class="page-content" id="page-settings">
+      <div class="page-header"><div><div class="page-title">Settings</div><div class="page-subtitle">Organization and system configuration</div></div></div>
+      <div class="settings-list">
+        <div class="settings-card"><div class="settings-card-title">Organization</div><div class="settings-card-desc">TEDU EE — TED University, Electrical & Electronics Engineering</div>
+          <div class="field"><label class="field-label">Short Label</label><input class="field-input" value="TEDU EE"></div>
+          <div class="field"><label class="field-label">University</label><input class="field-input" value="TED University"></div>
+          <div class="field"><label class="field-label">Department</label><input class="field-input" value="Electrical & Electronics Engineering"></div>
+          <div style="margin-top:16px;"><button class="btn btn-primary" style="width:auto;">Save Changes</button></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function showPage(id) {
+      document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-' + id).classList.add('active');
+      document.querySelectorAll('.sb-item').forEach(item => item.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      // Update page title in header based on page
+      const titles = { overview:'Overview', scores:'Scores · Rankings', jurors:'Jurors', projects:'Projects', semesters:'Semesters', entry:'Entry Control', settings:'Settings' };
+    }
+  </script>
+</body>
+</html>

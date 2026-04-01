@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VERA — Full UI Showcase (Corporate Clean)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#fff;--bg-s:#f8fafc;--bg-card:#f8fafc;--border:#e2e8f0;--border-s:#f1f5f9;
+  --t1:#0f172a;--t2:#64748b;--t3:#94a3b8;--t4:#cbd5e1;
+  --p:#4f46e5;--p-h:#4338ca;--p-s:rgba(79,70,229,.08);--p-fg:#fff;
+  --g:#22c55e;--g-s:rgba(34,197,94,.08);--a:#f59e0b;--a-s:rgba(245,158,11,.08);
+  --b:#3b82f6;--r:#ef4444;--r-s:rgba(239,68,68,.08);
+  --radius:12px;--radius-s:8px;
+  --shadow:0 1px 3px rgba(0,0,0,.04),0 1px 2px rgba(0,0,0,.02);
+  --shadow-e:0 8px 24px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.04);
+  --dark:#1e293b;--dark-d:#0f172a;
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:#0f172a;color:var(--t1);-webkit-font-smoothing:antialiased;padding:0}
+
+/* ═══ SHOWCASE FRAME ═══ */
+.showcase{max-width:1280px;margin:0 auto;padding:40px 20px 80px}
+.showcase-title{text-align:center;color:rgba(255,255,255,.9);font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:4px}
+.showcase-sub{text-align:center;color:rgba(255,255,255,.4);font-size:13px;margin-bottom:48px}
+.screen{margin-bottom:40px;border-radius:16px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.06)}
+.screen-label{padding:10px 20px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.35)}
+
+/* ═══ ADMIN LAYOUT ═══ */
+.admin{display:flex;min-height:480px;background:var(--bg)}
+.sb{width:220px;background:var(--bg-s);border-right:1px solid var(--border);padding:16px 10px;flex-shrink:0;display:flex;flex-direction:column;font-size:12px}
+.sb-brand{display:flex;align-items:center;gap:8px;padding:4px 6px;margin-bottom:6px}
+.sb-logo{width:24px;height:24px;background:var(--p);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:10px}
+.sb-name{font-size:14px;font-weight:700;letter-spacing:-.3px}
+.sb-sep{height:1px;background:var(--border);margin:6px 0 10px}
+.sb-tenant{display:flex;align-items:center;gap:6px;padding:4px 6px;color:var(--t3);margin-bottom:12px;font-size:11px}
+.sb-sec{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t4);padding:0 6px;margin:12px 0 4px}
+.sb-sec:first-of-type{margin-top:0}
+.sb-i{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;color:var(--t2);cursor:default;margin-bottom:1px;font-weight:500}
+.sb-i.on{background:#fff;color:var(--t1);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.sb-i svg{width:14px;height:14px;flex-shrink:0}
+.sb-sub{margin-left:18px;padding-left:10px;border-left:2px solid var(--border)}
+.sb-sub .sb-i{font-size:11px;padding:3px 8px;color:var(--t3)}
+.sb-sub .sb-i.on{color:var(--p);font-weight:600;background:transparent;box-shadow:none}
+.sb-foot{margin-top:auto}
+.sb-user{display:flex;align-items:center;gap:8px;padding:6px}
+.sb-av{width:28px;height:28px;background:var(--p);border-radius:999px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0}
+.sb-un{font-size:12px;font-weight:600}
+.sb-ue{font-size:10px;color:var(--t3)}
+
+/* ═══ CONTENT ═══ */
+.ct{flex:1;min-width:0;padding:24px 32px}
+.pg-h{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
+.pg-t{font-size:18px;font-weight:800;letter-spacing:-.4px}
+.pg-st{font-size:12px;color:var(--t2);margin-top:2px}
+.h-acts{display:flex;gap:6px;align-items:center}
+.sel{height:30px;padding:0 28px 0 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;background:#fff;font-family:inherit;appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.rbtn{width:30px;height:30px;border:1px solid var(--border);border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--t3)}
+.rbtn svg{width:12px;height:12px}
+.lr{font-size:10px;color:var(--t4)}
+
+/* ═══ CARDS ═══ */
+.crd{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.crd-h{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between}
+.crd-t{font-size:13px;font-weight:700}
+
+/* ═══ KPI ═══ */
+.hero{display:grid;grid-template-columns:3fr 2fr;gap:12px;margin-bottom:20px}
+.kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
+.kring{position:relative;width:48px;height:48px;flex-shrink:0}
+.kring-p{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+.kicon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kicon svg{width:18px;height:18px}
+.kl{font-size:11px;font-weight:500;color:var(--t3);margin-bottom:1px}
+.kv{font-size:22px;font-weight:800;letter-spacing:-.8px;line-height:1.1}
+.ks{font-size:10px;color:var(--t3);margin-top:2px}
+.hero-s{display:flex;flex-direction:column;gap:12px}
+.hero-s .kpi{flex:1}
+.hero-s .kv{font-size:20px}
+
+/* ═══ TABLE ═══ */
+.split{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+table{width:100%;border-collapse:collapse}
+th{padding:6px 16px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);text-align:left;border-bottom:1px solid var(--border);background:rgba(0,0,0,.015)}
+td{padding:8px 16px;font-size:12px;color:var(--t2);border-bottom:1px solid var(--border-s)}
+tr:last-child td{border-bottom:none}
+.jn{font-weight:600;color:var(--t1)}
+.bdg{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:600;white-space:nowrap}
+.bdg-d{width:5px;height:5px;border-radius:999px}
+.bdg-g{background:var(--g-s);color:#16a34a}.bdg-g .bdg-d{background:var(--g)}
+.bdg-a{background:var(--a-s);color:#d97706}.bdg-a .bdg-d{background:var(--a)}
+.bdg-x{background:rgba(0,0,0,.04);color:var(--t3)}.bdg-x .bdg-d{background:var(--t4)}
+.bdg-b{background:rgba(59,130,246,.08);color:#2563eb}.bdg-b .bdg-d{background:var(--b)}
+.pb{height:5px;background:var(--border-s);border-radius:999px;overflow:hidden;width:60px}
+.pf{height:100%;border-radius:999px}
+
+/* Criteria */
+.cri{padding:0 16px 12px}
+.cri-i{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-s);font-size:12px}
+.cri-i:last-child{border-bottom:none}
+.cri-d{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.cri-n{flex:1;color:var(--t2);font-weight:500}
+.cri-v{font-weight:700;font-variant-numeric:tabular-nums;font-size:13px}
+.cri-m{font-size:10px;color:var(--t4);margin-left:1px}
+.cri-b{width:60px;flex-shrink:0}
+
+/* ═══ MANAGE ═══ */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.srch{position:relative}
+.srch svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:12px;height:12px;color:var(--t3)}
+.srch input{height:32px;padding:0 10px 0 30px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:200px;background:#fff;font-family:inherit;outline:none}
+.btn{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:default;font-family:inherit;border:none}
+.btn-p{background:var(--p);color:var(--p-fg)}
+.btn-o{background:#fff;border:1px solid var(--border);color:var(--t1)}
+.btn svg{width:12px;height:12px}
+.igrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.icard{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+.icard-t{font-size:13px;font-weight:700;margin-bottom:3px}
+.icard-m{font-size:11px;color:var(--t3);margin-bottom:2px;display:flex;align-items:center;gap:4px}
+.icard-m svg{width:11px;height:11px}
+.icard-a{display:flex;gap:4px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border-s)}
+.ibtn{padding:3px 8px;border-radius:5px;font-size:10px;font-weight:600;border:none;background:var(--bg);color:var(--t2);font-family:inherit;display:flex;align-items:center;gap:3px}
+.ibtn svg{width:10px;height:10px}
+.ibtn-r{color:var(--r)}
+
+/* Semester list */
+.sem-i{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.sem-i.cur{border-left:3px solid var(--p)}
+.sem-t{font-size:13px;font-weight:700}
+.sem-m{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* ═══ STANDALONE SCREENS ═══ */
+.standalone{background:var(--dark);display:flex;align-items:center;justify-content:center;padding:48px;min-height:420px}
+.form-card{background:#fff;border-radius:16px;box-shadow:var(--shadow-e);width:100%;max-width:400px;padding:28px}
+.form-card.wide{max-width:640px}
+.fh{text-align:center;margin-bottom:24px}
+.fh-icon{width:48px;height:48px;margin:0 auto 12px;background:var(--p-s);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--p)}
+.fh-icon svg{width:22px;height:22px}
+.fh-t{font-size:18px;font-weight:700;letter-spacing:-.3px;margin-bottom:3px}
+.fh-st{font-size:12px;color:var(--t2);line-height:1.4}
+.fld{margin-bottom:14px}
+.fld-l{display:block;font-size:12px;font-weight:600;margin-bottom:5px}
+.fld-lr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.fld-lk{font-size:11px;color:var(--t3);text-decoration:none;font-weight:500}
+.fld-i{width:100%;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:var(--radius-s);font-size:13px;font-family:inherit;color:var(--t1);background:#fff;outline:none;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.fld-i:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.cbx{display:flex;align-items:center;gap:6px;margin-bottom:16px;font-size:12px}
+.cbx input{width:14px;height:14px;accent-color:var(--p)}
+.cbx-h{color:var(--t3);font-size:11px}
+.fbtn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;height:40px;border-radius:var(--radius-s);font-size:13px;font-weight:600;font-family:inherit;cursor:default;border:none}
+.fbtn-p{background:var(--p);color:#fff}
+.fbtn-o{background:#fff;border:1px solid var(--border);color:var(--t1)}
+.fbtn svg{width:14px;height:14px}
+.fdiv{display:flex;align-items:center;gap:10px;margin:16px 0}
+.fdiv::before,.fdiv::after{content:"";flex:1;height:1px;background:var(--border)}
+.fdiv span{font-size:11px;color:var(--t3)}
+.fbot{text-align:center;margin-top:14px;font-size:12px;color:var(--t2)}
+.fbot a{color:var(--p);font-weight:600;text-decoration:none}
+.fret{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:14px;font-size:12px;color:rgba(255,255,255,.4)}
+.fret svg{width:12px;height:12px}
+
+/* Alert */
+.alrt{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:var(--radius-s);font-size:12px;line-height:1.5;margin-bottom:16px}
+.alrt svg{width:14px;height:14px;flex-shrink:0;margin-top:1px}
+.alrt-b{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);color:#2563eb}
+.alrt-a{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);color:#d97706}
+
+/* Info row */
+.info-r{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--t3)}
+.info-r svg{width:12px;height:12px}
+.info-dot{color:var(--t4)}
+.meta-col{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:6px;font-size:12px;color:var(--t2)}
+.meta-item{display:inline-flex;align-items:center;gap:5px}
+.meta-item svg{width:13px;height:13px;color:var(--t3)}
+
+/* PIN */
+.pin-row{display:flex;justify-content:center;gap:10px;margin:20px 0}
+.pin-b{width:48px;height:52px;border:2px solid var(--border);border-radius:var(--radius-s);font-size:22px;font-weight:700;text-align:center;font-family:inherit;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.pin-b.ok{border-color:var(--p);background:var(--p-s)}
+
+/* ═══ EVAL CARD ═══ */
+.eval-wrap{background:var(--dark);padding:24px;display:flex;justify-content:center}
+.eval{background:#fff;border-radius:20px;box-shadow:var(--shadow-e);width:100%;max-width:620px;overflow:hidden}
+.ev-hdr{background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.ev-id{display:flex;align-items:center;gap:6px;padding:8px 16px;font-size:11px;color:var(--t3);border-bottom:1px solid var(--border-s)}
+.ev-id-n{font-weight:600;color:var(--t2)}
+.ev-id-r{margin-left:auto;display:flex;align-items:center;gap:4px}
+.ev-sv{width:6px;height:6px;border-radius:999px;background:var(--g)}
+.ev-proj{padding:10px 16px;border-bottom:1px solid var(--border-s)}
+.ev-proj-t{font-size:12px;font-weight:700}
+.ev-proj-s{font-size:11px;color:var(--t3);margin-top:1px}
+.ev-nav{display:flex;align-items:center;gap:8px;padding:8px 16px}
+.ev-nb{height:28px;padding:0 12px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:11px;font-weight:600;color:var(--t2);font-family:inherit;display:flex;align-items:center;gap:3px;border:1px solid var(--border)}
+.ev-nb svg{width:12px;height:12px}
+.ev-nc{flex:1;text-align:center;font-size:12px;font-weight:700}
+.ev-nc span{font-weight:500;color:var(--t3)}
+.ev-pb{display:flex;align-items:center;gap:8px;padding:0 16px 8px}
+.ev-pb svg{width:12px;height:12px;color:var(--t3)}
+.ev-pb-bg{flex:1;height:5px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+.ev-pb-f{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--p),#7c3aed)}
+.ev-pb-l{font-size:10px;font-weight:700;color:var(--t2);min-width:24px;text-align:right}
+
+.ev-body{padding:16px}
+.cc{border:1px solid var(--border);border-left:4px solid;border-radius:var(--radius);padding:14px;margin-bottom:10px;background:#fff}
+.cc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.cc-l{font-size:13px;font-weight:700}
+.cc-mx{font-size:10px;color:var(--t3);margin-top:1px}
+.cc-desc{font-size:11px;color:var(--t3);line-height:1.4;margin-top:4px;max-width:340px}
+.sc-area{display:flex;align-items:center;gap:10px}
+.sc-i{width:60px;height:42px;border:2px solid var(--border);border-radius:6px;font-size:18px;font-weight:700;text-align:center;font-family:inherit;background:#fff}
+.sc-i.ok{border-color:var(--p);background:var(--p-s)}
+.sc-bar{flex:none;width:80px}
+.sc-bar-bg{height:5px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+.sc-bar-f{height:100%;border-radius:999px}
+.sc-pct{font-size:10px;font-weight:600;color:var(--t3);text-align:right;margin-top:2px}
+.mudek{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.mudek span{padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;background:var(--bg-s);color:var(--t3);border:1px solid var(--border)}
+.rub-btn{display:inline-flex;align-items:center;gap:3px;margin-top:8px;padding:3px 8px;border-radius:999px;border:1px solid var(--border);background:var(--bg-s);font-size:10px;font-weight:600;color:var(--t2);font-family:inherit}
+.rub-btn svg{width:10px;height:10px}
+
+/* Rubric table */
+.rub-t{margin-top:8px;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--bg-s)}
+.rub-r{display:grid;grid-template-columns:70px 1fr;font-size:11px;border-bottom:1px solid #e2e8f0}
+.rub-r:last-child{border-bottom:none}
+.rub-r.act{background:rgba(79,70,229,.04)}
+.rub-r.act .rub-rng{color:var(--p);font-weight:700}
+.rub-rng{padding:6px 10px;font-weight:600;color:var(--t2);border-right:1px solid #e2e8f0;display:flex;align-items:center;font-variant-numeric:tabular-nums}
+.rub-desc{padding:6px 10px;color:var(--t2);line-height:1.3}
+
+.cmt{border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;background:#fff}
+.cmt-l{font-size:12px;font-weight:600;margin-bottom:6px}
+.cmt-ta{width:100%;min-height:56px;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:12px;font-family:inherit;resize:vertical;outline:none;color:var(--t2)}
+
+.tot{display:flex;align-items:center;justify-content:space-between;background:rgba(79,70,229,.05);border:1px solid rgba(79,70,229,.12);border-radius:var(--radius);padding:12px 16px;margin-bottom:10px}
+.tot-l{font-size:13px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.5px}
+.tot-v{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.tot-m{color:var(--t3);font-size:14px;font-weight:500}
+
+.sub-btn{width:100%;height:44px;border:none;border-radius:var(--radius);font-size:14px;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;color:#fff}
+.sub-btn.green{background:var(--g);box-shadow:0 2px 12px rgba(34,197,94,.3)}
+.sub-btn.amber{background:var(--a);box-shadow:0 2px 12px rgba(245,158,11,.3)}
+.sub-btn svg{width:16px;height:16px}
+
+/* ═══ DONE STEP ═══ */
+.done-card{max-width:440px;text-align:center}
+.done-icon{width:56px;height:56px;margin:0 auto 12px;background:rgba(79,70,229,.08);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.done-t{font-size:20px;font-weight:800;margin-bottom:4px}
+.done-st{font-size:13px;color:var(--t2);margin-bottom:20px;line-height:1.5}
+.done-sum{background:var(--bg-s);border:1px solid var(--border);border-radius:var(--radius-s);padding:10px;margin-bottom:20px;text-align:left}
+.done-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:12px;border-bottom:1px solid var(--border-s)}
+.done-row:last-child{border-bottom:none}
+.done-rn{font-weight:600;color:var(--t1)}
+.done-rs{font-weight:700;font-variant-numeric:tabular-nums;color:var(--t1)}
+.done-acts{display:flex;flex-direction:column;gap:8px}
+
+/* ═══ ENTRY CONTROL ═══ */
+.token-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.token-h{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.token-ic{width:36px;height:36px;background:var(--g-s);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.token-t{font-weight:700;font-size:14px}
+.token-m{font-size:11px;color:var(--t3)}
+.token-url{background:var(--bg-s);border:1px solid var(--border);border-radius:6px;padding:10px;font-family:monospace;font-size:11px;color:var(--t2);word-break:break-all;margin-bottom:10px}
+.token-acts{display:flex;gap:6px}
+
+/* ═══ AUDIT LOG ═══ */
+.audit-row{display:flex;align-items:baseline;gap:8px;padding:8px 0;border-bottom:1px dashed var(--border-s);font-size:12px}
+.audit-row:last-child{border-bottom:none}
+.audit-ts{font-family:monospace;color:var(--t3);white-space:nowrap;font-size:11px}
+.audit-msg{color:var(--t2)}
+
+/* ═══ CHARTS ═══ */
+.chart-placeholder{height:160px;background:linear-gradient(180deg,rgba(79,70,229,.03),rgba(79,70,229,.01));border-radius:8px;display:flex;align-items:flex-end;justify-content:center;gap:8px;padding:0 20px 16px}
+.chart-bar{border-radius:4px 4px 0 0;width:32px;transition:height 300ms}
+</style>
+</head>
+<body>
+<div class="showcase">
+<div class="showcase-title">VERA — Full UI Showcase</div>
+<div class="showcase-sub">Corporate Clean Design System · Light Mode</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 1. ADMIN — OVERVIEW                                        -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="screen"><div class="screen-label">Admin — Overview</div>
+<div class="admin">
+  <div class="sb">
+    <div class="sb-brand"><div class="sb-logo">V</div><div class="sb-name">VERA</div></div>
+    <div class="sb-sep"></div>
+    <div class="sb-tenant"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg>TEDU EE</div>
+    <div class="sb-sec">Analytics</div>
+    <div class="sb-i on"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>Overview</div>
+    <div class="sb-i"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>Scores</div>
+    <div class="sb-sec">Manage</div>
+    <div class="sb-i"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Jurors</div>
+    <div class="sb-i"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Projects</div>
+    <div class="sb-i"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>Semesters</div>
+    <div class="sb-sec">System</div>
+    <div class="sb-i"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>Entry Control</div>
+    <div class="sb-i"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>Audit Log</div>
+    <div class="sb-foot"><div class="sb-sep"></div><div class="sb-user"><div class="sb-av">HY</div><div><div class="sb-un">Hugur Yıldız</div><div class="sb-ue">hugur@tedu.edu.tr</div></div></div></div>
+  </div>
+  <div class="ct">
+    <div class="pg-h"><div><div class="pg-t">Overview</div><div class="pg-st">2025 Fall · 15 Nov 2025</div></div><div class="h-acts"><span class="lr">Updated 2m ago</span><select class="sel"><option>2025 Fall</option></select><div class="rbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></div></div></div>
+    <div class="hero">
+      <div class="kpi"><div class="kring"><svg width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="none" stroke="#e2e8f0" stroke-width="4"/><circle cx="24" cy="24" r="20" fill="none" stroke="#84cc16" stroke-width="4" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="41.47" transform="rotate(-90 24 24)"/></svg><div class="kring-p" style="color:#84cc16">67%</div></div><div><div class="kl">Juror Completion</div><div class="kv">16 / 24</div><div class="ks">8 remaining · 3 in progress · 2 ready</div></div></div>
+      <div class="hero-s">
+        <div class="kpi"><div class="kicon" style="background:var(--p-s);color:var(--p)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg></div><div><div class="kl">Project Groups</div><div class="kv">8</div></div></div>
+        <div class="kpi"><div class="kring" style="width:40px;height:40px"><svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="#e2e8f0" stroke-width="3.5"/><circle cx="20" cy="20" r="16" fill="none" stroke="#eab308" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="100.53" stroke-dashoffset="40.21" transform="rotate(-90 20 20)"/></svg><div class="kring-p" style="color:#eab308;font-size:10px">60%</div></div><div><div class="kl">Scored Evaluations</div><div class="kv">115</div><div class="ks">192 total</div></div></div>
+      </div>
+    </div>
+    <div class="split">
+      <div class="crd"><div class="crd-h"><div class="crd-t">Juror Activity</div></div><table><thead><tr><th>Juror</th><th>Dept</th><th>Progress</th><th>Status</th><th>Last</th></tr></thead><tbody><tr><td class="jn">Dr. Ahmet K.</td><td>EE</td><td><div class="pb"><div class="pf" style="width:100%;background:var(--g)"></div></div></td><td><span class="bdg bdg-g"><span class="bdg-d"></span>Done</span></td><td style="font-size:11px;color:var(--t3)">14:32</td></tr><tr><td class="jn">Prof. Elif Y.</td><td>CS</td><td><div class="pb"><div class="pf" style="width:75%;background:var(--a)"></div></div></td><td><span class="bdg bdg-a"><span class="bdg-d"></span>Active</span></td><td style="font-size:11px;color:var(--t3)">13:45</td></tr><tr><td class="jn">Doç. Mehmet K.</td><td>ME</td><td><div class="pb"><div class="pf" style="width:100%;background:var(--g)"></div></div></td><td><span class="bdg bdg-g"><span class="bdg-d"></span>Done</span></td><td style="font-size:11px;color:var(--t3)">12:10</td></tr><tr><td class="jn">Prof. Can Ö.</td><td>EE</td><td><div class="pb"><div class="pf" style="width:0%"></div></div></td><td><span class="bdg bdg-x"><span class="bdg-d"></span>Waiting</span></td><td style="font-size:11px;color:var(--t3)">—</td></tr></tbody></table></div>
+      <div class="crd"><div class="crd-h"><div class="crd-t">Criteria Breakdown</div></div><div class="cri"><div class="cri-i"><div class="cri-d" style="background:var(--a)"></div><div class="cri-n">Technical</div><div><span class="cri-v">24.2</span><span class="cri-m">/30</span></div><div class="cri-b"><div class="pb"><div class="pf" style="width:81%;background:var(--a)"></div></div></div></div><div class="cri-i"><div class="cri-d" style="background:var(--g)"></div><div class="cri-n">Written</div><div><span class="cri-v">22.1</span><span class="cri-m">/30</span></div><div class="cri-b"><div class="pb"><div class="pf" style="width:74%;background:var(--g)"></div></div></div></div><div class="cri-i"><div class="cri-d" style="background:var(--b)"></div><div class="cri-n">Oral</div><div><span class="cri-v">21.8</span><span class="cri-m">/30</span></div><div class="cri-b"><div class="pb"><div class="pf" style="width:73%;background:var(--b)"></div></div></div></div><div class="cri-i"><div class="cri-d" style="background:var(--r)"></div><div class="cri-n">Teamwork</div><div><span class="cri-v">7.6</span><span class="cri-m">/10</span></div><div class="cri-b"><div class="pb"><div class="pf" style="width:76%;background:var(--r)"></div></div></div></div></div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 2. ADMIN — SCORES RANKINGS                                 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="screen"><div class="screen-label">Admin — Scores · Rankings</div>
+<div class="admin">
+  <div class="sb"><div class="sb-brand"><div class="sb-logo">V</div><div class="sb-name">VERA</div></div><div class="sb-sep"></div><div class="sb-sec">Analytics</div><div class="sb-i">Overview</div><div class="sb-i on">Scores</div><div class="sb-sub"><div class="sb-i on">Rankings</div><div class="sb-i">Analytics</div><div class="sb-i">Grid</div><div class="sb-i">Details</div></div><div class="sb-sec">Manage</div><div class="sb-i">Jurors</div><div class="sb-i">Projects</div></div>
+  <div class="ct">
+    <div class="pg-h"><div><div class="pg-t">Scores · Rankings</div><div class="pg-st">2025 Fall</div></div></div>
+    <div class="crd"><table><thead><tr><th>#</th><th>Group</th><th>Project</th><th>Avg Score</th><th>Jurors</th><th>Technical</th><th>Written</th><th>Oral</th></tr></thead><tbody>
+      <tr><td style="font-weight:700">🥇</td><td class="jn">Group 3</td><td>Smart Home Energy</td><td style="font-weight:700">82.4</td><td>16/24</td><td>25.8</td><td>24.2</td><td>23.8</td></tr>
+      <tr><td style="font-weight:700">🥈</td><td class="jn">Group 1</td><td>Autonomous Drone</td><td style="font-weight:700">78.9</td><td>16/24</td><td>24.1</td><td>23.5</td><td>22.7</td></tr>
+      <tr><td style="font-weight:700">🥉</td><td class="jn">Group 5</td><td>IoT Weather Station</td><td style="font-weight:700">75.2</td><td>14/24</td><td>23.4</td><td>22.1</td><td>21.9</td></tr>
+      <tr><td>4</td><td class="jn">Group 2</td><td>Robot Arm Control</td><td style="font-weight:700">72.1</td><td>16/24</td><td>22.8</td><td>21.0</td><td>20.5</td></tr>
+      <tr><td>5</td><td class="jn">Group 7</td><td>Solar Tracker</td><td style="font-weight:700">69.8</td><td>12/24</td><td>21.2</td><td>20.8</td><td>19.6</td></tr>
+      <tr><td>6</td><td class="jn">Group 4</td><td>EV Charger</td><td style="font-weight:700">67.3</td><td>16/24</td><td>20.5</td><td>19.4</td><td>19.2</td></tr>
+    </tbody></table></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 3. ADMIN — SCORES ANALYTICS                                -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="screen"><div class="screen-label">Admin — Scores · Analytics</div>
+<div class="admin" style="min-height:400px">
+  <div class="sb"><div class="sb-brand"><div class="sb-logo">V</div><div class="sb-name">VERA</div></div><div class="sb-sep"></div><div class="sb-sec">Analytics</div><div class="sb-i">Overview</div><div class="sb-i on">Scores</div><div class="sb-sub"><div class="sb-i">Rankings</div><div class="sb-i on">Analytics</div><div class="sb-i">Grid</div><div class="sb-i">Details</div></div></div>
+  <div class="ct">
+    <div class="pg-h"><div><div class="pg-t">Scores · Analytics</div><div class="pg-st">2025 Fall</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="crd"><div class="crd-h"><div class="crd-t">Programme Outcome Averages</div></div><div style="padding:0 16px 16px"><div class="chart-placeholder"><div class="chart-bar" style="height:75%;background:var(--b);width:28px"></div><div class="chart-bar" style="height:82%;background:var(--b);width:28px"></div><div class="chart-bar" style="height:68%;background:var(--b);width:28px"></div><div class="chart-bar" style="height:90%;background:var(--b);width:28px"></div><div class="chart-bar" style="height:72%;background:var(--b);width:28px"></div><div class="chart-bar" style="height:85%;background:var(--b);width:28px"></div><div class="chart-bar" style="height:65%;background:var(--b);width:28px"></div><div class="chart-bar" style="height:78%;background:var(--b);width:28px"></div></div></div></div>
+      <div class="crd"><div class="crd-h"><div class="crd-t">Achievement Level Distribution</div></div><div style="padding:0 16px 16px"><div class="chart-placeholder" style="gap:4px"><div class="chart-bar" style="height:30%;background:var(--r);width:40px"></div><div class="chart-bar" style="height:55%;background:var(--a);width:40px"></div><div class="chart-bar" style="height:80%;background:var(--g);width:40px"></div><div class="chart-bar" style="height:45%;background:var(--b);width:40px"></div></div></div></div>
+      <div class="crd" style="grid-column:span 2"><div class="crd-h"><div class="crd-t">Score Distribution by Criterion</div></div><div style="padding:0 16px 16px"><div class="chart-placeholder" style="height:120px"><div class="chart-bar" style="height:80%;background:var(--a);width:48px"></div><div class="chart-bar" style="height:73%;background:var(--g);width:48px"></div><div class="chart-bar" style="height:72%;background:var(--b);width:48px"></div><div class="chart-bar" style="height:76%;background:var(--r);width:48px"></div></div></div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 4. ADMIN — JURORS                                          -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="screen"><div class="screen-label">Admin — Jurors</div>
+<div class="admin">
+  <div class="sb"><div class="sb-brand"><div class="sb-logo">V</div><div class="sb-name">VERA</div></div><div class="sb-sep"></div><div class="sb-sec">Analytics</div><div class="sb-i">Overview</div><div class="sb-i">Scores</div><div class="sb-sec">Manage</div><div class="sb-i on">Jurors</div><div class="sb-i">Projects</div><div class="sb-i">Semesters</div></div>
+  <div class="ct">
+    <div class="pg-h"><div><div class="pg-t">Jurors</div><div class="pg-st">Manage jury members and evaluation permissions</div></div></div>
+    <div class="toolbar"><div class="srch"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Search jurors..."></div><div style="display:flex;gap:6px"><div class="btn btn-o"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Import CSV</div><div class="btn btn-p"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>Add Juror</div></div></div>
+    <div class="crd"><table><thead><tr><th>Name</th><th>Department</th><th>PIN</th><th>Progress</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+      <tr><td class="jn">Dr. Ahmet Karaoğlu</td><td>EE</td><td style="font-family:monospace;font-size:11px;color:var(--t3)">••••</td><td><div class="pb"><div class="pf" style="width:100%;background:var(--g)"></div></div></td><td><span class="bdg bdg-g"><span class="bdg-d"></span>Completed</span></td><td><span class="ibtn"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit</span></td></tr>
+      <tr><td class="jn">Prof. Elif Yılmaz</td><td>CS</td><td style="font-family:monospace;font-size:11px;color:var(--t3)">••••</td><td><div class="pb"><div class="pf" style="width:75%;background:var(--a)"></div></div></td><td><span class="bdg bdg-a"><span class="bdg-d"></span>In Progress</span></td><td><span class="ibtn"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit</span></td></tr>
+      <tr><td class="jn">Prof. Can Özkan</td><td>EE</td><td style="font-family:monospace;font-size:11px;color:var(--t3)">••••</td><td><div class="pb"><div class="pf" style="width:0%"></div></div></td><td><span class="bdg bdg-x"><span class="bdg-d"></span>Not Started</span></td><td><span class="ibtn"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit</span></td></tr>
+    </tbody></table></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 5. ADMIN — PROJECTS                                        -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="screen"><div class="screen-label">Admin — Projects</div>
+<div class="admin">
+  <div class="sb"><div class="sb-brand"><div class="sb-logo">V</div><div class="sb-name">VERA</div></div><div class="sb-sep"></div><div class="sb-sec">Manage</div><div class="sb-i">Jurors</div><div class="sb-i on">Projects</div><div class="sb-i">Semesters</div></div>
+  <div class="ct">
+    <div class="pg-h"><div><div class="pg-t">Projects</div><div class="pg-st">Manage student groups and project assignments</div></div></div>
+    <div class="toolbar"><div class="srch"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Search projects..."></div><div style="display:flex;gap:6px"><div class="btn btn-o">Import CSV</div><div class="btn btn-p">Add Project</div></div></div>
+    <div class="igrid">
+      <div class="icard"><div class="icard-t">Group 1 — Autonomous Drone</div><div class="icard-m"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Ali V., Zeynep K., Burak T.</div><div class="icard-a"><span class="ibtn"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit</span><span class="ibtn ibtn-r"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg>Delete</span></div></div>
+      <div class="icard"><div class="icard-t">Group 2 — Robot Arm Control</div><div class="icard-m"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Deniz A., Selin M.</div><div class="icard-a"><span class="ibtn">Edit</span><span class="ibtn ibtn-r">Delete</span></div></div>
+      <div class="icard"><div class="icard-t">Group 3 — Smart Home Energy</div><div class="icard-m"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Ahmet Y., Elif K., Can D.</div><div class="icard-a"><span class="ibtn">Edit</span><span class="ibtn ibtn-r">Delete</span></div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 6. ADMIN — SEMESTERS                                       -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="screen"><div class="screen-label">Admin — Semesters</div>
+<div class="admin" style="min-height:380px">
+  <div class="sb"><div class="sb-brand"><div class="sb-logo">V</div><div class="sb-name">VERA</div></div><div class="sb-sep"></div><div class="sb-sec">Manage</div><div class="sb-i">Jurors</div><div class="sb-i">Projects</div><div class="sb-i on">Semesters</div></div>
+  <div class="ct">
+    <div class="pg-h"><div><div class="pg-t">Semesters</div><div class="pg-st">Manage evaluation periods, criteria, and MÜDEK outcomes</div></div><div class="btn btn-p">Add Semester</div></div>
+    <div class="sem-i cur"><div><div class="sem-t">2025 Fall</div><div class="sem-m">📅 15 Nov 2025 · <span class="bdg bdg-g" style="font-size:9px"><span class="bdg-d"></span>Current</span></div></div><span class="ibtn">Edit</span></div>
+    <div class="sem-i"><div><div class="sem-t">2025 Spring</div><div class="sem-m">📅 20 May 2025</div></div><span class="ibtn">Edit</span></div>
+    <div class="sem-i"><div><div class="sem-t">2024 Fall</div><div class="sem-m">📅 14 Nov 2024</div></div><span class="ibtn">Edit</span></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 7. ADMIN — ENTRY CONTROL                                   -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="screen"><div class="screen-label">Admin — Entry Control</div>
+<div class="admin" style="min-height:360px">
+  <div class="sb"><div class="sb-brand"><div class="sb-logo">V</div><div class="sb-name">VERA</div></div><div class="sb-sep"></div><div class="sb-sec">System</div><div class="sb-i on">Entry Control</div><div class="sb-i">Audit Log</div><div class="sb-i">Settings</div></div>
+  <div class="ct">
+    <div class="pg-h"><div><div class="pg-t">Entry Control</div><div class="pg-st">Manage jury entry tokens and QR access codes</div></div></div>
+    <div class="token-card">
+      <div class="token-h"><div class="token-ic">🔗</div><div><div class="token-t">Active Entry Token</div><div class="token-m">Created 2 hours ago · Expires in 22 hours</div></div></div>
+      <div class="token-url">https://vera-eval.app/?t=abc123def456ghi789</div>
+      <div class="token-acts"><div class="btn btn-o">📋 Copy Link</div><div class="btn btn-o">📱 Show QR</div><div class="btn btn-o" style="color:var(--r);border-color:rgba(239,68,68,.3)">Revoke</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 8. ADMIN — AUDIT LOG                                       -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="screen"><div class="screen-label">Admin — Audit Log</div>
+<div class="admin" style="min-height:360px">
+  <div class="sb"><div class="sb-brand"><div class="sb-logo">V</div><div class="sb-name">VERA</div></div><div class="sb-sep"></div><div class="sb-sec">System</div><div class="sb-i">Entry Control</div><div class="sb-i on">Audit Log</div><div class="sb-i">Settings</div></div>
+  <div class="ct">
+    <div class="pg-h"><div><div class="pg-t">Audit Log</div><div class="pg-st">View administrative actions and security events</div></div></div>
+    <div class="crd" style="padding:16px">
+      <div class="audit-row"><span class="audit-ts">14:32:18</span><span class="audit-msg"><strong>Dr. Ahmet K.</strong> submitted final scores for all groups</span></div>
+      <div class="audit-row"><span class="audit-ts">13:45:02</span><span class="audit-msg"><strong>Prof. Elif Y.</strong> started evaluation session</span></div>
+      <div class="audit-row"><span class="audit-ts">12:10:55</span><span class="audit-msg"><strong>Doç. Mehmet K.</strong> submitted final scores for all groups</span></div>
+      <div class="audit-row"><span class="audit-ts">10:30:00</span><span class="audit-msg"><strong>Admin</strong> generated new entry token</span></div>
+      <div class="audit-row"><span class="audit-ts">09:15:22</span><span class="audit-msg"><strong>Admin</strong> added 3 new project groups</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 9. SIGN IN                                                 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="screen"><div class="screen-label">Admin — Sign In</div>
+<div class="standalone">
+  <div>
+    <div class="form-card">
+      <div class="fh"><div class="fh-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></div><div class="fh-t">Admin Panel</div><div class="fh-st">Sign in to manage your department.</div></div>
+      <div class="fld"><label class="fld-l">Email</label><input class="fld-i" value="hugur@tedu.edu.tr"></div>
+      <div class="fld"><div class="fld-lr"><label class="fld-l" style="margin-bottom:0">Password</label><a class="fld-lk">Forgot password?</a></div><input class="fld-i" type="password" value="••••••••••"></div>
+      <div class="cbx"><input type="checkbox" checked><span>Remember me</span><span class="cbx-h">30 days</span></div>
+      <div class="fbtn fbtn-p">Sign In</div>
+      <div class="fdiv"><span>or</span></div>
+      <div class="fbtn fbtn-o"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Sign in with Google</div>
+      <div class="fbot">Don't have an account? <a>Apply for access</a></div>
+    </div>
+    <div class="fret"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Return Home</div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 10. JURY — INFO STEP                                       -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="screen"><div class="screen-label">Jury — Info Step</div>
+<div class="standalone">
+  <div>
+    <div class="form-card">
+      <div class="fh">
+        <div class="fh-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg></div>
+        <div class="fh-t">Jury Information</div>
+        <div class="meta-col"><div class="meta-item"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 6 3 6 3s3 0 6-3v-5"/></svg>TED University</div><div class="meta-item"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg>Electrical &amp; Electronics Eng.</div></div>
+        <div class="info-r"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>Summer 2026 <span class="info-dot">·</span> 12 Aug 2026 <span class="info-dot">·</span> 3 Groups</div>
+      </div>
+      <div class="alrt alrt-b"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Name and institution / department cannot be changed once evaluation starts.</div>
+      <div class="fld"><label class="fld-l">Full Name</label><input class="fld-i" value="Demo Juror" placeholder="e.g. Jane Smith"></div>
+      <div class="fld"><label class="fld-l">Institution / Department</label><input class="fld-i" value="TED University / EE" placeholder="e.g. TED University / EE"></div>
+      <div class="alrt alrt-a"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>In production, jurors enter their real name and institution / department.</div>
+      <div class="fbtn fbtn-p" style="margin-top:4px">Start Evaluation <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
+    </div>
+    <div class="fret"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Return Home</div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 11. JURY — PIN STEP                                        -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="screen"><div class="screen-label">Jury — PIN Step</div>
+<div class="standalone" style="min-height:360px">
+  <div>
+    <div class="form-card" style="max-width:360px">
+      <div class="fh"><div class="fh-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div class="fh-t">Enter Your PIN</div><div class="fh-st">Enter the 4-digit PIN assigned to you.</div></div>
+      <div class="pin-row"><input class="pin-b ok" value="4" maxlength="1"><input class="pin-b ok" value="7" maxlength="1"><input class="pin-b ok" value="2" maxlength="1"><input class="pin-b" value="" maxlength="1" placeholder="·"></div>
+      <div class="fbtn fbtn-p">Verify PIN</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 12. JURY — EVALUATION                                      -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="screen"><div class="screen-label">Jury — Evaluation Form</div>
+<div class="eval-wrap">
+  <div class="eval">
+    <div class="ev-hdr">
+      <div class="ev-id"><span class="ev-id-n">Demo Juror</span><span style="margin:0 2px">·</span>TEDU / EE<div class="ev-id-r"><div class="ev-sv"></div><span style="font-size:10px;color:var(--t3)">Saved</span></div></div>
+      <div class="ev-proj"><div class="ev-proj-t">Smart Home Energy Management System</div><div class="ev-proj-s">Ahmet Yılmaz, Elif Kara, Can Demir</div></div>
+      <div class="ev-nav"><div class="ev-nb" style="opacity:.4"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Prev</div><div class="ev-nc">Group 1 <span>of 3</span></div><div class="ev-nb">Next <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div></div>
+      <div class="ev-pb"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg><div class="ev-pb-bg"><div class="ev-pb-f" style="width:75%"></div></div><span class="ev-pb-l">75%</span></div>
+    </div>
+    <div class="ev-body">
+      <!-- Technical -->
+      <div class="cc" style="border-left-color:var(--a)"><div class="cc-top"><div><div class="cc-l">Technical</div><div class="cc-mx">0 – 30 points</div><div class="cc-desc">Evaluates technical depth, methodology, and engineering quality.</div><div class="mudek"><span>PÇ 1.2</span><span>PÇ 2</span><span>PÇ 3.1</span></div></div><div class="sc-area"><input class="sc-i ok" value="24"><div class="sc-bar"><div class="sc-bar-bg"><div class="sc-bar-f" style="width:80%;background:var(--a)"></div></div><div class="sc-pct">80%</div></div></div></div><div class="rub-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>Show rubric</div></div>
+      <!-- Written (rubric open) -->
+      <div class="cc" style="border-left-color:var(--g)"><div class="cc-top"><div><div class="cc-l">Written</div><div class="cc-mx">0 – 30 points</div></div><div class="sc-area"><input class="sc-i ok" value="22"><div class="sc-bar"><div class="sc-bar-bg"><div class="sc-bar-f" style="width:73%;background:var(--g)"></div></div><div class="sc-pct">73%</div></div></div></div><div class="rub-btn" style="background:#eef2ff;color:var(--p);border-color:rgba(79,70,229,.2)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform:rotate(180deg)"><path d="m6 9 6 6 6-6"/></svg>Hide rubric</div><div class="rub-t"><div class="rub-r"><div class="rub-rng">25–30</div><div class="rub-desc">Excellent — Clear, professional quality</div></div><div class="rub-r act"><div class="rub-rng">18–24</div><div class="rub-desc">Good — Minor issues, generally well-written</div></div><div class="rub-r"><div class="rub-rng">10–17</div><div class="rub-desc">Developing — Needs significant improvement</div></div><div class="rub-r"><div class="rub-rng">0–9</div><div class="rub-desc">Unsatisfactory — Incomplete or very poor</div></div></div></div>
+      <!-- Oral -->
+      <div class="cc" style="border-left-color:var(--b)"><div class="cc-top"><div><div class="cc-l">Oral</div><div class="cc-mx">0 – 30 points</div></div><div class="sc-area"><input class="sc-i" value="" placeholder="—"><div class="sc-bar"><div class="sc-bar-bg"><div class="sc-bar-f" style="width:0%"></div></div><div class="sc-pct">—</div></div></div></div></div>
+      <!-- Teamwork -->
+      <div class="cc" style="border-left-color:var(--r)"><div class="cc-top"><div><div class="cc-l">Teamwork</div><div class="cc-mx">0 – 10 points</div></div><div class="sc-area"><input class="sc-i ok" value="8"><div class="sc-bar"><div class="sc-bar-bg"><div class="sc-bar-f" style="width:80%;background:var(--r)"></div></div><div class="sc-pct">80%</div></div></div></div></div>
+      <!-- Comment -->
+      <div class="cmt"><div class="cmt-l">Comments (optional)</div><textarea class="cmt-ta">Good project overall. Technical implementation was solid.</textarea></div>
+      <!-- Total -->
+      <div class="tot"><div class="tot-l">Total</div><div class="tot-v">54 <span class="tot-m">/ 100</span></div></div>
+      <div class="sub-btn amber"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="m5 12 7 7 7-7"/></svg>Save &amp; Continue to Next Group</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 13. JURY — DONE STEP                                       -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="screen"><div class="screen-label">Jury — Done Step</div>
+<div class="standalone">
+  <div class="form-card done-card">
+    <div class="done-icon">🎉</div>
+    <div class="done-t">All Done!</div>
+    <div class="done-st">Your evaluations have been submitted successfully for all 3 project groups.</div>
+    <div class="done-sum">
+      <div class="done-row"><span class="done-rn">Group 1 — Autonomous Drone</span><span class="done-rs">78</span></div>
+      <div class="done-row"><span class="done-rn">Group 2 — Robot Arm Control</span><span class="done-rs">72</span></div>
+      <div class="done-row"><span class="done-rn">Group 3 — Smart Home Energy</span><span class="done-rs">82</span></div>
+    </div>
+    <div class="done-acts">
+      <div class="fbtn fbtn-o">Edit Scores</div>
+      <div class="fbtn fbtn-p">Return Home</div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div><!-- /showcase -->
+</body>
+</html>

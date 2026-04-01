@@ -36,7 +36,20 @@
       "Bash(git replace:*)",
       "Bash(git filter-branch:*)",
       "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --tag-name-filter cat -- HEAD)",
-      "Bash(grep -E \"\\\\.jsx$|\\\\.js$\")"
+      "Bash(grep -E \"\\\\.jsx$|\\\\.js$\")",
+      "Bash(ls /Users/huguryildiz/Documents/GitHub/VERA/postcss.config.*)",
+      "Bash(ls /Users/huguryildiz/Documents/GitHub/VERA/tailwind.config.*)",
+      "Bash(find /Users/huguryildiz/Documents/GitHub/VERA/src/admin -name components.jsx -o -name components.js -o -name StatusBadge*)",
+      "Bash(ls -la /Users/huguryildiz/Documents/GitHub/VERA/src/styles/admin-*.css)",
+      "Bash(grep -n --ring- /Users/huguryildiz/Documents/GitHub/VERA/src/styles/*.css)",
+      "Bash(npx shadcn@latest init --preset b1Ymqvgiu --template vite)",
+      "Bash(yes)",
+      "Bash(npx shadcn@latest add --preset b1Ymqvgiu --all --overwrite)",
+      "Bash(npx shadcn@latest add --help)",
+      "Bash(npx shadcn@latest add \"https://v0.dev/chat/b1Ymqvgiu\" --overwrite --yes)",
+      "Bash(npx shadcn@latest add \"https://v0.dev/chat/b1Ymqvgiu?token=v0_token\" --overwrite --yes)",
+      "Bash(npx shadcn@latest init --help)",
+      "Bash(npx shadcn@latest init --template vite --defaults --force --reinstall)"
     ]
   }
 }

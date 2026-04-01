@@ -1,14 +1,11 @@
 // src/admin/hooks/useAdminTabs.js
 // ============================================================
-// Manages admin panel tab navigation state, URL sync, localStorage
-// persistence, and tab bar overflow hints.
+// Manages admin panel navigation state, URL sync, and
+// localStorage persistence.
 //
-// Extracted from AdminPanel.jsx (Phase 4 — Admin Layer Decomposition).
-// Phase 5: scoresView sub-navigation extracted to useResultsViewState.js.
-//
-// AdminPanel.jsx retains: TABS / EVALUATION_VIEWS render constants,
-// settingsDirtyRef creation, and the inline click handler that guards
-// against unsaved Settings changes.
+// Phase 2B: Extended with new sidebar pages (jurors, projects,
+// semesters, entry-control, audit-log, export). The old 3-tab
+// system is preserved as a subset.
 // ============================================================
 
 import { useEffect, useRef, useState } from "react";
@@ -21,7 +18,21 @@ import {
 
 // ── Tab normalizers ────────────────────────────────────────────
 
-const VALID_TABS = new Set(["overview", "scores", "settings"]);
+const VALID_TABS = new Set([
+  "overview",
+  "scores",
+  "settings",
+  // Phase 2B — decomposed from Settings
+  "jurors",
+  "projects",
+  "semesters",
+  "entry-control",
+  "audit-log",
+  "export",
+]);
+
+// Tabs that have editable forms — dirty guard applies
+const DIRTY_TABS = new Set(["settings", "jurors", "projects", "semesters"]);
 
 const normalizeTab = (value) => {
   if (value === "results" || value === "analysis") return "scores";
@@ -34,28 +45,17 @@ const normalizeTab = (value) => {
 // ── Hook ──────────────────────────────────────────────────────
 
 /**
- * useAdminTabs — tab navigation, URL sync, and tab bar overflow.
+ * useAdminTabs — sidebar navigation, URL sync, localStorage persistence.
  *
  * @param {object} opts
  * @param {React.MutableRefObject<boolean>} opts.settingsDirtyRef
- *   Ref owned by AdminPanel; the hook reads it in the setAdminTab
- *   guard so that AdminPanel's JSX click handler can use the same
- *   ref without passing it back through state.
+ * @param {boolean} [opts.isDemoMode]
  *
  * @returns {{
  *   adminTab: string,
  *   setAdminTab: (tab: string) => void,
  *   scoresView: string,
  *   switchScoresView: (view: string) => void,
- *   semesterOpen: boolean,
- *   setSemesterOpen: Function,
- *   scoreMenuOpen: boolean,
- *   setScoreMenuOpen: Function,
- *   tabOverflow: boolean,
- *   tabHintLeft: boolean,
- *   tabHintRight: boolean,
- *   tabBarRef: React.RefObject<HTMLDivElement>,
- *   updateTabHints: () => void,
  * }}
  */
 export function useAdminTabs({ settingsDirtyRef, isDemoMode = false }) {
@@ -74,22 +74,12 @@ export function useAdminTabs({ settingsDirtyRef, isDemoMode = false }) {
   // ── Scores sub-view (delegated) ──────────────────────────
   const { scoresView, setScoresViewRaw, switchScoresView } = useResultsViewState();
 
-  // Dropdown open/close state
-  const [semesterOpen, setSemesterOpen] = useState(false);
-  const [scoreMenuOpen, setScoreMenuOpen] = useState(false);
-
-  // Tab overflow scroll hints
-  const [tabOverflow, setTabOverflow] = useState(false);
-  const [tabHintLeft, setTabHintLeft] = useState(false);
-  const [tabHintRight, setTabHintRight] = useState(false);
-  const tabBarRef = useRef(null);
-
   // Tracks whether we've pushed the initial URL entry (use replaceState first)
   const hasInitialUrlPush = useRef(false);
 
-  // ── setAdminTab — guards against leaving dirty Settings ───
+  // ── setAdminTab — guards against leaving dirty pages ─────
   const setAdminTab = (tab) => {
-    if (adminTab === "settings" && settingsDirtyRef?.current) {
+    if (DIRTY_TABS.has(adminTab) && settingsDirtyRef?.current) {
       if (!window.confirm("You have unsaved changes. Leave anyway?")) return;
     }
     setAdminTabRaw(tab);
@@ -142,65 +132,10 @@ export function useAdminTabs({ settingsDirtyRef, isDemoMode = false }) {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Dropdown mutual exclusion ──────────────────────────────
-  useEffect(() => {
-    if (semesterOpen) setScoreMenuOpen(false);
-  }, [semesterOpen]);
-
-  useEffect(() => {
-    if (scoreMenuOpen) setSemesterOpen(false);
-  }, [scoreMenuOpen]);
-
-  // ── Tab bar overflow scroll hints ──────────────────────────
-  const updateTabHints = () => {
-    const el = tabBarRef.current;
-    if (!el) return;
-    const maxScroll = el.scrollWidth - el.clientWidth;
-    const hasOverflow = maxScroll > 2;
-    setTabOverflow(hasOverflow);
-    if (!hasOverflow) { setTabHintLeft(false); setTabHintRight(false); return; }
-    setTabHintLeft(el.scrollLeft > 4);
-    setTabHintRight(el.scrollLeft < maxScroll - 4);
-  };
-
-  useEffect(() => {
-    updateTabHints();
-    window.addEventListener("resize", updateTabHints);
-    return () => window.removeEventListener("resize", updateTabHints);
-  }, [adminTab]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Orientation-change reflow ──────────────────────────────
-  useEffect(() => {
-    let rafId1 = null;
-    let rafId2 = null;
-    const handleOrientation = () => {
-      rafId1 = requestAnimationFrame(() => {
-        rafId2 = requestAnimationFrame(() => {
-          window.dispatchEvent(new Event("resize"));
-        });
-      });
-    };
-    window.addEventListener("orientationchange", handleOrientation);
-    return () => {
-      window.removeEventListener("orientationchange", handleOrientation);
-      if (rafId1 !== null) cancelAnimationFrame(rafId1);
-      if (rafId2 !== null) cancelAnimationFrame(rafId2);
-    };
-  }, []);
-
   return {
     adminTab,
     setAdminTab,
     scoresView,
     switchScoresView,
-    semesterOpen,
-    setSemesterOpen,
-    scoreMenuOpen,
-    setScoreMenuOpen,
-    tabOverflow,
-    tabHintLeft,
-    tabHintRight,
-    tabBarRef,
-    updateTabHints,
   };
 }

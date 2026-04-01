@@ -1,0 +1,91 @@
+/* Confetti celebration animation for DoneStep */
+
+.confetti-icon {
+  position: relative;
+  overflow: visible;
+  animation: icon-celebrate 600ms ease-out 400ms both;
+}
+@keyframes icon-celebrate {
+  0% { transform: scale(0.6) rotate(-8deg); opacity: 0; }
+  50% { transform: scale(1.12) rotate(3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.confetti-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+  border-radius: 999px;
+}
+
+/* Layer A — small circles, fast outward burst */
+.confetti-a {
+  width: 5px; height: 5px;
+  background: #6366f1;
+  box-shadow:
+    -24px -18px 0 0 #818cf8,
+     22px -22px 0 0 #a855f7,
+    -28px  14px 0 0 #6366f1,
+     26px  20px 0 0 #c084fc,
+      0px -28px 0 0 #f59e0b,
+     -8px  26px 0 0 #10b981;
+  animation: confetti-explode-a 1.4s cubic-bezier(0.22, 1, 0.36, 1) 500ms both;
+}
+@keyframes confetti-explode-a {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+}
+
+/* Layer B — elongated bars, staggered */
+.confetti-b {
+  width: 3px; height: 8px;
+  border-radius: 2px;
+  background: #a855f7;
+  box-shadow:
+    -18px -24px 0 0 #f59e0b,
+     20px  -6px 0 0 #10b981,
+    -14px  22px 0 0 #6366f1,
+     16px  16px 0 0 #ec4899,
+     -4px -20px 0 0 #c084fc;
+  animation: confetti-explode-b 1.6s cubic-bezier(0.22, 1, 0.36, 1) 600ms both;
+}
+@keyframes confetti-explode-b {
+  0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.4) rotate(60deg); opacity: 0; }
+}
+
+/* Layer C — tiny sparkle dots, delayed */
+.confetti-c {
+  width: 3px; height: 3px;
+  background: #f59e0b;
+  box-shadow:
+    -32px  -4px 0 0 #ec4899,
+     30px -16px 0 0 #f59e0b,
+    -20px  28px 0 0 #10b981,
+     28px  24px 0 0 #818cf8,
+     10px -30px 0 0 #c084fc,
+    -26px -20px 0 0 #6366f1;
+  animation: confetti-explode-c 1.8s cubic-bezier(0.22, 1, 0.36, 1) 700ms both;
+}
+@keyframes confetti-explode-c {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  12% { opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+}
+
+/* Layer D — ring pulse glow */
+.confetti-d {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: transparent;
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  animation: confetti-ring 1.2s ease-out 450ms both;
+}
+@keyframes confetti-ring {
+  0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+  30% { opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+}

@@ -386,6 +386,12 @@
   color: #475569;
   white-space: nowrap;
 }
+.detail-table td.cell-status,
+.detail-table td.cell-juror-status {
+  text-align: center;
+  white-space: nowrap;
+  width: 1%;
+}
 .details-juror-cell {
   display: inline-flex;
   align-items: center;

@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VERA — Corporate Clean Evaluation Form Concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #1e293b;
+    --card: #ffffff;
+    --card-border: #e2e8f0;
+    --muted: #f8fafc;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --text-tertiary: #94a3b8;
+    --primary: #4f46e5;
+    --primary-soft: rgba(79,70,229,0.08);
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+    --red: #ef4444;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px 48px;
+  }
+
+  /* ─── Eval Card ─── */
+  .eval-card {
+    background: var(--card);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 680px;
+    overflow: hidden;
+  }
+
+  /* ─── Sticky Header ─── */
+  .eval-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(255,255,255,0.97);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--card-border);
+    border-radius: 20px 20px 0 0;
+  }
+  .header-identity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .header-identity-name { font-weight: 600; color: var(--text-secondary); }
+  .header-identity-sep { margin: 0 2px; }
+  .header-identity-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+  .save-dot { width: 7px; height: 7px; border-radius: 999px; }
+  .save-dot.saved { background: var(--green); }
+  .save-label { font-size: 11px; color: var(--text-tertiary); }
+  .header-home-btn {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-tertiary);
+  }
+  .header-home-btn:hover { color: var(--text-primary); background: var(--muted); }
+  .header-home-btn svg { width: 14px; height: 14px; }
+
+  .header-project {
+    padding: 12px 20px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .project-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+  .project-students { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+
+  .header-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+  }
+  .nav-btn {
+    height: 32px; padding: 0 14px;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    background: white;
+    font-size: 12px; font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; gap: 4px;
+    transition: all 120ms;
+  }
+  .nav-btn:hover { background: var(--muted); color: var(--text-primary); }
+  .nav-btn:disabled { opacity: 0.4; cursor: default; }
+  .nav-btn svg { width: 14px; height: 14px; }
+  .nav-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .nav-center-sub { font-weight: 500; color: var(--text-tertiary); font-size: 12px; }
+
+  .header-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px 10px;
+  }
+  .progress-icon { color: var(--text-tertiary); flex-shrink: 0; }
+  .progress-icon svg { width: 14px; height: 14px; }
+  .progress-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--primary), #7c3aed);
+    transition: width 400ms ease;
+  }
+  .progress-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    min-width: 30px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ─── Eval Body ─── */
+  .eval-body { padding: 20px; }
+
+  /* ─── Criterion Card ─── */
+  .crit-card {
+    border: 1px solid var(--card-border);
+    border-left: 4px solid;
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 14px;
+    background: white;
+  }
+  .crit-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .crit-left {}
+  .crit-label { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  .crit-max { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+  .crit-desc { font-size: 12px; color: var(--text-tertiary); line-height: 1.5; margin-top: 6px; max-width: 400px; }
+
+  .score-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .score-input {
+    width: 72px;
+    height: 48px;
+    border: 2px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: white;
+    outline: none;
+    transition: all 150ms;
+  }
+  .score-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+  }
+  .score-input.filled { border-color: var(--primary); background: var(--primary-soft); }
+
+  .score-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .score-bar-bg {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 300ms ease;
+  }
+  .score-pct {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ─── Rubric Toggle ─── */
+  .rubric-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--card-border);
+    background: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 120ms;
+  }
+  .rubric-toggle:hover { background: #eef2ff; color: var(--primary); border-color: rgba(79,70,229,0.2); }
+  .rubric-toggle svg { width: 12px; height: 12px; }
+
+  /* ─── Rubric Table ─── */
+  .rubric-table {
+    margin-top: 10px;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--muted);
+  }
+  .rubric-row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    font-size: 12px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .rubric-row:last-child { border-bottom: none; }
+  .rubric-row.active { background: rgba(79,70,229,0.04); }
+  .rubric-row.active .rubric-range { color: var(--primary); font-weight: 700; }
+  .rubric-range {
+    padding: 8px 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    border-right: 1px solid #e2e8f0;
+    display: flex; align-items: center;
+  }
+  .rubric-desc-cell {
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  /* ─── MÜDEK Badges ─── */
+  .mudek-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .mudek-badge {
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--muted);
+    color: var(--text-tertiary);
+    border: 1px solid var(--card-border);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ─── Comment Card ─── */
+  .comment-card {
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 14px;
+    background: white;
+  }
+  .comment-label { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+  .comment-textarea {
+    width: 100%;
+    min-height: 72px;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: white;
+    outline: none;
+    resize: vertical;
+    transition: all 150ms;
+  }
+  .comment-textarea::placeholder { color: var(--text-tertiary); }
+  .comment-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.08); }
+
+  /* ─── Total Bar ─── */
+  .total-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(79,70,229,0.05);
+    border: 1px solid rgba(79,70,229,0.12);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 14px;
+  }
+  .total-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .total-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+  .total-max { color: var(--text-tertiary); font-size: 16px; font-weight: 500; }
+
+  /* ─── Submit Button ─── */
+  .submit-btn {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--green);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 200ms;
+    box-shadow: 0 2px 12px rgba(34,197,94,0.3);
+  }
+  .submit-btn:hover { background: #16a34a; box-shadow: 0 4px 16px rgba(34,197,94,0.4); }
+  .submit-btn svg { width: 18px; height: 18px; }
+  .submit-btn.amber {
+    background: var(--amber);
+    box-shadow: 0 2px 12px rgba(245,158,11,0.3);
+  }
+  .submit-btn.amber:hover { background: #d97706; }
+</style>
+</head>
+<body>
+  <div class="eval-card">
+    <!-- ─── Sticky Header ─── -->
+    <div class="eval-header">
+      <!-- Identity bar -->
+      <div class="header-identity">
+        <button class="header-home-btn" title="Back to home">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <span class="header-identity-name">Demo Juror</span>
+        <span class="header-identity-sep">·</span>
+        <span>TEDU / EE</span>
+        <div class="header-identity-right">
+          <div class="save-dot saved"></div>
+          <span class="save-label">Saved</span>
+        </div>
+      </div>
+
+      <!-- Project info -->
+      <div class="header-project">
+        <div class="project-title">Smart Home Energy Management System</div>
+        <div class="project-students">Ahmet Yılmaz, Elif Kara, Can Demir</div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="header-nav">
+        <button class="nav-btn" disabled>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          Prev
+        </button>
+        <div class="nav-center">
+          Group 1
+          <span class="nav-center-sub">of 3</span>
+        </div>
+        <button class="nav-btn">
+          Next
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="header-progress">
+        <div class="progress-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width:75%;"></div>
+        </div>
+        <span class="progress-label">75%</span>
+      </div>
+    </div>
+
+    <!-- ─── Eval Body ─── -->
+    <div class="eval-body">
+      <!-- Technical (amber) -->
+      <div class="crit-card" style="border-left-color: var(--amber);">
+        <div class="crit-header">
+          <div class="crit-left">
+            <div class="crit-label">Technical</div>
+            <div class="crit-max">0 – 30 points</div>
+            <div class="crit-desc">Evaluates technical depth, methodology, and engineering quality of the project.</div>
+            <div class="mudek-badges">
+              <span class="mudek-badge">PÇ 1.2</span>
+              <span class="mudek-badge">PÇ 2</span>
+              <span class="mudek-badge">PÇ 3.1</span>
+            </div>
+          </div>
+          <div class="score-area">
+            <input class="score-input filled" type="text" value="24" maxlength="2">
+            <div class="score-bar-wrap">
+              <div class="score-bar-bg">
+                <div class="score-bar-fill" style="width:80%;background:var(--amber);"></div>
+              </div>
+              <div class="score-pct">80%</div>
+            </div>
+          </div>
+        </div>
+        <button class="rubric-toggle">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          Show rubric
+        </button>
+      </div>
+
+      <!-- Written (green) - with rubric open -->
+      <div class="crit-card" style="border-left-color: var(--green);">
+        <div class="crit-header">
+          <div class="crit-left">
+            <div class="crit-label">Written</div>
+            <div class="crit-max">0 – 30 points</div>
+            <div class="crit-desc">Evaluates poster/report quality, clarity of writing, and visual presentation.</div>
+          </div>
+          <div class="score-area">
+            <input class="score-input filled" type="text" value="22" maxlength="2">
+            <div class="score-bar-wrap">
+              <div class="score-bar-bg">
+                <div class="score-bar-fill" style="width:73%;background:var(--green);"></div>
+              </div>
+              <div class="score-pct">73%</div>
+            </div>
+          </div>
+        </div>
+        <button class="rubric-toggle" style="background:#eef2ff;color:var(--primary);border-color:rgba(79,70,229,0.2);">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform:rotate(180deg)"><path d="m6 9 6 6 6-6"/></svg>
+          Hide rubric
+        </button>
+        <!-- Rubric table expanded -->
+        <div class="rubric-table">
+          <div class="rubric-row">
+            <div class="rubric-range">25–30</div>
+            <div class="rubric-desc-cell">Excellent — Clear, well-structured, professional quality</div>
+          </div>
+          <div class="rubric-row active">
+            <div class="rubric-range">18–24</div>
+            <div class="rubric-desc-cell">Good — Minor issues but generally well-written</div>
+          </div>
+          <div class="rubric-row">
+            <div class="rubric-range">10–17</div>
+            <div class="rubric-desc-cell">Developing — Needs significant improvement</div>
+          </div>
+          <div class="rubric-row">
+            <div class="rubric-range">0–9</div>
+            <div class="rubric-desc-cell">Unsatisfactory — Incomplete or very poor quality</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Oral (blue) -->
+      <div class="crit-card" style="border-left-color: var(--blue);">
+        <div class="crit-header">
+          <div class="crit-left">
+            <div class="crit-label">Oral</div>
+            <div class="crit-max">0 – 30 points</div>
+          </div>
+          <div class="score-area">
+            <input class="score-input" type="text" value="" maxlength="2" placeholder="—">
+            <div class="score-bar-wrap">
+              <div class="score-bar-bg">
+                <div class="score-bar-fill" style="width:0%;background:var(--blue);"></div>
+              </div>
+              <div class="score-pct">—</div>
+            </div>
+          </div>
+        </div>
+        <button class="rubric-toggle">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          Show rubric
+        </button>
+      </div>
+
+      <!-- Teamwork (red) -->
+      <div class="crit-card" style="border-left-color: var(--red);">
+        <div class="crit-header">
+          <div class="crit-left">
+            <div class="crit-label">Teamwork</div>
+            <div class="crit-max">0 – 10 points</div>
+          </div>
+          <div class="score-area">
+            <input class="score-input filled" type="text" value="8" maxlength="2">
+            <div class="score-bar-wrap">
+              <div class="score-bar-bg">
+                <div class="score-bar-fill" style="width:80%;background:var(--red);"></div>
+              </div>
+              <div class="score-pct">80%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comment -->
+      <div class="comment-card">
+        <div class="comment-label">Comments (optional)</div>
+        <textarea class="comment-textarea" placeholder="Add any notes about this group's presentation...">Good project overall. The technical implementation was solid but the oral presentation could be more confident.</textarea>
+      </div>
+
+      <!-- Total Bar -->
+      <div class="total-bar">
+        <div class="total-label">Total</div>
+        <div class="total-value">54 <span class="total-max">/ 100</span></div>
+      </div>
+
+      <!-- Submit -->
+      <button class="submit-btn amber">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="m5 12 7 7 7-7"/></svg>
+        Save &amp; Continue to Next Group
+      </button>
+    </div>
+  </div>
+</body>
+</html>

@@ -52,7 +52,7 @@ function useMediaQuery(query) {
   return matches;
 }
 
-export default function SettingsPage({ tenantId, selectedSemesterId = "", isDemoMode = false, onDirtyChange, onCurrentSemesterChange }) {
+export default function SettingsPage({ tenantId, selectedSemesterId = "", isDemoMode = false, onDirtyChange, onCurrentSemesterChange, focusPanel = null }) {
   const { isSuper, activeTenant } = useAuth();
   const tenantCode = activeTenant?.code || "";
   const isMobile = useMediaQuery("(max-width: 900px)");
@@ -60,6 +60,29 @@ export default function SettingsPage({ tenantId, selectedSemesterId = "", isDemo
   const supportsInfiniteScroll = typeof window !== "undefined" && "IntersectionObserver" in window;
 
   const [openPanels, setOpenPanels] = useState(() => {
+    // When focusPanel is set (sidebar navigation), force only that panel open
+    if (focusPanel) {
+      const panelMap = {
+        "semesters": "semester",
+        "projects": "projects",
+        "jurors": "jurors",
+        "audit-log": "audit",
+        "export": "export",
+        "entry-control": "juryEntry",
+        "settings": "org",
+      };
+      const key = panelMap[focusPanel] || focusPanel;
+      return {
+        org: key === "org",
+        semester: key === "semester",
+        projects: key === "projects",
+        jurors: key === "jurors",
+        audit: key === "audit",
+        export: key === "export",
+        dbbackup: false,
+        juryEntry: key === "juryEntry",
+      };
+    }
     const isSM = typeof window !== "undefined" && window.innerWidth <= 500;
     return {
       org: !isSM,
