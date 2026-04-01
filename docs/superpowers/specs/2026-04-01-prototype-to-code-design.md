@@ -10,12 +10,13 @@ This is the **master spec** that defines the overall migration strategy. Impleme
 
 | # | Sub-project | Status |
 |---|------------|--------|
-| 1 | Foundation (tokens, dark mode, base components) | This spec |
-| 2 | Admin (15 pages + sidebar + header) | Separate spec |
+| 1 | Foundation (tokens, dark mode, base components) | ✅ Done |
+| 2 | Admin (15 pages + sidebar + header) | ✅ Done |
+| DB | DB Migration (parallel track — see below) | 🔄 In Progress |
 | 3 | Jury (splash, identity, PIN, eval, done) | Separate spec |
 | 4 | Landing (hero, trust band, features, CTA) | Separate spec |
 
-Order: Foundation -> Admin -> Jury -> Landing.
+Order: Foundation → Admin → **DB Migration** → Jury → Landing.
 
 ## Global Decisions
 
@@ -45,14 +46,15 @@ These renames come from project decisions documented in memory. Apply everywhere
 
 A consolidated DB migration is required. Pending schema changes:
 
-- RENAME `juror_inst` -> `affiliation`
-- RENAME `supervisor` -> `advisor` (when column exists)
+- RENAME `juror_inst` → `affiliation` (jurors table)
+- RENAME `students` → `members` (projects table)
 - ADD `advisor` to projects (nullable)
 - ADD `description` to projects (nullable)
-- ADD `description`, `start_date`, `end_date` to semesters (nullable)
+- RENAME table `semesters` → `periods`
+- ADD `description`, `start_date`, `end_date`, `framework`, `is_visible` to periods (nullable except is_visible DEFAULT true)
 - ADD `email` to jurors (nullable)
 - ADD `coverage_override` to outcomes (for Direct/Indirect mapping)
-- Potential `tenants` -> `organizations` table/column rename
+- RENAME table `tenants` → `organizations`, `tenant_id` → `organization_id` (all references)
 
 RPCs, API layer (`src/shared/api/`), and `fieldMapping.js` must be updated in sync.
 
