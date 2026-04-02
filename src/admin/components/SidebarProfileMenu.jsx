@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { useSidebar } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -304,7 +303,6 @@ export default function SidebarProfileMenu({
   isSuper,
   onLogout,
 }) {
-  const { isMobile } = useSidebar();
   const [menuOpen, setMenuOpen] = useState(false);
   const profile = useProfileEdit();
 
@@ -380,7 +378,7 @@ export default function SidebarProfileMenu({
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
-          side={isMobile ? "top" : "right"}
+          side="right"
           align="end"
           sideOffset={10}
           className="w-72 rounded-xl border-border/70 p-2"
