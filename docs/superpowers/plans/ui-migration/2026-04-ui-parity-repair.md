@@ -686,7 +686,7 @@ Phase 9  ✅ System pages (Entry Control, PIN, Audit, Settings, Export)
 Phase 10 ✅ Drawers + Modals
 Phase 11 ✅ Landing page
 Phase 12 ✅ Auth screens
-Phase 13 → Jury flow
+Phase 13 ✅ Jury flow
 Phase 14 → App shell + routing (final wiring)
 Phase 15 → Charts (Phase 2 + 4 ile paralel yazılabilir)
 Phase 16 → CSS Refactor (vera.css → ayrı dosyalara bölme)
@@ -769,7 +769,7 @@ Bu tablo her phase sonunda güncellenir. `Notes` alanında ilgili implementation
 | Modals | 24252-26700 | src/admin/modals/*.jsx + src/shared/ConfirmModal.jsx | ✅ | Full | [Phase 10 Report](implementation_reports/phase-10-implementation-summary.md) |
 | Landing | 10541-11159 | src/pages/LandingPage.jsx | ✅ | Full | [Phase 11 Report](implementation_reports/phase-11-implementation-summary.md) |
 | Auth Screens | CSS+HTML | src/auth/*.jsx | ✅ | Full | [Phase 12 Report](implementation_reports/phase-12-implementation-summary.md) |
-| Jury Flow | 16351-16700 | src/jury/steps/*.jsx | ⏳ | Missing | Phase 13 |
+| Jury Flow | 16351-17148 | src/jury/steps/*.jsx | ✅ | Full | [Phase 13 Report](implementation_reports/phase-13-implementation-summary.md) |
 | App Shell | — | src/App.jsx, AdminPanel.jsx | ⏳ | Missing | Phase 14 |
 | Charts Polish | — | src/charts/*.jsx | ⏳ | Missing | Phase 15 |
 | CSS Refactor | — | src/styles/*.css | ⏳ | Missing | Phase 16 |
