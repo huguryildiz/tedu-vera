@@ -33,7 +33,7 @@ import {
   EyeOffIcon,
   ChevronDownIcon,
   AlertCircleIcon,
-} from "../../shared/Icons";
+} from "@/shared/ui/Icons";
 import {
   getRawToken as storageGetRawToken,
   setRawToken as storageSetRawToken,

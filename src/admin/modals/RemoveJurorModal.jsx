@@ -10,7 +10,7 @@
 //   onRemove — () => Promise<void>
 
 import { useState } from "react";
-import Modal from "../../shared/Modal";
+import Modal from "@/shared/ui/Modal";
 
 export default function RemoveJurorModal({ open, onClose, juror, impact = {}, onRemove }) {
   const [removing, setRemoving] = useState(false);

@@ -8,7 +8,7 @@
 //   children    — drawer content (header + body + footer rendered by caller)
 
 import { useEffect, useRef } from "react";
-import { useFocusTrap } from "./useFocusTrap";
+import { useFocusTrap } from "@/shared/hooks/useFocusTrap";
 
 export default function Drawer({ open, onClose, children, id, className }) {
   const containerRef = useRef(null);

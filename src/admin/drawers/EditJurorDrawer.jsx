@@ -13,7 +13,7 @@
 //   error          — string | null
 
 import { useState, useEffect } from "react";
-import Drawer from "../../shared/Drawer";
+import Drawer from "@/shared/ui/Drawer";
 
 function initials(name) {
   return (name || "?").split(" ").slice(0, 2).map((p) => p[0]?.toUpperCase()).join("");

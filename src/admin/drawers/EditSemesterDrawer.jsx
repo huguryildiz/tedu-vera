@@ -12,7 +12,7 @@
 //   error       — string | null
 
 import { useState, useEffect } from "react";
-import Drawer from "../../shared/Drawer";
+import Drawer from "@/shared/ui/Drawer";
 
 export default function EditSemesterDrawer({ open, onClose, period, onSave, onDelete, error }) {
   const [form, setForm] = useState({ name: "", description: "", startDate: "", endDate: "", evalLock: "unlocked", visibility: "visible" });

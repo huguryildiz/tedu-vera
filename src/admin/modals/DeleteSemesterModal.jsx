@@ -10,7 +10,7 @@
 //   onDelete   — () => Promise<void>
 
 import { useState, useEffect } from "react";
-import Modal from "../../shared/Modal";
+import Modal from "@/shared/ui/Modal";
 
 export default function DeleteSemesterModal({ open, onClose, periodName, impact = {}, onDelete }) {
   const [typed, setTyped] = useState("");

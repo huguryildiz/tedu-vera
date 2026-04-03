@@ -12,7 +12,7 @@
 //   onReplaceFile   — () => void
 
 import { useState } from "react";
-import Modal from "../../shared/Modal";
+import Modal from "@/shared/ui/Modal";
 
 const STATUS_LABELS = { ok: "Valid", skip: "Duplicate", err: "Error" };
 

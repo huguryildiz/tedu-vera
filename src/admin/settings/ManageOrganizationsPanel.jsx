@@ -19,10 +19,10 @@ import {
   TrashIcon,
   UserStarIcon,
   UniversityIcon,
-} from "../../shared/Icons";
-import AlertCard from "../../shared/AlertCard";
-import Tooltip from "../../shared/Tooltip";
-import ConfirmDialog from "../../shared/ConfirmDialog";
+} from "@/shared/ui/Icons";
+import AlertCard from "@/shared/ui/AlertCard";
+import Tooltip from "@/shared/ui/Tooltip";
+import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import LastActivity from "../LastActivity";
 
 // ── Status badge styles ──────────────────────────────────────

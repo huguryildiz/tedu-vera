@@ -2,7 +2,7 @@
 import { describe, it, expect, vi } from "vitest";
 
 // Icons are pulled in transitively via scoreHelpers — mock them.
-vi.mock("../shared/Icons", () => ({
+vi.mock("@/shared/ui/Icons", () => ({
   CheckCircle2Icon: "span", CheckIcon: "span", SendIcon: "span",
   Clock3Icon: "span", CircleIcon: "span", CircleDotDashedIcon: "span", PencilIcon: "span",
 }));

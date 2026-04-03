@@ -3,7 +3,7 @@ import { describe, expect, vi } from "vitest";
 import { qaTest } from "./qaTest.js";
 
 // Icons are React components — mock them so scoreHelpers can be imported in Node.
-vi.mock("../shared/Icons", () => ({
+vi.mock("@/shared/ui/Icons", () => ({
   CheckCircle2Icon: "span",
   CheckIcon: "span",
   SendIcon: "span",

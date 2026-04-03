@@ -10,7 +10,7 @@
 //   onSendEmail — ({ email, includeQr }) => Promise<void>
 
 import { useState } from "react";
-import Modal from "../../shared/Modal";
+import Modal from "@/shared/ui/Modal";
 
 export default function PinResultModal({ open, onClose, juror, newPin, onSendEmail }) {
   const [copied, setCopied] = useState(false);

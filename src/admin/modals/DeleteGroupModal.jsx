@@ -10,7 +10,7 @@
 //   onDelete  — () => Promise<void>
 
 import { useState } from "react";
-import Modal from "../../shared/Modal";
+import Modal from "@/shared/ui/Modal";
 
 export default function DeleteGroupModal({ open, onClose, groupName, impact = {}, onDelete }) {
   const [deleting, setDeleting] = useState(false);

@@ -22,10 +22,10 @@
 // ============================================================
 
 import { useEffect, useId, useRef, useState } from "react";
-import AutoGrow from "../shared/AutoGrow";
-import BlockingValidationAlert from "../shared/BlockingValidationAlert";
-import AlertCard from "../shared/AlertCard";
-import ConfirmDialog from "../shared/ConfirmDialog";
+import AutoGrow from "@/shared/ui/AutoGrow";
+import BlockingValidationAlert from "@/shared/ui/BlockingValidationAlert";
+import AlertCard from "@/shared/ui/AlertCard";
+import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import { cn } from "@/shared/lib/utils";
 import {
   DndContext,
@@ -48,9 +48,9 @@ import {
   GoalIcon,
   TriangleAlertLucideIcon,
   XIcon,
-} from "../shared/Icons";
+} from "@/shared/ui/Icons";
 import DangerIconButton from "../components/admin/DangerIconButton";
-import Tooltip from "../shared/Tooltip";
+import Tooltip from "@/shared/ui/Tooltip";
 import { CSS } from "@dnd-kit/utilities";
 
 // ── Internal helpers ──────────────────────────────────────────

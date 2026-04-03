@@ -6,7 +6,7 @@
 
 import { render, screen } from "@testing-library/react";
 import { describe, expect, vi, beforeEach, afterEach } from "vitest";
-import ErrorBoundary from "../ErrorBoundary";
+import ErrorBoundary from "../ui/ErrorBoundary";
 import { qaTest } from "../../test/qaTest.js";
 
 function BrokenComponent() {

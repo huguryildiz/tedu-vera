@@ -1,8 +1,8 @@
 // src/admin/settings/JuryRevokeConfirmDialog.jsx
 import { useRef } from "react";
-import { BanIcon } from "../../shared/Icons";
-import { useFocusTrap } from "../../shared/useFocusTrap";
-import AlertCard from "../../shared/AlertCard";
+import { BanIcon } from "@/shared/ui/Icons";
+import { useFocusTrap } from "@/shared/hooks/useFocusTrap";
+import AlertCard from "@/shared/ui/AlertCard";
 
 export default function JuryRevokeConfirmDialog({
   open,

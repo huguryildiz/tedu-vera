@@ -28,7 +28,7 @@ vi.mock("../config", () => ({
   APP_CONFIG: { maxScore: 100 },
 }));
 
-vi.mock("../shared/Icons", () => ({
+vi.mock("@/shared/ui/Icons", () => ({
   ChevronDownIcon:          "span",
   InfoIcon:                 "span",
   KeyRoundIcon:             "span",

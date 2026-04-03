@@ -14,7 +14,7 @@
 //   <StudentNames names={studentNamesArray} />
 // ============================================================
 
-import { FolderKanbanIcon, FileTextIcon, UsersRoundIcon } from "../shared/Icons";
+import { FolderKanbanIcon, FileTextIcon, UsersRoundIcon } from "./Icons";
 
 export function GroupLabel({ text, shortText }) {
   const resolvedShortText = shortText || text;

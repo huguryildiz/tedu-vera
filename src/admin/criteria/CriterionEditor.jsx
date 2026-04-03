@@ -1,11 +1,11 @@
 // src/admin/criteria/CriterionEditor.jsx
 // Renders a single criterion row's expanded/collapsed content.
 
-import AutoGrow from "../../shared/AutoGrow";
-import Tooltip from "../../shared/Tooltip";
+import AutoGrow from "@/shared/ui/AutoGrow";
+import Tooltip from "@/shared/ui/Tooltip";
 import DangerIconButton from "../../components/admin/DangerIconButton";
 import { cn } from "@/shared/lib/utils";
-import LevelPill, { isKnownBandVariant, getBandPositionStyle, getBandScoreRank } from "../../shared/LevelPill";
+import LevelPill, { isKnownBandVariant, getBandPositionStyle, getBandScoreRank } from "@/shared/ui/LevelPill";
 import {
   GripVerticalIcon,
   XIcon,
@@ -14,7 +14,7 @@ import {
   GraduationCapIcon,
   ListChecksIcon,
   LockIcon,
-} from "../../shared/Icons";
+} from "@/shared/ui/Icons";
 import { RUBRIC_EDITOR_TEXT } from "../../config";
 import {
   getCriterionDisplayName,

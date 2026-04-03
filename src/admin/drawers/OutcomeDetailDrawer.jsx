@@ -11,7 +11,7 @@
 //   error        — string | null
 
 import { useState, useEffect } from "react";
-import Drawer from "../../shared/Drawer";
+import Drawer from "@/shared/ui/Drawer";
 
 export default function OutcomeDetailDrawer({ open, onClose, outcome, criteria = [], onSave, error }) {
   const [description, setDescription] = useState("");

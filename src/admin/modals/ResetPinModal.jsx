@@ -8,7 +8,7 @@
 //   onConfirm — () => Promise<void>
 
 import { useState } from "react";
-import Modal from "../../shared/Modal";
+import Modal from "@/shared/ui/Modal";
 
 export default function ResetPinModal({ open, onClose, juror, onConfirm }) {
   const [confirming, setConfirming] = useState(false);

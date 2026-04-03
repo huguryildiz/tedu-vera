@@ -10,7 +10,7 @@
 //   children    — modal content (header + body + footer rendered by caller)
 
 import { useRef } from "react";
-import { useFocusTrap } from "./useFocusTrap";
+import { useFocusTrap } from "@/shared/hooks/useFocusTrap";
 
 export default function Modal({ open, onClose, size = "md", centered = false, children }) {
   const containerRef = useRef(null);

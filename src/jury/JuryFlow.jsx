@@ -14,7 +14,7 @@ import LockedStep from "./steps/LockedStep";
 import ProgressStep from "./steps/ProgressStep";
 import EvalStep from "./steps/EvalStep";
 import DoneStep from "./steps/DoneStep";
-import MinimalLoaderOverlay from "../shared/MinimalLoaderOverlay";
+import MinimalLoaderOverlay from "@/shared/ui/MinimalLoaderOverlay";
 
 export default function JuryFlow({ onBack }) {
   const state = useJuryState();

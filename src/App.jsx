@@ -4,7 +4,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import AdminLayout from "./admin/layout/AdminLayout";
 import JuryFlow from "./jury/JuryFlow";
-import ErrorBoundary from "./shared/ErrorBoundary";
+import ErrorBoundary from "@/shared/ui/ErrorBoundary";
 import { getPage, setPage as savePage, getJuryAccess } from "./shared/storage";
 import DemoAdminLoader from "./components/DemoAdminLoader";
 import { DEMO_MODE } from "@/shared/lib/demoMode";

@@ -6,7 +6,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDownIcon } from "../../shared/Icons";
+import { ChevronDownIcon } from "@/shared/ui/Icons";
 
 function useAnchoredPopover(isOpen, deps = []) {
   const triggerRef = useRef(null);

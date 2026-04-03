@@ -1,6 +1,6 @@
 import { cn } from "@/shared/lib/utils";
-import { TrashIcon } from "../../shared/Icons";
-import Tooltip from "../../shared/Tooltip";
+import { TrashIcon } from "@/shared/ui/Icons";
+import Tooltip from "@/shared/ui/Tooltip";
 
 export default function DangerIconButton({
   ariaLabel,

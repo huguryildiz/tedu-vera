@@ -45,7 +45,7 @@ vi.mock("@/shared/lib/supabaseClient", () => ({
   },
 }));
 vi.mock("../shared/scrollIndicators", () => ({ initScrollIndicators: () => () => {} }));
-vi.mock("../shared/MinimalLoaderOverlay", () => ({ default: () => null }));
+vi.mock("@/shared/ui/MinimalLoaderOverlay", () => ({ default: () => null }));
 vi.mock("@/auth/screens/LoginScreen", () => ({
   default: ({ onLogin, onSwitchToRegister }) => (
     <div data-testid="login-form">

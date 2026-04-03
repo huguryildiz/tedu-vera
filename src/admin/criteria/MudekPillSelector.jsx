@@ -1,7 +1,7 @@
 // src/admin/criteria/MudekPillSelector.jsx
 
 import { useState } from "react";
-import Tooltip from "../../shared/Tooltip";
+import Tooltip from "@/shared/ui/Tooltip";
 import { RUBRIC_EDITOR_TEXT } from "../../config";
 import { getCriterionTintStyle } from "./criteriaFormHelpers";
 

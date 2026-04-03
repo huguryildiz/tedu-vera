@@ -14,7 +14,7 @@
 //   onSave          — () => Promise<void>
 
 import { useState } from "react";
-import Drawer from "../../shared/Drawer";
+import Drawer from "@/shared/ui/Drawer";
 
 export default function ProgrammeOutcomesManagerDrawer({
   open,

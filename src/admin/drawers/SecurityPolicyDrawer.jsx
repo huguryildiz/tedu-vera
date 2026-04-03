@@ -13,7 +13,7 @@
 //   error   — string | null
 
 import { useState, useEffect } from "react";
-import Drawer from "../../shared/Drawer";
+import Drawer from "@/shared/ui/Drawer";
 
 const DEFAULT_POLICY = {
   googleOAuth: true,

@@ -1,9 +1,9 @@
 // src/admin/criteria/RubricBandEditor.jsx
 
-import AutoGrow from "../../shared/AutoGrow";
-import BlockingValidationAlert from "../../shared/BlockingValidationAlert";
+import AutoGrow from "@/shared/ui/AutoGrow";
+import BlockingValidationAlert from "@/shared/ui/BlockingValidationAlert";
 import DangerIconButton from "../../components/admin/DangerIconButton";
-import { XIcon, CirclePlusIcon } from "../../shared/Icons";
+import { XIcon, CirclePlusIcon } from "@/shared/ui/Icons";
 import { RUBRIC_EDITOR_TEXT } from "../../config";
 import { clampToCriterionMax, getDescPlaceholder } from "./criteriaFormHelpers";
 import { cn } from "@/shared/lib/utils";

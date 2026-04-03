@@ -14,7 +14,7 @@ import {
   CircleIcon,
   CircleDotDashedIcon,
   PencilIcon,
-} from "../shared/Icons";
+} from "@/shared/ui/Icons";
 import { CRITERIA } from "../config";
 import { rowKey } from "./utils";
 

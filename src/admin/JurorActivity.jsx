@@ -5,8 +5,8 @@ import { formatTs, adminCompletionPct, cmp } from "./utils";
 import { readSection, writeSection } from "./persist";
 import { StatusBadge } from "./components";
 import { getCellState, getPartialTotal, jurorStatusMeta } from "./scoreHelpers";
-import { ChevronDownIcon, HistoryIcon, LandmarkIcon, LoaderIcon, SearchIcon, UserCheckIcon, XIcon } from "../shared/Icons";
-import { GroupLabel, ProjectTitle, StudentNames } from "../components/EntityMeta";
+import { ChevronDownIcon, HistoryIcon, LandmarkIcon, LoaderIcon, SearchIcon, UserCheckIcon, XIcon } from "@/shared/ui/Icons";
+import { GroupLabel, ProjectTitle, StudentNames } from "@/shared/ui/EntityMeta";
 
 // jurorStats prop: { key, name, dept, jurorId, rows, latestRow, editEnabled }[]
 // groups prop: { id (uuid), groupNo, label }[]

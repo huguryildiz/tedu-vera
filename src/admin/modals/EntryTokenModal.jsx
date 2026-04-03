@@ -11,7 +11,7 @@
 //   onSendEmail    — (email: string) => Promise<void>
 
 import { useState } from "react";
-import Modal from "../../shared/Modal";
+import Modal from "@/shared/ui/Modal";
 
 export default function EntryTokenModal({
   open, onClose, tokenUrl, expiresIn, activeSessions, onRevoke, onSendEmail,

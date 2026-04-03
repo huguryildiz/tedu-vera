@@ -10,7 +10,7 @@ import {
   getBandPositionStyle,
   isKnownBandVariant,
   getBandScoreRank,
-} from "../LevelPill.jsx";
+} from "../ui/LevelPill.jsx";
 
 describe("getBandPositionStyle", () => {
   qaTest("levelpill.gradient.01", () => {

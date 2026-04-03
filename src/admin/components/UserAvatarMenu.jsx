@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/auth";
-import { useFocusTrap } from "../../shared/useFocusTrap";
+import { useFocusTrap } from "@/shared/hooks/useFocusTrap";
 import { useProfileEdit } from "../hooks/useProfileEdit";
 import {
   UserPenIcon,
@@ -17,8 +17,8 @@ import {
   ShieldCheckIcon,
   EyeIcon,
   EyeOffIcon,
-} from "../../shared/Icons";
-import AlertCard from "../../shared/AlertCard";
+} from "@/shared/ui/Icons";
+import AlertCard from "@/shared/ui/AlertCard";
 
 // ── Helpers ──────────────────────────────────────────────────
 

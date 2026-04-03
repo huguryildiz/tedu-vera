@@ -8,7 +8,7 @@
 //   onRevoke  — (sessionId) => Promise<void>
 
 import { useState } from "react";
-import Drawer from "../../shared/Drawer";
+import Drawer from "@/shared/ui/Drawer";
 
 export default function ViewSessionsDrawer({ open, onClose, sessions = [], onRevoke }) {
   const [revoking, setRevoking] = useState(null);

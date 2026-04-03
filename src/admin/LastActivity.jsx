@@ -1,7 +1,7 @@
 // src/admin/LastActivity.jsx
 
 import { cn } from "@/shared/lib/utils";
-import { HistoryIcon } from "../shared/Icons";
+import { HistoryIcon } from "@/shared/ui/Icons";
 import { formatTs } from "./utils";
 
 export default function LastActivity({ value, className = "" }) {

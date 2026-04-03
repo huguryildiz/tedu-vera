@@ -10,7 +10,7 @@
 //   error      — string | null
 
 import { useState, useEffect } from "react";
-import Drawer from "../../shared/Drawer";
+import Drawer from "@/shared/ui/Drawer";
 
 export default function EditProjectDrawer({ open, onClose, project, onSave, error }) {
   const [form, setForm] = useState({ title: "", advisor: "", description: "", members: [""] });

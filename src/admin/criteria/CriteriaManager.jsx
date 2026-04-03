@@ -21,7 +21,7 @@
 // ============================================================
 
 import { useId } from "react";
-import AlertCard from "../../shared/AlertCard";
+import AlertCard from "@/shared/ui/AlertCard";
 import {
   DndContext,
   closestCenter,
@@ -31,7 +31,7 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CirclePlusIcon, LockIcon } from "../../shared/Icons";
+import { CirclePlusIcon, LockIcon } from "@/shared/ui/Icons";
 import { CSS } from "@dnd-kit/utilities";
 import { getCriterionDisplayName } from "./criteriaFormHelpers";
 import { useCriteriaForm } from "./useCriteriaForm";

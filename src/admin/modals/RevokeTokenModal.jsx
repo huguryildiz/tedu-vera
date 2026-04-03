@@ -9,7 +9,7 @@
 //   onRevoke    — () => Promise<void>
 
 import { useState } from "react";
-import Modal from "../../shared/Modal";
+import Modal from "@/shared/ui/Modal";
 
 export default function RevokeTokenModal({ open, onClose, activeCount = 0, onRevoke }) {
   const [revoking, setRevoking] = useState(false);

@@ -1,9 +1,9 @@
 // src/admin/criteria/CriterionDeleteDialog.jsx
 
 import { useRef } from "react";
-import { useFocusTrap } from "../../shared/useFocusTrap";
-import AlertCard from "../../shared/AlertCard";
-import { TrashIcon } from "../../shared/Icons";
+import { useFocusTrap } from "@/shared/hooks/useFocusTrap";
+import AlertCard from "@/shared/ui/AlertCard";
+import { TrashIcon } from "@/shared/ui/Icons";
 
 export default function CriterionDeleteDialog({ open, rowLabel, onOpenChange, onConfirm, saveDisabled = false }) {
   const containerRef = useRef(null);

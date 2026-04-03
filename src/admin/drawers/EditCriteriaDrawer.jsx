@@ -13,7 +13,7 @@
 //   disabled      — boolean
 //   isLocked      — boolean
 
-import Drawer from "../../shared/Drawer";
+import Drawer from "@/shared/ui/Drawer";
 import CriteriaManager from "../criteria/CriteriaManager";
 
 export default function EditCriteriaDrawer({
