@@ -307,8 +307,8 @@ export default function HeatmapPage({ data, jurors, groups, periodName, criteria
                   }
                   onClick={() => toggleGroupSort(g.id)}
                 >
-                  <span className="proj-name">{g.title}</span>
-                  <span className="proj-group">Group {g.group_no}</span>
+                  <span className="proj-name">Project {g.group_no}</span>
+                  <span className="proj-group">{g.title}</span>
                 </th>
               ))}
             </tr>

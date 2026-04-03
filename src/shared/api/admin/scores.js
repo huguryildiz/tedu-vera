@@ -10,7 +10,7 @@ import { dbAvgScoresToUi, formatMembers } from "../fieldMapping";
 export async function getScores(periodId) {
   const { data, error } = await supabase
     .from("scores_compat")
-    .select("*, project:projects(id, title, members), juror:jurors(id, juror_name, affiliation)")
+    .select("*, project:projects(id, title, members, project_no), juror:jurors(id, juror_name, affiliation)")
     .eq("period_id", periodId);
   if (error) throw error;
   return (data || []).map((row) => ({
@@ -20,7 +20,7 @@ export async function getScores(periodId) {
     affiliation: row.juror?.affiliation || "",
     projectId: row.project_id,
     projectName: row.project?.title || "",
-    groupNo: row.project?.group_no ?? null,
+    groupNo: row.project?.project_no ?? null,
     students: formatMembers(row.project?.members),
     technical: row.technical,
     design: row.written,
@@ -28,9 +28,6 @@ export async function getScores(periodId) {
     teamwork: row.teamwork,
     total: (row.technical || 0) + (row.written || 0) + (row.oral || 0) + (row.teamwork || 0),
     comments: row.comments || "",
-    sheetStatus: row.sheet_status || "draft",
-    finalSubmittedAt: row.final_submitted_at || "",
-    editEnabled: row.edit_enabled || false,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }));
@@ -133,7 +130,7 @@ export async function getProjectSummary(periodId) {
 
     return {
       id: p.id,
-      group_no: p.group_no ?? null,
+      group_no: p.project_no ?? null,
       title: p.title,
       members: formatMembers(p.members),
       advisor: p.advisor || "",

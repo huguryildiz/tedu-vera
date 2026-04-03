@@ -34,6 +34,7 @@ vi.mock("../../shared/Icons", () => ({
   TriangleAlertIcon:  "span",
   LoaderIcon:         "span",
   LockIcon:           "span",
+  InfoIcon:           "span",
 }));
 
 vi.mock("../../config", () => ({

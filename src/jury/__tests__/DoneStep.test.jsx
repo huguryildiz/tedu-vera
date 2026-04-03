@@ -14,6 +14,7 @@ vi.mock("../../shared/Icons", () => ({
   ChevronDownIcon: "span",
   PencilIcon:      "span",
   HistoryIcon:     "span",
+  InfoIcon:        "span",
 }));
 
 vi.mock("../../config", () => ({

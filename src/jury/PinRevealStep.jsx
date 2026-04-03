@@ -1,10 +1,8 @@
 // src/jury/PinRevealStep.jsx
-// One-time PIN reveal after first-time registration. Phase 7 restyle.
+// One-time PIN reveal after first-time registration.
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { KeyRound, Info, Copy, CopyCheck } from "lucide-react";
+import { KeyRoundIcon, CopyIcon, CheckIcon, InfoIcon } from "../shared/Icons";
 
 const isDemoMode = import.meta.env.VITE_DEMO_MODE === "true";
 
@@ -31,66 +29,64 @@ export default function PinRevealStep({ pin, onContinue, onBack }) {
 
   return (
     <div className="flex min-h-dvh items-center justify-center p-4">
-      <Card className="w-full max-w-lg">
-        <CardContent className="space-y-5 pt-6">
-          <div className="flex flex-col items-center gap-3 text-center">
-            <div className="jury-step-icon">
-              <KeyRound />
-            </div>
-            <h1 className="text-xl font-semibold tracking-tight">Your Access PIN</h1>
-            <p className="text-sm text-muted-foreground">This PIN will be shown only once. Save it before continuing.</p>
+      <div className="w-full max-w-lg rounded-xl border bg-card p-6 shadow-sm space-y-5">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="jury-step-icon">
+            <KeyRoundIcon />
           </div>
+          <h1 className="text-xl font-semibold tracking-tight">Your Access PIN</h1>
+          <p className="text-sm text-muted-foreground">This PIN will be shown only once. Save it before continuing.</p>
+        </div>
 
-          {/* PIN digits */}
-          <div className="flex justify-center gap-3" aria-label="One-time PIN">
-            {digits.map((d, idx) => (
-              <span key={idx} className="flex size-14 items-center justify-center rounded-lg border-2 border-primary/20 bg-muted text-2xl font-bold tabular-nums font-mono">
-                {d}
-              </span>
-            ))}
+        {/* PIN digits */}
+        <div className="flex justify-center gap-3" aria-label="One-time PIN">
+          {digits.map((d, idx) => (
+            <span key={idx} className="flex size-14 items-center justify-center rounded-lg border-2 border-primary/20 bg-muted text-2xl font-bold tabular-nums font-mono">
+              {d}
+            </span>
+          ))}
+        </div>
+
+        {/* Copy button */}
+        <div className="flex justify-center">
+          <button type="button" onClick={handleCopy} className="btn btn-outline btn-sm gap-2">
+            {copied ? <CheckIcon /> : <CopyIcon />}
+            {copied ? "Copied" : "Copy PIN"}
+          </button>
+        </div>
+
+        {copyFailed && (
+          <div className="text-center text-sm text-destructive" role="alert">
+            Could not copy automatically. Please note your PIN manually.
           </div>
+        )}
 
-          {/* Copy button */}
-          <div className="flex justify-center">
-            <Button variant="outline" size="sm" onClick={handleCopy} className="gap-2">
-              {copied ? <CopyCheck className="size-4" /> : <Copy className="size-4" />}
-              {copied ? "Copied" : "Copy PIN"}
-            </Button>
+        <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2.5 text-sm text-amber-700">
+          <span className="mt-0.5 shrink-0" aria-hidden="true"><InfoIcon /></span>
+          <span>Use this PIN to resume your evaluation later or on another device.</span>
+        </div>
+
+        {isDemoMode && (
+          <div className="flex items-start gap-2 rounded-lg border border-blue-500/20 bg-blue-500/5 px-3 py-2.5 text-sm text-blue-700">
+            <span className="mt-0.5 shrink-0" aria-hidden="true"><InfoIcon /></span>
+            <span>In production, each juror receives a unique 4-digit PIN for secure access.</span>
           </div>
+        )}
 
-          {copyFailed && (
-            <div className="text-center text-sm text-destructive" role="alert">
-              Could not copy automatically. Please note your PIN manually.
-            </div>
-          )}
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={pinSaved} onChange={(e) => setPinSaved(e.target.checked)} className="size-4 rounded border-border" />
+          I have noted / saved my PIN
+        </label>
 
-          <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2.5 text-sm text-amber-700">
-            <Info className="mt-0.5 size-4 shrink-0" />
-            <span>Use this PIN to resume your evaluation later or on another device.</span>
-          </div>
-
-          {isDemoMode && (
-            <div className="flex items-start gap-2 rounded-lg border border-blue-500/20 bg-blue-500/5 px-3 py-2.5 text-sm text-blue-700">
-              <Info className="mt-0.5 size-4 shrink-0" />
-              <span>In production, each juror receives a unique 4-digit PIN for secure access.</span>
-            </div>
-          )}
-
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={pinSaved} onChange={(e) => setPinSaved(e.target.checked)} className="size-4 rounded border-border" />
-            I have noted / saved my PIN
-          </label>
-
-          <Button className="w-full" onClick={onContinue} disabled={!pinSaved}>
-            Continue &rarr;
-          </Button>
-          {onBack && (
-            <button type="button" className="block w-full text-center text-sm text-muted-foreground hover:text-foreground hover:underline" onClick={onBack}>
-              &larr; Return Home
-            </button>
-          )}
-        </CardContent>
-      </Card>
+        <button type="button" className="btn btn-primary w-full" onClick={onContinue} disabled={!pinSaved}>
+          Continue &rarr;
+        </button>
+        {onBack && (
+          <button type="button" className="block w-full text-center text-sm text-muted-foreground hover:text-foreground hover:underline" onClick={onBack}>
+            &larr; Return Home
+          </button>
+        )}
+      </div>
     </div>
   );
 }

@@ -665,7 +665,7 @@ export default function ReviewsPage({
                 Juror <SortIcon colKey="juryName" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th className="text-center" style={{ width: 46, cursor: "pointer" }} onClick={() => handleSort("groupNo")}>
-                Grp <SortIcon colKey="groupNo" sortKey={sortKey} sortDir={sortDir} />
+                No <SortIcon colKey="groupNo" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th style={{ cursor: "pointer" }} onClick={() => handleSort("title")}>
                 Project <SortIcon colKey="title" sortKey={sortKey} sortDir={sortDir} />
