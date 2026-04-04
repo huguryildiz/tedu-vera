@@ -3733,5 +3733,49 @@
     "risk": "Swapped aliases would save criteria config to the outcome config slot and vice versa.",
     "coverageStrength": "Strong",
     "severity": "critical"
+  },
+  {
+    "id": "outcome.trend.01",
+    "module": "Analytics / Trend",
+    "area": "Outcome Attainment Trend — Dataset",
+    "story": "Empty data guard",
+    "scenario": "returns empty rows and outcomeMeta when trendData is empty",
+    "whyItMatters": "No selected periods must not crash the chart renderer.",
+    "risk": "Unguarded empty array access would throw at runtime.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
+    "id": "outcome.trend.02",
+    "module": "Analytics / Trend",
+    "area": "Outcome Attainment Trend — Dataset",
+    "story": "Normalized weight calculation",
+    "scenario": "outcome score uses normalized weights so result is 0–100 regardless of raw weight sum",
+    "whyItMatters": "Two criteria with weights 0.25+0.25 must yield the same scale as one criterion with weight 1.0 after normalization.",
+    "risk": "Un-normalized weights produce outcome scores above 100% or below expected values, breaking attainment threshold comparisons.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "outcome.trend.03",
+    "module": "Analytics / Trend",
+    "area": "Outcome Attainment Trend — Dataset",
+    "story": "Missing outcome in period",
+    "scenario": "outcome not measured in a period gets null att and avg keys in the row",
+    "whyItMatters": "Recharts connectNulls=false creates a visible gap — null must propagate correctly for this to work.",
+    "risk": "Defaulting to 0 instead of null would show a false zero on the chart.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "outcome.trend.04",
+    "module": "Analytics / Trend",
+    "area": "Outcome Attainment Trend — Dataset",
+    "story": "Attainment rate computation",
+    "scenario": "attainmentRate equals percent of evaluations with outcome score >= 70",
+    "whyItMatters": "The 70% threshold is the accreditation benchmark — an off-by-one or wrong denominator gives misleading compliance data.",
+    "risk": "Wrong attainment rate would cause incorrect accreditation evidence.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
   }
 ]
