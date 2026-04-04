@@ -306,8 +306,16 @@ export function useAdminData({
   }, [scoresView, detailsKey, sortedPeriods, detailsScores.length, rawScores]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Trend / analytics (delegated) ─────────────────────────
-  const { trendData, trendLoading, trendError, trendPeriodIds, setTrendPeriodIds } =
-    useAnalyticsData({ organizationId, periodList, sortedPeriods, lastRefresh });
+  const {
+    trendData,
+    trendLoading,
+    trendError,
+    outcomeTrendData,
+    outcomeTrendLoading,
+    outcomeTrendError,
+    trendPeriodIds,
+    setTrendPeriodIds,
+  } = useAnalyticsData({ organizationId, periodList, sortedPeriods, lastRefresh });
 
   return {
     rawScores,
@@ -318,6 +326,9 @@ export function useAdminData({
     trendData,
     trendLoading,
     trendError,
+    outcomeTrendData,
+    outcomeTrendLoading,
+    outcomeTrendError,
     trendPeriodIds,
     setTrendPeriodIds,
     detailsScores,

@@ -139,6 +139,9 @@ export default function AdminLayout({ onReturnHome }) {
     trendData,
     trendLoading,
     trendError,
+    outcomeTrendData,
+    outcomeTrendLoading,
+    outcomeTrendError,
     trendPeriodIds,
     setTrendPeriodIds,
     fetchData,
@@ -377,6 +380,7 @@ export default function AdminLayout({ onReturnHome }) {
               loading={loading}
               error={loadError}
               periodName={selectedPeriod?.name || selectedPeriod?.semester_name || ""}
+              selectedPeriodId={selectedPeriodId}
               lastRefresh={lastRefresh}
               semesterOptions={sortedPeriods}
               trendSemesterIds={trendPeriodIds}
@@ -384,6 +388,9 @@ export default function AdminLayout({ onReturnHome }) {
               trendData={trendData}
               trendLoading={trendLoading}
               trendError={trendError}
+              outcomeTrendData={outcomeTrendData}
+              outcomeTrendLoading={outcomeTrendLoading}
+              outcomeTrendError={outcomeTrendError}
               criteriaConfig={criteriaConfig}
               outcomeConfig={outcomeConfig}
             />

@@ -12,6 +12,8 @@ import { OutcomeByGroupChart } from "@/charts/OutcomeByGroupChart";
 import { RubricAchievementChart } from "@/charts/RubricAchievementChart";
 import { ProgrammeAveragesChart } from "@/charts/ProgrammeAveragesChart";
 import { AttainmentTrendChart } from "@/charts/AttainmentTrendChart";
+import { OutcomeAttainmentTrendChart } from "@/charts/OutcomeAttainmentTrendChart";
+import { buildOutcomeAttainmentTrendDataset } from "../analytics/analyticsDatasets";
 import { AttainmentRateChart } from "@/charts/AttainmentRateChart";
 import { ThresholdGapChart } from "@/charts/ThresholdGapChart";
 import { GroupAttainmentHeatmap } from "@/charts/GroupAttainmentHeatmap";
@@ -45,10 +47,12 @@ function DownloadIcon({ size = 14 }) {
 
 // ── Attainment card computation ────────────────────────────────
 // Returns one card per unique MÜDEK outcome code across all criteria.
-function buildAttainmentCards(submittedData, criteria = []) {
+// deltaRows: [{periodId, criteriaAvgs}] for exactly [currentPeriod, prevPeriod].
+// delta is change in avg score % vs the immediately preceding period.
+function buildAttainmentCards(submittedData, criteria = [], deltaRows = []) {
   const rows = submittedData || [];
-  // Collect all directly-mapped outcome codes and their source criteria
-  const outcomeMap = new Map(); // outcomeCode → { label, criterionId, max }
+  // outcomeCode → { criterionId (= criterion key), max }
+  const outcomeMap = new Map();
   for (const c of criteria) {
     for (const code of (c.mudek || [])) {
       if (!outcomeMap.has(code)) {
@@ -56,6 +60,8 @@ function buildAttainmentCards(submittedData, criteria = []) {
       }
     }
   }
+
+  const [currentTrend, prevTrend] = deltaRows;
 
   const OUTCOME_LABELS = {
     "1.2": "Knowledge Application",
@@ -95,6 +101,16 @@ function buildAttainmentCards(submittedData, criteria = []) {
       attRate >= 60 ? "∼ " :
       "✗ ";
 
+    // Delta: change in average score % vs previous period.
+    let delta = null;
+    if (currentTrend && prevTrend && max > 0) {
+      const curAvg = currentTrend.criteriaAvgs?.[criterionId];
+      const prevAvg = prevTrend.criteriaAvgs?.[criterionId];
+      if (curAvg != null && prevAvg != null) {
+        delta = Math.round(((curAvg - prevAvg) / max) * 100);
+      }
+    }
+
     cards.push({
       code,
       label: OUTCOME_LABELS[code] ?? code,
@@ -102,6 +118,7 @@ function buildAttainmentCards(submittedData, criteria = []) {
       statusClass,
       statusLabel,
       statusPrefix,
+      delta,
     });
   }
 
@@ -116,75 +133,7 @@ function buildAttainmentCards(submittedData, criteria = []) {
   return cards;
 }
 
-// ── MÜDEK Popover ─────────────────────────────────────────────
-function MudekBadge({ criteria = [] }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
 
-  useEffect(() => {
-    if (!open) return;
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
-
-  // Collect all directly-mapped outcomes from criteria
-  const mappedOutcomes = [];
-  const seen = new Set();
-  for (const c of criteria) {
-    for (const code of (c.mudek || [])) {
-      if (!seen.has(code)) {
-        seen.add(code);
-        mappedOutcomes.push(code);
-      }
-    }
-  }
-
-  const OUTCOME_LABELS = {
-    "1.2": "Knowledge application to complex problems",
-    "2":   "Problem identification & analysis",
-    "3.1": "Creative engineering solutions",
-    "3.2": "Design under realistic constraints",
-    "8.1": "Intra-disciplinary teamwork",
-    "8.2": "Multi-disciplinary teamwork",
-    "9.1": "Oral communication",
-    "9.2": "Written communication",
-  };
-
-  return (
-    <div className="mudek-badge" ref={ref} onClick={() => setOpen((v) => !v)} role="button" aria-expanded={open}>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-        <path d="M6 12v5c0 1.657 2.686 3 6 3s6-1.343 6-3v-5" />
-      </svg>
-      MÜDEK 2024 · {mappedOutcomes.length} outcomes mapped
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-        <path d="m6 9 6 6 6-6" />
-      </svg>
-      {open && (
-        <div className="mudek-popover" onClick={(e) => e.stopPropagation()}>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--text-primary)" }}>Active Framework: MÜDEK 2024</div>
-          <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 10 }}>
-            This dashboard provides direct assessment evidence for the following programme outcomes from the active accreditation framework:
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 11 }}>
-            {mappedOutcomes.map((code) => (
-              <div key={code} style={{ display: "flex", gap: 8 }}>
-                <span style={{ fontFamily: "var(--mono)", fontWeight: 700, color: "var(--accent)", minWidth: 28 }}>{code}</span>
-                <span style={{ color: "var(--text-secondary)" }}>{OUTCOME_LABELS[code] ?? code}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid var(--border)", fontSize: 10, color: "var(--text-tertiary)" }}>
-            Attainment target: ≥70% of evaluations must meet the scoring threshold
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ── Analytics Nav ─────────────────────────────────────────────
 function AnalyticsNav({ activeSection }) {
@@ -299,22 +248,45 @@ export default function AnalyticsPage({
   loading,
   error,
   periodName,
+  selectedPeriodId,
   semesterOptions,
   trendSemesterIds,
   onTrendSelectionChange,
   trendData,
   trendLoading,
   trendError,
+  outcomeTrendData,
+  outcomeTrendLoading,
+  outcomeTrendError,
   criteriaConfig,
   outcomeConfig,
 }) {
   const criteria = criteriaConfig || [];
   const [exportOpen, setExportOpen] = useState(false);
+  const [deltaRows, setDeltaRows] = useState([]);
   const _toast = useToast();
   const { activeOrganization } = useAuth();
   const orgName = activeOrganization?.name || "";
   const deptName = activeOrganization?.institution_name || "";
   const tc = activeOrganization?.code || "";
+
+  // Fetch delta data: current period + immediately previous period, independently
+  // of the trend chart selection so the badge is always accurate.
+  useEffect(() => {
+    if (!selectedPeriodId || !semesterOptions?.length) { setDeltaRows([]); return; }
+    const currentIdx = semesterOptions.findIndex((p) => p.id === selectedPeriodId);
+    const prevPeriod = currentIdx >= 0 ? semesterOptions[currentIdx + 1] : null;
+    if (!prevPeriod) { setDeltaRows([]); return; }
+    let cancelled = false;
+    import("../../shared/api").then(({ getOutcomeTrends }) =>
+      getOutcomeTrends([selectedPeriodId, prevPeriod.id])
+    ).then((rows) => {
+      if (!cancelled) setDeltaRows(rows);
+    }).catch(() => {
+      if (!cancelled) setDeltaRows([]);
+    });
+    return () => { cancelled = true; };
+  }, [selectedPeriodId, semesterOptions]);
 
   async function handleExport(format = "xlsx") {
     try {
@@ -404,7 +376,12 @@ export default function AnalyticsPage({
     }
   };
 
-  const attCards = buildAttainmentCards(submittedData, criteria);
+  const attCards = buildAttainmentCards(submittedData, criteria, deltaRows);
+  const { rows: outcomeTrendRows, outcomeMeta } = buildOutcomeAttainmentTrendDataset(
+    outcomeTrendData,
+    semesterOptions,
+    trendSemesterIds
+  );
   const metCount = attCards.filter((c) => c.statusClass === "status-met").length;
   const totalCount = attCards.filter((c) => c.attRate != null).length;
 
@@ -436,7 +413,6 @@ export default function AnalyticsPage({
           </div>
         </div>
         <div className="analytics-actions">
-          <MudekBadge criteria={criteria} />
           <button
             className="btn btn-outline btn-sm"
             onClick={() => setExportOpen((v) => !v)}
@@ -472,10 +448,10 @@ export default function AnalyticsPage({
       {attCards.length > 0 ? (
         <>
           <div className="attainment-cards">
-            {attCards.map(({ code, label, attRate, statusClass, statusLabel, statusPrefix }) => (
+            {attCards.map(({ code, label, attRate, statusClass, statusLabel, statusPrefix, delta }) => (
               <div key={code} className={`att-card ${statusClass}`}>
                 <div className="att-card-header">
-                  <span className="att-card-code">PO {code}</span>
+                  <span className="att-card-code">{code}</span>
                   <span className={`att-card-status ${statusClass.replace("status-", "")}`}>
                     {statusPrefix}{statusLabel}
                   </span>
@@ -486,6 +462,11 @@ export default function AnalyticsPage({
                     {attRate != null ? `${attRate}%` : "—"}
                   </span>
                   <span className="att-card-unit">above threshold</span>
+                  {delta != null && (
+                    <span className={`att-card-trend ${delta > 0 ? "up" : delta < 0 ? "down" : "flat"}`}>
+                      {delta > 0 ? "↑" : delta < 0 ? "↓" : "→"} {delta > 0 ? "+" : ""}{delta}%
+                    </span>
+                  )}
                 </div>
                 {attRate != null && (
                   <div className="att-card-bar">
@@ -739,6 +720,32 @@ export default function AnalyticsPage({
         </div>
       </div>
 
+      {outcomeTrendRows.length > 0 && (
+        <div className="chart-card-v2" style={{ marginBottom: 12 }}>
+          <div className="chart-header">
+            <div>
+              <div className="chart-title">Outcome Attainment Trend</div>
+              <div className="chart-subtitle">
+                Attainment rate (solid) and average score % (dashed) per programme outcome across evaluation periods
+              </div>
+            </div>
+          </div>
+          <div className="chart-body">
+            {outcomeTrendLoading ? (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200, color: "var(--text-muted)" }}>
+                Loading outcome trends…
+              </div>
+            ) : outcomeTrendError ? (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200, color: "var(--danger)" }}>
+                {outcomeTrendError}
+              </div>
+            ) : (
+              <OutcomeAttainmentTrendChart rows={outcomeTrendRows} outcomeMeta={outcomeMeta} />
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="insight-banner insight-banner-full">
         <InfoIcon />
         <div>
@@ -799,23 +806,22 @@ export default function AnalyticsPage({
       {/* ══════ SECTION 08: Coverage Matrix ══════ */}
       <div className="analytics-section" id="ans-coverage">
         <div className="analytics-section-title">
-          <span className="section-num">08</span>MÜDEK Outcome Coverage
+          <span className="section-num">08</span>Outcome Coverage
         </div>
       </div>
 
       <div className="chart-card-v2" style={{ marginBottom: 18 }}>
         <div className="chart-header">
           <div>
-            <div className="chart-title">MÜDEK 2024 Coverage Matrix</div>
-            <div className="chart-subtitle">Which programme outcomes are assessed (directly / indirectly) by VERA evaluation criteria</div>
+            <div className="chart-title">Coverage Matrix</div>
+            <div className="chart-subtitle">Which programme outcomes are directly assessed by evaluation criteria</div>
           </div>
         </div>
         <div className="chart-body" style={{ overflowX: "auto" }}>
-          <CoverageMatrix criteria={criteria} />
+          <CoverageMatrix criteria={criteria} outcomes={outcomeConfig} />
         </div>
         <div className="chart-legend">
           <div className="legend-item"><span className="coverage-chip direct" style={{ marginRight: 4 }}>✓ Direct</span>Directly assessed</div>
-          <div className="legend-item"><span className="coverage-chip indirect" style={{ marginRight: 4 }}>∼ Indirect</span>Indirect evidence</div>
           <div className="legend-item"><span className="coverage-chip none" style={{ marginRight: 4 }}>—</span>Not mapped</div>
         </div>
       </div>

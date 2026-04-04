@@ -16,6 +16,7 @@ export default function ScoresTab({
   matrixJurors,
   groups,
   selectedPeriod,
+  selectedPeriodId,
   periodName,
   dashboardStats,
   submittedData,
@@ -28,6 +29,9 @@ export default function ScoresTab({
   trendData,
   trendLoading,
   trendError,
+  outcomeTrendData,
+  outcomeTrendLoading,
+  outcomeTrendError,
   criteriaConfig,
   outcomeConfig,
 }) {
@@ -52,12 +56,16 @@ export default function ScoresTab({
           loading={loading}
           error={error}
           periodName={periodName}
+          selectedPeriodId={selectedPeriodId}
           semesterOptions={semesterOptions}
           trendSemesterIds={trendSemesterIds}
           onTrendSelectionChange={onTrendSelectionChange}
           trendData={trendData}
           trendLoading={trendLoading}
           trendError={trendError}
+          outcomeTrendData={outcomeTrendData}
+          outcomeTrendLoading={outcomeTrendLoading}
+          outcomeTrendError={outcomeTrendError}
           criteriaConfig={criteriaConfig}
           outcomeConfig={outcomeConfig}
         />
