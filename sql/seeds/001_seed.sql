@@ -759,6 +759,84 @@ INSERT INTO juror_period_auth (juror_id, period_id, pin_hash, final_submitted_at
 INSERT INTO juror_period_auth (juror_id, period_id, pin_hash, final_submitted_at, last_seen_at) VALUES ('a71bad63-0a65-47a2-a5a5-623ab35c9ba7', '9f49cd18-d850-4b1e-ae53-c08253910f4e', '$2a$06$D1E3X/QGg9sM4W0.A3vQG.n9v6p0y5NlKJ/K6W9fHq7.HkH9n.AWe', timestamp '2024-08-15 12:00:00' - interval '16 hours', timestamp '2024-08-15 12:00:00' - interval '3 hours') ON CONFLICT DO NOTHING;
 INSERT INTO juror_period_auth (juror_id, period_id, pin_hash, final_submitted_at, last_seen_at) VALUES ('25380419-e8ec-4bae-a9e7-eeded88bba8b', '9f49cd18-d850-4b1e-ae53-c08253910f4e', '$2a$06$D1E3X/QGg9sM4W0.A3vQG.n9v6p0y5NlKJ/K6W9fHq7.HkH9n.AWe', timestamp '2024-08-15 12:00:00' - interval '11 hours', timestamp '2024-08-15 12:00:00' - interval '8 hours') ON CONFLICT DO NOTHING;
 
+-- PIN Blocking Demo Data
+-- is_blocked = true ensures rows always appear in PIN Blocking page regardless of when seed was applied.
+-- failed_attempts and locked_at vary per entry for realism.
+
+-- Org: TED University EE (e802a6cb) -----------------------------------------------
+-- Spring 2026 (a0d6f60d) — 3 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 5, locked_at = timestamp '2026-06-01 09:14:22' WHERE juror_id = 'aaa0da50-6432-47e0-ab48-b01ca823ef19' AND period_id = 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 7, locked_at = timestamp '2026-06-01 10:47:05' WHERE juror_id = '9a21397b-552a-4b00-a5c4-15a0982436b1' AND period_id = 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2026-06-01 11:02:33' WHERE juror_id = '7d1bbec7-493f-4e1a-aee5-be30df51db49' AND period_id = 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88';
+-- Fall 2025 (952dd05e) — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 4, locked_at = timestamp '2025-12-10 08:33:11' WHERE juror_id = 'aaa0da50-6432-47e0-ab48-b01ca823ef19' AND period_id = '952dd05e-8ff2-44a7-a13b-9a22958f57fb';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 6, locked_at = timestamp '2025-12-10 14:19:44' WHERE juror_id = '9a21397b-552a-4b00-a5c4-15a0982436b1' AND period_id = '952dd05e-8ff2-44a7-a13b-9a22958f57fb';
+-- Spring 2025 (e55e0820) — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2025-06-12 09:55:07' WHERE juror_id = 'aaa0da50-6432-47e0-ab48-b01ca823ef19' AND period_id = 'e55e0820-93f2-487f-abaa-4ae64a77e93e';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 5, locked_at = timestamp '2025-06-12 11:28:50' WHERE juror_id = '7d1bbec7-493f-4e1a-aee5-be30df51db49' AND period_id = 'e55e0820-93f2-487f-abaa-4ae64a77e93e';
+-- Fall 2024 (10078594) — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 4, locked_at = timestamp '2024-12-18 10:04:31' WHERE juror_id = '9a21397b-552a-4b00-a5c4-15a0982436b1' AND period_id = '10078594-2707-4c3f-a212-42add04fbd84';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2024-12-18 15:41:09' WHERE juror_id = 'aaa0da50-6432-47e0-ab48-b01ca823ef19' AND period_id = '10078594-2707-4c3f-a212-42add04fbd84';
+
+-- Org: b94595d6 — 4 periods -----------------------------------------------------------
+-- Spring 2026 (e14683dc) — 3 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 5, locked_at = timestamp '2026-06-02 08:21:17' WHERE juror_id = '47dcf645-bcf8-407e-a86e-f0e506495726' AND period_id = 'e14683dc-6ac1-4c73-a2cb-da24e9e4f45f';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2026-06-02 09:44:52' WHERE juror_id = '44e14170-d567-4ad4-a771-cd269d538a2f' AND period_id = 'e14683dc-6ac1-4c73-a2cb-da24e9e4f45f';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 6, locked_at = timestamp '2026-06-02 13:07:28' WHERE juror_id = 'c8a52987-c3a6-4368-a31c-a2f6566399f1' AND period_id = 'e14683dc-6ac1-4c73-a2cb-da24e9e4f45f';
+-- Fall 2025 (b90e1112) — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 4, locked_at = timestamp '2025-12-11 07:58:03' WHERE juror_id = '47dcf645-bcf8-407e-a86e-f0e506495726' AND period_id = 'b90e1112-88c7-44fa-a275-25bc0ad2d96d';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2025-12-11 12:33:47' WHERE juror_id = '44e14170-d567-4ad4-a771-cd269d538a2f' AND period_id = 'b90e1112-88c7-44fa-a275-25bc0ad2d96d';
+-- Spring 2025 (0e963024) — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 5, locked_at = timestamp '2025-06-14 10:22:19' WHERE juror_id = '47dcf645-bcf8-407e-a86e-f0e506495726' AND period_id = '0e963024-a53f-4722-a9e0-5db7a47b4419';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2025-06-14 14:51:06' WHERE juror_id = 'c8a52987-c3a6-4368-a31c-a2f6566399f1' AND period_id = '0e963024-a53f-4722-a9e0-5db7a47b4419';
+-- Fall 2024 (f8c01197) — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 4, locked_at = timestamp '2024-12-19 09:17:55' WHERE juror_id = '44e14170-d567-4ad4-a771-cd269d538a2f' AND period_id = 'f8c01197-da4a-4646-a42d-8dc74715e3bc';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2024-12-19 16:02:38' WHERE juror_id = '47dcf645-bcf8-407e-a86e-f0e506495726' AND period_id = 'f8c01197-da4a-4646-a42d-8dc74715e3bc';
+
+-- Org: d8214e32 — 3 periods -----------------------------------------------------------
+-- e77bf882 — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 5, locked_at = timestamp '2026-06-03 08:44:12' WHERE juror_id = 'cec22180-51e9-4924-a2d0-6bca4aeb0028' AND period_id = 'e77bf882-fc32-461c-acab-6ee1696df0c7';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2026-06-03 11:15:29' WHERE juror_id = '27eea0b5-10e7-42eb-a739-4082ace54aa0' AND period_id = 'e77bf882-fc32-461c-acab-6ee1696df0c7';
+-- 308d2708 — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 4, locked_at = timestamp '2025-12-13 09:31:44' WHERE juror_id = 'cec22180-51e9-4924-a2d0-6bca4aeb0028' AND period_id = '308d2708-dbea-41b6-a1c8-da6129445759';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 6, locked_at = timestamp '2025-12-13 13:58:22' WHERE juror_id = '618aec67-dbed-41bf-ac48-c600f70c9fa5' AND period_id = '308d2708-dbea-41b6-a1c8-da6129445759';
+-- bf4ee98f — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2025-06-16 10:07:53' WHERE juror_id = '27eea0b5-10e7-42eb-a739-4082ace54aa0' AND period_id = 'bf4ee98f-1fd2-418d-a62d-8cb5b585f293';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 5, locked_at = timestamp '2025-06-16 15:44:18' WHERE juror_id = 'cec22180-51e9-4924-a2d0-6bca4aeb0028' AND period_id = 'bf4ee98f-1fd2-418d-a62d-8cb5b585f293';
+
+-- Org: 088f5054 — 3 periods -----------------------------------------------------------
+-- 05a1eb4a — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 4, locked_at = timestamp '2026-08-15 08:09:37' WHERE juror_id = 'a49b6b5e-f40d-48f6-a398-87b85bbff743' AND period_id = '05a1eb4a-d4cf-478b-a52d-578c3d9c22ad';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2026-08-15 10:52:14' WHERE juror_id = '9ff6ca95-c216-42cd-a63f-1e58b1756cf2' AND period_id = '05a1eb4a-d4cf-478b-a52d-578c3d9c22ad';
+-- bb63166c — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 6, locked_at = timestamp '2025-08-14 09:23:48' WHERE juror_id = 'a49b6b5e-f40d-48f6-a398-87b85bbff743' AND period_id = 'bb63166c-d38c-4278-a1e9-5c8b7b081a6c';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2025-08-14 14:36:59' WHERE juror_id = '9d55d273-9fd8-4365-a294-404246566892' AND period_id = 'bb63166c-d38c-4278-a1e9-5c8b7b081a6c';
+-- 3f9cabdb — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 4, locked_at = timestamp '2024-08-16 11:18:25' WHERE juror_id = '9ff6ca95-c216-42cd-a63f-1e58b1756cf2' AND period_id = '3f9cabdb-61dc-45da-afa5-dbb1747cd8c8';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 5, locked_at = timestamp '2024-08-16 16:04:41' WHERE juror_id = 'a49b6b5e-f40d-48f6-a398-87b85bbff743' AND period_id = '3f9cabdb-61dc-45da-afa5-dbb1747cd8c8';
+
+-- Org: ff81ecf1 — 3 periods -----------------------------------------------------------
+-- 6c44b363 — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 5, locked_at = timestamp '2026-08-15 07:47:03' WHERE juror_id = 'f106ca15-dc12-414f-ac41-0b361db08f95' AND period_id = '6c44b363-4522-4cad-a251-06484b72b164';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2026-08-15 12:22:56' WHERE juror_id = '2d3b2caa-0358-45c2-a122-c1c17cb9fbc5' AND period_id = '6c44b363-4522-4cad-a251-06484b72b164';
+-- 318124ea — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 4, locked_at = timestamp '2025-08-14 08:55:31' WHERE juror_id = 'f106ca15-dc12-414f-ac41-0b361db08f95' AND period_id = '318124ea-8614-4355-ad48-2486524dfc13';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2025-08-14 13:41:17' WHERE juror_id = '79ef4764-8e84-4a18-ad48-dbd780a5a027' AND period_id = '318124ea-8614-4355-ad48-2486524dfc13';
+-- b7014c23 — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 5, locked_at = timestamp '2024-08-15 10:33:44' WHERE juror_id = '2d3b2caa-0358-45c2-a122-c1c17cb9fbc5' AND period_id = 'b7014c23-db5e-4be5-a5d6-d9597e8578cc';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2024-08-15 15:08:29' WHERE juror_id = 'f106ca15-dc12-414f-ac41-0b361db08f95' AND period_id = 'b7014c23-db5e-4be5-a5d6-d9597e8578cc';
+
+-- Org: b72b74d8 — 3 periods -----------------------------------------------------------
+-- 47979751 — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 5, locked_at = timestamp '2026-08-15 09:12:06' WHERE juror_id = '74499a66-86e7-4d92-ade1-70ba9b770ef0' AND period_id = '47979751-163d-48b3-ae56-a65586d18f1b';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2026-08-15 11:47:33' WHERE juror_id = '4f32d322-afb7-4042-a9d1-ce0c17a09a30' AND period_id = '47979751-163d-48b3-ae56-a65586d18f1b';
+-- 10abd4e8 — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 4, locked_at = timestamp '2025-08-15 08:27:19' WHERE juror_id = '74499a66-86e7-4d92-ade1-70ba9b770ef0' AND period_id = '10abd4e8-0cb9-4853-a17c-ac40da311bff';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 6, locked_at = timestamp '2025-08-15 14:53:42' WHERE juror_id = 'a71bad63-0a65-47a2-a5a5-623ab35c9ba7' AND period_id = '10abd4e8-0cb9-4853-a17c-ac40da311bff';
+-- 9f49cd18 — 2 locked
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 3, locked_at = timestamp '2024-08-15 10:44:08' WHERE juror_id = '4f32d322-afb7-4042-a9d1-ce0c17a09a30' AND period_id = '9f49cd18-d850-4b1e-ae53-c08253910f4e';
+UPDATE juror_period_auth SET is_blocked = true, failed_attempts = 5, locked_at = timestamp '2024-08-15 16:19:55' WHERE juror_id = 'a71bad63-0a65-47a2-a5a5-623ab35c9ba7' AND period_id = '9f49cd18-d850-4b1e-ae53-c08253910f4e';
+
 -- Scoring
 -- Score status: Scored = all criteria filled, Partial = some criteria, Empty = no sheet
     INSERT INTO score_sheets (id, period_id, project_id, juror_id, status, started_at, last_activity_at)
@@ -5949,8 +6027,8 @@ INSERT INTO juror_period_auth (juror_id, period_id, pin_hash, final_submitted_at
     VALUES ('aca268ed-a5e4-4f24-a4b6-32bd736f9191', 'd0fd9b5e-fcdf-4690-bcd7-841067f1528f', '327d79df-1a6a-4e5e-af2d-ece7cff070bd', 16) ON CONFLICT DO NOTHING;
 
 -- Entry Tokens (Hashed)
--- demo-tedu-ee: long-lived demo entry token for "Experience Demo" CTA on landing page (1 year from seed run)
-INSERT INTO entry_tokens (id, period_id, token_hash, is_revoked, expires_at) VALUES ('f6e53c1f-9f17-4f1a-960c-c97d815ce846', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'b21753a65d3e039d77e6ae4d95258460f73d6ac3859c8c07d1e8cac85764b524', false, NOW() + interval '365 days') ON CONFLICT DO NOTHING;
+-- demo-tedu-ee: demo entry token for "Experience Demo" CTA on landing page
+INSERT INTO entry_tokens (id, period_id, token_hash, is_revoked, expires_at) VALUES ('f6e53c1f-9f17-4f1a-960c-c97d815ce846', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'b21753a65d3e039d77e6ae4d95258460f73d6ac3859c8c07d1e8cac85764b524', false, NOW() + interval '24 hours') ON CONFLICT DO NOTHING;
 INSERT INTO entry_tokens (id, period_id, token_hash, is_revoked, expires_at) VALUES ('65eec217-e3e7-4892-aa86-c2dd89b8f341', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'b2afaa35e6337796a575fe62ed9fb9eff3de54e21cb7a0d704831299ea32e950', false, NOW() + interval '24 hours') ON CONFLICT DO NOTHING;
 INSERT INTO entry_tokens (id, period_id, token_hash, is_revoked, expires_at) VALUES ('b268f2bc-eec0-48d8-a256-4f38a0cb7c34', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', '38f84c84567b17b31649c9846f6830cde7dec9e2517f6cfd80dce220f3d13d0a', false, NOW() + interval '24 hours') ON CONFLICT DO NOTHING;
 INSERT INTO entry_tokens (id, period_id, token_hash, is_revoked, expires_at, last_used_at) VALUES ('6e9ef69e-6b4d-400e-ae23-63adf410d6ed', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', '01d114adc172f0dbc8d37fd6f454ac7a26ad4159bcb361b965b15bf3c2ae49be', true, timestamp '2026-05-10 12:00:00' - interval '2 days', timestamp '2026-05-10 12:00:00' - interval '2.1 days') ON CONFLICT DO NOTHING;
