@@ -10,8 +10,7 @@
  * during capture, then removes it regardless of success or failure.
  *
  * @param {string} elementId - DOM element ID to capture
- * @returns {Promise<string|null>} Data URL string ("data:image/png;base64,...")
- *                                  or null if element not found
+ * @returns {Promise<{dataURL: string, width: number, height: number}|null>}
  */
 export async function captureChartImage(elementId) {
   const el = document.getElementById(elementId);
@@ -22,11 +21,11 @@ export async function captureChartImage(elementId) {
     const { default: html2canvas } = await import("html2canvas");
     const canvas = await html2canvas(el, {
       backgroundColor: "#ffffff",
-      scale: 1.5,
+      scale: 3,
       useCORS: true,
       logging: false,
     });
-    return { dataURL: canvas.toDataURL("image/jpeg", 0.85), width: canvas.width, height: canvas.height };
+    return { dataURL: canvas.toDataURL("image/png"), width: canvas.width, height: canvas.height };
   } finally {
     el.classList.remove("pdf-capture-mode");
   }
