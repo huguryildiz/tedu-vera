@@ -301,10 +301,19 @@ export default function RankingsPage({
   // ── KPIs ───────────────────────────────────────────────────────
   const totalProjects = rankedRows.length;
   const totalJurors = allJurors.length;
-  const avgScore =
-    totalProjects
-      ? (rankedRows.reduce((s, p) => s + p.totalAvg, 0) / totalProjects).toFixed(1)
-      : "—";
+
+  // Average: only completed jurors (finalSubmitted, not in edit mode) — consistent with Overview
+  const completedJurorIds = useMemo(() => new Set(
+    allJurors.filter((j) => (j.finalSubmitted || j.finalSubmittedAt) && !j.editEnabled).map((j) => j.jurorId ?? j.id)
+  ), [allJurors]);
+  const completedRawScores = useMemo(
+    () => rawScores.filter((r) => r.total != null && completedJurorIds.has(r.jurorId ?? r.juror_id)),
+    [rawScores, completedJurorIds]
+  );
+  const avgScore = completedRawScores.length
+    ? (completedRawScores.reduce((s, r) => s + r.total, 0) / completedRawScores.length).toFixed(1)
+    : "—";
+
   const topScore = totalProjects ? rankedRows[0].totalAvg.toFixed(1) : "—";
   const actualCoverage = rankedRows.reduce((s, p) => s + (p.count || 0), 0);
   const maxPossible = totalProjects * totalJurors;

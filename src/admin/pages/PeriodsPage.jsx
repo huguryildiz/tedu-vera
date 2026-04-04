@@ -317,7 +317,7 @@ export default function PeriodsPage({
               p.name ?? "", p.season ?? "", p.is_current ? "Yes" : "No", p.is_locked ? "Yes" : "No", formatUpdated(p.created_at),
             ]);
             return generateTableBlob(fmt, {
-              filenameType: "Periods", sheetName: "Periods", periodName: "all",
+              filenameType: "Periods", sheetName: "Evaluation Periods", periodName: "all",
               tenantCode: activeOrganization?.code || "", organization: activeOrganization?.name || "",
               department: activeOrganization?.institution_name || "", pdfTitle: "VERA — Evaluation Periods",
               header, rows, colWidths: [28, 14, 10, 10, 18],
@@ -330,7 +330,7 @@ export default function PeriodsPage({
                 p.name ?? "", p.season ?? "", p.is_current ? "Yes" : "No", p.is_locked ? "Yes" : "No", formatUpdated(p.created_at),
               ]);
               await downloadTable(fmt, {
-                filenameType: "Periods", sheetName: "Periods", periodName: "all",
+                filenameType: "Periods", sheetName: "Evaluation Periods", periodName: "all",
                 tenantCode: activeOrganization?.code || "", organization: activeOrganization?.name || "",
                 department: activeOrganization?.institution_name || "", pdfTitle: "VERA — Evaluation Periods",
                 header, rows, colWidths: [28, 14, 10, 10, 18],

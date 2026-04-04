@@ -101,7 +101,7 @@ export function useGridExport({ buildExportRows, groups, periodName, visibleJuro
         tenantCode,
         organization: orgName,
         department: deptName,
-        pdfTitle: "VERA — Evaluation Heatmap",
+        pdfTitle: "VERA — Heatmap",
         pdfSubtitle: `${periodName || "All Periods"} · ${exportRows.length} jurors · ${groups.length} projects`,
         header,
         rows,

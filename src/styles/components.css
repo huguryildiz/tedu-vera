@@ -411,7 +411,8 @@ body:not(.dark-mode) .consensus-sub-disputed .consensus-sub-sigma{color:#e11d48}
 /* ─── OVERVIEW FEED ─── */
 .live-feed-card{padding:0;overflow:hidden}
 .live-feed-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.live-feed-dot{width:10px;height:10px;border-radius:50%;background:var(--success);box-shadow:0 0 0 4px rgba(22,163,74,0.12)}
+.live-feed-dot{width:10px;height:10px;border-radius:50%;background:var(--success);box-shadow:0 0 0 4px rgba(22,163,74,0.12);animation:live-feed-pulse 1.6s ease-in-out infinite}
+@keyframes live-feed-pulse{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,0.7);opacity:1}60%{box-shadow:0 0 0 7px rgba(22,163,74,0);opacity:0.85}}
 .live-feed-list{display:flex;flex-direction:column}
 .live-feed-item{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-bottom:1px solid var(--surface-1)}
 .live-feed-item:last-child{border-bottom:none}
@@ -421,6 +422,7 @@ body:not(.dark-mode) .consensus-sub-disputed .consensus-sub-sigma{color:#e11d48}
 .live-feed-icon.start{background:rgba(22,163,74,0.1);color:var(--success)}
 .live-feed-icon.warn{background:rgba(225,29,72,0.08);color:var(--danger)}
 .live-feed-icon.done{background:rgba(217,119,6,0.1);color:var(--warning)}
+.live-feed-icon.edit{background:rgba(139,92,246,0.1);color:#8b5cf6}
 .live-feed-main{min-width:0}
 .live-feed-text{font-size:12px;color:var(--text-secondary);line-height:1.45}
 .live-feed-text strong{font-weight:700;color:var(--text-primary)}

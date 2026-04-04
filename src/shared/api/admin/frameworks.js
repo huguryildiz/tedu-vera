@@ -6,7 +6,7 @@ import { supabase } from "../core/client";
 export async function listFrameworks(organizationId) {
   const { data, error } = await supabase
     .from("frameworks")
-    .select("*, outcomes(*)")
+    .select("*")
     .or(`organization_id.eq.${organizationId},organization_id.is.null`)
     .order("created_at");
   if (error) throw error;

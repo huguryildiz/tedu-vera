@@ -4,6 +4,7 @@ import { useState } from "react";
 import "../../styles/jury.css";
 import RubricSheet from "../components/RubricSheet";
 import SpotlightTour from "../components/SpotlightTour";
+import { useTheme } from "../../shared/theme/ThemeProvider";
 
 // Per-criterion color scheme (matches prototype djCriteria color map)
 const CRIT_PALETTE = [
@@ -22,6 +23,8 @@ function getCritPalette(index) {
 export default function EvalStep({ state, onBack }) {
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [rubricCritIndex, setRubricCritIndex] = useState(null);
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark";
 
   if (!state.project) {
     return (
@@ -85,6 +88,24 @@ export default function EvalStep({ state, onBack }) {
                 <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                 <polyline points="9,22 9,12 15,12 15,22" />
               </svg>
+            </button>
+            <button
+              className="dj-home-btn"
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              title={isDark ? "Light Mode" : "Dark Mode"}
+            >
+              {isDark ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}>
+                  <circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" />
+                  <path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" />
+                  <path d="M2 12h2" /><path d="M20 12h2" />
+                  <path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}>
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                </svg>
+              )}
             </button>
           </div>
         </div>

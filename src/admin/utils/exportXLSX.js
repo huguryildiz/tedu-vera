@@ -231,7 +231,7 @@ export async function exportXLSX(rows, { periodName = "", summaryData = [], juro
   ws["!cols"] = [24, 8, 32, 42, ...criteriaWidths, 8, 12, 12, 32, 24]
     .map((w) => ({ wch: w }));
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Jury Evaluations");
+  XLSX.utils.book_append_sheet(wb, ws, "Reviews");
   XLSX.writeFile(wb, buildExportFilename("Reviews", periodName, "xlsx", tenantCode));
 }
 

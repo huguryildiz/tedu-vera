@@ -1,7 +1,7 @@
 // src/admin/OverviewPage.jsx — Phase 2
 // Prototype source: #page-overview (docs/concepts/vera-premium-prototype.html ~lines 11758–11982)
 // Single-file overview page: KPIs, juror table, right stack, live feed, completion, charts, top projects.
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import JurorBadge from "../components/JurorBadge";
 import { SubmissionTimelineChart } from "@/charts/SubmissionTimelineChart";
 import { ScoreDistributionChart } from "@/charts/ScoreDistributionChart";
@@ -114,6 +114,45 @@ export default function OverviewPage({
   isDemoMode = false,
 }) {
   const [jurorTableExpanded, setJurorTableExpanded] = useState(false);
+  const [avgPopoverOpen, setAvgPopoverOpen] = useState(false);
+  const [avgPopoverPos, setAvgPopoverPos] = useState({ top: 0, left: 0 });
+  const avgIconRef = useRef(null);
+  const avgPopoverRef = useRef(null);
+
+  function openAvgPopover(e) {
+    e.stopPropagation();
+    if (avgPopoverOpen) { setAvgPopoverOpen(false); return; }
+    const rect = avgIconRef.current?.getBoundingClientRect();
+    if (rect) {
+      const popoverWidth = 260;
+      let left = rect.right - popoverWidth;
+      if (left < 8) left = 8;
+      if (left + popoverWidth > window.innerWidth - 8) left = window.innerWidth - popoverWidth - 8;
+      setAvgPopoverPos({ top: rect.bottom + 6, left });
+    }
+    setAvgPopoverOpen(true);
+  }
+
+  useEffect(() => {
+    if (!avgPopoverOpen) return;
+    function handleClick(e) {
+      if (
+        avgPopoverRef.current && !avgPopoverRef.current.contains(e.target) &&
+        avgIconRef.current && !avgIconRef.current.contains(e.target)
+      ) {
+        setAvgPopoverOpen(false);
+      }
+    }
+    const close = () => setAvgPopoverOpen(false);
+    document.addEventListener("mousedown", handleClick);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [avgPopoverOpen]);
 
   // ── KPIs ──────────────────────────────────────────────────────
   const kpi = useMemo(() => {
@@ -189,13 +228,12 @@ export default function OverviewPage({
       .sort((a, b) => b.pct - a.pct);
   }, [summaryData, rawScores, kpi.totalJ]);
 
-  // ── Live feed (most recently active jurors) ───────────────────
+  // ── Live feed (most recently active first) ────────────────────
   const recentActivity = useMemo(
     () =>
       [...allJurors]
-        .filter((j) => (j.lastSeenMs || 0) > 0)
         .sort((a, b) => (b.lastSeenMs || 0) - (a.lastSeenMs || 0))
-        .slice(0, 5),
+        .slice(0, 7),
     [allJurors]
   );
 
@@ -217,11 +255,16 @@ export default function OverviewPage({
   }, [criteriaConfig]);
 
   // ── Needs attention items ─────────────────────────────────────
+  // types: "critical" (red) | "warn" (yellow) | "editing" (purple) | "ok" (green)
   const attentionItems = useMemo(() => {
     const items = [];
-    if (kpi.notStarted.length > 0) {
-      const n = kpi.notStarted.length;
-      items.push({ type: "warn", text: `${n} juror${n > 1 ? "s have" : " has"} not started scoring` });
+    if (kpi.notStarted > 0) {
+      const n = kpi.notStarted;
+      items.push({ type: "critical", text: `${n} juror${n > 1 ? "s haven't" : " hasn't"} started scoring yet` });
+    }
+    if (kpi.editing > 0) {
+      const n = kpi.editing;
+      items.push({ type: "editing", text: `${n} juror${n > 1 ? "s are" : " is"} editing a submitted evaluation` });
     }
     if (kpi.inProg > 0) {
       const n = kpi.inProg;
@@ -237,6 +280,7 @@ export default function OverviewPage({
   }, [kpi]);
 
   return (
+    <>
     <div className="admin-page" id="page-overview">
 
 
@@ -388,12 +432,19 @@ export default function OverviewPage({
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {attentionItems.map((item, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12 }}>
-                  <span style={{ color: item.type === "ok" ? "var(--success)" : "var(--warning)", fontSize: 14, lineHeight: 1 }}>●</span>
-                  <span>{item.text}</span>
-                </div>
-              ))}
+              {attentionItems.map((item, i) => {
+                const bulletColor =
+                  item.type === "ok"       ? "var(--success)" :
+                  item.type === "editing"  ? "#8b5cf6" :
+                  item.type === "critical" ? "var(--danger, #ef4444)" :
+                                             "var(--warning)";
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12 }}>
+                    <span style={{ color: bulletColor, fontSize: 14, lineHeight: 1, flexShrink: 0 }}>●</span>
+                    <span>{item.text}</span>
+                  </div>
+                );
+              })}
             </div>
             <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
               <button className="btn btn-sm btn-outline" onClick={() => onNavigate?.("jurors")}>Review jurors</button>
@@ -469,13 +520,29 @@ export default function OverviewPage({
             ) : (
               recentActivity.map((j) => {
                 const status = jurorStatus(j);
-                const iconType = status === "completed" ? "done" : status === "editing" || status === "in_progress" ? "score" : "start";
+                const iconType =
+                  status === "completed"   ? "done"  :
+                  status === "editing"     ? "edit"  :
+                  status === "in_progress" ? "score" :
+                  status === "partial"     ? "score" :
+                                             "start";
+                const feedText =
+                  status === "completed"   ? "completed all evaluations" :
+                  status === "editing"     ? "is editing a submitted evaluation" :
+                  status === "in_progress" ? `scored ${j.completedProjects} of ${j.totalProjects} projects` :
+                  status === "partial"     ? "scored all projects — awaiting submission" :
+                                             "hasn't started scoring yet";
                 return (
                   <div className="live-feed-item" key={j.jurorId || j.juryName}>
                     <div className={`live-feed-icon ${iconType}`} aria-hidden="true">
                       {iconType === "done" ? (
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M12 2v6" /><path d="M12 22v-2" /><path d="M6.2 6.2 7.6 7.6" /><path d="m16.4 16.4 1.4 1.4" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.2 17.8 1.4-1.4" /><path d="m16.4 7.6 1.4-1.4" /><circle cx="12" cy="12" r="4" />
+                        </svg>
+                      ) : iconType === "edit" ? (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z" />
                         </svg>
                       ) : iconType === "score" ? (
                         <svg viewBox="0 0 24 24" fill="currentColor">
@@ -487,16 +554,9 @@ export default function OverviewPage({
                     </div>
                     <div className="live-feed-main">
                       <div className="live-feed-text">
-                        <strong>{j.juryName}</strong>{" "}
-                        {status === "completed"
-                          ? "completed all evaluations"
-                          : status === "editing"
-                          ? "is editing scores"
-                          : status === "in_progress"
-                          ? `scored ${j.completedProjects} of ${j.totalProjects} projects`
-                          : "was recently active"}
+                        <strong>{j.juryName}</strong>{" "}{feedText}
                       </div>
-                      <div className="live-feed-time">{relativeTime(j.lastSeenMs)}</div>
+                      <div className="live-feed-time">{j.lastSeenMs ? relativeTime(j.lastSeenMs) : "Never seen"}</div>
                     </div>
                   </div>
                 );
@@ -587,7 +647,12 @@ export default function OverviewPage({
               <tr>
                 <th style={{ width: 32 }}>#</th>
                 <th>Project</th>
-                <th className="text-right">Avg Score</th>
+                <th className="text-right">
+                  <div className="col-info" style={{ justifyContent: "flex-end" }}>
+                    Avg Score
+                    <span ref={avgIconRef} className="col-info-icon" onClick={openAvgPopover}>?</span>
+                  </div>
+                </th>
                 <th>Highlight</th>
               </tr>
             </thead>
@@ -623,5 +688,20 @@ export default function OverviewPage({
       </div>
 
     </div>
+
+    {avgPopoverOpen && (
+      <div
+        ref={avgPopoverRef}
+        className="col-info-popover show"
+        style={{ position: "fixed", top: avgPopoverPos.top, left: avgPopoverPos.left, zIndex: 9999 }}
+      >
+        <h5>Average Score</h5>
+        <p>Calculated from <strong>completed jurors only</strong> — jurors who have submitted their final evaluation.</p>
+        <p style={{ marginTop: 8, fontSize: 10, color: "var(--text-tertiary)" }}>
+          In-progress and editing evaluations are excluded to ensure score integrity.
+        </p>
+      </div>
+    )}
+    </>
   );
 }

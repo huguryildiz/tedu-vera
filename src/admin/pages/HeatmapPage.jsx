@@ -294,7 +294,7 @@ export default function HeatmapPage({ data, jurors, groups, periodName, organiza
             filenameType: "Heatmap", sheetName: "Heatmap", periodName,
             tenantCode: activeOrganization?.code || "",
             organization: activeOrganization?.name || organization,
-            pdfTitle: "VERA — Evaluation Heatmap", header, rows,
+            pdfTitle: "VERA — Heatmap", header, rows,
           });
         }}
       />
@@ -424,14 +424,7 @@ export default function HeatmapPage({ data, jurors, groups, periodName, organiza
         <div className="matrix-footer">
           <div className="matrix-legend-section">
             <span className="matrix-legend-label">Low</span>
-            <div className="matrix-legend-bar">
-              <span style={{ background: "var(--score-poor-bg)" }} />
-              <span style={{ background: "var(--score-low-bg)" }} />
-              <span style={{ background: "var(--score-adequate-bg)" }} />
-              <span style={{ background: "var(--score-good-bg)" }} />
-              <span style={{ background: "var(--score-high-bg)" }} />
-              <span style={{ background: "var(--score-excellent-bg)" }} />
-            </div>
+            <div className="matrix-legend-bar" />
             <span className="matrix-legend-label">High</span>
           </div>
           <div className="matrix-legend-range" style={{ marginLeft: "8px" }}>

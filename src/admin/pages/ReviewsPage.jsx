@@ -245,7 +245,10 @@ export default function ReviewsPage({
   const uniqueJurors = new Set(enriched.map((r) => r.jurorId || r.juryName)).size;
   const uniqueProjects = new Set(enriched.map((r) => r.projectId || r.title)).size;
   const partialCount = enriched.filter((r) => r.effectiveStatus === "partial").length;
-  const scoredRows = enriched.filter((r) => r.total != null && Number.isFinite(Number(r.total)));
+  // Average: only completed jurors (finalSubmitted, not editing) — consistent with Overview & Rankings
+  const scoredRows = enriched.filter(
+    (r) => r.total != null && Number.isFinite(Number(r.total)) && r.finalSubmittedAt && !r.isEditing
+  );
   const avgScore = scoredRows.length > 0
     ? (scoredRows.reduce((s, r) => s + Number(r.total), 0) / scoredRows.length).toFixed(1)
     : "—";
@@ -759,8 +762,10 @@ export default function ReviewsPage({
                     <td>
                       <JurorBadge name={row.juryName} affiliation={row.affiliation} size="sm" />
                     </td>
-                    <td className="text-center mono" style={{ fontSize: 11, color: "var(--text-tertiary)" }}>
-                      {row.groupNo ?? "—"}
+                    <td className="text-center">
+                      {row.groupNo != null
+                        ? <span className="group-no-badge">P{row.groupNo}</span>
+                        : <span style={{ color: "var(--text-tertiary)", fontSize: 11 }}>—</span>}
                     </td>
                     <td className="text-sm">{row.title || row.projectName || "—"}</td>
                     <td className="text-xs text-muted">{row.students || "—"}</td>

@@ -187,15 +187,63 @@ export function LandingPage({ onStartJury, onAdmin, onSignIn }) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
-            Powering evaluations at
+            Built for every evaluation
           </div>
-          <div className="landing-proof-logos">
-            {stats.institutions.map((inst, i) => (
-              <React.Fragment key={inst}>
-                {i > 0 && <span className="proof-sep">·</span>}
-                <span>{inst}</span>
-              </React.Fragment>
-            ))}
+          <div className="trust-usecase-grid">
+            <div className="trust-usecase-card">
+              <div className="trust-usecase-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5" />
+                </svg>
+              </div>
+              <span className="trust-usecase-label">Universities</span>
+              <span className="trust-usecase-hint">Capstone & thesis defenses</span>
+            </div>
+            <div className="trust-usecase-card">
+              <div className="trust-usecase-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" /><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+                </svg>
+              </div>
+              <span className="trust-usecase-label">Hackathons</span>
+              <span className="trust-usecase-hint">48-hour innovation sprints</span>
+            </div>
+            <div className="trust-usecase-card">
+              <div className="trust-usecase-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                </svg>
+              </div>
+              <span className="trust-usecase-label">Competitions</span>
+              <span className="trust-usecase-hint">TEKNOFEST, CanSat, IEEE</span>
+            </div>
+            <div className="trust-usecase-card">
+              <div className="trust-usecase-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2" /><path d="M8.5 2h7" /><path d="M7 16.5h10" />
+                </svg>
+              </div>
+              <span className="trust-usecase-label">Research Councils</span>
+              <span className="trust-usecase-hint">Grant reviews & project evaluations</span>
+            </div>
+            <div className="trust-usecase-card">
+              <div className="trust-usecase-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8" /><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4" /><path d="M12 4v6" /><path d="M2 20h20" /><path d="m6 10 4 4" /><path d="m14 10 4 4" />
+                </svg>
+              </div>
+              <span className="trust-usecase-label">Design Exhibitions</span>
+              <span className="trust-usecase-hint">Poster days & showcases</span>
+            </div>
+            <div className="trust-usecase-card">
+              <div className="trust-usecase-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 7V5a2 2 0 0 1 2-2h2" /><path d="M17 3h2a2 2 0 0 1 2 2v2" /><path d="M21 17v2a2 2 0 0 1-2 2h-2" /><path d="M7 21H5a2 2 0 0 1-2-2v-2" /><rect x="7" y="7" width="10" height="10" rx="1" />
+                </svg>
+              </div>
+              <span className="trust-usecase-label">Accreditation</span>
+              <span className="trust-usecase-hint">ABET, MÜDEK, EUR-ACE</span>
+            </div>
           </div>
         </div>
         <div className="landing-trust-divider" />
@@ -538,49 +586,6 @@ export function LandingPage({ onStartJury, onAdmin, onSignIn }) {
             <div className="mobile-step-label">4 · Done</div>
           </div>
 
-        </div>
-      </section>
-
-      {/* Use Cases */}
-      <section className="landing-usecases reveal-section">
-        <div className="landing-section-label">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ opacity: 0.6 }}>
-            <circle cx="12" cy="12" r="10" />
-            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-          </svg>
-          Built for every evaluation
-        </div>
-        <div className="uc-grid">
-          <div className="uc-card reveal-child">
-            <div className="uc-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c6 3 12 0 12 0v-5" />
-              </svg>
-            </div>
-            <h4>Academic</h4>
-            <p>Capstone exhibitions, poster days, thesis defenses, lab assessments</p>
-            <div className="uc-tags"><span className="uc-tag">MÜDEK</span><span className="uc-tag">ABET</span><span className="uc-tag">Poster Day</span></div>
-          </div>
-          <div className="uc-card reveal-child">
-            <div className="uc-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-              </svg>
-            </div>
-            <h4>Competitions</h4>
-            <p>Hackathons, science fairs, innovation challenges, startup pitch events</p>
-            <div className="uc-tags"><span className="uc-tag">Teknofest</span><span className="uc-tag">Hackathon</span><span className="uc-tag">Pitch Day</span></div>
-          </div>
-          <div className="uc-card reveal-child">
-            <div className="uc-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-              </svg>
-            </div>
-            <h4>Corporate &amp; R&amp;D</h4>
-            <p>Internal innovation reviews, vendor selection, portfolio evaluations, grant panels</p>
-            <div className="uc-tags"><span className="uc-tag">R&amp;D Review</span><span className="uc-tag">Vendor Select</span><span className="uc-tag">Grants</span></div>
-          </div>
         </div>
       </section>
 

@@ -522,7 +522,7 @@ export default function JurorsPage({
               filenameType: "Jurors", sheetName: "Jurors",
               periodName: periods.viewPeriodLabel, tenantCode: activeOrganization?.code || "",
               organization: activeOrganization?.name || "", department: activeOrganization?.institution_name || "",
-              pdfTitle: "VERA — Juror Roster", header, rows, colWidths: [28, 28, 14, 10, 10],
+              pdfTitle: "VERA — Jurors", header, rows, colWidths: [28, 28, 14, 10, 10],
             });
           }}
           onExport={async (fmt) => {
@@ -536,7 +536,7 @@ export default function JurorsPage({
                 filenameType: "Jurors", sheetName: "Jurors",
                 periodName: periods.viewPeriodLabel, tenantCode: activeOrganization?.code || "",
                 organization: activeOrganization?.name || "", department: activeOrganization?.institution_name || "",
-                pdfTitle: "VERA — Juror Roster", header, rows, colWidths: [28, 28, 14, 10, 10],
+                pdfTitle: "VERA — Jurors", header, rows, colWidths: [28, 28, 14, 10, 10],
               });
               setExportOpen(false);
               _toast.success("Jurors exported");

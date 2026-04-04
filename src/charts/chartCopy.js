@@ -4,7 +4,7 @@
 
 export const CHART_COPY = {
   outcomeByGroup: {
-    title: "Outcome Score by Group",
+    title: "Outcome Achievement by Group",
     note: "Average score per criterion per project group. Normalized to percentage of maximum possible score.",
   },
   programmeAverages: {
@@ -12,7 +12,7 @@ export const CHART_COPY = {
     note: "Grand mean (%) ± 1σ per criterion. 70% attainment threshold shown as reference.",
   },
   semesterTrend: {
-    title: "Attainment Rate Trend",
+    title: "Outcome Attainment Trend",
     note: "Percentage of evaluations meeting the 70% threshold across evaluation periods.",
   },
   competencyProfile: {
@@ -20,7 +20,7 @@ export const CHART_COPY = {
     note: "Radar/polar view of average attainment per criterion per group. Cohort average included.",
   },
   jurorConsistency: {
-    title: "Juror Consistency (CV)",
+    title: "Inter-Rater Consistency Heatmap",
     note: "Coefficient of Variation (CV = σ/μ × 100) per group × criterion. CV >25% indicates poor inter-rater agreement.",
   },
   scoreDistribution: {

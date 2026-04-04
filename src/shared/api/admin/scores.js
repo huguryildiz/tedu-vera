@@ -118,14 +118,15 @@ export async function getProjectSummary(periodId) {
     .order("title");
   if (projErr) throw projErr;
 
-  // Get all score sheets with items for this period
+  // Get only submitted score sheets for this period
   const { data: sheets, error: sheetErr } = await supabase
     .from("score_sheets")
     .select(`
       id, project_id,
       items:score_sheet_items(score_value, period_criteria(key))
     `)
-    .eq("period_id", periodId);
+    .eq("period_id", periodId)
+    .eq("status", "submitted");
   if (sheetErr) throw sheetErr;
 
   // Aggregate scores per project

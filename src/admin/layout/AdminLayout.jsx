@@ -174,7 +174,12 @@ export default function AdminLayout({ onReturnHome }) {
           listFrameworks(activeOrganization.id),
         ]);
         if (!alive) return;
-        setCriteriaConfig(getActiveCriteria(criteriaRows));
+        // Fall back to JSONB criteria_config on the period row for periods
+        // created before the period_criteria snapshot table was introduced.
+        const effectiveCriteria = criteriaRows.length > 0
+          ? criteriaRows
+          : (selectedPeriod?.criteria_config || []);
+        setCriteriaConfig(getActiveCriteria(effectiveCriteria));
         setOutcomeConfig(outcomeRows.map((o) => ({
           id: o.id,
           code: o.code,

@@ -53,7 +53,7 @@ export function computeOverallAvg(submittedData, outcomes = []) {
 export function buildOutcomeByGroupDataset(dashboardStats, outcomes = []) {
   const groups = (dashboardStats || []).filter((s) => s.count > 0);
   const headers = [
-    "Group",
+    "Title",
     ...outcomes.flatMap((o) => [`${o.label} Avg`, `${o.label} (%)`]),
   ];
   const rows = groups.map((g) => {
@@ -62,10 +62,10 @@ export function buildOutcomeByGroupDataset(dashboardStats, outcomes = []) {
       const pct = o.max > 0 ? (avgRaw / o.max) * 100 : 0;
       return [fmt2(avgRaw), fmt1(pct)];
     });
-    return [g.name, ...cells];
+    return [g.title || g.name || "—", ...cells];
   });
   return {
-    sheet: "Outcome Group",
+    sheet: "Outcome Achievement",
     title: CHART_COPY.outcomeByGroup.title,
     note: CHART_COPY.outcomeByGroup.note,
     headers,
@@ -84,7 +84,7 @@ export function buildProgrammeAveragesDataset(submittedData, outcomes = []) {
     return [o.label, o.max, fmt2(avgRaw), fmt1(pct), fmt1(sd), vals.length];
   });
   return {
-    sheet: "Programme Avg",
+    sheet: "Programme-Level Averages",
     title: CHART_COPY.programmeAverages.title,
     note: CHART_COPY.programmeAverages.note,
     headers,
@@ -114,7 +114,7 @@ export function buildTrendDataset(trendData, semesterOptions, selectedIds, outco
     return [s.period_name || row?.periodName || "—", row?.nEvals ?? 0, ...cells];
   });
   return {
-    sheet: "Period Trend",
+    sheet: "Attainment Trend",
     title: CHART_COPY.semesterTrend.title,
     note: CHART_COPY.semesterTrend.note,
     headers,
@@ -124,14 +124,14 @@ export function buildTrendDataset(trendData, semesterOptions, selectedIds, outco
 
 export function buildCompetencyProfilesDataset(dashboardStats, outcomes = []) {
   const groups = (dashboardStats || []).filter((s) => s.count > 0);
-  const headers = ["Group", ...outcomes.map((o) => `${o.label} (%)`)];
+  const headers = ["Title", ...outcomes.map((o) => `${o.label} (%)`)];
   const rows = groups.map((g) => {
     const vals = outcomes.map((o) => {
       const avgRaw = Number(g.avg?.[o.key] ?? 0);
       const pct = o.max > 0 ? (avgRaw / o.max) * 100 : 0;
       return fmt1(pct);
     });
-    return [g.name, ...vals];
+    return [g.title || g.name || "—", ...vals];
   });
   const cohort = outcomes.map((o) => {
     const vals = groups.map((g) => {
@@ -153,7 +153,7 @@ export function buildCompetencyProfilesDataset(dashboardStats, outcomes = []) {
 export function buildJurorConsistencyDataset(dashboardStats, submittedData, outcomes = []) {
   const groups = (dashboardStats || []).filter((s) => s.count > 0);
   const rows   = submittedData || [];
-  const headers = ["Group", ...outcomes.map((o) => o.label)];
+  const headers = ["Title", ...outcomes.map((o) => o.label)];
 
   const buildMatrix = (metric) =>
     groups.map((g) => {
@@ -173,19 +173,19 @@ export function buildJurorConsistencyDataset(dashboardStats, submittedData, outc
         }
         return null;
       });
-      return [g.name, ...cells];
+      return [g.title || g.name || "—", ...cells];
     });
 
   return {
-    sheet: "Juror CV",
+    sheet: "Juror Consistency",
     title: CHART_COPY.jurorConsistency.title,
     note: CHART_COPY.jurorConsistency.note,
     headers,
     rows: buildMatrix("cv"),
     extra: [
-      { title: "Mean (%) by Group x Criterion", headers, rows: buildMatrix("mean") },
-      { title: "Std. deviation (σ) by Group x Criterion", headers, rows: buildMatrix("sd") },
-      { title: "N (Juror Count) by Group x Criterion", headers, rows: buildMatrix("n") },
+      { title: "Mean (%) by Title x Criterion", headers, rows: buildMatrix("mean") },
+      { title: "Std. deviation (σ) by Title x Criterion", headers, rows: buildMatrix("sd") },
+      { title: "N (Juror Count) by Title x Criterion", headers, rows: buildMatrix("n") },
     ],
   };
 }
@@ -222,7 +222,7 @@ export function buildCriterionBoxplotDataset(submittedData, outcomes = []) {
     ];
   });
   return {
-    sheet: "Boxplot",
+    sheet: "Score Distribution",
     title: CHART_COPY.scoreDistribution.title,
     note: CHART_COPY.scoreDistribution.note,
     headers,
@@ -283,7 +283,7 @@ export function buildRubricAchievementDataset(submittedData, outcomes = []) {
   });
 
   return {
-    sheet: "Rubric Dist",
+    sheet: "Rubric Achievement Dist.",
     title: CHART_COPY.achievementDistribution.title,
     note: CHART_COPY.achievementDistribution.note,
     headers,
@@ -292,7 +292,7 @@ export function buildRubricAchievementDataset(submittedData, outcomes = []) {
 }
 
 export function buildMudekMappingDataset(outcomes = [], mudekLookup = null) {
-  const headers = ["Criteria", "MÜDEK Code(s)", "MÜDEK Outcome(s)"];
+  const headers = ["Criteria", "Outcome Code(s)", "Outcome Label(s)"];
   const rows = [];
   const merges = [];
   const alignments = [];
@@ -327,9 +327,9 @@ export function buildMudekMappingDataset(outcomes = [], mudekLookup = null) {
     rowIndex += count;
   });
   return {
-    sheet: "MÜDEK Mapping",
-    title: "MÜDEK Outcome Mapping",
-    note: "Criteria-to-MÜDEK outcome references used in analytics.",
+    sheet: "Coverage Matrix",
+    title: "Coverage Matrix",
+    note: "Criteria-to-outcome references used in analytics.",
     headers,
     rows,
     merges,

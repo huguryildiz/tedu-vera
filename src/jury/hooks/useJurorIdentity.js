@@ -15,7 +15,7 @@ import { DEMO_MODE } from "@/shared/lib/demoMode";
 
 export function useJurorIdentity() {
   const [juryName, setJuryName] = useState(DEMO_MODE ? "Demo Juror" : "");
-  const [affiliation, setAffiliation] = useState(DEMO_MODE ? "TED University / Electrical and Electronics Engineering" : "");
+  const [affiliation, setAffiliation] = useState(DEMO_MODE ? "TEDU, EE" : "");
   const [authError, setAuthError] = useState("");
 
   return {
