@@ -45,21 +45,23 @@
    apply globally — no page-specific scope needed. */
 
 /* ─── Outcome Attainment Heatmap ──────────────────────────────────────────── */
-/* Dark mode (default): semi-transparent tints over dark surface */
+/* Mirrors ga-cell-* palette from analytics.css for visual consistency.      */
 .hm-cell { border-radius: 6px; padding: 6px 4px; text-align: center; }
-.hm-cell--green  { background: rgba(34,197,94,0.22); }
-.hm-cell--lime   { background: rgba(132,204,22,0.20); }
-.hm-cell--yellow { background: rgba(234,179,8,0.20); }
-.hm-cell--orange { background: rgba(249,115,22,0.22); }
-.hm-cell--red    { background: rgba(239,68,68,0.22); }
+
+/* Dark mode (default) */
+.hm-cell--green  { background:rgba(16,185,129,0.24);box-shadow:inset 0 0 0 1px rgba(16,185,129,0.44);color:#34d399; }
+.hm-cell--lime   { background:rgba(16,185,129,0.16);box-shadow:inset 0 0 0 1px rgba(16,185,129,0.28);color:#34d399; }
+.hm-cell--yellow { background:rgba(16,185,129,0.08);box-shadow:inset 0 0 0 1px rgba(16,185,129,0.14);color:#6ee7b7; }
+.hm-cell--orange { background:rgba(251,191,36,0.12);box-shadow:inset 0 0 0 1px rgba(251,191,36,0.22);color:#fbbf24; }
+.hm-cell--red    { background:rgba(248,113,113,0.12);box-shadow:inset 0 0 0 1px rgba(248,113,113,0.22);color:#f87171; }
 .hm-cell--none   { background: var(--surface-raised); }
 
-.hm-cell__value { font-size: 13px; font-weight: 700; line-height: 1.2; color: var(--text-primary); }
-.hm-cell__avg   { font-size: 9px; margin-top: 2px; color: var(--text-muted); }
+.hm-cell__value { font-size: 13px; font-weight: 700; line-height: 1.2; color: inherit; }
+.hm-cell__avg   { font-size: 9px; margin-top: 2px; color: inherit; opacity: 0.75; }
 
-/* Light mode overrides: solid pastels + sharp text */
-body:not(.dark-mode) .hm-cell--green  { background: #dcfce7; }
-body:not(.dark-mode) .hm-cell--lime   { background: #ecfccb; }
-body:not(.dark-mode) .hm-cell--yellow { background: #fef9c3; }
-body:not(.dark-mode) .hm-cell--orange { background: #ffedd5; }
-body:not(.dark-mode) .hm-cell--red    { background: #fee2e2; }
+/* Light mode overrides — same as ga-cell-* light overrides */
+body:not(.dark-mode) .hm-cell--green  { background:rgba(16,185,129,0.22);box-shadow:inset 0 0 0 1px rgba(16,185,129,0.50);color:#047857; }
+body:not(.dark-mode) .hm-cell--lime   { background:rgba(16,185,129,0.18);box-shadow:inset 0 0 0 1px rgba(16,185,129,0.40);color:#047857; }
+body:not(.dark-mode) .hm-cell--yellow { background:rgba(16,185,129,0.10);box-shadow:inset 0 0 0 1px rgba(16,185,129,0.25);color:#059669; }
+body:not(.dark-mode) .hm-cell--orange { background:rgba(217,119,6,0.14);box-shadow:inset 0 0 0 1px rgba(217,119,6,0.35);color:#b45309; }
+body:not(.dark-mode) .hm-cell--red    { background:rgba(220,38,38,0.12);box-shadow:inset 0 0 0 1px rgba(220,38,38,0.30);color:#b91c1c; }
