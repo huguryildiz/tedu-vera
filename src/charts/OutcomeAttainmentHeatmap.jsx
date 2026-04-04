@@ -1,24 +1,16 @@
 // src/charts/OutcomeAttainmentHeatmap.jsx
 // Heatmap: outcomes (rows) × evaluation periods (columns).
 // Cell color = attainment rate; secondary label = avg score.
+// Colors live in charts.css (.hm-cell--*) so they adapt to light/dark theme.
 
-/** Returns a CSS background color for the given attainment rate. */
-function attainmentColor(rate) {
-  if (rate == null) return "var(--surface-raised)";
-  if (rate >= 90) return "rgba(34,197,94,0.30)";
-  if (rate >= 80) return "rgba(132,204,22,0.28)";
-  if (rate >= 70) return "rgba(234,179,8,0.28)";
-  if (rate >= 50) return "rgba(249,115,22,0.28)";
-  return "rgba(239,68,68,0.28)";
-}
-
-/** Returns a foreground color that stays legible over the cell background. */
-function attainmentTextColor(rate) {
-  if (rate == null) return "var(--text-muted)";
-  if (rate >= 80) return "#86efac";
-  if (rate >= 70) return "#fde68a";
-  if (rate >= 50) return "#fdba74";
-  return "#fca5a5";
+/** Returns the CSS modifier class for a given attainment rate. */
+function attainmentClass(rate) {
+  if (rate == null) return "hm-cell--none";
+  if (rate >= 90) return "hm-cell--green";
+  if (rate >= 80) return "hm-cell--lime";
+  if (rate >= 70) return "hm-cell--yellow";
+  if (rate >= 50) return "hm-cell--orange";
+  return "hm-cell--red";
 }
 
 /**
@@ -42,7 +34,6 @@ export function OutcomeAttainmentHeatmap({ rows = [], outcomeMeta = [] }) {
         </colgroup>
         <thead>
           <tr>
-            {/* Outcome label column header */}
             <th style={{
               textAlign: "left",
               fontSize: 10,
@@ -98,31 +89,18 @@ export function OutcomeAttainmentHeatmap({ rows = [], outcomeMeta = [] }) {
                 const att = r[o.attKey];
                 const avg = r[o.avgKey];
                 return (
-                  <td key={r.period} title={att != null ? `Attainment: ${att}%  |  Avg score: ${avg != null ? avg + "%" : "—"}` : "No data"} style={{
-                    textAlign: "center",
-                    borderRadius: 6,
-                    background: attainmentColor(att),
-                    padding: "6px 4px",
-                    minWidth: 64,
-                  }}>
+                  <td
+                    key={r.period}
+                    className={`hm-cell ${attainmentClass(att)}`}
+                    title={att != null
+                      ? `Attainment: ${att}%  |  Avg score: ${avg != null ? avg + "%" : "—"}`
+                      : "No data"}
+                  >
                     {att != null ? (
                       <>
-                        <div style={{
-                          fontSize: 13,
-                          fontWeight: 700,
-                          color: attainmentTextColor(att),
-                          lineHeight: 1.2,
-                        }}>
-                          {att}%
-                        </div>
+                        <div className="hm-cell__value">{att}%</div>
                         {avg != null && (
-                          <div style={{
-                            fontSize: 9,
-                            color: "var(--text-muted)",
-                            marginTop: 2,
-                          }}>
-                            avg {avg}%
-                          </div>
+                          <div className="hm-cell__avg">avg {avg}%</div>
                         )}
                       </>
                     ) : (
@@ -145,20 +123,20 @@ export function OutcomeAttainmentHeatmap({ rows = [], outcomeMeta = [] }) {
         flexWrap: "wrap",
       }}>
         {[
-          { label: "≥ 90%", bg: "rgba(34,197,94,0.30)", color: "#86efac" },
-          { label: "80–90%", bg: "rgba(132,204,22,0.28)", color: "#bef264" },
-          { label: "70–80%", bg: "rgba(234,179,8,0.28)", color: "#fde68a" },
-          { label: "50–70%", bg: "rgba(249,115,22,0.28)", color: "#fdba74" },
-          { label: "< 50%", bg: "rgba(239,68,68,0.28)", color: "#fca5a5" },
-          { label: "No data", bg: "var(--surface-raised)", color: "var(--text-muted)" },
+          { label: "≥ 90%", cls: "hm-cell--green" },
+          { label: "80–90%", cls: "hm-cell--lime" },
+          { label: "70–80%", cls: "hm-cell--yellow" },
+          { label: "50–70%", cls: "hm-cell--orange" },
+          { label: "< 50%", cls: "hm-cell--red" },
+          { label: "No data", cls: "hm-cell--none" },
         ].map((s) => (
           <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <span style={{
+            <span className={`hm-cell ${s.cls}`} style={{
               display: "inline-block",
               width: 16,
               height: 12,
               borderRadius: 3,
-              background: s.bg,
+              padding: 0,
             }} />
             <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{s.label}</span>
           </div>

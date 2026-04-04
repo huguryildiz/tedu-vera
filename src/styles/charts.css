@@ -43,3 +43,23 @@
 /* Base containers defined in analytics.css; overview page inherits them.
    The vera.css component styles (att-bar-fill.met, lollipop-stem.positive, etc.)
    apply globally — no page-specific scope needed. */
+
+/* ─── Outcome Attainment Heatmap ──────────────────────────────────────────── */
+/* Dark mode (default): semi-transparent tints over dark surface */
+.hm-cell { border-radius: 6px; padding: 6px 4px; text-align: center; }
+.hm-cell--green  { background: rgba(34,197,94,0.22); }
+.hm-cell--lime   { background: rgba(132,204,22,0.20); }
+.hm-cell--yellow { background: rgba(234,179,8,0.20); }
+.hm-cell--orange { background: rgba(249,115,22,0.22); }
+.hm-cell--red    { background: rgba(239,68,68,0.22); }
+.hm-cell--none   { background: var(--surface-raised); }
+
+.hm-cell__value { font-size: 13px; font-weight: 700; line-height: 1.2; color: var(--text-primary); }
+.hm-cell__avg   { font-size: 9px; margin-top: 2px; color: var(--text-muted); }
+
+/* Light mode overrides: solid pastels + sharp text */
+body:not(.dark-mode) .hm-cell--green  { background: #dcfce7; }
+body:not(.dark-mode) .hm-cell--lime   { background: #ecfccb; }
+body:not(.dark-mode) .hm-cell--yellow { background: #fef9c3; }
+body:not(.dark-mode) .hm-cell--orange { background: #ffedd5; }
+body:not(.dark-mode) .hm-cell--red    { background: #fee2e2; }
