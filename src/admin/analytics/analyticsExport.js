@@ -168,9 +168,9 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
     { title: "Outcome Achievement by Group",    chartId: "pdf-chart-outcome-by-group",   ds: outByGroup },
     { title: "Programme-Level Averages",        chartId: "pdf-chart-programme-averages", ds: progAvg    },
     { title: "Group Attainment Heatmap",        chartId: "pdf-chart-group-heatmap",      ds: outByGroup },
-    { title: "Juror Reliability (CV)",          chartId: "pdf-chart-juror-cv",           ds: jurorCV    },
+    { title: "Inter-Rater Consistency Heatmap", chartId: "pdf-chart-juror-cv",           ds: jurorCV    },
     { title: "Rubric Achievement Distribution", chartId: "pdf-chart-rubric",             ds: rubric     },
-    { title: "Outcome Coverage Matrix",         chartId: "pdf-chart-coverage",           ds: mudek      },
+    { title: "Coverage Matrix",                 chartId: "pdf-chart-coverage",           ds: mudek      },
     ...(trend.rows.length >= 2
       ? [{ title: "Attainment Trend", chartId: "pdf-chart-trend", ds: trend }]
       : []),
@@ -215,7 +215,7 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
           doc.addPage();
           startY = 14;
         }
-        doc.addImage(dataURL, "PNG", margin, startY, imgW, chartImgH);
+        doc.addImage(dataURL, "JPEG", margin, startY, imgW, chartImgH);
         startY += chartImgH + 6;
       }
     } catch (err) {

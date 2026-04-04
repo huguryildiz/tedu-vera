@@ -56,7 +56,7 @@ describe("captureChartImage", () => {
 
     expect(mockHtml2canvas).toHaveBeenCalledWith(div, {
       backgroundColor: "#ffffff",
-      scale: 2,
+      scale: 1.5,
       useCORS: true,
       logging: false,
     });

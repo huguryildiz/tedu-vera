@@ -22,11 +22,11 @@ export async function captureChartImage(elementId) {
     const { default: html2canvas } = await import("html2canvas");
     const canvas = await html2canvas(el, {
       backgroundColor: "#ffffff",
-      scale: 2,
+      scale: 1.5,
       useCORS: true,
       logging: false,
     });
-    return { dataURL: canvas.toDataURL("image/png"), width: canvas.width, height: canvas.height };
+    return { dataURL: canvas.toDataURL("image/jpeg", 0.85), width: canvas.width, height: canvas.height };
   } finally {
     el.classList.remove("pdf-capture-mode");
   }
