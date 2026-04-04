@@ -20,8 +20,6 @@ import { JurorConsistencyHeatmap } from "@/charts/JurorConsistencyHeatmap";
 import { CoverageMatrix } from "@/charts/CoverageMatrix";
 import "../../styles/pages/analytics.css";
 
-const ATTAINMENT_THRESHOLD = 70;
-
 // ── Insight icon ──────────────────────────────────────────────
 function InfoIcon() {
   return (
@@ -48,7 +46,7 @@ function DownloadIcon({ size = 14 }) {
 // Returns one card per unique MÜDEK outcome code across all criteria.
 // deltaRows: [{periodId, criteriaAvgs}] for exactly [currentPeriod, prevPeriod].
 // delta is change in avg score % vs the immediately preceding period.
-function buildAttainmentCards(submittedData, criteria = [], deltaRows = []) {
+function buildAttainmentCards(submittedData, criteria = [], deltaRows = [], threshold = 70) {
   const rows = submittedData || [];
   // outcomeCode → { criterionId (= criterion key), max }
   const outcomeMap = new Map();
@@ -78,25 +76,25 @@ function buildAttainmentCards(submittedData, criteria = [], deltaRows = []) {
     const vals = outcomeValues(rows, criterionId);
     let attRate = null;
     if (vals.length) {
-      const above = vals.filter((v) => (v / max) * 100 >= ATTAINMENT_THRESHOLD).length;
+      const above = vals.filter((v) => (v / max) * 100 >= threshold).length;
       attRate = Math.round((above / vals.length) * 100);
     }
 
     const statusClass =
       attRate == null ? "status-no-data" :
-      attRate >= ATTAINMENT_THRESHOLD ? "status-met" :
+      attRate >= threshold ? "status-met" :
       attRate >= 60 ? "status-borderline" :
       "status-not-met";
 
     const statusLabel =
       attRate == null ? "No data" :
-      attRate >= ATTAINMENT_THRESHOLD ? "Met" :
+      attRate >= threshold ? "Met" :
       attRate >= 60 ? "Borderline" :
       "Not Met";
 
     const statusPrefix =
       attRate == null ? "" :
-      attRate >= ATTAINMENT_THRESHOLD ? "✓ " :
+      attRate >= threshold ? "✓ " :
       attRate >= 60 ? "∼ " :
       "✗ ";
 
@@ -257,6 +255,7 @@ export default function AnalyticsPage({
   outcomeTrendError,
   criteriaConfig,
   outcomeConfig,
+  threshold = 70,
 }) {
   const criteria = criteriaConfig || [];
   const [exportOpen, setExportOpen] = useState(false);
@@ -373,7 +372,7 @@ export default function AnalyticsPage({
     }
   };
 
-  const attCards = buildAttainmentCards(submittedData, criteria, deltaRows);
+  const attCards = buildAttainmentCards(submittedData, criteria, deltaRows, threshold);
   const { rows: outcomeTrendRows, outcomeMeta } = buildOutcomeAttainmentTrendDataset(
     outcomeTrendData,
     semesterOptions,
@@ -471,7 +470,7 @@ export default function AnalyticsPage({
                       className="att-card-bar-fill"
                       style={{
                         width: `${attRate}%`,
-                        background: attRate >= 70
+                        background: attRate >= threshold
                           ? "var(--status-met-text)"
                           : attRate >= 60
                           ? "var(--status-borderline-text)"
@@ -515,7 +514,7 @@ export default function AnalyticsPage({
             </div>
           </div>
           <div className="chart-body">
-            <AttainmentRateChart submittedData={submittedData} criteria={criteria} />
+            <AttainmentRateChart submittedData={submittedData} criteria={criteria} threshold={threshold} />
           </div>
           <div className="chart-legend">
             <div className="legend-item"><div className="legend-dot" style={{ background: "var(--success)" }} />Met (≥70%)</div>
@@ -536,7 +535,7 @@ export default function AnalyticsPage({
             </div>
           </div>
           <div className="chart-body">
-            <ThresholdGapChart submittedData={submittedData} criteria={criteria} />
+            <ThresholdGapChart submittedData={submittedData} criteria={criteria} threshold={threshold} />
           </div>
           <div className="chart-legend">
             <div className="legend-item"><div className="legend-dot" style={{ background: "var(--success)" }} />Above threshold</div>
@@ -567,7 +566,7 @@ export default function AnalyticsPage({
           </div>
         </div>
         <div className="chart-body">
-          <OutcomeByGroupChart dashboardStats={dashboardStats} criteria={criteria} />
+          <OutcomeByGroupChart dashboardStats={dashboardStats} criteria={criteria} threshold={threshold} />
         </div>
         <div className="chart-legend">
           {criteria.map((c) => (
@@ -624,7 +623,7 @@ export default function AnalyticsPage({
             </div>
           </div>
           <div className="chart-body">
-            <ProgrammeAveragesChart submittedData={submittedData} criteria={criteria} />
+            <ProgrammeAveragesChart submittedData={submittedData} criteria={criteria} threshold={threshold} />
           </div>
           <div className="chart-legend">
             {criteria.map((c) => (
@@ -699,7 +698,7 @@ export default function AnalyticsPage({
           </div>
         </div>
         <div className="chart-body">
-          <GroupAttainmentHeatmap dashboardStats={dashboardStats} submittedData={submittedData} criteria={criteria} />
+          <GroupAttainmentHeatmap dashboardStats={dashboardStats} submittedData={submittedData} criteria={criteria} threshold={threshold} />
         </div>
         <div className="chart-legend">
           <div className="legend-item"><div className="legend-dot ga-cell-high" style={{ borderRadius: 2, width: 10, height: 10 }} />High (≥80%)</div>
