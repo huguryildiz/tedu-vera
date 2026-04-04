@@ -395,6 +395,22 @@ body:not(.dark-mode) .ga-cv-poor{background:rgba(220,38,38,0.12);box-shadow:inse
 .dark-mode .coverage-summary-stat .stat-num.direct{color:#4ade80}
 .dark-mode .coverage-summary-stat .stat-num.indirect{color:#fbbf24}
 
+/* ── PDF capture mode ─────────────────────────────────────────── */
+/* Applied transiently during PDF capture to force light background */
+.pdf-capture-mode,
+.pdf-capture-mode * {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: none !important;
+}
+.pdf-capture-mode .ga-cell-high       { background: rgba(16,185,129,0.18) !important; color: #047857 !important; }
+.pdf-capture-mode .ga-cell-met        { background: rgba(16,185,129,0.10) !important; color: #059669 !important; }
+.pdf-capture-mode .ga-cell-borderline { background: rgba(217,119,6,0.14)  !important; color: #b45309 !important; }
+.pdf-capture-mode .ga-cell-not-met    { background: rgba(220,38,38,0.12)  !important; color: #b91c1c !important; }
+.pdf-capture-mode .coverage-chip.direct   { background: rgba(22,163,74,0.12)  !important; color: #166534 !important; }
+.pdf-capture-mode .coverage-chip.indirect { background: rgba(217,119,6,0.12)  !important; color: #92400e !important; }
+
 /* Per-outcome trend table */
 .outcome-trend-table{width:100%;border-collapse:separate;border-spacing:0}
 .outcome-trend-table thead{position:sticky;top:0;z-index:1}
