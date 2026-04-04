@@ -215,6 +215,105 @@ export async function getOutcomeTrends(periodIds) {
 }
 
 /**
+ * Returns per-period outcome-level attainment rates and average scores.
+ * For each period, computes per-evaluation outcome scores using normalized
+ * criterion weights, then aggregates into attainmentRate and avg.
+ *
+ * @param {string[]} periodIds
+ * @returns {Promise<Array<{
+ *   periodId: string,
+ *   periodName: string,
+ *   nEvals: number,
+ *   outcomes: Array<{ code: string, label: string, avg: number|null, attainmentRate: number|null }>
+ * }>>}
+ */
+export async function getOutcomeAttainmentTrends(periodIds) {
+  const THRESHOLD = 70;
+  const results = [];
+
+  for (const periodId of periodIds) {
+    const [periodRes, criteriaRes, mapsRes, outcomesRes, scores] = await Promise.all([
+      supabase.from("periods").select("id, name").eq("id", periodId).single(),
+      supabase.from("period_criteria").select("id, key, max_score").eq("period_id", periodId),
+      supabase
+        .from("period_criterion_outcome_maps")
+        .select("period_criterion_id, weight, period_outcomes(code)")
+        .eq("period_id", periodId),
+      supabase
+        .from("period_outcomes")
+        .select("code, label")
+        .eq("period_id", periodId)
+        .order("sort_order"),
+      getScores(periodId),
+    ]);
+
+    // criterion id → { key, max }
+    const criteriaById = Object.fromEntries(
+      (criteriaRes.data || []).map((c) => [c.id, { key: c.key, max: c.max_score }])
+    );
+
+    // outcome code → label
+    const outcomeLabelMap = Object.fromEntries(
+      (outcomesRes.data || []).map((o) => [o.code, o.label])
+    );
+
+    // outcome code → [{ key, max, weight }]
+    const outcomeContributors = {};
+    for (const map of mapsRes.data || []) {
+      const code = map.period_outcomes?.code;
+      const criterion = criteriaById[map.period_criterion_id];
+      if (!code || !criterion) continue;
+      const weight = typeof map.weight === "number" ? map.weight : 1;
+      (outcomeContributors[code] ||= []).push({ key: criterion.key, max: criterion.max, weight });
+    }
+
+    const nEvals = scores.length;
+
+    const outcomes = Object.entries(outcomeContributors).map(([code, contributors]) => {
+      const label = outcomeLabelMap[code] ?? code;
+
+      // Per-evaluation normalized weighted score for this outcome
+      const evalScores = scores
+        .map((evalRow) => {
+          let weightedSum = 0;
+          let effectiveWeight = 0;
+          for (const c of contributors) {
+            const raw = evalRow[c.key];
+            if (raw == null || !Number.isFinite(Number(raw)) || c.max === 0) continue;
+            weightedSum += (Number(raw) / c.max) * 100 * c.weight;
+            effectiveWeight += c.weight;
+          }
+          return effectiveWeight > 0 ? weightedSum / effectiveWeight : null;
+        })
+        .filter((v) => v !== null);
+
+      if (!evalScores.length) return { code, label, avg: null, attainmentRate: null };
+
+      const avg = evalScores.reduce((s, v) => s + v, 0) / evalScores.length;
+      const met = evalScores.filter((v) => v >= THRESHOLD).length;
+
+      return {
+        code,
+        label,
+        avg: Math.round(avg * 10) / 10,
+        attainmentRate: Math.round((met / evalScores.length) * 100),
+      };
+    });
+
+    outcomes.sort((a, b) => a.code.localeCompare(b.code));
+
+    results.push({
+      periodId,
+      periodName: periodRes.data?.name || "",
+      nEvals,
+      outcomes,
+    });
+  }
+
+  return results;
+}
+
+/**
  * Returns cascade counts for delete operations.
  */
 export async function getDeleteCounts(targetType, targetId) {

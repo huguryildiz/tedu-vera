@@ -55,6 +55,7 @@ export {
   listJurorsSummary,
   getProjectSummary,
   getOutcomeTrends,
+  getOutcomeAttainmentTrends,
   getDeleteCounts,
   deleteEntity,
   listPeriodCriteria,
@@ -83,3 +84,5 @@ export {
 } from "./frameworks";
 
 export { sendEntryTokenEmail, sendJurorPinEmail, sendExportReport } from "./notifications";
+
+export { getMaintenanceStatus, getMaintenanceConfig, setMaintenance, cancelMaintenance } from "./maintenance";
