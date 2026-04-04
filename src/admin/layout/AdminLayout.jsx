@@ -1,7 +1,7 @@
 // src/admin/layout/AdminLayout.jsx — Phase 2
 // Wires useAuth + useAdminData. Renders OverviewPage when adminTab === "overview".
 // Period dropdown in AdminHeader is now fully live.
-import { lazy, Suspense, useRef, useMemo, useState, useEffect, Component } from "react";
+import { lazy, Suspense, useRef, useMemo, useState, useEffect, useCallback, Component } from "react";
 import { useAuth } from "@/auth";
 import { useAdminTabs } from "../hooks/useAdminTabs";
 import { useAdminData } from "../hooks/useAdminData";
@@ -108,11 +108,16 @@ export default function AdminLayout({ onReturnHome }) {
     signIn,
     signInWithGoogle,
     signUp,
-    signOut,
+    signOut: _signOut,
     resetPassword,
     updatePassword,
     completeProfile,
   } = useAuth();
+
+  const signOut = useCallback(async () => {
+    await _signOut();
+    onReturnHome();
+  }, [_signOut, onReturnHome]);
 
   const [authPage, setAuthPage] = useState(() => {
     try {
