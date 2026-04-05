@@ -3810,5 +3810,38 @@
     "risk": "Wrong data URL format or missing metadata would produce a broken image in the PDF.",
     "coverageStrength": "Strong",
     "severity": "critical"
+  },
+  {
+    "id": "export.rank.02",
+    "module": "Scores / Rankings",
+    "area": "Export — Rankings",
+    "story": "Filtered Export",
+    "scenario": "exports only filtered rows when a filter is active",
+    "whyItMatters": "When the user filters rankings by search or score range, the export must reflect the filtered view, not the full unfiltered list.",
+    "risk": "Exporting unfiltered data while the table shows a filtered subset gives the user incorrect output without warning.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "export.projects.01",
+    "module": "Projects",
+    "area": "Export — Projects",
+    "story": "Column Header Alignment",
+    "scenario": "export column names match table column names exactly",
+    "whyItMatters": "Column names in the downloaded file must match what the admin sees in the table so the file is immediately understandable without cross-referencing the UI.",
+    "risk": "Mismatched names confuse admins and suggest the wrong field is being exported.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "export.jurors.01",
+    "module": "Jurors",
+    "area": "Export — Jurors",
+    "story": "Column Header Alignment",
+    "scenario": "export column names match table column names exactly",
+    "whyItMatters": "Column names in the downloaded file must match what the admin sees in the table so the file is immediately understandable without cross-referencing the UI.",
+    "risk": "Mismatched names (e.g. 'Affiliation' not in table, 'Last Active' missing from export) mislead admins.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
   }
 ]
