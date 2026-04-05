@@ -128,7 +128,7 @@
 .jurors-group-bar-fill{height:100%;border-radius:99px;transition:width .2s}
 .jurors-table-active{font-size:12px;color:var(--text-secondary);white-space:nowrap;cursor:default;position:relative}
 /* position override: right-align tooltip on last-active cell (would overflow right edge otherwise) */
-.jurors-table-active[data-tooltip]:hover::after{left:auto;right:0;transform:none}
+.jurors-table-active[data-juror-tooltip]:hover::after{left:auto;right:0;transform:none}
 
 /* ─── Table row states ─── */
 #jurors-main-table tbody tr{cursor:pointer;transition:background .1s,box-shadow .1s}
@@ -151,6 +151,10 @@
 .juror-action-btn:hover{background:var(--surface-1);border-color:var(--border);color:var(--text-secondary)}
 .juror-action-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:210px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,0.12),0 4px 12px rgba(0,0,0,0.06);z-index:80;padding:5px;animation:dropdown-in .18s cubic-bezier(.21,1.02,.73,1)}
 .juror-action-menu.show{display:block}
+.juror-action-wrap.menu-up .juror-action-menu{
+  top:auto;
+  bottom:calc(100% + 6px);
+}
 .juror-action-item{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:7px;font-size:12.5px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .1s}
 .juror-action-item:hover{background:var(--surface-1);color:var(--text-primary)}
 .juror-action-item svg{width:15px;height:15px;flex-shrink:0;color:var(--text-tertiary);transition:color .1s}
@@ -220,7 +224,7 @@
 .sem-status-locked svg{width:12px;height:12px;opacity:0.7}
 .sem-stat{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text-primary);letter-spacing:-0.02em}
 .sem-stat-label{font-size:10.5px;color:var(--text-tertiary);font-weight:400;font-family:var(--font)}
-.sem-updated{font-size:11px;color:var(--text-tertiary);font-weight:400;white-space:nowrap;font-family:var(--mono);letter-spacing:-0.02em}
+.sem-updated{color:inherit}
 .sem-action-wrap{position:relative;display:flex;justify-content:flex-end}
 .sem-action-btn{padding:4px 6px;border:1px solid transparent;border-radius:var(--radius-sm);background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--text-tertiary);font-size:12px;transition:all .12s}
 .sem-action-btn:hover{background:var(--surface-1);border-color:var(--border);color:var(--text-secondary)}
@@ -262,9 +266,9 @@
 .j-row .j-inst{display:block;font-size:10px;color:var(--text-tertiary);font-weight:400}
 
 /* ─── Tooltip base (used for disabled action menu items) ───── */
-[data-tooltip] { position: relative }
-[data-tooltip]::after {
-  content: attr(data-tooltip);
+[data-juror-tooltip] { position: relative }
+[data-juror-tooltip]::after {
+  content: attr(data-juror-tooltip);
   position: absolute;
   bottom: calc(100% + 6px);
   left: 50%;
@@ -281,7 +285,7 @@
   transition: opacity .15s .15s;
   z-index: 200;
 }
-[data-tooltip]:hover::after { opacity: 1 }
+[data-juror-tooltip]:hover::after { opacity: 1 }
 
 /* ─── Disabled action item ───────────────────────────────────── */
 .juror-action-item.disabled {
@@ -293,11 +297,93 @@
   display: block;
   position: relative;
 }
-.juror-action-item-tooltip-wrap[data-tooltip]::after {
+.juror-action-item-tooltip-wrap[data-juror-tooltip]::after {
   left: 50%;
   transform: translateX(-50%);
   bottom: calc(100% + 6px);
   white-space: normal;
   width: 200px;
   text-align: center;
+}
+
+/* ─── Portrait / mobile card layout ───────────────────────── */
+@media (max-width: 768px) {
+  .jurors-page .table-wrap {
+    overflow: hidden;
+    border: none;
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* display:contents removes the table box — tbody becomes direct child of
+     table-wrap, so width:100% resolves to table-wrap width, not intrinsic. */
+  #jurors-main-table { display: contents; }
+  #jurors-main-table thead { display: none !important; }
+  #jurors-main-table tbody {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  #jurors-main-table tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    cursor: pointer;
+  }
+
+  #jurors-main-table td {
+    display: block;
+    border-bottom: none;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  /* Row 1: juror badge — full width */
+  #jurors-main-table .col-juror {
+    flex: 0 0 100%;
+    order: 1;
+    min-width: 0;
+  }
+
+  /* Divider before row 2 */
+  #jurors-main-table .col-status,
+  #jurors-main-table .col-avg {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Row 2: status pill — fixed 144px so it aligns across all cards */
+  #jurors-main-table .col-status {
+    flex: 0 0 144px;
+    order: 2;
+  }
+
+  /* Row 2: avg score — fills remaining space, right-aligned */
+  #jurors-main-table .col-avg {
+    flex: 1 1 0;
+    order: 3;
+    text-align: right;
+  }
+
+  /* Hide columns not shown in portrait */
+  #jurors-main-table .col-projects,
+  #jurors-main-table .col-active,
+  #jurors-main-table .col-actions {
+    display: none;
+  }
 }

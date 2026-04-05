@@ -11,12 +11,15 @@ import RemoveJurorModal from "../modals/RemoveJurorModal";
 import ResetPinModal from "../modals/ResetPinModal";
 import ImportJurorsModal from "../modals/ImportJurorsModal";
 import EnableEditingModal from "../modals/EnableEditingModal";
+import JurorReviewsModal from "../modals/JurorReviewsModal";
 import AddJurorDrawer from "../drawers/AddJurorDrawer";
 import EditJurorDrawer from "../drawers/EditJurorDrawer";
 import { sendJurorPinEmail, getActiveEntryTokenPlain } from "@/shared/api";
 import { parseJurorsCsv } from "../utils/csvParser";
 import ExportPanel from "../components/ExportPanel";
 import { downloadTable, generateTableBlob } from "../utils/downloadTable";
+import PremiumTooltip from "@/shared/ui/PremiumTooltip";
+import CustomSelect from "@/shared/ui/CustomSelect";
 import "../../styles/pages/jurors.css";
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -41,6 +44,23 @@ function formatFull(ts) {
       hour: "2-digit", minute: "2-digit",
     });
   } catch { return ""; }
+}
+
+function formatEditWindowLeft(ts, nowMs = Date.now()) {
+  if (!ts) return "";
+  const expiresMs = Date.parse(ts);
+  if (!Number.isFinite(expiresMs)) return "";
+  const diff = expiresMs - nowMs;
+  if (diff <= 0) return "window expired";
+  const hours = Math.floor(diff / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+  if (hours > 0) return `${hours}h ${mins}m left`;
+  return `${Math.max(1, mins)}m left`;
+}
+
+function formatEditWindowText(juror, nowMs) {
+  const left = formatEditWindowLeft(juror?.editExpiresAt || juror?.edit_expires_at, nowMs);
+  return left ? ` (${left})` : "";
 }
 
 
@@ -152,6 +172,7 @@ export default function JurorsPage({
   const [affilFilter, setAffilFilter] = useState("all");
 
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [openMenuPlacement, setOpenMenuPlacement] = useState("down");
   const menuRef = useRef(null);
 
   // Import CSV state
@@ -167,9 +188,11 @@ export default function JurorsPage({
 
   // Remove juror modal
   const [removeJuror, setRemoveJuror] = useState(null);
+  const [editWindowNowMs, setEditWindowNowMs] = useState(() => Date.now());
 
   // Enable editing mode modal
   const [editModeJuror, setEditModeJuror] = useState(null);
+  const [reviewsJuror, setReviewsJuror] = useState(null);
 
   // ── Data loading ────────────────────────────────────────────
   useEffect(() => {
@@ -205,6 +228,15 @@ export default function JurorsPage({
       return () => document.removeEventListener("mousedown", handleClick);
     }
   }, [openMenuId]);
+
+  const shouldOpenMenuUp = useCallback((anchorEl) => {
+    if (!anchorEl || typeof window === "undefined") return false;
+    const rect = anchorEl.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const estimatedMenuHeight = 230;
+    return spaceBelow < estimatedMenuHeight && spaceAbove > spaceBelow;
+  }, []);
 
   const jurorList = jurorsHook.jurors || [];
   const periodMaxScore = jurorsHook.periodMaxScore;
@@ -259,6 +291,15 @@ export default function JurorsPage({
   const notStartedJurors = jurorList.filter((j) => j.overviewStatus === "not_started").length;
 
   const editingBannerJurors = jurorList.filter((j) => j.overviewStatus === "editing");
+
+  useEffect(() => {
+    if (!editingBannerJurors.length) return;
+    setEditWindowNowMs(Date.now());
+    const timerId = setInterval(() => {
+      setEditWindowNowMs(Date.now());
+    }, 30_000);
+    return () => clearInterval(timerId);
+  }, [editingBannerJurors.length]);
 
   // ── Modal handlers ──────────────────────────────────────────
 
@@ -352,6 +393,7 @@ export default function JurorsPage({
           </svg>
           <span className="fb-banner-text">
             Editing enabled for <strong>{j.juryName || j.juror_name}</strong> — changes will overwrite existing scores
+            {formatEditWindowText(j, editWindowNowMs)}
           </span>
           <button
             className="fb-banner-action"
@@ -448,21 +490,33 @@ export default function JurorsPage({
           <div className="filter-row">
             <div className="filter-group">
               <label>Status</label>
-              <select className="modal-input" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ height: "32px", fontSize: "12px" }}>
-                <option value="all">All statuses</option>
-                <option value="completed">Completed</option>
-                <option value="in_progress">In Progress</option>
-                <option value="not_started">Not Started</option>
-                <option value="editing">Editing</option>
-                <option value="ready_to_submit">Ready to Submit</option>
-              </select>
+              <CustomSelect
+                compact
+                value={statusFilter}
+                onChange={(v) => setStatusFilter(v)}
+                options={[
+                  { value: "all", label: "All statuses" },
+                  { value: "completed", label: "Completed" },
+                  { value: "in_progress", label: "In Progress" },
+                  { value: "not_started", label: "Not Started" },
+                  { value: "editing", label: "Editing" },
+                  { value: "ready_to_submit", label: "Ready to Submit" },
+                ]}
+                ariaLabel="Status"
+              />
             </div>
             <div className="filter-group">
               <label>Affiliation</label>
-              <select className="modal-input" value={affilFilter} onChange={(e) => setAffilFilter(e.target.value)} style={{ height: "32px", fontSize: "12px" }}>
-                <option value="all">All affiliations</option>
-                {affiliations.map((a) => <option key={a} value={a}>{a}</option>)}
-              </select>
+              <CustomSelect
+                compact
+                value={affilFilter}
+                onChange={(v) => setAffilFilter(v)}
+                options={[
+                  { value: "all", label: "All affiliations" },
+                  ...affiliations.map((a) => ({ value: a, label: a })),
+                ]}
+                ariaLabel="Affiliation"
+              />
             </div>
             <button className="btn btn-outline btn-sm filter-clear-btn" onClick={() => { setStatusFilter("all"); setAffilFilter("all"); }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
@@ -529,7 +583,7 @@ export default function JurorsPage({
             <tr>
               <th>Juror Name</th>
               <th className="text-center">Projects Evaluated</th>
-              <th className="text-center">Avg. Score{periodMaxScore != null ? ` / ${periodMaxScore}` : ""}</th>
+              <th className="text-center">Average Score{periodMaxScore != null ? ` (${periodMaxScore})` : ""}</th>
               <th>Status</th>
               <th>Last Active</th>
               <th style={{ width: "48px" }}>Actions</th>
@@ -559,10 +613,10 @@ export default function JurorsPage({
 
               return (
                 <tr key={jid} onClick={() => openEditModal(juror)}>
-                  <td>
+                  <td className="col-juror">
                     <JurorBadge name={name} affiliation={juror.affiliation} size="sm" />
                   </td>
-                  <td className="text-center">
+                  <td className="col-projects text-center">
                     <span className={groupTextClass(scored, total)}>
                       {scored} / {total}
                       <span className="jurors-group-bar">
@@ -570,7 +624,7 @@ export default function JurorsPage({
                       </span>
                     </span>
                   </td>
-                  <td className="text-center avg-score-cell">
+                  <td className="col-avg text-center avg-score-cell">
                     {jurorAvgMap.get(String(jid)) ? (
                       <>
                         <span className="avg-score-value">{jurorAvgMap.get(String(jid))}</span>
@@ -580,18 +634,21 @@ export default function JurorsPage({
                       <span className="avg-score-empty">—</span>
                     )}
                   </td>
-                  <td>
+                  <td className="col-status">
                     <JurorStatusPill status={status} />
                   </td>
-                  <td className="jurors-table-active" data-tooltip={formatFull(lastActive)}>
-                    {formatRelative(lastActive)}
+                  <td className="col-active jurors-table-active">
+                    <PremiumTooltip text={formatFull(lastActive)}>
+                      <span className="vera-datetime-text">{formatRelative(lastActive)}</span>
+                    </PremiumTooltip>
                   </td>
-                  <td>
-                    <div className="juror-action-wrap" ref={openMenuId === jid ? menuRef : null}>
+                  <td className="col-actions">
+                    <div className={`juror-action-wrap${openMenuId === jid && openMenuPlacement === "up" ? " menu-up" : ""}`} ref={openMenuId === jid ? menuRef : null}>
                       <button
                         className="juror-action-btn"
                         onClick={(e) => {
                           e.stopPropagation();
+                          setOpenMenuPlacement(shouldOpenMenuUp(e.currentTarget) ? "up" : "down");
                           setOpenMenuId((prev) => (prev === jid ? null : jid));
                         }}
                         title="Actions"
@@ -637,7 +694,7 @@ export default function JurorsPage({
                             ) : (
                               <span
                                 className="juror-action-item-tooltip-wrap"
-                                data-tooltip="Juror must complete their submission before editing can be unlocked."
+                                data-juror-tooltip="Juror must complete their submission before editing can be unlocked."
                               >
                                 <div className="juror-action-item disabled">
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -649,7 +706,14 @@ export default function JurorsPage({
                               </span>
                             )
                           )}
-                          <div className="juror-action-item" onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); onViewReviews?.(juror); }}>
+                          <div
+                            className="juror-action-item"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenMenuId(null);
+                              setReviewsJuror(juror);
+                            }}
+                          >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" />
                             </svg>
@@ -747,13 +811,15 @@ export default function JurorsPage({
         open={!!removeJuror}
         onClose={() => setRemoveJuror(null)}
         juror={removeJuror ? {
-          name: removeJuror.juror_name || "",
+          name: removeJuror.juryName || removeJuror.juror_name || "",
           affiliation: removeJuror.affiliation || "",
         } : null}
         impact={{
           scores: removeJuror?.overviewScoredProjects ?? 0,
           groupsAffected: removeJuror?.overviewScoredProjects ?? 0,
-          avgScore: "—",
+          avgScore: removeJuror
+            ? (jurorAvgMap.get(String(removeJuror.juror_id || removeJuror.jurorId || "")) ?? "—")
+            : "—",
         }}
         periodName={periods.viewPeriodLabel}
         onRemove={handleRemoveJuror}
@@ -768,6 +834,18 @@ export default function JurorsPage({
           affiliation: editModeJuror.affiliation || "",
         } : null}
         onEnable={handleEnableEditMode}
+      />
+
+      <JurorReviewsModal
+        open={!!reviewsJuror}
+        onClose={() => setReviewsJuror(null)}
+        juror={reviewsJuror}
+        scoreRows={jurorsHook.scoreRows}
+        projects={projectsHook.projects}
+        onOpenFullReviews={() => {
+          setReviewsJuror(null);
+          onViewReviews?.(reviewsJuror);
+        }}
       />
 
       <ImportJurorsModal

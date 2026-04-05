@@ -86,9 +86,7 @@
 
 .reviews-table .col-submitted {
   white-space: nowrap;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text-secondary);
+  color: inherit;
 }
 
 .reviews-table .text-sm { font-size: 12px; }
@@ -260,7 +258,39 @@
 /* ── From vera.css 4701-4821: Reviews Page ── */
 /* ─── REVIEWS PAGE ─── */
 .reviews-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap}
+.reviews-header-left{
+  margin:0;
+  padding:0;
+  text-align:left;
+  min-width:0;
+}
+.reviews-header-left .page-title,
+.reviews-header-left .page-desc{
+  margin-left:0 !important;
+  padding-left:0 !important;
+  text-indent:0 !important;
+  text-align:left !important;
+}
 .reviews-actions{display:flex;gap:6px;align-items:center}
+
+/* Hard-align Reviews heading block to the very left edge of the content area. */
+.reviews-page .reviews-header,
+.reviews-page .reviews-header-left{
+  margin-left:0 !important;
+  padding-left:0 !important;
+}
+.reviews-page .reviews-header-left{
+  width:100%;
+  align-self:stretch;
+}
+.reviews-page .reviews-header-left .page-title,
+.reviews-page .reviews-header-left .page-desc{
+  margin-left:0 !important;
+  padding-left:0 !important;
+  text-indent:0 !important;
+  transform:none !important;
+  text-align:left !important;
+}
 .reviews-summary{display:flex;gap:0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:12px;overflow:hidden}
 .reviews-summary-item{padding:8px 16px;border-right:1px solid var(--border);font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:5px}
 .reviews-summary-item:last-child{border-right:none}
@@ -299,19 +329,7 @@
   font-size:10px;padding:3px 10px;border-width:1px;gap:5px;
 }
 .reviews-status-legend .status-pill svg{width:11px;height:11px}
-.reviews-status-legend .status-pill{position:relative;cursor:default}
-.reviews-status-legend .status-pill::after{
-  content:attr(data-tip);
-  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
-  background:var(--sidebar-bg,#0f172a);color:#e2e8f0;
-  font-size:11px;font-weight:500;letter-spacing:0;text-transform:none;
-  padding:6px 10px;border-radius:7px;white-space:nowrap;
-  box-shadow:0 4px 14px rgba(0,0,0,0.25);
-  opacity:0;visibility:hidden;transition:opacity .15s,visibility .15s;
-  pointer-events:none;z-index:20;
-}
-.reviews-status-legend .status-pill:hover::after{opacity:1;visibility:visible}
-.dark-mode .reviews-status-legend .status-pill::after{background:#1e293b;border:1px solid rgba(255,255,255,0.08)}
+.reviews-status-legend .status-pill{cursor:default}
 @media(min-width:1100px){
   .reviews-status-legend{flex-direction:row;align-items:center;gap:0;padding:10px 16px}
   .legend-sep{display:block}
@@ -321,10 +339,11 @@
 .reviews-search::placeholder{color:var(--text-tertiary)}
 .reviews-table{width:100%;border-collapse:collapse}
 .reviews-table th{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-tertiary);padding:8px 12px;background:var(--surface-1);border-bottom:2px solid var(--border);user-select:none;vertical-align:middle;line-height:1.2;white-space:nowrap;position:sticky;top:0;z-index:2}
-.reviews-table th[onclick]{cursor:pointer;transition:color .12s}
-.reviews-table th[onclick]:hover{color:var(--text-secondary)}
+.reviews-table th.sortable{cursor:pointer;transition:color .12s}
+.reviews-table th.sortable:hover{color:var(--text-secondary)}
 .reviews-table th .sort-icon{opacity:0;margin-left:2px;font-size:8px;transition:opacity .12s}
-.reviews-table th[onclick]:hover .sort-icon{opacity:0.4}
+.reviews-table th.sortable:hover .sort-icon{opacity:0.4}
+.reviews-table th.sortable.sorted .sort-icon{opacity:1;color:var(--accent)}
 .reviews-table td{padding:7px 12px;border-bottom:1px solid var(--border);font-size:11.5px;vertical-align:middle}
 .reviews-table td:last-child{font-size:10px}
 .reviews-table tr:last-child td{border-bottom:none}
@@ -337,7 +356,7 @@
 .reviews-table .col-score.missing{color:var(--text-tertiary)}
 .reviews-table .col-comment{max-width:220px;font-size:11px;color:var(--text-tertiary)}
 .reviews-table .col-comment-inner{display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default}
-.reviews-table .col-submitted{white-space:nowrap;font-family:var(--mono);font-size:10px;color:var(--text-secondary);letter-spacing:-0.2px}
+.reviews-table .col-submitted{white-space:nowrap;color:inherit}
 .reviews-table .partial-row .col-total{color:var(--warning)}
 .reviews-pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border);background:var(--surface-1);border-radius:0 0 var(--radius) var(--radius)}
 .reviews-pagination-info{font-size:11px;color:var(--text-tertiary)}
@@ -351,9 +370,11 @@
 .reviews-footer-note{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-tertiary);margin-top:8px}
 .reviews-footer-note .flag-dot{width:12px;height:12px;border-radius:50%;background:rgba(217,119,6,0.12);display:inline-flex;align-items:center;justify-content:center;font-size:7px;color:var(--warning);font-weight:700;flex-shrink:0}
 
-/* Group number badge */
+/* Backward-compatible alias; canonical class is .project-no-badge in components.css */
 .group-no-badge {
-  font-size: 11px; font-weight: 600; letter-spacing: 0.3px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
   font-family: var(--mono);
   color: var(--accent);
 }
@@ -365,3 +386,170 @@
   .legend-sep{display:none}
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   Portrait / mobile card layout  (≤ 768px)
+   Table rows become stacked cards — no horizontal scrolling needed.
+   ══════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── Header ── */
+  .reviews-header { flex-direction: column; align-items: stretch; gap: 10px; }
+  .reviews-actions { flex-wrap: wrap; gap: 6px; }
+  .reviews-actions > div:first-child { width: 100%; min-width: 0; }
+  .reviews-search { width: 100% !important; box-sizing: border-box; }
+
+  /* ── Status legend compact ── */
+  .reviews-status-legend { padding: 8px 10px; gap: 6px; }
+  .reviews-status-legend-row-inline { gap: 4px; }
+  .reviews-status-legend .status-pill { font-size: 9px; padding: 2px 7px; gap: 3px; }
+  .reviews-status-legend .status-pill svg { width: 9px; height: 9px; }
+
+  /* ── Kill horizontal scroll — table wrapper ── */
+  .reviews-page {
+    overflow: hidden;
+    max-width: 100%;
+  }
+  .reviews-page .table-wrap {
+    overflow: hidden;
+    border: none;
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* display:contents removes the table box — tbody becomes direct child of table-wrap,
+     so width:100% on tbody/tr resolves to the correct 100% of table-wrap. */
+  .reviews-table { display: contents; }
+  .reviews-table thead { display: none !important; }
+  .reviews-table tbody { display: block; width: 100%; max-width: 100%; box-sizing: border-box; }
+
+  /* ── Each row is a card ── */
+  .reviews-table tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: box-shadow 0.15s, border-color 0.15s;
+  }
+  .reviews-table tbody tr:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border-color: var(--border-strong, var(--border));
+  }
+  .reviews-table tbody tr.partial-row { border-left: 3px solid var(--warning); }
+
+  /* Base reset for all cells */
+  .reviews-table td {
+    display: block;
+    border-bottom: none;
+    padding: 0;
+    text-align: left;
+    box-sizing: border-box;
+  }
+
+  /* ── Row 1: Juror (flex:1) + Total score (auto) ── */
+  .reviews-table .col-juror {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-bottom: 10px;
+    order: 1;
+  }
+  .reviews-table .col-total {
+    flex: 0 0 auto;
+    text-align: right;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+    padding-left: 12px;
+    order: 2;
+    align-self: flex-start;
+  }
+
+  /* ── Row 2: Project no + title (full width) ── */
+  .reviews-table .col-no {
+    flex: 0 0 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0 8px;
+    border-top: 1px solid var(--border);
+    order: 3;
+  }
+  .reviews-table .col-no::after {
+    content: attr(data-project);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-primary);
+    font-family: var(--font);
+    line-height: 1.35;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .reviews-table .col-project { display: none; }
+
+  /* ── Row 3: Score chips (full width) ── */
+  .reviews-table .col-score {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    order: 10;
+    margin-right: 10px;
+    margin-top: 6px;
+    font-size: 12px;
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .reviews-table .col-score::before {
+    content: attr(data-label);
+    font-family: var(--font);
+    font-weight: 500;
+    font-size: 9.5px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    margin-right: 3px;
+  }
+  .reviews-table .col-score.missing { color: var(--text-tertiary); }
+
+  /* ── Row 4: Status pill (left) + Progress pill (right) ── */
+  .reviews-table .col-status {
+    flex: 1 1 auto;
+    text-align: left;
+    padding-top: 8px;
+    order: 20;
+  }
+  .reviews-table .col-progress {
+    flex: 0 0 auto;
+    text-align: right;
+    padding-top: 8px;
+    order: 21;
+  }
+
+  /* ── Hidden on mobile ── */
+  .reviews-table .col-members,
+  .reviews-table .col-comment,
+  .reviews-table .col-submitted { display: none; }
+
+  /* ── Pagination compact ── */
+  .reviews-pagination {
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 12px;
+  }
+  .reviews-page-btn { padding: 6px 10px; min-width: 32px; font-size: 12px; }
+}
