@@ -20,6 +20,7 @@ import {
   EyeOffIcon,
 } from "@/shared/ui/Icons";
 import AlertCard from "@/shared/ui/AlertCard";
+import Avatar from "@/shared/ui/Avatar";
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -410,16 +411,14 @@ export default function UserAvatarMenu({ onLogout }) {
       <button
         ref={triggerRef}
         className="ph-avatar-btn"
-        style={{ background: avatarUrl ? "transparent" : avatarBg }}
+        style={{ background: "transparent", padding: 0, overflow: "hidden" }}
         onClick={() => setMenuOpen((v) => !v)}
         aria-label="Account menu"
         aria-haspopup="true"
         aria-expanded={menuOpen}
         title={displayName || user?.email || "Account"}
       >
-        {avatarUrl
-          ? <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
-          : initials}
+        <Avatar avatarUrl={avatarUrl} initials={initials} bg={avatarBg} size={34} style={{ borderRadius: "50%", pointerEvents: "none" }} />
       </button>
 
       {/* Dropdown menu */}
@@ -436,11 +435,7 @@ export default function UserAvatarMenu({ onLogout }) {
             <div className={`ph-avatar-menu-view${menuView !== "main" ? " ph-avatar-menu-view--hidden-left" : ""}`}>
               {/* Header */}
               <div className="ph-avatar-menu-header">
-                <div className="ph-avatar-circle-lg" style={{ background: avatarUrl ? "transparent" : avatarBg, overflow: "hidden" }} aria-hidden="true">
-                  {avatarUrl
-                    ? <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : initials}
-                </div>
+                <Avatar avatarUrl={avatarUrl} initials={initials} bg={avatarBg} size={48} className="ph-avatar-circle-lg" />
                 <div className="ph-avatar-menu-identity">
                   <span className="ph-avatar-menu-name">{displayName || "Admin"}</span>
                   <span className="ph-avatar-menu-email">{user?.email}</span>
