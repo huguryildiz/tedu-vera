@@ -137,6 +137,8 @@ function MedalCell({ rank }) {
           className="ranking-medal"
           role="img"
           aria-label="1st place"
+          alt="1st place"
+          title="1st Place"
         >
           🥇
         </span>
@@ -149,6 +151,8 @@ function MedalCell({ rank }) {
           className="ranking-medal"
           role="img"
           aria-label="2nd place"
+          alt="2nd place"
+          title="2nd Place"
         >
           🥈
         </span>
@@ -161,6 +165,8 @@ function MedalCell({ rank }) {
           className="ranking-medal"
           role="img"
           aria-label="3rd place"
+          alt="3rd place"
+          title="3rd Place"
         >
           🥉
         </span>
@@ -232,7 +238,7 @@ export default function RankingsPage({
   const [criterionFilter, setCriterionFilter] = useState("all");
   const [exportFormat, setExportFormat] = useState("xlsx");
   const [sendOpen, setSendOpen] = useState(false);
-  const [sortField, setSortField] = useState("rank");
+  const [sortField, setSortField] = useState("avg");
   const [sortDir, setSortDir] = useState("desc");
   const [consensusPopoverOpen, setConsensusPopoverOpen] = useState(false);
   const [consensusPopoverPos, setConsensusPopoverPos] = useState({ top: 0, left: 0 });
@@ -347,10 +353,10 @@ export default function RankingsPage({
     }
 
     // Re-sort if user picked a non-default sort
-    if (sortField !== "rank" || sortDir !== "desc") {
+    if (sortField !== "avg" || sortDir !== "desc") {
       rows = [...rows].sort((a, b) => {
         let va, vb;
-        if (sortField === "rank" || sortField === "avg") {
+        if (sortField === "avg") {
           va = a.totalAvg;
           vb = b.totalAvg;
         } else if (sortField === "project") {
@@ -391,12 +397,6 @@ export default function RankingsPage({
     maxAvg !== "" ||
     criterionFilter !== "all";
 
-  function fmtMembers(m) {
-    if (!m) return "";
-    if (Array.isArray(m)) return m.map((e) => (e?.name || e || "").toString().trim()).filter(Boolean).join("; ");
-    return String(m).split(/,/).map((s) => s.trim()).filter(Boolean).join("; ");
-  }
-
   function handleSort(field) {
     if (sortField === field) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -417,10 +417,15 @@ export default function RankingsPage({
   async function handleExport() {
     try {
       const tc = activeOrganization?.code || "";
+      const fmtMembers = (m) => {
+        if (!m) return "";
+        if (Array.isArray(m)) return m.map((e) => (e?.name || e || "").toString().trim()).filter(Boolean).join("; ");
+        return String(m).split(/,/).map((s) => s.trim()).filter(Boolean).join("; ");
+      };
+      const { header, rows } = buildRankingsExportData(filteredRows, criteriaConfig, consensusMap, fmtMembers);
       if (exportFormat === "xlsx") {
         await exportRankingsXLSX(filteredRows, criteriaConfig, { periodName, tenantCode: tc, consensusMap });
       } else {
-        const { header, rows } = buildRankingsExportData(filteredRows, criteriaConfig, consensusMap, fmtMembers);
         await downloadTable(exportFormat, {
           filenameType: "Rankings",
           sheetName: "Rankings",
@@ -435,10 +440,9 @@ export default function RankingsPage({
         });
       }
       setExportPanelOpen(false);
-      const fmtLabel = exportFormat === "pdf" ? "PDF" : exportFormat === "csv" ? "CSV" : "Excel";
-      _toast.success(`${filteredRows.length} project${filteredRows.length !== 1 ? "s" : ""} exported · ${fmtLabel}`);
+      _toast.success("Rankings exported");
     } catch (e) {
-      _toast.error(e?.message || "Rankings export failed — please try again");
+      _toast.error(e?.message || "Export failed");
     }
   }
 
@@ -590,6 +594,7 @@ export default function RankingsPage({
             Clear all
           </button>
         </div>
+        <div className="filter-tags" />
       </div>
 
       {/* ── Active Filters Bar ───────────────────────────────── */}
@@ -608,9 +613,9 @@ export default function RankingsPage({
           <span>
             Filtered · {filteredRows.length} of {totalProjects} projects
           </span>
-          <button type="button" className="clear-link" onClick={clearFilters}>
+          <span className="clear-link" onClick={clearFilters}>
             Clear filters
-          </button>
+          </span>
         </div>
       )}
 
@@ -655,9 +660,8 @@ export default function RankingsPage({
               hint: "Best for archival",
             },
           ].map((opt) => (
-            <button
+            <div
               key={opt.id}
-              type="button"
               className={`export-option${exportFormat === opt.id ? " selected" : ""}`}
               onClick={() => setExportFormat(opt.id)}
             >
@@ -670,7 +674,7 @@ export default function RankingsPage({
               <div className="export-option-title">{opt.label}</div>
               <div className="export-option-desc">{opt.desc}</div>
               <div className="export-option-hint">{opt.hint}</div>
-            </button>
+            </div>
           ))}
         </div>
         <div className="export-footer">
@@ -684,7 +688,7 @@ export default function RankingsPage({
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button className="btn btn-outline btn-sm" onClick={() => setSendOpen(true)} aria-label="Send report via email" style={{ borderRadius: 999, padding: "9px 18px", display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <button className="btn btn-outline btn-sm" onClick={() => setSendOpen(true)} title="Send report via email" style={{ borderRadius: 999, padding: "9px 18px", display: "inline-flex", alignItems: "center", gap: 6 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4z" /><path d="m22 2-11 11" /></svg>
               {" "}Send
             </button>
@@ -714,6 +718,11 @@ export default function RankingsPage({
         organization={activeOrganization?.name || ""}
         department={activeOrganization?.institution_name || ""}
         generateFile={async (fmt) => {
+          const fmtMembers = (m) => {
+            if (!m) return "";
+            if (Array.isArray(m)) return m.map((e) => (e?.name || e || "").toString().trim()).filter(Boolean).join("; ");
+            return String(m).split(/,/).map((s) => s.trim()).filter(Boolean).join("; ");
+          };
           const { header, rows } = buildRankingsExportData(filteredRows, criteriaConfig, consensusMap, fmtMembers);
           return generateTableBlob(fmt, {
             filenameType: "Rankings", sheetName: "Rankings", periodName,
@@ -741,13 +750,7 @@ export default function RankingsPage({
             </colgroup>
             <thead>
               <tr>
-                <th
-                  className={`col-rank sortable${sortField === "rank" ? " sorted" : ""}`}
-                  onClick={() => handleSort("rank")}
-                >
-                  Rank
-                  <SortIcon field="rank" sortField={sortField} sortDir={sortDir} />
-                </th>
+                <th className="col-rank">Rank</th>
                 <th
                   className={`sortable${sortField === "project" ? " sorted" : ""}`}
                   onClick={() => handleSort("project")}
