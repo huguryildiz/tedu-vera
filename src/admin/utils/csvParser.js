@@ -1,8 +1,11 @@
 // src/admin/utils/csvParser.js
 // ============================================================
 // CSV parsing helpers for project and juror bulk import.
-// Returns rows shaped for ImportCsvModal / ImportJurorsModal
-// plus API-ready fields for handleImportProjects/handleImportJurors.
+//
+// Strategy: parse header-less, auto-detect if first row is a
+// header by fuzzy alias matching. Unmatched fields fall back to
+// positional order. No warnings for column mapping — returns
+// detectedColumns[] so the modal can show what was found.
 // ============================================================
 
 import Papa from "papaparse";
@@ -13,91 +16,160 @@ function sizeLabel(file) {
 }
 
 function normalizeHeader(h) {
-  return h.trim().toLowerCase().replace(/[\s#-]+/g, "_");
-}
-
-function resolveColumns(headers, colMap) {
-  const normalized = headers.map(normalizeHeader);
-  const resolved = {};
-  for (const [canonical, aliases] of Object.entries(colMap)) {
-    const idx = normalized.findIndex((h) => aliases.includes(h));
-    resolved[canonical] = idx >= 0 ? headers[idx] : null;
-  }
-  return resolved;
+  return String(h ?? "").trim().toLowerCase().replace(/[\s#\-./]+/g, "_");
 }
 
 const PROJECT_COL_MAP = {
-  group_no: ["group_no", "group_", "group_number", "groupno", "group"],
-  title:    ["title", "project_title", "project_name", "name"],
-  members:  ["members", "students", "team_members", "team", "student_names"],
+  group_no: ["group_no", "group_", "group_number", "groupno", "group", "no", "g"],
+  title:    ["title", "project_title", "project_name", "name", "baslik", "başlık"],
+  members:  ["members", "students", "team_members", "team", "student_names", "uyeler", "üyeler"],
 };
 
 const JUROR_COL_MAP = {
-  juror_name:  ["juror_name", "name", "juror", "full_name", "fullname"],
-  affiliation: ["affiliation", "department", "institution", "org", "company"],
-  email:       ["email", "e_mail", "email_address"],
+  juror_name:  ["juror_name", "name", "juror", "full_name", "fullname", "ad_soyad", "isim"],
+  affiliation: ["affiliation", "department", "institution", "org", "company", "kurum", "birim"],
+  email:       ["email", "e_mail", "email_address", "mail"],
 };
+
+// Positional order — used when a field has no header match
+const PROJECT_POSITIONAL = ["group_no", "title", "members"];
+const JUROR_POSITIONAL   = ["juror_name", "affiliation", "email"];
+
+/**
+ * Auto-detect column mapping from raw rows.
+ * Returns { dataRows, colIndices, detectedColumns, hasHeader }
+ *
+ * detectedColumns: [{ field, label, source: "header"|"positional" }]
+ * colIndices: { [field]: columnIndex }  (-1 = not available)
+ */
+function detectAndMap(rawRows, colMap, positionalOrder) {
+  if (rawRows.length === 0) {
+    const colIndices = Object.fromEntries(positionalOrder.map((f, i) => [f, i]));
+    const detectedColumns = positionalOrder.map((f, i) => ({ field: f, label: `column ${i + 1}`, source: "positional" }));
+    return { dataRows: [], colIndices, detectedColumns, hasHeader: false };
+  }
+
+  // Skip leading comment rows (first cell starts with #) and blank rows
+  const isComment = (row) => String(row[0] ?? "").trim().startsWith("#");
+  const isBlank   = (row) => row.every((cell) => String(cell ?? "").trim() === "");
+  const firstDataIdx = rawRows.findIndex((r) => !isComment(r) && !isBlank(r));
+  const candidateRows = firstDataIdx >= 0 ? rawRows.slice(firstDataIdx) : rawRows;
+
+  const firstRow = candidateRows[0].map((cell) => String(cell ?? "").trim());
+  const normalizedFirst = firstRow.map(normalizeHeader);
+
+  // Count how many aliases match the candidate header row
+  const headerIndices = {};
+  let matchCount = 0;
+  for (const [canonical, aliases] of Object.entries(colMap)) {
+    const idx = normalizedFirst.findIndex((h) => aliases.includes(h));
+    if (idx >= 0) { headerIndices[canonical] = idx; matchCount++; }
+  }
+
+  const hasHeader = matchCount > 0;
+  const dataRows  = hasHeader ? candidateRows.slice(1) : candidateRows;
+
+  const colIndices = {};
+  const detectedColumns = [];
+
+  positionalOrder.forEach((canonical, posIdx) => {
+    if (hasHeader && headerIndices[canonical] !== undefined) {
+      const idx = headerIndices[canonical];
+      colIndices[canonical] = idx;
+      detectedColumns.push({ field: canonical, label: firstRow[idx], source: "header" });
+    } else {
+      // Positional fallback — use index in positionalOrder
+      colIndices[canonical] = posIdx;
+      detectedColumns.push({ field: canonical, label: `column ${posIdx + 1}`, source: "positional" });
+    }
+  });
+
+  return { dataRows, colIndices, detectedColumns, hasHeader, firstDataIdx: firstDataIdx >= 0 ? firstDataIdx : 0 };
+}
 
 /**
  * Parse a projects CSV file.
- * @returns {{ rows, stats, warningMessage, file }}
+ * @returns {{ rows, stats, detectedColumns, warningMessage, file }}
  *   rows: [{ rowNum, groupNo, title, members, status, statusLabel, group_no }]
- *   stats: { valid, duplicate, error, total }
  */
-export async function parseProjectsCsv(file) {
+export async function parseProjectsCsv(file, existingProjects = []) {
   return new Promise((resolve) => {
     Papa.parse(file, {
-      header: true,
+      header: false,
       skipEmptyLines: true,
-      complete({ data, meta }) {
-        const colMap = resolveColumns(meta.fields || [], PROJECT_COL_MAP);
+      complete({ data }) {
+        const { dataRows, colIndices, detectedColumns, hasHeader, firstDataIdx = 0 } =
+          detectAndMap(data, PROJECT_COL_MAP, PROJECT_POSITIONAL);
+
+        const existingGroupNos = new Set(
+          existingProjects
+            .map((p) => p.group_no)
+            .filter((n) => n != null)
+            .map((n) => parseInt(n, 10))
+            .filter((n) => !isNaN(n))
+        );
+
+        const rowOffset = firstDataIdx + (hasHeader ? 2 : 1);
         const rows = [];
-        let valid = 0;
-        let error = 0;
+        let valid = 0, duplicate = 0, error = 0;
 
-        data.forEach((raw, i) => {
-          const rowNum = i + 2; // +1 for header, +1 for 1-based index
-          const groupNoRaw = colMap.group_no ? (raw[colMap.group_no] ?? "").trim() : "";
-          const title = colMap.title ? (raw[colMap.title] ?? "").trim() : "";
-          const members = colMap.members ? (raw[colMap.members] ?? "").trim() : "";
+        dataRows.forEach((raw, i) => {
+          const rowNum = i + rowOffset;
+          const groupNoRaw = (raw[colIndices.group_no] ?? "").toString().trim();
+          const title      = (raw[colIndices.title]    ?? "").toString().trim();
+          const members    = (raw[colIndices.members]  ?? "").toString().trim();
 
-          const groupNo = groupNoRaw !== "" ? parseInt(groupNoRaw, 10) : NaN;
-          const hasGroupNo = !isNaN(groupNo);
+          const groupNo  = groupNoRaw !== "" ? parseInt(groupNoRaw, 10) : NaN;
+          const hasGroup = !isNaN(groupNo);
           const hasTitle = title.length > 0;
 
-          let status = "ok";
-          let statusLabel = "";
-          if (!hasGroupNo || !hasTitle) {
+          let status = "ok", statusLabel = "";
+          if (!hasGroup || !hasTitle) {
             status = "err";
-            statusLabel = !hasGroupNo ? "Missing group no" : "Missing title";
+            statusLabel = !hasGroup ? "Missing group no" : "Missing title";
             error += 1;
+          } else if (hasGroup && existingGroupNos.has(groupNo)) {
+            status = "skip";
+            statusLabel = "Duplicate";
+            duplicate += 1;
           } else {
             valid += 1;
           }
 
           rows.push({
             rowNum,
-            groupNo: hasGroupNo ? groupNo : (groupNoRaw || "—"),
-            title: title || "—",
+            groupNo: hasGroup ? groupNo : (groupNoRaw || "—"),
+            title:   title || "—",
             members,
             status,
             statusLabel,
-            // API-ready fields for handleImportProjects
-            group_no: hasGroupNo ? groupNo : null,
+            group_no: hasGroup ? groupNo : null,
           });
         });
 
-        const warnings = [];
-        if (!colMap.group_no) warnings.push("No 'group_no' column — expected 'Group No', 'Group #', or 'group_no'.");
-        if (!colMap.title) warnings.push("No 'title' column — expected 'Title' or 'Project Title'.");
-        if (!colMap.members) warnings.push("No 'members' column — team members will be blank.");
+        let warningMessage = null;
+        if (duplicate > 0 || error > 0) {
+          const parts = [];
+          if (duplicate > 0) parts.push(`${duplicate} duplicate`);
+          if (error > 0) parts.push(`${error} error${error !== 1 ? "s" : ""}`);
+          const title = parts.join(", ");
+          const details = rows
+            .filter((r) => r.status !== "ok")
+            .map((r) => {
+              if (r.status === "skip") return `Row ${r.rowNum}: Group ${r.groupNo} already exists (will be skipped).`;
+              if (r.status === "err") return `Row ${r.rowNum}: ${r.statusLabel || "invalid"} (cannot import).`;
+              return null;
+            })
+            .filter(Boolean)
+            .join(" ");
+          warningMessage = { title, desc: details };
+        }
 
         resolve({
           rows,
-          stats: { valid, duplicate: 0, error, total: data.length },
-          warningMessage: warnings.length > 0
-            ? { title: "Column mapping warnings", desc: warnings.join(" ") }
-            : null,
+          stats: { valid, duplicate, error, total: dataRows.length },
+          detectedColumns,
+          warningMessage,
           file: { name: file.name, sizeLabel: sizeLabel(file) },
         });
       },
@@ -105,6 +177,7 @@ export async function parseProjectsCsv(file) {
         resolve({
           rows: [],
           stats: { valid: 0, duplicate: 0, error: 0, total: 0 },
+          detectedColumns: [],
           warningMessage: { title: "Parse error", desc: "Could not parse the CSV file." },
           file: { name: file.name, sizeLabel: sizeLabel(file) },
         });
@@ -113,35 +186,49 @@ export async function parseProjectsCsv(file) {
   });
 }
 
+function normName(s) {
+  return String(s ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
 /**
  * Parse a jurors CSV file.
- * @returns {{ rows, stats, warningMessage, file }}
+ * @param {File} file
+ * @param {Array} [existingJurors] — current juror list; rows whose name matches will be marked duplicate
+ * @returns {{ rows, stats, detectedColumns, warningMessage, file }}
  *   rows: [{ rowNum, name, affiliation, status, statusLabel, juror_name, email }]
- *   stats: { valid, duplicate, error, total }
  */
-export async function parseJurorsCsv(file) {
+export async function parseJurorsCsv(file, existingJurors = []) {
+  const existingNames = new Set(
+    existingJurors.map((j) => normName(j.juror_name || j.juryName || ""))
+  );
+
   return new Promise((resolve) => {
     Papa.parse(file, {
-      header: true,
+      header: false,
       skipEmptyLines: true,
-      complete({ data, meta }) {
-        const colMap = resolveColumns(meta.fields || [], JUROR_COL_MAP);
+      complete({ data }) {
+        const { dataRows, colIndices, detectedColumns, hasHeader, firstDataIdx = 0 } =
+          detectAndMap(data, JUROR_COL_MAP, JUROR_POSITIONAL);
+
+        const rowOffset = firstDataIdx + (hasHeader ? 2 : 1);
         const rows = [];
-        let valid = 0;
-        let error = 0;
+        let valid = 0, duplicate = 0, error = 0;
 
-        data.forEach((raw, i) => {
-          const rowNum = i + 2;
-          const jurorName = colMap.juror_name ? (raw[colMap.juror_name] ?? "").trim() : "";
-          const affiliation = colMap.affiliation ? (raw[colMap.affiliation] ?? "").trim() : "";
-          const email = colMap.email ? (raw[colMap.email] ?? "").trim() : "";
+        dataRows.forEach((raw, i) => {
+          const rowNum      = i + rowOffset;
+          const jurorName   = (raw[colIndices.juror_name]  ?? "").toString().trim();
+          const affiliation = (raw[colIndices.affiliation] ?? "").toString().trim();
+          const email       = (raw[colIndices.email]       ?? "").toString().trim();
 
-          let status = "ok";
-          let statusLabel = "";
+          let status = "ok", statusLabel = "";
           if (!jurorName) {
             status = "err";
-            statusLabel = "Missing name";
+            statusLabel = "No name";
             error += 1;
+          } else if (existingNames.has(normName(jurorName))) {
+            status = "skip";
+            statusLabel = "Duplicate";
+            duplicate += 1;
           } else {
             valid += 1;
           }
@@ -152,22 +239,35 @@ export async function parseJurorsCsv(file) {
             affiliation,
             status,
             statusLabel,
-            // API-ready fields for handleImportJurors → createJuror
             juror_name: jurorName || null,
             email: email || null,
           });
         });
 
-        const warnings = [];
-        if (!colMap.juror_name) warnings.push("No name column — expected 'Name', 'Juror Name', or 'juror_name'.");
-        if (!colMap.affiliation) warnings.push("No affiliation column found.");
+        // Build per-row warning summary for duplicates + errors
+        let warningMessage = null;
+        if (duplicate > 0 || error > 0) {
+          const parts = [];
+          if (duplicate > 0) parts.push(`${duplicate} duplicate`);
+          if (error > 0) parts.push(`${error} error`);
+          const title = parts.join(", ");
+          const details = rows
+            .filter((r) => r.status !== "ok")
+            .map((r) => {
+              if (r.status === "skip") return `Row ${r.rowNum}: ${r.name} already exists in this evaluation period (will be skipped).`;
+              if (r.status === "err") return `Row ${r.rowNum}: juror name is missing — cannot import.`;
+              return null;
+            })
+            .filter(Boolean)
+            .join(" ");
+          warningMessage = { title, desc: details };
+        }
 
         resolve({
           rows,
-          stats: { valid, duplicate: 0, error, total: data.length },
-          warningMessage: warnings.length > 0
-            ? { title: "Column mapping warnings", desc: warnings.join(" ") }
-            : null,
+          stats: { valid, duplicate, error, total: dataRows.length },
+          detectedColumns,
+          warningMessage,
           file: { name: file.name, sizeLabel: sizeLabel(file) },
         });
       },
@@ -175,6 +275,7 @@ export async function parseJurorsCsv(file) {
         resolve({
           rows: [],
           stats: { valid: 0, duplicate: 0, error: 0, total: 0 },
+          detectedColumns: [],
           warningMessage: { title: "Parse error", desc: "Could not parse the CSV file." },
           file: { name: file.name, sizeLabel: sizeLabel(file) },
         });
