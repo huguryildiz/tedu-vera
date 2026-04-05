@@ -113,14 +113,8 @@ export default function ProjectsPage({
   const [drawerProject, setDrawerProject] = useState(null);
 
   // Import CSV state
-  const csvInputRef = useRef(null);
-  const [importOpen, setImportOpen] = useState(false);
-  const [importFile, setImportFile] = useState(null);
-  const [importRows, setImportRows] = useState([]);
-  const [importStats, setImportStats] = useState({ valid: 0, duplicate: 0, error: 0, total: 0 });
-  const [importWarning, setImportWarning] = useState(null);
-  const [importBusy, setImportBusy] = useState(false);
   const cancelImportRef = useRef(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   // Load periods, then projects
   useEffect(() => {
@@ -215,22 +209,6 @@ export default function ProjectsPage({
     setDrawerProject(project);
   }
 
-  async function handleImport() {
-    const validRows = importRows.filter((r) => r.status === "ok");
-    if (validRows.length === 0) return;
-    cancelImportRef.current = false;
-    setImportBusy(true);
-    try {
-      const result = await projects.handleImportProjects(validRows, { cancelRef: cancelImportRef });
-      if (result?.ok !== false) {
-        setImportOpen(false);
-        _toast.success(`Imported ${validRows.length - (result?.skipped || 0)} project${validRows.length !== 1 ? "s" : ""}`);
-      }
-    } finally {
-      setImportBusy(false);
-    }
-  }
-
   return (
     <div>
       {/* Header */}
@@ -285,7 +263,7 @@ export default function ProjectsPage({
           </svg>
           {" "}Export
         </button>
-        <button className="btn btn-outline btn-sm" onClick={() => csvInputRef.current?.click()}>
+        <button className="btn btn-outline btn-sm" onClick={() => setImportOpen(true)}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "-1px" }}>
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="17 8 12 3 7 8" />
@@ -293,23 +271,6 @@ export default function ProjectsPage({
           </svg>
           {" "}Import
         </button>
-        <input
-          ref={csvInputRef}
-          type="file"
-          accept=".csv"
-          style={{ display: "none" }}
-          onChange={async (e) => {
-            const file = e.target.files?.[0];
-            e.target.value = "";
-            if (!file) return;
-            const parsed = await parseProjectsCsv(file);
-            setImportFile(parsed.file);
-            setImportRows(parsed.rows);
-            setImportStats(parsed.stats);
-            setImportWarning(parsed.warningMessage);
-            setImportOpen(true);
-          }}
-        />
         <button
           className="btn btn-primary btn-sm"
           style={{ width: "auto", padding: "6px 14px", fontSize: "12px", background: "var(--accent)", boxShadow: "none" }}
@@ -616,13 +577,13 @@ export default function ProjectsPage({
       <ImportCsvModal
         open={importOpen}
         onClose={() => setImportOpen(false)}
-        file={importFile}
-        rows={importRows}
-        stats={importStats}
-        warningMessage={importWarning}
-        onImport={handleImport}
-        onReplaceFile={() => csvInputRef.current?.click()}
-        busy={importBusy}
+        parseFile={(f) => parseProjectsCsv(f, projects.projects)}
+        onImport={async (rows) => {
+          cancelImportRef.current = false;
+          const result = await projects.handleImportProjects(rows, { cancelRef: cancelImportRef });
+          if (result?.ok === false) throw new Error(result.formError || "Import failed.");
+          return result;
+        }}
       />
     </div>
   );
