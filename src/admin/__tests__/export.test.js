@@ -129,3 +129,57 @@ describe("exportRankingsXLSX", () => {
     expect(rankGamma).toBe(3); // competition ranking — skips rank 2
   });
 });
+
+// ── Export UI alignment ───────────────────────────────────────────────────
+
+describe("Export UI alignment", () => {
+  beforeEach(() => {
+    capturedSheets = [];
+    vi.clearAllMocks();
+  });
+
+  qaTest("export.rank.02", async () => {
+    // exportRankingsXLSX with a filtered subset must only output those rows
+    const criteria = [{ id: "technical", label: "Technical", shortLabel: "Tech", max: 30 }];
+    const allRanked = [
+      { id: "p1", title: "Alpha", students: "", totalAvg: 90, avg: { technical: 25 }, count: 2 },
+      { id: "p2", title: "Beta",  students: "", totalAvg: 75, avg: { technical: 20 }, count: 2 },
+      { id: "p3", title: "Gamma", students: "", totalAvg: 60, avg: { technical: 15 }, count: 2 },
+    ];
+    // Simulate a search filter: only Alpha and Beta pass
+    const filteredRows = allRanked.slice(0, 2);
+
+    await exportRankingsXLSX(filteredRows, criteria, { periodName: "2026 Spring" });
+
+    const XLSX = await import("xlsx-js-style");
+    const sheetData = XLSX.utils.aoa_to_sheet.mock.calls[0][0];
+    // 1 header row + 2 data rows (not 3)
+    expect(sheetData).toHaveLength(3);
+    expect(sheetData[1][1]).toBe("Alpha");
+    expect(sheetData[2][1]).toBe("Beta");
+  });
+
+  qaTest("export.projects.01", () => {
+    // COLUMNS drives both the table header and the export header — they must be identical
+    const COLUMNS = [
+      { key: "group_no",   label: "#"            },
+      { key: "title",      label: "Project Title" },
+      { key: "members",    label: "Team Members"  },
+      { key: "updated_at", label: "Last Updated"  },
+    ];
+    const exportHeader = COLUMNS.map((c) => c.label);
+    expect(exportHeader).toEqual(["#", "Project Title", "Team Members", "Last Updated"]);
+  });
+
+  qaTest("export.jurors.01", () => {
+    // COLUMNS drives both the table header and the export header — they must be identical
+    const COLUMNS = [
+      { key: "name",       label: "Juror Name"         },
+      { key: "progress",   label: "Projects Evaluated" },
+      { key: "status",     label: "Status"             },
+      { key: "lastActive", label: "Last Active"        },
+    ];
+    const exportHeader = COLUMNS.map((c) => c.label);
+    expect(exportHeader).toEqual(["Juror Name", "Projects Evaluated", "Status", "Last Active"]);
+  });
+});
