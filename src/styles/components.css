@@ -2614,7 +2614,7 @@ body:not(.dark-mode) .tab-btn.active {
   align-items: center;
   gap: 6px;
   font-size: 12.5px;
-  color: #818cf8;
+  color: var(--accent);
   background: none;
   border: none;
   cursor: pointer;
@@ -2622,7 +2622,7 @@ body:not(.dark-mode) .tab-btn.active {
   font-weight: 500;
   transition: color 0.12s;
 }
-.profile-password-link:hover { color: #6366f1; }
+.profile-password-link:hover { color: var(--accent); }
 .profile-password-link svg { width: 13px; height: 13px; }
 .profile-password-hint {
   font-size: 11.5px;
@@ -2646,6 +2646,15 @@ body:not(.dark-mode) .ph-avatar-menu {
 body:not(.dark-mode) .ph-avatar-menu-item:hover { background: rgba(241,245,249,0.9); }
 body:not(.dark-mode) .ph-avatar-menu-item--danger:hover { background: rgba(239,68,68,0.06); }
 body:not(.dark-mode) .profile-readonly-section { background: #f8fafc; }
+body:not(.dark-mode) .profile-modal-input {
+  background: #fff;
+  border-color: rgba(0,0,0,0.15);
+  color: var(--text-primary);
+}
+body:not(.dark-mode) .profile-modal-btn--ghost {
+  border-color: rgba(0,0,0,0.15);
+  color: var(--text-primary);
+}
 
 .ph-avatar-menu-item-icon {
   width: 16px;
@@ -2711,6 +2720,7 @@ body:not(.dark-mode) .profile-readonly-section { background: #f8fafc; }
   font-weight: 500;
   cursor: pointer;
   transition: opacity 0.15s, background 0.15s;
+  box-sizing: border-box;
 }
 .profile-modal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -2722,7 +2732,7 @@ body:not(.dark-mode) .profile-readonly-section { background: #f8fafc; }
 
 .profile-modal-btn--ghost {
   background: transparent;
-  color: var(--text-secondary, var(--text-tertiary));
+  color: var(--text-secondary);
   border: 1px solid var(--border);
 }
-.profile-modal-btn--ghost:hover:not(:disabled) { background: var(--muted, rgba(0,0,0,0.05)); }
+.profile-modal-btn--ghost:hover:not(:disabled) { background: var(--muted, rgba(128,128,128,0.1)); }
