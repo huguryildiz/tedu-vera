@@ -21,7 +21,7 @@ export async function captureChartImage(elementId) {
     const { default: html2canvas } = await import("html2canvas");
     const canvas = await html2canvas(el, {
       backgroundColor: "#ffffff",
-      scale: 3,
+      scale: 2,
       useCORS: true,
       logging: false,
     });

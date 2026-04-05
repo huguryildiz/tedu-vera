@@ -206,13 +206,13 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
     }
 
     // Chart image — SVG vector or raster depending on captureMethod
-    if (captureMethod !== "none") {
-      try {
-        let embedded = false;
+    {
+      let embedded = false;
 
-        if (captureMethod === "svg") {
+      // Try SVG vector embed first (for recharts charts)
+      if (captureMethod === "svg") {
+        try {
           const { captureSvgForPdf } = await import("./captureSvgForPdf");
-          // Get SVG aspect ratio from the DOM element
           const svgEl = document.getElementById(chartId)?.querySelector("svg");
           if (svgEl) {
             const svgW = svgEl.width.baseVal.value || svgEl.clientWidth || 1;
@@ -225,10 +225,14 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
             embedded = await captureSvgForPdf(chartId, doc, margin, startY, imgW, chartImgH);
             if (embedded) startY += chartImgH + 6;
           }
+        } catch (svgErr) {
+          console.warn(`[PDF] SVG embed failed for ${chartId}, falling back to raster:`, svgErr);
         }
+      }
 
-        // Raster fallback (also used for captureMethod === "raster")
-        if (!embedded) {
+      // Raster fallback (also primary path for captureMethod === "raster")
+      if (!embedded) {
+        try {
           const captured = await captureChartImage(chartId);
           if (captured) {
             const { dataURL, width, height } = captured;
@@ -240,9 +244,9 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
             doc.addImage(dataURL, "PNG", margin, startY, imgW, chartImgH);
             startY += chartImgH + 6;
           }
+        } catch (rasterErr) {
+          console.error(`[PDF] Raster capture also failed for ${chartId}:`, rasterErr);
         }
-      } catch (err) {
-        console.error(`[PDF] Chart capture failed for ${chartId}:`, err);
       }
     }
 
