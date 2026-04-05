@@ -17,7 +17,6 @@ import {
   setJurorEditMode,
   forceCloseJurorEditMode,
 } from "../../shared/api";
-import { getCellState } from "../utils/scoreHelpers";
 
 const getJurorNameById = (list, jurorId) => {
   const target = (list || []).find(
@@ -53,6 +52,7 @@ export function useManageJurors({
   setEvalLockError,
 }) {
   const [jurors, setJurors] = useState([]);
+  const [scoreRows, setScoreRows] = useState([]);
   const [pinResetTarget, setPinResetTarget] = useState(null);
   const [resetPinInfo, setResetPinInfo] = useState(null);
   const [pinResetLoading, setPinResetLoading] = useState(false);
@@ -103,17 +103,18 @@ export function useManageJurors({
 
   // ── Score enrichment helper (pure, no state dep) ─────────
   const _buildEnrichedJurors = (rows, scoreRows) => {
+    // Count score sheets per juror. A score sheet row in getScores means the
+    // juror has saved at least one score for that project. We can't call
+    // getCellState without a criteria list, so we use presence of the row as
+    // "started" and a non-null total as "scored".
     const scoredByJuror = new Map();
     const startedByJuror = new Map();
     (scoreRows || []).forEach((r) => {
       const jurorId = String(r?.jurorId || "").trim();
       if (!jurorId) return;
-      const cellState = getCellState(r);
-      if (cellState === "scored") {
+      startedByJuror.set(jurorId, (startedByJuror.get(jurorId) || 0) + 1);
+      if (r.total != null) {
         scoredByJuror.set(jurorId, (scoredByJuror.get(jurorId) || 0) + 1);
-      }
-      if (cellState !== "empty") {
-        startedByJuror.set(jurorId, (startedByJuror.get(jurorId) || 0) + 1);
       }
     });
     return (rows || []).map((j) => {
@@ -163,11 +164,12 @@ export function useManageJurors({
     const oid = organizationIdRef.current;
     const pid = viewPeriodIdRef.current;
     if (!oid) return;
-    const [rows, scoreRows] = await Promise.all([
+    const [rows, scores] = await Promise.all([
       listJurorsSummary(pid),
       getScores(pid),
     ]);
-    setJurors(_buildEnrichedJurors(rows, scoreRows));
+    setScoreRows(scores);
+    setJurors(_buildEnrichedJurors(rows, scores));
   }, []); // stable identity — reads from refs
 
   // ── Full load: list + enrich in one call (for CRUD/Realtime) ──
@@ -175,11 +177,12 @@ export function useManageJurors({
     const oid = organizationIdRef.current;
     const pid = viewPeriodIdRef.current;
     if (!oid) return;
-    const [rows, scoreRows] = await Promise.all([
+    const [rows, scores] = await Promise.all([
       listJurorsSummary(pid),
       getScores(pid),
     ]);
-    setJurors(_buildEnrichedJurors(rows, scoreRows));
+    setScoreRows(scores);
+    setJurors(_buildEnrichedJurors(rows, scores));
   }, []); // stable identity — reads from refs
 
   // ── scheduleJurorRefresh ──────────────────────────────────
@@ -199,7 +202,7 @@ export function useManageJurors({
     clearPanelError("jurors");
     incLoading();
     try {
-      const created = await createJuror({ ...row, periodId: viewPeriodId });
+      const created = await createJuror({ ...row, organizationId, periodId: viewPeriodId });
       if (created?.juror_id) {
         applyJurorPatch({
           juror_id: created.juror_id,
@@ -252,10 +255,10 @@ export function useManageJurors({
     clearPanelError("jurors");
     incLoading();
     try {
-      let skipped = 0;
+      let imported = 0, skipped = 0, failed = 0;
       for (const row of rows) {
         try {
-          const created = await createJuror({ ...row, periodId: viewPeriodId });
+          const created = await createJuror({ ...row, organizationId, periodId: viewPeriodId });
           if (created?.juror_id) {
             applyJurorPatch({
               juror_id: created.juror_id,
@@ -272,6 +275,7 @@ export function useManageJurors({
               total_projects: (projects || []).length,
               completed_projects: 0,
             });
+            imported += 1;
           }
         } catch (e) {
           const msg = String(e?.message || "");
@@ -284,7 +288,7 @@ export function useManageJurors({
             skipped += 1;
             continue;
           }
-          throw e;
+          failed += 1;
         }
       }
       setMessage(
@@ -292,7 +296,7 @@ export function useManageJurors({
           ? `Jurors imported. Skipped ${skipped} existing jurors`
           : "Jurors imported"
       );
-      return { ok: true, skipped };
+      return { ok: true, imported, skipped, failed };
     } catch (e) {
       const msg = String(e?.message || "");
       const msgLower = msg.toLowerCase();
@@ -482,10 +486,11 @@ export function useManageJurors({
     setMessage("");
     clearPanelError("jurors");
     incLoading();
+    const jurorName = getJurorNameById(jurors, jurorId);
     try {
       await deleteJuror(jurorId);
       removeJuror(jurorId);
-      setMessage("Juror removed");
+      setMessage(jurorName ? `${jurorName} removed` : "Juror removed");
     } catch (e) {
       setPanelError("jurors", e?.message || "Could not delete juror. Try again.");
     } finally {
@@ -599,6 +604,7 @@ export function useManageJurors({
 
   return {
     jurors,
+    scoreRows,
     pinResetTarget,
     resetPinInfo,
     pinResetLoading,

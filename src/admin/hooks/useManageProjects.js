@@ -109,7 +109,7 @@ export function useManageProjects({
         viewPeriodLabel && viewPeriodLabel !== "—"
           ? viewPeriodLabel
           : "selected period";
-      let skipped = 0;
+      let imported = 0, skipped = 0, failed = 0;
       for (const row of rows) {
         if (cancelRef?.current) {
           // Soft-cancel: user requested stop between rows.
@@ -128,6 +128,7 @@ export function useManageProjects({
             title: row.title,
             members: normalizedMembers,
           });
+          imported += 1;
         } catch (e) {
           const msg = String(e?.message || "");
           const msgLower = msg.toLowerCase();
@@ -139,7 +140,7 @@ export function useManageProjects({
             skipped += 1;
             continue;
           }
-          throw e;
+          failed += 1;
         }
       }
       // Full refresh to get server-confirmed IDs and normalize client state
@@ -149,7 +150,7 @@ export function useManageProjects({
           ? `Groups imported for Period ${periodContext}, skipped ${skipped} existing groups`
           : `Groups imported for Period ${periodContext}`
       );
-      return { ok: true, skipped };
+      return { ok: true, imported, skipped, failed };
     } catch (e) {
       const msg = String(e?.message || "");
       const msgLower = msg.toLowerCase();
@@ -268,10 +269,11 @@ export function useManageProjects({
     setMessage("");
     clearPanelError("projects");
     incLoading();
+    const project = projects.find((p) => p.id === projectId);
     try {
       await deleteProject(projectId);
       removeProject(projectId);
-      setMessage("Project deleted");
+      setMessage(project?.group_no ? `Group ${project.group_no} deleted` : "Project deleted");
     } catch (e) {
       setPanelError("projects", e?.message || "Could not delete project. Try again.");
     } finally {
