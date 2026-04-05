@@ -69,6 +69,8 @@ export default function DemoAdminLoader({ onComplete }) {
     if (didRun.current) return;
     didRun.current = true;
 
+    const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+
     const setStep = (i, cls) => {
       const el = stepsRef.current[i];
       if (!el) return;
@@ -88,38 +90,39 @@ export default function DemoAdminLoader({ onComplete }) {
       }
     };
 
-    // Run auth + stats + animation in parallel, navigate only when both auth+anim are done
-    const authDone = signIn(DEMO_EMAIL, DEMO_PASSWORD, true).then(() => true, () => false);
-    const statsDone = fetchDemoStats().catch(() => null);
-    const animDone = new Promise((r) => setTimeout(r, 3100));
+    const PAUSE_AFTER_DATA = 500; // ms to show the data before turning green
 
-    // Step 0: Authenticating
-    setTimeout(() => { setStep(0, "active"); setBar(15); }, 200);
-    setTimeout(() => { setStep(0, "done"); setBar(35); }, 1000);
+    const run = async () => {
+      // Step 0: active → auth resolves → green
+      setStep(0, "active"); setBar(15);
+      const authOk = await signIn(DEMO_EMAIL, DEMO_PASSWORD, true).then(() => true, () => false);
+      await delay(PAUSE_AFTER_DATA);
+      setStep(0, "done"); setBar(35);
 
-    // Step 1: Loading organizations — update desc when stats arrive
-    setTimeout(() => { setStep(1, "active"); setBar(50); }, 1100);
-    statsDone.then((stats) => {
+      // Step 1: active → stats arrive (auth is ready now) → desc written → green
+      setStep(1, "active"); setBar(50);
+      const stats = await fetchDemoStats().catch(() => null);
       if (stats?.orgs > 0) setDesc(1, `${stats.orgs} organization${stats.orgs !== 1 ? "s" : ""}`);
-    });
-    setTimeout(() => { setStep(1, "done"); setBar(70); }, 1900);
+      await delay(PAUSE_AFTER_DATA);
+      setStep(1, "done"); setBar(70);
 
-    // Step 2: Syncing data — update desc when stats arrive
-    setTimeout(() => { setStep(2, "active"); setBar(85); }, 2000);
-    statsDone.then((stats) => {
-      if (!stats) return;
-      const parts = [];
-      if (stats.projects > 0) parts.push(`${stats.projects} projects`);
-      if (stats.jurors > 0) parts.push(`${stats.jurors} jurors`);
-      if (stats.periods > 0) parts.push(`${stats.periods} period${stats.periods !== 1 ? "s" : ""}`);
-      if (parts.length > 0) setDesc(2, parts.join(" · "));
-    });
-    setTimeout(() => { setStep(2, "done"); setBar(100); }, 2700);
+      // Step 2: active → desc written (stats already ready) → green
+      setStep(2, "active"); setBar(85);
+      if (stats) {
+        const parts = [];
+        if (stats.projects > 0) parts.push(`${stats.projects} projects`);
+        if (stats.jurors > 0) parts.push(`${stats.jurors} jurors`);
+        if (stats.periods > 0) parts.push(`${stats.periods} period${stats.periods !== 1 ? "s" : ""}`);
+        if (parts.length > 0) setDesc(2, parts.join(" · "));
+      }
+      await delay(PAUSE_AFTER_DATA);
+      setStep(2, "done"); setBar(100);
 
-    // Navigate only when auth succeeded AND animation finished
-    Promise.all([authDone, animDone]).then(([ok]) => {
-      if (ok) onComplete();
-    });
+      await delay(350);
+      if (authOk) onComplete();
+    };
+
+    run();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
@@ -137,7 +140,12 @@ export default function DemoAdminLoader({ onComplete }) {
             <div key={i} className="dao-step" ref={(el) => (stepsRef.current[i] = el)}>
               <div className="dao-step-icon">{s.icon}</div>
               <div className="dao-step-text">
-                <div className="dao-step-label">{s.label}</div>
+                <div className="dao-step-label">
+                  {s.label}
+                  <span className="dao-dots" aria-hidden="true">
+                    <span /><span /><span />
+                  </span>
+                </div>
                 <div
                   className="dao-step-desc"
                   ref={(el) => (descRefs.current[i] = el)}

@@ -1,35 +1,61 @@
 // src/admin/drawers/EditProfileDrawer.jsx
-// Drawer: edit the current user's display name.
-// Email, role, and organization are read-only.
+// Drawer: edit the current user's display name, email, and avatar.
+// Role and organization are always read-only (system-managed).
 //
 // Props:
 //   open         — boolean
 //   onClose      — () => void
-//   profile      — { displayName, email, role, organization }
-//   onSave       — ({ displayName }) => Promise<void>
+//   profile      — { displayName, email, role, organization, avatarUrl }
+//   onSave       — ({ displayName, email, avatarFile }) => Promise<void>
 //   error        — string | null
+//   initials     — string (e.g. "DA")
+//   avatarBg     — string (CSS color for initials fallback)
+//   isSuper      — boolean
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Drawer from "@/shared/ui/Drawer";
+import Avatar from "@/shared/ui/Avatar";
 
-export default function EditProfileDrawer({ open, onClose, profile, onSave, error }) {
+export default function EditProfileDrawer({ open, onClose, profile, onSave, error, initials, avatarBg, isSuper }) {
   const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (open) {
       setDisplayName(profile?.displayName ?? "");
+      setEmail(profile?.email ?? "");
+      setAvatarFile(null);
+      setAvatarPreview(null);
       setSaveError("");
       setSaving(false);
     }
   }, [open, profile]);
 
+  const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2 MB
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_AVATAR_SIZE) {
+      setSaveError("Avatar image must be under 2 MB.");
+      e.target.value = "";
+      return;
+    }
+    setAvatarFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setAvatarPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
   const handleSave = async () => {
     setSaveError("");
     setSaving(true);
     try {
-      await onSave?.({ displayName: displayName.trim() });
+      await onSave?.({ displayName: displayName.trim(), email: email.trim(), avatarFile });
       onClose();
     } catch (e) {
       setSaveError(e?.message || "Something went wrong.");
@@ -39,6 +65,12 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, erro
   };
 
   const displayError = saveError || error;
+  const isDirty =
+    displayName.trim() !== (profile?.displayName ?? "") ||
+    email.trim() !== (profile?.email ?? "") ||
+    avatarFile !== null;
+
+  const avatarSrc = avatarPreview || profile?.avatarUrl || null;
 
   return (
     <Drawer open={open} onClose={onClose}>
@@ -71,6 +103,47 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, erro
           </div>
         )}
 
+        {/* Avatar edit */}
+        <div style={{ display: "flex", justifyContent: "center", paddingBottom: 4 }}>
+          <div style={{ position: "relative", display: "inline-block" }}>
+            <Avatar
+              avatarUrl={avatarSrc}
+              initials={initials || "?"}
+              bg={avatarBg}
+              size={72}
+              fontSize={24}
+              style={{ border: "2px solid var(--border)", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={saving}
+              title="Change photo"
+              style={{
+                position: "absolute", bottom: 0, right: 0,
+                width: 24, height: 24, borderRadius: "50%",
+                background: "var(--accent, #6366f1)",
+                border: "2px solid var(--bg-card, #0f0f17)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", padding: 0,
+                transition: "opacity 0.15s",
+              }}
+              aria-label="Change avatar"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" style={{ width: 11, height: 11 }}>
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+              </svg>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handleAvatarChange}
+            />
+          </div>
+        </div>
+
         <div className="fs-field-row">
           <label className="fs-label">Display Name</label>
           <input
@@ -88,13 +161,13 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, erro
           <input
             className="fs-input"
             type="email"
-            value={profile?.email ?? ""}
-            disabled
-            style={{ opacity: 0.6, cursor: "not-allowed" }}
-            readOnly
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={saving}
+            placeholder="your.email@institution.edu"
           />
           <div className="fs-field-helper hint">
-            Email is managed by your authentication provider and cannot be changed here.
+            A confirmation link will be sent to your new email address.
           </div>
         </div>
 
@@ -105,10 +178,12 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, erro
             type="text"
             value={profile?.role ?? ""}
             disabled
-            style={{ opacity: 0.6, cursor: "not-allowed" }}
+            style={{ opacity: 0.55, cursor: "not-allowed" }}
             readOnly
           />
-          <div className="fs-field-helper hint">Role changes require Super Admin approval.</div>
+          {!isSuper && (
+            <div className="fs-field-helper hint">Role changes require Super Admin approval.</div>
+          )}
         </div>
 
         <div className="fs-field-row">
@@ -118,7 +193,7 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, erro
             type="text"
             value={profile?.organization ?? ""}
             disabled
-            style={{ opacity: 0.6, cursor: "not-allowed" }}
+            style={{ opacity: 0.55, cursor: "not-allowed" }}
             readOnly
           />
         </div>
@@ -132,7 +207,7 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, erro
           className="fs-btn fs-btn-primary"
           type="button"
           onClick={handleSave}
-          disabled={saving || !displayName.trim()}
+          disabled={saving || !isDirty || !displayName.trim()}
         >
           {saving ? "Saving…" : "Save Changes"}
         </button>

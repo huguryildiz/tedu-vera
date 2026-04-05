@@ -1,6 +1,7 @@
 // src/admin/layout/AdminSidebar.jsx — Phase 1
 // Prototype source: lines 11580–11711
 import { useRef, useState } from "react";
+import Avatar from "@/shared/ui/Avatar";
 import { useAuth } from "@/auth";
 import { useTheme } from "../../shared/theme/ThemeProvider";
 
@@ -31,7 +32,7 @@ function getInitials(name) {
 }
 
 export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switchScoresView, mobileOpen, onClose }) {
-  const { user, displayName, organizations, activeOrganization, setActiveOrganization, isSuper, signOut } = useAuth();
+  const { user, displayName, avatarUrl, organizations, activeOrganization, setActiveOrganization, isSuper, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const isDark = theme === "dark";
 
@@ -309,7 +310,7 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
           aria-haspopup="menu"
           aria-expanded={accountMenuOpen}
         >
-          <div className={`sb-avatar${isSuper ? " sa-avatar" : ""}`}>{initials}</div>
+          <Avatar avatarUrl={avatarUrl} initials={initials} bg={isSuper ? "#6366f1" : "#8b5cf6"} size={36} className={`sb-avatar${isSuper ? " sa-avatar" : ""}`} />
           <div className="sb-user-info">
             <div className="sb-user-name">{name}</div>
             <div className="sb-user-role">{orgLabel} · {roleLabel}</div>
@@ -319,7 +320,7 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
 
         <div className={`sb-account-menu${accountMenuOpen ? " show" : ""}`} role="menu">
           <div className="sb-account-head">
-            <div className={`sb-avatar${isSuper ? " sa-avatar" : ""}`}>{initials}</div>
+            <Avatar avatarUrl={avatarUrl} initials={initials} bg={isSuper ? "#6366f1" : "#8b5cf6"} size={36} className={`sb-avatar${isSuper ? " sa-avatar" : ""}`} />
             <div className="sb-account-meta">
               <div className="sb-user-name">{name}</div>
               <div className="sb-user-role">{orgLabel} · {roleLabel}</div>

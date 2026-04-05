@@ -91,9 +91,7 @@ export function useProfileEdit() {
 
       if (nameChanged) {
         const result = await upsertProfile(trimmedName || null);
-        if (result?.out_display_name != null) {
-          setDisplayName(result.out_display_name);
-        }
+        setDisplayName(result?.display_name ?? trimmedName);
       }
 
       if (emailChanged) {

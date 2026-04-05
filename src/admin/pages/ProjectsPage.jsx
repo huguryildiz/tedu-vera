@@ -373,7 +373,7 @@ export default function ProjectsPage({
           <thead>
             <tr>
               <th style={{ width: "40px" }}>#</th>
-              <th>Title / Group</th>
+              <th>Project Title</th>
               <th>Team Members</th>
               <th style={{ width: "130px" }}>Last Updated</th>
               <th style={{ width: "48px" }}>Actions</th>
@@ -397,12 +397,14 @@ export default function ProjectsPage({
                 <td className="mono text-center">{project.group_no}</td>
                 <td>
                   <div style={{ fontWeight: 600, lineHeight: 1.35 }}>{project.title}</div>
-                  <div className="text-xs text-muted" style={{ marginTop: "2px" }}>Group {project.group_no}</div>
                 </td>
                 <td>
-                  <div className="text-sm" style={{ lineHeight: 1.5, color: "var(--text-secondary)" }}>
-                    {membersToArray(project.members).map((name, i, arr) => (
-                      <span key={i}>{name}{i < arr.length - 1 ? <br /> : null}</span>
+                  <div className="proj-member-list">
+                    {membersToArray(project.members).map((name, i) => (
+                      <span key={i} className="proj-member-chip">
+                        <span className="proj-member-avatar">{name[0]?.toUpperCase() || "?"}</span>
+                        <span className="proj-member-name">{name}</span>
+                      </span>
                     ))}
                   </div>
                 </td>
@@ -488,7 +490,7 @@ export default function ProjectsPage({
                 {drawerProject.title}
               </div>
               <div className="text-xs text-muted" style={{ marginTop: "4px" }}>
-                Group {drawerProject.group_no}
+                No. {drawerProject.group_no}
               </div>
             </div>
             <div className="juror-drawer-details" style={{ marginTop: "8px" }}>
@@ -528,7 +530,7 @@ export default function ProjectsPage({
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
                   <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
-                Delete Group
+                Delete Project
               </button>
             </div>
           </div>

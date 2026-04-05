@@ -2,13 +2,17 @@
 // Settings page: org-admin profile/security view vs super-admin control center.
 // Prototype: vera-premium-prototype.html lines 15647–16066
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/auth";
 import { useToast } from "@/shared/hooks/useToast";
 import { useProfileEdit } from "../hooks/useProfileEdit";
 import { useManageOrganizations } from "../hooks/useManageOrganizations";
 import SecurityPolicyDrawer from "../drawers/SecurityPolicyDrawer";
+import EditProfileDrawer from "../drawers/EditProfileDrawer";
+import Avatar from "@/shared/ui/Avatar";
+import { upsertProfile, getSecurityPolicy, setSecurityPolicy } from "@/shared/api";
+import { supabase } from "@/shared/lib/supabaseClient";
 import {
   GlobalSettingsDrawer,
   AuditCenterDrawer,
@@ -58,11 +62,19 @@ function formatShortDate(dateStr) {
   return String(dateStr).slice(0, 10);
 }
 
-// ── Profile Edit Modal ────────────────────────────────────────
+const AVATAR_COLORS = [
+  "#6366f1", "#8b5cf6", "#ec4899", "#f59e0b",
+  "#10b981", "#3b82f6", "#ef4444", "#14b8a6",
+];
+function getAvatarColor(name) {
+  const code = (name || "?").charCodeAt(0);
+  return AVATAR_COLORS[code % AVATAR_COLORS.length];
+}
 
-function ProfileEditModal({ profile }) {
-  if (!profile.modalOpen) return null;
-  const isPassword = profile.modalView === "password";
+// ── Password Change Modal ─────────────────────────────────────
+
+function PasswordModal({ profile }) {
+  if (!profile.modalOpen || profile.modalView !== "password") return null;
   return createPortal(
     <div
       className="crud-overlay"
@@ -71,129 +83,64 @@ function ProfileEditModal({ profile }) {
     >
       <div className="crud-modal" style={{ maxWidth: 440 }}>
         <div className="crud-modal-header">
-          <h3>{isPassword ? "Change Password" : "Edit Profile"}</h3>
+          <h3>Change Password</h3>
           <button className="crud-modal-close" onClick={profile.closeModal}>&#215;</button>
         </div>
 
         <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: 14 }}>
-          {!isPassword ? (
-            <>
-              {profile.errors._general && (
-                <div className="fb-alert fba-error">
-                  <div className="fb-alert-body"><div className="fb-alert-desc">{profile.errors._general}</div></div>
-                </div>
-              )}
-              <label className="form-label" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                Full Name
-                <input
-                  className="form-input"
-                  type="text"
-                  value={profile.form.displayName}
-                  onChange={(e) => profile.setField("displayName", e.target.value)}
-                  disabled={profile.saving}
-                  placeholder="Your full name"
-                />
-                {profile.errors.displayName && (
-                  <span style={{ fontSize: 11, color: "var(--danger)" }}>{profile.errors.displayName}</span>
-                )}
-              </label>
-              <label className="form-label" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                Email
-                <input
-                  className="form-input"
-                  type="email"
-                  value={profile.form.email}
-                  onChange={(e) => profile.setField("email", e.target.value)}
-                  disabled={profile.saving}
-                  placeholder="your.email@institution.edu"
-                />
-                {profile.errors.email && (
-                  <span style={{ fontSize: 11, color: "var(--danger)" }}>{profile.errors.email}</span>
-                )}
-              </label>
-              <button
-                type="button"
-                style={{ fontSize: 12, color: "var(--accent)", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                onClick={() => profile.setModalView("password")}
-              >
-                Change Password →
-              </button>
-            </>
-          ) : (
-            <>
-              {profile.passwordErrors._general && (
-                <div className="fb-alert fba-error">
-                  <div className="fb-alert-body"><div className="fb-alert-desc">{profile.passwordErrors._general}</div></div>
-                </div>
-              )}
-              <label className="form-label" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                New Password
-                <input
-                  className="form-input"
-                  type="password"
-                  value={profile.passwordForm.password}
-                  onChange={(e) => profile.setPasswordField("password", e.target.value)}
-                  disabled={profile.passwordSaving}
-                  placeholder="Min 10 chars, upper, lower, digit, symbol"
-                  autoComplete="new-password"
-                />
-                {profile.passwordErrors.password && (
-                  <span style={{ fontSize: 11, color: "var(--danger)" }}>{profile.passwordErrors.password}</span>
-                )}
-              </label>
-              <label className="form-label" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                Confirm Password
-                <input
-                  className="form-input"
-                  type="password"
-                  value={profile.passwordForm.confirmPassword}
-                  onChange={(e) => profile.setPasswordField("confirmPassword", e.target.value)}
-                  disabled={profile.passwordSaving}
-                  placeholder="Enter your new password"
-                  autoComplete="new-password"
-                />
-                {profile.passwordErrors.confirmPassword && (
-                  <span style={{ fontSize: 11, color: "var(--danger)" }}>{profile.passwordErrors.confirmPassword}</span>
-                )}
-              </label>
-              <button
-                type="button"
-                style={{ fontSize: 12, color: "var(--text-tertiary)", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                onClick={() => profile.setModalView("profile")}
-              >
-                ← Back to Profile
-              </button>
-            </>
+          {profile.passwordErrors._general && (
+            <div className="fb-alert fba-error">
+              <div className="fb-alert-body"><div className="fb-alert-desc">{profile.passwordErrors._general}</div></div>
+            </div>
           )}
+          <label className="form-label" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            New Password
+            <input
+              className="form-input"
+              type="password"
+              value={profile.passwordForm.password}
+              onChange={(e) => profile.setPasswordField("password", e.target.value)}
+              disabled={profile.passwordSaving}
+              placeholder="Min 10 chars, upper, lower, digit, symbol"
+              autoComplete="new-password"
+            />
+            {profile.passwordErrors.password && (
+              <span style={{ fontSize: 11, color: "var(--danger)" }}>{profile.passwordErrors.password}</span>
+            )}
+          </label>
+          <label className="form-label" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            Confirm Password
+            <input
+              className="form-input"
+              type="password"
+              value={profile.passwordForm.confirmPassword}
+              onChange={(e) => profile.setPasswordField("confirmPassword", e.target.value)}
+              disabled={profile.passwordSaving}
+              placeholder="Enter your new password"
+              autoComplete="new-password"
+            />
+            {profile.passwordErrors.confirmPassword && (
+              <span style={{ fontSize: 11, color: "var(--danger)" }}>{profile.passwordErrors.confirmPassword}</span>
+            )}
+          </label>
         </div>
 
         <div style={{ padding: "12px 20px", borderTop: "1px solid var(--border)", background: "var(--surface-1)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <button
             className="btn btn-outline btn-sm"
             onClick={profile.closeModal}
-            disabled={profile.saving || profile.passwordSaving}
+            disabled={profile.passwordSaving}
           >
             Cancel
           </button>
-          {!isPassword ? (
-            <button
-              className="btn btn-sm"
-              style={{ background: "var(--accent)", color: "#fff" }}
-              onClick={profile.handleSave}
-              disabled={profile.saving || !profile.isDirty || isDemoMode}
-            >
-              {profile.saving ? "Saving…" : "Save Changes"}
-            </button>
-          ) : (
-            <button
-              className="btn btn-sm"
-              style={{ background: "var(--accent)", color: "#fff" }}
-              onClick={profile.handlePasswordSave}
-              disabled={profile.passwordSaving || isDemoMode}
-            >
-              {profile.passwordSaving ? "Saving…" : "Update Password"}
-            </button>
-          )}
+          <button
+            className="btn btn-sm"
+            style={{ background: "var(--accent)", color: "#fff" }}
+            onClick={profile.handlePasswordSave}
+            disabled={profile.passwordSaving || isDemoMode}
+          >
+            {profile.passwordSaving ? "Saving…" : "Update Password"}
+          </button>
         </div>
       </div>
     </div>,
@@ -204,7 +151,7 @@ function ProfileEditModal({ profile }) {
 // ── Main Component ────────────────────────────────────────────
 
 export default function SettingsPage({ organizationId }) {
-  const { user, displayName, isSuper, activeOrganization, signOut } = useAuth();
+  const { user, displayName, setDisplayName, avatarUrl, setAvatarUrl, isSuper, activeOrganization, signOut } = useAuth();
   const _toast = useToast();
   const setMessage = useCallback((msg) => { if (msg) _toast.success(msg); }, [_toast]);
   const noop = useCallback(() => {}, []);
@@ -229,8 +176,10 @@ export default function SettingsPage({ organizationId }) {
   });
 
   const initials = getInitials(displayName, user?.email);
+  const avatarBg = getAvatarColor(displayName || user?.email);
 
   // Drawer states
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [securityPolicyOpen, setSecurityPolicyOpen] = useState(false);
   const [globalSettingsOpen, setGlobalSettingsOpen] = useState(false);
   const [auditCenterOpen, setAuditCenterOpen] = useState(false);
@@ -239,9 +188,72 @@ export default function SettingsPage({ organizationId }) {
   const [featureFlagsOpen, setFeatureFlagsOpen] = useState(false);
   const [systemHealthOpen, setSystemHealthOpen] = useState(false);
 
+  // Security policy state
+  const [securityPolicy, setSecurityPolicyState] = useState(null);
+  const [securityPolicyError, setSecurityPolicyError] = useState(null);
+  const policyFetched = useRef(false);
+
+  const handleOpenSecurityPolicy = useCallback(async () => {
+    setSecurityPolicyError(null);
+    setSecurityPolicyOpen(true);
+    if (policyFetched.current) return;
+    try {
+      const data = await getSecurityPolicy();
+      setSecurityPolicyState(data);
+      policyFetched.current = true;
+    } catch (e) {
+      setSecurityPolicyError(e?.message || "Failed to load security policy.");
+    }
+  }, []);
+
+  const handleSaveSecurityPolicy = useCallback(async (policy) => {
+    await setSecurityPolicy(policy);
+    setSecurityPolicyState(policy);
+    _toast.success("Security policy saved");
+  }, [_toast]);
+
   // Super-admin Danger Zone modal state
   const [dangerModal, setDangerModal] = useState(null); // null | "disable_org" | "revoke_admin" | "maintenance"
   const [dangerConfirm, setDangerConfirm] = useState("");
+
+  const handleSaveProfile = useCallback(async ({ displayName: newName, email: newEmail, avatarFile }) => {
+    const trimmedName = newName.trim();
+    const trimmedEmail = newEmail.trim();
+
+    // 1. Save display name
+    const result = await upsertProfile(trimmedName || null);
+    const saved = result?.display_name ?? trimmedName;
+    setDisplayName(saved);
+
+    // 2. Save email if changed
+    if (trimmedEmail && trimmedEmail !== user?.email) {
+      const { error: emailError } = await supabase.auth.updateUser({ email: trimmedEmail });
+      if (emailError) throw emailError;
+      _toast.info("Confirmation link sent to your new email address");
+    }
+
+    // 3. Upload avatar if provided
+    if (avatarFile) {
+      const userId = user?.id;
+      if (userId) {
+        const ext = avatarFile.name.split(".").pop() || "jpg";
+        const path = `${userId}/avatar.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(path, avatarFile, { upsert: true, contentType: avatarFile.type });
+        if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+        await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
+        setAvatarUrl(publicUrl);
+      }
+    }
+
+    if (!avatarFile && (trimmedEmail === user?.email || !trimmedEmail)) {
+      _toast.success("Profile updated");
+    } else if (avatarFile && trimmedEmail === user?.email) {
+      _toast.success("Profile updated");
+    }
+  }, [setDisplayName, setAvatarUrl, user, _toast]);
 
   // Super-admin KPIs
   const kpis = useMemo(() => {
@@ -285,10 +297,32 @@ export default function SettingsPage({ organizationId }) {
 
   return (
     <>
-      <ProfileEditModal profile={profile} />
+      <PasswordModal profile={profile} />
+
+      <EditProfileDrawer
+        open={editProfileOpen}
+        onClose={() => setEditProfileOpen(false)}
+        profile={{
+          displayName: displayName || "",
+          email: user?.email || "",
+          role: isSuper ? "Super Admin" : "Organization Admin",
+          organization: activeOrganization?.name || "",
+          avatarUrl: avatarUrl || null,
+        }}
+        onSave={handleSaveProfile}
+        initials={initials}
+        avatarBg={avatarBg}
+        isSuper={isSuper}
+      />
 
       {/* Governance drawers */}
-      <SecurityPolicyDrawer open={securityPolicyOpen} onClose={() => setSecurityPolicyOpen(false)} />
+      <SecurityPolicyDrawer
+        open={securityPolicyOpen}
+        onClose={() => setSecurityPolicyOpen(false)}
+        policy={securityPolicy}
+        onSave={handleSaveSecurityPolicy}
+        error={securityPolicyError}
+      />
       <GlobalSettingsDrawer open={globalSettingsOpen} onClose={() => setGlobalSettingsOpen(false)} />
       <AuditCenterDrawer open={auditCenterOpen} onClose={() => setAuditCenterOpen(false)} />
       <ExportBackupDrawer open={exportBackupOpen} onClose={() => setExportBackupOpen(false)} />
@@ -368,7 +402,7 @@ export default function SettingsPage({ organizationId }) {
           <div className="card settings-role-card" style={{ marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <div className="sb-avatar sa-avatar" style={{ width: 54, height: 54, fontSize: 17 }}>{initials}</div>
+                <Avatar avatarUrl={avatarUrl} initials={initials} bg={avatarBg} size={54} fontSize={17} className="sb-avatar sa-avatar" />
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 15 }}>{displayName || "Platform Owner"}</div>
                   <div className="text-sm text-muted" style={{ marginTop: 2 }}>{user?.email}</div>
@@ -379,8 +413,8 @@ export default function SettingsPage({ organizationId }) {
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button className="btn btn-outline btn-sm" onClick={() => profile.openModal("profile")}>Edit Profile</button>
-                <button className="btn btn-outline btn-sm" onClick={() => setSecurityPolicyOpen(true)}>Security Policy</button>
+                <button className="btn btn-outline btn-sm" onClick={() => setEditProfileOpen(true)}>Edit Profile</button>
+                <button className="btn btn-outline btn-sm" onClick={handleOpenSecurityPolicy}>Security Policy</button>
               </div>
             </div>
           </div>
@@ -766,9 +800,7 @@ export default function SettingsPage({ organizationId }) {
                   <span className="badge badge-neutral">Personal</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, paddingBottom: 10, borderBottom: "1px solid var(--border)" }}>
-                  <div className="sb-avatar" style={{ width: 44, height: 44, fontSize: 14, boxShadow: "0 0 0 2px var(--accent-soft)" }}>
-                    {initials}
-                  </div>
+                  <Avatar avatarUrl={avatarUrl} initials={initials} bg={avatarBg} size={44} fontSize={14} className="sb-avatar" style={{ boxShadow: "0 0 0 2px var(--accent-soft)" }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 13.5, letterSpacing: "-0.2px" }}>
                       {displayName || "Admin"}
@@ -795,7 +827,7 @@ export default function SettingsPage({ organizationId }) {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
-                  <button className="btn btn-outline btn-sm" onClick={() => profile.openModal("profile")}>Edit Profile</button>
+                  <button className="btn btn-outline btn-sm" onClick={() => setEditProfileOpen(true)}>Edit Profile</button>
                   <button className="btn btn-outline btn-sm" onClick={() => profile.openModal("password")}>Change Password</button>
                 </div>
               </div>

@@ -65,6 +65,7 @@ export default function AuthProvider({ children }) {
   const [organizations, setOrganizations] = useState([]);
   const [activeOrganizationId, setActiveOrganizationIdState] = useState(null);
   const [displayName, setDisplayName] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const [profileIncomplete, setProfileIncomplete] = useState(false);
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef(true);
@@ -217,6 +218,9 @@ export default function AuthProvider({ children }) {
         if (mountedRef.current && profile?.display_name) {
           setDisplayName(profile.display_name);
         }
+        if (mountedRef.current && profile?.avatar_url) {
+          setAvatarUrl(profile.avatar_url);
+        }
       }).catch(() => {});
       setLoading(false);
       return;
@@ -225,6 +229,9 @@ export default function AuthProvider({ children }) {
     upsertProfile(displayNameFromUser).then((profile) => {
       if (mountedRef.current && profile?.display_name) {
         setDisplayName(profile.display_name);
+      }
+      if (mountedRef.current && profile?.avatar_url) {
+        setAvatarUrl(profile.avatar_url);
       }
     }).catch(() => {});
 
@@ -416,6 +423,8 @@ export default function AuthProvider({ children }) {
     setActiveOrganization,
     displayName,
     setDisplayName,
+    avatarUrl,
+    setAvatarUrl,
     isSuper,
     isPending,
     demoBypass,
@@ -430,8 +439,8 @@ export default function AuthProvider({ children }) {
     refreshMemberships,
     completeProfile,
   }), [user, session, organizations, activeOrganization, setActiveOrganization, displayName, setDisplayName,
-       isSuper, isPending, demoBypass, profileIncomplete, loading, signIn, signInWithGoogle, signUp, signOut,
-       resetPassword, updatePassword, refreshMemberships, completeProfile]);
+       avatarUrl, setAvatarUrl, isSuper, isPending, demoBypass, profileIncomplete, loading, signIn,
+       signInWithGoogle, signUp, signOut, resetPassword, updatePassword, refreshMemberships, completeProfile]);
 
   return (
     <AuthContext.Provider value={value}>

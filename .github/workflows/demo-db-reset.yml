@@ -20,4 +20,13 @@ jobs:
       - name: Run seed SQL against demo database
         env:
           DEMO_DATABASE_URL: ${{ secrets.DEMO_DATABASE_URL }}
-        run: psql "$DEMO_DATABASE_URL" --no-psqlrc -v ON_ERROR_STOP=1 -f sql/seeds/001_seed.sql
+        run: |
+          cat \
+            sql/seeds/001_orgs_users.sql \
+            sql/seeds/002_frameworks.sql \
+            sql/seeds/003_periods.sql \
+            sql/seeds/004_projects_jurors.sql \
+            sql/seeds/005_scores.sql \
+            sql/seeds/006_tokens_audit.sql \
+            sql/seeds/007_descriptions.sql \
+          | psql "$DEMO_DATABASE_URL" --no-psqlrc -v ON_ERROR_STOP=1

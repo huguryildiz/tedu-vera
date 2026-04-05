@@ -87,3 +87,5 @@ export {
 export { sendEntryTokenEmail, sendJurorPinEmail, sendExportReport } from "./notifications";
 
 export { getMaintenanceStatus, getMaintenanceConfig, setMaintenance, cancelMaintenance } from "./maintenance";
+
+export { getSecurityPolicy, setSecurityPolicy } from "./security";

@@ -91,4 +91,6 @@ export {
   getMaintenanceConfig,
   setMaintenance,
   cancelMaintenance,
+  getSecurityPolicy,
+  setSecurityPolicy,
 } from "./admin/index";
