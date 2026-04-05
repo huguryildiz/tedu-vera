@@ -102,6 +102,65 @@ function TeamPreview({ orgList, orgLoading, orgError, onSelectAdmin, onViewAll }
   );
 }
 
+// ── Team List View Sub-Component ────────────────────────────
+
+function TeamListView({ orgList, orgLoading, orgError, onBack, onSelectAdmin }) {
+  const sorted = [...orgList]
+    .filter((o) => (o.tenantAdmins?.length || 0) > 0)
+    .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+  return (
+    <>
+      <div className="ph-avatar-view-header">
+        <button className="ph-avatar-view-back" onClick={onBack} aria-label="Back">
+          ← <span>Back</span>
+        </button>
+        <span className="ph-avatar-view-title">All Admins</span>
+      </div>
+
+      <div className="ph-avatar-team-list">
+        {orgLoading && (
+          <div className="ph-avatar-team-empty">Loading…</div>
+        )}
+        {orgError && (
+          <div className="ph-avatar-team-error" style={{ padding: "12px 16px" }}>{orgError}</div>
+        )}
+        {!orgLoading && !orgError && sorted.length === 0 && (
+          <div className="ph-avatar-team-empty">No admins found.</div>
+        )}
+        {!orgLoading && sorted.map((org) => (
+          <div key={org.id} className="ph-avatar-org-section">
+            <div className="ph-avatar-org-label">{org.name}</div>
+            {(org.tenantAdmins || []).map((admin) => {
+              const enriched = { ...admin, organizationId: org.id, organizationName: org.name };
+              return (
+                <button
+                  key={admin.userId}
+                  className="ph-avatar-admin-row"
+                  role="menuitem"
+                  onClick={() => onSelectAdmin(enriched)}
+                >
+                  <div
+                    className="ph-avatar-admin-avatar"
+                    style={{ background: getAvatarColor(admin.name || admin.email) }}
+                    aria-hidden="true"
+                  >
+                    {getInitials(admin.name, admin.email)}
+                  </div>
+                  <div className="ph-avatar-admin-info">
+                    <span className="ph-avatar-admin-name">{admin.name || admin.email}</span>
+                    <span className="ph-avatar-admin-org">{admin.email}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 // ── Main Component ───────────────────────────────────────────
 
 import { DEMO_MODE as isDemoMode } from "@/shared/lib/demoMode";
@@ -312,15 +371,15 @@ export default function UserAvatarMenu({ onLogout }) {
               </button>
             </div>
 
-            {/* Team list view — placeholder, filled in Task 4 */}
+            {/* Team list view */}
             <div className={`ph-avatar-menu-view${menuView !== "team" ? " ph-avatar-menu-view--hidden-right" : ""}`}>
-              <div className="ph-avatar-view-header">
-                <button className="ph-avatar-view-back" onClick={() => setMenuView("main")} aria-label="Back">
-                  ← <span>Back</span>
-                </button>
-                <span className="ph-avatar-view-title">All Admins</span>
-              </div>
-              <div style={{ padding: "12px 16px", fontSize: 13, color: "var(--text-tertiary)" }}>Loading…</div>
+              <TeamListView
+                orgList={orgList}
+                orgLoading={orgLoading}
+                orgError={orgError}
+                onBack={() => setMenuView("main")}
+                onSelectAdmin={(admin) => handleSelectAdmin(admin)}
+              />
             </div>
 
             {/* Admin detail view — placeholder, filled in Task 5 */}

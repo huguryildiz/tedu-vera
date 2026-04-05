@@ -2880,3 +2880,27 @@ body:not(.dark-mode) .ph-avatar-view-back:hover { background: #f1f5f9; }
   padding: 6px 16px;
 }
 body:not(.dark-mode) .ph-avatar-admin-row:hover { background: #f1f5f9; }
+
+/* ── Team list view ────────────────────────────────────────── */
+
+.ph-avatar-team-list {
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 4px 0 8px;
+}
+.ph-avatar-org-section { }
+.ph-avatar-org-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  padding: 10px 16px 4px;
+}
+.ph-avatar-org-label:first-child { padding-top: 6px; }
+.ph-avatar-team-empty {
+  padding: 16px;
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+  text-align: center;
+}
