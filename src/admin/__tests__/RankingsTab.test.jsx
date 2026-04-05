@@ -5,6 +5,16 @@ vi.mock("@/auth", () => ({
   useAuth: () => ({ activeOrganization: null }),
 }));
 
+vi.mock("recharts", () => ({
+  RadarChart: ({ children }) => <div data-testid="radar-chart">{children}</div>,
+  Radar: () => null,
+  PolarAngleAxis: () => null,
+  PolarGrid: () => null,
+  PolarRadiusAxis: () => null,
+  ResponsiveContainer: ({ children }) => <div>{children}</div>,
+  Tooltip: () => null,
+}));
+
 import RankingsPage from "../pages/RankingsPage";
 import { qaTest } from "../../test/qaTest.js";
 
@@ -139,5 +149,37 @@ describe("RankingsPage", () => {
     expect(screen.getAllByRole("img", { name: /1st place/i })).toHaveLength(1);
     expect(screen.getAllByRole("img", { name: /2nd place/i })).toHaveLength(1);
     expect(screen.getAllByRole("img", { name: /3rd place/i })).toHaveLength(1);
+  });
+
+  qaTest("compare.01", () => {
+    const summaryData = [
+      { id: "p1", title: "Alpha", members: "", totalAvg: 88, avg: { technical: 26 } },
+      { id: "p2", title: "Beta",  members: "", totalAvg: 77, avg: { technical: 22 } },
+    ];
+    render(
+      <RankingsPage
+        summaryData={summaryData}
+        criteriaConfig={[{ id: "technical", label: "Technical", shortLabel: "Tech", max: 30, color: "#3b82f6" }]}
+        periodName="Spring 2026"
+      />
+    );
+    const compareBtn = screen.getByRole("button", { name: /compare/i });
+    expect(compareBtn).toBeTruthy();
+    fireEvent.click(compareBtn);
+    expect(screen.getByText("Compare Projects")).toBeTruthy();
+  });
+
+  qaTest("compare.02", () => {
+    const summaryData = [
+      { id: "p1", title: "Only Project", members: "", totalAvg: 88, avg: {} },
+    ];
+    render(
+      <RankingsPage
+        summaryData={summaryData}
+        criteriaConfig={[]}
+        periodName="Spring 2026"
+      />
+    );
+    expect(screen.queryByRole("button", { name: /compare/i })).toBeNull();
   });
 });

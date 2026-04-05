@@ -99,3 +99,149 @@
 .fs-modal-centered .fs-modal-header { text-align: center; border-bottom: none; padding-bottom: 0; }
 .fs-modal-centered .fs-modal-body   { text-align: center; padding-top: 6px; }
 .fs-modal-centered .fs-modal-footer { justify-content: center; background: transparent; border-top: none; padding-top: 2px; }
+
+/* ═══════════════════════════════════════════════════
+   COMPARE PROJECTS MODAL
+   Prototype reference: docs/concepts/vera-premium-prototype.html
+   ═══════════════════════════════════════════════════ */
+
+/* Modal size override */
+.fs-modal.compare { max-width: 720px; }
+
+/* Project selectors row */
+.compare-selectors {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.compare-select {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 28px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color .15s;
+}
+
+.compare-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft, rgba(59,130,246,0.15));
+}
+
+.compare-vs {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+/* Legend */
+.compare-legend {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.compare-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.compare-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.compare-legend-a { background: rgba(59,130,246,0.7); }
+.compare-legend-b { background: rgba(139,92,246,0.7); }
+
+/* Two-column layout: chart left, stats right */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* Stats grid */
+.compare-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.compare-stat {
+  background: var(--bg-card);
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.compare-stat-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 5px;
+}
+
+.compare-stat-values {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.compare-stat-val {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.compare-val-a { color: var(--accent); }
+.compare-val-b { color: #8b5cf6; }
+
+/* Dark mode: glass card */
+.dark-mode .compare-stat {
+  background: rgba(10,15,28,0.50);
+}
+
+.dark-mode .compare-val-b { color: #c4b5fd; }
+
+/* Mobile: stack vertically */
+@media (max-width: 640px) {
+  .compare-grid {
+    grid-template-columns: 1fr;
+  }
+  .compare-selectors {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .compare-vs {
+    text-align: center;
+  }
+}

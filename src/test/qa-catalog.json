@@ -3887,5 +3887,25 @@
     "risk": "Juror with null name causes DB error at write time.",
     "coverageStrength": "Medium",
     "severity": "normal"
+  },
+  {
+    "id": "compare.01",
+    "module": "Scores / Rankings",
+    "area": "Compare Projects",
+    "story": "Open Compare modal",
+    "scenario": "compare button opens modal when ≥ 2 projects exist",
+    "whyItMatters": "Admin must be able to compare projects side-by-side from the Rankings page.",
+    "risk": "Low modal does not open or crashes on open.",
+    "coverageStrength": "Medium"
+  },
+  {
+    "id": "compare.02",
+    "module": "Scores / Rankings",
+    "area": "Compare Projects",
+    "story": "Compare button hidden",
+    "scenario": "compare button is absent when fewer than 2 projects exist",
+    "whyItMatters": "Modal requires two distinct projects; showing the button with <2 projects would let the user open a broken state.",
+    "risk": "Low — button visibility guard.",
+    "coverageStrength": "Low"
   }
 ]

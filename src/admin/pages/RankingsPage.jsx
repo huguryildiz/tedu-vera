@@ -7,6 +7,8 @@ import { downloadTable, generateTableBlob } from "../utils/downloadTable";
 import { useToast } from "@/shared/hooks/useToast";
 import { useAuth } from "@/auth";
 import SendReportModal from "@/admin/modals/SendReportModal";
+import { GitCompare } from "lucide-react";
+import CompareProjectsModal from "@/admin/modals/CompareProjectsModal";
 
 // ── Competition ranking ──────────────────────────────────────────
 // Tied scores share the same rank; next rank skips (1,1,3,4,…).
@@ -241,6 +243,7 @@ export default function RankingsPage({
   const [sortField, setSortField] = useState("avg");
   const [sortDir, setSortDir] = useState("desc");
   const [consensusPopoverOpen, setConsensusPopoverOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
   const [consensusPopoverPos, setConsensusPopoverPos] = useState({ top: 0, left: 0 });
   const consensusIconRef = useRef(null);
   const consensusPopoverRef = useRef(null);
@@ -482,6 +485,17 @@ export default function RankingsPage({
           >
             <DownloadIcon style={{ verticalAlign: "-1px" }} /> Export
           </button>
+          {summaryData.length >= 2 && (
+            <>
+              <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => setCompareOpen(true)}
+              >
+                <GitCompare size={14} style={{ verticalAlign: "-1px" }} /> Compare
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -739,6 +753,16 @@ export default function RankingsPage({
           });
         }}
       />
+
+      {compareOpen && (
+        <CompareProjectsModal
+          open={true}
+          onClose={() => setCompareOpen(false)}
+          projects={summaryData}
+          criteriaConfig={criteriaConfig}
+          rawScores={rawScores}
+        />
+      )}
 
       {/* ── Rankings Table ───────────────────────────────────── */}
       <div id="sub-rankings">
