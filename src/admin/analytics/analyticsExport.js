@@ -154,26 +154,27 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
   const margin = 14;
   const imgW = pageW - margin * 2;
 
-  // Build all datasets upfront
+  // Build all datasets upfront (UI section order)
   const progAvg    = buildProgrammeAveragesDataset(submittedData, activeOutcomes);
   const outByGroup = buildOutcomeByGroupDataset(dashboardStats, activeOutcomes);
-  const jurorCV    = buildJurorConsistencyDataset(dashboardStats, submittedData, activeOutcomes);
   const rubric     = buildRubricAchievementDataset(submittedData, activeOutcomes);
-  const mudek      = buildMudekMappingDataset(activeOutcomes, mudekLookup);
   const trend      = buildTrendDataset(trendData, semesterOptions, trendSemesterIds, activeOutcomes);
+  const jurorCV    = buildJurorConsistencyDataset(dashboardStats, submittedData, activeOutcomes);
+  const mudek      = buildMudekMappingDataset(activeOutcomes, mudekLookup);
 
+  // Sections in UI order (matches AnalyticsPage.jsx sections 02–08)
   const sections = [
-    { title: "Outcome Attainment Rate",        note: "% of evaluations scoring ≥70% per programme outcome",                                                              chartId: "pdf-chart-attainment-rate",    ds: progAvg,    captureMethod: "raster" },
-    { title: "Threshold Gap Analysis",          note: "Deviation from 70% competency threshold per outcome",                                                              chartId: "pdf-chart-threshold-gap",      ds: progAvg,    captureMethod: "raster" },
-    { title: "Outcome Achievement by Group",    note: "Normalized score (0–100%) per criterion per project group — 70% threshold reference",                              chartId: "pdf-chart-outcome-by-group",   ds: outByGroup, captureMethod: "svg"    },
-    { title: "Programme-Level Averages",        note: "Grand mean (%) ± 1σ per criterion with 70% threshold reference",                                                  chartId: "pdf-chart-programme-averages", ds: progAvg,    captureMethod: "svg"    },
-    { title: "Group Attainment Heatmap",        note: "Normalized score (%) per outcome per project group — cells below 70% threshold are flagged",                      chartId: "pdf-chart-group-heatmap",      ds: outByGroup, captureMethod: "raster" },
-    { title: "Inter-Rater Consistency Heatmap", note: "Coefficient of variation (CV = σ/μ × 100%) per project group — CV >25% indicates poor agreement",                 chartId: "pdf-chart-juror-cv",           ds: jurorCV,    captureMethod: "raster" },
-    { title: "Rubric Achievement Distribution", note: "Performance band breakdown per criterion — continuous improvement evidence",                                        chartId: "pdf-chart-rubric",             ds: rubric,     captureMethod: "svg"    },
-    { title: "Coverage Matrix",                 note: "Which programme outcomes are directly assessed by evaluation criteria",                                             chartId: "pdf-chart-coverage",           ds: mudek,      captureMethod: "raster" },
+    { title: "Outcome Attainment Rate",        note: "% of evaluations scoring ≥70% per programme outcome",                                                  chartId: "pdf-chart-attainment-rate",    ds: progAvg    },
+    { title: "Threshold Gap Analysis",          note: "Deviation from 70% competency threshold per outcome",                                                  chartId: "pdf-chart-threshold-gap",      ds: progAvg    },
+    { title: "Outcome Achievement by Group",    note: "Normalized score (0–100%) per criterion per project group — 70% threshold reference",                  chartId: "pdf-chart-outcome-by-group",   ds: outByGroup },
+    { title: "Rubric Achievement Distribution", note: "Performance band breakdown per criterion — continuous improvement evidence",                            chartId: "pdf-chart-rubric",             ds: rubric     },
+    { title: "Programme-Level Averages",        note: "Grand mean (%) ± 1σ per criterion with 70% threshold reference",                                      chartId: "pdf-chart-programme-averages", ds: progAvg    },
     ...(trend.rows.length >= 2
-      ? [{ title: "Attainment Trend", note: "Attainment rate (solid) and average score % (dashed) per programme outcome across evaluation periods", chartId: "pdf-chart-trend", ds: trend, captureMethod: "raster" }]
+      ? [{ title: "Attainment Trend", note: "Attainment rate (solid) and average score % (dashed) per programme outcome across evaluation periods", chartId: "pdf-chart-trend", ds: trend }]
       : []),
+    { title: "Group Attainment Heatmap",        note: "Normalized score (%) per outcome per project group — cells below 70% threshold are flagged",          chartId: "pdf-chart-group-heatmap",      ds: outByGroup },
+    { title: "Inter-Rater Consistency Heatmap", note: "Coefficient of variation (CV = σ/μ × 100%) per project group — CV >25% indicates poor agreement",     chartId: "pdf-chart-juror-cv",           ds: jurorCV    },
+    { title: "Coverage Matrix",                 note: "Which programme outcomes are directly assessed by evaluation criteria",                                 chartId: "pdf-chart-coverage",           ds: mudek      },
   ];
 
   // All chart sections start on page 2 (cover is page 1)
@@ -181,15 +182,9 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
   let startY = 14;
 
   for (let i = 0; i < sections.length; i++) {
-    const { title, note, chartId, ds, captureMethod } = sections[i];
+    const { title, note, chartId, ds } = sections[i];
 
     if (!ds.rows.length) continue;
-
-    // Page break check before section title
-    if (startY > pageH - 60) {
-      doc.addPage();
-      startY = 14;
-    }
 
     // Section title
     doc.setFontSize(12);
@@ -205,49 +200,21 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
       startY += 6;
     }
 
-    // Chart image — SVG vector or raster depending on captureMethod
-    {
-      let embedded = false;
-
-      // Try SVG vector embed first (for recharts charts)
-      if (captureMethod === "svg") {
-        try {
-          const { captureSvgForPdf } = await import("./captureSvgForPdf");
-          const svgEl = document.getElementById(chartId)?.querySelector("svg");
-          if (svgEl) {
-            const svgW = svgEl.width.baseVal.value || svgEl.clientWidth || 1;
-            const svgH = svgEl.height.baseVal.value || svgEl.clientHeight || 1;
-            const chartImgH = Math.min(imgW * (svgH / svgW), pageH * 0.65);
-            if (startY + chartImgH > pageH - 20) {
-              doc.addPage();
-              startY = 14;
-            }
-            embedded = await captureSvgForPdf(chartId, doc, margin, startY, imgW, chartImgH);
-            if (embedded) startY += chartImgH + 6;
-          }
-        } catch (svgErr) {
-          console.warn(`[PDF] SVG embed failed for ${chartId}, falling back to raster:`, svgErr);
+    // Chart image via html2canvas (JPEG for small file size)
+    try {
+      const captured = await captureChartImage(chartId);
+      if (captured) {
+        const { dataURL, width, height } = captured;
+        const chartImgH = Math.min(imgW / (width / height), pageH * 0.65);
+        if (startY + chartImgH > pageH - 20) {
+          doc.addPage();
+          startY = 14;
         }
+        doc.addImage(dataURL, "JPEG", margin, startY, imgW, chartImgH);
+        startY += chartImgH + 6;
       }
-
-      // Raster fallback (also primary path for captureMethod === "raster")
-      if (!embedded) {
-        try {
-          const captured = await captureChartImage(chartId);
-          if (captured) {
-            const { dataURL, width, height } = captured;
-            const chartImgH = Math.min(imgW / (width / height), pageH * 0.65);
-            if (startY + chartImgH > pageH - 20) {
-              doc.addPage();
-              startY = 14;
-            }
-            doc.addImage(dataURL, "PNG", margin, startY, imgW, chartImgH);
-            startY += chartImgH + 6;
-          }
-        } catch (rasterErr) {
-          console.error(`[PDF] Raster capture also failed for ${chartId}:`, rasterErr);
-        }
-      }
+    } catch (err) {
+      console.error(`[PDF] Chart capture failed for ${chartId}:`, err);
     }
 
     // Data table

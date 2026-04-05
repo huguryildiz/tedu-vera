@@ -1,11 +1,11 @@
 // src/admin/analytics/captureChartImage.js
 // ============================================================
-// Captures a chart DOM element as a PNG data URL for PDF embedding.
-// Applies pdf-capture-mode class transiently to force a light/white background.
+// Captures a chart DOM element as a JPEG data URL for PDF embedding.
+// Uses scale 2 + JPEG 0.75 for sharp images with small file size.
 // ============================================================
 
 /**
- * Captures a chart element as a PNG data URL for PDF embedding.
+ * Captures a chart element as a JPEG data URL for PDF embedding.
  * Temporarily applies the pdf-capture-mode class to ensure a light background
  * during capture, then removes it regardless of success or failure.
  *
@@ -25,7 +25,7 @@ export async function captureChartImage(elementId) {
       useCORS: true,
       logging: false,
     });
-    return { dataURL: canvas.toDataURL("image/png"), width: canvas.width, height: canvas.height };
+    return { dataURL: canvas.toDataURL("image/jpeg", 0.75), width: canvas.width, height: canvas.height };
   } finally {
     el.classList.remove("pdf-capture-mode");
   }
