@@ -2646,3 +2646,83 @@ body:not(.dark-mode) .ph-avatar-menu {
 body:not(.dark-mode) .ph-avatar-menu-item:hover { background: rgba(241,245,249,0.9); }
 body:not(.dark-mode) .ph-avatar-menu-item--danger:hover { background: rgba(239,68,68,0.06); }
 body:not(.dark-mode) .profile-readonly-section { background: #f8fafc; }
+
+.ph-avatar-menu-item-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.ph-avatar-menu-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  padding: 8px 16px 4px;
+}
+
+.profile-modal-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.profile-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 16px 12px;
+}
+
+.profile-modal-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.profile-modal-input {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--input, var(--card));
+  color: var(--text-primary);
+  font-size: 13.5px;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.profile-modal-input:focus { border-color: var(--accent); }
+.profile-modal-input:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.profile-modal-btn {
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+}
+.profile-modal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.profile-modal-btn--primary {
+  background: var(--accent);
+  color: #fff;
+}
+.profile-modal-btn--primary:hover:not(:disabled) { opacity: 0.88; }
+
+.profile-modal-btn--ghost {
+  background: transparent;
+  color: var(--text-secondary, var(--text-tertiary));
+  border: 1px solid var(--border);
+}
+.profile-modal-btn--ghost:hover:not(:disabled) { background: var(--muted, rgba(0,0,0,0.05)); }
