@@ -1433,8 +1433,8 @@ body:not(.dark-mode) .nav-divider{background:rgba(15,23,42,0.10) !important}
 .nav-theme-toggle:hover svg{transform:rotate(15deg)}
 .nav-theme-toggle .ntog-sun{display:block}
 .nav-theme-toggle .ntog-moon{display:none}
-body:not(.dark-mode) .nav-theme-toggle{background:rgba(255,255,255,0.75) !important;color:#334155 !important;border-color:rgba(15,23,42,0.08) !important;box-shadow:0 2px 8px rgba(15,23,42,0.06) !important}
-body:not(.dark-mode) .nav-theme-toggle:hover{background:rgba(255,255,255,0.95) !important}
+body:not(.dark-mode) .nav-theme-toggle{background:rgba(15,23,42,0.06) !important;color:#334155 !important;border-color:rgba(15,23,42,0.08) !important;box-shadow:0 2px 8px rgba(15,23,42,0.06) !important}
+body:not(.dark-mode) .nav-theme-toggle:hover{background:rgba(15,23,42,0.1) !important}
 body:not(.dark-mode) .nav-theme-toggle .ntog-sun{display:none}
 body:not(.dark-mode) .nav-theme-toggle .ntog-moon{display:block}
 
@@ -2049,6 +2049,56 @@ body:not(.dark-mode) .dj-crit.submit-fail{border-color:rgba(239,68,68,0.3)}
 .dj-done-list-wrap::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.15);border-radius:99px}
 /* Tighter rows in done list */
 .dj-done-list-wrap .dj-score-item{padding:8px 12px}
+/* ── Done step: premium project row ── */
+.dj-done-proj-row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid rgba(148,163,184,0.06);transition:background .12s}
+.dj-done-proj-row:last-child{border-bottom:none}
+.dj-done-proj-row:hover{background:rgba(148,163,184,0.03)}
+.dj-done-proj-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dj-done-proj-dot.complete{background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,0.4)}
+.dj-done-proj-dot.partial{background:#fbbf24;box-shadow:0 0 6px rgba(251,191,36,0.3)}
+.dj-done-proj-info{flex:1;min-width:0}
+.dj-done-proj-name{font-size:12.5px;font-weight:650;color:#e2e8f0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dj-done-proj-members{font-size:10.5px;color:#64748b;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dj-done-proj-bar-track{height:3px;background:rgba(148,163,184,0.08);border-radius:2px;margin-top:6px;overflow:hidden}
+.dj-done-proj-bar-fill{height:100%;border-radius:2px;transition:width .7s cubic-bezier(.22,1,.36,1)}
+.dj-done-proj-bar-fill.bar-a{background:linear-gradient(90deg,#22c55e,#4ade80)}
+.dj-done-proj-bar-fill.bar-b{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+.dj-done-proj-bar-fill.bar-c{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.dj-done-proj-bar-fill.bar-d{background:linear-gradient(90deg,#ef4444,#f87171)}
+.dj-done-proj-bar-fill.bar-partial{background:linear-gradient(90deg,#d97706,#fbbf24)}
+.dj-done-proj-score-wrap{display:flex;align-items:baseline;gap:1px;flex-shrink:0;padding:4px 9px;border-radius:8px;border:1px solid transparent}
+.dj-done-proj-score-num{font-family:var(--mono);font-size:14px;font-weight:750;line-height:1}
+.dj-done-proj-score-denom{font-family:var(--mono);font-size:10px;font-weight:500;opacity:.55}
+.dj-done-proj-score-wrap.grade-a{background:rgba(34,197,94,0.10);border-color:rgba(34,197,94,0.18);color:#4ade80}
+.dj-done-proj-score-wrap.grade-b{background:rgba(59,130,246,0.10);border-color:rgba(59,130,246,0.18);color:#93c5fd}
+.dj-done-proj-score-wrap.grade-c{background:rgba(251,191,36,0.09);border-color:rgba(251,191,36,0.18);color:#fbbf24}
+.dj-done-proj-score-wrap.grade-d{background:rgba(239,68,68,0.09);border-color:rgba(239,68,68,0.15);color:#f87171}
+.dj-done-proj-score-wrap.grade-partial{background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.12);color:#fbbf24}
+/* Light mode */
+body:not(.dark-mode) .dj-done-proj-name{color:#1e293b !important}
+body:not(.dark-mode) .dj-done-proj-members{color:#94a3b8 !important}
+body:not(.dark-mode) .dj-done-proj-bar-track{background:rgba(15,23,42,0.06) !important}
+body:not(.dark-mode) .dj-done-proj-dot.complete{background:#16a34a !important;box-shadow:0 0 5px rgba(22,163,74,0.3) !important}
+body:not(.dark-mode) .dj-done-proj-dot.partial{background:#d97706 !important;box-shadow:0 0 5px rgba(217,119,6,0.25) !important}
+body:not(.dark-mode) .dj-done-proj-bar-fill.bar-a{background:linear-gradient(90deg,#16a34a,#22c55e) !important}
+body:not(.dark-mode) .dj-done-proj-bar-fill.bar-b{background:linear-gradient(90deg,#1d4ed8,#3b82f6) !important}
+body:not(.dark-mode) .dj-done-proj-bar-fill.bar-c{background:linear-gradient(90deg,#d97706,#f59e0b) !important}
+body:not(.dark-mode) .dj-done-proj-bar-fill.bar-d{background:linear-gradient(90deg,#dc2626,#ef4444) !important}
+body:not(.dark-mode) .dj-done-proj-score-wrap.grade-a{background:rgba(22,163,74,0.07) !important;border-color:rgba(22,163,74,0.2) !important;color:#15803d !important}
+body:not(.dark-mode) .dj-done-proj-score-wrap.grade-b{background:rgba(37,99,235,0.07) !important;border-color:rgba(37,99,235,0.18) !important;color:#1d4ed8 !important}
+body:not(.dark-mode) .dj-done-proj-score-wrap.grade-c{background:rgba(217,119,6,0.07) !important;border-color:rgba(217,119,6,0.2) !important;color:#b45309 !important}
+body:not(.dark-mode) .dj-done-proj-score-wrap.grade-d{background:rgba(220,38,38,0.07) !important;border-color:rgba(220,38,38,0.18) !important;color:#b91c1c !important}
+body:not(.dark-mode) .dj-done-proj-score-wrap.grade-partial{background:rgba(217,119,6,0.07) !important;border-color:rgba(217,119,6,0.15) !important;color:#b45309 !important}
+/* ── Done step: criteria chips ── */
+.dj-done-crit-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;margin-bottom:4px}
+.dj-done-crit-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border-radius:6px;font-size:11px;background:rgba(100,116,139,0.12);color:#64748b;border:1px solid rgba(100,116,139,0.12)}
+.dj-done-crit-label{font-weight:500;opacity:0.8}
+.dj-done-crit-val{font-family:var(--mono);font-weight:700;font-size:11.5px}
+body:not(.dark-mode) .dj-done-crit-chip{background:rgba(100,116,139,0.08) !important;color:#475569 !important;border-color:rgba(100,116,139,0.12) !important}
+/* ── Done step: StudentNames sizing ── */
+.dj-done-proj-info .team-members-inline{flex-wrap:wrap;gap:3px;margin-top:3px}
+.dj-done-proj-info .team-member-chip{font-size:10.5px;padding:1px 5px 1px 2px;gap:3px}
+.dj-done-proj-info .team-member-avatar{width:16px;height:16px;font-size:8px}
 /* ── Done step: primary CTA light-mode override ── */
 body:not(.dark-mode) .dj-done-primary-btn{background:linear-gradient(140deg,#1d4ed8 0%,#2563eb 50%,#3b82f6 100%) !important;color:#fff !important;box-shadow:0 2px 6px rgba(29,78,216,0.18),0 6px 22px rgba(37,99,235,0.22),0 0 0 1px rgba(255,255,255,0.14) inset !important}
 body:not(.dark-mode) .dj-done-primary-btn:hover{background:linear-gradient(140deg,#1e40af 0%,#1d4ed8 50%,#2563eb 100%) !important;box-shadow:0 4px 12px rgba(29,78,216,0.25),0 8px 28px rgba(37,99,235,0.28),0 0 0 1px rgba(255,255,255,0.16) inset !important}
@@ -2613,3 +2663,72 @@ body:not(.dark-mode) .dj-cb-yes{background:rgba(59,130,246,0.08) !important;bord
 body:not(.dark-mode) .dj-cb-yes:hover{background:rgba(59,130,246,0.15) !important}
 body:not(.dark-mode) .dj-cb-no{color:#94a3b8 !important}
 body:not(.dark-mode) .dj-cb-no:hover{color:#64748b !important}
+
+/* ── Portrait Mode Refinement (375–430px, orientation:portrait) ── */
+@media (max-width: 430px) and (orientation: portrait) {
+  .jury-step {
+    padding: 12px 10px;
+  }
+  .jury-card {
+    padding: 18px 14px;
+  }
+  .jury-icon-box {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+  .jury-icon-box svg {
+    width: 18px;
+    height: 18px;
+  }
+  .jury-title {
+    font-size: 16px;
+    margin-bottom: 2px;
+  }
+  .jury-sub {
+    font-size: 11.5px;
+    margin-bottom: 12px;
+  }
+  .jury-card .form-group {
+    margin-bottom: 10px;
+  }
+  .jury-card .form-input {
+    padding: 8px 12px;
+    font-size: 13.5px;
+  }
+  .jury-card .form-label {
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+  .jury-card .btn-primary {
+    padding: 10px;
+    font-size: 13.5px;
+  }
+  .dj-stepper-bar {
+    padding: 6px 8px 8px !important;
+  }
+}
+
+/* ── Short-Viewport Portrait (max-height: 700px) ── */
+@media (max-height: 700px) and (orientation: portrait) {
+  .jury-icon-box {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+  }
+  .jury-icon-box svg {
+    width: 16px;
+    height: 16px;
+  }
+  .jury-sub {
+    display: none;
+  }
+  .jury-card .form-group {
+    margin-bottom: 8px;
+  }
+  .dj-stepper-bar {
+    padding: 5px 8px 7px !important;
+  }
+}
