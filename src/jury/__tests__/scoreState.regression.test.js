@@ -11,6 +11,8 @@ import {
   isAllComplete,
   countFilled,
   makeEmptyScores,
+  getProjectStatus,
+  countFilledForProject,
 } from "../utils/scoreState";
 
 // ── Fixtures ──────────────────────────────────────────────────
@@ -66,5 +68,28 @@ describe("scoreState — regression (Phase 9)", () => {
 
     // countFilled with undefined criteria must throw.
     expect(() => countFilled(scores, PROJECTS, undefined)).toThrow();
+  });
+});
+
+describe("scoreState — project status helpers", () => {
+  qaTest("scorestate.status.01", () => {
+    const scores = makeEmptyScores(PROJECTS, CUSTOM_CRITERIA);
+    expect(getProjectStatus(scores, "p1", CUSTOM_CRITERIA)).toBe("empty");
+    scores.p1.design = 30;
+    expect(getProjectStatus(scores, "p1", CUSTOM_CRITERIA)).toBe("partial");
+    scores.p1.innovation = 20;
+    scores.p1.impact = 25;
+    expect(getProjectStatus(scores, "p1", CUSTOM_CRITERIA)).toBe("scored");
+    expect(getProjectStatus(scores, "p2", CUSTOM_CRITERIA)).toBe("empty");
+  });
+
+  qaTest("scorestate.status.02", () => {
+    const scores = makeEmptyScores(PROJECTS, CUSTOM_CRITERIA);
+    expect(countFilledForProject(scores, "p1", CUSTOM_CRITERIA)).toBe(0);
+    scores.p1.design = 30;
+    expect(countFilledForProject(scores, "p1", CUSTOM_CRITERIA)).toBe(1);
+    scores.p1.innovation = 20;
+    scores.p1.impact = 25;
+    expect(countFilledForProject(scores, "p1", CUSTOM_CRITERIA)).toBe(3);
   });
 });

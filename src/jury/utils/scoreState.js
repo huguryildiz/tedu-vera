@@ -77,3 +77,18 @@ export const makeAllTouched = (projects, criteria) =>
       Object.fromEntries(criteria.map((c) => [_id(c), true])),
     ])
   );
+
+// ── Per-project status helpers ───────────────────────────────
+
+export const countFilledForProject = (scores, pid, criteria) =>
+  criteria.reduce(
+    (n, c) => n + (isScoreFilled(scores[pid]?.[_id(c)]) ? 1 : 0),
+    0
+  );
+
+export const getProjectStatus = (scores, pid, criteria) => {
+  const filled = countFilledForProject(scores, pid, criteria);
+  if (filled === 0) return "empty";
+  if (filled === criteria.length) return "scored";
+  return "partial";
+};

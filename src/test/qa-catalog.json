@@ -3907,5 +3907,27 @@
     "whyItMatters": "Modal requires two distinct projects; showing the button with <2 projects would let the user open a broken state.",
     "risk": "Low — button visibility guard.",
     "coverageStrength": "Low"
+  },
+  {
+    "id": "scorestate.status.01",
+    "module": "Jury / Scoring",
+    "area": "scoreState helpers",
+    "story": "Project status derivation",
+    "scenario": "returns correct status for scored, partial, and empty projects",
+    "whyItMatters": "Segmented bar and drawer both depend on accurate per-project status classification.",
+    "risk": "Wrong status would mislead jurors about their progress.",
+    "coverageStrength": "High",
+    "severity": "critical"
+  },
+  {
+    "id": "scorestate.status.02",
+    "module": "Jury / Scoring",
+    "area": "scoreState helpers",
+    "story": "Filled count per project",
+    "scenario": "counts filled criteria for a single project correctly",
+    "whyItMatters": "Drawer status badge shows N/M filled — must be accurate.",
+    "risk": "Wrong count would show incorrect progress in drawer items.",
+    "coverageStrength": "High",
+    "severity": "critical"
   }
 ]
