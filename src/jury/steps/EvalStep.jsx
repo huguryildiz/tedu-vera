@@ -55,8 +55,6 @@ export default function EvalStep({ state, onBack }) {
   const projId = state.project.project_id;
   const projIdx = state.current;
   const total = state.projects.length;
-  const hasPrev = projIdx > 0;
-  const hasNext = projIdx < total - 1;
 
   // Total score computation
   const totalMax = state.effectiveCriteria.reduce((s, c) => s + (c.max || 0), 0);
