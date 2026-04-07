@@ -7,7 +7,7 @@ import { downloadTable, generateTableBlob } from "../utils/downloadTable";
 import { useToast } from "@/shared/hooks/useToast";
 import { useAuth } from "@/auth";
 import SendReportModal from "@/admin/modals/SendReportModal";
-import { GitCompare } from "lucide-react";
+import { GitCompare, Filter } from "lucide-react";
 import CompareProjectsModal from "@/admin/modals/CompareProjectsModal";
 import { StudentNames } from "@/shared/ui/EntityMeta";
 import CustomSelect from "@/shared/ui/CustomSelect";
@@ -526,18 +526,7 @@ export default function RankingsPage({
         <div className="filter-panel-header">
           <div>
             <h4 style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-              </svg>
+              <Filter size={14} />
               Filter Scores
             </h4>
             <div className="filter-panel-sub">
