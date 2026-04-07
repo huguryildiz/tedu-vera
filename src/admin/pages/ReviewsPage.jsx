@@ -14,6 +14,7 @@ import { useReviewsFilters } from "../hooks/useReviewsFilters";
 import { useToast } from "@/shared/hooks/useToast";
 import { useAuth } from "@/auth";
 import SendReportModal from "@/admin/modals/SendReportModal";
+import { FilterButton } from "@/shared/ui/FilterButton.jsx";
 import {
   buildProjectMetaMap,
   buildJurorEditMap,
@@ -395,17 +396,11 @@ export default function ReviewsPage({
               onChange={(e) => { setMultiSearchQuery(e.target.value); setCurrentPage(1); }}
             />
           </div>
-          <button
-            type="button"
-            className={`btn btn-outline btn-sm${showFilter ? " active" : ""}`}
+          <FilterButton
+            activeCount={activeFilterCount}
+            isOpen={showFilter}
             onClick={() => { setShowFilter((v) => !v); setShowExport(false); }}
-          >
-            <Filter size={14} style={{ verticalAlign: "-1px" }} />
-            Filter
-            {activeFilterCount > 0 && (
-              <span className="filter-badge">{activeFilterCount}</span>
-            )}
-          </button>
+          />
           <div style={{ flex: 1 }} />
           <button
             type="button"
