@@ -1,8 +1,11 @@
 // src/admin/pages/ProjectsPage.jsx — Phase 7
 // Projects management page. Structure from prototype lines 14001–14241.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Filter } from "lucide-react";
 import { useToast } from "@/shared/hooks/useToast";
 import { useAuth } from "@/auth";
+import FbAlert from "@/shared/ui/FbAlert";
+import { FilterButton } from "@/shared/ui/FilterButton";
 import { useManagePeriods } from "../hooks/useManagePeriods";
 import { useManageProjects } from "../hooks/useManageProjects";
 import ImportCsvModal from "../modals/ImportCsvModal";
@@ -250,12 +253,11 @@ export default function ProjectsPage({
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-outline btn-sm" onClick={() => { setFilterOpen((v) => !v); setExportOpen(false); }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "-1px" }}>
-            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
-          </svg>
-          {" "}Filter
-        </button>
+        <FilterButton
+          activeCount={0}
+          isOpen={filterOpen}
+          onClick={() => { setFilterOpen((v) => !v); setExportOpen(false); }}
+        />
         <div className="jurors-toolbar-spacer" />
         <button className="btn btn-outline btn-sm" onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "-1px" }}>
@@ -288,9 +290,7 @@ export default function ProjectsPage({
           <div className="filter-panel-header">
             <div>
               <h4>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "-1px", marginRight: "4px", opacity: 0.5 }}>
-                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-                </svg>
+                <Filter size={14} style={{ verticalAlign: "-1px", marginRight: "4px", opacity: 0.5, display: "inline" }} />
                 Filter Projects
               </h4>
               <div className="filter-panel-sub">Narrow projects by evaluation coverage and advisor, or change sort order.</div>
@@ -343,9 +343,9 @@ export default function ProjectsPage({
 
       {/* Error */}
       {panelError && (
-        <div className="fb-alert fba-danger" style={{ marginBottom: "12px" }}>
-          <div className="fb-alert-body">{panelError}</div>
-        </div>
+        <FbAlert variant="danger" style={{ marginBottom: "12px" }}>
+          {panelError}
+        </FbAlert>
       )}
 
       {/* Table */}
