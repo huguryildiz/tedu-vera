@@ -3,21 +3,24 @@
 // Determines whether the app talks to the production or demo Supabase instance.
 //
 // Resolution order:
-//   1. URL param ?env=demo — explicit at entry (QR codes, landing page buttons)
-//   2. sessionStorage['vera_env'] — persisted within current browser tab/session
-//   3. Default → 'prod'
+//   1. URL pathname starts with /demo — implicit via React Router
+//   2. URL param ?env=demo — explicit at entry (QR codes)
+//   3. sessionStorage['vera_env'] — persisted within current browser tab/session
+//   4. Default → 'prod'
 
 const ENV_KEY = "vera_env";
 const JURY_ACCESS_KEY = "jury_access_period";
 
 // Auto-clear stale demo environment at module load.
-// Preserve it when: (a) URL has ?env=demo or ?explore, or (b) an active jury
+// Preserve it when: (a) URL indicates demo mode, or (b) an active jury
 // session exists (jury_access_period in sessionStorage — survives refresh).
 if (typeof window !== "undefined") {
   const _p = new URLSearchParams(window.location.search);
-  const hasEnvParam = _p.get("env") === "demo" || _p.has("explore");
+  const isDemo =
+    window.location.pathname.startsWith("/demo") ||
+    _p.get("env") === "demo";
   const hasActiveJury = !!sessionStorage.getItem(JURY_ACCESS_KEY);
-  if (!hasEnvParam && !hasActiveJury) {
+  if (!isDemo && !hasActiveJury) {
     sessionStorage.removeItem(ENV_KEY);
   }
 }
@@ -29,8 +32,12 @@ if (typeof window !== "undefined") {
  */
 export function resolveEnvironment() {
   if (typeof window === "undefined") return "prod";
+  // Pathname-based detection (React Router)
+  if (window.location.pathname.startsWith("/demo")) return "demo";
+  // Query param detection (for /eval?t=TOKEN&env=demo)
   const params = new URLSearchParams(window.location.search);
-  if (params.get("env") === "demo" || params.has("explore")) return "demo";
+  if (params.get("env") === "demo") return "demo";
+  // Session storage (set by DemoLayout or setEnvironment)
   const stored = sessionStorage.getItem(ENV_KEY);
   if (stored === "demo") return stored;
   return "prod";

@@ -4,7 +4,8 @@
 // with dark glassmorphism design matching vera-premium-prototype.html
 // ============================================================
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import useJuryState from "./useJuryState";
 import IdentityStep from "./steps/IdentityStep";
 import SemesterStep from "./steps/SemesterStep";
@@ -18,9 +19,34 @@ import MinimalLoaderOverlay from "@/shared/ui/MinimalLoaderOverlay";
 import StepperBar from "./components/StepperBar";
 import DraggableThemeToggle from "./components/DraggableThemeToggle";
 
-export default function JuryFlow({ onBack }) {
+// Step name → URL path segment
+const STEP_TO_PATH = {
+  identity: "identity",
+  period: "period",
+  semester: "period",
+  pin: "pin",
+  pin_reveal: "pin-reveal",
+  locked: "locked",
+  progress_check: "progress",
+  eval: "evaluate",
+  done: "complete",
+};
+
+export default function JuryFlow() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const state = useJuryState();
   const [loaderActive, setLoaderActive] = useState(false);
+
+  // Keep URL in sync with current step
+  useEffect(() => {
+    const seg = STEP_TO_PATH[state.step];
+    if (seg && location.pathname !== `/jury/${seg}`) {
+      navigate(`/jury/${seg}`, { replace: true });
+    }
+  }, [state.step]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const onBack = () => navigate("/", { replace: true });
 
   // Map step names to components
   // "period" is the hook-internal name for semester selection

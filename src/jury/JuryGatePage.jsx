@@ -3,6 +3,7 @@
 // Verifies token against DB; on success stores grant and calls onGranted().
 
 import { useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ShieldAlert, ArrowLeft, KeyRound, Loader2 } from "lucide-react";
 import { verifyEntryToken } from "../shared/api";
 import { setJuryAccess } from "../shared/storage";
@@ -19,7 +20,10 @@ function extractToken(input) {
   return s;
 }
 
-export default function JuryGatePage({ token, onGranted, onBack }) {
+export default function JuryGatePage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("t");
   const [status, setStatus]       = useState(token ? "loading" : "missing");
   const [manualToken, setManual]  = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -33,8 +37,7 @@ export default function JuryGatePage({ token, onGranted, onBack }) {
         if (!active) return;
         if (res?.ok) {
           setJuryAccess(res.period_id);
-          window.history.replaceState(null, "", "/jury-entry");
-          onGranted();
+          navigate("/jury/identity", { replace: true });
         } else {
           setStatus("denied");
         }
@@ -53,8 +56,7 @@ export default function JuryGatePage({ token, onGranted, onBack }) {
       const res = await verifyEntryToken(t);
       if (res?.ok) {
         setJuryAccess(res.period_id);
-        window.history.replaceState(null, "", "/jury-entry");
-        onGranted();
+        navigate("/jury/identity", { replace: true });
       } else {
         setStatus("denied");
       }
@@ -134,7 +136,7 @@ export default function JuryGatePage({ token, onGranted, onBack }) {
           </form>
 
           {/* Back */}
-          <button className="jg-back-btn" onClick={onBack}>
+          <button className="jg-back-btn" onClick={() => navigate("/", { replace: true })}>
             <ArrowLeft size={13} />
             Back to home
           </button>

@@ -1,6 +1,7 @@
 // src/admin/layout/AdminSidebar.jsx — Phase 1
 // Prototype source: lines 11580–11711
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth";
 import { useTheme } from "../../shared/theme/ThemeProvider";
 import Avatar from "@/shared/ui/Avatar";
@@ -13,28 +14,11 @@ function getInitials(name, email) {
 }
 function getAvatarColor(name) { return AVATAR_COLORS[(name||"?").charCodeAt(0) % AVATAR_COLORS.length]; }
 
-// Maps adminTab + scoresView → sidebar active state per nav item
-function isActive(itemKey, adminTab, scoresView) {
-  if (itemKey === "overview")      return adminTab === "overview";
-  if (itemKey === "rankings")      return adminTab === "scores" && scoresView === "rankings";
-  if (itemKey === "analytics")     return adminTab === "scores" && scoresView === "analytics";
-  if (itemKey === "grid")          return adminTab === "scores" && scoresView === "grid";
-  if (itemKey === "details")       return adminTab === "scores" && scoresView === "details";
-  if (itemKey === "jurors")        return adminTab === "jurors";
-  if (itemKey === "projects")      return adminTab === "projects";
-  if (itemKey === "periods")       return adminTab === "periods";
-  if (itemKey === "criteria")      return adminTab === "criteria";
-  if (itemKey === "outcomes")      return adminTab === "outcomes";
-  if (itemKey === "entry-control") return adminTab === "entry-control";
-  if (itemKey === "pin-lock")      return adminTab === "pin-lock";
-  if (itemKey === "audit-log")     return adminTab === "audit-log";
-  if (itemKey === "settings")      return adminTab === "settings";
-  return false;
-}
 
-export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switchScoresView, mobileOpen, onClose }) {
+export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClose }) {
   const { user, displayName, avatarUrl, organizations, activeOrganization, setActiveOrganization, isSuper, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
   const isDark = theme === "dark";
 
   const [tenantMenuOpen, setTenantMenuOpen] = useState(false);
@@ -42,14 +26,8 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
 
   const orgLabel = activeOrganization?.name || activeOrganization?.code || "Organization";
 
-  function navTo(tab) {
-    setAdminTab(tab);
-    onClose();
-  }
-
-  function navToScores(view) {
-    setAdminTab("scores");
-    switchScoresView(view);
+  function navTo(page) {
+    navigate(`${basePath}/${page}`);
     onClose();
   }
 
@@ -121,7 +99,7 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
       <nav className="sb-nav">
         <div className="sb-section">Overview</div>
         <button
-          className={`sb-item${isActive("overview", adminTab, scoresView) ? " active" : ""}`}
+          className={`sb-item${currentPage === "overview" ? " active" : ""}`}
           onClick={() => navTo("overview")}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -133,8 +111,8 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
 
         <div className="sb-section">Evaluation</div>
         <button
-          className={`sb-item${isActive("rankings", adminTab, scoresView) ? " active" : ""}`}
-          onClick={() => navToScores("rankings")}
+          className={`sb-item${currentPage === "rankings" ? " active" : ""}`}
+          onClick={() => navTo("rankings")}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" />
@@ -142,8 +120,8 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
           Rankings
         </button>
         <button
-          className={`sb-item${isActive("analytics", adminTab, scoresView) ? " active" : ""}`}
-          onClick={() => navToScores("analytics")}
+          className={`sb-item${currentPage === "analytics" ? " active" : ""}`}
+          onClick={() => navTo("analytics")}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" />
@@ -151,8 +129,8 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
           Analytics
         </button>
         <button
-          className={`sb-item${isActive("grid", adminTab, scoresView) ? " active" : ""}`}
-          onClick={() => navToScores("grid")}
+          className={`sb-item${currentPage === "heatmap" ? " active" : ""}`}
+          onClick={() => navTo("heatmap")}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -169,8 +147,8 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
           Heatmap
         </button>
         <button
-          className={`sb-item${isActive("details", adminTab, scoresView) ? " active" : ""}`}
-          onClick={() => navToScores("details")}
+          className={`sb-item${currentPage === "reviews" ? " active" : ""}`}
+          onClick={() => navTo("reviews")}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
@@ -181,7 +159,7 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
 
         <div className="sb-section">Manage</div>
         <button
-          className={`sb-item${isActive("jurors", adminTab, scoresView) ? " active" : ""}`}
+          className={`sb-item${currentPage === "jurors" ? " active" : ""}`}
           onClick={() => navTo("jurors")}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -191,7 +169,7 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
           Jurors
         </button>
         <button
-          className={`sb-item${isActive("projects", adminTab, scoresView) ? " active" : ""}`}
+          className={`sb-item${currentPage === "projects" ? " active" : ""}`}
           onClick={() => navTo("projects")}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -200,7 +178,7 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
           Projects
         </button>
         <button
-          className={`sb-item${isActive("periods", adminTab, scoresView) ? " active" : ""}`}
+          className={`sb-item${currentPage === "periods" ? " active" : ""}`}
           onClick={() => navTo("periods")}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -212,7 +190,7 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
 
         <div className="sb-section">Configuration</div>
         <button
-          className={`sb-item${isActive("criteria", adminTab, scoresView) ? " active" : ""}`}
+          className={`sb-item${currentPage === "criteria" ? " active" : ""}`}
           onClick={() => navTo("criteria")}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -221,7 +199,7 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
           Evaluation Criteria
         </button>
         <button
-          className={`sb-item${isActive("outcomes", adminTab, scoresView) ? " active" : ""}`}
+          className={`sb-item${currentPage === "outcomes" ? " active" : ""}`}
           onClick={() => navTo("outcomes")}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -232,7 +210,7 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
 
         <div className="sb-section">System</div>
         <button
-          className={`sb-item${isActive("entry-control", adminTab, scoresView) ? " active" : ""}`}
+          className={`sb-item${currentPage === "entry-control" ? " active" : ""}`}
           onClick={() => navTo("entry-control")}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -241,8 +219,8 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
           Entry Control
         </button>
         <button
-          className={`sb-item${isActive("pin-lock", adminTab, scoresView) ? " active" : ""}`}
-          onClick={() => navTo("pin-lock")}
+          className={`sb-item${currentPage === "pin-blocking" ? " active" : ""}`}
+          onClick={() => navTo("pin-blocking")}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 1v6" /><path d="M8 7h8" /><path d="M5 11h14v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" />
@@ -251,7 +229,7 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
           PIN Blocking
         </button>
         <button
-          className={`sb-item${isActive("audit-log", adminTab, scoresView) ? " active" : ""}`}
+          className={`sb-item${currentPage === "audit-log" ? " active" : ""}`}
           onClick={() => navTo("audit-log")}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -260,7 +238,7 @@ export default function AdminSidebar({ adminTab, scoresView, setAdminTab, switch
           Audit Log
         </button>
         <button
-          className={`sb-item${isActive("settings", adminTab, scoresView) ? " active" : ""}`}
+          className={`sb-item${currentPage === "settings" ? " active" : ""}`}
           onClick={() => navTo("settings")}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

@@ -3,30 +3,26 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/auth";
 
-const TAB_LABELS = {
+const PAGE_LABELS = {
   overview: "Overview",
+  rankings: "Rankings",
+  analytics: "Analytics",
+  heatmap: "Heatmap",
+  reviews: "Reviews",
   jurors: "Jurors",
   projects: "Projects",
   periods: "Evaluation Periods",
   criteria: "Evaluation Criteria",
   outcomes: "Outcomes & Mapping",
   "entry-control": "Entry Control",
-  "pin-lock": "PIN Blocking",
+  "pin-blocking": "PIN Blocking",
   "audit-log": "Audit Log",
   settings: "Settings",
   export: "Export",
 };
 
-const SCORES_VIEW_LABELS = {
-  rankings: "Rankings",
-  analytics: "Analytics",
-  grid: "Heatmap",
-  details: "Reviews",
-};
-
 export default function AdminHeader({
-  adminTab,
-  scoresView,
+  currentPage,
   onMobileMenuOpen,
   sortedPeriods = [],
   selectedPeriodId,
@@ -40,10 +36,7 @@ export default function AdminHeader({
   const dropdownRef = useRef(null);
 
   const orgLabel = activeOrganization?.name || activeOrganization?.code || "Organization";
-  const pageLabel =
-    adminTab === "scores"
-      ? (SCORES_VIEW_LABELS[scoresView] || "Rankings")
-      : (TAB_LABELS[adminTab] || "Overview");
+  const pageLabel = PAGE_LABELS[currentPage] || "Overview";
 
   const selectedPeriod = sortedPeriods.find((p) => p.id === selectedPeriodId);
   const periodLabel = selectedPeriod?.name || selectedPeriod?.semester_name || "—";

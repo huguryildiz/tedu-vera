@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 import { ChevronLeft, ChevronRight, Moon, Quote, Star, Sun } from "lucide-react";
 import { useTheme } from "@/shared/theme/ThemeProvider";
@@ -86,7 +87,9 @@ function useCountUp(target, duration = 1400) {
   return { count, ref };
 }
 
-export function LandingPage({ onStartJury, onAdmin, onSignIn }) {
+export function LandingPage() {
+  const navigate = useNavigate();
+  const demoToken = import.meta.env.VITE_DEMO_ENTRY_TOKEN;
   const { theme, setTheme } = useTheme();
   const stats = useLandingStats();
   const feedback = useLandingFeedback();
@@ -143,7 +146,7 @@ export function LandingPage({ onStartJury, onAdmin, onSignIn }) {
           <div className="sb-logo-text"><span>V</span>ERA</div>
         </div>
         <div className="landing-nav-links">
-          <button className="nav-signin" onClick={onSignIn}>
+          <button className="nav-signin" onClick={() => navigate("/login")}>
             Sign In{" "}
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M5 12h14M13 6l6 6-6 6" />
@@ -182,7 +185,10 @@ export function LandingPage({ onStartJury, onAdmin, onSignIn }) {
           <button className="btn-landing-primary" id="btn-try-demo" onClick={(e) => {
             const btn = e.currentTarget;
             btn.classList.add("dj-loading");
-            setTimeout(() => { btn.classList.remove("dj-loading"); onStartJury(); }, 500);
+            setTimeout(() => {
+              btn.classList.remove("dj-loading");
+              navigate(demoToken ? `/eval?t=${demoToken}&env=demo` : "/eval");
+            }, 500);
           }}>
             <svg className="dj-btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}>
               <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" />
@@ -194,7 +200,7 @@ export function LandingPage({ onStartJury, onAdmin, onSignIn }) {
               Experience Demo
             </span>
           </button>
-          <button className="btn-landing-secondary" onClick={onAdmin}>
+          <button className="btn-landing-secondary" onClick={() => navigate("/login")}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}>
               <rect width="7" height="9" x="3" y="3" rx="1.5" />
               <rect width="7" height="5" x="14" y="3" rx="1.5" />
