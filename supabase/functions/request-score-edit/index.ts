@@ -1,7 +1,8 @@
 // supabase/functions/request-score-edit/index.ts
 // ============================================================
-// Sends a score-edit request email to the tenant admin(s) and
-// CCs the super admin when a juror requests the ability to edit
+// Sends a score-edit request email to the tenant admin(s). CC to
+// super admin is controlled by security_policy.ccOnScoreEdit
+// (defaults to false) when a juror requests the ability to edit
 // their already-submitted scores.
 //
 // Payload: { periodId, jurorName, affiliation, sessionToken }
@@ -167,6 +168,19 @@ async function resolveAdminEmails(
   };
 }
 
+async function shouldCcSuperAdmin(client: ReturnType<typeof createClient>): Promise<boolean> {
+  try {
+    const { data } = await client
+      .from("security_policy")
+      .select("policy")
+      .eq("id", 1)
+      .single();
+    return data?.policy?.ccOnScoreEdit === true;
+  } catch {
+    return false; // default: do NOT CC on score edit
+  }
+}
+
 // ── HTML builder ─────────────────────────────────────────────
 
 function buildHtml(params: {
@@ -308,8 +322,11 @@ Deno.serve(async (req: Request) => {
     let sent = false;
     let sendError = "";
 
+    const ccEnabled = await shouldCcSuperAdmin(client);
+    const cc = ccEnabled ? emails.cc : [];
+
     if (resendKey) {
-      const result = await sendViaResend(resendKey, emails.to, subject, textBody, html, fromAddr, emails.cc);
+      const result = await sendViaResend(resendKey, emails.to, subject, textBody, html, fromAddr, cc);
       sent = result.ok;
       sendError = result.error || "";
     } else {
@@ -321,7 +338,7 @@ Deno.serve(async (req: Request) => {
       periodId: payload.periodId,
       jurorName: payload.jurorName,
       to: emails.to,
-      cc: emails.cc,
+      cc: cc.length ? cc : undefined,
       sent,
       error: sendError || undefined,
     }));
