@@ -91,7 +91,7 @@ export default function RubricSheet({ crit, score, outcomeLookup, onClose }) {
 
         {/* ── Rubric band rows (collapsible, closed by default) ── */}
         {rubric.length > 0 && (
-          <div className={`dj-rub-meta${bandsOpen ? " open" : ""}`} style={{ marginTop: 4 }}>
+          <div className={`dj-rub-meta dj-rub-bands${bandsOpen ? " open" : ""}`} style={{ marginTop: 4 }}>
             <button
               className="dj-rub-meta-toggle"
               type="button"

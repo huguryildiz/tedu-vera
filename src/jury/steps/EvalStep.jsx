@@ -29,7 +29,7 @@ const RUBRIC_TOUR_STEPS = [
     placement: "above",
   },
   {
-    selector: ".dj-rub-sheet-row",
+    selector: ".dj-rub-bands",
     title: "Scoring Bands",
     body: "Use these band descriptions to calibrate your score. The highlighted band updates automatically as you enter a value.",
     placement: "above",

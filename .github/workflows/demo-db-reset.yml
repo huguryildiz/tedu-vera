@@ -23,7 +23,7 @@ jobs:
           node-version: '20'
 
       - name: Generate demo seed
-        run: node scripts/generate_demo_premium_seed.js
+        run: node scripts/generate_demo_seed.js
 
       - name: Run seed SQL against demo database
         env:

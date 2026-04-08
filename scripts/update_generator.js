@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-let file = fs.readFileSync('scripts/generate_demo_premium_seed.js', 'utf8');
+let file = fs.readFileSync('scripts/generate_demo_seed.js', 'utf8');
 
 file = file.replace(
   "let adminCount = (o.code === 'TEDU-EE' || o.code === 'CMU-CS') ? 2 : 1;",
@@ -153,5 +153,5 @@ orgAdminIds.forEach((pId, i) => {
 `
 file = file.replace("// App actions", newAdminLogs);
 
-fs.writeFileSync('scripts/generate_demo_premium_seed.js', file);
+fs.writeFileSync('scripts/generate_demo_seed.js', file);
 console.log('updated correctly');
