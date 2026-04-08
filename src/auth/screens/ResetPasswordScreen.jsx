@@ -4,11 +4,7 @@
 
 import { useState } from "react";
 import FbAlert from "@/shared/ui/FbAlert";
-
-const isStrongPassword = (v) => {
-  const s = String(v || "");
-  return s.length >= 10 && /[a-z]/.test(s) && /[A-Z]/.test(s) && /\d/.test(s) && /[^A-Za-z0-9]/.test(s);
-};
+import { useSecurityPolicy } from "@/auth/SecurityPolicyContext";
 
 const EYE_ICON = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16" aria-hidden="true">
@@ -33,11 +29,24 @@ export default function ResetPasswordScreen({ onUpdatePassword, onBackToLogin })
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
+  const { minPasswordLength, requireSpecialChars } = useSecurityPolicy();
+
+  const isValidPassword = (v) => {
+    const s = String(v || "");
+    if (s.length < minPasswordLength) return false;
+    if (requireSpecialChars && !/[^A-Za-z0-9]/.test(s)) return false;
+    return true;
+  };
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    if (!isStrongPassword(password)) {
-      setError("Password must be at least 10 characters with uppercase, lowercase, digit, and symbol.");
+    if (!isValidPassword(password)) {
+      setError(
+        requireSpecialChars
+          ? `Password must be at least ${minPasswordLength} characters and include a special character.`
+          : `Password must be at least ${minPasswordLength} characters.`
+      );
       return;
     }
     if (password !== confirmPassword) { setError("Passwords do not match."); return; }
@@ -84,7 +93,7 @@ export default function ResetPasswordScreen({ onUpdatePassword, onBackToLogin })
                     type={showPass ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Min 10 chars, upper, lower, digit, symbol"
+                    placeholder={`Min ${minPasswordLength} chars${requireSpecialChars ? ", include a symbol" : ""}`}
                     autoComplete="new-password"
                     disabled={loading}
                     style={{ paddingRight: "40px" }}
