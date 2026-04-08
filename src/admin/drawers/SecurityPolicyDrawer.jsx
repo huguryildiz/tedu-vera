@@ -7,7 +7,7 @@
 //   policy  — {
 //     googleOAuth, emailPassword, rememberMe,
 //     minPasswordLength, maxLoginAttempts, requireSpecialChars,
-//     tokenTtl, allowMultiDevice
+//     tokenTtl, ccOnPinReset, ccOnScoreEdit
 //   }
 //   onSave  — (policy) => Promise<void>
 //   error   — string | null
@@ -26,8 +26,8 @@ const DEFAULT_POLICY = {
   maxLoginAttempts: 5,
   requireSpecialChars: true,
   tokenTtl: "24h",
-  allowMultiDevice: false,
-  ccSuperAdminOnPinReset: true,
+  ccOnPinReset: true,
+  ccOnScoreEdit: false,
 };
 
 function Toggle({ checked, onChange, disabled }) {
@@ -229,20 +229,20 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
             How long jury entry tokens remain valid after generation.
           </div>
         </div>
-        <ToggleRow
-          title="Allow Multi-Device Jury Sessions"
-          desc="Let jurors use the same PIN on multiple devices simultaneously"
-          checked={form.allowMultiDevice}
-          onChange={(v) => set("allowMultiDevice", v)}
-          disabled={saving}
-        />
 
         <SectionLabel>Notifications</SectionLabel>
         <ToggleRow
           title="CC Me on PIN Reset Requests"
-          desc="Receive a copy when locked-out jurors request a PIN reset from their coordinator"
-          checked={form.ccSuperAdminOnPinReset}
-          onChange={(v) => set("ccSuperAdminOnPinReset", v)}
+          desc="Receive a copy when a juror requests a PIN reset"
+          checked={form.ccOnPinReset}
+          onChange={(v) => set("ccOnPinReset", v)}
+          disabled={saving}
+        />
+        <ToggleRow
+          title="CC Me on Score Edit Requests"
+          desc="Receive a copy when a juror requests score editing"
+          checked={form.ccOnScoreEdit}
+          onChange={(v) => set("ccOnScoreEdit", v)}
           disabled={saving}
         />
       </div>
