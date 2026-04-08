@@ -13,9 +13,10 @@ import { createContext, useCallback, useEffect, useMemo, useRef, useState } from
 import { supabase, clearPersistedSession } from "@/shared/lib/supabaseClient";
 import { getActiveOrganizationId, setActiveOrganizationId } from "@/shared/storage/adminStorage";
 import { getProfile, upsertProfile } from "@/shared/api/admin/profiles";
-import { getSession, listOrganizationsPublic } from "@/shared/api";
+import { getSession, listOrganizationsPublic, getSecurityPolicy } from "@/shared/api";
 import { KEYS } from "@/shared/storage/keys";
 import { DEMO_MODE } from "@/shared/lib/demoMode";
+import { SecurityPolicyContext, DEFAULT_POLICY } from "./SecurityPolicyContext";
 
 export const AuthContext = createContext(null);
 const DEMO_BYPASS_UIDS = (import.meta.env.VITE_DEMO_BYPASS_UIDS || "")
@@ -68,6 +69,7 @@ export default function AuthProvider({ children }) {
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [profileIncomplete, setProfileIncomplete] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [policy, setPolicy] = useState(DEFAULT_POLICY);
   const mountedRef = useRef(true);
   const hasSessionRef = useRef(false);
 
@@ -260,6 +262,11 @@ export default function AuthProvider({ children }) {
       clearTimeout(bootstrapTimeout);
     };
 
+    // Fetch security policy in parallel with session init (silent fallback).
+    getSecurityPolicy()
+      .then((p) => { if (mountedRef.current && p) setPolicy(p); })
+      .catch(() => {});
+
     // Subscribe first so auth events are not missed while initial session loads.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       handleAuthChange(event, newSession).finally(() => {
@@ -298,6 +305,7 @@ export default function AuthProvider({ children }) {
   }, []);
 
   const signIn = useCallback(async (email, password, rememberMe = false, captchaToken = "") => {
+    if (!policy.emailPassword) throw new Error("Email/password login is disabled.");
     try { localStorage.setItem(KEYS.ADMIN_REMEMBER_ME, String(rememberMe)); }
     catch {}
     const credentials = captchaToken
@@ -307,9 +315,10 @@ export default function AuthProvider({ children }) {
     if (error) throw error;
     if (!rememberMe) clearPersistedSession();
     return data;
-  }, []);
+  }, [policy.emailPassword]);
 
   const signInWithGoogle = useCallback(async (rememberMe = false) => {
+    if (!policy.googleOAuth) throw new Error("Google sign-in is disabled.");
     // Persist preference before redirect (checked in handleAuthChange after redirect)
     try { localStorage.setItem(KEYS.ADMIN_REMEMBER_ME, String(rememberMe)); }
     catch {}
@@ -321,7 +330,7 @@ export default function AuthProvider({ children }) {
     });
     if (error) throw error;
     return data;
-  }, []);
+  }, [policy.googleOAuth]);
 
   const completeProfile = useCallback(async ({ name, university, department, tenantId }) => {
     // Update user metadata to mark profile as completed
@@ -442,9 +451,16 @@ export default function AuthProvider({ children }) {
        avatarUrl, setAvatarUrl, isSuper, isPending, demoBypass, profileIncomplete, loading, signIn,
        signInWithGoogle, signUp, signOut, resetPassword, updatePassword, refreshMemberships, completeProfile]);
 
+  const policyContextValue = useMemo(
+    () => ({ policy, updatePolicy: setPolicy }),
+    [policy]
+  );
+
   return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+    <SecurityPolicyContext.Provider value={policyContextValue}>
+      <AuthContext.Provider value={value}>
+        {children}
+      </AuthContext.Provider>
+    </SecurityPolicyContext.Provider>
   );
 }
