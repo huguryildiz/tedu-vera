@@ -1417,103 +1417,122 @@ function adminFor(orgCode) { return (orgAdminMap[orgCode] || [])[0] || null; }
 
 orgs.forEach(o => {
   const adminId = adminFor(o.code);
-  (orgAdminMap[o.code] || []).forEach(pId => {
-    auditObjList.push({ action:'admin.create',resType:'profile',resId:pId,orgId:o.id,userId:null,details:'{"role":"org_admin"}',timeStr:sqlTs(orgCreatedDates[o.code],randInt(0,48)) });
-  });
   // Admin login events (2-3 per org, around org creation)
   if (adminId) {
     for (let li = 0; li < randInt(2, 3); li++) {
-      auditObjList.push({ action:'admin.login',resType:'profile',resId:adminId,orgId:o.id,userId:adminId,details:'{"method":"email"}',timeStr:randSqlTs(orgCreatedDates[o.code],li*48,li*48+48) });
+      auditObjList.push({ action:'admin.login',resType:'profiles',resId:adminId,orgId:o.id,userId:adminId,details:`{"method":"email","organization_id":"${o.id}"}`,timeStr:randSqlTs(orgCreatedDates[o.code],li*48,li*48+48) });
     }
   }
 });
 orgAppIds.forEach(oa => {
   const o = orgs.find(x => x.code === oa.org); const st = appStatuses[orgs.indexOf(o)];
-  if (st === 'approved' || st === 'rejected') auditObjList.push({ action:`application.${st}`,resType:'org_application',resId:oa.id,orgId:o.id,userId:null,details:`{"action":"${st}"}`,timeStr:sqlTs(orgCreatedDates[o.code],randInt(48,168)) });
+  if (st === 'approved' || st === 'rejected') {
+    const appDetails = st === 'approved'
+      ? `{"applicant_email":"admin-${oa.org.toLowerCase()}@example.com","applicant_name":"Admin ${oa.org}"}`
+      : `{"applicant_email":"admin-${oa.org.toLowerCase()}@example.com","applicant_name":"Admin ${oa.org}","rejection_reason":"Did not meet requirements"}`;
+    auditObjList.push({ action:`application.${st}`,resType:'org_applications',resId:oa.id,orgId:o.id,userId:null,details:appDetails,timeStr:sqlTs(orgCreatedDates[o.code],randInt(48,168)) });
+  }
+});
+
+// outcome.create — 1-2 entries per org with outcomes
+orgs.forEach(o => {
+  const adminId = adminFor(o.code);
+  if (o.outcomesData && o.outcomesData.length > 0) {
+    // Sample 1-2 outcomes to document as created
+    const fwId = uuid('fw-' + o.code);
+    const outcomeSample = o.outcomesData.slice(0, randInt(1, Math.min(2, o.outcomesData.length)));
+    outcomeSample.forEach((oc, i) => {
+      auditObjList.push({
+        action:'outcome.create',
+        resType:'framework_outcomes',
+        resId:oc.id,
+        orgId:o.id,
+        userId:adminId,
+        details:`{"framework_id":"${fwId}","code":"${oc.code}","label":"${escapeSql(oc.label)}"}`,
+        timeStr:randSqlTs(orgCreatedDates[o.code],72+i*48,168+i*48)
+      });
+    });
+  }
 });
 
 periodData.forEach(pd => {
   const o = orgs.find(x => x.code === pd.org);
   const adminId = adminFor(pd.org);
   const myProjs = projList.filter(p => p.pId === pd.id);
-  const myJurors = jurorIdList.filter(j => j.org === pd.org);
   const myTokens = tokenList.filter(t => t.pId === pd.id);
   const myAuths = authList.filter(a => a.pId === pd.id);
 
   const ev = pd.evalDay, evD = pd.evalDays;
 
-  auditObjList.push({ action:'period.create',resType:'period',resId:pd.id,orgId:o.id,userId:adminId,details:`{"name":"${escapeSql(pd.name)}","start_date":"${pd.start}","end_date":"${pd.end}"}`,timeStr:randSqlTs(pd.start,24,168) });
-
+  // snapshot.freeze — when period is locked (criteria/outcomes frozen)
   if (pd.isCur) {
-    auditObjList.push({ action:'snapshot.freeze',resType:'period',resId:pd.id,orgId:o.id,userId:adminId,details:'{"action":"frozen"}',timeStr:sqlTs(ev,-24) });
+    const periodCrits = periodCriteriaMap[pd.id] || [];
+    auditObjList.push({ action:'snapshot.freeze',resType:'periods',resId:pd.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","criteria_count":${periodCrits.length},"outcomes_count":${o.outcomesData ? o.outcomesData.length : 0}}`,timeStr:sqlTs(ev,-24) });
   } else {
-    auditObjList.push({ action:'period.lock',resType:'period',resId:pd.id,orgId:o.id,userId:adminId,details:'{"action":"locked"}',timeStr:sqlTs(ev,(evD+7)*24) });
+    // period.lock — admin closes period for submissions
+    auditObjList.push({ action:'period.lock',resType:'periods',resId:pd.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","reason":"Evaluation period ended"}`,timeStr:sqlTs(ev,(evD+7)*24) });
   }
 
   // Admin login around eval day
   if (adminId) {
-    auditObjList.push({ action:'admin.login',resType:'profile',resId:adminId,orgId:o.id,userId:adminId,details:'{"method":"email"}',timeStr:randSqlTs(ev,-2,2) });
-    if (pd.isCur) auditObjList.push({ action:'admin.login',resType:'profile',resId:adminId,orgId:o.id,userId:adminId,details:'{"method":"email"}',timeStr:randSqlTs(ev,evD*8,evD*16) });
+    auditObjList.push({ action:'admin.login',resType:'profiles',resId:adminId,orgId:o.id,userId:adminId,details:`{"method":"email","organization_id":"${o.id}"}`,timeStr:randSqlTs(ev,-2,2) });
+    if (pd.isCur) auditObjList.push({ action:'admin.login',resType:'profiles',resId:adminId,orgId:o.id,userId:adminId,details:`{"method":"email","organization_id":"${o.id}"}`,timeStr:randSqlTs(ev,evD*8,evD*16) });
   }
 
-  if (myJurors.length > 0) {
-    const ic = Math.min(Math.floor(myJurors.length * 0.6), myJurors.length);
-    auditObjList.push({ action:'juror.import',resType:'juror',resId:myJurors[0].id,orgId:o.id,userId:adminId,details:`{"imported_count":${ic},"source":"csv upload"}`,timeStr:randSqlTs(ev,-720,-336) });
-    myJurors.slice(ic).slice(0, 3).forEach((j, i) => {
-      auditObjList.push({ action:'juror.create',resType:'juror',resId:j.id,orgId:o.id,userId:adminId,details:`{"juror_name":"${escapeSql(j.n.substring(0,25))}"}`,timeStr:randSqlTs(ev,-336+i*24,-240+i*24) });
-    });
-  }
-
-  if (myProjs.length > 0) {
-    auditObjList.push({ action:'project.import',resType:'period',resId:pd.id,orgId:o.id,userId:adminId,details:`{"imported_count":${myProjs.length},"source":"csv upload"}`,timeStr:randSqlTs(ev,-600,-240) });
-    if (myProjs.length > 2) auditObjList.push({ action:'project.create',resType:'project',resId:myProjs[myProjs.length-1].id,orgId:o.id,userId:adminId,details:`{"title":"${escapeSql(myProjs[myProjs.length-1].title.substring(0,40))}"}`,timeStr:randSqlTs(ev,-192,-96) });
-    if (myProjs.length > 3 && random() > 0.4) auditObjList.push({ action:'project.update',resType:'project',resId:myProjs[1].id,orgId:o.id,userId:adminId,details:'{"field":"members","reason":"team member change"}',timeStr:randSqlTs(ev,-144,-48) });
-    if (myProjs.length > 1 && random() > 0.6) auditObjList.push({ action:'project.delete',resType:'project',resId:myProjs[myProjs.length-1].id,orgId:o.id,userId:adminId,details:'{"reason":"duplicate entry removed"}',timeStr:randSqlTs(ev,-96,-48) });
-  }
-
+  // token.generate — admin creates entry token
   myTokens.forEach((tok, i) => {
-    const reason = i === 0 ? 'Jury session QR code' : i === 1 ? 'Backup QR code' : i === 2 ? 'Staff entry token' : 'Short-lived test token';
-    auditObjList.push({ action:'token.generate',resType:'entry_token',resId:tok.id,orgId:o.id,userId:adminId,details:`{"reason":"${reason}"}`,timeStr:randSqlTs(ev,-336+i*24,-168+i*24) });
-  });
-  myTokens.filter(t => t.isRevoked).forEach(tok => {
-    auditObjList.push({ action:'token.revoke',resType:'entry_token',resId:tok.id,orgId:o.id,userId:adminId,details:'{"reason":"manual revocation"}',timeStr:randSqlTs(ev,-48,evD*12) });
+    const ttl = i === 0 ? '24h' : i === 1 ? '24h' : i === 2 ? '72h' : '1h';
+    const expiresAt = new Date(new Date().getTime() + (ttl.includes('24') ? 24 : ttl.includes('72') ? 72 : 1) * 3600000).toISOString();
+    auditObjList.push({ action:'token.generate',resType:'entry_tokens',resId:tok.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","expires_at":"${expiresAt}","ttl":"${ttl}"}`,timeStr:randSqlTs(ev,-336+i*24,-168+i*24) });
   });
 
-  // evaluation.complete — matches RPC action name
+  // token.revoke — admin revokes entry token
+  myTokens.filter(t => t.isRevoked).forEach(tok => {
+    auditObjList.push({ action:'token.revoke',resType:'entry_tokens',resId:tok.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","token_id":"${tok.id}"}`,timeStr:randSqlTs(ev,-48,evD*12) });
+  });
+
+  // evaluation.complete — juror-initiated event (user_id=NULL)
   myAuths.filter(a => a.semanticState==='Completed').forEach((a,i) => {
     if (myProjs.length === 0) return;
-    auditObjList.push({ action:'evaluation.complete',resType:'score_sheet',resId:uuid(`ss-${a.jId}-${myProjs[i%myProjs.length].id}`),orgId:o.id,userId:null,details:`{"juror_activity":"finalized","actor_name":"${escapeSql(a.name)}","juror_id":"${a.jId}"}`,timeStr:randSqlTs(ev,2+i*2,evD*16+i*2) });
+    auditObjList.push({ action:'evaluation.complete',resType:'juror_period_auth',resId:a.jId,orgId:o.id,userId:null,details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}"}`,timeStr:randSqlTs(ev,2+i*2,evD*16+i*2) });
   });
-  myAuths.filter(a => a.semanticState==='Editing').slice(0,2).forEach((a,i) => {
-    if (myProjs.length === 0) return;
-    auditObjList.push({ action:'score.update',resType:'score_sheet',resId:uuid(`ss-${a.jId}-${myProjs[0].id}`),orgId:o.id,userId:null,details:`{"corrections":2,"reason":"edit window granted","actor_name":"${escapeSql(a.name)}","juror_id":"${a.jId}"}`,timeStr:randSqlTs(ev,evD*18+i*4,evD*22+i*4) });
+
+  // juror.pin_locked — juror locked out after max failed PIN attempts
+  myAuths.filter(a => a.semanticState==='Locked').slice(0,1).forEach(a => {
+    auditObjList.push({ action:'juror.pin_locked',resType:'juror_period_auth',resId:a.jId,orgId:o.id,userId:null,details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}","failed_attempts":${randInt(3,5)},"locked_until":"${new Date(new Date().getTime() + 30 * 60000).toISOString()}"}`,timeStr:randSqlTs(ev,2,evD*12) });
   });
+
+  // juror.pin_unlocked — admin unlocks locked juror
+  myAuths.filter(a => a.semanticState==='Locked').slice(0,1).forEach(a => {
+    auditObjList.push({ action:'juror.pin_unlocked',resType:'juror_period_auth',resId:a.jId,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","juror_name":"${escapeSql(a.name)}"}`,timeStr:randSqlTs(ev,evD*12+1,evD*14) });
+  });
+
+  // pin.reset — admin resets juror PIN
   if (pd.isCur || pd.histIdx <= 1) {
     myAuths.filter(a => a.semanticState==='Completed'||a.semanticState==='InProgress').slice(0,pd.isCur?2:1).forEach((a,i) => {
-      auditObjList.push({ action:'pin.reset',resType:'juror_period_auth',resId:a.jId,orgId:o.id,userId:adminId,details:`{"juror_name":"${escapeSql(a.name)}","reason":"forgotten pin"}`,timeStr:randSqlTs(ev,1+i*3,evD*10+i*3) });
+      auditObjList.push({ action:'pin.reset',resType:'juror_period_auth',resId:a.jId,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","juror_name":"${escapeSql(a.name)}"}`,timeStr:randSqlTs(ev,1+i*3,evD*10+i*3) });
     });
   }
-  myAuths.filter(a => a.semanticState==='Locked').slice(0,1).forEach(a => {
-    auditObjList.push({ action:'juror.pin_locked',resType:'juror_period_auth',resId:a.jId,orgId:o.id,userId:null,details:`{"actor_name":"${escapeSql(a.name)}","attempts":${randInt(3,5)}}`,timeStr:randSqlTs(ev,2,evD*12) });
-    // juror.pin_unlocked — admin unlocks the locked juror
-    auditObjList.push({ action:'juror.pin_unlocked',resType:'juror_period_auth',resId:a.jId,orgId:o.id,userId:adminId,details:`{"juror_name":"${escapeSql(a.name)}"}`,timeStr:randSqlTs(ev,evD*12+1,evD*14) });
-  });
-  myAuths.filter(a => a.semanticState==='Blocked').slice(0,1).forEach(a => {
-    auditObjList.push({ action:'juror.blocked',resType:'juror_period_auth',resId:a.jId,orgId:o.id,userId:adminId,details:`{"juror_name":"${escapeSql(a.name)}","reason":"admin action"}`,timeStr:randSqlTs(ev,1,evD*8) });
-  });
-  myAuths.filter(a => a.semanticState==='Editing').slice(0,1).forEach(a => {
-    auditObjList.push({ action:'juror.edit_enabled',resType:'juror_period_auth',resId:a.jId,orgId:o.id,userId:adminId,details:`{"juror_name":"${escapeSql(a.name)}","reason":"Late extension","duration_minutes":60}`,timeStr:randSqlTs(ev,evD*16,evD*20) });
-  });
-  if (pd.histIdx === 0 && random() > 0.5) {
-    auditObjList.push({ action:'period.update',resType:'period',resId:pd.id,orgId:o.id,userId:adminId,details:'{"field":"end_date","reason":"calendar adjustment"}',timeStr:randSqlTs(pd.start,48,240) });
+
+  // criteria.save — full criteria & outcome mappings setup
+  const periodCrits = periodCriteriaMap[pd.id] || [];
+  if (periodCrits.length > 0) {
+    const outcomeMappingEstimate = periodCrits.length * (o.outcomesData ? o.outcomesData.length : 2);
+    auditObjList.push({ action:'criteria.save',resType:'period_criteria',resId:pd.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","criteria_count":${periodCrits.length},"outcome_mapping_count":${outcomeMappingEstimate},"operation":"upsert"}`,timeStr:randSqlTs(pd.start,120,336) });
   }
-  // Criteria update log for evolved periods
-  if (pd.histIdx > 0 && (criteriaEvolution[pd.org] || {})[pd.histIdx]) {
-    auditObjList.push({ action:'criteria.update',resType:'period',resId:pd.id,orgId:o.id,userId:adminId,details:'{"reason":"criteria weights adjusted for this period"}',timeStr:randSqlTs(pd.start,72,240) });
+
+  // export.scores — admin exports score data
+  const myJurors = jurorIdList.filter(j => j.org === pd.org);
+  if (pd.isCur && myProjs.length > 0) {
+    auditObjList.push({ action:'export.scores',resType:'score_sheets',resId:pd.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","format":"xlsx","row_count":${Math.min(myProjs.length * myJurors.length, 100)}}`,timeStr:randSqlTs(ev,evD*12,evD*18) });
+  } else if (!pd.isCur && pd.histIdx <= 2) {
+    auditObjList.push({ action:'export.scores',resType:'score_sheets',resId:pd.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","format":"xlsx","row_count":45}`,timeStr:sqlTs(ev,(evD+10)*24) });
   }
-  // Export log for completed (locked) periods
-  if (!pd.isCur && pd.histIdx <= 2) {
-    auditObjList.push({ action:'export.scores',resType:'period',resId:pd.id,orgId:o.id,userId:adminId,details:'{"format":"xlsx","scope":"full"}',timeStr:sqlTs(ev,(evD+10)*24) });
+
+  // export.rankings — admin exports rankings
+  if (pd.isCur) {
+    const scoredCount = myAuths.filter(a => a.semanticState === 'Completed').length;
+    auditObjList.push({ action:'export.rankings',resType:'score_sheets',resId:pd.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","format":"pdf","row_count":${Math.max(10, Math.floor(scoredCount * 0.6))}}`,timeStr:randSqlTs(ev,evD*8+2,evD*20) });
   }
 });
 
