@@ -51,92 +51,136 @@ export default function DraggableThemeToggle() {
     return () => clearInterval(id);
   }, [isDark]);
 
+  // Shared drag logic (used by both touch and mouse)
+  const startDrag = (el, clientX, clientY, ease) => {
+    const rect = el.getBoundingClientRect();
+    if (!dragRef.current.usingAbsolute) {
+      el.style.right = "auto";
+      el.style.bottom = "auto";
+      el.style.left = rect.left + "px";
+      el.style.top = rect.top + "px";
+      dragRef.current.usingAbsolute = true;
+    }
+    el.style.transition = "none";
+    dragRef.current.active = true;
+    dragRef.current.moved = false;
+    dragRef.current.startClientX = clientX;
+    dragRef.current.startClientY = clientY;
+    dragRef.current.startBtnX = rect.left;
+    dragRef.current.startBtnY = rect.top;
+  };
+
+  const moveDrag = (el, clientX, clientY) => {
+    if (!dragRef.current.active) return;
+    const dx = clientX - dragRef.current.startClientX;
+    const dy = clientY - dragRef.current.startClientY;
+
+    if (!dragRef.current.moved && Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
+      dragRef.current.moved = true;
+    }
+
+    if (dragRef.current.moved) {
+      const newX = Math.max(0, Math.min(window.innerWidth - SIZE, dragRef.current.startBtnX + dx));
+      const newY = Math.max(56, Math.min(window.innerHeight - SIZE - 20, dragRef.current.startBtnY + dy));
+      el.style.left = newX + "px";
+      el.style.top = newY + "px";
+
+      if (!isDark && raysRef.current) {
+        spinRef.current.rot = (spinRef.current.rot + dx * 0.04) % 360;
+        raysRef.current.setAttribute("transform", `rotate(${spinRef.current.rot} 12 12)`);
+      }
+      if (isDark && moonRef.current) {
+        const tilt = Math.max(-25, Math.min(25, dx * 0.3));
+        moonRef.current.style.transform = `scale(1) rotate(${tilt}deg)`;
+      }
+    }
+  };
+
+  const endDrag = (el, ease, onClickToggle) => {
+    const wasMoved = dragRef.current.moved;
+    dragRef.current.active = false;
+
+    if (isDark && moonRef.current) {
+      moonRef.current.style.transform = "scale(1) rotate(0deg)";
+    }
+
+    if (wasMoved) {
+      const curLeft = parseFloat(el.style.left) || 0;
+      const targetX =
+        curLeft + SIZE / 2 < window.innerWidth / 2
+          ? EDGE_PAD
+          : window.innerWidth - EDGE_PAD - SIZE;
+      el.style.transition = `left 0.38s ${ease}`;
+      el.style.left = targetX + "px";
+    } else if (onClickToggle) {
+      onClickToggle();
+    }
+  };
+
   // Touch drag handlers
   useEffect(() => {
     const el = btnRef.current;
     if (!el) return;
     const ease = "cubic-bezier(.4,0,.2,1)";
 
-    const onStart = (e) => {
+    const onTouchStart = (e) => {
       if (e.cancelable) e.preventDefault();
       const touch = e.touches[0];
-      const rect = el.getBoundingClientRect();
-
-      // First drag: switch from CSS right/bottom to JS left/top
-      if (!dragRef.current.usingAbsolute) {
-        el.style.right = "auto";
-        el.style.bottom = "auto";
-        el.style.left = rect.left + "px";
-        el.style.top = rect.top + "px";
-        dragRef.current.usingAbsolute = true;
-      }
-
-      el.style.transition = "none";
-      dragRef.current.active = true;
-      dragRef.current.moved = false;
-      dragRef.current.startClientX = touch.clientX;
-      dragRef.current.startClientY = touch.clientY;
-      dragRef.current.startBtnX = rect.left;
-      dragRef.current.startBtnY = rect.top;
+      startDrag(el, touch.clientX, touch.clientY, ease);
     };
 
-    const onMove = (e) => {
-      if (!dragRef.current.active) return;
+    const onTouchMove = (e) => {
       const touch = e.touches[0];
-      const dx = touch.clientX - dragRef.current.startClientX;
-      const dy = touch.clientY - dragRef.current.startClientY;
-
-      if (!dragRef.current.moved && Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
-        dragRef.current.moved = true;
-      }
-
-      if (dragRef.current.moved) {
-        const newX = Math.max(0, Math.min(window.innerWidth - SIZE, dragRef.current.startBtnX + dx));
-        const newY = Math.max(56, Math.min(window.innerHeight - SIZE - 20, dragRef.current.startBtnY + dy));
-        el.style.left = newX + "px";
-        el.style.top = newY + "px";
-
-        // Drag-responsive visuals
-        if (!isDark && raysRef.current) {
-          spinRef.current.rot = (spinRef.current.rot + dx * 0.04) % 360;
-          raysRef.current.setAttribute("transform", `rotate(${spinRef.current.rot} 12 12)`);
-        }
-        if (isDark && moonRef.current) {
-          const tilt = Math.max(-25, Math.min(25, dx * 0.3));
-          moonRef.current.style.transform = `scale(1) rotate(${tilt}deg)`;
-        }
-      }
+      moveDrag(el, touch.clientX, touch.clientY);
     };
 
-    const onEnd = () => {
-      const wasMoved = dragRef.current.moved;
-      dragRef.current.active = false;
-
-      if (isDark && moonRef.current) {
-        moonRef.current.style.transform = "scale(1) rotate(0deg)";
-      }
-
-      if (wasMoved) {
-        // Snap to nearest horizontal edge, keep vertical position
-        const curLeft = parseFloat(el.style.left) || 0;
-        const targetX =
-          curLeft + SIZE / 2 < window.innerWidth / 2
-            ? EDGE_PAD
-            : window.innerWidth - EDGE_PAD - SIZE;
-        el.style.transition = `left 0.38s ${ease}`;
-        el.style.left = targetX + "px";
-      } else {
-        setTheme(isDark ? "light" : "dark");
-      }
+    const onTouchEnd = () => {
+      endDrag(el, ease, () => setTheme(isDark ? "light" : "dark"));
     };
 
-    el.addEventListener("touchstart", onStart, { passive: false });
-    el.addEventListener("touchmove", onMove, { passive: true });
-    el.addEventListener("touchend", onEnd);
+    el.addEventListener("touchstart", onTouchStart, { passive: false });
+    el.addEventListener("touchmove", onTouchMove, { passive: true });
+    el.addEventListener("touchend", onTouchEnd);
     return () => {
-      el.removeEventListener("touchstart", onStart);
-      el.removeEventListener("touchmove", onMove);
-      el.removeEventListener("touchend", onEnd);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [isDark, setTheme]);
+
+  // Mouse drag handlers
+  useEffect(() => {
+    const el = btnRef.current;
+    if (!el) return;
+    const ease = "cubic-bezier(.4,0,.2,1)";
+
+    const onMouseDown = (e) => {
+      e.preventDefault();
+      startDrag(el, e.clientX, e.clientY, ease);
+      el.style.cursor = "grabbing";
+      document.body.style.userSelect = "none";
+    };
+
+    const onMouseMove = (e) => {
+      if (!dragRef.current.active) return;
+      moveDrag(el, e.clientX, e.clientY);
+    };
+
+    const onMouseUp = () => {
+      if (!dragRef.current.active) return;
+      el.style.cursor = "";
+      document.body.style.userSelect = "";
+      // Pass null — onClick handles the toggle for mouse clicks
+      endDrag(el, ease, null);
+    };
+
+    el.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    return () => {
+      el.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
     };
   }, [isDark, setTheme]);
 
@@ -146,7 +190,11 @@ export default function DraggableThemeToggle() {
     <button
       ref={btnRef}
       className={`dj-float-toggle${hint ? " dj-float-toggle--hint" : ""}${isJuryRoute ? " dj-float-toggle--jury" : ""}${isOverlayRoute ? " dj-float-toggle--above-overlay" : ""}`}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={(e) => {
+        // Mouse drag end fires onClick too — ignore if drag moved
+        if (dragRef.current.moved) { dragRef.current.moved = false; return; }
+        setTheme(isDark ? "light" : "dark");
+      }}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >
       <svg

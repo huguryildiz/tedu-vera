@@ -282,30 +282,30 @@ export default function AdminRouteLayout() {
             <LazyLoginForm
               onLogin={loginHandler}
               onGoogleLogin={signInWithGoogle}
-              onSwitchToRegister={() => navigate("/register")}
-              onForgotPassword={() => navigate("/forgot-password")}
+              onSwitchToRegister={() => navigate(isDemoMode ? "/demo/register" : "/register")}
+              onForgotPassword={() => navigate(isDemoMode ? "/demo/forgot-password" : "/forgot-password")}
               error={authError}
               initialEmail={isDemoMode ? DEMO_EMAIL : ""}
               initialPassword={isDemoMode ? DEMO_PASSWORD : ""}
-              onReturnHome={() => navigate("/")}
+              onReturnHome={() => navigate(isDemoMode ? "/demo" : "/")}
             />
           )}
           {authPage === "register" && (
             <LazyRegisterForm
               onRegister={signUp}
-              onSwitchToLogin={() => navigate("/login")}
+              onSwitchToLogin={() => navigate(isDemoMode ? "/demo/login" : "/login")}
             />
           )}
           {authPage === "forgot" && (
             <LazyForgotPasswordForm
               onResetPassword={resetPassword}
-              onBackToLogin={() => navigate("/login")}
+              onBackToLogin={() => navigate(isDemoMode ? "/demo/login" : "/login")}
             />
           )}
           {authPage === "reset" && (
             <LazyResetPasswordForm
               onUpdatePassword={updatePassword}
-              onBackToLogin={() => navigate("/login")}
+              onBackToLogin={() => navigate(isDemoMode ? "/demo/login" : "/login")}
             />
           )}
         </Suspense>

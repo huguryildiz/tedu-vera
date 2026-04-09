@@ -228,14 +228,32 @@ npm run e2e              # Playwright E2E suite
 
 ---
 
-## 🌐 Entry Points
+## 🌐 URL Structure
 
-| URL | Purpose |
-|---|---|
-| `vera-eval.app` | Landing page |
-| `vera-eval.app?admin` | Admin login |
-| `vera-eval.app?eval=TOKEN` | Jury gate — QR / entry-token verification |
-| `vera-eval.app?explore` | Demo mode — sandbox database, auto-login |
+VERA uses **React Router v6** with path-based routing. The active database instance is determined purely from the pathname — no query params, no session flags.
+
+```text
+/demo/*  →  demo Supabase instance
+everything else  →  prod Supabase instance
+```
+
+### Entry points
+
+| URL | Purpose | DB |
+|---|---|---|
+| `/` | Landing page | prod |
+| `/login` | Admin sign in | prod |
+| `/register` | Tenant application | prod |
+| `/forgot-password` | Request password reset | prod |
+| `/eval?t=TOKEN` | Jury gate — QR / entry-token verification | prod |
+| `/jury/*` | Guided jury evaluation flow | prod |
+| `/admin/*` | Admin panel (19 pages, auth required) | prod |
+| `/demo` | Demo sandbox — auto-login → admin overview | demo |
+| `/demo/eval?t=TOKEN` | Demo jury gate | demo |
+| `/demo/jury/*` | Demo jury flow | demo |
+| `/demo/admin/*` | Demo admin panel | demo |
+
+For the full route tree, guards, layouts, and environment resolution logic, see [`docs/architecture/url-routing.md`](docs/architecture/url-routing.md).
 
 ---
 
@@ -244,6 +262,7 @@ npm run e2e              # Playwright E2E suite
 | Directory | Contents |
 |---|---|
 | [`docs/architecture/`](docs/architecture/) | System overview, database schema |
+| [`docs/audit/`](docs/audit/) | Audit log coverage report — all 24 explicit actions, 7 trigger tables, actor classification, chip mapping |
 | [`docs/deployment/`](docs/deployment/) | Supabase setup, Vercel config, environment variables |
 | [`docs/qa/`](docs/qa/) | Unit test guide, E2E guide, smoke test plan, QA workbook |
 | [`docs/superpowers/`](docs/superpowers/) | Architectural decision records, migration plans, feature specs |

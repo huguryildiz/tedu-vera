@@ -26,9 +26,11 @@ body:not(.dark-mode) .dj-step-header{border-bottom-color:rgba(15,23,42,0.06) !im
 body:not(.dark-mode) .login-title{color:#0f172a !important}
 body:not(.dark-mode) .login-sub{color:#64748b !important}
 body:not(.dark-mode) .auth-state-title{
-  color:#1e293b !important;
+  background:linear-gradient(135deg,#0f172a 0%,#1d4ed8 100%) !important;
+  -webkit-background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+  background-clip:text !important;
   font-weight:700 !important;
-  text-shadow:0 1px 0 rgba(255,255,255,0.55);
 }
 body:not(.dark-mode) .auth-state-desc{
   color:#52637a !important;
@@ -48,7 +50,7 @@ body:not(.dark-mode) .login-icon-wrap{
   box-shadow:0 2px 12px rgba(59,130,246,0.12),inset 0 1px 0 rgba(255,255,255,0.8) !important;
   color:#2563eb !important;
 }
-body:not(.dark-mode) .login-title{color:#0f172a !important;font-size:22px !important;font-weight:700 !important}
+body:not(.dark-mode) .login-title{background:linear-gradient(135deg,#0f172a 0%,#1d4ed8 100%) !important;-webkit-background-clip:text !important;-webkit-text-fill-color:transparent !important;background-clip:text !important;font-size:22px !important;font-weight:700 !important}
 body:not(.dark-mode) .btn-google{
   background:#ffffff !important;
   color:#1e293b !important;
@@ -77,19 +79,19 @@ body:not(.dark-mode) .login-footer{color:#64748b !important}
 
 /* ── From vera.css 1292-1519: Login/Apply/Application Submitted screens ── */
 /* ─── LOGIN ─── */
-.login-screen{min-height:100vh;background:linear-gradient(155deg,#050912 0%,#0c1528 30%,#111e38 50%,#0a1020 75%,#050912 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;position:relative}
+.login-screen{min-height:100vh;background:linear-gradient(155deg,#050912 0%,#0c1528 30%,#111e38 50%,#0a1020 75%,#050912 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;position:relative;background-image:linear-gradient(155deg,#050912 0%,#0c1528 30%,#111e38 50%,#0a1020 75%,#050912 100%),radial-gradient(circle,rgba(255,255,255,0.035) 1px,transparent 1px);background-size:auto,28px 28px}
 .login-screen::before{content:'';position:absolute;top:18%;left:35%;width:500px;height:500px;background:radial-gradient(circle,rgba(59,130,246,0.10) 0%,transparent 65%);pointer-events:none}
 .login-screen::after{content:'';position:absolute;bottom:15%;right:20%;width:420px;height:420px;background:radial-gradient(circle,rgba(124,58,237,0.07) 0%,transparent 65%);pointer-events:none}
 .login-header{text-align:center;margin-bottom:24px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,0.07)}
 .dj-step-header{text-align:center;margin-bottom:24px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,0.07)}
 .dj-step-header .dj-sub{margin-bottom:0}
 .login-icon-wrap{width:52px;height:52px;border-radius:14px;margin:0 auto 14px;background:linear-gradient(135deg,rgba(99,102,241,0.25),rgba(124,58,237,0.30));border:1px solid rgba(124,58,237,0.25);display:grid;place-items:center;color:#c4b5fd;box-shadow:0 4px 20px rgba(124,58,237,0.20),inset 0 1px 0 rgba(255,255,255,0.08)}
-.login-title{font-size:20px;font-weight:700;color:#fff}
+.login-title{font-size:20px;font-weight:700;background:linear-gradient(135deg,#ffffff 0%,#93c5fd 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .login-sub{font-size:13px;color:#64748b;margin-top:4px;line-height:1.5}
-.login-card{background:rgba(255,255,255,0.04);backdrop-filter:blur(28px) saturate(1.3);-webkit-backdrop-filter:blur(28px) saturate(1.3);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:36px 32px 32px;width:400px;max-width:92vw;box-shadow:0 12px 48px rgba(0,0,0,0.40),inset 0 1px 0 rgba(255,255,255,0.05)}
+.login-card{background:rgba(255,255,255,0.04);backdrop-filter:blur(28px) saturate(1.3);-webkit-backdrop-filter:blur(28px) saturate(1.3);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:36px 32px 32px;width:400px;max-width:92vw;box-shadow:0 12px 48px rgba(0,0,0,0.40),inset 0 1px 0 rgba(255,255,255,0.14)}
 .form-label{display:block;font-size:13px;font-weight:500;color:#94a3b8;margin-bottom:6px;font-variant-ligatures:no-common-ligatures}
-.form-input{width:100%;padding:12px 14px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;font-family:var(--font);font-size:14px;outline:none;transition:border-color .15s;background:rgba(255,255,255,0.06);color:#64748b}
-.form-input:focus{border-color:rgba(59,130,246,0.5);box-shadow:0 0 0 3px rgba(59,130,246,0.1)}
+.form-input{width:100%;padding:12px 14px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;font-family:var(--font);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s,transform .15s;background:rgba(255,255,255,0.06);color:#64748b}
+.form-input:focus{border-color:rgba(59,130,246,0.5);box-shadow:0 0 0 3px rgba(59,130,246,0.1);transform:scale(1.005);transition:border-color .15s,box-shadow .15s,transform .15s}
 .form-input::placeholder{color:#475569}
 .form-group{margin-bottom:18px}
 .form-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
@@ -99,7 +101,7 @@ body:not(.dark-mode) .login-footer{color:#64748b !important}
 .form-link:hover{text-decoration:underline}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:600;border:none;cursor:pointer;transition:background .15s,box-shadow .15s}
 .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.btn-primary{background:linear-gradient(135deg,#3b82f6 0%,#2563eb 50%,#4f46e5 100%);color:#fff;width:100%;padding:12px;border-radius:10px;font-size:14px;box-shadow:0 4px 20px rgba(59,130,246,0.35),0 0 0 1px rgba(59,130,246,0.12),inset 0 1px 0 rgba(255,255,255,0.10)}
+.btn-primary{background:linear-gradient(135deg,#3b82f6 0%,#2563eb 50%,#4f46e5 100%);color:#fff;width:100%;padding:12px;border-radius:8px;font-size:14px;box-shadow:0 4px 20px rgba(59,130,246,0.35),0 0 0 1px rgba(59,130,246,0.12),inset 0 1px 0 rgba(255,255,255,0.10)}
 .btn-primary:hover{box-shadow:0 6px 28px rgba(59,130,246,0.45),0 0 0 1px rgba(59,130,246,0.18),inset 0 1px 0 rgba(255,255,255,0.12)}
 .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-secondary)}
 .btn-outline:hover{background:var(--surface-1)}
@@ -111,7 +113,7 @@ body:not(.dark-mode) .login-footer{color:#64748b !important}
 .login-divider::before,.login-divider::after{content:'';position:absolute;top:50%;width:38%;height:1px;background:rgba(255,255,255,0.08)}
 .login-divider::before{left:0}
 .login-divider::after{right:0}
-.btn-google{width:100%;background:rgba(255,255,255,0.04);color:#e2e8f0;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;font-size:14px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.04)}
+.btn-google{width:100%;background:rgba(255,255,255,0.04);color:#e2e8f0;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;font-size:14px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.04)}
 .btn-google:hover{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.12)}
 .login-footer{margin-top:20px;text-align:center;font-size:13px;color:#64748b}
 .login-footer a{color:var(--accent);cursor:pointer;text-decoration:none;font-weight:500}
@@ -123,7 +125,10 @@ body:not(.dark-mode) .login-footer{color:#64748b !important}
   font-weight:650;
   letter-spacing:-0.01em;
   line-height:1.35;
-  color:#e2e8f0;
+  background:linear-gradient(135deg,#ffffff 0%,#93c5fd 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
   margin-bottom:6px;
 }
 .auth-state-desc{
@@ -217,7 +222,8 @@ body:not(.dark-mode) .pin-block-progress-track{background:rgba(245,158,11,0.08) 
 .apply-wrap{width:400px;max-width:92vw}
 .apply-header{text-align:center;margin-bottom:24px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,0.07)}
 .apply-icon-wrap{width:52px;height:52px;border-radius:14px;margin:0 auto 14px;background:linear-gradient(135deg,rgba(99,102,241,0.25),rgba(124,58,237,0.30));border:1px solid rgba(124,58,237,0.25);display:grid;place-items:center;color:#c4b5fd;box-shadow:0 4px 20px rgba(124,58,237,0.20),inset 0 1px 0 rgba(255,255,255,0.08)}
-.apply-title{font-size:22px;font-weight:700;color:#fff}
+.apply-title{font-size:22px;font-weight:700;background:linear-gradient(135deg,#ffffff 0%,#93c5fd 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+body:not(.dark-mode) .apply-title{background:linear-gradient(135deg,#0f172a 0%,#1d4ed8 100%) !important;-webkit-background-clip:text !important;-webkit-text-fill-color:transparent !important;background-clip:text !important}
 .apply-sub{margin-top:5px;color:#64748b;font-size:13px;line-height:1.5}
 .apply-card{
   text-align:left;
@@ -272,6 +278,10 @@ body:not(.dark-mode) .pin-block-progress-track{background:rgba(245,158,11,0.08) 
 .apply-footer a:hover{text-decoration:underline}
 
 /* ─── APPLICATION SUBMITTED SCREEN ─── */
+.apply-success-card{text-align:center}
+.apply-success-card .apply-detail-card{text-align:left;margin-bottom:16px}
+.apply-success-card .apply-info-hint{margin-bottom:20px}
+@media(max-width:480px){.apply-success-card{padding:28px 20px 24px}}
 .apply-success-icon{
   width:72px;height:72px;border-radius:50%;margin:0 auto 20px;
   background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(16,185,129,0.12));
@@ -283,7 +293,8 @@ body:not(.dark-mode) .pin-block-progress-track{background:rgba(245,158,11,0.08) 
 .apply-success-icon .check-path{stroke-dasharray:36;stroke-dashoffset:36;animation:apply-draw .5s .3s ease forwards}
 @keyframes apply-pop{from{opacity:0;transform:scale(0.6)}to{opacity:1;transform:scale(1)}}
 @keyframes apply-draw{to{stroke-dashoffset:0}}
-.apply-success-title{font-size:22px;font-weight:700;color:#fff;text-align:center;margin-bottom:6px}
+.apply-success-title{font-size:22px;font-weight:700;background:linear-gradient(135deg,#ffffff 0%,#93c5fd 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;margin-bottom:6px}
+body:not(.dark-mode) .apply-success-title{background:linear-gradient(135deg,#0f172a 0%,#1d4ed8 100%) !important;-webkit-background-clip:text !important;-webkit-text-fill-color:transparent !important;background-clip:text !important}
 .apply-success-sub{font-size:13.5px;color:#94a3b8;text-align:center;line-height:1.55;max-width:340px;margin:0 auto 24px}
 .apply-detail-card{
   background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
@@ -304,13 +315,6 @@ body:not(.dark-mode) .pin-block-progress-track{background:rgba(245,158,11,0.08) 
 .apply-info-hint svg{width:16px;height:16px;color:#60a5fa;flex-shrink:0;margin-top:1px}
 .apply-info-hint p{font-size:12px;color:#94a3b8;line-height:1.5;margin:0;text-align:justify}
 .apply-info-hint strong{color:#e2e8f0;font-weight:600}
-.apply-success-btn{
-  width:100%;border:none;border-radius:10px;
-  background:linear-gradient(135deg,#3b82f6,#2563eb);
-  color:#fff;font-size:14px;font-weight:600;padding:12px;
-  cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,0.3);transition:box-shadow .15s;
-}
-.apply-success-btn:hover{box-shadow:0 6px 24px rgba(59,130,246,0.4)}
 @media (max-width:480px){
   .apply-card{padding:24px}
   .apply-grid-2{grid-template-columns:1fr}
@@ -346,7 +350,7 @@ body:not(.dark-mode) .pin-block-progress-track{background:rgba(245,158,11,0.08) 
   0%,100%{opacity:0;transform:scale(0.95)}
   50%{opacity:1;transform:scale(1.05)}
 }
-.prv-title{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.02em;margin-bottom:6px}
+.prv-title{font-size:22px;font-weight:800;background:linear-gradient(135deg,#ffffff 0%,#93c5fd 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.02em;margin-bottom:6px}
 .prv-sub{font-size:13.5px;color:#64748b;line-height:1.55}
 .prv-sub strong{color:#e2e8f0;font-weight:600}
 
@@ -493,7 +497,7 @@ body:not(.dark-mode) .prv-icon{
   box-shadow:0 4px 20px rgba(59,130,246,0.12),inset 0 1px 0 rgba(255,255,255,0.8);
 }
 body:not(.dark-mode) .prv-icon::before{border-color:rgba(59,130,246,0.15)}
-body:not(.dark-mode) .prv-title{color:#0f172a}
+body:not(.dark-mode) .prv-title{background:linear-gradient(135deg,#0f172a 0%,#1d4ed8 100%) !important;-webkit-background-clip:text !important;-webkit-text-fill-color:transparent !important;background-clip:text !important}
 body:not(.dark-mode) .prv-sub{color:#64748b}
 body:not(.dark-mode) .prv-sub strong{color:#1e293b}
 body:not(.dark-mode) .prv-dot-pending{background:#e2e8f0;color:#94a3b8}
@@ -705,10 +709,22 @@ body:not(.dark-mode) .grouped-cb-clear:hover{color:#0f172a;background:#f1f5f9}
 }
 .apply-field--invalid .apply-input,
 .apply-field--invalid .grouped-cb-selected,
-.apply-field--invalid .grouped-cb-trigger{
+.apply-field--invalid .grouped-cb-trigger,
+.apply-field:has(.apply-field-error) .apply-input,
+.apply-field:has(.apply-field-error) .grouped-cb-selected,
+.apply-field:has(.apply-field-error) .grouped-cb-trigger{
   border-color:#ef4444 !important;background:rgba(239,68,68,0.06) !important;
+  box-shadow:0 0 0 3px rgba(239,68,68,0.12) !important;
 }
 .apply-field-error{font-size:11px;color:#ef4444;margin-top:5px;font-weight:500}
+
+.apply-email-checking{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;border:2px solid rgba(99,102,241,0.25);
+  border-top-color:#6366f1;border-radius:50%;
+  animation:apply-spin 0.65s linear infinite;pointer-events:none;
+}
+@keyframes apply-spin{to{transform:translateY(-50%) rotate(360deg)}}
 
 body:not(.dark-mode) .apply-valid-check{color:#16a34a}
 body:not(.dark-mode) .apply-field--valid .apply-input,
@@ -718,8 +734,12 @@ body:not(.dark-mode) .apply-field--valid .grouped-cb-trigger{
 }
 body:not(.dark-mode) .apply-field--invalid .apply-input,
 body:not(.dark-mode) .apply-field--invalid .grouped-cb-selected,
-body:not(.dark-mode) .apply-field--invalid .grouped-cb-trigger{
+body:not(.dark-mode) .apply-field--invalid .grouped-cb-trigger,
+body:not(.dark-mode) .apply-field:has(.apply-field-error) .apply-input,
+body:not(.dark-mode) .apply-field:has(.apply-field-error) .grouped-cb-selected,
+body:not(.dark-mode) .apply-field:has(.apply-field-error) .grouped-cb-trigger{
   border-color:#ef4444 !important;background:#fff5f5 !important;
+  box-shadow:0 0 0 3px rgba(239,68,68,0.10) !important;
 }
 body:not(.dark-mode) .apply-field-error{color:#dc2626}
 

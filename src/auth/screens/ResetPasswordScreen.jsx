@@ -2,7 +2,7 @@
 // Create-new-password form with strength validation and done state, using vera.css design tokens.
 // Replaces src/components/auth/ResetPasswordCreateForm.jsx.
 
-import { useContext, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import FbAlert from "@/shared/ui/FbAlert";
 import { AuthContext } from "@/auth/AuthProvider";
@@ -32,6 +32,21 @@ export default function ResetPasswordScreen({ onUpdatePassword, onBackToLogin })
     throw new Error("Password update is not configured in this screen context.");
   });
   const goLogin = onBackToLogin || (() => navigate(`${base}/login`));
+  const goForgotPassword = () => navigate(`${base}/forgot-password`);
+
+  // Capture the URL hash on first render — Supabase clears it after processing,
+  // so we must read it before it disappears.
+  const hasRecoveryToken = useRef(
+    typeof window !== "undefined" &&
+    (window.location.hash.includes("type=recovery") ||
+      new URLSearchParams(window.location.search).get("type") === "recovery")
+  );
+  // Also valid if the user already has an active session (e.g. they reloaded after
+  // Supabase established the recovery session). Defer the check until auth is done loading
+  // to avoid a false "invalid" flash while the session bootstraps.
+  const authLoading = !!auth?.loading;
+  const hasSession = !!auth?.session;
+  const isValidAccess = authLoading || hasRecoveryToken.current || hasSession;
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -72,6 +87,39 @@ export default function ResetPasswordScreen({ onUpdatePassword, onBackToLogin })
     } finally {
       setLoading(false);
     }
+  }
+
+  if (!isValidAccess) {
+    return (
+      <div className="login-screen">
+        <div style={{ width: "400px", maxWidth: "92vw" }}>
+          <div className="login-card">
+            <div className="login-header">
+              <div className="login-icon-wrap" style={{ background: "rgba(239,68,68,0.12)" }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--fb-danger-text, #ef4444)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </div>
+              <div className="login-title">Invalid Reset Link</div>
+              <div className="login-sub">This password reset link is invalid or has already expired.</div>
+            </div>
+            <FbAlert variant="warning" style={{ marginBottom: "20px" }}>
+              Reset links expire after a short period and can only be used once. Request a new one to continue.
+            </FbAlert>
+            <button type="button" className="btn btn-primary" style={{ width: "100%" }} onClick={goForgotPassword}>
+              Request a New Reset Link
+            </button>
+          </div>
+          <div className="login-footer">
+            <button type="button" onClick={goLogin} className="form-link">
+              ← Back to Sign In
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

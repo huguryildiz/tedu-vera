@@ -8,6 +8,7 @@ import { useAdminContext } from "../hooks/useAdminContext";
 import { useAuth } from "@/auth";
 import { useUpdatePolicy } from "@/auth/SecurityPolicyContext";
 import { useToast } from "@/shared/hooks/useToast";
+import { useTheme } from "@/shared/theme/ThemeProvider";
 import FbAlert from "@/shared/ui/FbAlert";
 import Drawer from "@/shared/ui/Drawer";
 import Modal from "@/shared/ui/Modal";
@@ -21,7 +22,6 @@ import { upsertProfile, getSecurityPolicy, setSecurityPolicy, listPeriods, setCu
 import { supabase } from "@/shared/lib/supabaseClient";
 import {
   GlobalSettingsDrawer,
-  AuditCenterDrawer,
   ExportBackupDrawer,
   MaintenanceDrawer,
   FeatureFlagsDrawer,
@@ -75,7 +75,10 @@ function OrgStatusBadge({ status }) {
 
 function formatShortDate(dateStr) {
   if (!dateStr) return "—";
-  return String(dateStr).slice(0, 10);
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return "—";
+  const pad = (v) => String(v).padStart(2, "0");
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
 }
 
 function SortIcon({ colKey, sortKey, sortDir }) {
@@ -203,6 +206,8 @@ export default function SettingsPage() {
   const { user, displayName, setDisplayName, avatarUrl, setAvatarUrl, isSuper, activeOrganization, signOut } = useAuth();
   const updatePolicy = useUpdatePolicy();
   const _toast = useToast();
+  const { theme } = useTheme();
+  const _dangerZoneBg = theme; // handled via CSS class now
   const setMessage = useCallback((msg) => { if (msg) _toast.success(msg); }, [_toast]);
   const noop = useCallback(() => {}, []);
 
@@ -273,7 +278,7 @@ export default function SettingsPage() {
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [securityPolicyOpen, setSecurityPolicyOpen] = useState(false);
   const [globalSettingsOpen, setGlobalSettingsOpen] = useState(false);
-  const [auditCenterOpen, setAuditCenterOpen] = useState(false);
+  // AuditCenterDrawer removed — use /audit page instead
   const [exportBackupOpen, setExportBackupOpen] = useState(false);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
   const [featureFlagsOpen, setFeatureFlagsOpen] = useState(false);
@@ -286,11 +291,9 @@ export default function SettingsPage() {
   const getOrgMeta = useCallback((org) => {
     const lookup = ORG_PROTOTYPE_META[String(org?.code || "").toUpperCase()] || {};
     const periodFromSettings = org?.settings?.currentPeriodName || org?.settings?.activePeriod || org?.settings?.active_period;
-    const period = orgPeriodOverrides[org.id] || periodFromSettings || lookup.period || "—";
-    const jurorsRaw = org?.settings?.jurorCount ?? org?.settings?.jurors ?? lookup.jurors ?? null;
-    const projectsRaw = org?.settings?.projectCount ?? org?.settings?.projects ?? lookup.projects ?? null;
-    const jurors = Number.isFinite(Number(jurorsRaw)) ? Number(jurorsRaw) : "—";
-    const projects = Number.isFinite(Number(projectsRaw)) ? Number(projectsRaw) : "—";
+    const period = orgPeriodOverrides[org.id] || org?.active_period_name || periodFromSettings || lookup.period || "—";
+    const jurors = org?.juror_count != null ? Number(org.juror_count) : "—";
+    const projects = org?.project_count != null ? Number(org.project_count) : "—";
     const status = org?.status || "active";
     const { university, department } = splitSubtitle(org?.subtitle);
     return { period, jurors, projects, status, university, department };
@@ -685,7 +688,7 @@ export default function SettingsPage() {
         error={securityPolicyError}
       />
       <GlobalSettingsDrawer open={globalSettingsOpen} onClose={() => setGlobalSettingsOpen(false)} />
-      <AuditCenterDrawer open={auditCenterOpen} onClose={() => setAuditCenterOpen(false)} />
+      {/* AuditCenterDrawer removed — use /audit page instead */}
       <ExportBackupDrawer open={exportBackupOpen} onClose={() => setExportBackupOpen(false)} />
       <MaintenanceDrawer open={maintenanceOpen} onClose={() => setMaintenanceOpen(false)} />
       <FeatureFlagsDrawer open={featureFlagsOpen} onClose={() => setFeatureFlagsOpen(false)} />
@@ -883,8 +886,8 @@ export default function SettingsPage() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
               </div>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>{viewOrg?.name || "Organization Profile"}</div>
-                <div style={{ fontSize: 12, color: "var(--text-tertiary)", marginTop: 2 }}>{String(viewOrg?.code || "").toUpperCase()}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>{viewOrgMeta?.university || viewOrg?.name || "Organization Profile"}</div>
+                <div style={{ fontSize: 12, color: "var(--text-tertiary)", marginTop: 2 }}>{viewOrg?.name || "—"}</div>
               </div>
             </div>
             <button className="fs-close" onClick={() => setViewOrg(null)}>
@@ -906,9 +909,9 @@ export default function SettingsPage() {
             </div>
           </div>
           <div style={{ border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", overflow: "hidden" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 14px", borderBottom: "1px solid var(--border)" }}><span className="text-sm text-muted">Full Name</span><span style={{ fontSize: 12.5, fontWeight: 600 }}>{viewOrg?.name || "—"}</span></div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 14px", borderBottom: "1px solid var(--border)" }}><span className="text-sm text-muted">University</span><span style={{ fontSize: 12.5, fontWeight: 600 }}>{viewOrgMeta?.university || "—"}</span></div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 14px", borderBottom: "1px solid var(--border)" }}><span className="text-sm text-muted">Department</span><span style={{ fontSize: 12.5, fontWeight: 600 }}>{viewOrgMeta?.department || "—"}</span></div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 14px", borderBottom: "1px solid var(--border)" }}><span className="text-sm text-muted">Organization</span><span style={{ fontSize: 12.5, fontWeight: 600 }}>{viewOrgMeta?.university || "—"}</span></div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 14px", borderBottom: "1px solid var(--border)" }}><span className="text-sm text-muted">Name</span><span style={{ fontSize: 12.5, fontWeight: 600 }}>{viewOrg?.name || "—"}</span></div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 14px", borderBottom: "1px solid var(--border)" }}><span className="text-sm text-muted">Code</span><span style={{ fontSize: 12.5, fontWeight: 600, fontFamily: "var(--mono)" }}>{String(viewOrg?.code || "").toUpperCase() || "—"}</span></div>
             <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 14px", borderBottom: "1px solid var(--border)" }}><span className="text-sm text-muted">Current Period</span><span style={{ fontSize: 12.5, fontWeight: 600 }}>{viewOrgMeta?.period || "—"}</span></div>
             <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 14px", borderBottom: "1px solid var(--border)" }}><span className="text-sm text-muted">Total Jurors</span><span style={{ fontSize: 12.5, fontWeight: 700, fontFamily: "var(--mono)" }}>{viewOrgMeta?.jurors ?? "—"}</span></div>
             <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 14px", borderBottom: "1px solid var(--border)" }}><span className="text-sm text-muted">Total Projects</span><span style={{ fontSize: 12.5, fontWeight: 700, fontFamily: "var(--mono)" }}>{viewOrgMeta?.projects ?? "—"}</span></div>
@@ -1389,14 +1392,14 @@ export default function SettingsPage() {
               <table>
                 <thead>
                   <tr>
+                    <th className={`sortable${orgSortKey === "subtitle" ? " sorted" : ""}`} onClick={() => handleOrgSort("subtitle")}>
+                      Organization <SortIcon colKey="subtitle" sortKey={orgSortKey} sortDir={orgSortDir} />
+                    </th>
                     <th className={`sortable${orgSortKey === "name" ? " sorted" : ""}`} onClick={() => handleOrgSort("name")}>
-                      Organization <SortIcon colKey="name" sortKey={orgSortKey} sortDir={orgSortDir} />
+                      Name <SortIcon colKey="name" sortKey={orgSortKey} sortDir={orgSortDir} />
                     </th>
                     <th className={`sortable${orgSortKey === "code" ? " sorted" : ""}`} onClick={() => handleOrgSort("code")}>
-                      Short Label <SortIcon colKey="code" sortKey={orgSortKey} sortDir={orgSortDir} />
-                    </th>
-                    <th className={`sortable${orgSortKey === "subtitle" ? " sorted" : ""}`} onClick={() => handleOrgSort("subtitle")}>
-                      University / Department <SortIcon colKey="subtitle" sortKey={orgSortKey} sortDir={orgSortDir} />
+                      Code <SortIcon colKey="code" sortKey={orgSortKey} sortDir={orgSortDir} />
                     </th>
                     <th className={`sortable${orgSortKey === "status" ? " sorted" : ""}`} onClick={() => handleOrgSort("status")}>
                       Status <SortIcon colKey="status" sortKey={orgSortKey} sortDir={orgSortDir} />
@@ -1424,16 +1427,16 @@ export default function SettingsPage() {
                       const code = String(org.code || "").toUpperCase();
                       return (
                         <tr key={org.id}>
-                          <td style={{ fontWeight: 600 }}>{org.name}</td>
+                          <td style={{ fontWeight: 600 }}>{org.subtitle || "—"}</td>
+                          <td>{org.name}</td>
                           <td className="mono">{code || "—"}</td>
-                          <td>{org.subtitle || "—"}</td>
                           <td><OrgStatusBadge status={org.status} /></td>
                           <td>{meta.period || "—"}</td>
                           <td className="text-center mono org-admin-count-cell">
                             <span className="org-admin-count-label">Admins:</span>{" "}
                             {org.tenantAdmins?.length ?? 0}
                           </td>
-                          <td className="mono text-sm">{formatShortDate(org.created_at)}</td>
+                          <td><span className="vera-datetime-text">{formatShortDate(org.created_at)}</span></td>
                           <td className="text-right">
                             <div className="juror-action-wrap sa-org-action-wrap menu-up" style={{ display: "inline-flex" }}>
                               <button
@@ -1530,171 +1533,6 @@ export default function SettingsPage() {
                   )}
                 </tbody>
               </table>
-            </div>
-          </div>
-
-          {/* Pending Approvals + Platform Governance */}
-          <div className="grid-2" style={{ marginBottom: 14 }}>
-            {/* Pending Approvals */}
-            <div className="card" style={{ padding: 14 }}>
-              <div className="card-header">
-                <div>
-                  <div className="card-title">Pending Approvals</div>
-                  <div className="text-sm text-muted" style={{ marginTop: 3 }}>Review admin applications and onboarding queue.</div>
-                </div>
-                {allPending.length > 0 && (
-                  <span className="badge badge-warning">{allPending.length} Pending</span>
-                )}
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {allPending.length === 0 ? (
-                  <div className="text-sm text-muted" style={{ textAlign: "center", padding: "12px 0" }}>
-                    No pending applications.
-                  </div>
-                ) : (
-                  allPending.slice(0, 2).map((app) => (
-                    <div key={app.applicationId} style={{ padding: "10px 12px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 600, fontSize: 13 }}>{app.name}</div>
-                          <div className="text-sm text-muted" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {app.email} · {app.orgCode}
-                          </div>
-                          <div className="text-xs text-muted" style={{ marginTop: 2 }}>
-                            Submitted {formatShortDate(app.createdAt)}
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
-                          <button
-                            className="btn btn-sm"
-                            style={{ padding: "5px 14px", fontSize: 11, background: "var(--accent)", color: "#fff", boxShadow: "none" }}
-                            onClick={() => setReviewApp(app)}
-                          >
-                            Review
-                          </button>
-                          <button
-                            className="btn btn-outline btn-sm"
-                            style={{ padding: "5px 10px", fontSize: 11, borderColor: "rgba(22,163,74,0.25)", color: "var(--success)" }}
-                            onClick={() => handleApproveApplication(app.applicationId)}
-                            disabled={applicationActionLoading.id === app.applicationId}
-                          >
-                            {applicationActionLoading.id === app.applicationId && applicationActionLoading.action === "approve" ? "…" : "Approve"}
-                          </button>
-                          <button
-                            className="btn btn-outline btn-sm"
-                            style={{ padding: "5px 10px", fontSize: 11, borderColor: "rgba(225,29,72,0.2)", color: "var(--text-tertiary)" }}
-                            onClick={() => handleRejectApplication(app.applicationId)}
-                            disabled={applicationActionLoading.id === app.applicationId}
-                          >
-                            {applicationActionLoading.id === app.applicationId && applicationActionLoading.action === "reject" ? "…" : "Reject"}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-                {allPending.length > 2 && (
-                  <div style={{ textAlign: "center", padding: "6px 0 2px" }}>
-                    <button
-                      className="text-xs text-muted"
-                      style={{ border: "none", background: "transparent", cursor: "pointer" }}
-                      onClick={() => setAllApplicationsOpen(true)}
-                    >
-                      View all {allPending.length} applications
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Platform Governance */}
-            <div className="card" style={{ padding: 14 }}>
-              <div className="card-header" style={{ marginBottom: 10 }}>
-                <div>
-                  <div className="card-title">Platform Governance</div>
-                  <div className="text-sm text-muted" style={{ marginTop: 3 }}>System-wide controls, flags, and operational tools.</div>
-                </div>
-                <span className="badge badge-neutral" style={{ fontSize: 9 }}>Super Admin Only</span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                {[
-                  {
-                    label: "Global Settings",
-                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><circle cx="12" cy="12" r="3" /><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M19.07 19.07A10 10 0 0 0 4.93 4.93" /></svg>,
-                    onClick: () => setGlobalSettingsOpen(true),
-                  },
-                  {
-                    label: "Audit Center",
-                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>,
-                    onClick: () => setAuditCenterOpen(true),
-                  },
-                  {
-                    label: "Export & Backup",
-                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>,
-                    onClick: () => setExportBackupOpen(true),
-                  },
-                  {
-                    label: "Maintenance",
-                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>,
-                    onClick: () => setMaintenanceOpen(true),
-                  },
-                  {
-                    label: "Feature Flags",
-                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></svg>,
-                    onClick: () => setFeatureFlagsOpen(true),
-                  },
-                  {
-                    label: "System Health",
-                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>,
-                    onClick: () => setSystemHealthOpen(true),
-                  },
-                ].map(({ label, icon, onClick }) => (
-                  <button
-                    key={label}
-                    className="btn btn-outline btn-sm"
-                    style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "flex-start", padding: "8px 10px", fontSize: 12 }}
-                    onClick={onClick}
-                  >
-                    {icon}
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-          </div>
-
-          {/* Super-admin Danger Zone */}
-          <div className="card" style={{ marginBottom: 14, padding: "12px 14px", borderColor: "rgba(225,29,72,0.15)", background: "var(--danger-soft)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" style={{ width: 14, height: 14, opacity: 0.5, flexShrink: 0 }}>
-                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                  <path d="M12 9v4m0 4h.01" />
-                </svg>
-                <div className="card-title" style={{ color: "var(--danger)", fontSize: 12.5 }}>Danger Zone</div>
-              </div>
-              <span className="badge badge-danger" style={{ fontSize: 9 }}>Irreversible</span>
-            </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {[
-                { key: "disable_org", label: "Disable Organization", desc: "Suspend all access for an organization. Evaluation sessions, juror logins, and admin access are frozen." },
-                { key: "revoke_admin", label: "Revoke Admin Access", desc: "Remove an org-admin's membership and platform access immediately." },
-                { key: "maintenance", label: "Start Maintenance Mode", desc: "Take the platform offline for all users except Super Admin. Schedule or trigger immediately." },
-              ].map(({ key, label, desc }) => (
-                <div key={key} style={{ flex: 1, minWidth: 180, padding: 10, border: "1px solid rgba(225,29,72,0.12)", borderRadius: "var(--radius-sm)", background: "var(--bg-card)" }}>
-                  <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text-primary)", marginBottom: 2 }}>{label}</div>
-                  <div style={{ fontSize: 10, color: "var(--text-tertiary)", marginBottom: 8, lineHeight: 1.4 }}>{desc}</div>
-                  <button
-                    className="btn btn-outline btn-sm"
-                    style={{ borderColor: "rgba(225,29,72,0.2)", color: "var(--danger)", fontSize: 11, padding: "4px 10px" }}
-                    onClick={() => { setDangerModal(key); setDangerConfirm(""); }}
-                    disabled={isDemoMode}
-                  >
-                    {label}
-                  </button>
-                </div>
-              ))}
             </div>
           </div>
 
@@ -1796,6 +1634,166 @@ export default function SettingsPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          {/* Pending Approvals + Platform Governance */}
+          <div className="grid-2" style={{ marginBottom: 14 }}>
+            {/* Pending Approvals */}
+            <div className="card" style={{ padding: 14 }}>
+              <div className="card-header">
+                <div>
+                  <div className="card-title">Pending Approvals</div>
+                  <div className="text-sm text-muted" style={{ marginTop: 3 }}>Review admin applications and onboarding queue.</div>
+                </div>
+                {allPending.length > 0 && (
+                  <span className="badge badge-warning">{allPending.length} Pending</span>
+                )}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {allPending.length === 0 ? (
+                  <div className="text-sm text-muted" style={{ textAlign: "center", padding: "12px 0" }}>
+                    No pending applications.
+                  </div>
+                ) : (
+                  allPending.slice(0, 2).map((app) => (
+                    <div key={app.applicationId} style={{ padding: "10px 12px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: 13 }}>{app.name}</div>
+                          <div className="text-sm text-muted" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {app.email} · {app.orgCode}
+                          </div>
+                          <div className="text-xs text-muted" style={{ marginTop: 2 }}>
+                            Submitted {formatShortDate(app.createdAt)}
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
+                          <button
+                            className="btn btn-sm"
+                            style={{ padding: "5px 14px", fontSize: 11, background: "var(--accent)", color: "#fff", boxShadow: "none" }}
+                            onClick={() => setReviewApp(app)}
+                          >
+                            Review
+                          </button>
+                          <button
+                            className="btn btn-outline btn-sm"
+                            style={{ padding: "5px 10px", fontSize: 11, borderColor: "rgba(22,163,74,0.25)", color: "var(--success)" }}
+                            onClick={() => handleApproveApplication(app.applicationId)}
+                            disabled={applicationActionLoading.id === app.applicationId}
+                          >
+                            {applicationActionLoading.id === app.applicationId && applicationActionLoading.action === "approve" ? "…" : "Approve"}
+                          </button>
+                          <button
+                            className="btn btn-outline btn-sm"
+                            style={{ padding: "5px 10px", fontSize: 11, borderColor: "rgba(225,29,72,0.2)", color: "var(--text-tertiary)" }}
+                            onClick={() => handleRejectApplication(app.applicationId)}
+                            disabled={applicationActionLoading.id === app.applicationId}
+                          >
+                            {applicationActionLoading.id === app.applicationId && applicationActionLoading.action === "reject" ? "…" : "Reject"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+                {allPending.length > 2 && (
+                  <div style={{ textAlign: "center", padding: "6px 0 2px" }}>
+                    <button
+                      className="text-xs text-muted"
+                      style={{ border: "none", background: "transparent", cursor: "pointer" }}
+                      onClick={() => setAllApplicationsOpen(true)}
+                    >
+                      View all {allPending.length} applications
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Platform Governance */}
+            <div className="card" style={{ padding: 14 }}>
+              <div className="card-header" style={{ marginBottom: 10 }}>
+                <div>
+                  <div className="card-title">Platform Governance</div>
+                  <div className="text-sm text-muted" style={{ marginTop: 3 }}>System-wide controls, flags, and operational tools.</div>
+                </div>
+                <span className="badge badge-neutral" style={{ fontSize: 9 }}>Super Admin Only</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {[
+                  {
+                    label: "Global Settings",
+                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><circle cx="12" cy="12" r="3" /><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M19.07 19.07A10 10 0 0 0 4.93 4.93" /></svg>,
+                    onClick: () => setGlobalSettingsOpen(true),
+                  },
+                  {
+                    label: "Export & Backup",
+                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>,
+                    onClick: () => setExportBackupOpen(true),
+                  },
+                  {
+                    label: "Maintenance",
+                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>,
+                    onClick: () => setMaintenanceOpen(true),
+                  },
+                  {
+                    label: "Feature Flags",
+                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></svg>,
+                    onClick: () => setFeatureFlagsOpen(true),
+                  },
+                  {
+                    label: "System Health",
+                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>,
+                    onClick: () => setSystemHealthOpen(true),
+                  },
+                ].map(({ label, icon, onClick }) => (
+                  <button
+                    key={label}
+                    className="btn btn-outline btn-sm"
+                    style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "flex-start", padding: "8px 10px", fontSize: 12 }}
+                    onClick={onClick}
+                  >
+                    {icon}
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Super-admin Danger Zone */}
+          <div className="card danger-zone-card" style={{ marginTop: 14, padding: "14px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2.2" style={{ width: 15, height: 15, flexShrink: 0 }}>
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                  <path d="M12 9v4m0 4h.01" />
+                </svg>
+                <div className="card-title" style={{ color: "var(--danger)", fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase" }}>Danger Zone</div>
+              </div>
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", background: "rgba(225,29,72,0.12)", color: "var(--danger)", border: "1px solid rgba(225,29,72,0.35)", borderRadius: 4, padding: "2px 8px" }}>Irreversible</span>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {[
+                { key: "disable_org", label: "Disable Organization", desc: "Suspend all access for an organization. Evaluation sessions, juror logins, and admin access are frozen." },
+                { key: "revoke_admin", label: "Revoke Admin Access", desc: "Remove an org-admin's membership and platform access immediately." },
+                { key: "maintenance", label: "Start Maintenance Mode", desc: "Take the platform offline for all users except Super Admin. Schedule or trigger immediately." },
+              ].map(({ key, label, desc }) => (
+                <div key={key} className="danger-zone-item" style={{ flex: 1, minWidth: 180, padding: 11, borderRadius: "var(--radius-sm)" }}>
+                  <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text-primary)", marginBottom: 3 }}>{label}</div>
+                  <div style={{ fontSize: 10, color: "var(--text-tertiary)", marginBottom: 10, lineHeight: 1.5 }}>{desc}</div>
+                  <button
+                    className="btn btn-sm"
+                    style={{ border: "1px solid rgba(225,29,72,0.38)", color: "var(--danger)", background: "rgba(225,29,72,0.06)", fontSize: 11, padding: "4px 11px", borderRadius: "var(--radius-sm)" }}
+                    onClick={() => { setDangerModal(key); setDangerConfirm(""); }}
+                    disabled={isDemoMode}
+                  >
+                    {label}
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -1965,39 +1963,39 @@ export default function SettingsPage() {
           </div>
 
           {/* Danger Zone */}
-          <div className="card" style={{ marginTop: 10, padding: "12px 14px", borderColor: "rgba(225,29,72,0.15)", background: "var(--danger-soft)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" style={{ width: 14, height: 14, opacity: 0.5, flexShrink: 0 }}>
+          <div className="card danger-zone-card" style={{ marginTop: 10, padding: "14px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2.2" style={{ width: 15, height: 15, flexShrink: 0 }}>
                   <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                   <path d="M12 9v4m0 4h.01" />
                 </svg>
-                <div className="card-title" style={{ color: "var(--danger)", fontSize: 12.5 }}>Danger Zone</div>
+                <div className="card-title" style={{ color: "var(--danger)", fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase" }}>Danger Zone</div>
               </div>
-              <span className="badge badge-danger" style={{ fontSize: 9 }}>Restricted</span>
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", background: "rgba(225,29,72,0.12)", color: "var(--danger)", border: "1px solid rgba(225,29,72,0.35)", borderRadius: 4, padding: "2px 8px" }}>Restricted</span>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <div style={{ flex: 1, minWidth: 180, padding: 10, border: "1px solid rgba(225,29,72,0.12)", borderRadius: "var(--radius-sm)", background: "var(--bg-card)" }}>
-                <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text-primary)", marginBottom: 2 }}>Leave Organization</div>
-                <div style={{ fontSize: 10, color: "var(--text-tertiary)", marginBottom: 8, lineHeight: 1.4 }}>
+              <div className="danger-zone-item" style={{ flex: 1, minWidth: 180, padding: 11, borderRadius: "var(--radius-sm)" }}>
+                <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text-primary)", marginBottom: 3 }}>Leave Organization</div>
+                <div style={{ fontSize: 10, color: "var(--text-tertiary)", marginBottom: 10, lineHeight: 1.5 }}>
                   Remove yourself from {activeOrganization?.name || "this organization"}. Account stays active.
                 </div>
                 <button
-                  className="btn btn-outline btn-sm"
-                  style={{ borderColor: "rgba(225,29,72,0.2)", color: "var(--danger)", fontSize: 11, padding: "4px 10px" }}
+                  className="btn btn-sm"
+                  style={{ border: "1px solid rgba(225,29,72,0.38)", color: "var(--danger)", background: "rgba(225,29,72,0.06)", fontSize: 11, padding: "4px 11px", borderRadius: "var(--radius-sm)", opacity: 0.5, cursor: "not-allowed" }}
                   disabled
                 >
                   Request Leave
                 </button>
               </div>
-              <div style={{ flex: 1, minWidth: 180, padding: 10, border: "1px solid rgba(225,29,72,0.12)", borderRadius: "var(--radius-sm)", background: "var(--bg-card)" }}>
-                <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text-primary)", marginBottom: 2 }}>Deactivate Account</div>
-                <div style={{ fontSize: 10, color: "var(--text-tertiary)", marginBottom: 8, lineHeight: 1.4 }}>
+              <div className="danger-zone-item" style={{ flex: 1, minWidth: 180, padding: 11, borderRadius: "var(--radius-sm)" }}>
+                <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text-primary)", marginBottom: 3 }}>Deactivate Account</div>
+                <div style={{ fontSize: 10, color: "var(--text-tertiary)", marginBottom: 10, lineHeight: 1.5 }}>
                   Full deactivation. All memberships and data access revoked.
                 </div>
                 <button
-                  className="btn btn-outline btn-sm"
-                  style={{ borderColor: "rgba(225,29,72,0.2)", color: "var(--danger)", fontSize: 11, padding: "4px 10px" }}
+                  className="btn btn-sm"
+                  style={{ border: "1px solid rgba(225,29,72,0.38)", color: "var(--danger)", background: "rgba(225,29,72,0.06)", fontSize: 11, padding: "4px 11px", borderRadius: "var(--radius-sm)", opacity: 0.5, cursor: "not-allowed" }}
                   disabled
                 >
                   Request Deactivation

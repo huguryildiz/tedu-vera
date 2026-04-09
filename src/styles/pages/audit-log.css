@@ -79,8 +79,16 @@
 .audit-action-main{font-size:12.5px;font-weight:500;color:var(--text-primary);line-height:1.4}
 .audit-action-detail{font-size:11px;color:var(--text-tertiary);margin-top:2px;line-height:1.3}
 
+/* Date input (filter panel) */
+.audit-date-input{height:32px;padding:0 8px;border:1px solid var(--field-border);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--text-primary);background:var(--field-bg);outline:none;transition:border-color .15s,box-shadow .15s}
+.audit-date-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+/* Skeleton loading row */
+.audit-skeleton-row{height:14px;background:var(--surface-2);border-radius:4px;opacity:0.5;animation:pulse 1.5s ease-in-out infinite}
+
 /* Pagination footer */
-.audit-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border);background:var(--surface-1)}
+.audit-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border);background:var(--surface-1);flex-wrap:wrap;gap:8px}
+.audit-footer-left{display:flex;align-items:center;gap:10px}
 .audit-pagination{display:flex;align-items:center;gap:6px}
 .audit-page-btn{width:28px;height:28px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s}
 .audit-page-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
@@ -88,6 +96,7 @@
 .audit-page-current{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text-primary);padding:0 4px}
 .audit-page-sep{font-size:11px;color:var(--text-tertiary)}
 .audit-page-total{font-family:var(--mono);font-size:12px;color:var(--text-secondary);padding:0 4px}
+.audit-refresh-btn{gap:4px}
 
 /* ═══════════════════════════════════════════════════
    PIN-SCREEN GLOBAL PREMIUM ENHANCEMENT PASS

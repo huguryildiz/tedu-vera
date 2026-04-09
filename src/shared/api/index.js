@@ -30,6 +30,7 @@ export {
 
 export {
   getSession,
+  checkEmailAvailable,
   listOrganizationsPublic,
   submitApplication,
   getMyApplications,

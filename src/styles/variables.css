@@ -1,4 +1,4 @@
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;font-feature-settings:"liga" 0,"clig" 0}
 :root{
   --bg-page:#f4f7fb;--bg-card:#ffffff;--surface-1:#eef2f8;--surface-2:#e3eaf4;
   --border:rgba(15,23,42,0.08);--border-strong:rgba(15,23,42,0.13);
@@ -58,6 +58,7 @@ body:not(.dark-mode) .admin-main{
 body:not(.dark-mode) .admin-header{background:#f6f8fb;border-bottom-color:#d8dee8}
 body:not(.dark-mode) .card{background:#fafbfd;border-color:#d8dee8;box-shadow:0 1px 3px rgba(15,23,42,0.04),0 0 0 1px rgba(15,23,42,0.02)}
 body:not(.dark-mode) .card:hover{box-shadow:0 2px 8px rgba(15,23,42,0.06),0 0 0 1px rgba(15,23,42,0.03)}
+body:not(.dark-mode) .card.danger-zone-card{background:rgba(225,29,72,0.13);border-color:rgba(225,29,72,0.28);box-shadow:0 1px 3px rgba(225,29,72,0.08),0 0 0 1px rgba(225,29,72,0.14)}
 body:not(.dark-mode) .table-wrap{background:#fafbfd;border-color:#d8dee8}
 body:not(.dark-mode) table thead th{background:#f0f3f7;color:#475569;border-bottom-color:#d0d7e2}
 body:not(.dark-mode) table tbody td{border-bottom-color:#e8ecf2}

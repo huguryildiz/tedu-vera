@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import "../../styles/jury.css";
 import {
-  ArrowLeft,
   BarChart2,
   Check,
   CheckCircle2,
@@ -125,6 +124,12 @@ export default function DoneStep({ state, onBack }) {
   const rankedProjects = [...state.projects]
     .sort((a, b) => (b.avg_score ?? 0) - (a.avg_score ?? 0));
 
+  function getRankBarColor(pct) {
+    // 0% → red (hue 0) → 50% → amber (hue 45) → 100% → green (hue 120)
+    const hue = Math.round(pct * 1.2);
+    return `hsl(${hue}, 68%, 50%)`;
+  }
+
   return (
     <div className="jury-step" id="dj-step-done" style={{ justifyContent: "flex-start", paddingTop: 16, paddingBottom: 32 }}>
       <div className="dj-glass dj-glass-card dj-done-card">
@@ -228,12 +233,15 @@ export default function DoneStep({ state, onBack }) {
                 <div className="dj-done-rank-body">
                   <span className="dj-done-rank-title">{project.title}</span>
                   <div className="dj-done-rank-bar-track">
-                    <div className={`dj-done-rank-bar-fill${rank === 1 ? " gold" : ""}`} style={{ width: `${pct}%` }} />
+                    <div
+                      className="dj-done-rank-bar-fill"
+                      style={{ width: `${pct}%`, background: getRankBarColor(pct) }}
+                    />
                   </div>
                 </div>
                 <span className="avg-score-cell dj-done-rank-score">
                   {project.avg_score != null ? (
-                    <span className={`avg-score-value${rank === 1 ? " top" : ""}`}>{score}</span>
+                    <span className="avg-score-value" style={{ color: getRankBarColor(pct) }}>{score}</span>
                   ) : (
                     <span className="avg-score-empty">—</span>
                   )}
@@ -272,10 +280,11 @@ export default function DoneStep({ state, onBack }) {
         </div>
 
         {/* ═══ LAYER 4: Return Home ═══ */}
-        <button className="dj-done-home-link" onClick={handleReturnHome}>
-          <ArrowLeft size={14} strokeWidth={2} />
-          Return Home
-        </button>
+        <div className="login-footer" style={{ marginTop: "20px" }}>
+          <button type="button" className="form-link" onClick={handleReturnHome}>
+            ← Return Home
+          </button>
+        </div>
 
       </div>
 

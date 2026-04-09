@@ -6,7 +6,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserPlus, Eye, EyeOff, Check, Info } from "lucide-react";
 import FbAlert from "@/shared/ui/FbAlert";
-import { listOrganizationsPublic } from "@/shared/api";
+import { listOrganizationsPublic, checkEmailAvailable } from "@/shared/api";
 import GroupedCombobox from "@/shared/ui/GroupedCombobox";
 import { AuthContext } from "@/auth/AuthProvider";
 import { useSecurityPolicy } from "@/auth/SecurityPolicyContext";
@@ -25,7 +25,7 @@ const normalizeError = (raw) => {
   const msg = String(raw || "").toLowerCase().trim();
   if (!msg) return "Application could not be submitted. Please try again.";
   if (msg.includes("email_already_registered")) return "This email is already registered. Please sign in.";
-  if (msg.includes("email_required")) return "Work email is required.";
+  if (msg.includes("email_required")) return "Your email is required.";
   if (msg.includes("name_required")) return "Full name is required.";
   if (msg.includes("tenant_not_found")) return "Selected department was not found.";
   if (msg.includes("application_already_pending")) return "You already have a pending application for this department.";
@@ -146,8 +146,8 @@ export default function RegisterScreen({ onRegister, onSwitchToLogin, onReturnHo
     () =>
       tenants.map((t) => ({
         value: t.id,
-        label: t.subtitle || t.name,
-        group: t.name,
+        label: t.name,
+        group: t.subtitle || t.name,
         badge: t.code || "",
       })),
     [tenants],
@@ -156,9 +156,38 @@ export default function RegisterScreen({ onRegister, onSwitchToLogin, onReturnHo
   const [touched, setTouched] = useState({});
   const markTouched = (field) => setTouched((prev) => ({ ...prev, [field]: true }));
 
+  const [emailCheck, setEmailCheck] = useState({ status: "idle", message: "" });
+  // status: "idle" | "checking" | "available" | "taken"
+
+  const isEmailFormatValid = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+
+  async function handleEmailBlur() {
+    markTouched("email");
+    const trimmed = email.trim();
+    if (!isEmailFormatValid(trimmed) || isGoogleApplicationFlow) return;
+    setEmailCheck({ status: "checking", message: "" });
+    try {
+      const result = await checkEmailAvailable(trimmed);
+      if (result?.available) {
+        setEmailCheck({ status: "available", message: "" });
+      } else {
+        const reason = result?.reason || "";
+        const msg =
+          reason === "email_already_registered"
+            ? "This email is already registered. Please sign in."
+            : reason === "application_already_pending"
+              ? "You already have a pending application with this email."
+              : "This email is not available.";
+        setEmailCheck({ status: "taken", message: msg });
+      }
+    } catch {
+      setEmailCheck({ status: "idle", message: "" });
+    }
+  }
+
   const validations = {
     name: fullName.trim().length > 0,
-    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()),
+    email: isEmailFormatValid(email) && emailCheck.status !== "taken",
     org: !!tenantId,
     password: isValidPassword(password),
     confirm: password === confirmPassword && confirmPassword.length > 0,
@@ -187,13 +216,20 @@ export default function RegisterScreen({ onRegister, onSwitchToLogin, onReturnHo
       }
     }
 
+    if (emailCheck.status === "taken") {
+      setError(emailCheck.message || "This email is not available.");
+      return;
+    }
+
     setLoading(true);
     try {
       const selectedTenant = tenants.find((t) => t.id === tenantId);
+      const uniLabel = selectedTenant?.subtitle || selectedTenant?.name || "";
+      const deptLabel = selectedTenant?.subtitle ? selectedTenant?.name || "" : "";
       const payload = {
         name: fullName.trim(),
-        university: selectedTenant?.name || "",
-        department: selectedTenant?.subtitle || selectedTenant?.name || "",
+        university: selectedTenant?.subtitle || selectedTenant?.name || "",
+        department: selectedTenant?.name || "",
         tenantId,
       };
       if (isGoogleApplicationFlow) {
@@ -223,49 +259,51 @@ export default function RegisterScreen({ onRegister, onSwitchToLogin, onReturnHo
     return (
       <div className="apply-screen">
         <div className="apply-wrap">
-          <div className="apply-success-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" opacity="0.3"/>
-              <path className="check-path" d="M8 12.5l2.5 3 5.5-6.5"/>
-            </svg>
-          </div>
-          <div className="apply-success-title">Application Submitted</div>
-          <div className="apply-success-sub">
-            Your request has been sent to the department administrator. You&apos;ll receive an email notification once your access is approved.
-          </div>
-
-          <div className="apply-detail-card">
-            <div className="apply-detail-row">
-              <span className="apply-detail-label">Email</span>
-              <span className="apply-detail-value">{submittedEmail}</span>
+          <div className="apply-card apply-success-card">
+            <div className="apply-success-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" opacity="0.3"/>
+                <path className="check-path" d="M8 12.5l2.5 3 5.5-6.5"/>
+              </svg>
             </div>
-            <div className="apply-detail-row">
-              <span className="apply-detail-label">Department</span>
-              <span className="apply-detail-value">{submittedDept}</span>
+            <div className="apply-success-title">Application Submitted</div>
+            <div className="apply-success-sub">
+              Your request has been sent to the department administrator. You&apos;ll receive an email notification once your access is approved.
             </div>
-            <div className="apply-detail-row">
-              <span className="apply-detail-label">Status</span>
-              <span className="apply-detail-value pending">Pending review</span>
+
+            <div className="apply-detail-card">
+              <div className="apply-detail-row">
+                <span className="apply-detail-label">Email</span>
+                <span className="apply-detail-value">{submittedEmail}</span>
+              </div>
+              <div className="apply-detail-row">
+                <span className="apply-detail-label">Department</span>
+                <span className="apply-detail-value">{submittedDept}</span>
+              </div>
+              <div className="apply-detail-row">
+                <span className="apply-detail-label">Status</span>
+                <span className="apply-detail-value pending">Pending review</span>
+              </div>
             </div>
-          </div>
 
-          <div className="apply-info-hint">
-            <Info size={16} />
-            <p>Check your inbox at <strong>{submittedEmail}</strong> for a confirmation email. The department admin will review your application.</p>
-          </div>
+            <div className="apply-info-hint">
+              <Info size={16} />
+              <p>Check your inbox at <strong>{submittedEmail}</strong> for a confirmation email. The department admin will review your application.</p>
+            </div>
 
-          <button
-            type="button"
-            className="apply-success-btn"
-            onClick={isGoogleApplicationFlow ? () => navigate(`${base}/admin`) : goLogin}
-          >
-            {isGoogleApplicationFlow ? "Continue" : "Back to Sign In"}
-          </button>
-
-          <div className="login-footer" style={{ marginTop: "16px" }}>
-            <button type="button" onClick={goHome} className="form-link">
-              &larr; Return Home
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={isGoogleApplicationFlow ? () => navigate(`${base}/admin`) : goLogin}
+            >
+              {isGoogleApplicationFlow ? "Continue" : "Back to Sign In"}
             </button>
+
+            <div className="login-footer" style={{ marginTop: "16px" }}>
+              <button type="button" onClick={goHome} className="form-link">
+                &larr; Return Home
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -339,26 +377,34 @@ export default function RegisterScreen({ onRegister, onSwitchToLogin, onReturnHo
               )}
             </div>
 
-            <div className={`apply-field${touched.email && validations.email ? " apply-field--valid" : touched.email && !validations.email ? " apply-field--invalid" : ""}`}>
+            <div className={`apply-field${(touched.email && validations.email && emailCheck.status === "available") ? " apply-field--valid" : (touched.email && (!validations.email || emailCheck.status === "taken")) ? " apply-field--invalid" : ""}`}>
               <div className="apply-label-row">
                 <label className="apply-label" htmlFor="reg-email" style={{ marginBottom: 0 }}>Institutional Email</label>
-                {touched.email && validations.email && (
+                {touched.email && validations.email && emailCheck.status === "available" && (
                   <span className="apply-valid-check"><Check size={12} strokeWidth={2.5} /></span>
                 )}
               </div>
-              <input
-                id="reg-email"
-                className="apply-input"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onBlur={() => markTouched("email")}
-                placeholder="jane.doe@university.edu"
-                autoComplete="email"
-                disabled={loading || isGoogleApplicationFlow}
-              />
-              {touched.email && !validations.email && (
+              <div style={{ position: "relative" }}>
+                <input
+                  id="reg-email"
+                  className="apply-input"
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setEmailCheck({ status: "idle", message: "" }); }}
+                  onBlur={handleEmailBlur}
+                  placeholder="jane.doe@university.edu"
+                  autoComplete="email"
+                  disabled={loading || isGoogleApplicationFlow}
+                />
+                {emailCheck.status === "checking" && (
+                  <span className="apply-email-checking" aria-label="Checking email…" />
+                )}
+              </div>
+              {touched.email && !isEmailFormatValid(email) && (
                 <div className="apply-field-error">Valid email is required.</div>
+              )}
+              {emailCheck.status === "taken" && (
+                <div className="apply-field-error">{emailCheck.message}</div>
               )}
             </div>
 

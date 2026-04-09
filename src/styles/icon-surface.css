@@ -216,7 +216,7 @@ body:not(.dark-mode) .kpi:hover {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--vera-btn-blue-border) !important;
-  border-radius: 999px !important;
+  border-radius: 8px !important;
   background: linear-gradient(
     135deg,
     var(--vera-btn-blue-start) 0%,

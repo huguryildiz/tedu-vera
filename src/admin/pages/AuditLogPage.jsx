@@ -1,11 +1,10 @@
-// src/admin/AuditLogPage.jsx — Phase 9
+// src/admin/AuditLogPage.jsx — Phase 10
 // Audit Log page: track admin actions, score changes, and access events.
-// Prototype: vera-premium-prototype.html lines 15159–15621
 // Hook connections: useAuditLogFilters, usePageRealtime
 
 import { useMemo, useState } from "react";
 import { useAdminContext } from "../hooks/useAdminContext";
-import { Filter } from "lucide-react";
+import { ChevronLeft, ChevronRight, Filter, RefreshCw } from "lucide-react";
 import { useToast } from "@/shared/hooks/useToast";
 import FbAlert from "@/shared/ui/FbAlert";
 import { FilterButton } from "@/shared/ui/FilterButton";
@@ -31,6 +30,24 @@ const CHIP_MAP = {
   framework_outcomes: { type: "period",   label: "Outcome" },
   org_applications:   { type: "security", label: "Application" },
 };
+
+// Unique chip labels for Type filter dropdown
+const TYPE_OPTIONS = [
+  { value: "", label: "All types" },
+  ...Object.values(
+    Object.entries(CHIP_MAP).reduce((acc, [, chip]) => {
+      if (!acc[chip.label]) acc[chip.label] = chip.label;
+      return acc;
+    }, {})
+  ).map((label) => ({ value: label, label })),
+];
+
+const ACTOR_TYPES = [
+  { value: "", label: "All" },
+  { value: "admin", label: "Admin" },
+  { value: "juror", label: "Juror" },
+  { value: "system", label: "System" },
+];
 
 function getChip(resourceType) {
   return CHIP_MAP[resourceType] || { type: "eval", label: "System" };
@@ -59,6 +76,14 @@ export default function AuditLogPage() {
   const [sortKey, setSortKey] = useState("created_at");
   const [sortDir, setSortDir] = useState("desc");
 
+  // Client-side filters (applied after data loads)
+  const [typeFilter, setTypeFilter] = useState("");
+  const [actorFilter, setActorFilter] = useState("");
+
+  // Pagination
+  const [pageSize, setPageSize] = useState(50);
+  const [currentPage, setCurrentPage] = useState(1);
+
   const {
     auditLogs,
     auditLoading,
@@ -85,7 +110,9 @@ export default function AuditLogPage() {
   const auditActiveFilterCount =
     (auditSearch?.trim() ? 1 : 0) +
     (auditFilters?.startDate ? 1 : 0) +
-    (auditFilters?.endDate ? 1 : 0);
+    (auditFilters?.endDate ? 1 : 0) +
+    (typeFilter ? 1 : 0) +
+    (actorFilter ? 1 : 0);
 
   // Real-time: refresh on new audit log inserts
   usePageRealtime({
@@ -99,6 +126,7 @@ export default function AuditLogPage() {
   // ── Date preset handler ───────────────────────────────────
   function applyDatePreset(preset) {
     setDatePreset(preset);
+    setCurrentPage(1);
     const now = new Date();
     if (preset === "all") {
       setAuditFilters((f) => ({ ...f, startDate: "", endDate: "" }));
@@ -114,19 +142,33 @@ export default function AuditLogPage() {
     }
   }
 
-  // ── KPI derived values ────────────────────────────────────
-  const total = auditLogs.length;
-  const today = auditLogs.filter((l) => {
+  // ── Client-side filtering ────────────────────────────────
+  const filteredLogs = useMemo(() => {
+    let rows = auditLogs;
+    if (typeFilter) {
+      rows = rows.filter((l) => getChip(l.resource_type).label === typeFilter);
+    }
+    if (actorFilter) {
+      rows = rows.filter((l) => getActorInfo(l).type === actorFilter);
+    }
+    return rows;
+  }, [auditLogs, typeFilter, actorFilter]);
+
+  // ── KPI derived values (from filtered data per CLAUDE.md rule) ──
+  const kpiBase = filteredLogs;
+  const total = kpiBase.length;
+  const today = kpiBase.filter((l) => {
     if (!l.created_at) return false;
     const d = new Date(l.created_at);
     const n = new Date();
     return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
   }).length;
-  const systemEvents = auditLogs.filter((l) => getActorInfo(l).type === "system").length;
-  const adminActions = total - systemEvents;
+  const adminCount = kpiBase.filter((l) => getActorInfo(l).type === "admin").length;
+  const jurorCount = kpiBase.filter((l) => getActorInfo(l).type === "juror").length;
 
+  // ── Sorting ──────────────────────────────────────────────
   const sortedAuditLogs = useMemo(() => {
-    const rows = [...auditLogs];
+    const rows = [...filteredLogs];
     rows.sort((a, b) => {
       const direction = sortDir === "asc" ? 1 : -1;
       let cmp = 0;
@@ -139,25 +181,24 @@ export default function AuditLogPage() {
       } else if (sortKey === "resource_type") {
         cmp = getChip(a.resource_type).label.localeCompare(getChip(b.resource_type).label, "tr", { sensitivity: "base", numeric: true });
       } else if (sortKey === "actor") {
-        const aActor = getActorInfo(a).name;
-        const bActor = getActorInfo(b).name;
-        cmp = aActor.localeCompare(bActor, "tr", { sensitivity: "base", numeric: true });
+        cmp = getActorInfo(a).name.localeCompare(getActorInfo(b).name, "tr", { sensitivity: "base", numeric: true });
       } else if (sortKey === "action") {
-        cmp = formatActionLabel(a.action).localeCompare(
-          formatActionLabel(b.action),
-          "tr",
-          { sensitivity: "base", numeric: true }
-        );
+        cmp = formatActionLabel(a.action).localeCompare(formatActionLabel(b.action), "tr", { sensitivity: "base", numeric: true });
       }
       if (cmp !== 0) return cmp * direction;
       const aTs = Date.parse(a.created_at || "");
       const bTs = Date.parse(b.created_at || "");
-      const aValue = Number.isFinite(aTs) ? aTs : Number.NEGATIVE_INFINITY;
-      const bValue = Number.isFinite(bTs) ? bTs : Number.NEGATIVE_INFINITY;
-      return (bValue - aValue);
+      return (Number.isFinite(bTs) ? bTs : -Infinity) - (Number.isFinite(aTs) ? aTs : -Infinity);
     });
     return rows;
-  }, [auditLogs, sortKey, sortDir]);
+  }, [filteredLogs, sortKey, sortDir]);
+
+  // ── Pagination ───────────────────────────────────────────
+  const totalPages = Math.max(1, Math.ceil(sortedAuditLogs.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const pageStart = (safePage - 1) * pageSize;
+  const pageEnd = Math.min(pageStart + pageSize, sortedAuditLogs.length);
+  const pagedLogs = sortedAuditLogs.slice(pageStart, pageEnd);
 
   function handleSort(key) {
     if (sortKey === key) {
@@ -168,10 +209,18 @@ export default function AuditLogPage() {
     setSortDir(key === "created_at" ? "desc" : "asc");
   }
 
+  function handleClearAllFilters() {
+    handleAuditReset();
+    setDatePreset("all");
+    setTypeFilter("");
+    setActorFilter("");
+    setCurrentPage(1);
+  }
+
   return (
     <div className="page">
       <div className="page-title">Audit Log</div>
-      <div className="page-desc" style={{ marginBottom: 12 }}>
+      <div className="page-desc">
         Track admin actions, score changes, and access events for compliance and accountability.
       </div>
 
@@ -184,7 +233,7 @@ export default function AuditLogPage() {
       </div>
 
       {/* KPI strip */}
-      <div className="scores-kpi-strip" style={{ marginBottom: 14 }}>
+      <div className="scores-kpi-strip">
         <div className="scores-kpi-item">
           <div className="scores-kpi-item-value">{auditLoading && total === 0 ? "—" : total}</div>
           <div className="scores-kpi-item-label">Total Events</div>
@@ -194,16 +243,12 @@ export default function AuditLogPage() {
           <div className="scores-kpi-item-label">Today</div>
         </div>
         <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value">{auditLoading && total === 0 ? "—" : systemEvents}</div>
-          <div className="scores-kpi-item-label">System Events</div>
-        </div>
-        <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value">{auditLoading && total === 0 ? "—" : adminActions}</div>
+          <div className="scores-kpi-item-value">{auditLoading && total === 0 ? "—" : adminCount}</div>
           <div className="scores-kpi-item-label">Admin Actions</div>
         </div>
         <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value"><span className="success">0</span></div>
-          <div className="scores-kpi-item-label">Anomalies</div>
+          <div className="scores-kpi-item-value">{auditLoading && total === 0 ? "—" : jurorCount}</div>
+          <div className="scores-kpi-item-label">Juror Events</div>
         </div>
       </div>
 
@@ -226,7 +271,7 @@ export default function AuditLogPage() {
             type="text"
             placeholder="Search events, actors, actions…"
             value={auditSearch}
-            onChange={(e) => setAuditSearch(e.target.value)}
+            onChange={(e) => { setAuditSearch(e.target.value); setCurrentPage(1); }}
           />
         </div>
 
@@ -262,28 +307,26 @@ export default function AuditLogPage() {
                 <Filter size={14} style={{ verticalAlign: "-1px", marginRight: 4, opacity: 0.5 }} />
                 Filter Audit Log
               </h4>
-              <div className="filter-panel-sub">Narrow events by date range.</div>
+              <div className="filter-panel-sub">Narrow events by date range, type, and actor.</div>
             </div>
             <button className="filter-panel-close" type="button" onClick={() => setFilterOpen(false)}>×</button>
           </div>
           <div className="filter-row">
             <div className="filter-group">
               <label>Date Range</label>
-              <div className="filter-dropdown" style={{ position: "relative" }}>
-                <CustomSelect
-                  compact
-                  value={datePreset}
-                  onChange={(v) => applyDatePreset(v)}
-                  options={[
-                    { value: "all", label: "All time" },
-                    { value: "today", label: "Today" },
-                    { value: "7d", label: "Last 7 days" },
-                    { value: "30d", label: "Last 30 days" },
-                    { value: "custom", label: "Custom range…" },
-                  ]}
-                  ariaLabel="Date range"
-                />
-              </div>
+              <CustomSelect
+                compact
+                value={datePreset}
+                onChange={(v) => applyDatePreset(v)}
+                options={[
+                  { value: "all", label: "All time" },
+                  { value: "today", label: "Today" },
+                  { value: "7d", label: "Last 7 days" },
+                  { value: "30d", label: "Last 30 days" },
+                  { value: "custom", label: "Custom range…" },
+                ]}
+                ariaLabel="Date range"
+              />
             </div>
             {datePreset === "custom" && (
               <div className="filter-group">
@@ -291,9 +334,8 @@ export default function AuditLogPage() {
                 <input
                   type="datetime-local"
                   className="audit-date-input"
-                  style={{ height: 32, padding: "0 8px", border: "1px solid var(--field-border)", borderRadius: 6, fontFamily: "var(--mono)", fontSize: 11, color: "var(--text-primary)", background: "var(--field-bg)" }}
                   value={auditFilters.startDate}
-                  onChange={(e) => setAuditFilters((f) => ({ ...f, startDate: e.target.value }))}
+                  onChange={(e) => { setAuditFilters((f) => ({ ...f, startDate: e.target.value })); setCurrentPage(1); }}
                 />
               </div>
             )}
@@ -303,17 +345,36 @@ export default function AuditLogPage() {
                 <input
                   type="datetime-local"
                   className="audit-date-input"
-                  style={{ height: 32, padding: "0 8px", border: "1px solid var(--field-border)", borderRadius: 6, fontFamily: "var(--mono)", fontSize: 11, color: "var(--text-primary)", background: "var(--field-bg)" }}
                   value={auditFilters.endDate}
-                  onChange={(e) => setAuditFilters((f) => ({ ...f, endDate: e.target.value }))}
+                  onChange={(e) => { setAuditFilters((f) => ({ ...f, endDate: e.target.value })); setCurrentPage(1); }}
                 />
               </div>
             )}
+            <div className="filter-group">
+              <label>Type</label>
+              <CustomSelect
+                compact
+                value={typeFilter}
+                onChange={(v) => { setTypeFilter(v); setCurrentPage(1); }}
+                options={TYPE_OPTIONS}
+                ariaLabel="Event type"
+              />
+            </div>
+            <div className="filter-group">
+              <label>Actor</label>
+              <CustomSelect
+                compact
+                value={actorFilter}
+                onChange={(v) => { setActorFilter(v); setCurrentPage(1); }}
+                options={ACTOR_TYPES}
+                ariaLabel="Actor type"
+              />
+            </div>
           </div>
           <button
             className="btn btn-outline btn-sm filter-clear-btn"
             type="button"
-            onClick={() => { handleAuditReset(); setDatePreset("all"); }}
+            onClick={handleClearAllFilters}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
               <path d="M18 6 6 18" /><path d="m6 6 12 12" />
@@ -328,7 +389,7 @@ export default function AuditLogPage() {
         <ExportPanel
           title="Export Audit Log"
           subtitle="Download the full activity trail with timestamps, actors, and event details."
-          meta={`${total} events · ${hasAuditFilters ? "Filtered" : "All time"}`}
+          meta={`${total} events · ${hasAuditFilters || typeFilter || actorFilter ? "Filtered" : "All time"}`}
           loading={auditExporting}
           onClose={() => setExportOpen(false)}
           onExport={async (fmt) => {
@@ -376,21 +437,21 @@ export default function AuditLogPage() {
                 Array.from({ length: 5 }, (_, i) => (
                   <tr key={i}>
                     <td colSpan={4}>
-                      <div style={{ height: 14, background: "var(--surface-2)", borderRadius: 4, opacity: 0.5, animation: "pulse 1.5s ease-in-out infinite" }} />
+                      <div className="audit-skeleton-row" />
                     </td>
                   </tr>
                 ))
               )}
 
-              {!auditLoading && auditLogs.length === 0 && (
+              {!auditLoading && sortedAuditLogs.length === 0 && (
                 <tr>
                   <td colSpan={4} className="text-sm text-muted" style={{ textAlign: "center", padding: "22px 0" }}>
-                    {hasAuditFilters ? "No results for the current filters." : "No audit events yet."}
+                    {hasAuditFilters || typeFilter || actorFilter ? "No results for the current filters." : "No audit events yet."}
                   </td>
                 </tr>
               )}
 
-              {sortedAuditLogs.map((log) => {
+              {pagedLogs.map((log) => {
                 const chip = getChip(log.resource_type);
                 const actor = getActorInfo(log);
                 const ts = formatAuditTimestamp(log.created_at);
@@ -439,27 +500,63 @@ export default function AuditLogPage() {
 
         {/* Pagination footer */}
         <div className="audit-footer">
-          <div className="text-sm text-muted">
-            {auditLoading ? "Loading…" : `Showing ${auditLogs.length} event${auditLogs.length !== 1 ? "s" : ""}${auditHasMore ? "+" : ""}`}
+          <div className="audit-footer-left">
+            <span className="text-sm text-muted">
+              {auditLoading
+                ? "Loading…"
+                : sortedAuditLogs.length === 0
+                  ? "No events"
+                  : `Showing ${pageStart + 1}–${pageEnd} of ${sortedAuditLogs.length}${auditHasMore ? "+" : ""}`
+              }
+            </span>
+            <CustomSelect
+              compact
+              value={String(pageSize)}
+              onChange={(v) => { setPageSize(Number(v)); setCurrentPage(1); }}
+              options={[
+                { value: "25", label: "25 / page" },
+                { value: "50", label: "50 / page" },
+                { value: "100", label: "100 / page" },
+              ]}
+              ariaLabel="Page size"
+            />
           </div>
           <div className="audit-pagination">
             <button
               className="audit-page-btn"
               type="button"
-              disabled={!auditHasMore || auditLoading}
-              onClick={handleAuditLoadMore}
+              disabled={safePage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              aria-label="Previous page"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}>
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
+              <ChevronLeft size={14} />
+            </button>
+            <span className="audit-page-current">{safePage}</span>
+            <span className="audit-page-sep">/</span>
+            <span className="audit-page-total">{totalPages}</span>
+            <button
+              className="audit-page-btn"
+              type="button"
+              disabled={safePage >= totalPages && !auditHasMore}
+              onClick={() => {
+                if (safePage < totalPages) {
+                  setCurrentPage((p) => p + 1);
+                } else if (auditHasMore) {
+                  handleAuditLoadMore();
+                  setCurrentPage((p) => p + 1);
+                }
+              }}
+              aria-label="Next page"
+            >
+              <ChevronRight size={14} />
             </button>
             <button
-              className="btn btn-outline btn-sm"
+              className="btn btn-outline btn-sm audit-refresh-btn"
               type="button"
-              style={{ padding: "3px 10px", fontSize: 11 }}
               disabled={auditLoading}
-              onClick={handleAuditRefresh}
+              onClick={() => { handleAuditRefresh(); setCurrentPage(1); }}
             >
+              <RefreshCw size={11} />
               Refresh
             </button>
           </div>

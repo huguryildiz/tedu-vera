@@ -19,6 +19,17 @@ export async function getSession() {
 }
 
 /**
+ * Checks whether an email address is available for registration.
+ * Accessible to anon via SECURITY DEFINER RPC.
+ * @returns {{ available: boolean, reason?: string }}
+ */
+export async function checkEmailAvailable(email) {
+  const { data, error } = await supabase.rpc("rpc_check_email_available", { p_email: email });
+  if (error) throw error;
+  return data;
+}
+
+/**
  * Lists active organizations for public dropdown.
  */
 export async function listOrganizationsPublic() {

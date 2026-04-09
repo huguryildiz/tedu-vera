@@ -183,7 +183,7 @@ export default function LoginScreen({
             <div className="login-icon-wrap">
               <ShieldCheck width="26" height="26" strokeWidth="1.5" aria-hidden="true" />
             </div>
-            <div className="login-title">Welcome back</div>
+            <div className="login-title">Welcome Back</div>
             <div className="login-sub">Access your evaluation workspace</div>
           </div>
 
@@ -214,7 +214,7 @@ export default function LoginScreen({
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                   <label className="form-label" htmlFor="login-password" style={{ marginBottom: 0 }}>Password</label>
                   <button type="button" onClick={goForgotPassword} className="form-link">
-                    Forgot?
+                    Forgot password?
                   </button>
                 </div>
                 <div style={{ position: "relative" }}>

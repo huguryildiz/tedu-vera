@@ -42,7 +42,7 @@
 .ec-qr-actions .btn+.btn{border-left:1px solid var(--border)}
 .ec-qr-actions .btn.btn-primary{background:var(--accent);color:#fff;border-color:transparent}
 .ec-qr-actions .btn.btn-primary:hover{background:var(--accent-dark)}
-.ec-qr-actions .btn.ec-download-btn{border-radius:10px !important;padding:8px 12px}
+.ec-qr-actions .btn.ec-download-btn{border-radius:8px !important;padding:8px 12px}
 .ec-qr-actions .btn-revoke{color:var(--danger) !important}
 .ec-qr-actions .btn-revoke:hover{background:var(--danger-soft) !important}
 /* Token disclosure */

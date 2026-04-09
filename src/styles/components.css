@@ -1955,7 +1955,7 @@ body:not(.dark-mode) .apply-footer {
   background:var(--admin-primary-bg) !important;
   border:1px solid var(--admin-primary-border) !important;
   color:#eef4ff !important;
-  border-radius:999px !important;
+  border-radius:8px !important;
   box-shadow:var(--admin-primary-shadow) !important;
   text-shadow:0 1px 0 rgba(0,0,0,0.15);
 }
@@ -1990,7 +1990,7 @@ body:not(.dark-mode) .apply-footer {
 .admin-main #page-criteria .crt-add-btn{
   min-height:34px;
   padding:0 14px;
-  border-radius:999px !important;
+  border-radius:8px !important;
   font-size:12px;
   gap:6px;
   box-shadow:

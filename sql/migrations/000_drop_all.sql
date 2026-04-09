@@ -87,6 +87,8 @@ DROP FUNCTION IF EXISTS public.rpc_entry_token_revoke(UUID)                     
 DROP FUNCTION IF EXISTS public.rpc_landing_stats()                                          CASCADE;
 DROP FUNCTION IF EXISTS public.rpc_platform_metrics()                                       CASCADE;
 DROP FUNCTION IF EXISTS public.rpc_period_freeze_snapshot(UUID)                             CASCADE;
+DROP FUNCTION IF EXISTS public.rpc_check_email_available(TEXT)                              CASCADE;
+DROP FUNCTION IF EXISTS public.rpc_admin_write_audit_log(TEXT, TEXT, UUID, JSONB)           CASCADE;
 
 -- RPCs: System Config
 DROP FUNCTION IF EXISTS public.rpc_public_maintenance_status()                              CASCADE;

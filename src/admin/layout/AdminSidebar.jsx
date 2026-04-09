@@ -6,6 +6,7 @@ import { useAuth } from "@/auth";
 import { useTheme } from "../../shared/theme/ThemeProvider";
 import Avatar from "@/shared/ui/Avatar";
 import { LogOutIcon } from "@/shared/ui/Icons";
+import logoImg from "@/assets/favicon/web-app-manifest-512x512.png";
 
 const AVATAR_COLORS = ["#6366f1","#8b5cf6","#ec4899","#f59e0b","#10b981","#3b82f6","#ef4444","#14b8a6"];
 function getInitials(name, email) {
@@ -43,7 +44,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
       {/* Logo */}
       <div className="sb-logo">
         <div className="sb-logo-icon">
-          <img src="/src/assets/favicon/web-app-manifest-512x512.png" alt="V" width="34" height="34" />
+          <img src={logoImg} alt="V" width="34" height="34" />
         </div>
         <div className="sb-logo-text"><span>V</span>ERA<small>v1.0</small></div>
         <button className="sidebar-close-btn" type="button" aria-label="Close navigation" onClick={onClose}>
@@ -252,7 +253,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
       {/* Bottom: theme toggle + user menu */}
       <div className="sb-bottom">
         <button
-          className="sb-theme-toggle"
+          className={`sb-theme-toggle${isDark ? " sb-theme-toggle--sun" : ""}`}
           type="button"
           onClick={() => setTheme(isDark ? "light" : "dark")}
           aria-label="Toggle dark mode"

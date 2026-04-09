@@ -1188,23 +1188,43 @@ BEGIN
   SELECT COALESCE(
     json_agg(
       jsonb_build_object(
-        'id',               o.id,
-        'code',             o.code,
-        'name',             o.name,
-        'subtitle',         o.subtitle,
-        'contact_email',    o.contact_email,
-        'status',           o.status,
-        'settings',         o.settings,
-        'created_at',       o.created_at,
-        'updated_at',       o.updated_at,
-        'memberships',      m_agg.data,
-        'org_applications', a_agg.data
+        'id',                 o.id,
+        'code',               o.code,
+        'name',               o.name,
+        'subtitle',           o.subtitle,
+        'contact_email',      o.contact_email,
+        'status',             o.status,
+        'settings',           o.settings,
+        'created_at',         o.created_at,
+        'updated_at',         o.updated_at,
+        'active_period_name', p_curr.name,
+        'juror_count',        j_cnt.juror_count,
+        'project_count',      pr_cnt.project_count,
+        'memberships',        m_agg.data,
+        'org_applications',   a_agg.data
       ) ORDER BY o.name
     ),
     '[]'::json
   )
   INTO v_result
   FROM organizations o
+  LEFT JOIN LATERAL (
+    SELECT name
+    FROM periods
+    WHERE organization_id = o.id AND is_current = true
+    LIMIT 1
+  ) p_curr ON true
+  LEFT JOIN LATERAL (
+    SELECT COUNT(*) AS juror_count
+    FROM jurors j
+    WHERE j.organization_id = o.id
+  ) j_cnt ON true
+  LEFT JOIN LATERAL (
+    SELECT COUNT(*) AS project_count
+    FROM periods cp
+    JOIN projects pr ON pr.period_id = cp.id
+    WHERE cp.organization_id = o.id AND cp.is_current = true
+  ) pr_cnt ON true
   LEFT JOIN LATERAL (
     SELECT COALESCE(
       json_agg(
@@ -1631,3 +1651,56 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.rpc_admin_set_security_policy(JSONB) TO authenticated;
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- I) PUBLIC AUTH HELPERS
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+-- =============================================================================
+-- rpc_check_email_available
+-- Public RPC callable by anon. Uses SECURITY DEFINER to access auth.users.
+-- Returns { available: bool, reason?: 'email_already_registered' | 'application_already_pending' }
+-- =============================================================================
+CREATE OR REPLACE FUNCTION rpc_check_email_available(p_email TEXT)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_email      TEXT;
+  v_in_auth    BOOLEAN;
+  v_in_pending BOOLEAN;
+BEGIN
+  v_email := lower(trim(p_email));
+
+  IF v_email = '' OR v_email IS NULL THEN
+    RETURN jsonb_build_object('available', false, 'reason', 'email_required');
+  END IF;
+
+  -- Check auth.users (SECURITY DEFINER allows access to auth schema)
+  SELECT EXISTS(
+    SELECT 1 FROM auth.users WHERE lower(email) = v_email
+  ) INTO v_in_auth;
+
+  IF v_in_auth THEN
+    RETURN jsonb_build_object('available', false, 'reason', 'email_already_registered');
+  END IF;
+
+  -- Check for a pending application with the same email
+  SELECT EXISTS(
+    SELECT 1 FROM org_applications
+    WHERE lower(trim(contact_email)) = v_email
+      AND status = 'pending'
+  ) INTO v_in_pending;
+
+  IF v_in_pending THEN
+    RETURN jsonb_build_object('available', false, 'reason', 'application_already_pending');
+  END IF;
+
+  RETURN jsonb_build_object('available', true);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION rpc_check_email_available(TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION rpc_check_email_available(TEXT) TO authenticated;

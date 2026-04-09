@@ -3,6 +3,7 @@
 
 export {
   getSession,
+  checkEmailAvailable,
   listOrganizationsPublic,
   submitApplication,
   getMyApplications,
