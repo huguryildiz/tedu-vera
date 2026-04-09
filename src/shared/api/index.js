@@ -115,4 +115,6 @@ export {
   cancelMaintenance,
   getSecurityPolicy,
   setSecurityPolicy,
+  touchAdminSession,
+  listAdminSessions,
 } from "./admin/index";

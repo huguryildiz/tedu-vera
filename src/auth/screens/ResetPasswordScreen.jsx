@@ -6,8 +6,12 @@ import { useContext, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import FbAlert from "@/shared/ui/FbAlert";
 import { AuthContext } from "@/auth/AuthProvider";
-import { useSecurityPolicy } from "@/auth/SecurityPolicyContext";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
+import {
+  isStrongPassword,
+  PASSWORD_POLICY_ERROR_TEXT,
+  PASSWORD_POLICY_PLACEHOLDER,
+} from "@/shared/passwordPolicy";
 
 const EYE_ICON = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16" aria-hidden="true">
@@ -57,24 +61,13 @@ export default function ResetPasswordScreen({ onUpdatePassword, onBackToLogin })
   const [done, setDone] = useState(false);
   const submitBtnRef = useShakeOnError(error);
 
-  const { minPasswordLength, requireSpecialChars } = useSecurityPolicy();
-
-  const isValidPassword = (v) => {
-    const s = String(v || "");
-    if (s.length < minPasswordLength) return false;
-    if (requireSpecialChars && !/[^A-Za-z0-9]/.test(s)) return false;
-    return true;
-  };
+  const isValidPassword = isStrongPassword;
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     if (!isValidPassword(password)) {
-      setError(
-        requireSpecialChars
-          ? `Password must be at least ${minPasswordLength} characters and include a special character.`
-          : `Password must be at least ${minPasswordLength} characters.`
-      );
+      setError(PASSWORD_POLICY_ERROR_TEXT);
       return;
     }
     if (password !== confirmPassword) { setError("Passwords do not match."); return; }
@@ -154,7 +147,7 @@ export default function ResetPasswordScreen({ onUpdatePassword, onBackToLogin })
                     type={showPass ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder={`Min ${minPasswordLength} chars${requireSpecialChars ? ", include a symbol" : ""}`}
+                    placeholder={PASSWORD_POLICY_PLACEHOLDER}
                     autoComplete="new-password"
                     disabled={loading}
                     style={{ paddingRight: "40px" }}

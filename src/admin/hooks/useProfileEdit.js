@@ -9,11 +9,7 @@ import { useAuth } from "@/auth";
 import { useToast } from "@/shared/hooks/useToast";
 import { upsertProfile } from "../../shared/api";
 import { supabase } from "@/shared/lib/supabaseClient";
-
-const isStrongPassword = (v) => {
-  const s = String(v || "");
-  return s.length >= 10 && /[a-z]/.test(s) && /[A-Z]/.test(s) && /\d/.test(s) && /[^A-Za-z0-9]/.test(s);
-};
+import { isStrongPassword, PASSWORD_POLICY_ERROR_TEXT } from "@/shared/passwordPolicy";
 
 const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || ""));
 
@@ -127,7 +123,7 @@ export function useProfileEdit() {
   const handlePasswordSave = useCallback(async () => {
     const errs = {};
     if (!isStrongPassword(passwordForm.password)) {
-      errs.password = "Min 10 chars with uppercase, lowercase, digit, and symbol.";
+      errs.password = PASSWORD_POLICY_ERROR_TEXT;
     }
     if (passwordForm.password !== passwordForm.confirmPassword) {
       errs.confirmPassword = "Passwords do not match.";

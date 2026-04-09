@@ -1,29 +1,61 @@
 // src/admin/drawers/ViewSessionsDrawer.jsx
-// Drawer: view and revoke active login sessions.
+// Drawer: inspect tracked admin sessions (device-scoped).
 //
 // Props:
-//   open      — boolean
-//   onClose   — () => void
-//   sessions  — [{ id, device, ip, location, lastActive, signedIn, isCurrent }]
-//   onRevoke  — (sessionId) => Promise<void>
+//   open            — boolean
+//   onClose         — () => void
+//   sessions        — admin_user_sessions rows
+//   loading         — boolean
+//   currentDeviceId — current browser device_id
 
-import { useState } from "react";
 import Drawer from "@/shared/ui/Drawer";
-import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
+import { maskIpAddress, normalizeCountryCode } from "@/shared/lib/adminSession";
 
-export default function ViewSessionsDrawer({ open, onClose, sessions = [], onRevoke }) {
-  const [revoking, setRevoking] = useState(null);
+function formatAbsoluteDate(ts) {
+  if (!ts) return "Unknown";
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return "Unknown";
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
-  const handleRevoke = async (id) => {
-    setRevoking(id);
-    try {
-      await onRevoke?.(id);
-    } finally {
-      setRevoking(null);
-    }
-  };
+function formatRelative(ts) {
+  if (!ts) return "Unknown";
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return "Unknown";
+  const diffMs = Date.now() - d.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return formatAbsoluteDate(ts);
+}
 
-  const activeSessions = sessions.filter((s) => !s._revoked);
+function describeDevice(session) {
+  const browser = session?.browser || "Unknown";
+  const os = session?.os || "Unknown";
+  return `${browser} / ${os}`;
+}
+
+export default function ViewSessionsDrawer({ open, onClose, sessions = [], loading = false, currentDeviceId = "" }) {
+  const sortedSessions = Array.isArray(sessions)
+    ? [...sessions].sort((a, b) => {
+      const aMs = Date.parse(a?.last_activity_at || "");
+      const bMs = Date.parse(b?.last_activity_at || "");
+      const safeA = Number.isNaN(aMs) ? 0 : aMs;
+      const safeB = Number.isNaN(bMs) ? 0 : bMs;
+      return safeB - safeA;
+    })
+    : [];
+  const totalSessions = sortedSessions.length;
 
   return (
     <Drawer open={open} onClose={onClose}>
@@ -44,7 +76,7 @@ export default function ViewSessionsDrawer({ open, onClose, sessions = [], onRev
             <div>
               <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>Active Sessions</div>
               <div style={{ fontSize: 12, color: "var(--text-tertiary)", marginTop: 2 }}>
-                {activeSessions.length} device{activeSessions.length !== 1 ? "s" : ""} currently signed in
+                {totalSessions} device{totalSessions !== 1 ? "s" : ""} currently tracked
               </div>
             </div>
           </div>
@@ -57,53 +89,63 @@ export default function ViewSessionsDrawer({ open, onClose, sessions = [], onRev
       </div>
 
       <div className="fs-drawer-body" style={{ gap: 10 }}>
-        {sessions.length === 0 && (
+        {loading && (
           <div style={{ padding: "20px 0", textAlign: "center", color: "var(--text-quaternary)", fontSize: 12 }}>
-            No active sessions found.
+            Loading sessions...
           </div>
         )}
-        {sessions.map((session) => (
+        {!loading && sortedSessions.length === 0 && (
+          <div style={{ padding: "20px 0", textAlign: "center", color: "var(--text-quaternary)", fontSize: 12 }}>
+            No sessions found.
+          </div>
+        )}
+        {!loading && sortedSessions.map((session) => {
+          const isCurrent = session?.device_id === currentDeviceId;
+          const usedSignedInFallback = !session?.signed_in_at && !!session?.first_seen_at;
+          const signedInAt = session?.signed_in_at || session?.first_seen_at || null;
+
+          return (
           <div
             key={session.id}
-            style={
-              session.isCurrent
-                ? { border: "1px solid rgba(22,163,74,0.18)", borderRadius: 10, padding: "14px 16px", background: "rgba(22,163,74,0.03)" }
-                : { border: "1px solid var(--border)", borderRadius: 10, padding: "14px 16px" }
-            }
+            className={`fs-session-card${isCurrent ? " current" : ""}`}
           >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <div style={{ fontSize: 13, fontWeight: 650, color: "var(--text-primary)" }}>
-                {session.device}
+            <div className="fs-session-card-header">
+              <div className="fs-session-card-name">
+                {describeDevice(session)}
               </div>
-              {session.isCurrent ? (
-                <span className="badge badge-success" style={{ fontSize: 9 }}>Current</span>
-              ) : (
-                <button
-                  className="btn btn-outline btn-sm"
-                  type="button"
-                  style={{ padding: "3px 10px", fontSize: 10, borderColor: "rgba(225,29,72,0.2)", color: "var(--danger)" }}
-                  onClick={() => handleRevoke(session.id)}
-                  disabled={revoking === session.id}
-                >
-                  <span className="btn-loading-content">
-                    <AsyncButtonContent loading={revoking === session.id} loadingText="Revoking…">Revoke</AsyncButtonContent>
-                  </span>
-                </button>
+              {isCurrent && (
+                <span className="badge badge-success" style={{ fontSize: 9 }}>
+                  Current Session
+                </span>
               )}
             </div>
-            <div style={{ fontSize: 11.5, color: "var(--text-tertiary)", lineHeight: 1.6 }}>
-              {session.ip && <div>IP: {session.ip}{session.location ? ` · ${session.location}` : ""}</div>}
-              {session.lastActive && <div>Last active: {session.lastActive}</div>}
-              {session.signedIn && <div>Signed in: {session.signedIn}</div>}
+            <div className="fs-session-card-meta">
+              <div><strong>Device/Browser/OS:</strong> {describeDevice(session)}</div>
+              <div><strong>IP:</strong> {maskIpAddress(session?.ip_address)}</div>
+              <div><strong>Country:</strong> {normalizeCountryCode(session?.country_code)}</div>
+              <div>
+                <strong>Signed in at:</strong> {formatAbsoluteDate(signedInAt)}
+                {usedSignedInFallback && (
+                  <span
+                    style={{ marginLeft: 6, color: "var(--text-quaternary)", cursor: "help" }}
+                    title="Exact sign-in timestamp unavailable. Showing first seen timestamp."
+                    aria-label="signed-in-fallback-info"
+                  >
+                    (first seen)
+                  </span>
+                )}
+              </div>
+              <div><strong>Last activity:</strong> {formatRelative(session?.last_activity_at)}</div>
+              <div><strong>Auth method:</strong> {session?.auth_method || "Unknown"}</div>
+              <div><strong>Expires at:</strong> {formatAbsoluteDate(session?.expires_at)}</div>
             </div>
           </div>
-        ))}
+        );
+        })}
       </div>
 
       <div className="fs-drawer-footer">
-        <div style={{ flex: 1, fontSize: 11, color: "var(--text-tertiary)" }}>
-          {activeSessions.length} active session{activeSessions.length !== 1 ? "s" : ""}
-        </div>
+        <div style={{ flex: 1, fontSize: 11, color: "var(--text-tertiary)" }}>{totalSessions} session(s)</div>
         <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose}>
           Close
         </button>

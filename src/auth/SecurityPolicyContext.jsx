@@ -9,7 +9,7 @@ export const DEFAULT_POLICY = {
   googleOAuth: true,
   emailPassword: true,
   rememberMe: true,
-  minPasswordLength: 8,
+  minPasswordLength: 10,
   maxLoginAttempts: 5,
   requireSpecialChars: true,
   tokenTtl: "24h",

@@ -109,3 +109,5 @@ export { sendEntryTokenEmail, sendJurorPinEmail, sendExportReport } from "./noti
 export { getMaintenanceStatus, getMaintenanceConfig, setMaintenance, cancelMaintenance } from "./maintenance";
 
 export { getSecurityPolicy, setSecurityPolicy } from "./security";
+
+export { touchAdminSession, listAdminSessions } from "./sessions";

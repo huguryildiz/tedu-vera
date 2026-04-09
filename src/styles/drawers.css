@@ -870,3 +870,16 @@ textarea.fs-outcome-input{min-height:38px;max-height:120px}
 .fs-weight-bar-track{flex:0 0 120px;height:6px;background:var(--surface-2);border-radius:99px;overflow:hidden}
 .fs-weight-bar-fill{height:100%;border-radius:99px;transition:width .3s}
 
+/* Error message alignment: keep danger alerts vertically centered */
+.fs-alert.danger{align-items:center}
+.fs-alert.danger .fs-alert-icon{margin-top:0}
+
+/* Stronger error emphasis for drawer inputs using legacy input-error utility */
+.fs-input.input-error,
+.fs-input.input-error:hover,
+.fs-input.input-error:focus,
+.fs-input.input-error:focus-visible,
+.fs-input.input-error:active{
+  border-color:#f43f5e !important;
+  box-shadow:0 0 0 4px rgba(244,63,94,0.18) !important;
+}

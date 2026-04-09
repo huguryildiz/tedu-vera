@@ -30,6 +30,7 @@ DROP TABLE IF EXISTS period_outcomes                 CASCADE;
 DROP TABLE IF EXISTS period_criteria                 CASCADE;
 
 -- Execution
+DROP TABLE IF EXISTS admin_user_sessions             CASCADE;
 DROP TABLE IF EXISTS audit_logs                      CASCADE;
 DROP TABLE IF EXISTS entry_tokens                    CASCADE;
 DROP TABLE IF EXISTS juror_period_auth               CASCADE;

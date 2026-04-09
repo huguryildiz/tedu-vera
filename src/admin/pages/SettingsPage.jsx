@@ -2,18 +2,17 @@
 // Simplified: profile + security for both roles.
 // Organization management moved to OrganizationsPage.jsx.
 
-import { useCallback, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/auth";
 import { useUpdatePolicy } from "@/auth/SecurityPolicyContext";
 import { useToast } from "@/shared/hooks/useToast";
-import FbAlert from "@/shared/ui/FbAlert";
-import { useProfileEdit } from "../hooks/useProfileEdit";
 import SecurityPolicyDrawer from "../drawers/SecurityPolicyDrawer";
 import EditProfileDrawer from "../drawers/EditProfileDrawer";
+import ChangePasswordDrawer from "../drawers/ChangePasswordDrawer";
+import ViewSessionsDrawer from "../drawers/ViewSessionsDrawer";
 import Avatar from "@/shared/ui/Avatar";
-import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
-import { upsertProfile, getSecurityPolicy, setSecurityPolicy } from "@/shared/api";
+import { upsertProfile, getSecurityPolicy, setSecurityPolicy, listAdminSessions } from "@/shared/api";
+import { getAdminDeviceId, getAuthMethodLabelFromSession } from "@/shared/lib/adminSession";
 import { supabase } from "@/shared/lib/supabaseClient";
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -37,105 +36,118 @@ function getAvatarColor(name) {
   return AVATAR_COLORS[code % AVATAR_COLORS.length];
 }
 
-// ── Password Change Modal ─────────────────────────────────────
+function formatShortDate(ts) {
+  if (!ts) return "—";
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
 
-function PasswordModal({ profile }) {
-  if (!profile.modalOpen || profile.modalView !== "password") return null;
-  return createPortal(
-    <div
-      className="crud-overlay"
-      style={{ display: "flex" }}
-      onClick={(e) => { if (e.target === e.currentTarget) profile.closeModal(); }}
-    >
-      <div className="crud-modal" style={{ maxWidth: 440 }}>
-        <div className="crud-modal-header">
-          <h3>Change Password</h3>
-          <button className="crud-modal-close" onClick={profile.closeModal}>&#215;</button>
-        </div>
+function formatRelativeDate(ts) {
+  if (!ts) return "—";
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return "—";
+  const diffMs = Date.now() - d.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return formatShortDate(ts);
+}
 
-        <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: 14 }}>
-          {profile.passwordErrors._general && (
-            <FbAlert variant="danger">
-              {profile.passwordErrors._general}
-            </FbAlert>
-          )}
-          <label className="form-label" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            New Password
-            <input
-              className="form-input"
-              type="password"
-              value={profile.passwordForm.password}
-              onChange={(e) => profile.setPasswordField("password", e.target.value)}
-              disabled={profile.passwordSaving}
-              placeholder="Min 10 chars, upper, lower, digit, symbol"
-              autoComplete="new-password"
-            />
-            {profile.passwordErrors.password && (
-              <span style={{ fontSize: 11, color: "var(--danger)" }}>{profile.passwordErrors.password}</span>
-            )}
-          </label>
-          <label className="form-label" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            Confirm Password
-            <input
-              className="form-input"
-              type="password"
-              value={profile.passwordForm.confirmPassword}
-              onChange={(e) => profile.setPasswordField("confirmPassword", e.target.value)}
-              disabled={profile.passwordSaving}
-              placeholder="Enter your new password"
-              autoComplete="new-password"
-            />
-            {profile.passwordErrors.confirmPassword && (
-              <span style={{ fontSize: 11, color: "var(--danger)" }}>{profile.passwordErrors.confirmPassword}</span>
-            )}
-          </label>
-        </div>
-
-        <div style={{ padding: "12px 20px", borderTop: "1px solid var(--border)", background: "var(--surface-1)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <button
-            className="btn btn-outline btn-sm"
-            onClick={profile.closeModal}
-            disabled={profile.passwordSaving}
-          >
-            Cancel
-          </button>
-          <button
-            className="btn btn-sm"
-            style={{ background: "var(--accent)", color: "#fff" }}
-            onClick={profile.handlePasswordSave}
-            disabled={profile.passwordSaving}
-          >
-            <span className="btn-loading-content">
-              <AsyncButtonContent loading={profile.passwordSaving} loadingText="Saving…">Update Password</AsyncButtonContent>
-            </span>
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body
-  );
+function normalizePasswordChangeError(raw) {
+  const msg = String(raw?.message || raw || "").toLowerCase().trim();
+  if (!msg) return "Could not update password. Please try again.";
+  if (msg.includes("current password is incorrect")) return "Current password is incorrect.";
+  if (msg.includes("invalid login credentials")) return "Current password is incorrect.";
+  if (msg.includes("session expired")) return "Session expired. Please sign in again.";
+  if (msg.includes("current password is required")) return "Current password is required.";
+  if (msg.includes("new password should be different")) return "New password must be different from current password.";
+  if (msg.includes("same password")) return "New password must be different from current password.";
+  if (msg.includes("weak password")) return "Password does not meet security requirements.";
+  return String(raw?.message || raw || "Could not update password. Please try again.");
 }
 
 // ── Main Component ────────────────────────────────────────────
 
 export default function SettingsPage() {
-  const { user, displayName, setDisplayName, avatarUrl, setAvatarUrl, isSuper, activeOrganization, signOut, refreshUser, clearPendingEmail } = useAuth();
+  const {
+    user,
+    session,
+    displayName,
+    setDisplayName,
+    avatarUrl,
+    setAvatarUrl,
+    isSuper,
+    activeOrganization,
+    signOut,
+    signOutAll,
+    refreshUser,
+    clearPendingEmail,
+    updatePassword,
+    reauthenticateWithPassword,
+    loading,
+  } = useAuth();
   const updatePolicy = useUpdatePolicy();
   const _toast = useToast();
 
-  const profile = useProfileEdit();
-
   const initials = getInitials(displayName, user?.email);
   const avatarBg = getAvatarColor(displayName || user?.email);
+  const joinedAt = session?.user?.created_at || null;
+  const lastActiveAt = session?.user?.last_sign_in_at || null;
+  const lastLoginAt = session?.user?.last_sign_in_at || null;
+  const authMethod = getAuthMethodLabelFromSession(session, user);
+  const currentDeviceId = getAdminDeviceId();
 
   // Drawer states
   const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [securityPolicyOpen, setSecurityPolicyOpen] = useState(false);
+  const [viewSessionsOpen, setViewSessionsOpen] = useState(false);
 
   // Security policy state
   const [securityPolicy, setSecurityPolicyState] = useState(null);
   const [securityPolicyError, setSecurityPolicyError] = useState(null);
   const policyFetched = useRef(false);
+  const [adminSessions, setAdminSessions] = useState([]);
+  const [adminSessionsLoading, setAdminSessionsLoading] = useState(false);
+  const knownSessionCount = adminSessions.length > 0 ? adminSessions.length : (session ? 1 : 0);
+  const sessionCount = `${knownSessionCount} Active`;
+
+  const loadAdminSessions = useCallback(async ({ silent = false } = {}) => {
+    if (!user?.id) {
+      setAdminSessions([]);
+      return;
+    }
+
+    setAdminSessionsLoading(true);
+    try {
+      const rows = await listAdminSessions();
+      setAdminSessions(rows);
+    } catch (e) {
+      if (!silent) {
+        _toast.error(e?.message || "Failed to load session history.");
+      }
+    } finally {
+      setAdminSessionsLoading(false);
+    }
+  }, [user?.id, _toast]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setAdminSessions([]);
+      return;
+    }
+    loadAdminSessions({ silent: true });
+  }, [user?.id, loadAdminSessions]);
+
+  useEffect(() => {
+    if (!viewSessionsOpen) return;
+    loadAdminSessions();
+  }, [viewSessionsOpen, loadAdminSessions]);
 
   const handleOpenSecurityPolicy = useCallback(async () => {
     setSecurityPolicyError(null);
@@ -204,10 +216,18 @@ export default function SettingsPage() {
     }
   }, [user, _toast, refreshUser, clearPendingEmail]);
 
+  const handleSavePassword = useCallback(async ({ currentPassword, newPassword }) => {
+    try {
+      await reauthenticateWithPassword(currentPassword);
+      await updatePassword(newPassword);
+      _toast.success("Password updated");
+    } catch (e) {
+      throw new Error(normalizePasswordChangeError(e));
+    }
+  }, [reauthenticateWithPassword, updatePassword, _toast]);
+
   return (
     <>
-      <PasswordModal profile={profile} />
-
       <EditProfileDrawer
         open={editProfileOpen}
         onClose={() => setEditProfileOpen(false)}
@@ -232,6 +252,19 @@ export default function SettingsPage() {
         policy={securityPolicy}
         onSave={handleSaveSecurityPolicy}
         error={securityPolicyError}
+      />
+      <ChangePasswordDrawer
+        open={changePasswordOpen}
+        onClose={() => setChangePasswordOpen(false)}
+        onSave={handleSavePassword}
+        error={null}
+      />
+      <ViewSessionsDrawer
+        open={viewSessionsOpen}
+        onClose={() => setViewSessionsOpen(false)}
+        sessions={adminSessions}
+        loading={adminSessionsLoading}
+        currentDeviceId={currentDeviceId}
       />
 
       <div className="page">
@@ -281,17 +314,17 @@ export default function SettingsPage() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 8 }}>
                 <div style={{ padding: "7px 10px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", background: "var(--surface-1)", textAlign: "center" }}>
-                  <div style={{ fontFamily: "var(--mono)", fontWeight: 700, fontSize: 12, color: "var(--text-primary)" }}>—</div>
+                  <div style={{ fontFamily: "var(--mono)", fontWeight: 700, fontSize: 12, color: "var(--text-primary)" }}>{formatShortDate(joinedAt)}</div>
                   <div style={{ fontSize: 8.5, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 1 }}>Joined</div>
                 </div>
                 <div style={{ padding: "7px 10px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", background: "var(--surface-1)", textAlign: "center" }}>
-                  <div style={{ fontFamily: "var(--mono)", fontWeight: 700, fontSize: 12, color: "var(--text-primary)" }}>—</div>
+                  <div style={{ fontFamily: "var(--mono)", fontWeight: 700, fontSize: 12, color: "var(--text-primary)" }}>{formatRelativeDate(lastActiveAt)}</div>
                   <div style={{ fontSize: 8.5, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 1 }}>Last Active</div>
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
                 <button className="btn btn-outline btn-sm" onClick={() => setEditProfileOpen(true)}>Edit Profile</button>
-                <button className="btn btn-outline btn-sm" onClick={() => profile.openModal("password")}>Change Password</button>
+                <button className="btn btn-outline btn-sm" onClick={() => setChangePasswordOpen(true)}>Change Password</button>
               </div>
             </div>
 
@@ -306,9 +339,9 @@ export default function SettingsPage() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
                 {[
-                  { label: "Last Login", value: "—" },
-                  { label: "Sessions", value: "—" },
-                  { label: "Auth Method", value: "—" },
+                  { label: "Last Login", value: loading ? "..." : formatRelativeDate(lastLoginAt) },
+                  { label: "Sessions", value: loading || adminSessionsLoading ? "..." : sessionCount },
+                  { label: "Auth Method", value: loading ? "..." : authMethod },
                 ].map(({ label, value }) => (
                   <div key={label} style={{ padding: "7px 8px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", background: "var(--surface-1)", textAlign: "center" }}>
                     <div style={{ fontFamily: "var(--mono)", fontWeight: 700, fontSize: 11.5, color: "var(--text-primary)" }}>{value}</div>
@@ -317,8 +350,8 @@ export default function SettingsPage() {
                 ))}
               </div>
               <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap", alignItems: "center" }}>
-                <button className="btn btn-outline btn-sm" disabled title="Session management — coming soon">View Sessions</button>
-                <button className="btn btn-outline btn-sm" style={{ borderColor: "rgba(225,29,72,0.2)", color: "var(--text-secondary)" }} disabled title="Sign out all sessions — coming soon">Sign Out All</button>
+                <button className="btn btn-outline btn-sm" onClick={() => setViewSessionsOpen(true)}>View Sessions</button>
+                <button className="btn btn-outline btn-sm" style={{ borderColor: "rgba(225,29,72,0.25)", color: "var(--danger)" }} onClick={signOutAll} title="Sign out from all devices">Sign Out All</button>
                 <div style={{ flex: 1 }} />
                 <button
                   className="btn btn-outline btn-sm"

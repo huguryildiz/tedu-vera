@@ -960,7 +960,8 @@ tbody tr:hover{background:var(--surface-1)}
 
 /* ── Field Validation ── */
 .field-error .form-input,.field-error .modal-input,.field-error .crud-form-group input,.field-error .crud-form-group select,.field-error .crud-form-group textarea,
-input.input-error,select.input-error,textarea.input-error{border-color:rgba(225,29,72,0.4) !important;box-shadow:0 0 0 3px rgba(225,29,72,0.06) !important}
+input.input-error,select.input-error,textarea.input-error,
+input.input-error:focus,select.input-error:focus,textarea.input-error:focus{border-color:#f43f5e !important;box-shadow:0 0 0 4px rgba(244,63,94,0.18) !important}
 .field-success .form-input,.field-success .modal-input,input.input-success{border-color:rgba(34,197,94,0.35) !important;box-shadow:0 0 0 3px rgba(34,197,94,0.06) !important}
 .field-helper{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:11.5px;line-height:1.4}
 .field-helper svg{flex-shrink:0;width:12px;height:12px}
@@ -1126,6 +1127,10 @@ body:not(.dark-mode) .fb-alert.fba-success .fb-alert-desc{color:#166534;opacity:
 .fb-modal-alert.fma-warning{background:var(--fb-warning-bg);border:1px solid var(--fb-warning-border);color:var(--fb-warning-text)}
 .fb-modal-alert.fma-success{background:var(--fb-success-bg);border:1px solid var(--fb-success-border);color:var(--fb-success-text)}
 .fb-modal-alert.fma-info{background:var(--fb-info-bg);border:1px solid var(--fb-info-border);color:var(--fb-info-text)}
+
+/* Error message alignment: keep danger alerts vertically centered */
+.fb-modal-alert.fma-danger{align-items:center}
+.fb-modal-alert.fma-danger svg{margin-top:0}
 
 /* ── Empty / Error Table States ── */
 .fb-empty{text-align:center;padding:48px 24px;border-radius:12px;border:1px solid var(--border);background:var(--bg-card)}

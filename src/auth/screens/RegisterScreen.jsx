@@ -9,8 +9,13 @@ import FbAlert from "@/shared/ui/FbAlert";
 import { listOrganizationsPublic, checkEmailAvailable } from "@/shared/api";
 import GroupedCombobox from "@/shared/ui/GroupedCombobox";
 import { AuthContext } from "@/auth/AuthProvider";
-import { useSecurityPolicy } from "@/auth/SecurityPolicyContext";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
+import {
+  evaluatePassword,
+  isStrongPassword,
+  PASSWORD_POLICY_ERROR_TEXT,
+  PASSWORD_POLICY_PLACEHOLDER,
+} from "@/shared/passwordPolicy";
 
 function generateTemporaryPassword() {
   const rand =
@@ -49,24 +54,18 @@ const GOOGLE_ICON = (
 );
 
 /* ── Password Strength ── */
-function getPasswordStrength(password, minLen, requireSpecial) {
+function getPasswordStrength(password) {
   if (!password) return { level: 0, label: "" };
-  let score = 0;
-  if (password.length >= minLen) score++;
-  if (password.length >= minLen + 4) score++;
-  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
-  if (/\d/.test(password)) score++;
-  if (/[^A-Za-z0-9]/.test(password)) score++;
-  if (requireSpecial && !/[^A-Za-z0-9]/.test(password)) score = Math.min(score, 2);
+  const { score } = evaluatePassword(password);
 
   if (score <= 1) return { level: 1, label: "Weak" };
   if (score <= 2) return { level: 2, label: "Fair" };
-  if (score <= 3) return { level: 3, label: "Good" };
+  if (score <= 4) return { level: 3, label: "Good" };
   return { level: 4, label: "Strong" };
 }
 
-function PasswordStrengthBar({ password, minLen, requireSpecial }) {
-  const { level, label } = getPasswordStrength(password, minLen, requireSpecial);
+function PasswordStrengthBar({ password }) {
+  const { level, label } = getPasswordStrength(password);
   if (!password) return null;
   const colors = ["", "reg-pw-weak", "reg-pw-fair", "reg-pw-good", "reg-pw-strong"];
   return (
@@ -110,16 +109,8 @@ export default function RegisterScreen({ onRegister, onSwitchToLogin, onReturnHo
   const [tenants, setTenants] = useState([]);
   const [tenantsLoading, setTenantsLoading] = useState(true);
 
-  const { minPasswordLength, requireSpecialChars } = useSecurityPolicy();
-
-  const isValidPassword = (v) => {
-    const s = String(v || "");
-    if (s.length < minPasswordLength) return false;
-    if (requireSpecialChars && !/[^A-Za-z0-9]/.test(s)) return false;
-    return true;
-  };
-
-  const passwordPlaceholder = `Min ${minPasswordLength} chars${requireSpecialChars ? ", include a symbol" : ""}`;
+  const isValidPassword = isStrongPassword;
+  const passwordPlaceholder = PASSWORD_POLICY_PLACEHOLDER;
 
   useEffect(() => {
     if (!authLoading && authUser && !profileIncomplete) {
@@ -207,11 +198,7 @@ export default function RegisterScreen({ onRegister, onSwitchToLogin, onReturnHo
       if (!password) { setError("Password is required."); return; }
       if (password !== confirmPassword) { setError("Passwords do not match."); return; }
       if (!isValidPassword(password)) {
-        setError(
-          requireSpecialChars
-            ? `Password must be at least ${minPasswordLength} characters and include a special character.`
-            : `Password must be at least ${minPasswordLength} characters.`
-        );
+        setError(PASSWORD_POLICY_ERROR_TEXT);
         return;
       }
     }
@@ -457,8 +444,6 @@ export default function RegisterScreen({ onRegister, onSwitchToLogin, onReturnHo
                   </div>
                   <PasswordStrengthBar
                     password={password}
-                    minLen={minPasswordLength}
-                    requireSpecial={requireSpecialChars}
                   />
                 </div>
 

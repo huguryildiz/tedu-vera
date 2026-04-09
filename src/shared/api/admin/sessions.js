@@ -1,0 +1,63 @@
+import { supabase } from "../core/client";
+import { resolveEnvironment } from "../../lib/environment";
+
+function toIsoOrNull(value) {
+  if (value == null) return null;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const d = new Date(value * 1000);
+    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  }
+  const text = String(value).trim();
+  if (!text) return null;
+  const d = new Date(text);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+export async function touchAdminSession({
+  deviceId,
+  userAgent,
+  browser,
+  os,
+  authMethod,
+  signedInAt = null,
+  expiresAt = null,
+}) {
+  const payload = {
+    deviceId: String(deviceId || "").trim(),
+    userAgent: String(userAgent || "").trim(),
+    browser: String(browser || "").trim() || "Unknown",
+    os: String(os || "").trim() || "Unknown",
+    authMethod: String(authMethod || "").trim() || "Unknown",
+    signedInAt: toIsoOrNull(signedInAt),
+    expiresAt: toIsoOrNull(expiresAt),
+  };
+
+  const invokeOptions = {
+    body: payload,
+  };
+
+  try {
+    const { data, error } = await supabase.functions.invoke("admin-session-touch", invokeOptions);
+    if (error) {
+      console.error("401/500 from admin-session-touch Edge Function! Error details:", error.message, error.context);
+      throw error;
+    }
+    if (data?.ok !== true) {
+      throw new Error(data?.error || "Session touch failed.");
+    }
+    return data;
+  } catch (err) {
+    console.error("touchAdminSession invoke exception:", err);
+    throw err;
+  }
+}
+
+export async function listAdminSessions() {
+  const { data, error } = await supabase
+    .from("admin_user_sessions")
+    .select("*")
+    .order("last_activity_at", { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}

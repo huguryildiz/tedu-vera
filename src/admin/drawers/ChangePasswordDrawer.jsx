@@ -12,21 +12,16 @@ import { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
+import InlineError from "@/shared/ui/InlineError";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
-
-function getStrength(password) {
-  const checks = {
-    length: password.length >= 8,
-    lower: /[a-z]/.test(password),
-    upper: /[A-Z]/.test(password),
-    number: /[0-9]/.test(password),
-    special: /[^a-zA-Z0-9]/.test(password),
-  };
-  const score = Object.values(checks).filter(Boolean).length;
-  const labels = ["", "Very Weak", "Weak", "Fair", "Strong", "Very Strong"];
-  const colors = ["", "#ef4444", "#f97316", "#eab308", "#22c55e", "#16a34a"];
-  return { checks, score, label: labels[score] || "", color: colors[score] || "", pct: score * 20 };
-}
+import {
+  evaluatePassword,
+  getStrengthMeta,
+  isStrongPassword,
+  PASSWORD_POLICY_PLACEHOLDER,
+  PASSWORD_REQUIREMENTS,
+} from "@/shared/passwordPolicy";
+import { useAuth } from "@/auth";
 
 function EyeIcon() {
   return (
@@ -55,7 +50,7 @@ function CheckIcon() {
   );
 }
 
-function PasswordField({ label, value, onChange, placeholder, disabled, id }) {
+function PasswordField({ label, value, onChange, placeholder, disabled, id, name, autoComplete, error }) {
   const [show, setShow] = useState(false);
   return (
     <div className="fs-field">
@@ -63,7 +58,9 @@ function PasswordField({ label, value, onChange, placeholder, disabled, id }) {
       <div style={{ position: "relative" }}>
         <input
           id={id}
-          className="fs-input"
+          name={name}
+          autoComplete={autoComplete}
+          className={`fs-input${error ? " input-error" : ""}`}
           type={show ? "text" : "password"}
           placeholder={placeholder}
           value={value}
@@ -81,11 +78,13 @@ function PasswordField({ label, value, onChange, placeholder, disabled, id }) {
           {show ? <EyeOffIcon /> : <EyeIcon />}
         </button>
       </div>
+      <InlineError>{error}</InlineError>
     </div>
   );
 }
 
 export default function ChangePasswordDrawer({ open, onClose, onSave, error }) {
+  const { user } = useAuth();
   const [current, setCurrent] = useState("");
   const [newPwd, setNewPwd] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -99,46 +98,67 @@ export default function ChangePasswordDrawer({ open, onClose, onSave, error }) {
     }
   }, [open]);
 
-  const strength = getStrength(newPwd);
+  const { checks, score } = evaluatePassword(newPwd);
+  const strength = { checks, score, ...getStrengthMeta(score) };
   const passwordsMatch = newPwd && confirm && newPwd === confirm;
-  const passwordsMismatch = confirm && newPwd !== confirm;
-  const canSave = current && strength.checks.length && passwordsMatch;
+  const confirmMismatch = Boolean(confirm && !passwordsMatch);
+  const canSave = Boolean(current && isStrongPassword(newPwd) && passwordsMatch);
 
-  const handleSave = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!canSave || saving) return;
+    
     setSaveError("");
     setSaving(true);
     try {
       await onSave?.({ currentPassword: current, newPassword: newPwd });
       onClose();
-    } catch (e) {
-      setSaveError(e?.message || "Something went wrong.");
+    } catch (err) {
+      setSaveError(err?.message || "Something went wrong.");
     } finally {
       setSaving(false);
     }
   };
 
   const displayError = saveError || error;
+  const errorText = String(displayError || "").trim();
+  const lowerError = errorText.toLowerCase();
+  const currentFieldError = lowerError.includes("current password") ? errorText : "";
+  const newPasswordFieldError = (
+    lowerError.includes("new password")
+    || lowerError.includes("security requirements")
+    || lowerError.includes("weak password")
+    || lowerError.includes("same password")
+  ) ? errorText : "";
+  const showGlobalError = Boolean(errorText && !currentFieldError && !newPasswordFieldError);
   const saveBtnRef = useShakeOnError(displayError);
 
   return (
     <Drawer open={open} onClose={onClose}>
-      <div className="fs-drawer-header">
+      <form onSubmit={handleSubmit} style={{ display: "contents" }}>
+        {/* Hidden username field for accessibility / password manager autofill */}
+        <input 
+          type="text" 
+          name="username" 
+          id="cp-username" 
+          autoComplete="username" 
+          value={user?.email || ""} 
+          readOnly 
+          style={{ display: "none" }} 
+          aria-hidden="true" 
+        />
+        <div className="fs-drawer-header">
         <div className="fs-drawer-header-row">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div
-              style={{
-                width: 36, height: 36, borderRadius: 9, display: "grid", placeItems: "center",
-                background: "rgba(217,119,6,0.08)", border: "1px solid rgba(217,119,6,0.12)",
-              }}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="2" style={{ width: 17, height: 17 }}>
+            <div className="fs-icon warning">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
             </div>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>Change Password</div>
-              <div style={{ fontSize: 12, color: "var(--text-tertiary)", marginTop: 2 }}>Update your account password</div>
+            <div className="fs-title-group">
+              <div className="fs-title">Change Password</div>
+              <div className="fs-subtitle">Update your account password</div>
             </div>
           </div>
           <button className="fs-close" type="button" onClick={onClose} aria-label="Close">
@@ -150,28 +170,43 @@ export default function ChangePasswordDrawer({ open, onClose, onSave, error }) {
       </div>
 
       <div className="fs-drawer-body" style={{ gap: 16 }}>
-        {displayError && (
+        {showGlobalError && (
           <div className="fs-alert danger" style={{ marginBottom: 4 }}>
             <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{displayError}</div>
+            <div className="fs-alert-body">{errorText}</div>
           </div>
         )}
 
         <PasswordField
           label="Current Password"
           value={current}
-          onChange={(e) => setCurrent(e.target.value)}
+          onChange={(e) => {
+            if (saveError) setSaveError("");
+            setCurrent(e.target.value);
+          }}
           placeholder="Enter current password"
           disabled={saving}
           id="cp-current"
+          name="currentPassword"
+          autoComplete="current-password"
+          error={currentFieldError}
         />
 
         {/* New password with strength */}
         <div className="fs-field">
           <label className="fs-field-label">New Password</label>
           <div style={{ position: "relative" }}>
-            <NewPasswordField value={newPwd} onChange={setNewPwd} disabled={saving} />
+            <NewPasswordField
+              value={newPwd}
+              onChange={(value) => {
+                if (saveError) setSaveError("");
+                setNewPwd(value);
+              }}
+              disabled={saving}
+              error={newPasswordFieldError}
+            />
           </div>
+          <InlineError>{newPasswordFieldError}</InlineError>
 
           {newPwd && (
             <>
@@ -187,14 +222,8 @@ export default function ChangePasswordDrawer({ open, onClose, onSave, error }) {
                 </span>
               </div>
               <div className="pwd-checklist">
-                {[
-                  { key: "length", label: "Minimum 8 characters" },
-                  { key: "lower", label: "At least one lowercase letter" },
-                  { key: "upper", label: "At least one uppercase letter" },
-                  { key: "number", label: "At least one number" },
-                  { key: "special", label: "At least one special character" },
-                ].map(({ key, label }) => (
-                  <div key={key} className={`pwd-check${strength.checks[key] ? " met" : ""}`}>
+                {PASSWORD_REQUIREMENTS.map(({ key, label }) => (
+                  <div key={key} className={`pwd-check${strength.checks[key] ? " pass" : ""}`}>
                     <CheckIcon />
                     {label}
                   </div>
@@ -207,14 +236,21 @@ export default function ChangePasswordDrawer({ open, onClose, onSave, error }) {
         {/* Confirm */}
         <div className="fs-field">
           <label className="fs-field-label">Confirm New Password</label>
-          <ConfirmPasswordField value={confirm} onChange={setConfirm} disabled={saving} />
+          <ConfirmPasswordField
+            value={confirm}
+            onChange={(value) => {
+              if (saveError) setSaveError("");
+              setConfirm(value);
+            }}
+            disabled={saving}
+            error={confirmMismatch}
+          />
           {confirm && (
-            <div
-              className="pwd-match-msg"
-              style={{ color: passwordsMatch ? "var(--success)" : "var(--danger)" }}
-            >
-              {passwordsMatch ? "Passwords match" : "Passwords do not match"}
-            </div>
+            passwordsMatch ? (
+              <div className="pwd-match-msg match">Passwords match</div>
+            ) : (
+              <InlineError>Passwords do not match</InlineError>
+            )
           )}
         </div>
       </div>
@@ -226,8 +262,7 @@ export default function ChangePasswordDrawer({ open, onClose, onSave, error }) {
         <button
           ref={saveBtnRef}
           className="fs-btn fs-btn-primary"
-          type="button"
-          onClick={handleSave}
+          type="submit"
           disabled={saving || !canSave}
         >
           <span className="btn-loading-content">
@@ -235,20 +270,24 @@ export default function ChangePasswordDrawer({ open, onClose, onSave, error }) {
           </span>
         </button>
       </div>
+      </form>
     </Drawer>
   );
 }
 
 // Separate sub-components to avoid rules-of-hooks issues with inline show/hide state
 
-function NewPasswordField({ value, onChange, disabled }) {
+function NewPasswordField({ value, onChange, disabled, error }) {
   const [show, setShow] = useState(false);
   return (
     <div style={{ position: "relative" }}>
       <input
-        className="fs-input"
+        id="cp-new"
+        name="newPassword"
+        autoComplete="new-password"
+        className={`fs-input${error ? " input-error" : ""}`}
         type={show ? "text" : "password"}
-        placeholder="Enter new password"
+        placeholder={PASSWORD_POLICY_PLACEHOLDER}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
@@ -267,12 +306,15 @@ function NewPasswordField({ value, onChange, disabled }) {
   );
 }
 
-function ConfirmPasswordField({ value, onChange, disabled }) {
+function ConfirmPasswordField({ value, onChange, disabled, error = false }) {
   const [show, setShow] = useState(false);
   return (
     <div style={{ position: "relative" }}>
       <input
-        className="fs-input"
+        id="cp-confirm"
+        name="confirmPassword"
+        autoComplete="new-password"
+        className={`fs-input${error ? " input-error" : ""}`}
         type={show ? "text" : "password"}
         placeholder="Re-enter new password"
         value={value}

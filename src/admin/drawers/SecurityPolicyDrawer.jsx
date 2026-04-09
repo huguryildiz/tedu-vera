@@ -23,7 +23,7 @@ const DEFAULT_POLICY = {
   googleOAuth: true,
   emailPassword: true,
   rememberMe: true,
-  minPasswordLength: 8,
+  minPasswordLength: 10,
   maxLoginAttempts: 5,
   requireSpecialChars: true,
   tokenTtl: "24h",
@@ -216,14 +216,6 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
             />
           </div>
         </div>
-        <ToggleRow
-          title="Require Special Characters"
-          desc="Enforce at least one special character in passwords"
-          checked={form.requireSpecialChars}
-          onChange={(v) => set("requireSpecialChars", v)}
-          disabled={saving}
-        />
-
         <SectionLabel>Jury Access</SectionLabel>
         <div className="fs-field">
           <label className="fs-field-label">Entry Token TTL</label>

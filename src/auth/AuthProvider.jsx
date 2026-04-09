@@ -13,9 +13,10 @@ import { createContext, useCallback, useEffect, useMemo, useRef, useState } from
 import { supabase, clearPersistedSession } from "@/shared/lib/supabaseClient";
 import { getActiveOrganizationId, setActiveOrganizationId } from "@/shared/storage/adminStorage";
 import { getProfile, upsertProfile } from "@/shared/api/admin/profiles";
-import { getSession, listOrganizationsPublic, getSecurityPolicy } from "@/shared/api";
+import { getSession, listOrganizationsPublic, getSecurityPolicy, touchAdminSession } from "@/shared/api";
 import { KEYS } from "@/shared/storage/keys";
 import { DEMO_MODE } from "@/shared/lib/demoMode";
+import { getAdminDeviceId, getAuthMethodLabelFromSession, parseUserAgent } from "@/shared/lib/adminSession";
 import { SecurityPolicyContext, DEFAULT_POLICY } from "./SecurityPolicyContext";
 
 export const AuthContext = createContext(null);
@@ -311,6 +312,50 @@ export default function AuthProvider({ children }) {
     };
   }, [handleAuthChange]);
 
+  const touchCurrentAdminSession = useCallback(async () => {
+    if (!session?.user?.id || !session?.access_token) return;
+
+    const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const { browser, os } = parseUserAgent(userAgent);
+    const deviceId = getAdminDeviceId();
+    const authMethod = getAuthMethodLabelFromSession(session, user);
+
+    await touchAdminSession({
+      deviceId,
+      userAgent,
+      browser,
+      os,
+      authMethod,
+      signedInAt: session?.user?.last_sign_in_at || null,
+      expiresAt: session?.expires_at || null,
+      accessToken: session.access_token,
+    });
+  }, [session, user]);
+
+  useEffect(() => {
+    if (!session?.user?.id) return undefined;
+
+    const safeTouch = () => {
+      touchCurrentAdminSession().catch(() => {});
+    };
+
+    safeTouch();
+    const intervalId = setInterval(safeTouch, 5 * 60 * 1000);
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        safeTouch();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [session?.user?.id, touchCurrentAdminSession]);
+
   const setActiveOrganization = useCallback((organizationId) => {
     setActiveOrganizationIdState(organizationId);
     setActiveOrganizationId(organizationId);
@@ -409,8 +454,33 @@ export default function AuthProvider({ children }) {
     return data;
   }, []);
 
+  const reauthenticateWithPassword = useCallback(async (password) => {
+    const email = String(user?.email || "").trim();
+    if (!email) throw new Error("Session expired. Please sign in again.");
+    if (!String(password || "").trim()) throw new Error("Current password is required.");
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      const msg = String(error?.message || "").toLowerCase();
+      if (msg.includes("invalid login credentials")) {
+        throw new Error("Current password is incorrect.");
+      }
+      throw error;
+    }
+    return data;
+  }, [user?.email]);
+
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "local" });
+    hasSessionRef.current = false;
+    setUser(null);
+    setSession(null);
+    setOrganizations([]);
+    setActiveOrganizationIdState(null);
+  }, []);
+
+  const signOutAll = useCallback(async () => {
+    await supabase.auth.signOut({ scope: "global" });
     hasSessionRef.current = false;
     setUser(null);
     setSession(null);
@@ -512,15 +582,17 @@ export default function AuthProvider({ children }) {
     signInWithGoogle,
     signUp,
     signOut,
+    signOutAll,
     resetPassword,
     updatePassword,
+    reauthenticateWithPassword,
     refreshMemberships,
     completeProfile,
     refreshUser,
     clearPendingEmail,
   }), [user, session, organizations, activeOrganization, setActiveOrganization, displayName, setDisplayName,
        avatarUrl, setAvatarUrl, isSuper, isPending, profileIncomplete, loading, signIn,
-       signInWithGoogle, signUp, signOut, resetPassword, updatePassword, refreshMemberships, completeProfile, refreshUser, clearPendingEmail]);
+    signInWithGoogle, signUp, signOut, signOutAll, resetPassword, updatePassword, reauthenticateWithPassword, refreshMemberships, completeProfile, refreshUser, clearPendingEmail]);
 
   const policyContextValue = useMemo(
     () => ({ policy, updatePolicy: setPolicy }),

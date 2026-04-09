@@ -7,6 +7,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ShieldCheck, AlertCircle } from "lucide-react";
 import { getInvitePayload, acceptAdminInvite } from "@/shared/api";
 import FbAlert from "@/shared/ui/FbAlert";
+import {
+  isStrongPassword,
+  PASSWORD_POLICY_ERROR_TEXT,
+  PASSWORD_POLICY_PLACEHOLDER,
+} from "@/shared/passwordPolicy";
 
 export default function InviteAcceptScreen() {
   const { token } = useParams();
@@ -65,7 +70,7 @@ export default function InviteAcceptScreen() {
   }, [token]);
 
   // ── Validation ──
-  const passwordValid = password.length >= 8;
+  const passwordValid = isStrongPassword(password);
   const passwordsMatch = password === confirmPassword;
   const canSubmit = passwordValid && passwordsMatch && displayName.trim();
 
@@ -272,9 +277,9 @@ export default function InviteAcceptScreen() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min. 8 characters"
+                placeholder={PASSWORD_POLICY_PLACEHOLDER}
                 required
-                minLength={8}
+                minLength={10}
                 style={{ paddingRight: 40 }}
               />
               <button
@@ -304,7 +309,7 @@ export default function InviteAcceptScreen() {
                   marginTop: 4,
                 }}
               >
-                Password must be at least 8 characters
+                {PASSWORD_POLICY_ERROR_TEXT}
               </div>
             )}
           </div>

@@ -23,6 +23,7 @@ import AlertCard from "@/shared/ui/AlertCard";
 import Tooltip from "@/shared/ui/Tooltip";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import CustomSelect from "@/shared/ui/CustomSelect";
+import { isStrongPassword, PASSWORD_POLICY_ERROR_TEXT } from "@/shared/passwordPolicy";
 import LastActivity from "../components/LastActivity";
 
 // ── Status badge ─────────────────────────────────────────────
@@ -271,7 +272,7 @@ export default function ManageOrganizationsPanel({
     if (!organizationId) { setAdminCreateError("Organization is missing."); return; }
     if (!name) { setAdminCreateError("Name is required."); return; }
     if (!email || !email.includes("@")) { setAdminCreateError("A valid email is required."); return; }
-    if (!password || password.length < 10) { setAdminCreateError("Password must be at least 10 characters."); return; }
+    if (!isStrongPassword(password)) { setAdminCreateError(PASSWORD_POLICY_ERROR_TEXT); return; }
 
     setAdminCreateSaving(true);
     setAdminCreateError("");
