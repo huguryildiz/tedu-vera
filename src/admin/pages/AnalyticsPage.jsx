@@ -347,7 +347,7 @@ export default function AnalyticsPage() {
       writeAuditLog("export.analytics", {
         resourceType: "score_sheets",
         details: { format },
-      }).catch(() => {});
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
       const fmtLabel = format === "pdf" ? "PDF" : format === "csv" ? "CSV" : "Excel";
       _toast.success(`Analytics exported · ${fmtLabel}${periodName ? ` · ${periodName}` : ""}`);
       setExportOpen(false);

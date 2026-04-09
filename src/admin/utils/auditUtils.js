@@ -239,12 +239,12 @@ export function getActorInfo(log) {
 export const ACTION_LABELS = {
   // Explicit RPC actions
   "evaluation.complete": "Evaluation completed",
-  "pin.reset": "PIN reset",
-  "token.generate": "Token generated",
-  "token.revoke": "Token revoked",
+  "pin.reset": "Juror PIN reset by admin",
+  "token.generate": "QR access code generated",
+  "token.revoke": "QR access code revoked",
   "snapshot.freeze": "Snapshot frozen",
-  "juror.pin_locked": "Account locked (failed attempts)",
-  "juror.pin_unlocked": "Account unlocked",
+  "juror.pin_locked": "Juror locked (too many PIN attempts)",
+  "juror.pin_unlocked": "Juror unlocked by admin",
   "juror.edit_mode_enabled": "Edit mode granted",
   "juror.edit_mode_closed_on_resubmit": "Edit mode closed (resubmit)",
   "juror.blocked": "Juror blocked",
@@ -278,14 +278,17 @@ export const ACTION_LABELS = {
   "periods.insert": "Period created",
   "periods.update": "Period updated",
   "periods.delete": "Period deleted",
-  "entry_tokens.insert": "Entry token created",
-  "entry_tokens.update": "Entry token updated",
-  "entry_tokens.delete": "Entry token deleted",
+  "entry_tokens.insert": "QR access code created",
+  "entry_tokens.update": "QR access code updated",
+  "entry_tokens.delete": "QR access code deleted",
   "memberships.insert": "Membership created",
   "memberships.update": "Membership updated",
   "memberships.delete": "Membership deleted",
   "organizations.insert": "Organization created",
   "organizations.update": "Organization updated",
+  "org_applications.insert": "Application submitted",
+  "org_applications.update": "Application status changed",
+  "org_applications.delete": "Application deleted",
   // Frontend-instrumented actions (via rpc_admin_write_audit_log)
   "admin.login": "Admin login",
   "export.scores": "Scores exported",
@@ -303,6 +306,25 @@ export const ACTION_LABELS = {
   "application.submitted": "Application submitted",
   "application.approved": "Application approved",
   "application.rejected": "Application rejected",
+  // Cross-org super-admin actions
+  "period.set_current": "Active period changed",
+  "organization.status_changed": "Organization status changed",
+  // Notification actions
+  "notification.application": "Application notification sent",
+  "notification.admin_invite": "Admin invite email sent",
+  "notification.entry_token": "QR access link emailed",
+  "notification.juror_pin": "Juror PIN emailed",
+  "notification.export_report": "Report shared via email",
+  "notification.password_reset": "Password reset email sent",
+  // Trigger-based: admin_invites, frameworks, profiles
+  "admin_invites.insert": "Admin invite created",
+  "admin_invites.update": "Admin invite updated",
+  "admin_invites.delete": "Admin invite deleted",
+  "frameworks.insert": "Framework created",
+  "frameworks.update": "Framework updated",
+  "frameworks.delete": "Framework deleted",
+  "profiles.insert": "Profile created",
+  "profiles.update": "Profile updated",
 };
 
 /**
@@ -327,12 +349,67 @@ export function formatActionLabel(action) {
  */
 export function formatActionDetail(log) {
   if (!log.details) return "";
-  // For admin actions on jurors, show juror name
-  if (log.details.juror_name) return log.details.juror_name;
-  // For trigger-based CRUD, show operation · table
-  const op = log.details.operation || "";
-  const table = log.details.table || "";
-  return `${op} · ${table}`.replace(/^ · | · $/g, "");
+  const d = log.details;
+
+  // Juror actions — show juror name
+  if (d.juror_name) return d.juror_name;
+  if (d.actor_name && !log.user_id) return d.actor_name;
+
+  // Application actions — show applicant info
+  if (d.applicant_name || d.applicant_email) {
+    return [d.applicant_name, d.applicant_email].filter(Boolean).join(" · ");
+  }
+
+  // Period actions — show period name / org context
+  if (d.periodName) {
+    return [d.periodName, d.organizationCode].filter(Boolean).join(" · ");
+  }
+
+  // Organization status change
+  if (d.previousStatus && d.newStatus) {
+    const parts = [d.organizationCode, `${d.previousStatus} → ${d.newStatus}`];
+    if (d.reason) parts.push(d.reason);
+    return parts.filter(Boolean).join(" · ");
+  }
+
+  // Notification actions — show recipient
+  if (d.recipientEmail) {
+    return [d.recipientEmail, d.type].filter(Boolean).join(" · ");
+  }
+  if (d.recipients && Array.isArray(d.recipients)) {
+    return d.recipients.join(", ");
+  }
+
+  // Export actions — show format
+  if (d.format) {
+    const parts = [d.format.toUpperCase()];
+    if (d.rowCount != null) parts.push(`${d.rowCount} rows`);
+    if (d.jurorCount != null) parts.push(`${d.jurorCount} jurors`);
+    if (d.projectCount != null) parts.push(`${d.projectCount} projects`);
+    if (d.periodCount != null) parts.push(`${d.periodCount} periods`);
+    return parts.join(" · ");
+  }
+
+  // Admin management — show admin name/email
+  if (d.adminName || d.adminEmail) {
+    return [d.adminName, d.adminEmail].filter(Boolean).join(" · ");
+  }
+  if (d.email) return d.email;
+
+  // Auth — show method
+  if (d.method) return d.method;
+
+  // Criteria save
+  if (d.criteriaCount != null) {
+    return `${d.criteriaCount} criteria · ${d.outcomeMappingCount || 0} mappings`;
+  }
+
+  // Trigger-based CRUD fallback — show operation · table
+  const op = d.operation || "";
+  const table = d.table || "";
+  if (op || table) return `${op} · ${table}`.replace(/^ · | · $/g, "");
+
+  return "";
 }
 
 // ── normalizeStudentNames ──────────────────────────────────────

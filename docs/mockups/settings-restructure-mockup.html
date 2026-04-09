@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VERA — Settings Restructure Mockup</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-1: #f4f5f7;
+    --surface-2: #ebedf0;
+    --border: #e2e5ea;
+    --border-light: #eef0f3;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-tertiary: #9ca3af;
+    --accent: #6366f1;
+    --accent-soft: rgba(99,102,241,0.08);
+    --accent-border: rgba(99,102,241,0.20);
+    --success: #16a34a;
+    --success-soft: rgba(22,163,74,0.06);
+    --warning: #f59e0b;
+    --warning-soft: rgba(245,158,11,0.08);
+    --danger: #e11d48;
+    --danger-soft: rgba(225,29,72,0.06);
+    --radius: 10px;
+    --radius-sm: 7px;
+    --mono: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    --sidebar-w: 230px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.07);
+  }
+  body.dark {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface-1: #21242f;
+    --surface-2: #2a2d3a;
+    --border: #2e3140;
+    --border-light: #262938;
+    --text-primary: #f1f3f5;
+    --text-secondary: #a1a8b8;
+    --text-tertiary: #6b7280;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+    --shadow: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text-primary); font-size: 13px; line-height: 1.5; }
+
+  /* ── View Toggle ──────────────────────────────────────── */
+  .view-toggle-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 20px; box-shadow: var(--shadow-sm);
+  }
+  .view-toggle-bar .label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; margin-right: 8px; }
+  .view-btn {
+    padding: 6px 16px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface-1); color: var(--text-secondary); font-size: 12px;
+    font-weight: 600; cursor: pointer; transition: all 0.15s;
+  }
+  .view-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .view-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .theme-btn {
+    margin-left: auto; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface-1); color: var(--text-secondary); font-size: 12px;
+    cursor: pointer; font-weight: 600;
+  }
+
+  /* ── Layout ───────────────────────────────────────────── */
+  .layout { display: flex; min-height: 100vh; padding-top: 48px; }
+
+  /* ── Sidebar ──────────────────────────────────────────── */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; position: fixed; top: 48px; bottom: 0; left: 0;
+    overflow-y: auto;
+  }
+  .sb-logo {
+    display: flex; align-items: center; gap: 10px; padding: 16px 16px 12px;
+  }
+  .sb-logo-icon {
+    width: 32px; height: 32px; background: var(--accent); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 14px;
+  }
+  .sb-logo-text { font-size: 16px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); }
+  .sb-logo-text span { color: var(--accent); }
+  .sb-logo-text small { font-size: 9px; font-weight: 500; color: var(--text-tertiary); margin-left: 4px; vertical-align: super; }
+
+  .sb-tenant {
+    margin: 0 12px 8px; padding: 8px 10px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); background: var(--surface-1);
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+  }
+  .sb-tenant-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+  .sb-tenant-name { font-size: 12px; font-weight: 600; }
+  .sb-tenant-inst { font-size: 10px; color: var(--text-tertiary); }
+  .sb-tenant-chevron { margin-left: auto; color: var(--text-tertiary); font-size: 10px; }
+
+  .sb-nav { flex: 1; padding: 0 8px; }
+  .sb-section {
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-tertiary); padding: 14px 10px 5px;
+  }
+  .sb-item {
+    display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 10px;
+    border: none; background: transparent; color: var(--text-secondary);
+    font-size: 12.5px; font-weight: 500; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.12s; text-align: left;
+  }
+  .sb-item:hover { background: var(--surface-1); color: var(--text-primary); }
+  .sb-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .sb-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sb-item .sb-badge {
+    margin-left: auto; font-size: 9px; padding: 1px 6px; border-radius: 10px;
+    background: var(--warning-soft); color: var(--warning); font-weight: 700;
+  }
+
+  .sb-section.super-only { color: var(--accent); opacity: 0.7; }
+  .sb-divider { height: 1px; background: var(--border); margin: 6px 12px; }
+
+  .sb-bottom {
+    padding: 12px; border-top: 1px solid var(--border);
+  }
+  .sb-user {
+    display: flex; align-items: center; gap: 9px; padding: 6px 4px;
+  }
+  .sb-avatar {
+    width: 30px; height: 30px; border-radius: 50%; background: #6366f1;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .sb-user-name { font-size: 12px; font-weight: 600; }
+  .sb-user-role { font-size: 10px; color: var(--text-tertiary); }
+
+  /* ── Main Content ─────────────────────────────────────── */
+  .main { margin-left: var(--sidebar-w); flex: 1; padding: 28px 32px; max-width: 1200px; }
+
+  .page-header { margin-bottom: 20px; }
+  .page-title { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; }
+  .page-desc { font-size: 12.5px; color: var(--text-tertiary); margin-top: 3px; }
+  .page-badges { display: flex; gap: 6px; margin-top: 8px; }
+
+  /* ── Cards ────────────────────────────────────────────── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-sm);
+  }
+  .card-header {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    margin-bottom: 14px;
+  }
+  .card-title { font-size: 13.5px; font-weight: 700; }
+  .card-desc { font-size: 11.5px; color: var(--text-tertiary); margin-top: 2px; }
+
+  /* ── Badges ───────────────────────────────────────────── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px;
+    white-space: nowrap;
+  }
+  .badge-neutral { background: var(--surface-2); color: var(--text-secondary); }
+  .badge-accent { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border); }
+  .badge-success { background: var(--success-soft); color: var(--success); border: 1px solid rgba(22,163,74,0.15); }
+  .badge-warning { background: var(--warning-soft); color: #b45309; border: 1px solid rgba(245,158,11,0.18); }
+  .badge-danger { background: var(--danger-soft); color: var(--danger); border: 1px solid rgba(225,29,72,0.15); }
+
+  /* ── Buttons ──────────────────────────────────────────── */
+  .btn {
+    padding: 7px 16px; border-radius: var(--radius-sm); font-size: 12px;
+    font-weight: 600; cursor: pointer; transition: all 0.15s; border: none;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm { padding: 5px 12px; font-size: 11.5px; }
+  .btn-icon { padding: 6px; }
+
+  /* ── Grid ─────────────────────────────────────────────── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  /* ── KPI Strip ────────────────────────────────────────── */
+  .kpi-strip {
+    display: flex; gap: 1px; background: var(--border); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; margin-bottom: 16px;
+  }
+  .kpi-item {
+    flex: 1; padding: 12px 14px; background: var(--surface); text-align: center;
+  }
+  .kpi-value { font-size: 20px; font-weight: 800; font-family: var(--mono); letter-spacing: -0.5px; }
+  .kpi-label { font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary); margin-top: 2px; }
+
+  /* ── Table ────────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th {
+    text-align: left; padding: 8px 10px; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary);
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  tbody td {
+    padding: 10px 10px; border-bottom: 1px solid var(--border-light);
+    color: var(--text-secondary); vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-1); }
+  .mono { font-family: var(--mono); font-size: 11px; }
+  .text-center { text-align: center; }
+  .text-right { text-align: right; }
+  .fw-600 { font-weight: 600; color: var(--text-primary); }
+
+  /* ── Avatar ───────────────────────────────────────────── */
+  .avatar {
+    width: 44px; height: 44px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; color: #fff;
+    font-weight: 700; font-size: 14px; flex-shrink: 0;
+  }
+  .avatar-sm { width: 32px; height: 32px; font-size: 11px; }
+
+  /* ── Profile Card ─────────────────────────────────────── */
+  .profile-row {
+    display: flex; align-items: center; gap: 14px;
+    padding-bottom: 14px; border-bottom: 1px solid var(--border-light);
+  }
+  .profile-name { font-weight: 700; font-size: 15px; }
+  .profile-email { font-size: 11.5px; color: var(--text-tertiary); font-family: var(--mono); margin-top: 2px; }
+  .profile-badges { display: flex; gap: 5px; margin-top: 6px; }
+  .profile-actions { display: flex; gap: 8px; margin-left: auto; }
+
+  /* ── Stat mini ────────────────────────────────────────── */
+  .stat-mini {
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface-1); text-align: center;
+  }
+  .stat-mini-value { font-family: var(--mono); font-weight: 700; font-size: 13px; }
+  .stat-mini-label {
+    font-size: 8.5px; font-weight: 600; color: var(--text-tertiary);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px;
+  }
+
+  /* ── Info row ─────────────────────────────────────────── */
+  .info-table {
+    border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;
+  }
+  .info-row {
+    display: grid; grid-template-columns: 140px 1fr; padding: 8px 12px;
+    border-bottom: 1px solid var(--border-light); font-size: 12px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-row:nth-child(odd) { background: var(--surface-1); }
+  .info-label { color: var(--text-tertiary); font-size: 11px; }
+  .info-value { font-weight: 600; }
+
+  /* ── Governance Grid ──────────────────────────────────── */
+  .gov-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .gov-btn {
+    display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface); cursor: pointer; transition: all 0.15s;
+    text-align: left;
+  }
+  .gov-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .gov-btn svg { width: 16px; height: 16px; color: var(--text-tertiary); flex-shrink: 0; }
+  .gov-btn:hover svg { color: var(--accent); }
+  .gov-btn-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+  .gov-btn:hover .gov-btn-label { color: var(--accent); }
+  .gov-btn-desc { font-size: 10px; color: var(--text-tertiary); margin-top: 1px; }
+
+  /* ── Pending card ─────────────────────────────────────── */
+  .pending-item {
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .pending-info { flex: 1; min-width: 0; }
+  .pending-name { font-weight: 600; font-size: 12.5px; }
+  .pending-meta { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pending-date { font-size: 10px; color: var(--text-tertiary); margin-top: 1px; }
+  .pending-actions { display: flex; gap: 5px; flex-shrink: 0; }
+
+  /* ── Permissions list ─────────────────────────────────── */
+  .perm-item {
+    display: flex; align-items: center; gap: 7px; padding: 6px 8px;
+    border-radius: var(--radius-sm); font-size: 11.5px;
+  }
+  .perm-item.allowed { background: var(--success-soft); border: 1px solid rgba(22,163,74,0.12); color: var(--text-secondary); }
+  .perm-item.denied { background: var(--danger-soft); border: 1px solid rgba(225,29,72,0.10); color: var(--text-tertiary); }
+  .perm-icon { font-size: 11px; flex-shrink: 0; }
+  .perm-item.allowed .perm-icon { color: var(--success); }
+  .perm-item.denied .perm-icon { color: var(--danger); }
+
+  /* ── Action menu dot ──────────────────────────────────── */
+  .action-dots {
+    width: 28px; height: 28px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+    background: transparent; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; color: var(--text-tertiary); transition: all 0.12s;
+  }
+  .action-dots:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Views ────────────────────────────────────────────── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── Search input ─────────────────────────────────────── */
+  .search-input {
+    padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 12px; background: var(--surface); color: var(--text-primary);
+    width: 180px; outline: none; transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text-tertiary); }
+
+  /* ── Status filter ────────────────────────────────────── */
+  .filter-select {
+    padding: 5px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 11px; background: var(--surface); color: var(--text-secondary);
+    cursor: pointer; font-weight: 600;
+  }
+
+  /* ── Annotation labels ─────────────────────────────────── */
+  .annotation {
+    position: relative; display: inline-block;
+  }
+  .annotation::after {
+    content: attr(data-note);
+    position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+    background: var(--accent); color: #fff; font-size: 9px; font-weight: 700;
+    padding: 2px 8px; border-radius: 4px; white-space: nowrap;
+    pointer-events: none; letter-spacing: 0.3px;
+  }
+
+  .new-tag {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff;
+    font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .removed-tag {
+    background: var(--danger-soft); color: var(--danger);
+    font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-left: 6px;
+    text-decoration: line-through; vertical-align: middle;
+  }
+
+  /* ── Section note ──────────────────────────────────────── */
+  .section-note {
+    padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 14px;
+    background: var(--accent-soft); border: 1px dashed var(--accent-border);
+    font-size: 11.5px; color: var(--accent); font-weight: 500;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-note svg { width: 14px; height: 14px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- ── View Toggle Bar ──────────────────────────────────── -->
+<div class="view-toggle-bar">
+  <span class="label">Mockup View</span>
+  <button class="view-btn active" onclick="showView('super-orgs')">Super Admin — Organizations</button>
+  <button class="view-btn" onclick="showView('super-settings')">Super Admin — Settings</button>
+  <button class="view-btn" onclick="showView('org-settings')">Org Admin — Settings</button>
+  <button class="theme-btn" onclick="toggleTheme()">Toggle Dark</button>
+</div>
+
+<div class="layout">
+
+<!-- ══════════════════════════════════════════════════════════
+     SIDEBAR
+     ══════════════════════════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">V</div>
+    <div class="sb-logo-text"><span>V</span>ERA<small>v1.1</small></div>
+  </div>
+
+  <div class="sb-tenant">
+    <span class="sb-tenant-dot"></span>
+    <div>
+      <div class="sb-tenant-name" id="tenant-label">All Organizations</div>
+      <div class="sb-tenant-inst" id="tenant-sub">Super Admin Scope</div>
+    </div>
+    <span class="sb-tenant-chevron">▾</span>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-section">Overview</div>
+    <button class="sb-item" onclick="navTo(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Overview
+    </button>
+
+    <div class="sb-section">Evaluation</div>
+    <button class="sb-item" onclick="navTo(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+      Rankings
+    </button>
+    <button class="sb-item" onclick="navTo(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      Analytics
+    </button>
+    <button class="sb-item" onclick="navTo(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+      Heatmap
+    </button>
+    <button class="sb-item" onclick="navTo(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/></svg>
+      Reviews
+    </button>
+
+    <div class="sb-section">Manage</div>
+    <button class="sb-item" onclick="navTo(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Jurors
+    </button>
+    <button class="sb-item" onclick="navTo(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 9.5 12 4l10 5.5"/><path d="M2 14.5 12 20l10-5.5"/></svg>
+      Projects
+    </button>
+    <button class="sb-item" onclick="navTo(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/></svg>
+      Periods
+    </button>
+
+    <div class="sb-section">Configuration</div>
+    <button class="sb-item" onclick="navTo(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      Evaluation Criteria
+    </button>
+    <button class="sb-item" onclick="navTo(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+      Outcomes &amp; Mapping
+    </button>
+
+    <div class="sb-section">System</div>
+    <button class="sb-item" onclick="navTo(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Entry Control
+    </button>
+    <button class="sb-item" onclick="navTo(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1v6"/><path d="M8 7h8"/></svg>
+      PIN Blocking
+    </button>
+    <button class="sb-item" onclick="navTo(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></svg>
+      Audit Log
+    </button>
+
+    <!-- ── Super Admin Only Section ─────────────────────── -->
+    <div class="sb-divider" id="platform-divider"></div>
+    <div class="sb-section super-only" id="platform-section">
+      Platform <span class="new-tag">super admin</span>
+    </div>
+    <button class="sb-item" id="nav-orgs" onclick="navTo(this); showView('super-orgs')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Organizations
+      <span class="sb-badge" id="pending-badge">1</span>
+    </button>
+
+    <div class="sb-divider"></div>
+    <button class="sb-item" id="nav-settings" onclick="navTo(this); showView(currentRole === 'super' ? 'super-settings' : 'org-settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      Settings
+    </button>
+  </nav>
+
+  <div class="sb-bottom">
+    <div class="sb-user">
+      <div class="sb-avatar" id="sb-avatar">HY</div>
+      <div>
+        <div class="sb-user-name" id="sb-name">Hugur Yildiz</div>
+        <div class="sb-user-role" id="sb-role">Super Admin</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════════════════════════
+     VIEW 1: Super Admin — Organizations Page (NEW)
+     ══════════════════════════════════════════════════════════ -->
+<main class="main">
+<div class="view active" id="view-super-orgs">
+
+  <div class="section-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+    Bu sayfa Settings'ten ayrildi → sidebar'da "Platform > Organizations" olarak bagimsiz sayfa
+  </div>
+
+  <div class="page-header">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div class="page-title">Organizations</div>
+        <div class="page-desc">Manage platform organizations, admin memberships, and onboarding.</div>
+      </div>
+      <div class="page-badges">
+        <span class="badge badge-neutral">Super Admin</span>
+        <span class="badge badge-success">Platform Scope</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Strip -->
+  <div class="kpi-strip">
+    <div class="kpi-item">
+      <div class="kpi-value">6</div>
+      <div class="kpi-label">Organizations</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-value" style="color:var(--success)">5</div>
+      <div class="kpi-label">Active</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-value">12</div>
+      <div class="kpi-label">Org Admins</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-value" style="color:var(--warning)">1</div>
+      <div class="kpi-label">Pending</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-value">4</div>
+      <div class="kpi-label">Active Periods</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-value">86</div>
+      <div class="kpi-label">Total Jurors</div>
+    </div>
+  </div>
+
+  <!-- Organization Table -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Organization Management</div>
+        <div class="card-desc">Organization identity, health, admin capacity, and operational actions.</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="filter-select">
+          <option>All Statuses</option>
+          <option>Active</option>
+          <option>Archived</option>
+        </select>
+        <input class="search-input" placeholder="Search organizations…" />
+        <button class="btn btn-primary btn-sm">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Create
+        </button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Organization</th>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Status</th>
+            <th>Active Period</th>
+            <th class="text-center">Admins</th>
+            <th>Created</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="fw-600">TED University</td>
+            <td>Electrical Engineering</td>
+            <td class="mono">TEDU-EE</td>
+            <td><span class="badge badge-success">Active</span></td>
+            <td>Spring 2026</td>
+            <td class="text-center mono">3</td>
+            <td><span style="font-size:11px;color:var(--text-tertiary)">15.01.2026</span></td>
+            <td class="text-right"><button class="action-dots">⋮</button></td>
+          </tr>
+          <tr>
+            <td class="fw-600">Bogazici University</td>
+            <td>Chemistry</td>
+            <td class="mono">BOUN-CHEM</td>
+            <td><span class="badge badge-success">Active</span></td>
+            <td>Fall 2025</td>
+            <td class="text-center mono">2</td>
+            <td><span style="font-size:11px;color:var(--text-tertiary)">03.09.2025</span></td>
+            <td class="text-right"><button class="action-dots">⋮</button></td>
+          </tr>
+          <tr>
+            <td class="fw-600">METU</td>
+            <td>Industrial Engineering</td>
+            <td class="mono">METU-IE</td>
+            <td><span class="badge badge-success">Active</span></td>
+            <td>Spring 2026</td>
+            <td class="text-center mono">2</td>
+            <td><span style="font-size:11px;color:var(--text-tertiary)">20.11.2025</span></td>
+            <td class="text-right"><button class="action-dots">⋮</button></td>
+          </tr>
+          <tr>
+            <td class="fw-600">IEEE APS</td>
+            <td>Student Design Contest</td>
+            <td class="mono">APSSDC</td>
+            <td><span class="badge badge-success">Active</span></td>
+            <td>—</td>
+            <td class="text-center mono">1</td>
+            <td><span style="font-size:11px;color:var(--text-tertiary)">01.03.2026</span></td>
+            <td class="text-right"><button class="action-dots">⋮</button></td>
+          </tr>
+          <tr>
+            <td class="fw-600">CanSat Turkey</td>
+            <td>National Competition</td>
+            <td class="mono">CANSAT-2025</td>
+            <td><span class="badge badge-success">Active</span></td>
+            <td>2025 Finals</td>
+            <td class="text-center mono">2</td>
+            <td><span style="font-size:11px;color:var(--text-tertiary)">09.04.2026</span></td>
+            <td class="text-right"><button class="action-dots">⋮</button></td>
+          </tr>
+          <tr style="opacity:0.6">
+            <td class="fw-600">Hacettepe Uni</td>
+            <td>Computer Science</td>
+            <td class="mono">HU-CS</td>
+            <td><span class="badge badge-neutral">Archived</span></td>
+            <td>—</td>
+            <td class="text-center mono">2</td>
+            <td><span style="font-size:11px;color:var(--text-tertiary)">18.06.2025</span></td>
+            <td class="text-right"><button class="action-dots">⋮</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pending Approvals + Governance side by side -->
+  <div class="grid-2">
+    <!-- Pending Approvals -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Pending Approvals</div>
+          <div class="card-desc">Review admin applications and onboarding queue.</div>
+        </div>
+        <span class="badge badge-warning">1 Pending</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="pending-item">
+          <div class="avatar-sm" style="background:#ec4899;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">CM</div>
+          <div class="pending-info">
+            <div class="pending-name">Celine Moreau</div>
+            <div class="pending-meta">cansat-2025@example.edu · CANSAT-2025</div>
+            <div class="pending-date">Submitted 09.04.2026</div>
+          </div>
+          <div class="pending-actions">
+            <button class="btn btn-sm" style="background:rgba(22,163,74,0.1);color:var(--success);border:1px solid rgba(22,163,74,0.2)">Approve</button>
+            <button class="btn btn-outline btn-sm" style="color:var(--text-tertiary)">Reject</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Platform Governance -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Platform Governance</div>
+          <div class="card-desc">System-wide controls and operational tools.</div>
+        </div>
+        <span class="badge badge-neutral">Super Admin Only</span>
+      </div>
+      <div class="gov-grid">
+        <button class="gov-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M19.07 19.07A10 10 0 0 0 4.93 4.93"/></svg>
+          <div>
+            <div class="gov-btn-label">Global Settings</div>
+            <div class="gov-btn-desc">Platform config, auto-approve</div>
+          </div>
+        </button>
+        <button class="gov-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <div>
+            <div class="gov-btn-label">Export &amp; Backup</div>
+            <div class="gov-btn-desc">Download org data, scores</div>
+          </div>
+        </button>
+        <button class="gov-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          <div>
+            <div class="gov-btn-label">Maintenance</div>
+            <div class="gov-btn-desc">Schedule downtime</div>
+          </div>
+        </button>
+        <button class="gov-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <div>
+            <div class="gov-btn-label">System Health</div>
+            <div class="gov-btn-desc">DB, functions, storage</div>
+          </div>
+        </button>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--text-tertiary);text-align:center">
+        Feature Flags — removed <span class="removed-tag">Feature Flags</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     VIEW 2: Super Admin — Settings (Simplified)
+     ══════════════════════════════════════════════════════════ -->
+<div class="view" id="view-super-settings">
+
+  <div class="section-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+    Settings artik sadece profil + guvenlik. Org management ayri sayfaya tasindigindan ~2000 satir → ~300 satira dustu.
+  </div>
+
+  <div class="page-header">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div class="page-title">Settings</div>
+        <div class="page-desc">Profile, security, and account preferences.</div>
+      </div>
+      <div class="page-badges">
+        <span class="badge badge-neutral">Super Admin</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Left: Profile -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Profile</div>
+          <span class="badge badge-neutral">Personal</span>
+        </div>
+        <div class="profile-row">
+          <div class="avatar" style="background:#6366f1;box-shadow:0 0 0 3px var(--accent-soft)">HY</div>
+          <div>
+            <div class="profile-name">Hugur Yildiz</div>
+            <div class="profile-email">hugur@vera-eval.app</div>
+            <div class="profile-badges">
+              <span class="badge badge-neutral">Super Admin</span>
+              <span class="badge badge-success">Cross-Organization Access</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+          <div class="stat-mini">
+            <div class="stat-mini-value">15.01.2026</div>
+            <div class="stat-mini-label">Joined</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-value">Today</div>
+            <div class="stat-mini-label">Last Active</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-outline btn-sm">Edit Profile</button>
+          <button class="btn btn-outline btn-sm">Change Password</button>
+        </div>
+      </div>
+
+      <!-- Security & Sessions -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Security &amp; Sessions</div>
+          <span class="badge badge-success" style="font-size:10px">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block;margin-right:3px"></span>
+            Secure
+          </span>
+        </div>
+        <div class="grid-3">
+          <div class="stat-mini">
+            <div class="stat-mini-value" style="font-size:11px">09.04.2026</div>
+            <div class="stat-mini-label">Last Login</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-value">1</div>
+            <div class="stat-mini-label">Sessions</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-value" style="font-size:11px">Email</div>
+            <div class="stat-mini-label">Auth Method</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+          <button class="btn btn-outline btn-sm" style="opacity:0.5" disabled>View Sessions</button>
+          <div style="flex:1"></div>
+          <button class="btn btn-outline btn-sm" style="border-color:rgba(225,29,72,0.2);color:var(--danger)">Sign Out</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Security Policy (super admin only section) -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Security Policy <span class="new-tag">super admin</span></div>
+          <span class="badge badge-neutral">Platform-wide</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm)">
+            <div>
+              <div style="font-size:12.5px;font-weight:600">Minimum Password Length</div>
+              <div style="font-size:10.5px;color:var(--text-tertiary)">Applied to all admin accounts</div>
+            </div>
+            <div style="font-family:var(--mono);font-weight:700;font-size:15px;color:var(--accent)">10</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid rgba(22,163,74,0.15);border-radius:var(--radius-sm);background:var(--success-soft)">
+            <div>
+              <div style="font-size:12.5px;font-weight:600">Require Uppercase + Digit + Symbol</div>
+              <div style="font-size:10.5px;color:var(--text-tertiary)">Enforced on password change</div>
+            </div>
+            <div style="color:var(--success);font-weight:700;font-size:12px">Enabled</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm)">
+            <div>
+              <div style="font-size:12.5px;font-weight:600">Session Timeout</div>
+              <div style="font-size:10.5px;color:var(--text-tertiary)">Auto sign-out after inactivity</div>
+            </div>
+            <div style="font-family:var(--mono);font-weight:700;font-size:13px;color:var(--text-secondary)">30 days</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-outline btn-sm">Edit Security Policy</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     VIEW 3: Org Admin — Settings
+     ══════════════════════════════════════════════════════════ -->
+<div class="view" id="view-org-settings">
+
+  <div class="section-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+    Org Admin gorunumu — sidebar'da "Platform" section'i gizli, Settings sadece profil + guvenlik + org bilgisi
+  </div>
+
+  <div class="page-header">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div class="page-title">Settings</div>
+        <div class="page-desc">Manage your profile, security, and view organization details.</div>
+      </div>
+      <div class="page-badges">
+        <span class="badge badge-neutral">Organization Admin</span>
+        <span class="badge badge-accent">TEDU-EE</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Left -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <!-- Profile -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Profile</div>
+          <span class="badge badge-neutral">Personal</span>
+        </div>
+        <div class="profile-row">
+          <div class="avatar" style="background:#10b981">AK</div>
+          <div>
+            <div class="profile-name">Ayse Kaya</div>
+            <div class="profile-email">ayse.kaya@tedu.edu.tr</div>
+            <div class="profile-badges">
+              <span class="badge badge-neutral">Organization Admin</span>
+              <span class="badge badge-success">TEDU Electrical Eng.</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+          <div class="stat-mini">
+            <div class="stat-mini-value">20.02.2026</div>
+            <div class="stat-mini-label">Joined</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-value">Today</div>
+            <div class="stat-mini-label">Last Active</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-outline btn-sm">Edit Profile</button>
+          <button class="btn btn-outline btn-sm">Change Password</button>
+        </div>
+      </div>
+
+      <!-- Security & Sessions -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Security &amp; Sessions</div>
+          <span class="badge badge-success" style="font-size:10px">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block;margin-right:3px"></span>
+            Secure
+          </span>
+        </div>
+        <div class="grid-3">
+          <div class="stat-mini">
+            <div class="stat-mini-value" style="font-size:11px">09.04.2026</div>
+            <div class="stat-mini-label">Last Login</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-value">1</div>
+            <div class="stat-mini-label">Sessions</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-value" style="font-size:11px">Google</div>
+            <div class="stat-mini-label">Auth Method</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+          <button class="btn btn-outline btn-sm" style="opacity:0.5" disabled>View Sessions</button>
+          <div style="flex:1"></div>
+          <button class="btn btn-outline btn-sm" style="border-color:rgba(225,29,72,0.2);color:var(--danger)">Sign Out</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <!-- Organization Access (read-only) -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Organization Access</div>
+          <div style="display:flex;gap:5px">
+            <span class="badge badge-neutral">Read Only</span>
+            <span class="badge badge-neutral">Managed by Super Admin</span>
+          </div>
+        </div>
+        <div class="info-table">
+          <div class="info-row"><div class="info-label">Organization</div><div class="info-value">TED University — Electrical Engineering</div></div>
+          <div class="info-row"><div class="info-label">Short Label</div><div class="info-value mono">TEDU-EE</div></div>
+          <div class="info-row"><div class="info-label">Status</div><div class="info-value"><span class="badge badge-success">Active</span></div></div>
+          <div class="info-row"><div class="info-label">Current Period</div><div class="info-value">Spring 2026</div></div>
+        </div>
+        <div style="font-size:10.5px;color:var(--text-tertiary);margin-top:10px">
+          Organization identity fields are locked. Name, code, and metadata can only be edited by Super Admin.
+        </div>
+      </div>
+
+      <!-- Permissions Summary -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Permissions Summary</div>
+          <span class="badge badge-neutral">Scope</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div class="perm-item allowed"><span class="perm-icon">✓</span> Manage periods, jurors, projects, and scoring</div>
+          <div class="perm-item allowed"><span class="perm-icon">✓</span> View and export scores and analytics</div>
+          <div class="perm-item allowed"><span class="perm-icon">✓</span> Control jury entry tokens</div>
+          <div class="perm-item denied"><span class="perm-icon">✕</span> Edit organization identity</div>
+          <div class="perm-item denied"><span class="perm-icon">✕</span> Approve admin applications</div>
+          <div class="perm-item denied"><span class="perm-icon">✕</span> Access other organizations</div>
+          <div class="perm-item denied"><span class="perm-icon">✕</span> Platform governance controls</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+</main>
+</div>
+
+<script>
+  let currentRole = 'super';
+
+  function showView(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+
+    const viewMap = {
+      'super-orgs': 0,
+      'super-settings': 1,
+      'org-settings': 2,
+    };
+    document.querySelectorAll('.view-btn')[viewMap[viewId]].classList.add('active');
+    document.getElementById('view-' + viewId).classList.add('active');
+
+    // Sidebar updates
+    const platformSection = document.getElementById('platform-section');
+    const platformDivider = document.getElementById('platform-divider');
+    const navOrgs = document.getElementById('nav-orgs');
+    const pendingBadge = document.getElementById('pending-badge');
+    const tenantLabel = document.getElementById('tenant-label');
+    const tenantSub = document.getElementById('tenant-sub');
+    const sbName = document.getElementById('sb-name');
+    const sbRole = document.getElementById('sb-role');
+    const sbAvatar = document.getElementById('sb-avatar');
+
+    if (viewId === 'org-settings') {
+      currentRole = 'org';
+      platformSection.style.display = 'none';
+      platformDivider.style.display = 'none';
+      navOrgs.style.display = 'none';
+      pendingBadge.style.display = 'none';
+      tenantLabel.textContent = 'TEDU Electrical Eng.';
+      tenantSub.textContent = 'TED University';
+      sbName.textContent = 'Ayse Kaya';
+      sbRole.textContent = 'TEDU-EE';
+      sbAvatar.textContent = 'AK';
+      sbAvatar.style.background = '#10b981';
+    } else {
+      currentRole = 'super';
+      platformSection.style.display = '';
+      platformDivider.style.display = '';
+      navOrgs.style.display = '';
+      pendingBadge.style.display = '';
+      tenantLabel.textContent = 'All Organizations';
+      tenantSub.textContent = 'Super Admin Scope';
+      sbName.textContent = 'Hugur Yildiz';
+      sbRole.textContent = 'Super Admin';
+      sbAvatar.textContent = 'HY';
+      sbAvatar.style.background = '#6366f1';
+    }
+
+    // Highlight active sidebar item
+    document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+    if (viewId === 'super-orgs') navOrgs.classList.add('active');
+    else document.getElementById('nav-settings').classList.add('active');
+  }
+
+  function navTo(el) {
+    document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function toggleTheme() {
+    document.body.classList.toggle('dark');
+  }
+
+  // Initialize
+  showView('super-orgs');
+</script>
+
+</body>
+</html>

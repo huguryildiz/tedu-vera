@@ -357,7 +357,7 @@ export default function ReviewsPage() {
       writeAuditLog("export.scores", {
         resourceType: "score_sheets",
         details: { format: exportFormat, rowCount: sorted.length },
-      }).catch(() => {});
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
       setShowExport(false);
       const fmtLabel = exportFormat === "pdf" ? "PDF" : exportFormat === "csv" ? "CSV" : "Excel";
       toast.success(`${sorted.length} review${sorted.length !== 1 ? "s" : ""} · ${uniqueJurors} juror${uniqueJurors !== 1 ? "s" : ""} exported · ${fmtLabel}`);

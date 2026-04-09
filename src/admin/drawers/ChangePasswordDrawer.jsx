@@ -58,8 +58,8 @@ function CheckIcon() {
 function PasswordField({ label, value, onChange, placeholder, disabled, id }) {
   const [show, setShow] = useState(false);
   return (
-    <div className="fs-field-row">
-      <label className="fs-label">{label}</label>
+    <div className="fs-field">
+      <label className="fs-field-label">{label}</label>
       <div style={{ position: "relative" }}>
         <input
           id={id}
@@ -167,8 +167,8 @@ export default function ChangePasswordDrawer({ open, onClose, onSave, error }) {
         />
 
         {/* New password with strength */}
-        <div className="fs-field-row">
-          <label className="fs-label">New Password</label>
+        <div className="fs-field">
+          <label className="fs-field-label">New Password</label>
           <div style={{ position: "relative" }}>
             <NewPasswordField value={newPwd} onChange={setNewPwd} disabled={saving} />
           </div>
@@ -205,8 +205,8 @@ export default function ChangePasswordDrawer({ open, onClose, onSave, error }) {
         </div>
 
         {/* Confirm */}
-        <div className="fs-field-row">
-          <label className="fs-label">Confirm New Password</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Confirm New Password</label>
           <ConfirmPasswordField value={confirm} onChange={setConfirm} disabled={saving} />
           {confirm && (
             <div

@@ -760,7 +760,7 @@ body:not(.dark-mode) .jury-meta-sub { color: #64748b; }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: monospace;
+  font-family: var(--mono);
   font-size: 20px;
   font-weight: 700;
   color: #f1f5f9;
@@ -772,7 +772,7 @@ body:not(.dark-mode) .jury-meta-sub { color: #64748b; }
   border-radius: 12px;
   background: rgba(30, 41, 59, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.12);
-  font-family: monospace;
+  font-family: var(--mono);
   font-size: 20px;
   font-weight: 700;
   color: #f1f5f9;
@@ -809,7 +809,7 @@ body:not(.dark-mode) .jury-meta-sub { color: #64748b; }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, monospace;
+  font-family: var(--mono);
   font-size: 28px;
   font-weight: 700;
   color: #f1f5f9;
@@ -938,7 +938,7 @@ body:not(.dark-mode) .dj-nav-arrow{
 }
 
 .dj-crit-max {
-  font-family: monospace;
+  font-family: var(--mono);
   font-size: 11px;
   color: #475569;
 }
@@ -955,7 +955,7 @@ body:not(.dark-mode) .dj-nav-arrow{
   border: 1px solid rgba(148, 163, 184, 0.12);
   border-radius: 8px;
   background: rgba(15, 23, 42, 0.5);
-  font-family: monospace;
+  font-family: var(--mono);
   font-size: 16px;
   font-weight: 700;
   text-align: center;
@@ -970,7 +970,7 @@ body:not(.dark-mode) .dj-nav-arrow{
 }
 
 .dj-score-frac {
-  font-family: monospace;
+  font-family: var(--mono);
   font-size: 12px;
   color: #94a3b8;
   min-width: 50px;
@@ -1398,7 +1398,7 @@ body:not(.dark-mode) .dj-nav-arrow{
   font-size: 12px;
   font-weight: 600;
   color: #94a3b8;
-  font-family: var(--mono, monospace);
+  font-family: var(--mono);
 }
 .ps-criterion-chevron {
   color: #475569;
@@ -1467,7 +1467,7 @@ body:not(.dark-mode) .ps-criteria-total {
   font-weight: 700;
   color: #f59e0b;
   margin: 12px 0;
-  font-family: monospace;
+  font-family: var(--mono);
 }
 
 /* ── Locked Recovery Screen ── */
@@ -1526,7 +1526,7 @@ body:not(.dark-mode) .ps-criteria-total {
   color:#94a3b8;margin-bottom:8px;
 }
 .locked-timer-value{
-  font-family:'SF Mono',SFMono-Regular,ui-monospace,Menlo,monospace;
+  font-family:var(--mono);
   font-size:32px;font-weight:700;color:#fbbf24;letter-spacing:2px;
 }
 .locked-timer-value.expired{color:#4ade80}
@@ -2327,30 +2327,14 @@ body{font-family:var(--font);color:var(--text-primary);background:var(--bg-page)
 
 .jury-gate-card{max-width:440px;text-align:center;width:100%}
 .jg-icon-wrap{display:flex;justify-content:center;margin-bottom:20px}
+.jg-logo{display:flex;justify-content:center;margin-bottom:20px}
+.jg-logo img{height:28px;width:auto;display:block}
+/* Dark mode shows vera_logo_dark, light mode shows vera_logo_white */
+.jg-logo .jg-logo-light{display:none}
+body:not(.dark-mode) .jg-logo .jg-logo-dark{display:none}
+body:not(.dark-mode) .jg-logo .jg-logo-light{display:block}
 .jg-form{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;text-align:left}
 .jg-label{display:flex;align-items:center;gap:5px;margin-bottom:0}
-
-/* ── Divider: "or enter your access code" — prominent ── */
-.jg-divider{
-  display:flex;align-items:center;gap:10px;
-  margin:18px 0 14px;
-  user-select:none;
-}
-.jg-divider::before,.jg-divider::after{
-  content:'';flex:1;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(148,163,184,0.22) 40%,rgba(148,163,184,0.22) 60%,transparent);
-}
-.jg-divider span{
-  font-size:12px;font-weight:600;letter-spacing:0.03em;
-  color:var(--text-secondary);
-  white-space:nowrap;
-  padding:0 4px;
-}
-body:not(.dark-mode) .jg-divider::before,
-body:not(.dark-mode) .jg-divider::after{
-  background:linear-gradient(90deg,transparent,rgba(15,23,42,0.14) 40%,rgba(15,23,42,0.14) 60%,transparent);
-}
-body:not(.dark-mode) .jg-divider span{color:#374151}
 
 /* ── Input wrapper with icon ── */
 .jg-input-wrap{
@@ -2373,13 +2357,6 @@ body:not(.dark-mode) .jg-divider span{color:#374151}
 .jg-verify-btn:not(:disabled):hover{transform:translateY(-1px)}
 .jg-verify-btn:disabled{opacity:.45;cursor:not-allowed;transform:none !important}
 .jg-spin{animation:juryGateSpin .8s linear infinite}
-.jg-back-btn{
-  display:inline-flex;align-items:center;gap:5px;
-  background:none;border:none;cursor:pointer;
-  font-size:13px;color:var(--text-tertiary);padding:6px 0;
-  transition:color .15s;margin-bottom:10px;
-}
-.jg-back-btn:hover{color:var(--text-primary)}
 .jury-gate-status{font-size:12px;color:var(--text-tertiary);margin-bottom:24px}
 .jury-gate-spinner{
   width:42px;height:42px;margin:0 auto 18px;border-radius:50%;
@@ -2413,7 +2390,6 @@ body:not(.dark-mode) .jury-gate-spinner{
     padding:20px 16px;
   }
   .jury-gate-card{max-width:100%}
-  .jg-divider{margin:14px 0 10px}
 }
 
 /* ── Gate mobile landscape ── */
@@ -2431,7 +2407,6 @@ body:not(.dark-mode) .jury-gate-spinner{
   .jury-gate-card .jury-icon-box{display:none}
   .jury-gate-card .jury-title{font-size:16px;margin-bottom:4px}
   .jury-gate-card .jury-sub{font-size:12.5px;margin-bottom:10px}
-  .jg-divider{margin:10px 0 8px}
   .jg-form{gap:8px;margin-bottom:10px}
   .jury-gate-note{margin-top:8px}
 }

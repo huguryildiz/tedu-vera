@@ -191,8 +191,8 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
 
         <SectionLabel>Password Requirements</SectionLabel>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <div className="fs-field-row">
-            <label className="fs-label">Minimum Length</label>
+          <div className="fs-field">
+            <label className="fs-field-label">Minimum Length</label>
             <input
               className="fs-input"
               type="number"
@@ -203,8 +203,8 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
               disabled={saving}
             />
           </div>
-          <div className="fs-field-row">
-            <label className="fs-label">Max Login Attempts</label>
+          <div className="fs-field">
+            <label className="fs-field-label">Max Login Attempts</label>
             <input
               className="fs-input"
               type="number"
@@ -225,8 +225,8 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
         />
 
         <SectionLabel>Jury Access</SectionLabel>
-        <div className="fs-field-row">
-          <label className="fs-label">Entry Token TTL</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Entry Token TTL</label>
           <CustomSelect
             value={form.tokenTtl}
             onChange={(v) => set("tokenTtl", v)}
@@ -290,8 +290,8 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
               Risk Control
             </span>
           </div>
-          <div className="fs-field-row">
-            <label className="fs-label">Cooldown Duration</label>
+          <div className="fs-field">
+            <label className="fs-field-label">Cooldown Duration</label>
             <CustomSelect
               value={form.pinLockCooldown}
               onChange={(v) => set("pinLockCooldown", v)}

@@ -107,12 +107,7 @@ export function GlobalSettingsDrawer({ open, onClose }) {
   const [form, setForm] = useState({
     platformName: "VERA Evaluation Platform",
     supportEmail: "support@vera-eval.app",
-    defaultScale: "percentage",
-    maxCriteria: 10,
     autoApproveOrgs: false,
-    enableDemo: false,
-    notificationProvider: "resend",
-    sendWelcomeEmails: true,
   });
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -132,68 +127,21 @@ export function GlobalSettingsDrawer({ open, onClose }) {
       />
       <div className="fs-drawer-body" style={{ gap: 16 }}>
         <SectionLabel>Platform Identity</SectionLabel>
-        <div className="fs-field-row">
-          <label className="fs-label">Platform Name</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Platform Name</label>
           <input className="fs-input" type="text" value={form.platformName} onChange={(e) => set("platformName", e.target.value)} />
         </div>
-        <div className="fs-field-row">
-          <label className="fs-label">Support Email</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Support Email</label>
           <input className="fs-input" type="email" value={form.supportEmail} onChange={(e) => set("supportEmail", e.target.value)} />
         </div>
 
         <SectionLabel style={{ marginTop: 4 }}>Default Evaluation Settings</SectionLabel>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <div className="fs-field-row">
-            <label className="fs-label">Default Scoring Scale</label>
-            <CustomSelect
-              value={form.defaultScale}
-              onChange={(v) => set("defaultScale", v)}
-              options={[
-                { value: "percentage", label: "0–100 (Percentage)" },
-                { value: "weighted", label: "0–30 (Weighted)" },
-                { value: "likert", label: "1–5 (Likert)" },
-              ]}
-              ariaLabel="Default scoring scale"
-            />
-          </div>
-          <div className="fs-field-row">
-            <label className="fs-label">Max Criteria per Period</label>
-            <input className="fs-input" type="number" value={form.maxCriteria} min={3} max={20} onChange={(e) => set("maxCriteria", Number(e.target.value))} />
-          </div>
-        </div>
         <ToggleRow
           title="Auto-approve New Organizations"
           desc="Skip manual review for new org applications"
           checked={form.autoApproveOrgs}
           onChange={(v) => set("autoApproveOrgs", v)}
-        />
-        <ToggleRow
-          title="Enable Demo Mode"
-          desc="Allow demo credentials on login screen"
-          checked={form.enableDemo}
-          onChange={(v) => set("enableDemo", v)}
-        />
-
-        <SectionLabel style={{ marginTop: 4 }}>Email &amp; Notifications</SectionLabel>
-        <div className="fs-field-row">
-          <label className="fs-label">Notification Provider</label>
-          <CustomSelect
-            value={form.notificationProvider}
-            onChange={(v) => set("notificationProvider", v)}
-            options={[
-              { value: "resend", label: "Resend" },
-              { value: "sendgrid", label: "SendGrid" },
-              { value: "ses", label: "AWS SES" },
-              { value: "disabled", label: "Disabled" },
-            ]}
-            ariaLabel="Notification provider"
-          />
-        </div>
-        <ToggleRow
-          title="Send Welcome Emails"
-          desc="Automatically email new admins upon approval"
-          checked={form.sendWelcomeEmails}
-          onChange={(v) => set("sendWelcomeEmails", v)}
         />
       </div>
       <div className="fs-drawer-footer">
@@ -240,8 +188,8 @@ export function ExportBackupDrawer({ open, onClose }) {
       />
       <div className="fs-drawer-body" style={{ gap: 14 }}>
         <SectionLabel>Export Scope</SectionLabel>
-        <div className="fs-field-row">
-          <label className="fs-label">Organization</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Organization</label>
           <CustomSelect
             value="All Organizations"
             onChange={() => {}}
@@ -254,8 +202,8 @@ export function ExportBackupDrawer({ open, onClose }) {
             ariaLabel="Organization"
           />
         </div>
-        <div className="fs-field-row">
-          <label className="fs-label">Data Type</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Data Type</label>
           <CustomSelect
             value="Full Database Backup"
             onChange={() => {}}
@@ -269,8 +217,8 @@ export function ExportBackupDrawer({ open, onClose }) {
             ariaLabel="Data type"
           />
         </div>
-        <div className="fs-field-row">
-          <label className="fs-label">Format</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Format</label>
           <div style={{ display: "flex", gap: 8 }}>
             {[["sql", "SQL Dump"], ["csv", "CSV"], ["json", "JSON"]].map(([val, label]) => (
               <label
@@ -456,8 +404,8 @@ export function MaintenanceDrawer({ open, onClose }) {
           </div>
         </div>
 
-        <div className="fs-field-row">
-          <label className="fs-label">Mode</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Mode</label>
           <div style={{ display: "flex", gap: 8 }}>
             {[["scheduled", "Scheduled", "rgba(217,119,6,0.04)", "rgba(217,119,6,0.25)"], ["immediate", "Immediate", "rgba(239,68,68,0.04)", "rgba(239,68,68,0.25)"]].map(([val, label, bg, border]) => (
               <label
@@ -486,8 +434,8 @@ export function MaintenanceDrawer({ open, onClose }) {
 
         {mode === "scheduled" && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div className="fs-field-row">
-              <label className="fs-label">Start Time</label>
+            <div className="fs-field">
+              <label className="fs-field-label">Start Time</label>
               <input
                 className="fs-input"
                 type="datetime-local"
@@ -495,8 +443,8 @@ export function MaintenanceDrawer({ open, onClose }) {
                 onChange={(e) => setStartTime(e.target.value)}
               />
             </div>
-            <div className="fs-field-row">
-              <label className="fs-label">Estimated Duration</label>
+            <div className="fs-field">
+              <label className="fs-field-label">Estimated Duration</label>
               <CustomSelect
                 value={durationMin ?? ""}
                 onChange={(v) => setDurationMin(v === "" ? null : Number(v))}
@@ -508,8 +456,8 @@ export function MaintenanceDrawer({ open, onClose }) {
         )}
 
         {mode === "immediate" && (
-          <div className="fs-field-row">
-            <label className="fs-label">Estimated Duration</label>
+          <div className="fs-field">
+            <label className="fs-field-label">Estimated Duration</label>
             <CustomSelect
               value={durationMin ?? ""}
               onChange={(v) => setDurationMin(v === "" ? null : Number(v))}
@@ -519,8 +467,8 @@ export function MaintenanceDrawer({ open, onClose }) {
           </div>
         )}
 
-        <div className="fs-field-row">
-          <label className="fs-label">Maintenance Message</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Maintenance Message</label>
           <textarea
             className="fs-input"
             rows={2}
@@ -572,71 +520,6 @@ export function MaintenanceDrawer({ open, onClose }) {
             </button>
           </>
         )}
-      </div>
-    </Drawer>
-  );
-}
-
-// ── 5. Feature Flags ───────────────────────────────────────────
-
-const DEFAULT_FLAGS = {
-  analytics: true,
-  outcomes: true,
-  qrEntry: true,
-  emailNotifications: false,
-  reportSharing: false,
-  multiLanguage: false,
-};
-
-export function FeatureFlagsDrawer({ open, onClose }) {
-  const toast = useToast();
-  const [flags, setFlags] = useState(DEFAULT_FLAGS);
-  const toggle = (k) => setFlags((f) => ({ ...f, [k]: !f[k] }));
-
-  const FEATURE_ROWS = [
-    { key: "analytics",           title: "Analytics Dashboard",        desc: "Charts, trends, and outcome analytics for org admins" },
-    { key: "outcomes",            title: "Outcome Frameworks",         desc: "Outcome mapping, competency radar, and framework management" },
-    { key: "qrEntry",             title: "QR Code Entry",              desc: "Allow jury entry via QR code scanning" },
-    { key: "emailNotifications",  title: "Email Notifications",        desc: "Send email notifications for approvals, resets, and invites", badge: { type: "warning", label: "Beta" } },
-    { key: "reportSharing",       title: "Report Sharing",             desc: "Allow org admins to share score reports externally", badge: { type: "neutral", label: "Coming Soon" } },
-    { key: "multiLanguage",       title: "Multi-Language Support",     desc: "Enable Turkish/English language switching for all interfaces", badge: { type: "neutral", label: "Coming Soon" } },
-  ];
-
-  return (
-    <Drawer open={open} onClose={onClose}>
-      <DrawerHeader
-        icon={(stroke) => (
-          <svg viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" style={{ width: 17, height: 17 }}>
-            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-            <line x1="4" y1="22" x2="4" y2="15" />
-          </svg>
-        )}
-        iconStroke="#8b5cf6"
-        title="Feature Flags"
-        subtitle="Toggle platform features on or off globally"
-        onClose={onClose}
-      />
-      <div className="fs-drawer-body" style={{ gap: 8 }}>
-        {FEATURE_ROWS.map((row) => (
-          <ToggleRow
-            key={row.key}
-            title={row.title}
-            desc={row.desc}
-            badge={row.badge}
-            checked={flags[row.key]}
-            onChange={() => toggle(row.key)}
-          />
-        ))}
-      </div>
-      <div className="fs-drawer-footer">
-        <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose}>Cancel</button>
-        <button
-          className="fs-btn fs-btn-primary"
-          type="button"
-          onClick={() => { toast.success("Feature flags saved"); onClose(); }}
-        >
-          Save Flags
-        </button>
       </div>
     </Drawer>
   );

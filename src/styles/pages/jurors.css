@@ -30,7 +30,7 @@
 .juror-action-btn:hover { background: var(--surface-1); border-color: var(--border); color: var(--text-primary) }
 .juror-action-menu { display: none; position: absolute; top: calc(100% + 6px); right: 0; min-width: 210px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 12px 36px rgba(0,0,0,.12), 0 4px 12px rgba(0,0,0,.06); z-index: 80; padding: 5px; animation: dropdown-in .18s cubic-bezier(.21,1.02,.73,1) }
 .juror-action-menu.open { display: block }
-.juror-action-item { display: flex; align-items: center; gap: 9px; padding: 8px 11px; border-radius: 7px; font-size: 12.5px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all .1s }
+.juror-action-item { display: flex; align-items: center; gap: 9px; padding: 8px 11px; border-radius: 7px; font-size: 12.5px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all .1s; font-family: var(--font); }
 .juror-action-item:hover { background: var(--surface-1); color: var(--text-primary) }
 .juror-action-item.danger { color: var(--danger) }
 .juror-action-item.danger:hover { background: var(--danger-soft) }
@@ -151,7 +151,7 @@
 .juror-action-btn:hover{background:var(--surface-1);border-color:var(--border);color:var(--text-secondary)}
 .juror-action-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:210px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,0.12),0 4px 12px rgba(0,0,0,0.06);z-index:80;padding:5px;animation:dropdown-in .18s cubic-bezier(.21,1.02,.73,1)}
 .juror-action-menu.show{display:block}
-.juror-action-item{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:7px;font-size:12.5px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .1s}
+.juror-action-item{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:7px;font-size:12.5px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .1s;font-family:var(--font)}
 .juror-action-item:hover{background:var(--surface-1);color:var(--text-primary)}
 .juror-action-item svg{width:15px;height:15px;flex-shrink:0;color:var(--text-tertiary);transition:color .1s}
 .juror-action-item:hover svg{color:var(--text-secondary)}

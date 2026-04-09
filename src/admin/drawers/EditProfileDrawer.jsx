@@ -13,18 +13,19 @@
 //   isSuper      — boolean
 
 import { useState, useEffect, useRef } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, X } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import Avatar from "@/shared/ui/Avatar";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
 
-export default function EditProfileDrawer({ open, onClose, profile, onSave, error, initials, avatarBg, isSuper }) {
+export default function EditProfileDrawer({ open, onClose, profile, onSave, onCancelEmailChange, pendingEmail, error, initials, avatarBg, isSuper }) {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [saveError, setSaveError] = useState("");
   const fileInputRef = useRef(null);
 
@@ -71,7 +72,7 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, erro
   const saveBtnRef = useShakeOnError(displayError);
   const isDirty =
     displayName.trim() !== (profile?.displayName ?? "") ||
-    email.trim() !== (profile?.email ?? "") ||
+    (!pendingEmail && email.trim() !== (profile?.email ?? "")) ||
     avatarFile !== null;
 
   const avatarSrc = avatarPreview || profile?.avatarUrl || null;
@@ -149,8 +150,8 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, erro
           </div>
         </div>
 
-        <div className="fs-field-row">
-          <label className="fs-label">Display Name</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Display Name</label>
           <input
             className="fs-input"
             type="text"
@@ -161,23 +162,79 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, erro
           />
         </div>
 
-        <div className="fs-field-row">
-          <label className="fs-label">Email</label>
-          <input
-            className="fs-input"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={saving}
-            placeholder="your.email@institution.edu"
-          />
-          <div className="fs-field-helper hint">
-            A confirmation link will be sent to your new email address.
-          </div>
+        <div className="fs-field">
+          <label className="fs-field-label">Email</label>
+          {pendingEmail ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  className="fs-input"
+                  type="email"
+                  value={profile?.email ?? ""}
+                  disabled
+                  readOnly
+                  style={{ flex: 1, opacity: 0.7, cursor: "not-allowed" }}
+                />
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                  padding: "3px 9px", borderRadius: 99,
+                  background: "color-mix(in srgb, #22c55e 12%, transparent)",
+                  color: "#16a34a", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap",
+                }}>
+                  <CheckCircle2 size={11} /> Verified
+                </span>
+              </div>
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "9px 12px", borderRadius: "var(--radius-sm)",
+                border: "1px solid color-mix(in srgb, #f59e0b 35%, transparent)",
+                background: "color-mix(in srgb, #f59e0b 8%, transparent)",
+                gap: 10,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                  <Clock size={13} style={{ color: "#d97706", flexShrink: 0 }} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 11, color: "#d97706", fontWeight: 600, lineHeight: 1.3 }}>Awaiting confirmation</div>
+                    <div style={{ fontSize: 12, color: "var(--text-primary)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pendingEmail}</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={saving || cancelling}
+                  onClick={async () => {
+                    setCancelling(true);
+                    try { await onCancelEmailChange?.(); } finally { setCancelling(false); }
+                  }}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 4,
+                    padding: "3px 9px", borderRadius: 99, border: "1px solid #d97706",
+                    background: "transparent", color: "#d97706",
+                    fontSize: 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
+                  }}
+                >
+                  <X size={10} /> Cancel change
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <input
+                className="fs-input"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={saving}
+                placeholder="your.email@institution.edu"
+              />
+              <div className="fs-field-helper hint">
+                A confirmation link will be sent to your new email address.
+              </div>
+            </>
+          )}
         </div>
 
-        <div className="fs-field-row">
-          <label className="fs-label">Role</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Role</label>
           <input
             className="fs-input"
             type="text"
@@ -191,8 +248,8 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, erro
           )}
         </div>
 
-        <div className="fs-field-row">
-          <label className="fs-label">Organization</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Organization</label>
           <input
             className="fs-input"
             type="text"

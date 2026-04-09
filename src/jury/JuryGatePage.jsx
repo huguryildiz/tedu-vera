@@ -5,7 +5,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
-import { ArrowLeft, KeyRound, Loader2 } from "lucide-react";
+import { KeyRound, Loader2 } from "lucide-react";
+import veraLogoDark from "../assets/vera_logo_dark.png";
+import veraLogoWhite from "../assets/vera_logo_white.png";
 import { listPeriodsPublic, verifyEntryReference, verifyEntryToken } from "../shared/api";
 import { setJuryAccess } from "../shared/storage";
 import FbAlert from "../shared/ui/FbAlert";
@@ -172,9 +174,10 @@ export default function JuryGatePage() {
       <div className="jury-step">
         <div className="jury-card dj-glass-card jury-gate-card">
 
-          {/* Icon */}
-          <div className="jury-icon-box" style={{ marginBottom: 20 }}>
-            <KeyRound size={24} strokeWidth={1.8} />
+          {/* Logo */}
+          <div className="jg-logo">
+            <img src={veraLogoDark} alt="VERA" className="jg-logo-dark" />
+            <img src={veraLogoWhite} alt="VERA" className="jg-logo-light" />
           </div>
 
           {/* Header */}
@@ -189,11 +192,6 @@ export default function JuryGatePage() {
               {denyMessage || "The link is invalid, expired, or has been revoked."}
             </FbAlert>
           )}
-
-          {/* Divider */}
-          <div className="jg-divider">
-            <span>or enter your access code</span>
-          </div>
 
           {/* Manual token entry */}
           <form onSubmit={handleVerify} className="jg-form">
@@ -220,17 +218,18 @@ export default function JuryGatePage() {
             </button>
           </form>
 
-          {/* Back */}
-          <button className="jg-back-btn" onClick={() => navigate("/", { replace: true })}>
-            <ArrowLeft size={13} />
-            Return Home
-          </button>
-
           <div className="jury-gate-note">
             If you are a walk-in juror, please contact the registration desk.
           </div>
 
         </div>
+
+        <div className="login-footer" style={{ marginTop: "8px" }}>
+          <button type="button" className="form-link" onClick={() => navigate("/", { replace: true })}>
+            ← Return Home
+          </button>
+        </div>
+
       </div>
     </div>
   );

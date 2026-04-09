@@ -15,7 +15,7 @@ import EnableEditingModal from "../modals/EnableEditingModal";
 import JurorReviewsModal from "../modals/JurorReviewsModal";
 import AddJurorDrawer from "../drawers/AddJurorDrawer";
 import EditJurorDrawer from "../drawers/EditJurorDrawer";
-import { sendJurorPinEmail, getActiveEntryTokenPlain } from "@/shared/api";
+import { sendJurorPinEmail, getActiveEntryTokenPlain, writeAuditLog } from "@/shared/api";
 import { parseJurorsCsv } from "../utils/csvParser";
 import ExportPanel from "../components/ExportPanel";
 import { SquarePen, Filter, LockOpen, Lock } from "lucide-react";
@@ -476,6 +476,10 @@ export default function JurorsPage() {
       tokenUrl,
       periodName: periods.viewPeriodLabel,
     });
+    writeAuditLog("notification.juror_pin", {
+      resourceType: "jurors",
+      details: { recipientEmail: email, jurorName: target?.juryName || target?.juror_name || "" },
+    }).catch((e) => console.warn("Audit write failed:", e?.message));
   }
 
   function openRemoveModal(juror) {

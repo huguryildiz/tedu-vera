@@ -20,6 +20,10 @@ import {
   rejectApplication,
   notifyApplication,
   writeAuditLog,
+  sendAdminInvite,
+  listAdminInvites,
+  resendAdminInvite,
+  cancelAdminInvite,
 } from "../../shared/api";
 
 const EMPTY_CREATE = {
@@ -45,7 +49,7 @@ const EMPTY_EDIT = {
   created_at: "",
   updated_at: "",
 };
-const VALID_STATUSES = ["active", "limited", "disabled", "archived"];
+const VALID_STATUSES = ["active", "archived"];
 const CODE_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function splitSubtitle(subtitle) {
@@ -77,6 +81,17 @@ const normalizeAdminApplicationError = (raw) => {
   if (lower.includes("tenant_not_found")) {
     return "Organization was not found. Please refresh and try again.";
   }
+  return msg;
+};
+
+const normalizeAdminInviteError = (raw) => {
+  const msg = String(raw || "").trim();
+  const lower = msg.toLowerCase();
+  if (!lower) return "Could not send invite.";
+  if (lower.includes("already_member")) return "This email is already a member of this organization.";
+  if (lower.includes("invalid_email")) return "Please enter a valid email address.";
+  if (lower.includes("rate_limit_exceeded")) return "Too many invites sent recently. Please try again later.";
+  if (lower.includes("organization_not_found")) return "Organization not found.";
   return msg;
 };
 
@@ -114,6 +129,10 @@ export function useManageOrganizations({
   const editOrigRef = useRef(EMPTY_EDIT);
   const [applicationActionLoading, setApplicationActionLoading] = useState({ id: "", action: "" });
 
+  // ── Invite state ─────────────────────────────────────────────
+  const [invites, setInvites] = useState([]);
+  const [inviteLoading, setInviteLoading] = useState(false);
+
   // ── Load ──────────────────────────────────────────────────
   const loadOrgs = useCallback(async () => {
     if (!enabled) return;
@@ -122,6 +141,16 @@ export function useManageOrganizations({
       setOrgList(data);
     } catch (e) {
       setError(e?.message || "Could not load organizations.");
+    }
+  }, [enabled]);
+
+  const loadInvites = useCallback(async (orgId) => {
+    if (!enabled || !orgId) return;
+    try {
+      const data = await listAdminInvites(orgId);
+      setInvites(data);
+    } catch (e) {
+      console.warn("Could not load invites:", e?.message);
     }
   }, [enabled]);
 
@@ -354,11 +383,6 @@ export function useManageOrganizations({
         .find((a) => a.applicationId === applicationId);
 
       await approveApplication(applicationId);
-      writeAuditLog("application.approved", {
-        resourceType: "org_applications",
-        resourceId: applicationId,
-        details: { applicantEmail: appData?.email, applicantName: appData?.name },
-      }).catch(() => {});
 
       // Fire-and-forget notification (never blocks approve flow)
       if (appData?.email) {
@@ -370,6 +394,12 @@ export function useManageOrganizations({
           organizationId: appData.orgId,
           organizationName: appData.orgName,
         });
+        writeAuditLog("notification.application", {
+          resourceType: "org_applications",
+          resourceId: applicationId,
+          organizationId: appData.orgId,
+          details: { type: "application_approved", recipientEmail: appData.email },
+        }).catch((e) => console.warn("Audit write failed:", e?.message));
       }
 
       await loadOrgs();
@@ -395,11 +425,6 @@ export function useManageOrganizations({
         .find((a) => a.applicationId === applicationId);
 
       await rejectApplication(applicationId);
-      writeAuditLog("application.rejected", {
-        resourceType: "org_applications",
-        resourceId: applicationId,
-        details: { applicantEmail: appData?.email, applicantName: appData?.name },
-      }).catch(() => {});
 
       // Fire-and-forget notification (never blocks reject flow)
       if (appData?.email) {
@@ -411,6 +436,12 @@ export function useManageOrganizations({
           organizationId: appData.orgId,
           organizationName: appData.orgName,
         });
+        writeAuditLog("notification.application", {
+          resourceType: "org_applications",
+          resourceId: applicationId,
+          organizationId: appData.orgId,
+          details: { type: "application_rejected", recipientEmail: appData.email },
+        }).catch((e) => console.warn("Audit write failed:", e?.message));
       }
 
       await loadOrgs();
@@ -429,12 +460,20 @@ export function useManageOrganizations({
     setError("");
     incLoading();
     try {
+      const cleanName = String(name || "").trim();
+      const cleanEmail = String(email || "").trim().toLowerCase();
       await updateMemberAdmin({
         organizationId,
         userId,
-        name: String(name || "").trim(),
-        email: String(email || "").trim().toLowerCase(),
+        name: cleanName,
+        email: cleanEmail,
       });
+      writeAuditLog("admin.updated", {
+        resourceType: "memberships",
+        resourceId: userId,
+        organizationId,
+        details: { adminName: cleanName, adminEmail: cleanEmail },
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
       await loadOrgs();
       setMessage?.("Admin updated.");
       return true;
@@ -485,10 +524,6 @@ export function useManageOrganizations({
         university: String(university || "").trim(),
         department: String(department || "").trim(),
       });
-      writeAuditLog("application.submitted", {
-        resourceType: "org_applications",
-        details: { applicantEmail: String(email || "").trim().toLowerCase(), organizationId },
-      }).catch(() => {});
       await loadOrgs();
       setMessage?.("Admin application created.");
       return { ok: true };
@@ -500,6 +535,70 @@ export function useManageOrganizations({
       decLoading();
     }
   }, [enabled, loadOrgs, setMessage, incLoading, decLoading]);
+
+  const handleSendInvite = useCallback(async (orgId, email) => {
+    if (!enabled || !orgId) return { ok: false, error: "Organization is missing." };
+    setError("");
+    setInviteLoading(true);
+    try {
+      const result = await sendAdminInvite(orgId, email);
+      writeAuditLog("notification.admin_invite", {
+        resourceType: "admin_invites",
+        resourceId: result.invite_id || result.user_id,
+        organizationId: orgId,
+        details: { email, type: "invite", status: result.status },
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
+
+      if (result.status === "added") {
+        await loadOrgs();
+        setMessage?.("Admin added — they already had an account.");
+      } else {
+        await loadInvites(orgId);
+        setMessage?.(`Invitation sent to ${email}`);
+      }
+      return { ok: true, status: result.status };
+    } catch (e) {
+      const msg = normalizeAdminInviteError(e?.message || "");
+      setError(msg);
+      return { ok: false, error: msg };
+    } finally {
+      setInviteLoading(false);
+    }
+  }, [enabled, loadOrgs, loadInvites, setMessage]);
+
+  const handleResendInvite = useCallback(async (inviteId, orgId) => {
+    if (!enabled || !inviteId) return;
+    setInviteLoading(true);
+    try {
+      await resendAdminInvite(inviteId, orgId);
+      writeAuditLog("notification.admin_invite", {
+        resourceType: "admin_invites",
+        resourceId: inviteId,
+        organizationId: orgId,
+        details: { type: "resend" },
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
+      await loadInvites(orgId);
+      setMessage?.("Invite resent.");
+    } catch (e) {
+      setError(e?.message || "Could not resend invite.");
+    } finally {
+      setInviteLoading(false);
+    }
+  }, [enabled, loadInvites, setMessage]);
+
+  const handleCancelInvite = useCallback(async (inviteId, orgId) => {
+    if (!enabled || !inviteId) return;
+    setInviteLoading(true);
+    try {
+      await cancelAdminInvite(inviteId);
+      await loadInvites(orgId);
+      setMessage?.("Invite cancelled.");
+    } catch (e) {
+      setError(e?.message || "Could not cancel invite.");
+    } finally {
+      setInviteLoading(false);
+    }
+  }, [enabled, loadInvites, setMessage]);
 
   return {
     orgList,
@@ -532,5 +631,12 @@ export function useManageOrganizations({
 
     isDirty,
     loadOrgs,
+
+    invites,
+    inviteLoading,
+    loadInvites,
+    handleSendInvite,
+    handleResendInvite,
+    handleCancelInvite,
   };
 }

@@ -123,14 +123,19 @@ export async function approveApplication(applicationId) {
 }
 
 /**
- * Reject application.
+ * Reject application via RPC (server-side audit trail).
  */
 export async function rejectApplication(applicationId) {
-  const { error } = await supabase
-    .from("org_applications")
-    .update({ status: "rejected", reviewed_at: new Date().toISOString() })
-    .eq("id", applicationId);
+  const { data, error } = await supabase.rpc("rpc_admin_reject_application", {
+    p_application_id: applicationId,
+  });
   if (error) throw error;
+  if (data?.ok === false) {
+    const e = new Error(data.error_code || "Could not reject application.");
+    e.code = data.error_code;
+    throw e;
+  }
+  return data;
 }
 
 /**

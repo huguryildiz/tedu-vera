@@ -102,7 +102,7 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
     try {
       const params = buildAuditParams(filters || defaultAuditFilters, AUDIT_PAGE_SIZE, cursor, searchTerm);
       const rawRows = await listAuditLogs({ ...params, organizationId });
-      const rows = (rawRows || []).filter((row) => row?.action !== "admin_login_success");
+      const rows = rawRows || [];
       if (mode === "append") {
         setAuditLogs((prev) => [...prev, ...(rows || [])]);
       } else {
@@ -252,7 +252,7 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
       writeAuditLog("export.audit", {
         resourceType: "audit_logs",
         details: { format, rowCount: all.length },
-      }).catch(() => {});
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
       setMessage(`${all.length} audit event${all.length !== 1 ? "s" : ""} exported`);
     } catch (e) {
       setAuditError(e?.message || "Could not export audit logs.");

@@ -453,7 +453,7 @@ export default function RankingsPage() {
       writeAuditLog("export.rankings", {
         resourceType: "score_sheets",
         details: { format: exportFormat, rowCount: filteredRows.length },
-      }).catch(() => {});
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
       setExportPanelOpen(false);
       _toast.success("Rankings exported");
     } catch (e) {

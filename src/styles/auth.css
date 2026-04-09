@@ -174,7 +174,7 @@ body:not(.dark-mode) .login-footer{color:#64748b !important}
   color:var(--text-tertiary);margin-bottom:5px;
 }
 .pin-block-kpi-value{
-  font-size:22px;font-weight:700;font-family:ui-monospace,monospace;letter-spacing:0.5px;
+  font-size:22px;font-weight:700;font-family:var(--mono);letter-spacing:0.5px;
   color:var(--text-primary);line-height:1;
 }
 .pin-block-kpi-value.warn{color:#f59e0b}

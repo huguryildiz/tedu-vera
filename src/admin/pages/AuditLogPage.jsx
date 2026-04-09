@@ -4,7 +4,7 @@
 
 import { useMemo, useState } from "react";
 import { useAdminContext } from "../hooks/useAdminContext";
-import { ChevronLeft, ChevronRight, Filter, RefreshCw } from "lucide-react";
+import { Filter, RefreshCw } from "lucide-react";
 import { useToast } from "@/shared/hooks/useToast";
 import FbAlert from "@/shared/ui/FbAlert";
 import { FilterButton } from "@/shared/ui/FilterButton";
@@ -16,7 +16,7 @@ import { getActorInfo, formatActionLabel, formatActionDetail } from "../utils/au
 
 // ── Chip helpers ──────────────────────────────────────────────
 const CHIP_MAP = {
-  entry_tokens:       { type: "token",    label: "Token" },
+  entry_tokens:       { type: "token",    label: "QR Access" },
   score_sheets:       { type: "eval",     label: "Evaluation" },
   jurors:             { type: "juror",    label: "Juror" },
   periods:            { type: "period",   label: "Period" },
@@ -499,14 +499,14 @@ export default function AuditLogPage() {
         </div>
 
         {/* Pagination footer */}
-        <div className="audit-footer">
-          <div className="audit-footer-left">
-            <span className="text-sm text-muted">
+        <div className="jurors-pagination">
+          <div className="jurors-pagination-info">
+            <span>
               {auditLoading
                 ? "Loading…"
                 : sortedAuditLogs.length === 0
                   ? "No events"
-                  : `Showing ${pageStart + 1}–${pageEnd} of ${sortedAuditLogs.length}${auditHasMore ? "+" : ""}`
+                  : `Showing ${pageStart + 1}–${pageEnd} of ${sortedAuditLogs.length}${auditHasMore ? "+" : ""} events`
               }
             </span>
             <CustomSelect
@@ -521,21 +521,27 @@ export default function AuditLogPage() {
               ariaLabel="Page size"
             />
           </div>
-          <div className="audit-pagination">
+          <div className="jurors-pagination-pages">
             <button
-              className="audit-page-btn"
               type="button"
               disabled={safePage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               aria-label="Previous page"
             >
-              <ChevronLeft size={14} />
+              ‹ Prev
             </button>
-            <span className="audit-page-current">{safePage}</span>
-            <span className="audit-page-sep">/</span>
-            <span className="audit-page-total">{totalPages}</span>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                type="button"
+                className={page === safePage ? "active" : undefined}
+                aria-current={page === safePage ? "page" : undefined}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </button>
+            ))}
             <button
-              className="audit-page-btn"
               type="button"
               disabled={safePage >= totalPages && !auditHasMore}
               onClick={() => {
@@ -548,7 +554,7 @@ export default function AuditLogPage() {
               }}
               aria-label="Next page"
             >
-              <ChevronRight size={14} />
+              Next ›
             </button>
             <button
               className="btn btn-outline btn-sm audit-refresh-btn"

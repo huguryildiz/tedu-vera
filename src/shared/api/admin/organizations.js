@@ -120,23 +120,134 @@ export async function updateMemberAdmin(payload) {
   return true;
 }
 
+// ── Admin Invite API ──────────────────────────────────────────
+
+/**
+ * Send an admin invite. Returns { status: 'invited', invite_id, token, email }
+ * or { status: 'added', user_id } for existing users.
+ */
+export async function sendAdminInvite(orgId, email) {
+  const { data, error } = await supabase.rpc("rpc_admin_invite_send", {
+    p_org_id: orgId,
+    p_email: email,
+  });
+  if (error) throw error;
+
+  // Fire-and-forget: send email via Edge Function
+  const orgName = await _getOrgName(orgId);
+  supabase.functions.invoke("send-admin-invite", {
+    body: {
+      type: data.status === "added" ? "added" : "invite",
+      email: data.email || email,
+      token: data.token || null,
+      org_name: orgName,
+    },
+  }).catch((e) => console.warn("send-admin-invite email failed:", e?.message));
+
+  return data;
+}
+
+/**
+ * List pending invites for an organization.
+ * Returns array of { id, email, created_at, expires_at }.
+ */
+export async function listAdminInvites(orgId) {
+  const { data, error } = await supabase.rpc("rpc_admin_invite_list", {
+    p_org_id: orgId,
+  });
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Resend an existing invite (new token, reset expiry).
+ */
+export async function resendAdminInvite(inviteId, orgId) {
+  const { data, error } = await supabase.rpc("rpc_admin_invite_resend", {
+    p_invite_id: inviteId,
+  });
+  if (error) throw error;
+
+  // Fire-and-forget: send email
+  const orgName = await _getOrgName(orgId);
+  supabase.functions.invoke("send-admin-invite", {
+    body: {
+      type: "invite",
+      email: data.email,
+      token: data.token,
+      org_name: orgName,
+    },
+  }).catch((e) => console.warn("resend invite email failed:", e?.message));
+
+  return data;
+}
+
+/**
+ * Cancel a pending invite.
+ */
+export async function cancelAdminInvite(inviteId) {
+  const { data, error } = await supabase.rpc("rpc_admin_invite_cancel", {
+    p_invite_id: inviteId,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Get invite payload by token (for the accept page).
+ */
+export async function getInvitePayload(token) {
+  const { data, error } = await supabase.rpc("rpc_admin_invite_get_payload", {
+    p_token: token,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Accept an invite (calls Edge Function which creates user + membership).
+ */
+export async function acceptAdminInvite(token, password, displayName) {
+  const { data, error } = await supabase.functions.invoke(
+    "accept-admin-invite",
+    { body: { token, password, display_name: displayName } },
+  );
+  if (error) throw error;
+  if (data?.error) {
+    throw new Error(data.error);
+  }
+  return data;
+}
+
+/** @private Resolve org name for email templates */
+async function _getOrgName(orgId) {
+  try {
+    const { data } = await supabase
+      .from("organizations")
+      .select("name")
+      .eq("id", orgId)
+      .single();
+    return data?.name || "your organization";
+  } catch {
+    return "your organization";
+  }
+}
+
 export async function deleteMemberHard(payload) {
   const userId = typeof payload === "string" ? payload : payload?.userId;
+  const organizationId = typeof payload === "object" ? payload?.organizationId : null;
   if (!userId) throw new Error("userId is required");
+  if (!organizationId) throw new Error("organizationId is required");
 
-  // Delete membership
+  // Remove only the membership for this specific organization.
+  // The Supabase Auth user and profile are intentionally kept intact —
+  // the user may belong to other organizations or re-join later.
   const { error: memErr } = await supabase
     .from("memberships")
     .delete()
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .eq("organization_id", organizationId);
   if (memErr) throw memErr;
-
-  // Delete profile
-  const { error: profErr } = await supabase
-    .from("profiles")
-    .delete()
-    .eq("id", userId);
-  if (profErr) throw profErr;
 
   return true;
 }

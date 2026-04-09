@@ -10,7 +10,7 @@ import { useCallback, useRef } from "react";
 
 // Tabs that have editable forms — dirty guard applies
 const DIRTY_PAGES = new Set([
-  "settings", "jurors", "projects", "periods", "criteria", "outcomes",
+  "settings", "jurors", "projects", "periods", "criteria", "outcomes", "organizations",
 ]);
 
 // Map pathname segment to page key
@@ -87,6 +87,7 @@ const PAGE_LABELS = {
   "entry-control": "Entry Control",
   "pin-blocking": "PIN Blocking",
   "audit-log": "Audit Log",
+  organizations: "Organizations",
   settings: "Settings",
 };
 

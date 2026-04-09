@@ -73,7 +73,7 @@ export default function ExportPage() {
       writeAuditLog("export.backup", {
         resourceType: "score_sheets",
         details: { format: "xlsx", periodCount: orderedSemesters.length },
-      }).catch(() => {});
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
       _toast.success(`Score report downloaded · ${orderedSemesters.length} period${orderedSemesters.length !== 1 ? "s" : ""} · Excel`);
     } catch (e) {
       _toast.error(e?.message || "Score report export failed — please try again");

@@ -215,7 +215,6 @@ export default function ManageOrganizationsPanel({
   handleUpdateTenantAdmin,
   handleDeleteTenantAdmin,
   isDirty,
-  isDemoMode = false,
 }) {
   const [showAll, setShowAll] = useState(false);
   const [adminsDialogOrg, setAdminsDialogOrg] = useState(null);
@@ -320,7 +319,6 @@ export default function ManageOrganizationsPanel({
   };
 
   const confirmAdminDelete = async () => {
-    if (isDemoMode) throw new Error("Demo mode: delete is disabled.");
     if (!adminDeleteTarget?.organizationId || !adminDeleteTarget?.userId) return;
     await handleDeleteTenantAdmin?.({
       organizationId: adminDeleteTarget.organizationId,
@@ -388,7 +386,7 @@ export default function ManageOrganizationsPanel({
                 </div>
                 <div className="mop-org-meta-row">
                   <CodeIcon />
-                  <span style={{ fontFamily: "monospace" }}>{org.code}</span>
+                  <span style={{ fontFamily: "var(--mono)" }}>{org.code}</span>
                 </div>
                 <div className="mop-org-meta-row">
                   <UniversityIcon />
@@ -495,7 +493,7 @@ export default function ManageOrganizationsPanel({
             </ModalBody>
             <ModalActions>
               <BtnOutline onClick={closeCreate}>Cancel</BtnOutline>
-              <BtnPrimary disabled={!createCanSubmit || isDemoMode} onClick={handleCreateOrg}>
+              <BtnPrimary disabled={!createCanSubmit} onClick={handleCreateOrg}>
                 Create
               </BtnPrimary>
             </ModalActions>
@@ -547,7 +545,7 @@ export default function ManageOrganizationsPanel({
             </ModalBody>
             <ModalActions>
               <BtnOutline onClick={closeEdit}>Cancel</BtnOutline>
-              <BtnPrimary disabled={!editCanSubmit || isDemoMode} onClick={handleUpdateOrg}>
+              <BtnPrimary disabled={!editCanSubmit} onClick={handleUpdateOrg}>
                 Save
               </BtnPrimary>
             </ModalActions>
@@ -668,7 +666,7 @@ export default function ManageOrganizationsPanel({
                             <BtnPrimary
                               className="mop-btn-sm"
                               onClick={() => handleApproveApplication(entry.applicationId)}
-                              disabled={isRowLoading || isDemoMode}
+                              disabled={isRowLoading}
                             >
                               {isApproveLoading && <span className="spinner" aria-hidden="true" />}
                               Approve
@@ -676,7 +674,7 @@ export default function ManageOrganizationsPanel({
                             <BtnOutline
                               className="mop-btn-sm"
                               onClick={() => handleRejectApplication(entry.applicationId)}
-                              disabled={isRowLoading || isDemoMode}
+                              disabled={isRowLoading}
                             >
                               {isRejectLoading && <span className="spinner" aria-hidden="true" />}
                               Reject
@@ -737,7 +735,7 @@ export default function ManageOrganizationsPanel({
             </ModalBody>
             <ModalActions>
               <BtnOutline onClick={() => setAdminCreateOpen(false)}>Cancel</BtnOutline>
-              <BtnPrimary onClick={saveAdminCreate} disabled={adminCreateSaving || isDemoMode}>
+              <BtnPrimary onClick={saveAdminCreate} disabled={adminCreateSaving}>
                 Create
               </BtnPrimary>
             </ModalActions>
@@ -770,7 +768,7 @@ export default function ManageOrganizationsPanel({
             </ModalBody>
             <ModalActions>
               <BtnOutline onClick={() => setAdminEditOpen(false)}>Cancel</BtnOutline>
-              <BtnPrimary onClick={saveAdminEdit} disabled={adminEditSaving || isDemoMode}>
+              <BtnPrimary onClick={saveAdminEdit} disabled={adminEditSaving}>
                 Save
               </BtnPrimary>
             </ModalActions>

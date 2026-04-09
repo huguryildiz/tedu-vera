@@ -1027,7 +1027,7 @@ textarea::placeholder {
 }
 
 .outcome-editor-row-code {
-  font-family: var(--mono, ui-monospace, monospace);
+  font-family: var(--mono);
   font-size: 12.5px;
   font-weight: 700;
   color: var(--accent);
@@ -1110,7 +1110,7 @@ textarea::placeholder {
 /* Compact monospace input for outcome codes */
 .outcome-editor-input {
   height: 32px;
-  font-family: var(--mono, ui-monospace, monospace);
+  font-family: var(--mono);
   font-size: 13px;
   font-weight: 700;
   color: var(--accent);

@@ -1,4 +1,4 @@
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;font-feature-settings:"liga" 0,"clig" 0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;font-feature-settings:"liga" 0,"clig" 0;font-family:var(--font)}
 :root{
   --bg-page:#f4f7fb;--bg-card:#ffffff;--surface-1:#eef2f8;--surface-2:#e3eaf4;
   --border:rgba(15,23,42,0.08);--border-strong:rgba(15,23,42,0.13);

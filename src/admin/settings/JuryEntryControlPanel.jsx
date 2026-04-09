@@ -21,6 +21,7 @@ import {
   revokeEntryToken,
   getEntryTokenStatus,
 } from "../../shared/api";
+import { isDemoEnvironment } from "@/shared/lib/environment";
 import { useToast } from "@/shared/hooks/useToast";
 import JuryRevokeConfirmDialog from "./JuryRevokeConfirmDialog";
 import {
@@ -70,7 +71,6 @@ export default function JuryEntryControlPanel({
   isOpen,
   onToggle,
   isMobile,
-  isDemoMode = false,
 }) {
   const [status, setStatus]     = useState(null);
   const [error, setError]       = useState("");
@@ -87,7 +87,7 @@ export default function JuryEntryControlPanel({
   const qrInstance              = useRef(null);
 
   const entryUrl = rawToken
-    ? `${window.location.origin}${isDemoMode ? "/demo" : ""}/eval?t=${encodeURIComponent(rawToken)}`
+    ? `${window.location.origin}${isDemoEnvironment() ? "/demo" : ""}/eval?t=${encodeURIComponent(rawToken)}`
     : "";
 
   // ── QR code instance ──────────────────────────────────────
@@ -144,11 +144,11 @@ export default function JuryEntryControlPanel({
 
   // Demo mode: show a dummy QR when the period has an active token
   useEffect(() => {
-    if (!isDemoMode || !status?.has_token || !status?.enabled) return;
+    if (!isDemoEnvironment() || !status?.has_token || !status?.enabled) return;
     if (rawToken) return; // already showing a real/dummy token
     setRawToken("demo-token-" + (periodId || "").slice(0, 8));
     setShowQR(true);
-  }, [isDemoMode, status, rawToken, periodId]);
+  }, [status, rawToken, periodId]);
 
   // ── Generate / Regenerate ─────────────────────────────────
   async function handleGenerate() {
@@ -321,7 +321,7 @@ export default function JuryEntryControlPanel({
                     type="button"
                     className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed [&>svg]:size-3.5 [&>svg]:block"
                     onClick={handleGenerate}
-                    disabled={regenerating || revoking || isDemoMode}
+                    disabled={regenerating || revoking}
                   >
                     {regenerating ? <div className="spinner" /> : (hasToken ? <RefreshCcwIcon /> : <QrCodeIcon />)}
                     {regenerating ? "Generating…" : (hasToken ? "Regenerate QR" : "Generate QR")}
@@ -331,7 +331,7 @@ export default function JuryEntryControlPanel({
                     type="button"
                     className={`inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed [&>svg]:size-3.5 [&>svg]:block${regenerating ? " [&>svg]:animate-spin" : ""}`}
                     onClick={handleGenerate}
-                    disabled={regenerating || revoking || isDemoMode}
+                    disabled={regenerating || revoking}
                   >
                     <RefreshCcwIcon />
                     {regenerating ? "Regenerating…" : "Regenerate QR"}
@@ -343,7 +343,7 @@ export default function JuryEntryControlPanel({
                     type="button"
                     className="inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive px-4 py-2 text-sm font-medium text-white shadow hover:bg-destructive/90 disabled:opacity-60 disabled:cursor-not-allowed [&>svg]:size-3.5 [&>svg]:block"
                     onClick={() => setRevokeModalOpen(true)}
-                    disabled={regenerating || revoking || isDemoMode}
+                    disabled={regenerating || revoking}
                   >
                     {revoking ? <div className="spinner" /> : <BanIcon />}
                     Revoke Access

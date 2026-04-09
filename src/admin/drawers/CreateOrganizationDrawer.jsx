@@ -101,9 +101,9 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
           </div>
         )}
 
-        <div className="fs-field-row">
-          <label className="fs-label">
-            Organization Name <span style={{ color: "var(--danger)" }}>*</span>
+        <div className="fs-field">
+          <label className="fs-field-label">
+            Organization Name <span className="fs-field-req">*</span>
           </label>
           <input
             className="fs-input"
@@ -115,9 +115,9 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
           />
         </div>
 
-        <div className="fs-field-row">
-          <label className="fs-label">
-            Short Label <span style={{ color: "var(--danger)" }}>*</span>
+        <div className="fs-field">
+          <label className="fs-field-label">
+            Short Label <span className="fs-field-req">*</span>
           </label>
           <input
             className="fs-input"
@@ -132,8 +132,8 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div className="fs-field-row">
-            <label className="fs-label">University</label>
+          <div className="fs-field">
+            <label className="fs-field-label">University</label>
             <input
               className="fs-input"
               type="text"
@@ -143,8 +143,8 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
               disabled={saving}
             />
           </div>
-          <div className="fs-field-row">
-            <label className="fs-label">Department</label>
+          <div className="fs-field">
+            <label className="fs-field-label">Department</label>
             <input
               className="fs-input"
               type="text"
@@ -156,8 +156,8 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
           </div>
         </div>
 
-        <div className="fs-field-row">
-          <label className="fs-label">Contact Email</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Contact Email</label>
           <input
             className="fs-input"
             type="email"
@@ -168,8 +168,8 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
           />
         </div>
 
-        <div className="fs-field-row">
-          <label className="fs-label">Initial Admin</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Initial Admin</label>
           <input
             className="fs-input"
             type="email"
@@ -183,8 +183,8 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
           </div>
         </div>
 
-        <div className="fs-field-row">
-          <label className="fs-label">Initial Status</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Initial Status</label>
           <div style={{ display: "flex", gap: 8 }}>
             {[
               { value: "active", label: "Active", activeStyle: { background: "rgba(22,163,74,0.04)", borderColor: "rgba(22,163,74,0.25)" } },
@@ -214,8 +214,8 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
           </div>
         </div>
 
-        <div className="fs-field-row">
-          <label className="fs-label">Notes</label>
+        <div className="fs-field">
+          <label className="fs-field-label">Notes</label>
           <textarea
             className="fs-input"
             rows={2}

@@ -15,6 +15,7 @@ import {
   getEntryTokenHistory,
   getActiveEntryTokenPlain,
   sendEntryTokenEmail,
+  writeAuditLog,
   supabase,
 } from "@/shared/api";
 import { useToast } from "@/shared/hooks/useToast";
@@ -401,6 +402,10 @@ export default function EntryControlPage() {
       if (result?.sent === false || result?.ok === false) {
         throw new Error(result?.error || "send_failed");
       }
+      writeAuditLog("notification.entry_token", {
+        resourceType: "entry_tokens",
+        details: { recipientEmail: currentUserEmail, periodName, type: "test" },
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
       _toast.success(`Test sent to ${currentUserEmail}`);
     } catch (err) {
       _toast.error(err?.message || "Could not send test email.");
@@ -433,6 +438,10 @@ export default function EntryControlPage() {
       if (result?.sent === false || result?.ok === false) {
         throw new Error(result?.error || "send_failed");
       }
+      writeAuditLog("notification.entry_token", {
+        resourceType: "entry_tokens",
+        details: { recipientEmail: email, periodName, type: "direct" },
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
       _toast.success(`Access link sent to ${email}`);
       setNewUserEmail("");
       setNewUserModalOpen(false);
@@ -486,6 +495,10 @@ export default function EntryControlPage() {
       setSendModalOpen(false);
       setSendSuccessOpen(true);
       if (delivered > 0) {
+        writeAuditLog("notification.entry_token", {
+          resourceType: "entry_tokens",
+          details: { periodName, type: "bulk", delivered, failed, total: targets.length },
+        }).catch((e) => console.warn("Audit write failed:", e?.message));
         _toast.success(`Sent to ${delivered} juror${delivered === 1 ? "" : "s"}.`);
       }
       if (failed > 0) {

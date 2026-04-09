@@ -39,7 +39,7 @@ export function useGridExport({ buildExportRows, groups, periodName, visibleJuro
       writeAuditLog("export.heatmap", {
         resourceType: "score_sheets",
         details: { format: "xlsx", jurorCount: exportRows.length, projectCount: groups.length },
-      }).catch(() => {});
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
       return;
     }
 
@@ -78,7 +78,7 @@ export function useGridExport({ buildExportRows, groups, periodName, visibleJuro
       writeAuditLog("export.heatmap", {
         resourceType: "score_sheets",
         details: { format: "csv", jurorCount: exportRows.length, projectCount: groups.length },
-      }).catch(() => {});
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
     } else {
       // PDF: section-based (All Criteria page + per-criterion pages)
       const header = ["Juror", "Affiliation", "Status", ...groupHeaders];
@@ -120,7 +120,7 @@ export function useGridExport({ buildExportRows, groups, periodName, visibleJuro
       writeAuditLog("export.heatmap", {
         resourceType: "score_sheets",
         details: { format: "pdf", jurorCount: exportRows.length, projectCount: groups.length },
-      }).catch(() => {});
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
     }
   }, [buildExportRows, visibleJurors, groups, periodName, tenantCode, orgName, deptName, lookup, activeCriteria]);
 

@@ -18,6 +18,7 @@ import { useState, useRef, useCallback } from "react";
 import { useToast } from "@/shared/hooks/useToast";
 import { useAuth } from "@/auth";
 import { sendExportReport } from "@/shared/api/admin/notifications";
+import { writeAuditLog } from "@/shared/api";
 import { arrayBufferToBase64 } from "@/admin/utils/downloadTable";
 
 const FORMAT_ICON = { xlsx: "XLS", csv: "CSV", pdf: "PDF" };
@@ -129,6 +130,10 @@ export default function SendReportModal({
         if (!result.sent) {
           throw new Error(result.error || "Failed to send email");
         }
+        writeAuditLog("notification.export_report", {
+          resourceType: "score_sheets",
+          details: { recipients, reportTitle: reportTitle || "Report", periodName },
+        }).catch((e) => console.warn("Audit write failed:", e?.message));
       }
       return count;
     };

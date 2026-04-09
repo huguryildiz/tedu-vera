@@ -19,8 +19,6 @@ import { DEMO_MODE } from "@/shared/lib/demoMode";
 import { SecurityPolicyContext, DEFAULT_POLICY } from "./SecurityPolicyContext";
 
 export const AuthContext = createContext(null);
-const DEMO_BYPASS_UIDS = (import.meta.env.VITE_DEMO_BYPASS_UIDS || "")
-  .split(",").map((s) => s.trim()).filter(Boolean);
 
 function isRecoverableAuthLockError(error) {
   const msg = String(error?.message || "");
@@ -73,6 +71,8 @@ export default function AuthProvider({ children }) {
   const mountedRef = useRef(true);
   const hasSessionRef = useRef(false);
   const policyLoadedRef = useRef(false);
+  // Suppress the next USER_UPDATED newEmail re-application after an explicit cancel.
+  const suppressEmailUpdateRef = useRef(false);
 
   // Fetch tenant memberships from the session RPC.
   const fetchMemberships = useCallback(async () => {
@@ -103,6 +103,20 @@ export default function AuthProvider({ children }) {
     // the full-screen loader or re-fetch memberships.
     if (_event !== "INITIAL_SESSION" && hasSessionRef.current) {
       setSession(newSession);
+      // USER_UPDATED fires after updateUser() — sync newEmail into user state.
+      // If new_email equals current email, the user cancelled the change (confirmation to self);
+      // treat as no pending change.
+      if (_event === "USER_UPDATED" && newSession?.user) {
+        if (suppressEmailUpdateRef.current) {
+          // User explicitly cancelled the pending email change — keep newEmail null
+          // regardless of what Supabase still has in new_email on this event.
+          suppressEmailUpdateRef.current = false;
+        } else {
+          const rawNew = newSession.user.new_email;
+          const effectiveNew = (rawNew && rawNew !== newSession.user.email) ? rawNew : null;
+          setUser((prev) => prev ? { ...prev, newEmail: effectiveNew } : prev);
+        }
+      }
       return;
     }
 
@@ -111,6 +125,7 @@ export default function AuthProvider({ children }) {
     setUser({
       id: newSession.user.id,
       email: newSession.user.email,
+      newEmail: newSession.user.new_email ?? null,
       name: newSession.user.user_metadata?.name || newSession.user.email,
     });
 
@@ -220,7 +235,7 @@ export default function AuthProvider({ children }) {
 
     // Fetch security policy once for super admins only.
     // Non-admin/new OAuth users can hit RPC auth checks and return 400.
-    const canReadPolicy = !DEMO_MODE && organizationList.some((o) => o.role === "super_admin");
+    const canReadPolicy = organizationList.some((o) => o.role === "super_admin");
     if (!policyLoadedRef.current && canReadPolicy) {
       policyLoadedRef.current = true;
       getSecurityPolicy()
@@ -228,23 +243,6 @@ export default function AuthProvider({ children }) {
         .catch(() => {});
     }
 
-    // In demo mode, skip the profile upsert (write RPCs are blocked) but
-    // still read the display name from profiles so the avatar menu
-    // shows the seeded name instead of the fallback "Admin".
-    // Bypass users (VITE_DEMO_BYPASS_UIDS) are allowed to upsert.
-    const isBypass = DEMO_BYPASS_UIDS.includes(newSession.user.id);
-    if (DEMO_MODE && !isBypass) {
-      getProfile().then((profile) => {
-        if (mountedRef.current && profile?.display_name) {
-          setDisplayName(profile.display_name);
-        }
-        if (mountedRef.current && profile?.avatar_url) {
-          setAvatarUrl(profile.avatar_url);
-        }
-      }).catch(() => {});
-      setLoading(false);
-      return;
-    }
     const displayNameFromUser = newSession.user.user_metadata?.name || newSession.user.email;
     upsertProfile(displayNameFromUser).then((profile) => {
       if (mountedRef.current && profile?.display_name) {
@@ -333,7 +331,7 @@ export default function AuthProvider({ children }) {
       writeAuditLog("admin.login", {
         resourceType: "profiles",
         details: { method: "password" },
-      }).catch(() => {});
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
     }).catch(() => {});
     return data;
   }, [policy.emailPassword]);
@@ -391,6 +389,12 @@ export default function AuthProvider({ children }) {
     });
     if (error) throw error;
     if (data?.error) throw new Error(data.error);
+    import("@/shared/api").then(({ writeAuditLog }) => {
+      writeAuditLog("notification.password_reset", {
+        resourceType: "profiles",
+        details: { email },
+      }).catch((e) => console.warn("Audit write failed:", e?.message));
+    }).catch(() => {});
   }, []);
 
   const updatePassword = useCallback(async (password) => {
@@ -418,13 +422,45 @@ export default function AuthProvider({ children }) {
   const refreshMemberships = useCallback(async () => {
     const memberships = await fetchMemberships();
     if (!mountedRef.current) return;
-    const organizationList = memberships.map((m) => ({
-      id: m.organization_id,
-      code: m.organization?.code ?? null,
-      name: m.organization?.name ?? null,
-      role: m.role,
-    }));
-    setOrganizations(organizationList);
+    const isSuperMember = memberships.some((m) => m.role === "super_admin");
+    if (isSuperMember) {
+      try {
+        const allOrgs = await listOrganizationsPublic();
+        const allOrgList = allOrgs.map((o) => ({
+          id: o.id,
+          code: o.code ?? null,
+          name: o.name ?? null,
+          subtitle: o.subtitle ?? null,
+          role: "super_admin",
+        }));
+        const resolvedOrgList = allOrgList.length > 0
+          ? allOrgList
+          : [{ id: null, code: null, name: null, subtitle: null, role: "super_admin" }];
+        if (mountedRef.current) setOrganizations(resolvedOrgList);
+      } catch {
+        const organizationList = memberships
+          .filter((m) => m.organization?.status !== "archived")
+          .map((m) => ({
+            id: m.organization_id,
+            code: m.organization?.code ?? null,
+            name: m.organization?.name ?? null,
+            subtitle: m.organization?.subtitle ?? null,
+            role: m.role,
+          }));
+        if (mountedRef.current) setOrganizations(organizationList);
+      }
+    } else {
+      const organizationList = memberships
+        .filter((m) => m.organization?.status !== "archived")
+        .map((m) => ({
+          id: m.organization_id,
+          code: m.organization?.code ?? null,
+          name: m.organization?.name ?? null,
+          subtitle: m.organization?.subtitle ?? null,
+          role: m.role,
+        }));
+      if (mountedRef.current) setOrganizations(organizationList);
+    }
   }, [fetchMemberships]);
 
   const activeOrganization = useMemo(
@@ -442,10 +478,21 @@ export default function AuthProvider({ children }) {
     [user, organizations]
   );
 
-  const demoBypass = useMemo(
-    () => DEMO_BYPASS_UIDS.length > 0 && !!user?.id && DEMO_BYPASS_UIDS.includes(user.id),
-    [user]
-  );
+  const refreshUser = useCallback(async () => {
+    const { data: { user: freshUser } } = await supabase.auth.getUser();
+    if (freshUser) {
+      setUser((prev) => prev ? {
+        ...prev,
+        email: freshUser.email,
+        newEmail: freshUser.new_email ?? null,
+      } : prev);
+    }
+  }, []);
+
+  const clearPendingEmail = useCallback(() => {
+    suppressEmailUpdateRef.current = true;
+    setUser((prev) => prev ? { ...prev, newEmail: null } : prev);
+  }, []);
 
   const value = useMemo(() => ({
     user,
@@ -459,7 +506,6 @@ export default function AuthProvider({ children }) {
     setAvatarUrl,
     isSuper,
     isPending,
-    demoBypass,
     profileIncomplete,
     loading,
     signIn,
@@ -470,9 +516,11 @@ export default function AuthProvider({ children }) {
     updatePassword,
     refreshMemberships,
     completeProfile,
+    refreshUser,
+    clearPendingEmail,
   }), [user, session, organizations, activeOrganization, setActiveOrganization, displayName, setDisplayName,
-       avatarUrl, setAvatarUrl, isSuper, isPending, demoBypass, profileIncomplete, loading, signIn,
-       signInWithGoogle, signUp, signOut, resetPassword, updatePassword, refreshMemberships, completeProfile]);
+       avatarUrl, setAvatarUrl, isSuper, isPending, profileIncomplete, loading, signIn,
+       signInWithGoogle, signUp, signOut, resetPassword, updatePassword, refreshMemberships, completeProfile, refreshUser, clearPendingEmail]);
 
   const policyContextValue = useMemo(
     () => ({ policy, updatePolicy: setPolicy }),
