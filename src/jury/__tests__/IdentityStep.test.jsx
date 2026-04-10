@@ -20,7 +20,7 @@ describe("IdentityStep", () => {
       currentPeriodInfo: {
         name: "Spring 2026",
         organizations: {
-          subtitle: "TED University",
+          institution: "TED University",
           name: "Electrical & Electronics Engineering",
         },
       },

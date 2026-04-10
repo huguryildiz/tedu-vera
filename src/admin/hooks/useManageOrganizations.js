@@ -52,8 +52,8 @@ const EMPTY_EDIT = {
 const VALID_STATUSES = ["active", "archived"];
 const CODE_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-function splitSubtitle(subtitle) {
-  const raw = String(subtitle || "").trim();
+function splitInstitution(institution) {
+  const raw = String(institution || "").trim();
   if (!raw) return { university: "", department: "" };
   const parts = raw.split("·").map((p) => p.trim()).filter(Boolean);
   if (parts.length >= 2) {
@@ -167,7 +167,7 @@ export function useManageOrganizations({
       createForm.name !== orig.name ||
       createForm.code !== orig.code ||
       createForm.shortLabel !== orig.shortLabel ||
-      createForm.subtitle !== orig.subtitle ||
+      createForm.institution !== orig.institution ||
       createForm.university !== orig.university ||
       createForm.department !== orig.department ||
       createForm.contact_email !== orig.contact_email ||
@@ -181,7 +181,7 @@ export function useManageOrganizations({
     return (
       editForm.name !== orig.name ||
       editForm.shortLabel !== orig.shortLabel ||
-      editForm.subtitle !== orig.subtitle ||
+      editForm.institution !== orig.institution ||
       editForm.university !== orig.university ||
       editForm.department !== orig.department ||
       editForm.contact_email !== orig.contact_email ||
@@ -212,7 +212,7 @@ export function useManageOrganizations({
         String(o.code || "").toLowerCase().includes(q) ||
         String(o.shortLabel || "").toLowerCase().includes(q) ||
         String(o.name || "").toLowerCase().includes(q) ||
-        String(o.subtitle || "").toLowerCase().includes(q)
+        String(o.institution || "").toLowerCase().includes(q)
     );
   }, [orgList, search]);
 
@@ -232,13 +232,13 @@ export function useManageOrganizations({
   }, []);
 
   const openEdit = useCallback((org) => {
-    const { university, department } = splitSubtitle(org.subtitle);
+    const { university, department } = splitInstitution(org.institution);
     const snapshot = {
       id: org.id,
       name: org.name || "",
       code: org.code,
       shortLabel: String(org.code || "").toUpperCase(),
-      subtitle: org.subtitle || "",
+      institution: org.institution || "",
       university,
       department,
       contact_email: org.contact_email || "",
@@ -301,13 +301,13 @@ export function useManageOrganizations({
       const shortLabel = String(createForm.shortLabel || code).trim().toUpperCase();
       const uni = String(createForm.university || "").trim();
       const dept = String(createForm.department || "").trim();
-      const subtitle = String(createForm.subtitle || "").trim() || [uni, dept].filter(Boolean).join(" · ");
+      const institution = String(createForm.institution || "").trim() || [uni, dept].filter(Boolean).join(" · ");
       const name = String(createForm.name || "").trim() || [uni, dept].filter(Boolean).join(" ") || shortLabel;
       await createOrganization({
         name,
         code,
         shortLabel,
-        subtitle,
+        institution,
         university: uni,
         department: dept,
         contact_email: String(createForm.contact_email || "").trim() || null,
@@ -344,13 +344,13 @@ export function useManageOrganizations({
       const code = shortLabel.toLowerCase().replace(/\s+/g, "-");
       const uni = String(editForm.university || "").trim();
       const dept = String(editForm.department || "").trim();
-      const subtitle = String(editForm.subtitle || "").trim() || [uni, dept].filter(Boolean).join(" · ");
+      const institution = String(editForm.institution || "").trim() || [uni, dept].filter(Boolean).join(" · ");
       await updateOrganization({
         organizationId: editForm.id,
         name: String(editForm.name || "").trim(),
         code,
         shortLabel,
-        subtitle,
+        institution,
         university: uni,
         department: dept,
         contact_email: String(editForm.contact_email || "").trim() || null,

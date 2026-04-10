@@ -138,7 +138,7 @@ export default function RegisterScreen({ onRegister, onSwitchToLogin, onReturnHo
       tenants.map((t) => ({
         value: t.id,
         label: t.name,
-        group: t.subtitle || t.name,
+        group: t.institution || t.name,
         badge: t.code || "",
       })),
     [tenants],
@@ -211,11 +211,11 @@ export default function RegisterScreen({ onRegister, onSwitchToLogin, onReturnHo
     setLoading(true);
     try {
       const selectedTenant = tenants.find((t) => t.id === tenantId);
-      const uniLabel = selectedTenant?.subtitle || selectedTenant?.name || "";
-      const deptLabel = selectedTenant?.subtitle ? selectedTenant?.name || "" : "";
+      const uniLabel = selectedTenant?.institution || selectedTenant?.name || "";
+      const deptLabel = selectedTenant?.institution ? selectedTenant?.name || "" : "";
       const payload = {
         name: fullName.trim(),
-        university: selectedTenant?.subtitle || selectedTenant?.name || "",
+        university: selectedTenant?.institution || selectedTenant?.name || "",
         department: selectedTenant?.name || "",
         tenantId,
       };

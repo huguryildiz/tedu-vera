@@ -319,7 +319,7 @@ export default function HeatmapPage() {
         reportTitle="Heatmap"
         periodName={periodName}
         organization={activeOrganization?.name || organization}
-        department={activeOrganization?.subtitle || ""}
+        department={activeOrganization?.institution || ""}
         generateFile={async (fmt) => {
           const exportRows = buildExportRows(visibleJurors);
           const groupHeaders = (groups || []).map((g) => g.group_no != null ? `P${g.group_no}` : (g.title || g.id));

@@ -179,4 +179,73 @@ describe("SecurityPolicyDrawer", () => {
     expect(screen.getByText(/max pin attempts/i)).toBeInTheDocument();
     expect(screen.queryByText(/entry token ttl/i)).toBeNull();
   });
+
+  qaTest("security_policy.drawer.sole_auth_confirm", async () => {
+    const onSave = vi.fn().mockResolvedValue();
+    renderDrawer({ onSave });
+
+    // The "Email/Password Login" toggle is the label whose parent row
+    // holds the visible toggle control.
+    const emailLabel = screen.getByText(/email\/password login/i);
+    let emailToggle = null;
+    let current = emailLabel;
+    while (current && !emailToggle) {
+      emailToggle = current.querySelector("label");
+      current = current.parentElement;
+    }
+    if (!emailToggle) throw new Error("Could not find Email/Password toggle");
+    fireEvent.click(emailToggle);
+
+    // Clicking Save must open the disable-auth-method modal, not call onSave.
+    fireEvent.click(screen.getByRole("button", { name: /save policy/i }));
+    await waitFor(() => {
+      expect(screen.getByText(/disable email\/password login\?/i)).toBeInTheDocument();
+    });
+    expect(onSave).not.toHaveBeenCalled();
+
+    // The Disable Email/Password button stays disabled until DISABLE is typed.
+    const disableButton = screen.getByRole("button", { name: /disable email\/password/i });
+    expect(disableButton).toBeDisabled();
+
+    const confirmInput = screen.getByPlaceholderText(/type disable to confirm/i);
+    fireEvent.change(confirmInput, { target: { value: "DISABLE" } });
+    expect(disableButton).not.toBeDisabled();
+
+    fireEvent.click(disableButton);
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    const saved = onSave.mock.calls[0][0];
+    expect(saved.googleOAuth).toBe(true);
+    expect(saved.emailPassword).toBe(false);
+  });
+
+  qaTest("security_policy.drawer.sole_auth_cancel", async () => {
+    const onSave = vi.fn().mockResolvedValue();
+    const { container } = renderDrawer({ onSave });
+
+    const emailLabel = screen.getByText(/email\/password login/i);
+    let emailToggle = null;
+    let current = emailLabel;
+    while (current && !emailToggle) {
+      emailToggle = current.querySelector("label");
+      current = current.parentElement;
+    }
+    if (!emailToggle) throw new Error("Could not find Email/Password toggle");
+    fireEvent.click(emailToggle);
+
+    fireEvent.click(screen.getByRole("button", { name: /save policy/i }));
+
+    // Modal is "shown" by toggling the .show class on .fs-modal-wrap.
+    const modalWrap = container.querySelector(".fs-modal-wrap");
+    expect(modalWrap).not.toBeNull();
+    await waitFor(() => {
+      expect(modalWrap.classList.contains("show")).toBe(true);
+    });
+
+    // "Keep Both" hides the modal and leaves onSave untouched.
+    fireEvent.click(screen.getByRole("button", { name: /keep both/i }));
+    await waitFor(() => {
+      expect(modalWrap.classList.contains("show")).toBe(false);
+    });
+    expect(onSave).not.toHaveBeenCalled();
+  });
 });

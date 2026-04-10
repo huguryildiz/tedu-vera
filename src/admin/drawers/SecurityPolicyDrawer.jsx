@@ -4,6 +4,8 @@
 // Three sections:
 //   1. Authentication Methods — Google OAuth, Email/Password, Remember Me
 //      + safeguard: at least one of Google OAuth or Email/Password must be on
+//      + typed-confirmation dialog when the save transitions from both
+//      methods on to only one on (prevents accidental lockout)
 //   2. QR Access — QR Code TTL, Max PIN Attempts, PIN Lockout Cooldown
 //   3. Notifications — master "CC Super Admin on All Notifications" toggle
 //      + five granular child toggles (PIN Reset, Score Edit, Tenant
@@ -21,6 +23,7 @@ import { AlertCircle, ShieldAlert } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import CustomSelect from "@/shared/ui/CustomSelect";
+import DisableAuthMethodModal from "../modals/DisableAuthMethodModal";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
 
 const DEFAULT_POLICY = {
@@ -146,6 +149,7 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
   const [form, setForm] = useState(DEFAULT_POLICY);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [soleAuthConfirmOpen, setSoleAuthConfirmOpen] = useState(false);
 
   const selectedPinLockCooldown =
     PIN_LOCK_COOLDOWN_OPTIONS.find((opt) => opt.value === form.pinLockCooldown)?.label ||
@@ -156,6 +160,7 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
       setForm({ ...DEFAULT_POLICY, ...policy });
       setSaveError("");
       setSaving(false);
+      setSoleAuthConfirmOpen(false);
     }
   }, [open, policy]);
 
@@ -185,6 +190,34 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
     }));
   };
 
+  // Detect a transition from "both auth methods on" → "only one on".
+  // This is the point where we force a typed confirmation because a
+  // super admin is about to cut off one way of signing in.
+  const prevGoogle = policy?.googleOAuth ?? true;
+  const prevEmail = policy?.emailPassword ?? true;
+  const bothWereOn = prevGoogle && prevEmail;
+  const onlyOneNowOn =
+    (form.googleOAuth && !form.emailPassword) ||
+    (!form.googleOAuth && form.emailPassword);
+  const needsSoleAuthConfirm = bothWereOn && onlyOneNowOn;
+
+  const disabledMethod = !form.emailPassword ? "Email/Password" : "Google OAuth";
+  const remainingMethod = form.googleOAuth ? "Google OAuth" : "Email/Password";
+
+  const performSave = async () => {
+    setSaveError("");
+    setSaving(true);
+    try {
+      await onSave?.({ ...form });
+      onClose();
+    } catch (e) {
+      setSaveError(e?.message || "Something went wrong.");
+      throw e;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSave = async () => {
     setSaveError("");
     // Safeguard: at least one authentication method must remain enabled.
@@ -192,15 +225,17 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
       setSaveError("At least one authentication method must remain enabled.");
       return;
     }
-    setSaving(true);
-    try {
-      await onSave?.({ ...form });
-      onClose();
-    } catch (e) {
-      setSaveError(e?.message || "Something went wrong.");
-    } finally {
-      setSaving(false);
+    if (needsSoleAuthConfirm) {
+      setSoleAuthConfirmOpen(true);
+      return;
     }
+    await performSave();
+  };
+
+  // The modal drives its own close on success and stays open if performSave
+  // throws, so we just forward the call here.
+  const handleSoleAuthConfirm = async () => {
+    await performSave();
   };
 
   const displayError = saveError || error;
@@ -431,6 +466,14 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
           </span>
         </button>
       </div>
+
+      <DisableAuthMethodModal
+        open={soleAuthConfirmOpen}
+        onClose={() => setSoleAuthConfirmOpen(false)}
+        disabledMethod={disabledMethod}
+        remainingMethod={remainingMethod}
+        onConfirm={handleSoleAuthConfirm}
+      />
     </Drawer>
   );
 }

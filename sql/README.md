@@ -132,7 +132,7 @@ sql/
 
 | Table | Key columns |
 |-------|-------------|
-| `organizations` | `code` UNIQUE, `name`, `subtitle`, `status`, `settings JSONB` |
+| `organizations` | `code` UNIQUE, `name`, `institution`, `status`, `settings JSONB` |
 | `profiles` | `id` → `auth.users`, `display_name`, `avatar_url` |
 | `memberships` | `user_id`, `organization_id` (NULL = super_admin), `role` (`org_admin` \| `super_admin`) |
 | `org_applications` | `organization_id`, `applicant_name`, `contact_email`, `status` |

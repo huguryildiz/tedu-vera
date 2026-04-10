@@ -48,7 +48,8 @@ export async function listOrganizations() {
 }
 
 export async function createOrganization(payload) {
-  const subtitle =
+  const institution =
+    payload.institution ??
     payload.subtitle ??
     ([payload.university, payload.department].filter(Boolean).join(" · ") ||
       null);
@@ -57,7 +58,7 @@ export async function createOrganization(payload) {
     .insert({
       name: payload.name,
       code: payload.code || payload.shortLabel || null,
-      subtitle,
+      institution,
       contact_email: payload.contact_email || null,
       status: payload.status || "active",
     })
@@ -73,11 +74,12 @@ export async function updateOrganization(payload) {
   if (payload.name !== undefined) updates.name = payload.name;
   const resolvedCode = payload.code !== undefined ? payload.code : payload.shortLabel;
   if (resolvedCode !== undefined) updates.code = resolvedCode;
-  if (payload.subtitle !== undefined) updates.subtitle = payload.subtitle;
+  if (payload.institution !== undefined) updates.institution = payload.institution;
+  else if (payload.subtitle !== undefined) updates.institution = payload.subtitle;
   if (payload.university !== undefined || payload.department !== undefined) {
     const uni = String(payload.university || "").trim();
     const dept = String(payload.department || "").trim();
-    updates.subtitle = [uni, dept].filter(Boolean).join(" · ") || null;
+    updates.institution = [uni, dept].filter(Boolean).join(" · ") || null;
   }
   if (payload.contact_email !== undefined) updates.contact_email = payload.contact_email;
   if (payload.status !== undefined) updates.status = payload.status;

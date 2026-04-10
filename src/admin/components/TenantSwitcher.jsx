@@ -89,8 +89,8 @@ export default function TenantSwitcher({ tenants, activeOrganization, onSwitch }
             >
               <span style={{display:"flex",flexDirection:"column",gap:1,minWidth:0}}>
                 <span>{t.name}</span>
-                {t.subtitle && (
-                  <span style={{fontSize:"11px",color:"var(--text-tertiary)",fontWeight:400}}>{t.subtitle}</span>
+                {t.institution && (
+                  <span style={{fontSize:"11px",color:"var(--text-tertiary)",fontWeight:400}}>{t.institution}</span>
                 )}
               </span>
               {activeOrganization?.id === t.id && (

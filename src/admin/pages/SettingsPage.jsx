@@ -257,7 +257,7 @@ export default function SettingsPage() {
           email: user?.email || "",
           role: isSuper ? "Super Admin" : "Organization Admin",
           organization: activeOrganization?.name || "",
-          subtitle: activeOrganization?.subtitle || "",
+          institution: activeOrganization?.institution || "",
           avatarUrl: avatarUrl || null,
         }}
         onSave={handleSaveProfile}

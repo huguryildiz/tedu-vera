@@ -652,7 +652,7 @@ export default function JurorsPage() {
     return generateTableBlob(fmt, {
       filenameType: "Jurors", sheetName: "Jurors",
       periodName: periods.viewPeriodLabel, tenantCode: activeOrganization?.code || "",
-      organization: activeOrganization?.name || "", department: activeOrganization?.subtitle || "",
+      organization: activeOrganization?.name || "", department: activeOrganization?.institution || "",
       pdfTitle: "VERA — Jurors", header, rows,
       colWidths: JUROR_COLUMNS.map((c) => c.exportWidth),
     });
@@ -664,7 +664,7 @@ export default function JurorsPage() {
       await downloadTable(fmt, {
         filenameType: "Jurors", sheetName: "Jurors",
         periodName: periods.viewPeriodLabel, tenantCode: activeOrganization?.code || "",
-        organization: activeOrganization?.name || "", department: activeOrganization?.subtitle || "",
+        organization: activeOrganization?.name || "", department: activeOrganization?.institution || "",
         pdfTitle: "VERA — Jurors", header, rows,
         colWidths: JUROR_COLUMNS.map((c) => c.exportWidth),
       });

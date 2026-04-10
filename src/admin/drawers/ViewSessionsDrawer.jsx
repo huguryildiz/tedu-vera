@@ -9,6 +9,7 @@
 //   currentDeviceId — current browser device_id
 //   onRevoke        — (id: string) => Promise<void>  (optional)
 
+import { Laptop, Smartphone, Monitor, X } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import { maskIpAddress, normalizeCountryCode } from "@/shared/lib/adminSession";
 
@@ -51,28 +52,9 @@ function isExpiringWithinHours(ts, hours) {
 
 function DeviceIcon({ os }) {
   const lower = (os || "").toLowerCase();
-  if (lower === "ios" || lower === "android") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="5" y="2" width="14" height="20" rx="2" />
-        <circle cx="12" cy="18" r="1" />
-      </svg>
-    );
-  }
-  if (lower === "macos" || lower === "windows" || lower === "linux") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="20" height="13" rx="2" />
-        <path d="M8 21h8M12 17v4" />
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="3" width="20" height="14" rx="2" />
-      <path d="M8 21h8M12 17v4" />
-    </svg>
-  );
+  if (lower === "ios" || lower === "android") return <Smartphone size={18} />;
+  if (lower === "macos" || lower === "windows" || lower === "linux") return <Laptop size={18} />;
+  return <Monitor size={18} />;
 }
 
 export default function ViewSessionsDrawer({
@@ -98,10 +80,7 @@ export default function ViewSessionsDrawer({
         <div className="fs-drawer-header-row">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div className="fs-icon identity">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2" />
-                <path d="M8 21h8M12 17v4" />
-              </svg>
+              <Monitor size={18} />
             </div>
             <div>
               <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>Active Sessions</div>
@@ -111,9 +90,7 @@ export default function ViewSessionsDrawer({
             </div>
           </div>
           <button className="fs-close" type="button" onClick={onClose} aria-label="Close">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
+            <X size={18} strokeWidth={2} />
           </button>
         </div>
       </div>
@@ -172,8 +149,7 @@ export default function ViewSessionsDrawer({
                   Signed in {formatAbsoluteDate(signedInAt)}
                   {usedSignedInFallback && (
                     <span
-                      style={{ marginLeft: 5, cursor: "help" }}
-                      title="Exact sign-in timestamp unavailable. Showing first seen timestamp."
+                      style={{ marginLeft: 5 }}
                       aria-label="signed-in-fallback-info"
                     >
                       {" "}(first seen)

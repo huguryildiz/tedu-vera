@@ -441,7 +441,7 @@ export default function ProjectsPage() {
             return generateTableBlob(fmt, {
               filenameType: "Projects", sheetName: "Projects",
               periodName: periods.viewPeriodLabel, tenantCode: activeOrganization?.code || "",
-              organization: activeOrganization?.name || "", department: activeOrganization?.subtitle || "",
+              organization: activeOrganization?.name || "", department: activeOrganization?.institution || "",
               pdfTitle: "VERA — Projects", header, rows,
               colWidths: COLUMNS.map((c) => c.exportWidth),
             });
@@ -453,7 +453,7 @@ export default function ProjectsPage() {
               await downloadTable(fmt, {
                 filenameType: "Projects", sheetName: "Projects",
                 periodName: periods.viewPeriodLabel, tenantCode: activeOrganization?.code || "",
-                organization: activeOrganization?.name || "", department: activeOrganization?.subtitle || "",
+                organization: activeOrganization?.name || "", department: activeOrganization?.institution || "",
                 pdfTitle: "VERA — Projects", header, rows,
                 colWidths: COLUMNS.map((c) => c.exportWidth),
               });

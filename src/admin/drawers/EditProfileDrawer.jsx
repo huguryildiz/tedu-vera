@@ -12,22 +12,23 @@
 //   avatarBg     — string (CSS color for initials fallback)
 //   isSuper      — boolean
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { AlertCircle, CheckCircle2, Clock, X } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import Avatar from "@/shared/ui/Avatar";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
+import AvatarUploadModal from "@/admin/modals/AvatarUploadModal";
 
 export default function EditProfileDrawer({ open, onClose, profile, onSave, onCancelEmailChange, pendingEmail, error, initials, avatarBg, isSuper }) {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (open) {
@@ -35,24 +36,15 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, onCa
       setEmail(profile?.email ?? "");
       setAvatarFile(null);
       setAvatarPreview(null);
+      setAvatarModalOpen(false);
       setSaveError("");
       setSaving(false);
     }
   }, [open, profile]);
 
-  const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2 MB
-  const handleAvatarChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > MAX_AVATAR_SIZE) {
-      setSaveError("Avatar image must be under 2 MB.");
-      e.target.value = "";
-      return;
-    }
+  const handleAvatarConfirm = (file, previewUrl) => {
     setAvatarFile(file);
-    const reader = new FileReader();
-    reader.onload = (ev) => setAvatarPreview(ev.target.result);
-    reader.readAsDataURL(file);
+    setAvatarPreview(previewUrl);
   };
 
   const handleSave = async () => {
@@ -122,7 +114,7 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, onCa
             />
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => setAvatarModalOpen(true)}
               disabled={saving}
               title="Change photo"
               style={{
@@ -140,15 +132,14 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, onCa
                 <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
               </svg>
             </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: "none" }}
-              onChange={handleAvatarChange}
-            />
           </div>
         </div>
+
+        <AvatarUploadModal
+          open={avatarModalOpen}
+          onClose={() => setAvatarModalOpen(false)}
+          onConfirm={handleAvatarConfirm}
+        />
 
         <div className="fs-field">
           <label className="fs-field-label">Display Name</label>
@@ -259,6 +250,20 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, onCa
             readOnly
           />
         </div>
+
+        {profile?.institution && (
+          <div className="fs-field">
+            <label className="fs-field-label">Name</label>
+            <input
+              className="fs-input"
+              type="text"
+              value={profile.institution}
+              disabled
+              style={{ opacity: 0.55, cursor: "not-allowed" }}
+              readOnly
+            />
+          </div>
+        )}
       </div>
 
       <div className="fs-drawer-footer">

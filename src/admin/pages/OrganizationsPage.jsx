@@ -86,8 +86,8 @@ function SortIcon({ colKey, sortKey, sortDir }) {
   );
 }
 
-function splitSubtitle(subtitle) {
-  const raw = String(subtitle || "").trim();
+function splitInstitution(institution) {
+  const raw = String(institution || "").trim();
   if (!raw) return { university: "—", department: "—" };
   const parts = raw.split("·").map((p) => p.trim()).filter(Boolean);
   if (parts.length >= 2) {
@@ -204,7 +204,7 @@ export default function OrganizationsPage() {
     const jurors = org?.juror_count != null ? Number(org.juror_count) : "—";
     const projects = org?.project_count != null ? Number(org.project_count) : "—";
     const status = org?.status || "active";
-    const { university, department } = splitSubtitle(org?.subtitle);
+    const { university, department } = splitInstitution(org?.institution);
     return { period, jurors, projects, status, university, department };
   }, [orgPeriodOverrides]);
 
@@ -227,7 +227,7 @@ export default function OrganizationsPage() {
         orgId: o.id,
         orgCode: o.code,
         orgName: o.name,
-        orgSubtitle: o.subtitle || "",
+        orgSubtitle: o.institution || "",
       }))
     ),
     [orgList]
@@ -251,8 +251,8 @@ export default function OrganizationsPage() {
         cmp = aName.localeCompare(bName, "tr", { sensitivity: "base", numeric: true });
       } else if (orgSortKey === "code") {
         cmp = String(a.code || "").localeCompare(String(b.code || ""), "tr", { sensitivity: "base", numeric: true });
-      } else if (orgSortKey === "subtitle") {
-        cmp = String(a.subtitle || "").localeCompare(String(b.subtitle || ""), "tr", { sensitivity: "base", numeric: true });
+      } else if (orgSortKey === "institution") {
+        cmp = String(a.institution || "").localeCompare(String(b.institution || ""), "tr", { sensitivity: "base", numeric: true });
       } else if (orgSortKey === "status") {
         cmp = (statusRank[a.status] || 99) - (statusRank[b.status] || 99);
       } else if (orgSortKey === "admins") {
@@ -1004,8 +1004,8 @@ export default function OrganizationsPage() {
             <table>
               <thead>
                 <tr>
-                  <th className={`sortable${orgSortKey === "subtitle" ? " sorted" : ""}`} onClick={() => handleOrgSort("subtitle")}>Organization <SortIcon colKey="subtitle" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
-                  <th className={`sortable${orgSortKey === "name" ? " sorted" : ""}`} onClick={() => handleOrgSort("name")}>Name <SortIcon colKey="name" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
+                  <th className={`sortable${orgSortKey === "institution" ? " sorted" : ""}`} onClick={() => handleOrgSort("institution")}>Organization <SortIcon colKey="institution" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
+                  <th className={`sortable${orgSortKey === "name" ? " sorted" : ""}`} onClick={() => handleOrgSort("name")}>Program <SortIcon colKey="name" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
                   <th className={`sortable${orgSortKey === "code" ? " sorted" : ""}`} onClick={() => handleOrgSort("code")}>Code <SortIcon colKey="code" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
                   <th className={`sortable${orgSortKey === "status" ? " sorted" : ""}`} onClick={() => handleOrgSort("status")}>Status <SortIcon colKey="status" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
                   <th>Active Period</th>
@@ -1027,7 +1027,7 @@ export default function OrganizationsPage() {
                     const code = String(org.code || "").toUpperCase();
                     return (
                       <tr key={org.id}>
-                        <td style={{ fontWeight: 600 }}>{org.subtitle || "—"}</td>
+                        <td style={{ fontWeight: 600 }}>{org.institution || "—"}</td>
                         <td>{org.name}</td>
                         <td className="mono">{code || "—"}</td>
                         <td><OrgStatusBadge status={org.status} /></td>

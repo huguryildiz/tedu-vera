@@ -4193,5 +4193,27 @@
     "risk": "Label regression would reintroduce the confusing terminology.",
     "coverageStrength": "Medium",
     "severity": "normal"
+  },
+  {
+    "id": "security_policy.drawer.sole_auth_confirm",
+    "module": "Settings / Security Policy",
+    "area": "Security Policy Drawer — Sole Auth Confirmation",
+    "story": "Typed confirmation when disabling the last shared auth method",
+    "scenario": "disabling Email/Password while Google OAuth is the only remaining method opens a typed 'DISABLE' confirmation dialog before the save RPC is called",
+    "whyItMatters": "Cutting off one sign-in method affects every admin; a typed confirmation matches the delete-juror pattern and forces deliberate intent.",
+    "risk": "Without the gate, a super admin could accidentally lock out every admin who relies on the disabled method.",
+    "coverageStrength": "High",
+    "severity": "critical"
+  },
+  {
+    "id": "security_policy.drawer.sole_auth_cancel",
+    "module": "Settings / Security Policy",
+    "area": "Security Policy Drawer — Sole Auth Confirmation",
+    "story": "Cancelling the sole-auth confirmation leaves policy unchanged",
+    "scenario": "opening and then cancelling the sole-auth confirmation dialog keeps both methods in their prior state and never invokes onSave",
+    "whyItMatters": "The guard must be fully reversible — cancelling must not silently persist the disable.",
+    "risk": "A flaky cancel path would let a partial click sequence lock admins out even when the user backs out.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
   }
 ]

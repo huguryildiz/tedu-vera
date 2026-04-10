@@ -24,13 +24,13 @@ function uuid(seedStr) {
 function sha256(val) { return crypto.createHash('sha256').update(val).digest('hex'); }
 function escapeSql(str) { if (!str) return ''; return str.replace(/'/g, "''"); }
 
-// Derive evaluation-day anchor from period start/end + org type.
-// Academic: 2 weeks before end (1-day event).  Competition: 3 weeks before end (3-day event).
-function computeEvalWindow(start, end, orgType) {
-  const endMs   = Date.parse(end);
-  const evalDays = orgType === 'competition' ? 3 : 1;
-  const offset   = orgType === 'competition' ? 21 : 14;
-  const evalDay  = new Date(endMs - offset * 86400000).toISOString().split('T')[0];
+// Period start/end dates ARE the evaluation event window.
+// Academic 1-day events: start = end = evalDay.
+// Multi-day competitions: start = first eval day, end = last eval day.
+// evalDaysOverride: per-org explicit day count (overrides orgType default).
+function computeEvalWindow(start, _end, orgType, evalDaysOverride) {
+  const evalDays = evalDaysOverride != null ? evalDaysOverride : (orgType === 'competition' ? 3 : 1);
+  const evalDay  = start;  // period start IS the first evaluation day
   return { evalDay, evalDays };
 }
 
@@ -110,6 +110,7 @@ out.push(`TRUNCATE TABLE
   framework_criteria,
   framework_outcomes,
   frameworks,
+  admin_user_sessions,
   memberships,
   org_applications,
   organizations,
@@ -122,12 +123,12 @@ CASCADE;
 // ═══════════════════════════════════════════════════════════════
 
 const orgs = [
-  { p: 1, name: 'Electrical-Electronics Engineering', institution: 'TED University', code: 'TEDU-EE', type: 'academic', lang: 'tr', descLang: 'en', commentLang: 'en' },
-  { p: 2, name: 'Computer Science', institution: 'Carnegie Mellon University', code: 'CMU-CS', type: 'academic', lang: 'en', descLang: 'en' },
-  { p: 3, name: 'TEKNOFEST', institution: 'Türkiye Technology Team Foundation', code: 'TEKNOFEST', type: 'competition', lang: 'tr', descLang: 'tr' },
-  { p: 4, name: 'TÜBİTAK 2204-A', institution: 'Scientific and Technological Research Council of Türkiye', code: 'TUBITAK-2204A', type: 'competition', lang: 'tr', descLang: 'tr' },
-  { p: 5, name: 'AP-S Student Design Contest', institution: 'IEEE Antennas and Propagation Society', code: 'IEEE-APSSDC', type: 'competition', lang: 'en', descLang: 'en' },
-  { p: 6, name: 'CanSat Competition', institution: 'American Astronautical Society', code: 'CANSAT-2025', type: 'competition', lang: 'en', descLang: 'en' }
+  { p: 1, name: 'Electrical-Electronics Engineering', institution: 'TED University', code: 'TEDU-EE', type: 'academic', evalDays: 1, lang: 'tr', descLang: 'en', commentLang: 'en' },
+  { p: 2, name: 'Computer Science', institution: 'Carnegie Mellon University', code: 'CMU-CS', type: 'academic', evalDays: 1, lang: 'en', descLang: 'en' },
+  { p: 3, name: 'TEKNOFEST', institution: 'Türkiye Technology Team Foundation', code: 'TEKNOFEST', type: 'competition', evalDays: 3, lang: 'tr', descLang: 'tr' },
+  { p: 4, name: 'TÜBİTAK 2204-A', institution: 'Scientific and Technological Research Council of Türkiye', code: 'TUBITAK-2204A', type: 'competition', evalDays: 2, lang: 'tr', descLang: 'tr' },
+  { p: 5, name: 'AP-S Student Design Contest', institution: 'IEEE Antennas and Propagation Society', code: 'IEEE-APSSDC', type: 'competition', evalDays: 2, lang: 'en', descLang: 'en' },
+  { p: 6, name: 'CanSat Competition', institution: 'American Astronautical Society', code: 'CANSAT-2025', type: 'competition', evalDays: 3, lang: 'en', descLang: 'en' }
 ];
 
 const orgCreatedDates = {
@@ -144,12 +145,22 @@ const orgSettings = {
   'CANSAT-2025': '{"locale":"en","notifications":{"email":true,"slack":true},"theme":"default","recovery_tracking":true}',
 };
 
+const orgContactEmails = {
+  'TEDU-EE':       'tedu-ee@vera-eval.app',
+  'CMU-CS':        'cmu-cs@vera-eval.app',
+  'TEKNOFEST':     'teknofest@vera-eval.app',
+  'TUBITAK-2204A': 'tubitak-2204a@vera-eval.app',
+  'IEEE-APSSDC':   'ieee-apssdc@vera-eval.app',
+  'CANSAT-2025':   'cansat-2025@vera-eval.app',
+};
+
 out.push(`-- Organizations`);
 orgs.forEach(o => {
   o.id = uuid('org-' + o.code);
   const ts = sqlTs(orgCreatedDates[o.code]);
   const settings = orgSettings[o.code] || '{}';
-  out.push(`INSERT INTO organizations (id, subtitle, name, code, status, settings, updated_at) VALUES ('${o.id}', '${escapeSql(o.institution)}', '${escapeSql(o.name)}', '${o.code}', 'active', '${settings}', ${ts}) ON CONFLICT DO NOTHING;`);
+  const contactEmail = orgContactEmails[o.code] || '';
+  out.push(`INSERT INTO organizations (id, institution, name, code, status, settings, contact_email, updated_at) VALUES ('${o.id}', '${escapeSql(o.institution)}', '${escapeSql(o.name)}', '${o.code}', 'active', '${settings}', '${contactEmail}', ${ts}) ON CONFLICT DO NOTHING;`);
 });
 out.push('');
 
@@ -191,12 +202,68 @@ orgs.forEach(o => {
 });
 out.push('');
 
+// ═══════════════════════════════════════════════════════════════
+// ADMIN USER SESSIONS — realistic device/browser mix per admin
+// ═══════════════════════════════════════════════════════════════
+
+out.push(`-- Admin User Sessions`);
+{
+  // Sessions are relative to demo "now" = 2026-04-10
+  // lastAct: hours before demo date; signedIn: hours before lastAct
+  const sessionDefs = [
+    // ── Vera Platform Admin (super_admin) ────────────────────────
+    { uSeed: 'admin-vera', dSeed: 'dev-vera-1', browser:'Chrome 124', os:'macOS',   ip:'185.76.42.101', cc:'TR', method:'google',   lastActH:2,   signedInH:6,  expDays:30 },
+    { uSeed: 'admin-vera', dSeed: 'dev-vera-2', browser:'Firefox 125',os:'Windows', ip:'91.93.143.201', cc:'TR', method:'password',  lastActH:52,  signedInH:56, expDays:30 },
+    { uSeed: 'admin-vera', dSeed: 'dev-vera-3', browser:'Safari 17',  os:'iOS',     ip:'176.42.18.77',  cc:'TR', method:'google',    lastActH:128, signedInH:131,expDays:30 },
+    // ── TEDU-EE — Prof. Koray Yılmazer ───────────────────────────
+    { uSeed: 'prof-admin-TEDU-EE-1', dSeed: 'dev-tedu-1', browser:'Chrome 124',  os:'macOS',   ip:'193.255.106.14', cc:'TR', method:'google',   lastActH:4,  signedInH:8,  expDays:30 },
+    { uSeed: 'prof-admin-TEDU-EE-1', dSeed: 'dev-tedu-2', browser:'Safari 17',   os:'iPad',    ip:'78.189.44.120',  cc:'TR', method:'google',   lastActH:96, signedInH:99, expDays:30 },
+    // ── CMU-CS — Prof. Marcus Reynolds ───────────────────────────
+    { uSeed: 'prof-admin-CMU-CS-1',  dSeed: 'dev-cmu-1',  browser:'Chrome 124',  os:'macOS',   ip:'128.2.42.95',    cc:'US', method:'google',   lastActH:1,  signedInH:5,  expDays:30 },
+    { uSeed: 'prof-admin-CMU-CS-1',  dSeed: 'dev-cmu-2',  browser:'Edge 124',    os:'Windows', ip:'71.185.22.14',   cc:'US', method:'password',  lastActH:72, signedInH:76, expDays:30 },
+    // ── TEKNOFEST — Cemil Bozkurt ─────────────────────────────────
+    { uSeed: 'prof-admin-TEKNOFEST-1', dSeed:'dev-tkn-1', browser:'Chrome 124',  os:'Windows', ip:'185.60.101.88',  cc:'TR', method:'password',  lastActH:3,  signedInH:7,  expDays:30 },
+    // ── IEEE-APSSDC — Dr. Gavin Pierce ───────────────────────────
+    { uSeed: 'prof-admin-IEEE-APSSDC-1', dSeed:'dev-ieee-1', browser:'Safari 17', os:'macOS', ip:'69.171.246.18',   cc:'US', method:'google',   lastActH:8,  signedInH:12, expDays:30 },
+  ];
+
+  // demo "now" = 2026-04-10T12:00:00Z
+  const demoNow = new Date('2026-04-10T12:00:00Z');
+  function demoTs(hoursAgo, extraHoursAgo = 0) {
+    const ms = demoNow.getTime() - (hoursAgo + extraHoursAgo) * 3600000;
+    return `'${new Date(ms).toISOString().replace('T',' ').replace('Z','+00')}'`;
+  }
+  function expTs(fromHoursAgo, days) {
+    const ms = demoNow.getTime() - fromHoursAgo * 3600000 + days * 86400000;
+    return `'${new Date(ms).toISOString().replace('T',' ').replace('Z','+00')}'`;
+  }
+
+  sessionDefs.forEach(s => {
+    const userId = s.uSeed === 'admin-vera' ? demoAdminId : uuid(s.uSeed);
+    const id     = uuid('session-' + s.dSeed);
+    const devId  = uuid('devid-' + s.dSeed);
+    const lastAct = demoTs(s.lastActH);
+    const signedIn = demoTs(s.signedInH);
+    const expiresAt = expTs(s.signedInH, s.expDays);
+    out.push(`INSERT INTO admin_user_sessions (id, user_id, device_id, browser, os, ip_address, country_code, auth_method, signed_in_at, first_seen_at, last_activity_at, expires_at) VALUES ('${id}', '${userId}', '${devId}', '${s.browser}', '${s.os}', '${s.ip}', '${s.cc}', '${s.method}', ${signedIn}, ${signedIn}, ${lastAct}, ${expiresAt}) ON CONFLICT (user_id, device_id) DO UPDATE SET last_activity_at = EXCLUDED.last_activity_at;`);
+  });
+}
+out.push('');
+
 const applicantNames = ['Prof. Halil Çankaya', 'Dr. Rachel Voss', 'Oğuzhan Demirel', 'Dr. Ayça Gürkan', 'Prof. Arthur Finch', 'Celine Moreau'];
+const applicantEmails = [
+  'halil.cankaya@vera-eval.app',
+  'rachel.voss@vera-eval.app',
+  'oguzhan.demirel@vera-eval.app',
+  'ayca.gurkan@vera-eval.app',
+  'arthur.finch@vera-eval.app',
+  'celine.moreau@vera-eval.app',
+];
 const appStatuses = ['approved', 'approved', 'rejected', 'cancelled', 'pending', 'pending'];
 const orgAppIds = [];
 orgs.forEach((o, i) => {
   let appUuid = uuid('app-' + o.code);
-  out.push(`INSERT INTO org_applications (id, organization_id, applicant_name, contact_email, status) VALUES ('${appUuid}', '${o.id}', '${escapeSql(applicantNames[i])}', '${o.code.toLowerCase()}@example.edu', '${appStatuses[i]}') ON CONFLICT DO NOTHING;`);
+  out.push(`INSERT INTO org_applications (id, organization_id, applicant_name, contact_email, status) VALUES ('${appUuid}', '${o.id}', '${escapeSql(applicantNames[i])}', '${applicantEmails[i]}', '${appStatuses[i]}') ON CONFLICT DO NOTHING;`);
   orgAppIds.push({id: appUuid, org: o.code});
 });
 out.push('');
@@ -236,7 +303,16 @@ function simplifiedRubric(maxScore) {
 function processOrgfw(orgCode, fwName, fwVersion, criteria, outcomes, mappings) {
   const o = orgs.find(x => x.code === orgCode);
   const fwId = uuid('fw-' + orgCode);
-  fws.push(`INSERT INTO frameworks (id, organization_id, name, version, is_default) VALUES ('${fwId}', '${o.id}', '${escapeSql(fwName)}', '${fwVersion}', true) ON CONFLICT DO NOTHING;`);
+  const fwDescMap = {
+    'MUDEK 2024':                  'MÜDEK accreditation framework aligned with EUR-ACE standards. Evaluates engineering program outcomes across technical competency, design, communication, and teamwork dimensions.',
+    'ABET 2024':                   'ABET Computing Accreditation Commission framework. Assesses student outcomes in computing knowledge, problem analysis, solution design, communication, and professional ethics.',
+    'Competition Framework 2026':  'TEKNOFEST ulusal teknoloji yarışması değerlendirme çerçevesi. Havacılık ve robotik kategorilerinde teknolojik yenilik, proje fizibilitesi, prototip kalitesi ve takım sunumu esas alınarak değerlendirilir.',
+    'Research Competition Framework': 'TÜBİTAK 2204-A ulusal lise öğrencileri araştırma projeleri yarışması değerlendirme çerçevesi. Bilimsel yöntem, araştırma derinliği, özgünlük ve sözlü savunma kalitesi ölçütlerine göre puanlanır.',
+    'Design Contest Framework':    'IEEE AP-S Student Design Contest framework. Evaluates antenna design performance, technical documentation quality, oral presentation, and adherence to contest specifications.',
+    'Mission Framework':           'CanSat Competition mission evaluation framework. Assesses satellite container design, mission objective completion, telemetry data quality, and post-flight analysis report.',
+  };
+  const fwDesc = fwDescMap[fwName] || '';
+  fws.push(`INSERT INTO frameworks (id, organization_id, name, description, version, is_default) VALUES ('${fwId}', '${o.id}', '${escapeSql(fwName)}', '${escapeSql(fwDesc)}', '${fwVersion}', true) ON CONFLICT DO NOTHING;`);
   const oMap = {}; let outOrder = 1; o.outcomesData = [];
   for (const arr of outcomes) {
     const [code, lbl, desc] = arr; const oId = uuid(`fw-out-${orgCode}-${code}`); oMap[code] = oId;
@@ -267,7 +343,7 @@ function processOrgfw(orgCode, fwName, fwVersion, criteria, outcomes, mappings) 
 processOrgfw('TEDU-EE', 'MUDEK 2024', '1.0',
   [
     { key:'technical', label:'Technical Content', short:'Technical', max:30, weight:30, color:'#F59E0B',
-      desc:'Evaluates the depth and originality of the engineering solution, including problem formulation, design decisions, and mastery of relevant tools and methods.',
+      desc:'Evaluates the depth, correctness, and originality of the engineering work itself — independent of how well it is communicated. It assesses whether the team has applied appropriate engineering knowledge, justified their design decisions, and demonstrated real technical mastery.',
       customRubric: [
         { min: 27, max: 30, label: 'Excellent', description: 'Problem is clearly defined with strong motivation. Design decisions are well-justified with engineering depth. Originality and mastery of relevant tools or methods are evident.' },
         { min: 21, max: 26, label: 'Good', description: 'Design is mostly clear and technically justified. Engineering decisions are largely supported.' },
@@ -275,15 +351,15 @@ processOrgfw('TEDU-EE', 'MUDEK 2024', '1.0',
         { min: 0, max: 12, label: 'Insufficient', description: 'Vague problem definition and unjustified decisions. Superficial technical content.' },
       ] },
     { key:'design', label:'Written Communication', short:'Written', max:30, weight:30, color:'#22C55E',
-      desc:'Assesses poster layout, visual quality, labelling, and the accessibility of technical content for both technical and non-technical readers.',
+      desc:'Evaluates how effectively the team communicates their project in written and visual form on the poster — including layout, information hierarchy, figure quality, and the clarity of technical content for a mixed audience (engineers and non-engineers alike).',
       customRubric: [
-        { min: 27, max: 30, label: 'Excellent', description: 'Poster layout is intuitive with clear information flow. Visuals are fully labelled and high quality. Technical content is presented in a way that is accessible to both technical and non-technical readers.' },
+        { min: 27, max: 30, label: 'Excellent', description: 'Poster layout is intuitive with clear information flow. Visuals are fully labelled and high quality. Technical content is presented in a way accessible to both technical and non-technical readers.' },
         { min: 21, max: 26, label: 'Good', description: 'Layout is mostly logical. Visuals are readable with minor gaps. Technical content is largely clear with small areas for improvement.' },
         { min: 13, max: 20, label: 'Developing', description: 'Occasional gaps in information flow. Some visuals are missing labels or captions. Technical content is only partially communicated.' },
         { min: 0, max: 12, label: 'Insufficient', description: 'Confusing layout. Low-quality or unlabelled visuals. Technical content is unclear or missing.' },
       ] },
     { key:'delivery', label:'Oral Communication', short:'Oral', max:30, weight:30, color:'#3B82F6',
-      desc:'Assesses oral clarity, pacing, audience adaptation, and the quality of Q&A responses during the presentation.',
+      desc:'Evaluates the team\'s ability to present their work verbally and to respond to questions from jurors with varying technical backgrounds. A key factor is conscious audience adaptation — adjusting depth and vocabulary based on who is asking.',
       customRubric: [
         { min: 27, max: 30, label: 'Excellent', description: 'Presentation is consciously adapted for both technical and non-technical jury members. Q&A responses are accurate, clear, and audience-appropriate.' },
         { min: 21, max: 26, label: 'Good', description: 'Presentation is mostly clear and well-paced. Most questions answered correctly. Audience adaptation is generally evident.' },
@@ -291,7 +367,7 @@ processOrgfw('TEDU-EE', 'MUDEK 2024', '1.0',
         { min: 0, max: 12, label: 'Insufficient', description: 'Unclear or disorganised presentation. Most questions answered incorrectly or not at all.' },
       ] },
     { key:'teamwork', label:'Teamwork', short:'Teamwork', max:10, weight:10, color:'#EF4444',
-      desc:'Evaluates equitable participation, individual knowledge depth, and professional conduct across all team members.',
+      desc:'Evaluates visible evidence of equal and effective team participation during the poster session, as well as the group\'s professional and ethical conduct in interacting with jurors.',
       customRubric: [
         { min: 9, max: 10, label: 'Excellent', description: 'All members participate actively and equally. Professional and ethical conduct observed throughout.' },
         { min: 7, max: 8, label: 'Good', description: 'Most members contribute. Minor knowledge gaps. Professionalism mostly observed.' },
@@ -302,15 +378,14 @@ processOrgfw('TEDU-EE', 'MUDEK 2024', '1.0',
   [
     ['MDK 1.2','Adequate knowledge in mathematics, science and engineering','Demonstrate sufficient knowledge of mathematics, natural sciences, and engineering fundamentals to solve complex engineering problems.'],
     ['MDK 2','Ability to formulate and solve complex engineering problems','Identify, define, formulate, and solve complex engineering problems by selecting and applying appropriate analysis and modeling methods.'],
-    ['MDK 3.1','Ability to design a complex system under realistic constraints','Design complex systems, processes, devices, or products under realistic constraints to meet identified needs.'],
-    ['MDK 3.2','Ability to apply modern design methods','Apply modern design techniques and tools appropriate to engineering practice, including computer-aided engineering.'],
-    ['MDK 8.1','Ability to function effectively in teams','Function effectively as a member or leader in teams, taking individual responsibility within disciplinary and multidisciplinary settings.'],
+    ['MDK 3','Ability to design solutions under realistic constraints','Design complex systems, processes, devices, or products under realistic constraints, applying creative and modern design methods to meet identified needs.'],
+    ['MDK 8.1','Ability to function effectively in disciplinary teams','Function effectively as a member or leader in disciplinary teams, taking individual responsibility within face-to-face, remote, or hybrid settings.'],
     ['MDK 8.2','Ability to work in multi-disciplinary teams','Work effectively in multidisciplinary teams, contributing expertise while integrating perspectives from other disciplines.'],
-    ['MDK 9.1','Oral communication effectiveness','Communicate effectively through oral presentations, adapting communication style to diverse audiences.'],
-    ['MDK 9.2','Written communication effectiveness','Produce clear, well-structured written technical documents including reports, specifications, and design documentation.']
+    ['MDK 9.1','Oral communication effectiveness','Communicate effectively through oral presentations, adapting communication style to diverse audiences including technical and non-technical listeners.'],
+    ['MDK 9.2','Written communication effectiveness','Communicate effectively through written and visual means, producing clear technical documentation accessible to diverse audiences.']
   ],
   [
-    {crit:'technical', outs:[{code:'MDK 1.2',weight:0.25},{code:'MDK 2',weight:0.25},{code:'MDK 3.1',weight:0.25},{code:'MDK 3.2',weight:0.25}]},
+    {crit:'technical', outs:[{code:'MDK 1.2',weight:0.34},{code:'MDK 2',weight:0.33},{code:'MDK 3',weight:0.33}]},
     {crit:'design', outs:[{code:'MDK 9.2',weight:1.0}]},
     {crit:'delivery', outs:[{code:'MDK 9.1',weight:1.0}]},
     {crit:'teamwork', outs:[{code:'MDK 8.1',weight:0.5},{code:'MDK 8.2',weight:0.5}]}
@@ -385,32 +460,32 @@ const periodData = [];
 
 const orgPeriodsDef = {
   'TEDU-EE': [
-    {name:'Spring 2026',s:'Spring',start:'2026-02-01',end:'2026-06-15',desc:'EE 491/492 Senior Design Poster Day'},
-    {name:'Fall 2025',s:'Fall',start:'2025-09-01',end:'2025-12-20',desc:'EE 491/492 Fall Poster Presentations'},
-    {name:'Spring 2025',s:'Spring',start:'2025-02-01',end:'2025-06-15',desc:'EE Senior Design Spring Presentations'},
-    {name:'Fall 2024',s:'Fall',start:'2024-09-01',end:'2025-01-15',desc:'EE Senior Design Fall Poster Day'}],
+    {name:'Spring 2026',s:'Spring',start:'2026-06-11',end:'2026-06-11',desc:'EE 491/492 Senior Design — 1-Day Poster Evaluation'},
+    {name:'Fall 2025',s:'Fall',start:'2026-01-09',end:'2026-01-09',desc:'EE 491/492 Fall Senior Design — 1-Day Poster Day'},
+    {name:'Spring 2025',s:'Spring',start:'2025-06-11',end:'2025-06-11',desc:'EE Senior Design Spring — 1-Day Poster Presentations'},
+    {name:'Fall 2024',s:'Fall',start:'2025-01-10',end:'2025-01-10',desc:'EE Senior Design Fall — 1-Day Poster Day'}],
   'CMU-CS': [
-    {name:'Spring 2026',s:'Spring',start:'2026-02-01',end:'2026-06-15',desc:'CS Capstone Demo Day'},
-    {name:'Fall 2025',s:'Fall',start:'2025-09-01',end:'2025-12-20',desc:'CS Fall Capstone Presentations'},
-    {name:'Spring 2025',s:'Spring',start:'2025-02-01',end:'2025-06-15',desc:'CS Spring Demo Day'},
-    {name:'Fall 2024',s:'Fall',start:'2024-09-01',end:'2025-01-15',desc:'CS Fall Demo Day'}],
+    {name:'Spring 2026',s:'Spring',start:'2026-04-26',end:'2026-04-26',desc:'CS Capstone — 1-Day Demo Day'},
+    {name:'Fall 2025',s:'Fall',start:'2025-12-06',end:'2025-12-06',desc:'CS Fall Capstone — 1-Day Demo Day'},
+    {name:'Spring 2025',s:'Spring',start:'2025-04-27',end:'2025-04-27',desc:'CS Spring Capstone — 1-Day Demo Day'},
+    {name:'Fall 2024',s:'Fall',start:'2024-12-07',end:'2024-12-07',desc:'CS Fall Capstone — 1-Day Demo Day'}],
   'TEKNOFEST': [
-    {name:'2026 Season',s:'Evaluation',start:'2026-06-01',end:'2026-08-15',desc:'TEKNOFEST 2026 Aviation Competition Finals'},
-    {name:'2025 Season',s:'Evaluation',start:'2025-06-01',end:'2025-08-15',desc:'TEKNOFEST 2025 Finals'},
-    {name:'2024 Season',s:'Evaluation',start:'2024-06-01',end:'2024-08-15',desc:'TEKNOFEST 2024 Finals'}],
+    {name:'2026 Season',s:'Evaluation',start:'2026-07-25',end:'2026-07-27',desc:'TEKNOFEST 2026 Aviation Competition — 3-Day Finals (Jul 25–27)'},
+    {name:'2025 Season',s:'Evaluation',start:'2025-07-25',end:'2025-07-27',desc:'TEKNOFEST 2025 Aviation Competition — 3-Day Finals (Jul 25–27)'},
+    {name:'2024 Season',s:'Evaluation',start:'2024-07-25',end:'2024-07-27',desc:'TEKNOFEST 2024 Aviation Competition — 3-Day Finals (Jul 25–27)'}],
   'TUBITAK-2204A': [
-    {name:'2026 Competition',s:'Evaluation',start:'2026-03-01',end:'2026-06-30',desc:'TÜBİTAK 2204-A 2026 National Science Competition'},
-    {name:'2025 Competition',s:'Evaluation',start:'2025-03-01',end:'2025-06-30',desc:'TÜBİTAK 2204-A 2025 Finals'},
-    {name:'2024 Competition',s:'Evaluation',start:'2024-03-01',end:'2024-06-30',desc:'TÜBİTAK 2204-A 2024 Finals'}],
+    {name:'2026 Competition',s:'Evaluation',start:'2026-06-09',end:'2026-06-10',desc:'TÜBİTAK 2204-A 2026 National Science Competition — 2-Day Finals (Jun 9–10)'},
+    {name:'2025 Competition',s:'Evaluation',start:'2025-06-09',end:'2025-06-10',desc:'TÜBİTAK 2204-A 2025 National Science Competition — 2-Day Finals (Jun 9–10)'},
+    {name:'2024 Competition',s:'Evaluation',start:'2024-06-09',end:'2024-06-10',desc:'TÜBİTAK 2204-A 2024 National Science Competition — 2-Day Finals (Jun 9–10)'}],
   'IEEE-APSSDC': [
-    {name:'2026 Contest',s:'Evaluation',start:'2026-06-01',end:'2026-08-15',desc:'IEEE AP-S Student Design Contest 2026'},
-    {name:'2025 Contest',s:'Evaluation',start:'2025-06-01',end:'2025-08-15',desc:'IEEE AP-S SDC 2025'},
-    {name:'2024 Contest',s:'Evaluation',start:'2024-06-01',end:'2024-08-15',desc:'IEEE AP-S SDC 2024'}],
+    {name:'2026 Contest',s:'Evaluation',start:'2026-07-25',end:'2026-07-26',desc:'IEEE AP-S Student Design Contest 2026 — 2-Day Evaluation (Jul 25–26)'},
+    {name:'2025 Contest',s:'Evaluation',start:'2025-07-25',end:'2025-07-26',desc:'IEEE AP-S Student Design Contest 2025 — 2-Day Evaluation (Jul 25–26)'},
+    {name:'2024 Contest',s:'Evaluation',start:'2024-07-25',end:'2024-07-26',desc:'IEEE AP-S Student Design Contest 2024 — 2-Day Evaluation (Jul 25–26)'}],
   'CANSAT-2025': [
-    {name:'2026 Season',s:'Spring',start:'2026-03-01',end:'2026-07-15',desc:'CanSat 2026 Launch Competition'},
-    {name:'2025 Season',s:'Spring',start:'2025-03-01',end:'2025-07-15',desc:'CanSat 2025 Competition'},
-    {name:'2024 Season',s:'Spring',start:'2024-03-01',end:'2024-07-15',desc:'CanSat 2024 Competition'},
-    {name:'2027 Season (Draft)',s:'Spring',start:'2027-03-01',end:'2027-07-15',desc:'CanSat 2027 — Planning Phase',draft:true}],
+    {name:'2026 Season',s:'Spring',start:'2026-06-24',end:'2026-06-26',desc:'CanSat 2026 Launch Competition — 3-Day Finals (Jun 24–26)'},
+    {name:'2025 Season',s:'Spring',start:'2025-06-24',end:'2025-06-26',desc:'CanSat 2025 Launch Competition — 3-Day Finals (Jun 24–26)'},
+    {name:'2024 Season',s:'Spring',start:'2024-06-24',end:'2024-06-26',desc:'CanSat 2024 Launch Competition — 3-Day Finals (Jun 24–26)'},
+    {name:'2027 Season (Draft)',s:'Spring',start:'2027-06-24',end:'2027-06-26',desc:'CanSat 2027 — Planning Phase',draft:true}],
 };
 
 // Criteria evolution: idx=0 is NEVER touched (current period preserved exactly)
@@ -725,7 +800,7 @@ orgs.forEach(o => {
     const isCurrent = idx === 0 && !d.draft;
     const isDraft = !!d.draft;
     const pId = uuid(`period-${o.code}-${idx}`);
-    const { evalDay, evalDays } = computeEvalWindow(d.start, d.end, o.type);
+    const { evalDay, evalDays } = computeEvalWindow(d.start, d.end, o.type, o.evalDays);
     let sn = d.s === 'NULL' ? 'NULL' : `'${d.s}'`;
 
     if (isDraft) {
@@ -1108,11 +1183,22 @@ periodData.forEach(pd => {
     const title = entry.t;
     const arch = entry.arch || archs[i % archs.length];
     // Weighted advisor distribution: some advisors get 2-3 projects, others get 1
+    // ~30% of projects (i % 3 === 0) get two advisors (comma-separated)
     const advPool = orgAdvisors[pd.org] || [];
-    const advisor = advPool.length > 0 ? advPool[Math.floor(i * advPool.length / count)] : {n:'TBD',aff:'TBD'};
+    let advisorName, advisorAff;
+    if (advPool.length >= 2 && i % 3 === 0) {
+      const idx1 = Math.floor(i * advPool.length / count);
+      const idx2 = (idx1 + 1) % advPool.length;
+      advisorName = `${advPool[idx1].n}, ${advPool[idx2].n}`;
+      advisorAff  = `${advPool[idx1].aff}, ${advPool[idx2].aff}`;
+    } else {
+      const adv = advPool.length > 0 ? advPool[Math.floor(i * advPool.length / count)] : {n:'TBD',aff:'TBD'};
+      advisorName = adv.n;
+      advisorAff  = adv.aff;
+    }
     const mem = genMembers(randInt(3, 5), o.lang);
     const desc = entry.desc || '';
-    out.push(`INSERT INTO projects (id, period_id, title, project_no, members, advisor_name, advisor_affiliation, description) VALUES ('${pjId}', '${pd.id}', '${escapeSql(title)}', ${i+1}, '${mem}', '${escapeSql(advisor.n)}', '${escapeSql(advisor.aff)}', '${escapeSql(desc)}') ON CONFLICT DO NOTHING;`);
+    out.push(`INSERT INTO projects (id, period_id, title, project_no, members, advisor_name, advisor_affiliation, description) VALUES ('${pjId}', '${pd.id}', '${escapeSql(title)}', ${i+1}, '${mem}', '${escapeSql(advisorName)}', '${escapeSql(advisorAff)}', '${escapeSql(desc)}') ON CONFLICT DO NOTHING;`);
     projList.push({id: pjId, pId: pd.id, org: pd.org, isCur: pd.isCur, arch, title});
   }
 });
@@ -1216,6 +1302,13 @@ periodData.forEach(pd => {
     const authObj = { jId: j.id, pId: pd.id, org: pd.org, isCur: pd.isCur, histIdx: pd.histIdx, semanticState, name: j.n, evalDay: pd.evalDay, evalDays: pd.evalDays };
     let q = `INSERT INTO juror_period_auth (juror_id, period_id, pin_hash`;
     let vals = `VALUES ('${j.id}', '${pd.id}', '${pinHash}'`;
+    if (semanticState !== 'NotStarted') {
+      const lsMinH = { InProgress: 1, ReadyToSubmit: pd.evalDays * 8, Completed: pd.evalDays * 2, Editing: pd.evalDays * 2, Locked: 1, Blocked: 1 }[semanticState] ?? 1;
+      const lsMaxH = { InProgress: pd.evalDays * 10, ReadyToSubmit: pd.evalDays * 16, Completed: pd.evalDays * 20, Editing: pd.evalDays * 18, Locked: pd.evalDays * 8, Blocked: pd.evalDays * 6 }[semanticState] ?? pd.evalDays * 12;
+      const lsH = randInt(lsMinH, lsMaxH); const lsM = randInt(0, 59);
+      q += `, last_seen_at, session_expires_at`;
+      vals += `, ${sqlTs(pd.evalDay, lsH + lsM / 60)}, ${sqlTs(pd.evalDay, lsH + 24 + lsM / 60)}`;
+    }
     if (semanticState === 'Completed' || semanticState === 'Editing') {
       q += `, final_submitted_at`;
       vals += `, ${randSqlTs(pd.evalDay, pd.evalDays * 2, pd.evalDays * 20)}`;
@@ -1248,8 +1341,8 @@ out.push(`-- Scoring`);
 // Includes 2 extreme biases: harsh (0.88) and lenient (1.12) for JurorConsistencyHeatmap
 const jurorBiases = [1.02,0.97,1.04,0.98,1.00,0.96,1.03,1.01,0.99,1.05,0.88,1.12,0.98,1.02,1.00,0.97,1.03,0.99];
 
-// Comment rates by archetype — star/partial get more comments
-const commentRates = {star:0.85,partial:0.70,solid:0.55,wellrounded:0.55,highvar:0.60,tech_strong_comm_weak:0.60,borderline:0.60,average:0.40,weak_tech_strong_team:0.40,strong_late:0.40};
+// Flat 60% comment rate across all archetypes and statuses
+const commentRates = {star:0.60,partial:0.60,solid:0.60,wellrounded:0.60,highvar:0.60,tech_strong_comm_weak:0.60,borderline:0.60,average:0.60,weak_tech_strong_team:0.60,strong_late:0.60};
 
 // Score duration by archetype (minutes) for started_at calculation
 const scoreDurations = {star:[10,20],solid:[20,30],wellrounded:[20,30],highvar:[30,50],tech_strong_comm_weak:[25,40],weak_tech_strong_team:[25,35],borderline:[30,45],average:[25,35],strong_late:[20,35],partial:[40,60]};
@@ -1318,7 +1411,7 @@ authList.forEach(auth => {
       ssStatus = 'in_progress';
     }
     if (auth.semanticState === 'Locked') {
-      ssStatus = 'in_progress'; // locked jurors never finalized
+      ssStatus = 'submitted'; // locked jurors submitted before PIN lockout; lock is captured in juror_period_auth
     }
     const ssId = uuid(`ss-${auth.jId}-${proj.id}`);
     const sst = randSqlTs(auth.evalDay, evalHourMin + scoredCount * 0.3, evalHourMax + scoredCount * 0.3);
@@ -1329,7 +1422,7 @@ authList.forEach(auth => {
 
     let ssComment = 'NULL';
     const cRate = commentRates[proj.arch] ?? 0.55;
-    if (ssStatus === 'submitted' && random() < cRate) {
+    if (random() < cRate) {
       const cLang = (o.commentLang || o.lang);
       const pools = cLang === 'tr' ? commentPoolsTr : commentPoolsEn;
       const defs = cLang === 'tr' ? defaultCommentsTr : defaultCommentsEn;
@@ -1415,45 +1508,81 @@ let auditObjList = [];
 // Helper: get first admin UUID for an org (for user_id attribution)
 function adminFor(orgCode) { return (orgAdminMap[orgCode] || [])[0] || null; }
 
+// Helper: convert juror display name to deterministic admin-style email
+function adminEmailFor(displayName) {
+  return displayName
+    .replace(/^(Prof\.|Dr\.|Col\.)\s*/i, '')
+    .toLowerCase()
+    .replace(/\s+/g, '.')
+    .replace(/[şŞ]/g, 's').replace(/[çÇ]/g, 'c').replace(/[ğĞ]/g, 'g')
+    .replace(/[ıİ]/g, 'i').replace(/[öÖ]/g, 'o').replace(/[üÜ]/g, 'u')
+    + '@vera-eval.app';
+}
+
+// ─── ORG-LEVEL EVENTS ───
+
+// 1. admin.login — 2-3 per org at creation, mixed "password"/"google" methods
 orgs.forEach(o => {
   const adminId = adminFor(o.code);
-  // Admin login events (2-3 per org, around org creation)
-  if (adminId) {
-    for (let li = 0; li < randInt(2, 3); li++) {
-      auditObjList.push({ action:'admin.login',resType:'profiles',resId:adminId,orgId:o.id,userId:adminId,details:`{"method":"email","organization_id":"${o.id}"}`,timeStr:randSqlTs(orgCreatedDates[o.code],li*48,li*48+48) });
-    }
-  }
-});
-orgAppIds.forEach(oa => {
-  const o = orgs.find(x => x.code === oa.org); const st = appStatuses[orgs.indexOf(o)];
-  if (st === 'approved' || st === 'rejected') {
-    const appDetails = st === 'approved'
-      ? `{"applicant_email":"admin-${oa.org.toLowerCase()}@example.com","applicant_name":"Admin ${oa.org}"}`
-      : `{"applicant_email":"admin-${oa.org.toLowerCase()}@example.com","applicant_name":"Admin ${oa.org}","rejection_reason":"Did not meet requirements"}`;
-    auditObjList.push({ action:`application.${st}`,resType:'org_applications',resId:oa.id,orgId:o.id,userId:null,details:appDetails,timeStr:sqlTs(orgCreatedDates[o.code],randInt(48,168)) });
+  if (!adminId) return;
+  const loginMethods = ['password', 'password', 'google'];
+  for (let li = 0; li < randInt(2, 3); li++) {
+    const method = loginMethods[li % loginMethods.length];
+    auditObjList.push({ action:'admin.login', resType:'profiles', resId:adminId, orgId:o.id, userId:adminId, details:`{"method":"${method}","organization_id":"${o.id}"}`, timeStr:randSqlTs(orgCreatedDates[o.code], li*48, li*48+48) });
   }
 });
 
-// outcome.create — 1-2 entries per org with outcomes
-orgs.forEach(o => {
-  const adminId = adminFor(o.code);
-  if (o.outcomesData && o.outcomesData.length > 0) {
-    // Sample 1-2 outcomes to document as created
-    const fwId = uuid('fw-' + o.code);
-    const outcomeSample = o.outcomesData.slice(0, randInt(1, Math.min(2, o.outcomesData.length)));
-    outcomeSample.forEach((oc, i) => {
-      auditObjList.push({
-        action:'outcome.create',
-        resType:'framework_outcomes',
-        resId:oc.id,
-        orgId:o.id,
-        userId:adminId,
-        details:`{"framework_id":"${fwId}","code":"${oc.code}","label":"${escapeSql(oc.label)}"}`,
-        timeStr:randSqlTs(orgCreatedDates[o.code],72+i*48,168+i*48)
-      });
-    });
-  }
+// 2. application.approved / application.rejected — real applicant data, demoAdminId
+orgAppIds.forEach(oa => {
+  const o = orgs.find(x => x.code === oa.org);
+  const appIdx = orgs.indexOf(o);
+  const st = appStatuses[appIdx];
+  if (st !== 'approved' && st !== 'rejected') return;
+  const applicantEmail = applicantEmails[appIdx];
+  const applicantName = applicantNames[appIdx];
+  const rejExtra = st === 'rejected' ? `,"rejection_reason":"Did not meet submission requirements"` : '';
+  auditObjList.push({ action:`application.${st}`, resType:'org_applications', resId:oa.id, orgId:o.id, userId:demoAdminId, details:`{"applicant_email":"${applicantEmail}","applicant_name":"${escapeSql(applicantName)}"${rejExtra}}`, timeStr:sqlTs(orgCreatedDates[o.code], randInt(48, 168)) });
+  // notification.application immediately follows each approval/rejection
+  auditObjList.push({ action:'notification.application', resType:'org_applications', resId:oa.id, orgId:o.id, userId:demoAdminId, details:`{"recipientEmail":"${applicantEmail}","type":"application_${st}"}`, timeStr:sqlTs(orgCreatedDates[o.code], randInt(49, 170)) });
 });
+
+// 3. notification.admin_invite — for each org admin account provisioned
+orgs.forEach(o => {
+  (orgAdminNames[o.code] || []).forEach((nm, i) => {
+    const adminPid = (orgAdminMap[o.code] || [])[i];
+    if (!adminPid) return;
+    const adminEmail = adminEmailFor(nm);
+    auditObjList.push({ action:'notification.admin_invite', resType:'memberships', resId:adminPid, orgId:o.id, userId:demoAdminId, details:`{"recipientEmail":"${adminEmail}","type":"invite"}`, timeStr:randSqlTs(orgCreatedDates[o.code], 24, 72) });
+  });
+});
+
+// 4. period.set_current — super-admin marks each org's current period
+periodData.filter(pd => pd.isCur).forEach(pd => {
+  const o = orgs.find(x => x.code === pd.org);
+  auditObjList.push({ action:'period.set_current', resType:'periods', resId:pd.id, orgId:o.id, userId:demoAdminId, details:`{"period_id":"${pd.id}","periodName":"${escapeSql(pd.name)} · ${pd.org}"}`, timeStr:randSqlTs(pd.start, 24, 72) });
+});
+
+// 5. organization.status_changed — CANSAT-2025 toggled disabled → active for demo
+{
+  const demoOrg = orgs.find(x => x.code === 'CANSAT-2025');
+  if (demoOrg) {
+    auditObjList.push({ action:'organization.status_changed', resType:'organizations', resId:demoOrg.id, orgId:demoOrg.id, userId:demoAdminId, details:`{"orgCode":"CANSAT-2025","orgName":"CanSat Competition","previousStatus":"active","newStatus":"disabled","reason":"Pending annual renewal review"}`, timeStr:randSqlTs(orgCreatedDates['CANSAT-2025'], 720, 1440) });
+    auditObjList.push({ action:'organization.status_changed', resType:'organizations', resId:demoOrg.id, orgId:demoOrg.id, userId:demoAdminId, details:`{"orgCode":"CANSAT-2025","orgName":"CanSat Competition","previousStatus":"disabled","newStatus":"active","reason":"Renewal complete"}`, timeStr:randSqlTs(orgCreatedDates['CANSAT-2025'], 1440, 2160) });
+  }
+}
+
+// 6. notification.password_reset — every other org's first admin
+orgs.forEach((o, oi) => {
+  if (oi % 2 !== 0) return;
+  const adminId = adminFor(o.code);
+  if (!adminId) return;
+  const nm = (orgAdminNames[o.code] || [])[0] || '';
+  if (!nm) return;
+  const adminEmail = adminEmailFor(nm);
+  auditObjList.push({ action:'notification.password_reset', resType:'profiles', resId:adminId, orgId:o.id, userId:adminId, details:`{"email":"${adminEmail}"}`, timeStr:randSqlTs(orgCreatedDates[o.code], 168, 720) });
+});
+
+// ─── PERIOD-LEVEL EVENTS ───
 
 periodData.forEach(pd => {
   const o = orgs.find(x => x.code === pd.org);
@@ -1461,78 +1590,109 @@ periodData.forEach(pd => {
   const myProjs = projList.filter(p => p.pId === pd.id);
   const myTokens = tokenList.filter(t => t.pId === pd.id);
   const myAuths = authList.filter(a => a.pId === pd.id);
-
+  const myJurors = jurorIdList.filter(j => j.org === pd.org);
   const ev = pd.evalDay, evD = pd.evalDays;
+  const periodCrits = periodCriteriaMap[pd.id] || [];
 
-  // snapshot.freeze — when period is locked (criteria/outcomes frozen)
+  // snapshot.freeze — current periods only (historical: covered by trigger on periods.update)
   if (pd.isCur) {
-    const periodCrits = periodCriteriaMap[pd.id] || [];
-    auditObjList.push({ action:'snapshot.freeze',resType:'periods',resId:pd.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","criteria_count":${periodCrits.length},"outcomes_count":${o.outcomesData ? o.outcomesData.length : 0}}`,timeStr:sqlTs(ev,-24) });
-  } else {
-    // period.lock — admin closes period for submissions
-    auditObjList.push({ action:'period.lock',resType:'periods',resId:pd.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","reason":"Evaluation period ended"}`,timeStr:sqlTs(ev,(evD+7)*24) });
+    auditObjList.push({ action:'snapshot.freeze', resType:'periods', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","criteria_count":${periodCrits.length},"outcomes_count":${o.outcomesData ? o.outcomesData.length : 0}}`, timeStr:sqlTs(ev, -24) });
   }
 
-  // Admin login around eval day
+  // admin.login around eval day — method "password"
   if (adminId) {
-    auditObjList.push({ action:'admin.login',resType:'profiles',resId:adminId,orgId:o.id,userId:adminId,details:`{"method":"email","organization_id":"${o.id}"}`,timeStr:randSqlTs(ev,-2,2) });
-    if (pd.isCur) auditObjList.push({ action:'admin.login',resType:'profiles',resId:adminId,orgId:o.id,userId:adminId,details:`{"method":"email","organization_id":"${o.id}"}`,timeStr:randSqlTs(ev,evD*8,evD*16) });
+    auditObjList.push({ action:'admin.login', resType:'profiles', resId:adminId, orgId:o.id, userId:adminId, details:`{"method":"password","organization_id":"${o.id}"}`, timeStr:randSqlTs(ev, -2, 2) });
+    if (pd.isCur) auditObjList.push({ action:'admin.login', resType:'profiles', resId:adminId, orgId:o.id, userId:adminId, details:`{"method":"password","organization_id":"${o.id}"}`, timeStr:randSqlTs(ev, evD*8, evD*16) });
   }
 
-  // token.generate — admin creates entry token
+  // token.generate — admin creates entry token before eval day
   myTokens.forEach((tok, i) => {
     const ttl = i === 0 ? '24h' : i === 1 ? '24h' : i === 2 ? '72h' : '1h';
-    const expiresAt = new Date(new Date().getTime() + (ttl.includes('24') ? 24 : ttl.includes('72') ? 72 : 1) * 3600000).toISOString();
-    auditObjList.push({ action:'token.generate',resType:'entry_tokens',resId:tok.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","expires_at":"${expiresAt}","ttl":"${ttl}"}`,timeStr:randSqlTs(ev,-336+i*24,-168+i*24) });
+    const expiresAt = new Date(new Date().getTime() + (ttl.includes('72') ? 72 : ttl.includes('24') ? 24 : 1) * 3600000).toISOString();
+    auditObjList.push({ action:'token.generate', resType:'entry_tokens', resId:tok.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","expires_at":"${expiresAt}","ttl":"${ttl}"}`, timeStr:randSqlTs(ev, -336+i*24, -168+i*24) });
   });
 
-  // token.revoke — admin revokes entry token
+  // notification.entry_token — bulk QR/link email to jurors before eval day
+  if (myJurors.length > 0 && myTokens.length > 0 && (pd.isCur || pd.histIdx <= 1)) {
+    const tok = myTokens[0];
+    const contactEmail = orgContactEmails[o.code] || 'admin@vera-eval.app';
+    auditObjList.push({ action:'notification.entry_token', resType:'entry_tokens', resId:tok.id, orgId:o.id, userId:adminId, details:`{"recipientEmail":"${contactEmail}","type":"bulk","period_id":"${pd.id}","juror_count":${Math.min(myJurors.length, 18)}}`, timeStr:randSqlTs(ev, -120, -48) });
+  }
+
+  // token.revoke — admin revokes a token
   myTokens.filter(t => t.isRevoked).forEach(tok => {
-    auditObjList.push({ action:'token.revoke',resType:'entry_tokens',resId:tok.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","token_id":"${tok.id}"}`,timeStr:randSqlTs(ev,-48,evD*12) });
+    auditObjList.push({ action:'token.revoke', resType:'entry_tokens', resId:tok.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","token_id":"${tok.id}"}`, timeStr:randSqlTs(ev, -48, evD*12) });
   });
 
-  // evaluation.complete — juror-initiated event (user_id=NULL)
-  myAuths.filter(a => a.semanticState==='Completed').forEach((a,i) => {
+  // evaluation.complete — juror-initiated (user_id=NULL)
+  myAuths.filter(a => a.semanticState==='Completed').forEach((a, i) => {
     if (myProjs.length === 0) return;
-    auditObjList.push({ action:'evaluation.complete',resType:'juror_period_auth',resId:a.jId,orgId:o.id,userId:null,details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}"}`,timeStr:randSqlTs(ev,2+i*2,evD*16+i*2) });
+    auditObjList.push({ action:'evaluation.complete', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}"}`, timeStr:randSqlTs(ev, 2+i*2, evD*16+i*2) });
   });
 
-  // juror.pin_locked — juror locked out after max failed PIN attempts
-  myAuths.filter(a => a.semanticState==='Locked').slice(0,1).forEach(a => {
-    auditObjList.push({ action:'juror.pin_locked',resType:'juror_period_auth',resId:a.jId,orgId:o.id,userId:null,details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}","failed_attempts":${randInt(3,5)},"locked_until":"${new Date(new Date().getTime() + 30 * 60000).toISOString()}"}`,timeStr:randSqlTs(ev,2,evD*12) });
+  // juror.pin_locked — juror-initiated (user_id=NULL)
+  myAuths.filter(a => a.semanticState==='Locked').slice(0, 1).forEach(a => {
+    auditObjList.push({ action:'juror.pin_locked', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}","failed_attempts":${randInt(3,5)},"locked_until":"${new Date(new Date().getTime() + 30 * 60000).toISOString()}"}`, timeStr:randSqlTs(ev, 2, evD*12) });
   });
 
-  // juror.pin_unlocked — admin unlocks locked juror
-  myAuths.filter(a => a.semanticState==='Locked').slice(0,1).forEach(a => {
-    auditObjList.push({ action:'juror.pin_unlocked',resType:'juror_period_auth',resId:a.jId,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","juror_name":"${escapeSql(a.name)}"}`,timeStr:randSqlTs(ev,evD*12+1,evD*14) });
+  // juror.pin_unlocked — admin action
+  myAuths.filter(a => a.semanticState==='Locked').slice(0, 1).forEach(a => {
+    auditObjList.push({ action:'juror.pin_unlocked', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:adminId, details:`{"juror_id":"${a.jId}","juror_name":"${escapeSql(a.name)}"}`, timeStr:randSqlTs(ev, evD*12+1, evD*14) });
   });
 
-  // pin.reset — admin resets juror PIN
-  if (pd.isCur || pd.histIdx <= 1) {
-    myAuths.filter(a => a.semanticState==='Completed'||a.semanticState==='InProgress').slice(0,pd.isCur?2:1).forEach((a,i) => {
-      auditObjList.push({ action:'pin.reset',resType:'juror_period_auth',resId:a.jId,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","juror_name":"${escapeSql(a.name)}"}`,timeStr:randSqlTs(ev,1+i*3,evD*10+i*3) });
+  // juror.edit_mode_enabled — for Editing-state jurors
+  myAuths.filter(a => a.semanticState==='Editing').forEach(a => {
+    const durationMin = 120;
+    const expiresAt = new Date(new Date().getTime() + durationMin * 60000).toISOString();
+    auditObjList.push({ action:'juror.edit_mode_enabled', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:adminId, details:`{"juror_id":"${a.jId}","juror_name":"${escapeSql(a.name)}","reason":"Late submission due to connectivity issue","duration_minutes":${durationMin},"expires_at":"${expiresAt}"}`, timeStr:randSqlTs(ev, evD*8, evD*14) });
+  });
+
+  // juror.edit_mode_closed_on_resubmit — historical periods, 1 completed juror
+  if (!pd.isCur) {
+    myAuths.filter(a => a.semanticState==='Completed').slice(0, 1).forEach(a => {
+      auditObjList.push({ action:'juror.edit_mode_closed_on_resubmit', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, details:`{"juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}","closed_at":"${new Date().toISOString()}","close_source":"resubmit"}`, timeStr:randSqlTs(ev, evD*14+2, evD*18) });
     });
   }
 
-  // criteria.save — full criteria & outcome mappings setup
-  const periodCrits = periodCriteriaMap[pd.id] || [];
-  if (periodCrits.length > 0) {
-    const outcomeMappingEstimate = periodCrits.length * (o.outcomesData ? o.outcomesData.length : 2);
-    auditObjList.push({ action:'criteria.save',resType:'period_criteria',resId:pd.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","criteria_count":${periodCrits.length},"outcome_mapping_count":${outcomeMappingEstimate},"operation":"upsert"}`,timeStr:randSqlTs(pd.start,120,336) });
+  // pin.reset + notification.juror_pin — paired actions
+  if (pd.isCur || pd.histIdx <= 1) {
+    myAuths.filter(a => a.semanticState==='Completed' || a.semanticState==='InProgress').slice(0, pd.isCur ? 2 : 1).forEach((a, i) => {
+      auditObjList.push({ action:'pin.reset', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:adminId, details:`{"juror_id":"${a.jId}","juror_name":"${escapeSql(a.name)}"}`, timeStr:randSqlTs(ev, 1+i*3, evD*10+i*3) });
+      const jurorEntry = jurorIdList.find(j => j.id === a.jId);
+      if (jurorEntry) {
+        const jMail = jurorEmail(jurorEntry.n);
+        auditObjList.push({ action:'notification.juror_pin', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:adminId, details:`{"recipientEmail":"${jMail}","juror_name":"${escapeSql(a.name)}"}`, timeStr:randSqlTs(ev, 1+i*3+1, evD*10+i*3+2) });
+      }
+    });
   }
 
-  // export.scores — admin exports score data
-  const myJurors = jurorIdList.filter(j => j.org === pd.org);
+  // export.scores — xlsx
   if (pd.isCur && myProjs.length > 0) {
-    auditObjList.push({ action:'export.scores',resType:'score_sheets',resId:pd.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","format":"xlsx","row_count":${Math.min(myProjs.length * myJurors.length, 100)}}`,timeStr:randSqlTs(ev,evD*12,evD*18) });
+    auditObjList.push({ action:'export.scores', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","format":"xlsx","row_count":${Math.min(myProjs.length * myJurors.length, 100)}}`, timeStr:randSqlTs(ev, evD*12, evD*18) });
   } else if (!pd.isCur && pd.histIdx <= 2) {
-    auditObjList.push({ action:'export.scores',resType:'score_sheets',resId:pd.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","format":"xlsx","row_count":45}`,timeStr:sqlTs(ev,(evD+10)*24) });
+    auditObjList.push({ action:'export.scores', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","format":"xlsx","row_count":45}`, timeStr:sqlTs(ev, (evD+10)*24) });
   }
 
-  // export.rankings — admin exports rankings
+  // export.rankings + export.heatmap + export.analytics + notification.export_report (current periods)
   if (pd.isCur) {
     const scoredCount = myAuths.filter(a => a.semanticState === 'Completed').length;
-    auditObjList.push({ action:'export.rankings',resType:'score_sheets',resId:pd.id,orgId:o.id,userId:adminId,details:`{"period_id":"${pd.id}","format":"pdf","row_count":${Math.max(10, Math.floor(scoredCount * 0.6))}}`,timeStr:randSqlTs(ev,evD*8+2,evD*20) });
+    auditObjList.push({ action:'export.rankings', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","format":"pdf","row_count":${Math.max(10, Math.floor(scoredCount * 0.6))}}`, timeStr:randSqlTs(ev, evD*8+2, evD*20) });
+    auditObjList.push({ action:'export.heatmap', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","format":"pdf","juror_count":${myJurors.length},"project_count":${myProjs.length}}`, timeStr:randSqlTs(ev, evD*10, evD*18) });
+    auditObjList.push({ action:'export.analytics', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","format":"pdf"}`, timeStr:randSqlTs(ev, evD*12+1, evD*20) });
+    const reportRecipients = (orgAdminNames[pd.org] || []).slice(0, 2).map(nm => adminEmailFor(nm));
+    auditObjList.push({ action:'notification.export_report', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"recipients":${JSON.stringify(reportRecipients)},"period_id":"${pd.id}"}`, timeStr:randSqlTs(ev, evD*14, evD*22) });
+  }
+
+  // export.audit — current + first historical of first 2 orgs
+  if (pd.isCur || (pd.histIdx === 1 && orgs.indexOf(o) < 2)) {
+    const rowCount = pd.isCur ? randInt(80, 200) : randInt(40, 120);
+    auditObjList.push({ action:'export.audit', resType:'audit_logs', resId:pd.id, orgId:o.id, userId:adminId, details:`{"format":"csv","row_count":${rowCount},"period_id":"${pd.id}"}`, timeStr:randSqlTs(ev, evD*16, evD*24) });
+  }
+
+  // export.backup — once per org at histIdx===1
+  if (pd.histIdx === 1) {
+    const periodCountForOrg = periodData.filter(p => p.org === pd.org).length;
+    auditObjList.push({ action:'export.backup', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"format":"xlsx","period_count":${periodCountForOrg},"org_id":"${o.id}"}`, timeStr:randSqlTs(pd.start, 48, 240) });
   }
 });
 
@@ -1544,75 +1704,178 @@ auditObjList.forEach(ad => {
 out.push('');
 
 // ═══════════════════════════════════════════════════════════════
-// JURY FEEDBACK
+// JURY FEEDBACK  — programmatic (~45% cur / ~55% hist) + curated overrides
 // ═══════════════════════════════════════════════════════════════
 
 out.push(`-- Jury Feedback`);
-const juryFeedbackData = [
-  // TEDU-EE — comments in English (commentLang: 'en')
-  {pSeed:'period-TEDU-EE-0',jSeed:'juror-TEDU-EE-0',rating:4,comment:null,pub:false},
-  {pSeed:'period-TEDU-EE-0',jSeed:'juror-TEDU-EE-1',rating:5,comment:'Very practical system. We completed all evaluations on poster day without any issues.',pub:true},
-  {pSeed:'period-TEDU-EE-0',jSeed:'juror-TEDU-EE-3',rating:4,comment:'Clean interface with fast response. The rubric bands were extremely helpful.',pub:true},
-  {pSeed:'period-TEDU-EE-0',jSeed:'juror-TEDU-EE-5',rating:3,comment:'Decent tool overall, but the mobile layout could use improvement for tablet users.',pub:true},
-  {pSeed:'period-TEDU-EE-1',jSeed:'juror-TEDU-EE-0',rating:5,comment:null,pub:false},
-  {pSeed:'period-TEDU-EE-1',jSeed:'juror-TEDU-EE-2',rating:4,comment:'Gets better every semester.',pub:true},
+
+// Curated overrides — always emitted regardless of state/probability
+const curatedFeedback = new Map([
+  // TEDU-EE — English
+  ['period-TEDU-EE-0|juror-TEDU-EE-0',         {rating:4,comment:null,pub:false}],
+  ['period-TEDU-EE-0|juror-TEDU-EE-1',         {rating:5,comment:'Very practical system. We completed all evaluations on poster day without any issues.',pub:true}],
+  ['period-TEDU-EE-0|juror-TEDU-EE-3',         {rating:4,comment:'Clean interface with fast response. The rubric bands were extremely helpful.',pub:true}],
+  ['period-TEDU-EE-0|juror-TEDU-EE-5',         {rating:3,comment:'Decent tool overall, but the mobile layout could use improvement for tablet users.',pub:true}],
+  ['period-TEDU-EE-1|juror-TEDU-EE-0',         {rating:5,comment:null,pub:false}],
+  ['period-TEDU-EE-1|juror-TEDU-EE-2',         {rating:4,comment:'Gets better every semester.',pub:true}],
   // CMU-CS
-  {pSeed:'period-CMU-CS-0',jSeed:'juror-CMU-CS-0',rating:5,comment:'Replaced our old paper-based system entirely. The export feature saves hours.',pub:true},
-  {pSeed:'period-CMU-CS-0',jSeed:'juror-CMU-CS-1',rating:4,comment:'Solid tool. Configurable criteria made it easy to adapt.',pub:true},
-  {pSeed:'period-CMU-CS-0',jSeed:'juror-CMU-CS-3',rating:5,comment:'Clean and intuitive. Scoring 12 projects took less than an hour.',pub:true},
-  {pSeed:'period-CMU-CS-0',jSeed:'juror-CMU-CS-5',rating:2,comment:'Had connectivity issues during the session. Lost some progress before it autosaved.',pub:false},
-  {pSeed:'period-CMU-CS-1',jSeed:'juror-CMU-CS-0',rating:5,comment:null,pub:false},
-  {pSeed:'period-CMU-CS-1',jSeed:'juror-CMU-CS-1',rating:3,comment:null,pub:false},
-  {pSeed:'period-CMU-CS-2',jSeed:'juror-CMU-CS-0',rating:4,comment:null,pub:false},
-  {pSeed:'period-CMU-CS-2',jSeed:'juror-CMU-CS-1',rating:5,comment:'Third semester using VERA. It keeps getting better.',pub:true},
+  ['period-CMU-CS-0|juror-CMU-CS-0',           {rating:5,comment:'Replaced our old paper-based system entirely. The export feature saves hours.',pub:true}],
+  ['period-CMU-CS-0|juror-CMU-CS-1',           {rating:4,comment:'Solid tool. Configurable criteria made it easy to adapt.',pub:true}],
+  ['period-CMU-CS-0|juror-CMU-CS-3',           {rating:5,comment:'Clean and intuitive. Scoring 12 projects took less than an hour.',pub:true}],
+  ['period-CMU-CS-0|juror-CMU-CS-5',           {rating:2,comment:'Had connectivity issues during the session. Lost some progress before it autosaved.',pub:false}],
+  ['period-CMU-CS-1|juror-CMU-CS-0',           {rating:5,comment:null,pub:false}],
+  ['period-CMU-CS-1|juror-CMU-CS-1',           {rating:3,comment:null,pub:false}],
+  ['period-CMU-CS-2|juror-CMU-CS-0',           {rating:4,comment:null,pub:false}],
+  ['period-CMU-CS-2|juror-CMU-CS-1',           {rating:5,comment:'Third semester using VERA. It keeps getting better.',pub:true}],
   // TEKNOFEST
-  {pSeed:'period-TEKNOFEST-0',jSeed:'juror-TEKNOFEST-0',rating:5,comment:'Yüzlerce takımı hızlıca değerlendirdik. Sistem çok stabil.',pub:true},
-  {pSeed:'period-TEKNOFEST-0',jSeed:'juror-TEKNOFEST-2',rating:4,comment:'Yarışma ortamında çok pratik. QR ile giriş mükemmel.',pub:true},
-  {pSeed:'period-TEKNOFEST-0',jSeed:'juror-TEKNOFEST-4',rating:3,comment:'Kullanılabilir ama yarışma günü internet kesintisinde sorun yaşadık.',pub:false},
-  {pSeed:'period-TEKNOFEST-1',jSeed:'juror-TEKNOFEST-0',rating:4,comment:null,pub:false},
-  {pSeed:'period-TEKNOFEST-1',jSeed:'juror-TEKNOFEST-1',rating:5,comment:'Kullanımı çok kolay, eğitim bile gerekmedi.',pub:true},
+  ['period-TEKNOFEST-0|juror-TEKNOFEST-0',     {rating:5,comment:'Yüzlerce takımı hızlıca değerlendirdik. Sistem çok stabil.',pub:true}],
+  ['period-TEKNOFEST-0|juror-TEKNOFEST-2',     {rating:4,comment:'Yarışma ortamında çok pratik. QR ile giriş mükemmel.',pub:true}],
+  ['period-TEKNOFEST-0|juror-TEKNOFEST-4',     {rating:3,comment:'Kullanılabilir ama yarışma günü internet kesintisinde sorun yaşadık.',pub:false}],
+  ['period-TEKNOFEST-1|juror-TEKNOFEST-0',     {rating:4,comment:null,pub:false}],
+  ['period-TEKNOFEST-1|juror-TEKNOFEST-1',     {rating:5,comment:'Kullanımı çok kolay, eğitim bile gerekmedi.',pub:true}],
   // IEEE-APSSDC
-  {pSeed:'period-IEEE-APSSDC-0',jSeed:'juror-IEEE-APSSDC-0',rating:5,comment:'Incredibly smooth experience. No hiccups.',pub:true},
-  {pSeed:'period-IEEE-APSSDC-0',jSeed:'juror-IEEE-APSSDC-1',rating:4,comment:'Clean interface, very intuitive.',pub:true},
-  {pSeed:'period-IEEE-APSSDC-0',jSeed:'juror-IEEE-APSSDC-2',rating:5,comment:'Best evaluation tool for design contest reviews.',pub:true},
-  {pSeed:'period-IEEE-APSSDC-1',jSeed:'juror-IEEE-APSSDC-0',rating:5,comment:null,pub:false},
-  {pSeed:'period-IEEE-APSSDC-1',jSeed:'juror-IEEE-APSSDC-2',rating:5,comment:'Used VERA again — consistently excellent.',pub:true},
+  ['period-IEEE-APSSDC-0|juror-IEEE-APSSDC-0', {rating:5,comment:'Incredibly smooth experience. No hiccups.',pub:true}],
+  ['period-IEEE-APSSDC-0|juror-IEEE-APSSDC-1', {rating:4,comment:'Clean interface, very intuitive.',pub:true}],
+  ['period-IEEE-APSSDC-0|juror-IEEE-APSSDC-2', {rating:5,comment:'Best evaluation tool for design contest reviews.',pub:true}],
+  ['period-IEEE-APSSDC-1|juror-IEEE-APSSDC-0', {rating:5,comment:null,pub:false}],
+  ['period-IEEE-APSSDC-1|juror-IEEE-APSSDC-2', {rating:5,comment:'Used VERA again — consistently excellent.',pub:true}],
   // CANSAT-2025
-  {pSeed:'period-CANSAT-2025-0',jSeed:'juror-CANSAT-2025-0',rating:5,comment:'Evaluated all teams in a single afternoon. Real-time rankings kept the event exciting.',pub:true},
-  {pSeed:'period-CANSAT-2025-0',jSeed:'juror-CANSAT-2025-1',rating:4,comment:'Great for competition settings. Rubric sheet was very helpful.',pub:true},
-  {pSeed:'period-CANSAT-2025-0',jSeed:'juror-CANSAT-2025-3',rating:3,comment:'Worked fine but would prefer larger text on the scoring interface.',pub:true},
-  {pSeed:'period-CANSAT-2025-1',jSeed:'juror-CANSAT-2025-0',rating:4,comment:null,pub:false},
-  {pSeed:'period-CANSAT-2025-1',jSeed:'juror-CANSAT-2025-1',rating:5,comment:'Even better than last year.',pub:true},
-  {pSeed:'period-CANSAT-2025-1',jSeed:'juror-CANSAT-2025-2',rating:4,comment:'Straightforward and efficient. No training needed.',pub:true},
-  {pSeed:'period-CANSAT-2025-2',jSeed:'juror-CANSAT-2025-1',rating:3,comment:null,pub:false},
-  {pSeed:'period-CANSAT-2025-2',jSeed:'juror-CANSAT-2025-2',rating:5,comment:null,pub:false},
-  // TUBITAK-2204A — more entries
-  {pSeed:'period-TUBITAK-2204A-0',jSeed:'juror-TUBITAK-2204A-0',rating:5,comment:'Araştırma projeleri için çok uygun bir değerlendirme aracı.',pub:true},
-  {pSeed:'period-TUBITAK-2204A-0',jSeed:'juror-TUBITAK-2204A-1',rating:4,comment:'Kriter bazlı puanlama çok iyi kurgulanmış.',pub:true},
-  {pSeed:'period-TUBITAK-2204A-0',jSeed:'juror-TUBITAK-2204A-3',rating:5,comment:'Bilimsel değerlendirme sürecini çok kolaylaştırdı.',pub:true},
-  {pSeed:'period-TUBITAK-2204A-1',jSeed:'juror-TUBITAK-2204A-0',rating:4,comment:null,pub:false},
-  {pSeed:'period-TUBITAK-2204A-1',jSeed:'juror-TUBITAK-2204A-2',rating:5,comment:'İkinci kez kullanıyoruz, memnuniyetimiz artıyor.',pub:true},
-  {pSeed:'period-TUBITAK-2204A-1',jSeed:'juror-TUBITAK-2204A-4',rating:2,comment:'Bazı jüri arkadaşlarım PIN sistemini karmaşık buldu.',pub:false},
+  ['period-CANSAT-2025-0|juror-CANSAT-2025-0', {rating:5,comment:'Evaluated all teams in a single afternoon. Real-time rankings kept the event exciting.',pub:true}],
+  ['period-CANSAT-2025-0|juror-CANSAT-2025-1', {rating:4,comment:'Great for competition settings. Rubric sheet was very helpful.',pub:true}],
+  ['period-CANSAT-2025-0|juror-CANSAT-2025-3', {rating:3,comment:'Worked fine but would prefer larger text on the scoring interface.',pub:true}],
+  ['period-CANSAT-2025-1|juror-CANSAT-2025-0', {rating:4,comment:null,pub:false}],
+  ['period-CANSAT-2025-1|juror-CANSAT-2025-1', {rating:5,comment:'Even better than last year.',pub:true}],
+  ['period-CANSAT-2025-1|juror-CANSAT-2025-2', {rating:4,comment:'Straightforward and efficient. No training needed.',pub:true}],
+  ['period-CANSAT-2025-2|juror-CANSAT-2025-1', {rating:3,comment:null,pub:false}],
+  ['period-CANSAT-2025-2|juror-CANSAT-2025-2', {rating:5,comment:null,pub:false}],
+  // TUBITAK-2204A
+  ['period-TUBITAK-2204A-0|juror-TUBITAK-2204A-0', {rating:5,comment:'Araştırma projeleri için çok uygun bir değerlendirme aracı.',pub:true}],
+  ['period-TUBITAK-2204A-0|juror-TUBITAK-2204A-1', {rating:4,comment:'Kriter bazlı puanlama çok iyi kurgulanmış.',pub:true}],
+  ['period-TUBITAK-2204A-0|juror-TUBITAK-2204A-3', {rating:5,comment:'Bilimsel değerlendirme sürecini çok kolaylaştırdı.',pub:true}],
+  ['period-TUBITAK-2204A-1|juror-TUBITAK-2204A-0', {rating:4,comment:null,pub:false}],
+  ['period-TUBITAK-2204A-1|juror-TUBITAK-2204A-2', {rating:5,comment:'İkinci kez kullanıyoruz, memnuniyetimiz artıyor.',pub:true}],
+  ['period-TUBITAK-2204A-1|juror-TUBITAK-2204A-4', {rating:2,comment:'Bazı jüri arkadaşlarım PIN sistemini karmaşık buldu.',pub:false}],
+]);
+
+const feedbackCommentsEN = [
+  'Smooth evaluation experience from start to finish.',
+  'Rubric bands made scoring much clearer.',
+  'QR entry worked perfectly on the first try.',
+  'Very intuitive — no training needed.',
+  'Configurable criteria adapted well to our project types.',
+  'Auto-save prevented any data loss during the session.',
+  'Clean and minimal — exactly what you need on evaluation day.',
+  'Scored all groups in under two hours with no issues.',
+  'Great tool for a multi-juror environment.',
+  'PIN setup was simple; the whole process took minutes.',
+  'Would recommend to other departments running similar evaluations.',
+  'Worked well on mobile — no installation needed.',
+  'Appreciated the clear rubric descriptions for each criterion.',
+  'Everything ran smoothly, even with a large panel of judges.',
+  'The summary view made it easy to catch inconsistencies.',
 ];
 
-// Resolve feedback timestamps from period eval windows
+const feedbackCommentsTR = [
+  'Sistem çok akıcı çalıştı, sorunsuz bir değerlendirme günü geçirdik.',
+  'Kriter bazlı puanlama çok pratik ve anlaşılır.',
+  'QR kod ile giriş mükemmeldi, hiç sorun yaşamadık.',
+  'Mobil cihazdan kolayca kullanılabildi.',
+  'PIN sistemi basit ve işlevsel.',
+  'Otomatik kayıt özelliği çok işime yaradı.',
+  'Arayüz sade ve kullanımı kolay.',
+  'Tüm grupları birkaç saat içinde değerlendirdik.',
+  'Rubrik bantları puanlama sürecini netleştirdi.',
+  'Diğer bölümlere de öneririm.',
+  'Çok jüri üyesiyle çalışırken koordinasyon sorunu yaşamadık.',
+  'Skor özeti ekranı tutarsızlıkları fark etmemizi kolaylaştırdı.',
+];
+
+const orgFeedbackLang = {
+  'TEDU-EE':'en', 'CMU-CS':'en', 'IEEE-APSSDC':'en', 'CANSAT-2025':'en',
+  'TEKNOFEST':'tr', 'TUBITAK-2204A':'tr',
+};
+
+// Probability of giving feedback by semantic state × period recency
+const fbProb = {
+  Completed:     {cur:0.50, hist:0.65},
+  Editing:       {cur:0.50, hist:0.65},
+  ReadyToSubmit: {cur:0.35, hist:0.45},
+  InProgress:    {cur:0.15, hist:0.22},
+};
+
+function pickFbRating() {
+  const r = random();
+  if (r < 0.02) return 1;
+  if (r < 0.10) return 2;
+  if (r < 0.30) return 3;
+  if (r < 0.70) return 4;
+  return 5;
+}
+
+// Reverse lookup: jId → jSeed (e.g. 'juror-TEDU-EE-0')
+const jurorSeedById = new Map();
+jurorIdList.forEach(j => jurorSeedById.set(j.id, `juror-${j.org}-${j.idx}`));
+
+// Resolve feedback timestamps from period eval windows (used for curated safety-net pass)
 const feedbackTimestamps = {};
 periodData.forEach(pd => {
   feedbackTimestamps[`period-${pd.org}-${pd.histIdx}`] = { evalDay: pd.evalDay, evalDays: pd.evalDays, isCur: pd.isCur };
 });
 
-const feedbackRows = juryFeedbackData.map(f => {
-  const comment = f.comment ? `'${escapeSql(f.comment)}'` : 'NULL';
-  const pdInfo = feedbackTimestamps[f.pSeed] || null;
+const seenFbKeys = new Set();
+const fbRows = [];
+
+authList.forEach(auth => {
+  const pSeed = `period-${auth.org}-${auth.histIdx}`;
+  const jSeed = jurorSeedById.get(auth.jId);
+  if (!jSeed) return;
+  const key = `${pSeed}|${jSeed}`;
+  const curated = curatedFeedback.get(key);
+
+  if (curated !== undefined) {
+    // Always include curated entries — they override state/probability
+    seenFbKeys.add(key);
+    const minH = auth.isCur ? auth.evalDays * 4 : auth.evalDays * 2;
+    const maxH = auth.isCur ? auth.evalDays * 16 : auth.evalDays * 24;
+    const commentSql = curated.comment ? `'${escapeSql(curated.comment)}'` : 'NULL';
+    fbRows.push(`('${uuid(pSeed)}', '${uuid(jSeed)}', ${curated.rating}, ${commentSql}, ${curated.pub}, ${randSqlTs(auth.evalDay, minH, maxH)})`);
+    return;
+  }
+
+  const prob = fbProb[auth.semanticState];
+  if (!prob) return; // NotStarted, Locked, Blocked — skip
+
+  const threshold = auth.isCur ? prob.cur : prob.hist;
+  if (random() >= threshold) return;
+
+  seenFbKeys.add(key);
+  const rating = pickFbRating();
+  const lang = orgFeedbackLang[auth.org] || 'en';
+  const pool = lang === 'tr' ? feedbackCommentsTR : feedbackCommentsEN;
+  const comment = random() < 0.50 ? pool[Math.floor(random() * pool.length)] : null;
+  const pub = random() < 0.65;
+  const minH = auth.isCur ? auth.evalDays * 4 : auth.evalDays * 2;
+  const maxH = auth.isCur ? auth.evalDays * 16 : auth.evalDays * 24;
+  const commentSql = comment ? `'${escapeSql(comment)}'` : 'NULL';
+  fbRows.push(`('${uuid(pSeed)}', '${uuid(jSeed)}', ${rating}, ${commentSql}, ${pub}, ${randSqlTs(auth.evalDay, minH, maxH)})`);
+});
+
+// Safety net: include any curated entries whose combo wasn't found in authList
+for (const [key, c] of curatedFeedback) {
+  if (seenFbKeys.has(key)) continue;
+  const [pSeed, jSeed] = key.split('|');
+  const pdInfo = feedbackTimestamps[pSeed] || null;
   let createdAtSql = 'now()';
   if (pdInfo) {
     const minH = pdInfo.isCur ? pdInfo.evalDays * 4 : pdInfo.evalDays * 2;
     const maxH = pdInfo.isCur ? pdInfo.evalDays * 16 : pdInfo.evalDays * 24;
     createdAtSql = randSqlTs(pdInfo.evalDay, minH, maxH);
   }
-  return `('${uuid(f.pSeed)}', '${uuid(f.jSeed)}', ${f.rating}, ${comment}, ${f.pub}, ${createdAtSql})`;
-});
-out.push(`INSERT INTO jury_feedback (period_id, juror_id, rating, comment, is_public, created_at) VALUES\n${feedbackRows.join(',\n')}\nON CONFLICT (period_id, juror_id) DO NOTHING;`);
+  const commentSql = c.comment ? `'${escapeSql(c.comment)}'` : 'NULL';
+  fbRows.push(`('${uuid(pSeed)}', '${uuid(jSeed)}', ${c.rating}, ${commentSql}, ${c.pub}, ${createdAtSql})`);
+}
+
+out.push(`INSERT INTO jury_feedback (period_id, juror_id, rating, comment, is_public, created_at) VALUES\n${fbRows.join(',\n')}\nON CONFLICT (period_id, juror_id) DO NOTHING;`);
 out.push('');
 
 // ═══════════════════════════════════════════════════════════════
@@ -1632,5 +1895,5 @@ console.log(`  Jurors: ${totalJurors}`);
 console.log(`  Juror-period auths: ${authList.length}`);
 console.log(`  Entry tokens: ${tokenList.length}`);
 console.log(`  Audit logs: ${auditObjList.length}`);
-console.log(`  Jury feedback: ${juryFeedbackData.length}`);
+console.log(`  Jury feedback: ${fbRows.length}`);
 console.log(`  TEDU-EE Spring 2026 criteria: PRESERVED (no evolution applied to idx=0)`);

@@ -64,8 +64,8 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <span className="sb-tenant-dot" />
             <div className="sb-tenant-labels">
               <span className="sb-tenant-name">{orgLabel}</span>
-              {activeOrganization?.subtitle && (
-                <span className="sb-tenant-inst">{activeOrganization.subtitle}</span>
+              {activeOrganization?.institution && (
+                <span className="sb-tenant-inst">{activeOrganization.institution}</span>
               )}
             </div>
             <span className="sb-tenant-chevron">▾</span>
@@ -84,8 +84,8 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
                 >
                   <div className="sb-tenant-item-info">
                     <div className="sb-tenant-item-dept">{org.name || org.code}</div>
-                    {org.subtitle && (
-                      <div className="sb-tenant-item-uni">{org.subtitle}</div>
+                    {org.institution && (
+                      <div className="sb-tenant-item-uni">{org.institution}</div>
                     )}
                   </div>
                   {org.id === activeOrganization?.id && <span className="sb-tenant-item-check">✓</span>}
