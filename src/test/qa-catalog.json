@@ -4127,5 +4127,71 @@
     "risk": "Missing banner content hides the reason and defeats the feature.",
     "coverageStrength": "High",
     "severity": "normal"
+  },
+  {
+    "id": "security_policy.drawer.schema",
+    "module": "Settings / Security Policy",
+    "area": "Security Policy Drawer — Save Payload",
+    "story": "New eleven-key policy schema",
+    "scenario": "save payload contains all eleven new-schema keys and no dead keys",
+    "whyItMatters": "After the JSONB rename, saves must use qrTtl/maxPinAttempts/ccOnTenantApplication/ccOnMaintenance/ccOnPasswordChanged instead of the old key names so DB and drawer stay in sync.",
+    "risk": "If the drawer writes old key names, the JSONB gains orphan keys and SQL functions read stale defaults.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "security_policy.drawer.auth_safeguard",
+    "module": "Settings / Security Policy",
+    "area": "Security Policy Drawer — Auth Safeguard",
+    "story": "At least one authentication method required",
+    "scenario": "save blocked when both Google OAuth and Email/Password are disabled",
+    "whyItMatters": "Without the safeguard, a super admin could lock the entire platform out by disabling both auth methods in one save.",
+    "risk": "Total platform lockout requiring DB surgery to recover.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "security_policy.drawer.master_toggle_on",
+    "module": "Settings / Security Policy",
+    "area": "Security Policy Drawer — Master Notifications Toggle",
+    "story": "Master toggle flips all children on",
+    "scenario": "clicking master from off sets all five CC child toggles to true",
+    "whyItMatters": "The master is a convenience control; users expect a single click to enable every notification CC at once.",
+    "risk": "Broken master toggle would force users to toggle each child individually.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
+    "id": "security_policy.drawer.master_toggle_off",
+    "module": "Settings / Security Policy",
+    "area": "Security Policy Drawer — Master Notifications Toggle",
+    "story": "Master toggle flips all children off",
+    "scenario": "clicking master from on sets all five CC child toggles to false",
+    "whyItMatters": "Symmetric counterpart to the on case — users expect the same shortcut in reverse.",
+    "risk": "Asymmetric behavior would confuse users and leave notifications enabled unexpectedly.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
+    "id": "security_policy.drawer.no_password_section",
+    "module": "Settings / Security Policy",
+    "area": "Security Policy Drawer — Removed Section",
+    "story": "Password Requirements section removed",
+    "scenario": "drawer does not render the Password Requirements section or its fields",
+    "whyItMatters": "The old section was dead (no enforcement). Leaving it visible creates false security expectations.",
+    "risk": "Re-introducing the section would restore the dead-setting problem.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
+    "id": "security_policy.drawer.new_labels",
+    "module": "Settings / Security Policy",
+    "area": "Security Policy Drawer — Renamed Labels",
+    "story": "QR terminology in user-facing labels",
+    "scenario": "drawer shows 'QR Code TTL' and 'Max PIN Attempts' labels instead of the old Entry Token and Login Attempts labels",
+    "whyItMatters": "Terminology in the drawer must match what super admins see elsewhere; 'Entry Token' and 'Login Attempts' were developer jargon and misleading respectively.",
+    "risk": "Label regression would reintroduce the confusing terminology.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
   }
 ]

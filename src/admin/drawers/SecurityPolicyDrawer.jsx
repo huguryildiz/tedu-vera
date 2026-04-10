@@ -1,14 +1,18 @@
 // src/admin/drawers/SecurityPolicyDrawer.jsx
 // Drawer: edit platform-wide security policy (Super Admin only).
 //
+// Three sections:
+//   1. Authentication Methods — Google OAuth, Email/Password, Remember Me
+//      + safeguard: at least one of Google OAuth or Email/Password must be on
+//   2. QR Access — QR Code TTL, Max PIN Attempts, PIN Lockout Cooldown
+//   3. Notifications — master "CC Super Admin on All Notifications" toggle
+//      + five granular child toggles (PIN Reset, Score Edit, Tenant
+//      Application, Maintenance, Password Changed)
+//
 // Props:
 //   open    — boolean
 //   onClose — () => void
-//   policy  — {
-//     googleOAuth, emailPassword, rememberMe,
-//     minPasswordLength, maxLoginAttempts, requireSpecialChars,
-//     tokenTtl, pinLockCooldown, ccOnPinReset, ccOnScoreEdit
-//   }
+//   policy  — eleven-key policy (see DEFAULT_POLICY below)
 //   onSave  — (policy) => Promise<void>
 //   error   — string | null
 
@@ -23,14 +27,22 @@ const DEFAULT_POLICY = {
   googleOAuth: true,
   emailPassword: true,
   rememberMe: true,
-  minPasswordLength: 10,
-  maxLoginAttempts: 5,
-  requireSpecialChars: true,
-  tokenTtl: "24h",
+  qrTtl: "24h",
+  maxPinAttempts: 5,
   pinLockCooldown: "30m",
   ccOnPinReset: true,
   ccOnScoreEdit: false,
+  ccOnTenantApplication: true,
+  ccOnMaintenance: true,
+  ccOnPasswordChanged: true,
 };
+
+const QR_TTL_OPTIONS = [
+  { value: "12h", label: "12 hours" },
+  { value: "24h", label: "24 hours" },
+  { value: "48h", label: "48 hours" },
+  { value: "7d", label: "7 days" },
+];
 
 const PIN_LOCK_COOLDOWN_OPTIONS = [
   { value: "5m", label: "5 minutes" },
@@ -40,44 +52,75 @@ const PIN_LOCK_COOLDOWN_OPTIONS = [
   { value: "60m", label: "60 minutes" },
 ];
 
-function Toggle({ checked, onChange, disabled }) {
+function Toggle({ checked, onChange, disabled, indeterminate = false }) {
+  const trackBg = checked ? "var(--accent)" : "var(--surface-2)";
+  const trackOpacity = indeterminate ? 0.5 : 1;
+  const thumbX = indeterminate ? 8 : checked ? 16 : 0;
+
   return (
     <label
-      style={{ position: "relative", width: 38, height: 22, cursor: disabled ? "not-allowed" : "pointer", flexShrink: 0 }}
-      onClick={(e) => { e.preventDefault(); if (!disabled) onChange(!checked); }}
+      style={{
+        position: "relative",
+        width: 38,
+        height: 22,
+        cursor: disabled ? "not-allowed" : "pointer",
+        flexShrink: 0,
+      }}
+      onClick={(e) => {
+        e.preventDefault();
+        if (!disabled) onChange(!checked);
+      }}
     >
       <div
         style={{
-          position: "absolute", inset: 0,
-          background: checked ? "var(--accent)" : "var(--surface-2)",
-          borderRadius: 11, transition: "background .2s",
+          position: "absolute",
+          inset: 0,
+          background: trackBg,
+          borderRadius: 11,
+          transition: "background .2s, opacity .2s",
+          opacity: trackOpacity,
         }}
       />
       <div
         style={{
-          position: "absolute", top: 2, left: 2,
-          width: 18, height: 18, background: "white", borderRadius: "50%",
-          transition: "transform .2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-          transform: checked ? "translateX(16px)" : "translateX(0)",
+          position: "absolute",
+          top: 2,
+          left: 2,
+          width: 18,
+          height: 18,
+          background: "white",
+          borderRadius: "50%",
+          transition: "transform .2s",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+          transform: `translateX(${thumbX}px)`,
         }}
       />
     </label>
   );
 }
 
-function ToggleRow({ title, desc, checked, onChange, disabled }) {
+function ToggleRow({ title, desc, checked, onChange, disabled, indeterminate = false }) {
   return (
     <div
       style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "10px 14px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "10px 14px",
+        border: "1px solid var(--border)",
+        borderRadius: "var(--radius-sm)",
       }}
     >
       <div>
         <div style={{ fontSize: 13, fontWeight: 600 }}>{title}</div>
         <div className="text-xs text-muted" style={{ marginTop: 2 }}>{desc}</div>
       </div>
-      <Toggle checked={checked} onChange={onChange} disabled={disabled} />
+      <Toggle
+        checked={checked}
+        onChange={onChange}
+        disabled={disabled}
+        indeterminate={indeterminate}
+      />
     </div>
   );
 }
@@ -86,8 +129,12 @@ function SectionLabel({ children }) {
   return (
     <div
       style={{
-        fontSize: 12, fontWeight: 650, color: "var(--text-secondary)",
-        textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: -4,
+        fontSize: 12,
+        fontWeight: 650,
+        color: "var(--text-secondary)",
+        textTransform: "uppercase",
+        letterSpacing: "0.5px",
+        marginBottom: -4,
       }}
     >
       {children}
@@ -99,6 +146,7 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
   const [form, setForm] = useState(DEFAULT_POLICY);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+
   const selectedPinLockCooldown =
     PIN_LOCK_COOLDOWN_OPTIONS.find((opt) => opt.value === form.pinLockCooldown)?.label ||
     "30 minutes";
@@ -106,14 +154,44 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
   useEffect(() => {
     if (open) {
       setForm({ ...DEFAULT_POLICY, ...policy });
-      setSaveError(""); setSaving(false);
+      setSaveError("");
+      setSaving(false);
     }
   }, [open, policy]);
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
 
+  // Master CC toggle derived state
+  const ccChildren = [
+    form.ccOnPinReset,
+    form.ccOnScoreEdit,
+    form.ccOnTenantApplication,
+    form.ccOnMaintenance,
+    form.ccOnPasswordChanged,
+  ];
+  const ccAllOn = ccChildren.every(Boolean);
+  const ccAnyOn = ccChildren.some(Boolean);
+  const ccMixed = ccAnyOn && !ccAllOn;
+
+  const handleMasterToggle = () => {
+    const next = !ccAllOn;
+    setForm((f) => ({
+      ...f,
+      ccOnPinReset: next,
+      ccOnScoreEdit: next,
+      ccOnTenantApplication: next,
+      ccOnMaintenance: next,
+      ccOnPasswordChanged: next,
+    }));
+  };
+
   const handleSave = async () => {
     setSaveError("");
+    // Safeguard: at least one authentication method must remain enabled.
+    if (!form.googleOAuth && !form.emailPassword) {
+      setSaveError("At least one authentication method must remain enabled.");
+      return;
+    }
     setSaving(true);
     try {
       await onSave?.({ ...form });
@@ -135,8 +213,13 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div
               style={{
-                width: 36, height: 36, borderRadius: 9, display: "grid", placeItems: "center",
-                background: "rgba(217,119,6,0.08)", border: "1px solid rgba(217,119,6,0.12)",
+                width: 36,
+                height: 36,
+                borderRadius: 9,
+                display: "grid",
+                placeItems: "center",
+                background: "rgba(217,119,6,0.08)",
+                border: "1px solid rgba(217,119,6,0.12)",
               }}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="2" style={{ width: 17, height: 17 }}>
@@ -146,7 +229,7 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
             <div>
               <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>Security Policy</div>
               <div style={{ fontSize: 12, color: "var(--text-tertiary)", marginTop: 2 }}>
-                Platform-wide authentication and access controls
+                Platform-wide authentication, access, and notifications
               </div>
             </div>
           </div>
@@ -166,7 +249,8 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
           </div>
         )}
 
-        <SectionLabel>Authentication</SectionLabel>
+        {/* ── Section 1: Authentication Methods ─────────────────────────── */}
+        <SectionLabel>Authentication Methods</SectionLabel>
         <ToggleRow
           title="Google OAuth"
           desc="Allow sign-in with Google accounts"
@@ -189,52 +273,8 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
           disabled={saving}
         />
 
-        <SectionLabel>Password Requirements</SectionLabel>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <div className="fs-field">
-            <label className="fs-field-label">Minimum Length</label>
-            <input
-              className="fs-input"
-              type="number"
-              value={form.minPasswordLength}
-              onChange={(e) => set("minPasswordLength", Number(e.target.value))}
-              min={6}
-              max={32}
-              disabled={saving}
-            />
-          </div>
-          <div className="fs-field">
-            <label className="fs-field-label">Max Login Attempts</label>
-            <input
-              className="fs-input"
-              type="number"
-              value={form.maxLoginAttempts}
-              onChange={(e) => set("maxLoginAttempts", Number(e.target.value))}
-              min={3}
-              max={20}
-              disabled={saving}
-            />
-          </div>
-        </div>
-        <SectionLabel>Jury Access</SectionLabel>
-        <div className="fs-field">
-          <label className="fs-field-label">Entry Token TTL</label>
-          <CustomSelect
-            value={form.tokenTtl}
-            onChange={(v) => set("tokenTtl", v)}
-            disabled={saving}
-            options={[
-              { value: "12h", label: "12 hours" },
-              { value: "24h", label: "24 hours" },
-              { value: "48h", label: "48 hours" },
-              { value: "7d", label: "7 days" },
-            ]}
-            ariaLabel="Entry token TTL"
-          />
-          <div className="fs-field-helper hint">
-            How long jury entry tokens remain valid after generation.
-          </div>
-        </div>
+        {/* ── Section 2: QR Access ──────────────────────────────────────── */}
+        <SectionLabel>QR Access</SectionLabel>
         <div
           style={{
             border: "1px solid rgba(96,165,250,0.2)",
@@ -243,7 +283,7 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
             padding: "12px 12px 10px",
             display: "flex",
             flexDirection: "column",
-            gap: 8,
+            gap: 10,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
@@ -263,7 +303,7 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
                 <ShieldAlert size={13} />
               </div>
               <div style={{ fontSize: 12.5, fontWeight: 650, color: "var(--text-primary)" }}>
-                PIN Lockout Cooldown
+                Jury QR Controls
               </div>
             </div>
             <span
@@ -282,8 +322,39 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
               Risk Control
             </span>
           </div>
+
           <div className="fs-field">
-            <label className="fs-field-label">Cooldown Duration</label>
+            <label className="fs-field-label">QR Code TTL</label>
+            <CustomSelect
+              value={form.qrTtl}
+              onChange={(v) => set("qrTtl", v)}
+              disabled={saving}
+              options={QR_TTL_OPTIONS}
+              ariaLabel="QR code TTL"
+            />
+            <div className="fs-field-helper hint">
+              How long jury QR codes remain valid after generation.
+            </div>
+          </div>
+
+          <div className="fs-field">
+            <label className="fs-field-label">Max PIN Attempts</label>
+            <input
+              className="fs-input"
+              type="number"
+              value={form.maxPinAttempts}
+              onChange={(e) => set("maxPinAttempts", Number(e.target.value))}
+              min={3}
+              max={20}
+              disabled={saving}
+            />
+            <div className="fs-field-helper hint">
+              Number of failed PIN attempts before a juror is locked out.
+            </div>
+          </div>
+
+          <div className="fs-field">
+            <label className="fs-field-label">PIN Lockout Cooldown</label>
             <CustomSelect
               value={form.pinLockCooldown}
               onChange={(v) => set("pinLockCooldown", v)}
@@ -291,25 +362,55 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
               options={PIN_LOCK_COOLDOWN_OPTIONS}
               ariaLabel="PIN lock cooldown duration"
             />
-          </div>
-          <div className="fs-field-helper hint">
-            After max failed PIN attempts, juror access is locked for {selectedPinLockCooldown.toLowerCase()}.
+            <div className="fs-field-helper hint">
+              After max failed PIN attempts, juror access is locked for {selectedPinLockCooldown.toLowerCase()}.
+            </div>
           </div>
         </div>
 
+        {/* ── Section 3: Notifications ──────────────────────────────────── */}
         <SectionLabel>Notifications</SectionLabel>
         <ToggleRow
-          title="CC Me on PIN Reset Requests"
+          title="CC Super Admin on All Notifications"
+          desc="Toggle all five notification CC flags at once"
+          checked={ccAllOn}
+          onChange={handleMasterToggle}
+          disabled={saving}
+          indeterminate={ccMixed}
+        />
+        <ToggleRow
+          title="PIN Reset Requests"
           desc="Receive a copy when a juror requests a PIN reset"
           checked={form.ccOnPinReset}
           onChange={(v) => set("ccOnPinReset", v)}
           disabled={saving}
         />
         <ToggleRow
-          title="CC Me on Score Edit Requests"
+          title="Score Edit Requests"
           desc="Receive a copy when a juror requests score editing"
           checked={form.ccOnScoreEdit}
           onChange={(v) => set("ccOnScoreEdit", v)}
+          disabled={saving}
+        />
+        <ToggleRow
+          title="Tenant Application Events"
+          desc="Receive a copy when a tenant application is submitted, approved, or rejected"
+          checked={form.ccOnTenantApplication}
+          onChange={(v) => set("ccOnTenantApplication", v)}
+          disabled={saving}
+        />
+        <ToggleRow
+          title="Maintenance Notifications"
+          desc="Receive a copy when platform maintenance windows are announced"
+          checked={form.ccOnMaintenance}
+          onChange={(v) => set("ccOnMaintenance", v)}
+          disabled={saving}
+        />
+        <ToggleRow
+          title="Password Changed"
+          desc="Receive a copy when an admin changes their account password"
+          checked={form.ccOnPasswordChanged}
+          onChange={(v) => set("ccOnPasswordChanged", v)}
           disabled={saving}
         />
       </div>
