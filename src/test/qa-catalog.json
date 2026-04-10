@@ -3973,5 +3973,159 @@
     "risk": "Silent click break would make the filter inaccessible.",
     "coverageStrength": "High",
     "severity": "normal"
+  },
+  {
+    "id": "settings.security.signal.01",
+    "module": "Admin / Settings",
+    "area": "Security Signal",
+    "story": "Secure state rollup",
+    "scenario": "returns state 'secure' when all four signals are ok",
+    "whyItMatters": "A clean account must render the green Secure pill, not fall through to Review.",
+    "risk": "False positives would nag users about healthy accounts and erode trust in the signal.",
+    "coverageStrength": "High",
+    "severity": "normal"
+  },
+  {
+    "id": "settings.security.signal.02",
+    "module": "Admin / Settings",
+    "area": "Security Signal",
+    "story": "Review state rollup",
+    "scenario": "returns state 'review' when at least one signal is warn and none are bad",
+    "whyItMatters": "Amber state is the middle rung — one warn must trigger it, no more and no less.",
+    "risk": "Missing the Review transition leaves users with a binary Secure/Risk, losing nuance.",
+    "coverageStrength": "High",
+    "severity": "normal"
+  },
+  {
+    "id": "settings.security.signal.03",
+    "module": "Admin / Settings",
+    "area": "Security Signal",
+    "story": "Risk state rollup",
+    "scenario": "returns state 'risk' when any single signal is bad, regardless of other signals",
+    "whyItMatters": "One severe red flag must dominate the rollup — max severity wins.",
+    "risk": "Averaging severities would dilute real risks behind cleaner signals.",
+    "coverageStrength": "High",
+    "severity": "critical"
+  },
+  {
+    "id": "settings.security.signal.04",
+    "module": "Admin / Settings",
+    "area": "Security Signal",
+    "story": "Verdict sentence generation",
+    "scenario": "verdict reason names the top two non-ok signals when two or more are present",
+    "whyItMatters": "Users must immediately see why they are in Review — vague messages defeat the pill.",
+    "risk": "A generic 'something is off' message is no better than the old hardcoded badge.",
+    "coverageStrength": "High",
+    "severity": "normal"
+  },
+  {
+    "id": "settings.security.pill.01",
+    "module": "Admin / Settings",
+    "area": "Security Signal Pill",
+    "story": "Popover open/close",
+    "scenario": "clicking the pill opens the popover, clicking again closes it",
+    "whyItMatters": "The pill's value is the explanation inside — it must be reachable with one click.",
+    "risk": "A silent pill hides the reason and regresses to the old decorative badge.",
+    "coverageStrength": "High",
+    "severity": "normal"
+  },
+  {
+    "id": "settings.security.pill.02",
+    "module": "Admin / Settings",
+    "area": "Security Signal Pill",
+    "story": "Keyboard dismissal",
+    "scenario": "pressing Escape while the popover is open closes it and returns focus to the pill",
+    "whyItMatters": "Keyboard users must be able to dismiss the popover without reaching for the mouse.",
+    "risk": "An un-dismissible popover traps screen reader and keyboard users.",
+    "coverageStrength": "High",
+    "severity": "normal"
+  },
+  {
+    "id": "settings.security.pill.03",
+    "module": "Admin / Settings",
+    "area": "Security Signal Pill",
+    "story": "Review sessions action",
+    "scenario": "clicking the 'Review sessions' footer link calls onReviewSessions and closes the popover",
+    "whyItMatters": "The popover's zero-distance action must work — click, act, done.",
+    "risk": "A dead action button wastes the user's intent and makes the feature feel broken.",
+    "coverageStrength": "High",
+    "severity": "normal"
+  },
+  {
+    "id": "settings.security.signal.05",
+    "module": "Admin / Settings",
+    "area": "Security Signal",
+    "story": "Threshold boundaries",
+    "scenario": "classifies session count exactly at the warn/bad thresholds correctly",
+    "whyItMatters": "Off-by-one bugs at threshold boundaries would silently mislabel accounts.",
+    "risk": "Severity misclassification at boundaries erodes trust in the pill.",
+    "coverageStrength": "High",
+    "severity": "normal"
+  },
+  {
+    "id": "settings.security.signal.06",
+    "module": "Admin / Settings",
+    "area": "Security Signal",
+    "story": "Loading state",
+    "scenario": "returns state 'loading' and no verdict when loading flag is true",
+    "whyItMatters": "The pill must not flash a wrong state before data arrives.",
+    "risk": "Flashing 'At Risk' during load scares users with a false alarm.",
+    "coverageStrength": "High",
+    "severity": "normal"
+  },
+  {
+    "id": "settings.security.signal.07",
+    "module": "Admin / Settings",
+    "area": "Security Signal",
+    "story": "Empty session fallback",
+    "scenario": "treats empty tracked sessions as one session when last login is fresh",
+    "whyItMatters": "Freshly logged-in admins must see Secure, not a scary zero-session state.",
+    "risk": "A 'no sessions' edge case would mislabel healthy accounts.",
+    "coverageStrength": "High",
+    "severity": "normal"
+  },
+  {
+    "id": "settings.security.signal.08",
+    "module": "Admin / Settings",
+    "area": "Security Signal",
+    "story": "Null country codes",
+    "scenario": "counts country diversity as zero when all sessions lack a country code",
+    "whyItMatters": "Missing geo data must not trigger a false country-diversity warning.",
+    "risk": "Null country codes counted as distinct countries would false-positive.",
+    "coverageStrength": "High",
+    "severity": "normal"
+  },
+  {
+    "id": "settings.security.signal.09",
+    "module": "Admin / Settings",
+    "area": "Security Signal",
+    "story": "Expired session detection",
+    "scenario": "classifies multiple expired sessions as a bad signal and rolls up to risk",
+    "whyItMatters": "Expired tokens are a real security signal — the pill must surface them.",
+    "risk": "Missing expired-session detection leaves dead tokens unflagged.",
+    "coverageStrength": "High",
+    "severity": "normal"
+  },
+  {
+    "id": "settings.security.pill.04",
+    "module": "Admin / Settings",
+    "area": "Security Signal Pill",
+    "story": "Secure state popover",
+    "scenario": "popover in secure state shows All clear header and no verdict banner",
+    "whyItMatters": "Users opening a healthy pill must see confirmation, not an empty popover.",
+    "risk": "A silent secure popover would feel broken on healthy accounts.",
+    "coverageStrength": "High",
+    "severity": "normal"
+  },
+  {
+    "id": "settings.security.pill.05",
+    "module": "Admin / Settings",
+    "area": "Security Signal Pill",
+    "story": "Review banner rendering",
+    "scenario": "popover in review state renders the amber banner with the generated verdict",
+    "whyItMatters": "The banner is the user's first read — it must render the verdict title and reason.",
+    "risk": "Missing banner content hides the reason and defeats the feature.",
+    "coverageStrength": "High",
+    "severity": "normal"
   }
 ]
