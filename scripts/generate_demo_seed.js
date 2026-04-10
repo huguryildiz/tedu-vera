@@ -82,6 +82,29 @@ function activeJurorsForIdx(idx) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// BATCH INSERT HELPER
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Collects SQL value tuples and flushes them as multi-row INSERTs.
+ * Each call to push() receives a pre-formatted "(val1, val2, ...)" string.
+ * flush(out) emits batches of `batchSize` rows — reduces thousands of
+ * single-row INSERTs to ~100 statements, cutting psql round-trip overhead.
+ */
+function makeBatcher(table, columns, conflictClause = 'ON CONFLICT DO NOTHING', batchSize = 100) {
+  let rows = [];
+  return {
+    push(valuesTuple) { rows.push(valuesTuple); },
+    flush(buf) {
+      while (rows.length > 0) {
+        const batch = rows.splice(0, batchSize);
+        buf.push(`INSERT INTO ${table} (${columns}) VALUES\n  ${batch.join(',\n  ')}\n${conflictClause};`);
+      }
+    },
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
 // OUTPUT BUFFER
 // ═══════════════════════════════════════════════════════════════
 
@@ -1289,6 +1312,10 @@ let authList = [];
 // Every period gets these guaranteed slots (assigned to first N jurors in order)
 const PERIOD_SLOTS = ['InProgress', 'Editing', 'ReadyToSubmit', 'NotStarted'];
 
+// Normalized fixed-column batcher for juror_period_auth (avoids variable-column INSERTs)
+const jpaColumns = 'juror_id, period_id, pin_hash, last_seen_at, session_expires_at, final_submitted_at, edit_enabled, edit_reason, edit_expires_at, failed_attempts, locked_until, locked_at, is_blocked';
+const jpaBatcher = makeBatcher('juror_period_auth', jpaColumns);
+
 periodData.forEach(pd => {
   let pJurors = jurorIdList.filter(j => j.org === pd.org);
   pJurors = pJurors.slice(0, Math.min(activeJurorsForIdx(pd.histIdx), pJurors.length));
@@ -1313,36 +1340,44 @@ periodData.forEach(pd => {
     }
 
     const authObj = { jId: j.id, pId: pd.id, org: pd.org, isCur: pd.isCur, histIdx: pd.histIdx, semanticState, name: j.n, evalDay: pd.evalDay, evalDays: pd.evalDays };
-    let q = `INSERT INTO juror_period_auth (juror_id, period_id, pin_hash`;
-    let vals = `VALUES ('${j.id}', '${pd.id}', '${pinHash}'`;
+
+    // Normalized row — always 13 columns; unused slots get NULL
+    let lastSeenAt = 'NULL', sessionExpiresAt = 'NULL';
+    let finalSubmittedAt = 'NULL';
+    let editEnabled = 'false', editReason = 'NULL', editExpiresAt = 'NULL';
+    let failedAttempts = '0', lockedUntil = 'NULL', lockedAt = 'NULL';
+    let isBlocked = 'false';
+
     if (semanticState !== 'NotStarted') {
       const lsMinH = { InProgress: 1, ReadyToSubmit: pd.evalDays * 8, Completed: pd.evalDays * 2, Editing: pd.evalDays * 2, Locked: 1, Blocked: 1 }[semanticState] ?? 1;
       const lsMaxH = { InProgress: pd.evalDays * 10, ReadyToSubmit: pd.evalDays * 16, Completed: pd.evalDays * 20, Editing: pd.evalDays * 18, Locked: pd.evalDays * 8, Blocked: pd.evalDays * 6 }[semanticState] ?? pd.evalDays * 12;
       const lsH = randInt(lsMinH, lsMaxH); const lsM = randInt(0, 59);
-      q += `, last_seen_at, session_expires_at`;
-      vals += `, ${sqlTs(pd.evalDay, lsH + lsM / 60)}, ${sqlTs(pd.evalDay, lsH + 24 + lsM / 60)}`;
+      lastSeenAt = sqlTs(pd.evalDay, lsH + lsM / 60);
+      sessionExpiresAt = sqlTs(pd.evalDay, lsH + 24 + lsM / 60);
     }
     if (semanticState === 'Completed' || semanticState === 'Editing') {
-      q += `, final_submitted_at`;
-      vals += `, ${randSqlTs(pd.evalDay, pd.evalDays * 2, pd.evalDays * 20)}`;
+      finalSubmittedAt = randSqlTs(pd.evalDay, pd.evalDays * 2, pd.evalDays * 20);
     }
     if (semanticState === 'Editing') {
-      q += `, edit_enabled, edit_reason, edit_expires_at`;
-      vals += `, true, 'Late submission due to connectivity issue', ${sqlTs(pd.evalDay, pd.evalDays * 24 + 48)}`;
+      editEnabled = 'true';
+      editReason = `'Late submission due to connectivity issue'`;
+      editExpiresAt = sqlTs(pd.evalDay, pd.evalDays * 24 + 48);
     }
     if (semanticState === 'Locked') {
       const lt = randSqlTs(pd.evalDay, 2, pd.evalDays * 12);
-      q += `, failed_attempts, locked_until, locked_at`;
-      vals += `, ${randInt(3, 5)}, ${lt} + interval '30 minutes', ${lt}`;
+      failedAttempts = String(randInt(3, 5));
+      lockedUntil = `${lt} + interval '30 minutes'`;
+      lockedAt = lt;
     }
     if (semanticState === 'Blocked') {
-      q += `, is_blocked`;
-      vals += `, true`;
+      isBlocked = 'true';
     }
-    out.push(`${q}) ${vals}) ON CONFLICT DO NOTHING;`);
+
+    jpaBatcher.push(`('${j.id}', '${pd.id}', '${pinHash}', ${lastSeenAt}, ${sessionExpiresAt}, ${finalSubmittedAt}, ${editEnabled}, ${editReason}, ${editExpiresAt}, ${failedAttempts}, ${lockedUntil}, ${lockedAt}, ${isBlocked})`);
     authList.push(authObj);
   });
 });
+jpaBatcher.flush(out);
 out.push('');
 
 
@@ -1351,6 +1386,9 @@ out.push('');
 // ═══════════════════════════════════════════════════════════════
 
 out.push(`-- Scoring`);
+const ssBatcher  = makeBatcher('score_sheets',      'id, period_id, project_id, juror_id, status, comment, started_at, last_activity_at');
+const ssiBatcher = makeBatcher('score_sheet_items', 'id, score_sheet_id, period_criterion_id, score_value');
+
 // Includes 2 extreme biases: harsh (0.88) and lenient (1.12) for JurorConsistencyHeatmap
 const jurorBiases = [1.02,0.97,1.04,0.98,1.00,0.96,1.03,1.01,0.99,1.05,0.88,1.12,0.98,1.02,1.00,0.97,1.03,0.99];
 
@@ -1442,7 +1480,7 @@ authList.forEach(auth => {
       ssComment = `'${escapeSql(pick(pools[proj.arch] || defs))}'`;
     }
 
-    out.push(`INSERT INTO score_sheets (id, period_id, project_id, juror_id, status, comment, started_at, last_activity_at) VALUES ('${ssId}', '${auth.pId}', '${proj.id}', '${auth.jId}', '${ssStatus}', ${ssComment}, ${sst} - interval '${durationMin} minutes', ${sst}) ON CONFLICT DO NOTHING;`);
+    ssBatcher.push(`('${ssId}', '${auth.pId}', '${proj.id}', '${auth.jId}', '${ssStatus}', ${ssComment}, ${sst} - interval '${durationMin} minutes', ${sst})`);
 
     let scoredItems = 0;
     periodCrits.forEach(c => {
@@ -1462,11 +1500,13 @@ authList.forEach(auth => {
       s = Math.max(0, Math.min(c.max, Math.round(s * bias)));
       // Edge case: lenient grader (bias >= 1.10) on star project → allow perfect score
       if (bias >= 1.10 && arch === 'star') s = Math.min(c.max, Math.round(c.max * randInt(95, 100) / 100));
-      out.push(`INSERT INTO score_sheet_items (id, score_sheet_id, period_criterion_id, score_value) VALUES ('${uuid(`ssi-${ssId}-${c.key}`)}', '${ssId}', '${c.pcId}', ${s}) ON CONFLICT DO NOTHING;`);
+      ssiBatcher.push(`('${uuid(`ssi-${ssId}-${c.key}`)}', '${ssId}', '${c.pcId}', ${s})`);
     });
     scoredCount++;
   });
 });
+ssBatcher.flush(out);
+ssiBatcher.flush(out);
 out.push('');
 
 // ═══════════════════════════════════════════════════════════════
@@ -1709,11 +1749,13 @@ periodData.forEach(pd => {
   }
 });
 
+const auditBatcher = makeBatcher('audit_logs', 'id, organization_id, user_id, action, resource_type, resource_id, details, created_at');
 auditObjList.forEach(ad => {
   const aId = uuid(`audit-${ad.action}-${ad.resId}-${String(ad.timeStr).substring(0,30)}`);
   const userSql = ad.userId ? `'${ad.userId}'` : 'NULL';
-  out.push(`INSERT INTO audit_logs (id, organization_id, user_id, action, resource_type, resource_id, details, created_at) VALUES ('${aId}', '${ad.orgId}', ${userSql}, '${ad.action}', '${ad.resType}', '${ad.resId}', '${escapeSql(ad.details)}', ${ad.timeStr}) ON CONFLICT DO NOTHING;`);
+  auditBatcher.push(`('${aId}', '${ad.orgId}', ${userSql}, '${ad.action}', '${ad.resType}', '${ad.resId}', '${escapeSql(ad.details)}', ${ad.timeStr})`);
 });
+auditBatcher.flush(out);
 out.push('');
 
 // ═══════════════════════════════════════════════════════════════
