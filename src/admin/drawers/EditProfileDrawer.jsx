@@ -1,11 +1,18 @@
 // src/admin/drawers/EditProfileDrawer.jsx
 // Drawer: edit the current user's display name, email, and avatar.
-// Role and organization are always read-only (system-managed).
+// Role, organization, and program are always read-only (system-managed).
+//
+// Org hierarchy:
+//   - profile.institution → parent organization (e.g. "IEEE APS")
+//   - profile.organization → specific program within it (e.g. "AP-S Student
+//     Design Contest"). Shown as a second "Program" field only when the
+//     org has a populated institution; flat orgs fall back to a single
+//     "Organization" field populated from profile.organization.
 //
 // Props:
 //   open         — boolean
 //   onClose      — () => void
-//   profile      — { displayName, email, role, organization, avatarUrl }
+//   profile      — { displayName, email, role, organization, institution, avatarUrl }
 //   onSave       — ({ displayName, email, avatarFile }) => Promise<void>
 //   error        — string | null
 //   initials     — string (e.g. "DA")
@@ -244,20 +251,20 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, onCa
           <input
             className="fs-input"
             type="text"
-            value={profile?.organization ?? ""}
+            value={profile?.institution || profile?.organization || ""}
             disabled
             style={{ opacity: 0.55, cursor: "not-allowed" }}
             readOnly
           />
         </div>
 
-        {profile?.institution && (
+        {profile?.institution && profile?.organization && (
           <div className="fs-field">
-            <label className="fs-field-label">Name</label>
+            <label className="fs-field-label">Program</label>
             <input
               className="fs-input"
               type="text"
-              value={profile.institution}
+              value={profile.organization}
               disabled
               style={{ opacity: 0.55, cursor: "not-allowed" }}
               readOnly

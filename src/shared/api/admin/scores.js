@@ -247,7 +247,7 @@ export async function getOutcomeAttainmentTrends(periodIds) {
 
   for (const periodId of periodIds) {
     const [periodRes, criteriaRes, mapsRes, outcomesRes, scores] = await Promise.all([
-      supabase.from("periods").select("id, name").eq("id", periodId).single(),
+      supabase.from("periods").select("id, name").eq("id", periodId).maybeSingle(),
       supabase.from("period_criteria").select("id, key, max_score").eq("period_id", periodId),
       supabase
         .from("period_criterion_outcome_maps")
@@ -260,6 +260,8 @@ export async function getOutcomeAttainmentTrends(periodIds) {
         .order("sort_order"),
       getScores(periodId),
     ]);
+
+    if (!periodRes.data) continue;
 
     // criterion id → { key, max }
     const criteriaById = Object.fromEntries(
