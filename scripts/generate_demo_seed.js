@@ -1240,24 +1240,31 @@ const orgJurors = {
     {n:'Prof. Yasemin Ertürk',aff:'Eskişehir Teknik, Havacılık'},{n:'Dr. Burak Yıldırım',aff:'TÜBİTAK UZAY'},{n:'Melih Şahin',aff:'TEI, Motor Tasarım'},
     {n:'Prof. Sevim Çalışkan',aff:'İYTE, Makina Müh.'},{n:'Ahmet Günay',aff:'ASELSAN, Radar'},{n:'Dr. Gülşen Aktaş',aff:'Ankara Üni., Uzay Bilimleri'},
     {n:'Prof. Tolga Karaman',aff:'İTÜ, Elektronik Müh.'},{n:'Dr. Nazlı Demirhan',aff:'TUSAŞ (TAI), Aviyonik'},
+    {n:'Dr. Caner Yıldız',aff:'Kocaeli Üni., Uzay Müh.'},{n:'Selin Arslan',aff:'HAVELSAN, Savunma Sanayi'},{n:'Prof. İlker Başaran',aff:'İTÜ, Kontrol Müh.'},
   ],
   'TUBITAK-2204A': [
     {n:'Prof. Hasan Yüksel',aff:'Boğaziçi, Fizik'},{n:'Dr. Elif Aydın',aff:'Hacettepe, Biyoloji'},{n:'Prof. Okan Birdal',aff:'Koç Üni., Kimya'},
     {n:'Dr. Sevgi Toprak',aff:'Ankara Üni., Fen Bilimleri'},{n:'Prof. Burak Çetin',aff:'ODTÜ, Matematik'},{n:'Dr. Selim Konuk',aff:'İstanbul Üni., Fizik'},
     {n:'Prof. Didem Sağır',aff:'Ege Üni., Biyokimya'},{n:'Dr. Kenan Erol',aff:'Sabancı Üni., Biyoloji'},{n:'Ayşegül Mazlum',aff:'TÜBİTAK MAM, Gıda'},
     {n:'Prof. İbrahim Yılmaz',aff:'Ankara Üni., Fizik'},{n:'Dr. Gülnaz Şen',aff:'Hacettepe, Kimya'},{n:'Prof. Erdem Tunç',aff:'ODTÜ, Biyoloji'},
+    {n:'Prof. Sinan Öztürk',aff:'Bilkent, Biyoteknoloji'},{n:'Dr. Meltem Dönmez',aff:'TÜBİTAK BİLGEM'},{n:'Prof. Fatih Yaman',aff:'Gazi Üni., Fizik'},
+    {n:'Dr. Cansu Polat',aff:'İTÜ, Kimya'},{n:'Prof. Uğur Sezgin',aff:'Hacettepe, Biyofizik'},
   ],
   'IEEE-APSSDC': [
     {n:'Prof. Raymond Chen',aff:'U. Michigan, ECE'},{n:'Dr. Catherine Liu',aff:'Georgia Tech, ECE'},{n:'Prof. Kenneth Walsh',aff:'UIUC, ECE'},
     {n:'Dr. Priya Raghavan',aff:'Purdue, ECE'},{n:'Prof. Diane Mitchell',aff:'Ohio State, ECE'},{n:'Dr. Akira Tanaka',aff:'U. Tokyo, EEIS'},
     {n:'Prof. Marco Rossi',aff:'Politecnico di Milano'},{n:'Dr. Fatima Al-Rashidi',aff:'KAUST, EE'},{n:'Prof. Neil Ferguson',aff:'U. Edinburgh, Engineering'},
     {n:'Dr. Soo-Jin Kim',aff:'KAIST, EE'},{n:'Prof. Carlos Mendez',aff:'U. São Paulo, EE'},{n:'Dr. Helena Lindqvist',aff:'KTH, EE'},
+    {n:'Dr. Alice Bourne',aff:'Stanford, EE'},{n:'Prof. James Vickers',aff:'Arizona State, EE'},{n:'Dr. Valentina Russo',aff:'TU Delft, EE'},
+    {n:'Prof. Ibrahim Hassan',aff:'Cairo U., Electronics'},{n:'Dr. Amy Chen',aff:'Caltech, EE'},
   ],
   'CANSAT-2025': [
     {n:'Dr. James Whitfield',aff:'Virginia Tech, Aerospace'},{n:'Prof. Laura Henderson',aff:'CU Boulder, Aerospace'},{n:'Col. Robert Drake',aff:'US Air Force Academy'},
     {n:'Dr. Megan Yoshida',aff:'NASA Goddard'},{n:'Prof. Nathan Cooper',aff:'Purdue, AAE'},{n:'Dr. Rebecca Stone',aff:'Johns Hopkins APL'},
     {n:'Prof. Tyler Grant',aff:'Georgia Tech, Aerospace'},{n:'Dr. Lisa Nakamura',aff:'NASA JPL'},{n:'Maj. David Wells',aff:'US Naval Academy'},
     {n:'Dr. Katherine Morris',aff:'MIT Lincoln Lab'},{n:'Prof. Samuel Ortiz',aff:'U. Texas, Aerospace'},{n:'Dr. Christine Adler',aff:'Embry-Riddle, Aerospace'},
+    {n:'Dr. Rachel Kim',aff:'U. Colorado, Aerospace'},{n:'Prof. Matthew Torres',aff:'Cornell, MAE'},{n:'Dr. Emily Brown',aff:'SpaceX, GNC'},
+    {n:'Prof. Ryan Murphy',aff:'U. Michigan, Aerospace'},{n:'Dr. Jessica Liu',aff:'Lockheed Martin, Space'},
   ],
 };
 
@@ -1286,12 +1293,18 @@ periodData.forEach(pd => {
   let pJurors = jurorIdList.filter(j => j.org === pd.org);
   pJurors = pJurors.slice(0, Math.min(activeJurorsForIdx(pd.histIdx), pJurors.length));
 
-  // 2-3 PIN-blocking entries per semester (deterministic)
-  const pinBlockCount = (pd.histIdx === 0 ? 3 : 2);
+  // Vary PIN-blocking count per org so Completed count ranges 10–13 across orgs.
+  // Current period: org-specific (gives 10, 11, 12, or 13 Completed depending on juror pool).
+  // Historical periods: 2 for prev, 1 for older/oldest.
+  const curPinBlocks = { 'TEDU-EE': 2, 'CMU-CS': 1, 'TEKNOFEST': 3, 'TUBITAK-2204A': 2, 'IEEE-APSSDC': 3, 'CANSAT-2025': 1 };
+  const pinBlockCount = pd.isCur ? (curPinBlocks[pd.org] ?? 2) : (pd.histIdx === 1 ? 2 : 1);
 
   pJurors.forEach((j, jix) => {
     let semanticState;
-    if (jix < PERIOD_SLOTS.length) {
+    if (!pd.isCur) {
+      // Historical/locked periods: all jurors Completed (realistic — event is over)
+      semanticState = 'Completed';
+    } else if (jix < PERIOD_SLOTS.length) {
       semanticState = PERIOD_SLOTS[jix];
     } else if (jix < PERIOD_SLOTS.length + pinBlockCount) {
       semanticState = (jix % 2 === 0) ? 'Locked' : 'Blocked';
@@ -1897,3 +1910,17 @@ console.log(`  Entry tokens: ${tokenList.length}`);
 console.log(`  Audit logs: ${auditObjList.length}`);
 console.log(`  Jury feedback: ${fbRows.length}`);
 console.log(`  TEDU-EE Spring 2026 criteria: PRESERVED (no evolution applied to idx=0)`);
+
+// Per-period state verification
+console.log(`\n  State distribution (current periods):`);
+const curPeriods = periodData.filter(p => p.isCur);
+curPeriods.forEach(pd => {
+  const entries = authList.filter(a => a.pId === pd.id);
+  const counts = {};
+  entries.forEach(a => { counts[a.semanticState] = (counts[a.semanticState] || 0) + 1; });
+  const line = Object.entries(counts).map(([s, n]) => `${s}:${n}`).join(' ');
+  console.log(`    [${pd.org}] ${line}`);
+});
+
+const nonCompleted = authList.filter(a => !a.isCur && a.semanticState !== 'Completed');
+console.log(`  Historical period non-Completed states: ${nonCompleted.length} (should be 0)`);
