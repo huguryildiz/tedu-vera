@@ -56,7 +56,7 @@ export default function PinBlockingPage() {
   }, [loadLockedJurors]);
 
   const noPeriod = !selectedPeriodId;
-  const failThreshold = parseFailThreshold(policy?.maxLoginAttempts);
+  const failThreshold = parseFailThreshold(policy?.maxPinAttempts);
   const cooldownMinutes = parseCooldownMinutes(policy?.pinLockCooldown);
   const cooldownBadge = `${cooldownMinutes}m`;
   const cooldownLabel = `${cooldownMinutes} minute${cooldownMinutes !== 1 ? "s" : ""}`;
