@@ -13,7 +13,7 @@ import { createContext, useCallback, useEffect, useMemo, useRef, useState } from
 import { supabase, clearPersistedSession } from "@/shared/lib/supabaseClient";
 import { getActiveOrganizationId, setActiveOrganizationId } from "@/shared/storage/adminStorage";
 import { getProfile, upsertProfile } from "@/shared/api/admin/profiles";
-import { getSession, listOrganizationsPublic, getSecurityPolicy, touchAdminSession } from "@/shared/api";
+import { getSession, listOrganizationsPublic, getSecurityPolicy, getPublicAuthFlags, touchAdminSession } from "@/shared/api";
 import { KEYS } from "@/shared/storage/keys";
 import { DEMO_MODE } from "@/shared/lib/demoMode";
 import { getAdminDeviceId, getAuthMethodLabelFromSession, parseUserAgent } from "@/shared/lib/adminSession";
@@ -140,12 +140,12 @@ export default function AuthProvider({ children }) {
           id: o.id,
           code: o.code ?? null,
           name: o.name ?? null,
-          subtitle: o.subtitle ?? null,
+          institution: o.institution ?? null,
           role: "super_admin",
         }));
       } catch {
         // listOrganizationsPublic may fail in demo (RLS) — keep super_admin role
-        organizationList = [{ id: null, code: null, name: null, subtitle: null, role: "super_admin" }];
+        organizationList = [{ id: null, code: null, name: null, institution: null, role: "super_admin" }];
       }
     } else {
       const memberships = await fetchMemberships();
@@ -154,7 +154,7 @@ export default function AuthProvider({ children }) {
         id: m.organization_id,
         code: m.organization?.code ?? null,
         name: m.organization?.name ?? null,
-        subtitle: m.organization?.subtitle ?? null,
+        institution: m.organization?.institution ?? null,
         role: m.role,
       }));
     }
@@ -197,7 +197,7 @@ export default function AuthProvider({ children }) {
           id: o.id,
           code: o.code ?? null,
           name: o.name ?? null,
-          subtitle: o.subtitle ?? null,
+          institution: o.institution ?? null,
           role: "super_admin",
         }));
         // Keep super-admin role visible even when there are no active orgs.
@@ -205,7 +205,7 @@ export default function AuthProvider({ children }) {
         // the pending gate despite an existing super_admin membership.
         const resolvedOrgList = allOrgList.length > 0
           ? allOrgList
-          : [{ id: null, code: null, name: null, subtitle: null, role: "super_admin" }];
+          : [{ id: null, code: null, name: null, institution: null, role: "super_admin" }];
         if (mountedRef.current) setOrganizations(resolvedOrgList);
         const savedIsValid = allOrgList.some((o) => o.id === savedOrganizationId);
         const demoOrg = allOrgs.find((o) =>
@@ -311,6 +311,19 @@ export default function AuthProvider({ children }) {
       subscription.unsubscribe();
     };
   }, [handleAuthChange]);
+
+  // Fetch the three public auth flags (googleOAuth, emailPassword, rememberMe)
+  // from rpc_public_auth_flags so the login screen can hide disabled methods
+  // for anonymous users. This runs independently of the super-admin policy
+  // fetch because it uses an anon-callable RPC and does not depend on session.
+  useEffect(() => {
+    getPublicAuthFlags()
+      .then((flags) => {
+        if (!mountedRef.current || !flags) return;
+        setPolicy((prev) => ({ ...prev, ...flags }));
+      })
+      .catch(() => {});
+  }, []);
 
   const touchCurrentAdminSession = useCallback(async () => {
     if (!session?.user?.id || !session?.access_token) return;
@@ -500,12 +513,12 @@ export default function AuthProvider({ children }) {
           id: o.id,
           code: o.code ?? null,
           name: o.name ?? null,
-          subtitle: o.subtitle ?? null,
+          institution: o.institution ?? null,
           role: "super_admin",
         }));
         const resolvedOrgList = allOrgList.length > 0
           ? allOrgList
-          : [{ id: null, code: null, name: null, subtitle: null, role: "super_admin" }];
+          : [{ id: null, code: null, name: null, institution: null, role: "super_admin" }];
         if (mountedRef.current) setOrganizations(resolvedOrgList);
       } catch {
         const organizationList = memberships
@@ -514,7 +527,7 @@ export default function AuthProvider({ children }) {
             id: m.organization_id,
             code: m.organization?.code ?? null,
             name: m.organization?.name ?? null,
-            subtitle: m.organization?.subtitle ?? null,
+            institution: m.organization?.institution ?? null,
             role: m.role,
           }));
         if (mountedRef.current) setOrganizations(organizationList);
@@ -526,7 +539,7 @@ export default function AuthProvider({ children }) {
           id: m.organization_id,
           code: m.organization?.code ?? null,
           name: m.organization?.name ?? null,
-          subtitle: m.organization?.subtitle ?? null,
+          institution: m.organization?.institution ?? null,
           role: m.role,
         }));
       if (mountedRef.current) setOrganizations(organizationList);

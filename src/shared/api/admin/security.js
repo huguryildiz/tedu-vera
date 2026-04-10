@@ -1,8 +1,25 @@
 // src/shared/api/admin/security.js
 // Security policy API — get and set platform-wide security settings.
-// Super admin only.
+// Most functions are super admin only; getPublicAuthFlags() is anon-callable
+// and returns only the three public authentication toggles for the login UI.
 
 import { supabase } from "../core/client";
+
+/**
+ * Anonymous/authenticated — read only the public authentication flags
+ * needed to render the login screen (hide disabled auth methods).
+ * Calls rpc_public_auth_flags which is granted to anon + authenticated.
+ * @returns {Promise<{
+ *   googleOAuth: boolean,
+ *   emailPassword: boolean,
+ *   rememberMe: boolean
+ * }>}
+ */
+export async function getPublicAuthFlags() {
+  const { data, error } = await supabase.rpc("rpc_public_auth_flags");
+  if (error) throw error;
+  return data;
+}
 
 /**
  * Super admin — read the current security policy for the admin drawer.

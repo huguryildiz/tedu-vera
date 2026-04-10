@@ -115,6 +115,7 @@ export {
   cancelMaintenance,
   getSecurityPolicy,
   setSecurityPolicy,
+  getPublicAuthFlags,
   touchAdminSession,
   listAdminSessions,
   deleteAdminSession,
