@@ -13,6 +13,7 @@
 // ============================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getSuperAdminEmails, shouldCcOn } from "../_shared/super-admin-cc.ts";
 
 interface MaintenancePayload {
   message?: string;
@@ -27,6 +28,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+function getServiceClientOrNull() {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  if (!supabaseUrl || !serviceKey) return null;
+  return createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+}
 
 function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {
@@ -173,15 +181,26 @@ async function sendViaResend(
   text: string,
   html: string,
   from: string,
+  cc?: string[],
 ): Promise<{ ok: boolean; error?: string }> {
   try {
+    const ccArr = (cc || []).filter(Boolean);
+    const payload: Record<string, unknown> = {
+      from,
+      to: [to],
+      subject,
+      text,
+      html,
+    };
+    if (ccArr.length > 0) payload.cc = ccArr;
+
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({ from, to: [to], subject, text, html }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       const err = await res.text();
@@ -302,7 +321,17 @@ Deno.serve(async (req: Request) => {
         continue;
       }
 
-      const result = await sendViaResend(resendKey, email, subject, plainText, html, fromAddr);
+      // CC super admins if ccOnMaintenance is on.
+      let ccEmails: string[] = [];
+      const service = getServiceClientOrNull();
+      if (service) {
+        const ccOn = await shouldCcOn(service, "ccOnMaintenance");
+        if (ccOn) {
+          ccEmails = await getSuperAdminEmails(service);
+        }
+      }
+
+      const result = await sendViaResend(resendKey, email, subject, plainText, html, fromAddr, ccEmails);
       if (result.ok) {
         sentCount++;
         console.log(`[notify-maintenance] Sent to ${email}`);

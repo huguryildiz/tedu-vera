@@ -1,10 +1,18 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getSuperAdminEmails, shouldCcOn } from "../_shared/super-admin-cc.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+function getServiceClientOrNull() {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  if (!supabaseUrl || !serviceKey) return null;
+  return createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+}
 
 function escapeHtml(input: string): string {
   return String(input || "")
@@ -22,20 +30,25 @@ async function sendViaResend(
   text: string,
   html: string,
   from: string,
+  cc?: string[],
 ) {
+  const ccArr = (cc || []).filter(Boolean);
+  const payload: Record<string, unknown> = {
+    from,
+    to: [to],
+    subject,
+    text,
+    html,
+  };
+  if (ccArr.length > 0) payload.cc = ccArr;
+
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      subject,
-      text,
-      html,
-    }),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) {
     const body = await res.text();
@@ -148,7 +161,18 @@ Deno.serve(async (req: Request) => {
       body,
       logoUrl,
     });
-    await sendViaResend(resendKey, to, subject, text, html, fromAddr);
+
+    // CC super admins if ccOnPasswordChanged is on.
+    let ccEmails: string[] = [];
+    const service = getServiceClientOrNull();
+    if (service) {
+      const ccOn = await shouldCcOn(service, "ccOnPasswordChanged");
+      if (ccOn) {
+        ccEmails = await getSuperAdminEmails(service);
+      }
+    }
+
+    await sendViaResend(resendKey, to, subject, text, html, fromAddr, ccEmails);
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
