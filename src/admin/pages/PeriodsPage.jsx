@@ -317,13 +317,14 @@ export default function PeriodsPage() {
           <div className="page-title">Evaluation Periods</div>
           <div className="page-desc">Manage evaluation periods, active sessions, and locked historical records.</div>
         </div>
-        <div className="sem-header-actions">
+        <div className="sem-header-actions mobile-toolbar-stack">
           <FilterButton
+            className="mobile-toolbar-filter"
             activeCount={activeFilterCount}
             isOpen={filterOpen}
             onClick={() => { setFilterOpen((v) => !v); setExportOpen(false); }}
           />
-          <button className="btn btn-outline btn-sm" onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}>
+          <button className="btn btn-outline btn-sm mobile-toolbar-export" onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "-1px" }}>
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
@@ -332,7 +333,7 @@ export default function PeriodsPage() {
             {" "}Export
           </button>
           <button
-            className="btn btn-primary btn-sm"
+            className="btn btn-primary btn-sm mobile-toolbar-secondary"
             style={{ width: "auto", padding: "6px 14px", fontSize: "12px", background: "var(--accent)", boxShadow: "none" }}
             onClick={openAddDrawer}
           >

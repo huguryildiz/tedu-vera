@@ -383,7 +383,13 @@ export default function AuthProvider({ children }) {
       ? { email, password, options: { captchaToken } }
       : { email, password };
     const { data, error } = await supabase.auth.signInWithPassword(credentials);
-    if (error) throw error;
+    if (error) {
+      // Log failure before re-throwing — anon RPC, never blocks UI.
+      import("@/shared/api").then(({ writeAuthFailureEvent }) => {
+        writeAuthFailureEvent(email, "password").catch(() => {});
+      }).catch(() => {});
+      throw error;
+    }
     if (!rememberMe) clearPersistedSession();
     // Fire-and-forget audit log for admin login
     import("@/shared/api").then(({ writeAuditLog }) => {
@@ -483,6 +489,10 @@ export default function AuthProvider({ children }) {
   }, [user?.email]);
 
   const signOut = useCallback(async () => {
+    // Audit before sign-out — user is still authenticated at this point.
+    import("@/shared/api").then(({ writeAuditLog }) => {
+      writeAuditLog("admin.logout", { resourceType: "profiles" }).catch(() => {});
+    }).catch(() => {});
     await supabase.auth.signOut({ scope: "local" });
     hasSessionRef.current = false;
     setUser(null);
@@ -492,6 +502,10 @@ export default function AuthProvider({ children }) {
   }, []);
 
   const signOutAll = useCallback(async () => {
+    // Audit before sign-out — user is still authenticated at this point.
+    import("@/shared/api").then(({ writeAuditLog }) => {
+      writeAuditLog("admin.logout", { resourceType: "profiles", details: { scope: "global" } }).catch(() => {});
+    }).catch(() => {});
     await supabase.auth.signOut({ scope: "global" });
     hasSessionRef.current = false;
     setUser(null);

@@ -213,3 +213,53 @@ html, body {
   /* Projects — compact number badge */
   #projects-main-table .project-no-badge { font-size: 10px; padding: 2px 5px; }
 }
+
+/* ── 13. Listing toolbars — portrait stack pattern ──────────
+   Shared behavior for search/filter/export rows on list pages.
+   Keeps landscape/desktop layouts untouched.
+   ─────────────────────────────────────────────────────────── */
+@media (max-width: 768px) and (orientation: portrait) {
+  .mobile-toolbar-stack {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .mobile-toolbar-stack .mobile-toolbar-spacer {
+    display: none !important;
+  }
+
+  .mobile-toolbar-stack .mobile-toolbar-search {
+    order: 1;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    flex: none;
+  }
+
+  .mobile-toolbar-stack .mobile-toolbar-search .search-input,
+  .mobile-toolbar-stack .mobile-toolbar-search .audit-search-input,
+  .mobile-toolbar-stack .mobile-toolbar-search .reviews-search {
+    width: 100% !important;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .mobile-toolbar-stack .mobile-toolbar-filter { order: 2; }
+  .mobile-toolbar-stack .mobile-toolbar-export { order: 3; }
+  .mobile-toolbar-stack .mobile-toolbar-secondary { order: 4; }
+
+  .mobile-toolbar-stack .btn {
+    width: 100%;
+    min-height: 36px;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .mobile-toolbar-stack .mobile-toolbar-secondary {
+    width: auto;
+    justify-self: stretch;
+  }
+}

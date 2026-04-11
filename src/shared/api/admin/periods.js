@@ -116,6 +116,14 @@ export async function setEvalLock(periodId, enabled) {
     .update({ is_locked: !!enabled })
     .eq("id", periodId);
   if (error) throw error;
+  // Fire-and-forget audit — rpc_admin_log_period_lock fetches period name + actor from DB.
+  supabase.rpc("rpc_admin_log_period_lock", {
+    p_period_id: periodId,
+    p_action:    enabled ? "period.lock" : "period.unlock",
+    p_ctx:       {},
+  }).then(({ error: auditErr }) => {
+    if (auditErr) console.warn("Period lock audit failed:", auditErr?.message);
+  });
 }
 
 /** @deprecated — does nothing useful; `criteria_config` column does not exist on periods. Use savePeriodCriteria instead. */
@@ -142,6 +150,17 @@ export async function savePeriodCriteria(periodId, criteria) {
   if (!Array.isArray(criteria)) throw new Error("savePeriodCriteria: criteria must be an array");
 
   const totalMax = criteria.reduce((s, c) => s + (Number(c.max) || 0), 0);
+
+  // 0. Capture existing criteria for diff (best-effort — don't block on failure)
+  let beforeRows = [];
+  try {
+    const { data: existing } = await supabase
+      .from("period_criteria")
+      .select("key, label, max_score")
+      .eq("period_id", periodId)
+      .order("sort_order");
+    beforeRows = existing || [];
+  } catch {}
 
   // 1. Delete existing outcome maps (FK constraint requires this before criteria delete)
   const { error: mapsDelErr } = await supabase
@@ -220,6 +239,20 @@ export async function savePeriodCriteria(periodId, criteria) {
       if (mapInsErr) throw mapInsErr;
     }
   }
+
+  // Fire-and-forget criteria save audit with before/after diff.
+  // Diff keys: {key}_max_score so the drawer's Changes tab shows e.g. "design max score: 30 → 35".
+  try {
+    const beforeMap = Object.fromEntries(beforeRows.map((r) => [`${r.key}_max_score`, r.max_score]));
+    const afterMap  = Object.fromEntries(criteria.map((c) => [`${c.key}_max_score`, Number(c.max) || 0]));
+    const { writeAuditLog } = await import("./audit.js");
+    writeAuditLog("criteria.save", {
+      resourceType: "periods",
+      resourceId:   periodId,
+      details:      { criteriaCount: criteria.length },
+      diff:         { before: beforeMap, after: afterMap },
+    }).catch((e) => console.warn("Criteria save audit failed:", e?.message));
+  } catch {}
 
   return inserted || [];
 }

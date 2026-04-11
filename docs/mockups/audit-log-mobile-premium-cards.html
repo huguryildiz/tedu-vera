@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VERA Audit Log Mobile Portrait Mockup</title>
+  <link rel="stylesheet" href="../../src/styles/main.css" />
+  <style>
+    body.dark-mode {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(120% 90% at 18% -12%, rgba(59, 130, 246, 0.2), transparent 48%),
+        radial-gradient(120% 90% at 82% 115%, rgba(14, 165, 233, 0.14), transparent 52%),
+        var(--bg-page);
+      padding: 20px;
+    }
+
+    .mock-phone {
+      width: min(390px, 100%);
+      border-radius: 26px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(10, 15, 30, 0.94), rgba(6, 10, 22, 0.98));
+      box-shadow: 0 24px 56px rgba(0, 0, 0, 0.6);
+      padding: 12px;
+    }
+
+    #page-audit.audit-log-page {
+      padding: 0;
+      margin: 0;
+    }
+
+    .mock-title {
+      color: var(--text-tertiary);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 2px 2px 10px;
+      font-weight: 700;
+    }
+
+    .mock-phone .card {
+      margin-bottom: 0;
+    }
+
+    .mock-phone .table-wrap {
+      overflow: hidden;
+    }
+
+    .mock-phone .audit-table tbody tr {
+      cursor: default;
+    }
+
+    .mock-note {
+      margin-top: 10px;
+      color: var(--text-tertiary);
+      font-size: 11px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body class="dark-mode">
+  <section class="mock-phone" aria-label="VERA Audit Log portrait cards">
+    <div id="page-audit" class="page audit-log-page">
+      <div class="mock-title">Audit Feed · Mobile Portrait · Theme-Exact</div>
+
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="table-wrap">
+          <table class="audit-table">
+            <tbody>
+              <tr>
+                <td class="audit-ts" data-label="Timestamp">
+                  <div class="audit-ts-main">12 Jun 2026 21:49</div>
+                </td>
+                <td data-label="Type">
+                  <span class="audit-chip audit-chip-period">Period</span>
+                </td>
+                <td class="audit-actor" data-label="Actor">
+                  <div class="audit-actor-avatar">DA</div>
+                  <div class="audit-actor-info">
+                    <div class="audit-actor-name">demo-admin@vera-eval.app</div>
+                    <div class="audit-actor-role">Organization Admin</div>
+                  </div>
+                </td>
+                <td data-label="Action">
+                  <div class="audit-action-main">Active period changed</div>
+                  <div class="audit-action-detail">Spring 2026 · TEDU-EE</div>
+                </td>
+              </tr>
+
+              <tr class="selected">
+                <td class="audit-ts" data-label="Timestamp">
+                  <div class="audit-ts-main">12 Jun 2026 18:50</div>
+                </td>
+                <td data-label="Type">
+                  <span class="audit-chip audit-chip-export">Export</span>
+                </td>
+                <td class="audit-actor" data-label="Actor">
+                  <div class="audit-actor-avatar">PM</div>
+                  <div class="audit-actor-info">
+                    <div class="audit-actor-name">Prof. Murat Aksoy Demonstration Account With Long Name</div>
+                    <div class="audit-actor-role">Juror</div>
+                  </div>
+                </td>
+                <td data-label="Action">
+                  <div class="audit-action-main">Evaluation completed</div>
+                  <div class="audit-action-detail">Prof. Murat Aksoy · Control case for long name + timestamp</div>
+                </td>
+              </tr>
+
+              <tr class="audit-row-warning">
+                <td class="audit-ts" data-label="Timestamp">
+                  <div class="audit-ts-main">12 Jun 2026 17:12</div>
+                </td>
+                <td data-label="Type">
+                  <span class="audit-chip audit-chip-security">Security</span>
+                </td>
+                <td class="audit-actor" data-label="Actor">
+                  <div class="audit-actor-avatar">SA</div>
+                  <div class="audit-actor-info">
+                    <div class="audit-actor-name">Seda Aydin</div>
+                    <div class="audit-actor-role">Juror</div>
+                  </div>
+                </td>
+                <td data-label="Action">
+                  <div class="audit-action-main">Juror locked (too many PIN attempts)</div>
+                  <div class="audit-action-detail">5 failed attempts in 3 min · Auto-lock applied</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="mock-note">Portrait davranışını görmek için 390x844 mobil viewport önerilir.</div>
+    </div>
+  </section>
+</body>
+</html>

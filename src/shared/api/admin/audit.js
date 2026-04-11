@@ -3,15 +3,32 @@
 
 import { supabase } from "../core/client";
 
-export async function writeAuditLog(action, { resourceType, resourceId, details, organizationId } = {}) {
-  const { error } = await supabase.rpc("rpc_admin_write_audit_log", {
-    p_action: action,
-    p_resource_type: resourceType || null,
-    p_resource_id: resourceId || null,
-    p_details: details || {},
-    p_organization_id: organizationId || null,
+export async function writeAuditLog(action, { resourceType, resourceId, details, organizationId, diff } = {}) {
+  const { error } = await supabase.rpc("rpc_admin_write_audit_event", {
+    p_event: {
+      action,
+      resourceType: resourceType || null,
+      resourceId: resourceId || null,
+      details: details || {},
+      organizationId: organizationId || null,
+      diff: diff || null,
+    },
   });
   if (error) throw error;
+}
+
+/**
+ * Log a failed admin login attempt. Callable without an active session
+ * (anon role) since auth failures have no auth.uid().
+ * Severity escalates automatically server-side based on recent failure count.
+ */
+export async function writeAuthFailureEvent(email, method = "password") {
+  const { error } = await supabase.rpc("rpc_write_auth_failure_event", {
+    p_email: email,
+    p_method: method,
+  });
+  // Never surface audit write failures to the caller — don't block the login UI.
+  if (error) console.warn("Auth failure audit write failed:", error?.message);
 }
 
 export async function listAuditLogs(filters = {}) {
@@ -27,6 +44,15 @@ export async function listAuditLogs(filters = {}) {
   }
   if (filters.actions?.length) {
     query = query.in("action", filters.actions);
+  }
+  if (filters.categories?.length) {
+    query = query.in("category", filters.categories);
+  }
+  if (filters.severities?.length) {
+    query = query.in("severity", filters.severities);
+  }
+  if (filters.actorTypes?.length) {
+    query = query.in("actor_type", filters.actorTypes);
   }
   if (filters.startAt) {
     query = query.gte("created_at", filters.startAt);
@@ -46,7 +72,7 @@ export async function listAuditLogs(filters = {}) {
     }
   }
 
-  // Search across action, resource_type, and details JSONB fields
+  // Search across action, resource_type, actor_name and details JSONB fields
   if (filters.search) {
     const s = filters.search.replace(/%/g, "");
     const term = `%${s}%`;
@@ -54,6 +80,7 @@ export async function listAuditLogs(filters = {}) {
       [
         `action.ilike.${term}`,
         `resource_type.ilike.${term}`,
+        `actor_name.ilike.${term}`,
         `details->>applicant_email.ilike.${term}`,
         `details->>applicant_name.ilike.${term}`,
         `details->>actor_name.ilike.${term}`,

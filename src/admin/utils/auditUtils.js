@@ -16,6 +16,22 @@ import {
 
 export const AUDIT_PAGE_SIZE = 120;
 
+export const CATEGORY_META = {
+  auth:     { label: "Auth",     cssClass: "cat-auth",     color: "#3b82f6" },
+  access:   { label: "Access",   cssClass: "cat-access",   color: "#8b5cf6" },
+  data:     { label: "Data",     cssClass: "cat-data",     color: "#22c55e" },
+  config:   { label: "Config",   cssClass: "cat-config",   color: "#f59e0b" },
+  security: { label: "Security", cssClass: "cat-security", color: "#ef4444" },
+};
+
+export const SEVERITY_META = {
+  info:     { label: "Info",     cssClass: "sev-info"     },
+  low:      { label: "Low",      cssClass: "sev-low"      },
+  medium:   { label: "Medium",   cssClass: "sev-medium"   },
+  high:     { label: "High",     cssClass: "sev-high"     },
+  critical: { label: "Critical", cssClass: "sev-critical" },
+};
+
 const AUDIT_MIN_YEAR = APP_DATE_MIN_YEAR;
 const AUDIT_MAX_YEAR = APP_DATE_MAX_YEAR;
 
@@ -223,6 +239,24 @@ export function getInitials(name) {
  * @returns {{ type: 'admin'|'juror'|'system', name: string, role: string, initials: string|null }}
  */
 export function getActorInfo(log) {
+  // Prefer new DB columns populated by migration 043+
+  if (log.actor_type) {
+    const colName = log.actor_name || null;
+    if (log.actor_type === "juror") {
+      const name = colName || log.details?.actor_name || "Juror";
+      return { type: "juror", name, role: "Juror", initials: getInitials(name) };
+    }
+    if (log.actor_type === "system") {
+      return { type: "system", name: "System", role: "Automated", initials: null };
+    }
+    if (log.actor_type === "anonymous") {
+      return { type: "system", name: "Anonymous", role: "Unauthenticated", initials: "?" };
+    }
+    // admin
+    const name = colName || log.profiles?.display_name || "Admin";
+    return { type: "admin", name, role: "Organization Admin", initials: getInitials(name) };
+  }
+  // Legacy fallback for rows without actor_type column
   if (log.user_id) {
     const name = log.profiles?.display_name || "Admin";
     return { type: "admin", name, role: "Organization Admin", initials: getInitials(name) };
@@ -237,35 +271,83 @@ export function getActorInfo(log) {
 // ── Action labels ─────────────────────────────────────────────
 
 export const ACTION_LABELS = {
-  // Explicit RPC actions
+  // ── Auth ──
+  "admin.login": "Admin login",
+
+  // ── Admin lifecycle ──
+  "admin.create": "Admin created",
+  "admin.updated": "Admin updated",
+
+  // ── Evaluation flow (juror-initiated) ──
   "evaluation.complete": "Evaluation completed",
+  "juror.pin_locked": "Juror locked (too many PIN attempts)",
+  "juror.edit_mode_closed_on_resubmit": "Edit mode closed (resubmit)",
+
+  // ── Juror admin actions ──
   "pin.reset": "Juror PIN reset by admin",
+  "juror.pin_unlocked": "Juror unlocked by admin",
+  "juror.edit_mode_enabled": "Edit mode granted",
+  "juror.edit_enabled": "Edit mode granted", // legacy alias → juror.edit_mode_enabled
+  "juror.blocked": "Juror blocked",
+
+  // ── Tokens & snapshots ──
   "token.generate": "QR access code generated",
   "token.revoke": "QR access code revoked",
   "snapshot.freeze": "Snapshot frozen",
-  "juror.pin_locked": "Juror locked (too many PIN attempts)",
-  "juror.pin_unlocked": "Juror unlocked by admin",
-  "juror.edit_mode_enabled": "Edit mode granted",
-  "juror.edit_mode_closed_on_resubmit": "Edit mode closed (resubmit)",
-  "juror.blocked": "Juror blocked",
-  "admin.login": "Admin login",
-  "admin.create": "Admin created",
+
+  // ── Application workflow ──
+  "application.submitted": "Application submitted",
   "application.approved": "Application approved",
   "application.rejected": "Application rejected",
+
+  // ── Period management (manual instrumented) ──
   "period.create": "Period created",
-  "period.lock": "Period locked",
   "period.update": "Period updated",
+  "period.lock": "Evaluation locked",
+  "period.unlock": "Evaluation unlocked",
+  "period.set_current": "Active period changed",
+
+  // ── Criteria, outcomes & framework ──
+  "criteria.save": "Criteria & outcomes saved",
   "criteria.update": "Criteria updated",
-  "export.scores": "Scores exported",
+  "outcome.create": "Outcome created",
+  "outcome.update": "Outcome updated",
+  "outcome.delete": "Outcome deleted",
+
+  // ── Imports & manual data ──
   "juror.import": "Jurors imported",
   "juror.create": "Juror created",
-  "juror.edit_enabled": "Edit mode granted", // legacy alias → juror.edit_mode_enabled
   "project.import": "Projects imported",
   "project.create": "Project created",
   "project.update": "Project updated",
   "project.delete": "Project deleted",
   "score.update": "Score updated",
-  // Trigger-based CRUD actions
+
+  // ── Cross-org super-admin actions ──
+  "organization.status_changed": "Organization status changed",
+
+  // ── Exports ──
+  "export.scores": "Scores exported",
+  "export.rankings": "Rankings exported",
+  "export.heatmap": "Heatmap exported",
+  "export.analytics": "Analytics exported",
+  "export.audit": "Audit log exported",
+  "export.backup": "Backup exported",
+
+  // ── Notifications ──
+  "notification.application": "Application notification sent",
+  "notification.admin_invite": "Admin invite email sent",
+  "notification.entry_token": "QR access link emailed",
+  "notification.juror_pin": "Juror PIN emailed",
+  "notification.export_report": "Report shared via email",
+  "notification.password_reset": "Password reset email sent",
+
+  // ── Backups ──
+  "backup.created": "Backup created",
+  "backup.deleted": "Backup deleted",
+  "backup.downloaded": "Backup downloaded",
+
+  // ── Trigger-based CRUD (table.operation) ──
   "score_sheets.insert": "Score sheet created",
   "score_sheets.update": "Score sheet updated",
   "score_sheets.delete": "Score sheet deleted",
@@ -289,34 +371,6 @@ export const ACTION_LABELS = {
   "org_applications.insert": "Application submitted",
   "org_applications.update": "Application status changed",
   "org_applications.delete": "Application deleted",
-  // Frontend-instrumented actions (via rpc_admin_write_audit_log)
-  "admin.login": "Admin login",
-  "export.scores": "Scores exported",
-  "export.rankings": "Rankings exported",
-  "export.heatmap": "Heatmap exported",
-  "export.analytics": "Analytics exported",
-  "export.audit": "Audit log exported",
-  "export.backup": "Backup exported",
-  "period.lock": "Evaluation locked",
-  "period.unlock": "Evaluation unlocked",
-  "criteria.save": "Criteria & outcomes saved",
-  "outcome.create": "Outcome created",
-  "outcome.update": "Outcome updated",
-  "outcome.delete": "Outcome deleted",
-  "application.submitted": "Application submitted",
-  "application.approved": "Application approved",
-  "application.rejected": "Application rejected",
-  // Cross-org super-admin actions
-  "period.set_current": "Active period changed",
-  "organization.status_changed": "Organization status changed",
-  // Notification actions
-  "notification.application": "Application notification sent",
-  "notification.admin_invite": "Admin invite email sent",
-  "notification.entry_token": "QR access link emailed",
-  "notification.juror_pin": "Juror PIN emailed",
-  "notification.export_report": "Report shared via email",
-  "notification.password_reset": "Password reset email sent",
-  // Trigger-based: admin_invites, frameworks, profiles
   "admin_invites.insert": "Admin invite created",
   "admin_invites.update": "Admin invite updated",
   "admin_invites.delete": "Admin invite deleted",
@@ -325,10 +379,6 @@ export const ACTION_LABELS = {
   "frameworks.delete": "Framework deleted",
   "profiles.insert": "Profile created",
   "profiles.update": "Profile updated",
-  // Backup actions
-  "backup.created": "Backup created",
-  "backup.deleted": "Backup deleted",
-  "backup.downloaded": "Backup downloaded",
 };
 
 /**
@@ -484,40 +534,84 @@ export function formatSentence(log) {
   const action = log.action || "";
   const d = log.details || {};
 
+  // ── Auth ──
+  if (action === "admin.login")                 return { verb: d.method ? `signed in via ${d.method}` : "signed in", resource: null };
+  if (action === "admin.create")                return { verb: "created admin",                     resource: d.adminName || d.adminEmail || null };
+  if (action === "admin.updated")               return { verb: "updated admin",                     resource: d.adminName || d.adminEmail || null };
+
+  // ── Evaluation flow (juror-initiated) ──
   if (action === "evaluation.complete")         return { verb: "completed an evaluation on",       resource: d.periodName || null };
   if (action === "juror.pin_locked")            return { verb: "was locked out (failed PIN attempts) on", resource: d.periodName || null };
-  if (action === "juror.pin_unlocked")          return { verb: "was unlocked by admin", resource: null };
+  if (action === "juror.edit_mode_closed_on_resubmit") return { verb: "edit window closed on resubmit for", resource: d.periodName || null };
+
+  // ── Juror admin actions ──
+  if (action === "pin.reset")                   return { verb: "reset PIN for",                     resource: d.juror_name || null };
+  if (action === "juror.pin_unlocked")          return { verb: "unlocked",                          resource: d.juror_name || null };
   if (action === "juror.edit_mode_enabled" ||
-      action === "juror.edit_enabled")          return { verb: "was granted edit mode on",          resource: d.periodName || null };
-  if (action === "juror.blocked")               return { verb: "was blocked",                       resource: null };
-  if (action === "token.generate")              return { verb: "generated a new QR access code for", resource: d.periodName || null };
+      action === "juror.edit_enabled")          return { verb: "granted edit mode to",              resource: d.juror_name || null };
+  if (action === "juror.blocked")               return { verb: "blocked juror",                     resource: d.juror_name || null };
+  if (action === "juror.import")                return { verb: "imported jurors",                   resource: d.count != null ? `${d.count} jurors` : null };
+  if (action === "juror.create")                return { verb: "added juror",                       resource: d.juror_name || null };
+
+  // ── Tokens & snapshots ──
+  if (action === "token.generate")              return { verb: "generated QR access code for",      resource: d.periodName || null };
   if (action === "token.revoke")                return { verb: "revoked QR access code for",        resource: d.periodName || null };
+  if (action === "snapshot.freeze")             return { verb: "froze framework snapshot for",      resource: d.periodName || null };
+
+  // ── Application workflow ──
+  if (action === "application.submitted")       return { verb: "submitted an application",          resource: d.applicant_email || d.applicantEmail || null };
+  if (action === "application.approved")        return { verb: "approved application from",        resource: d.applicant_email || d.applicantEmail || null };
+  if (action === "application.rejected")        return { verb: "rejected application from",        resource: d.applicant_email || d.applicantEmail || null };
+
+  // ── Period management ──
   if (action === "period.create"   ||
       action === "periods.insert")              return { verb: "created period",                    resource: d.periodName || null };
   if (action === "period.update"   ||
       action === "periods.update")              return { verb: "updated period",                    resource: d.periodName || null };
+  if (action === "periods.delete")              return { verb: "deleted period",                    resource: d.periodName || null };
   if (action === "period.lock")                 return { verb: "locked evaluation period",          resource: d.periodName || null };
   if (action === "period.unlock")               return { verb: "unlocked evaluation period",        resource: d.periodName || null };
-  if (action === "admin.login")                 return { verb: d.method ? `signed in via ${d.method}` : "signed in", resource: null };
-  if (action === "admin.create")                return { verb: "created admin",                     resource: d.adminName || d.adminEmail || null };
-  if (action === "application.approved")        return { verb: "approved application from",         resource: d.applicant_email || d.applicantEmail || null };
-  if (action === "application.rejected")        return { verb: "rejected application from",         resource: d.applicant_email || d.applicantEmail || null };
-  if (action === "application.submitted")       return { verb: "submitted an application",          resource: null };
+  if (action === "period.set_current")          return { verb: "set active period to",              resource: d.periodName || null };
+
+  // ── Criteria, outcomes, framework ──
   if (action === "criteria.save")               return { verb: "saved criteria configuration for",  resource: d.periodName || null };
-  if (action === "snapshot.freeze")             return { verb: "froze framework snapshot for",      resource: d.periodName || null };
-  if (action === "pin.reset")                   return { verb: "reset PIN for",                     resource: d.juror_name || null };
+  if (action === "criteria.update")             return { verb: "updated criteria for",              resource: d.periodName || null };
+  if (action === "outcome.create")              return { verb: "created outcome",                   resource: d.outcomeCode || d.outcome_code || d.outcomeName || null };
+  if (action === "outcome.update")              return { verb: "updated outcome",                   resource: d.outcomeCode || d.outcome_code || d.outcomeName || null };
+  if (action === "outcome.delete")              return { verb: "deleted outcome",                   resource: d.outcomeCode || d.outcome_code || d.outcomeName || null };
+
+  // ── Project management (manual instrumented) ──
+  if (action === "project.import")              return { verb: "imported projects",                 resource: d.count != null ? `${d.count} projects` : null };
+  if (action === "project.create")              return { verb: "created project",                   resource: d.title || d.projectTitle || null };
+  if (action === "project.update")              return { verb: "updated project",                   resource: d.title || d.projectTitle || null };
+  if (action === "project.delete")              return { verb: "deleted project",                   resource: d.title || d.projectTitle || null };
+
+  // ── Score management ──
+  if (action === "score.update")                return { verb: "updated scores for",                resource: d.projectTitle || d.title || null };
+
+  // ── Cross-org super-admin ──
+  if (action === "organization.status_changed") {
+    const transition = d.previousStatus && d.newStatus ? `${d.previousStatus} → ${d.newStatus}` : null;
+    const target = [d.organizationCode || d.orgCode, transition].filter(Boolean).join(" · ");
+    return { verb: "changed organization status",                                                  resource: target || null };
+  }
+
+  // ── Backups ──
   if (action === "backup.created")              return { verb: "created a backup",                  resource: d.fileName || null };
   if (action === "backup.deleted")              return { verb: "deleted backup",                    resource: d.fileName || null };
   if (action === "backup.downloaded")           return { verb: "downloaded backup",                 resource: d.fileName || null };
+
+  // ── Exports & notifications (prefix matchers) ──
   if (action.startsWith("export.")) {
     const type = action.replace("export.", "");
-    return { verb: `exported ${type}`,                                                               resource: d.periodName || null };
+    return { verb: `exported ${type}`,                                                              resource: d.periodName || null };
   }
   if (action.startsWith("notification.")) {
     const type = action.replace("notification.", "");
-    return { verb: `sent ${type.replace(/_/g, " ")} to`,                                            resource: d.recipientEmail || null };
+    return { verb: `sent ${type.replace(/_/g, " ")} to`,                                           resource: d.recipientEmail || (Array.isArray(d.recipients) ? d.recipients.join(", ") : null) };
   }
-  // trigger-based CRUD fallback
+
+  // ── Trigger-based CRUD fallback (table.insert/update/delete) ──
   const parts = action.split(".");
   if (parts.length >= 2) {
     const table = parts[0].replace(/_/g, " ");
@@ -554,6 +648,27 @@ export function formatDiffChips(log) {
       from: d.oldValues?.[field] != null ? String(d.oldValues[field]) : null,
       to:   d.newValues?.[field] != null ? String(d.newValues[field]) : null,
     }));
+  }
+
+  // Trigger-generated diff from migration 045 — {before:{...}, after:{...}}
+  if (log.diff && typeof log.diff === "object") {
+    const before = log.diff.before || {};
+    const after  = log.diff.after  || {};
+    const SKIP_KEYS = new Set([
+      "created_at", "updated_at", "id", "organization_id",
+      "user_id", "period_id", "framework_id",
+    ]);
+    const allKeys = [...new Set([...Object.keys(before), ...Object.keys(after)])];
+    const changed = allKeys.filter(
+      (k) => !SKIP_KEYS.has(k) && JSON.stringify(before[k]) !== JSON.stringify(after[k])
+    );
+    if (changed.length > 0) {
+      return changed.slice(0, 4).map((k) => ({
+        key:  k.replace(/_/g, " "),
+        from: before[k] != null ? String(before[k]).slice(0, 60) : null,
+        to:   after[k]  != null ? String(after[k]).slice(0, 60)  : null,
+      }));
+    }
   }
 
   return [];
@@ -616,12 +731,32 @@ function _timeAgo(ms) {
 export function detectAnomalies(logs) {
   const oneDayMs = 24 * 60 * 60 * 1000;
   const now = Date.now();
+
+  // Failed admin login burst (highest priority)
+  const recentFailures = logs.filter(
+    (l) =>
+      (l.action === "admin.login.failure" || l.action === "auth.admin.login.failure") &&
+      l.created_at &&
+      now - Date.parse(l.created_at) < oneDayMs
+  );
+  if (recentFailures.length >= 3) {
+    const latest = recentFailures[0];
+    const ip = latest.ip_address || null;
+    const timeAgo = _timeAgo(Date.parse(latest.created_at));
+    return {
+      title: `Failed login attempts detected · ${timeAgo}`,
+      desc: `${recentFailures.length} failed sign-in${recentFailures.length > 1 ? "s" : ""} in the last 24 hours.${ip ? ` Source: ${ip}.` : ""}`,
+      filterAction: latest.action,
+    };
+  }
+
+  // Juror PIN lockout
   const recentLocks = logs.filter(
     (l) => l.action === "juror.pin_locked" && l.created_at && (now - Date.parse(l.created_at)) < oneDayMs
   );
   if (recentLocks.length === 0) return null;
   const latest = recentLocks[0];
-  const name = latest.details?.actor_name || "A juror";
+  const name = latest.actor_name || latest.details?.actor_name || "A juror";
   const timeAgo = _timeAgo(Date.parse(latest.created_at));
   return {
     title: `Unusual activity detected · ${timeAgo}`,

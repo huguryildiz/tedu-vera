@@ -3,13 +3,18 @@ import { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react
 /**
  * useFloating — shared positioning hook for all floating panels in VERA.
  *
+ * On scroll, panels reposition to follow their trigger (standard floating UI
+ * behavior). Pass closeOnScroll: true for the legacy "close when any scroll
+ * happens" behavior.
+ *
  * @param {object} options
  * @param {React.RefObject} options.triggerRef   - ref attached to the element that opens the panel
  * @param {boolean}         options.isOpen       - controlled open state
  * @param {function}        options.onClose      - called when the panel should close
  * @param {'bottom-start'|'bottom-end'|'top-start'|'top-end'} [options.placement='bottom-start']
  * @param {number}          [options.offset=4]   - gap between trigger and panel in px
- * @param {boolean}         [options.closeOnScroll=true]
+ * @param {boolean}         [options.closeOnScroll=false] - legacy: close on any scroll
+ * @param {string|number}   [options.zIndex='var(--z-dropdown)']
  *
  * @returns {{ floatingRef: React.RefObject, floatingStyle: object, updatePosition: function, actualPlacement: string }}
  */
@@ -19,7 +24,8 @@ export function useFloating({
   onClose,
   placement = 'bottom-start',
   offset = 4,
-  closeOnScroll = true,
+  closeOnScroll = false,
+  zIndex = 'var(--z-dropdown)',
 }) {
   const floatingRef = useRef(null);
   const [coords, setCoords] = useState({ top: 0, left: 0, placement });
@@ -79,13 +85,13 @@ export function useFloating({
     return () => window.removeEventListener('resize', onResize);
   }, [isOpen, updatePosition]);
 
-  // Scroll close
+  // Scroll: reposition to follow trigger (default) or close (opt-in legacy)
   useEffect(() => {
-    if (!isOpen || !closeOnScroll) return;
-    const onScroll = () => onClose();
+    if (!isOpen) return;
+    const onScroll = closeOnScroll ? () => onClose() : () => updatePosition();
     window.addEventListener('scroll', onScroll, true); // capture = catches all scroll events
     return () => window.removeEventListener('scroll', onScroll, true);
-  }, [isOpen, closeOnScroll, onClose]);
+  }, [isOpen, closeOnScroll, onClose, updatePosition]);
 
   // Outside click
   useEffect(() => {
@@ -116,7 +122,7 @@ export function useFloating({
     position: 'fixed',
     top: coords.top,
     left: coords.left,
-    zIndex: 'var(--z-dropdown)',
+    zIndex,
   };
 
   return { floatingRef, floatingStyle, updatePosition, actualPlacement: coords.placement };

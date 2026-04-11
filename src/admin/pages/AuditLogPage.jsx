@@ -4,7 +4,7 @@
 
 import { useMemo, useState } from "react";
 import { useAdminContext } from "../hooks/useAdminContext";
-import { Filter, RefreshCw, Search, Download, X, Clock, List, Table2, AlertTriangle, ChevronRight } from "lucide-react";
+import { Search, Download, X, Clock, AlertTriangle, Filter, Lock, Shield, UserCheck, Activity, Key, Package, Calendar, LogIn, FileText } from "lucide-react";
 import { useToast } from "@/shared/hooks/useToast";
 import FbAlert from "@/shared/ui/FbAlert";
 import { FilterButton } from "@/shared/ui/FilterButton";
@@ -12,7 +12,7 @@ import { useAuditLogFilters } from "../hooks/useAuditLogFilters";
 import { usePageRealtime } from "../hooks/usePageRealtime";
 import ExportPanel from "../components/ExportPanel";
 import CustomSelect from "@/shared/ui/CustomSelect";
-import { getActorInfo, formatActionLabel, formatActionDetail, groupByDay, formatSentence, formatDiffChips, groupBulkEvents, detectAnomalies } from "../utils/auditUtils";
+import { getActorInfo, formatActionLabel, formatActionDetail, formatSentence, formatDiffChips, detectAnomalies, CATEGORY_META, SEVERITY_META, groupBulkEvents } from "../utils/auditUtils";
 import AuditEventDrawer from "../components/AuditEventDrawer";
 import Pagination from "@/shared/ui/Pagination";
 
@@ -35,7 +35,6 @@ const CHIP_MAP = {
   frameworks:         { type: "framework", label: "Framework" },
 };
 
-// Unique chip labels for Type filter dropdown
 const TYPE_OPTIONS = [
   { value: "", label: "All types" },
   ...Object.values(
@@ -50,18 +49,32 @@ const TYPE_OPTIONS = [
 ];
 
 const SAVED_VIEWS = [
-  { label: "All activity",        filter: null },
-  { label: "Failed PIN attempts", filter: "juror.pin_locked" },
-  { label: "Score edits",         filter: "evaluation.complete" },
-  { label: "Exports",             filter: "export." },
-  { label: "Cross-org changes",   filter: "organization.status_changed" },
+  { label: "All activity",   filterFn: null },
+  { label: "Failed auth",    filterFn: (l) => l.action?.includes("login.failure") || l.action === "admin.login.failure" || l.action === "auth.admin.login.failure" },
+  { label: "High risk",      filterFn: (l) => l.severity === "high" || l.severity === "critical" },
+  { label: "Exports",        filterFn: (l) => l.action?.startsWith("export.") || l.action?.startsWith("security.export.") },
+  { label: "Config changes", filterFn: (l) => l.category === "config" },
 ];
 
 const ACTOR_TYPES = [
-  { value: "", label: "All" },
+  { value: "", label: "All actors" },
   { value: "admin", label: "Admin" },
   { value: "juror", label: "Juror" },
   { value: "system", label: "System" },
+];
+
+const CATEGORY_OPTIONS = [
+  { value: "", label: "All categories" },
+  ...Object.entries(CATEGORY_META).map(([k, v]) => ({ value: k, label: v.label })),
+];
+
+const SEVERITY_OPTIONS = [
+  { value: "", label: "All severities" },
+  { value: "critical", label: "Critical" },
+  { value: "high",     label: "High" },
+  { value: "medium",   label: "Medium" },
+  { value: "low",      label: "Low" },
+  { value: "info",     label: "Info" },
 ];
 
 function getChip(resourceType, action) {
@@ -82,81 +95,41 @@ function SortIcon({ colKey, sortKey, sortDir }) {
   );
 }
 
-function FeedEventRow({ log, onSelect, selectedId }) {
-  const actor = getActorInfo(log);
-  const chip = getChip(log.resource_type, log.action);
-  const { verb, resource } = formatSentence(log);
-  const diffs = formatDiffChips(log);
-  const detail = formatActionDetail(log);
-  const ts = log.created_at ? new Date(log.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—";
-  const isSelected = log.id === selectedId;
-
-  return (
-    <div
-      className={`audit-event-row${isSelected ? " selected" : ""}${actor.type === "system" ? " audit-row-system" : ""}`}
-      onClick={() => onSelect(isSelected ? null : log)}
-    >
-      <div className="audit-event-time">{ts}</div>
-      <div className="audit-event-body">
-        <div className="audit-event-head">
-          <div className={`audit-actor-avatar${actor.type === "juror" ? " audit-actor-juror" : ""}${actor.type === "system" ? " audit-actor-system" : ""}`}>
-            {actor.type === "system" ? <Clock size={11} /> : actor.initials}
-          </div>
-          <span className="audit-event-strong">{actor.name}</span>
-          <span className="audit-event-verb">{verb}</span>
-          {resource && <span className="audit-event-resource">{resource}</span>}
-        </div>
-        <div className="audit-event-meta">
-          <span className={`audit-chip audit-chip-${chip.type}`}>{chip.label}</span>
-        </div>
-        {diffs.length > 0 && (
-          <div className="audit-diff-list">
-            {diffs.map((d, i) => (
-              <span key={i} className="audit-diff-chip">
-                <span className="audit-diff-key">{d.key}:</span>
-                {d.from != null && <span className="audit-diff-from">{d.from}</span>}
-                {d.from != null && d.to != null && <span className="audit-diff-arrow">→</span>}
-                {d.to != null && <span className="audit-diff-to">{d.to}</span>}
-              </span>
-            ))}
-          </div>
-        )}
-        {!diffs.length && detail && <div className="audit-event-detail">{detail}</div>}
-      </div>
-      <ChevronRight size={14} className="audit-chevron" />
-    </div>
-  );
+function isWarningAuditEvent(log) {
+  const action = String(log?.action || "");
+  const resourceType = String(log?.resource_type || "");
+  if (action === "juror.pin_locked") return true;
+  if (action.startsWith("security.") || action.startsWith("organization.status_changed")) return true;
+  if (action.includes("failed") || action.includes("blocked") || action.includes("rejected")) return true;
+  return resourceType === "organizations" || resourceType === "memberships";
 }
 
-function BulkEventRow({ item, onSelect, selectedId }) {
-  const { representative: log, count } = item;
-  const actor = getActorInfo(log);
-  const chip = getChip(log.resource_type, log.action);
-  const ts = log.created_at ? new Date(log.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—";
+function getRelativeTime(isoString) {
+  if (!isoString) return "";
+  const diff = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return `${Math.floor(days / 7)}w ago`;
+}
 
-  return (
-    <div
-      className={`audit-event-row${log.id === selectedId ? " selected" : ""}`}
-      onClick={() => onSelect(log.id === selectedId ? null : log)}
-    >
-      <div className="audit-event-time">{ts}</div>
-      <div className="audit-event-body">
-        <div className="audit-event-head">
-          <div className={`audit-actor-avatar${actor.type === "juror" ? " audit-actor-juror" : ""}`}>
-            {actor.initials}
-          </div>
-          <span className="audit-event-strong">{actor.name}</span>
-          <span className="audit-event-verb">updated</span>
-          <span className="audit-bulk-badge">{count} {log.resource_type?.replace(/_/g, " ") || "records"}</span>
-        </div>
-        <div className="audit-event-meta">
-          <span className={`audit-chip audit-chip-${chip.type}`}>{chip.label}</span>
-        </div>
-        <div className="audit-expand-hint">Collapsed bulk action · click to see first event details</div>
-      </div>
-      <ChevronRight size={14} className="audit-chevron" />
-    </div>
-  );
+function ActionIcon({ action = "", chipType = "" }) {
+  const a = String(action);
+  const props = { size: 14, strokeWidth: 2 };
+  if (a.startsWith("export.")) return <Download {...props} />;
+  if (a.startsWith("backup.")) return <Package {...props} />;
+  if (a === "juror.pin_locked" || a.includes("pin")) return <Lock {...props} />;
+  if (a.startsWith("security.") || chipType === "security") return <Shield {...props} />;
+  if (a.startsWith("period.") || chipType === "period") return <Calendar {...props} />;
+  if (a.startsWith("juror.") || chipType === "juror") return <UserCheck {...props} />;
+  if (a.startsWith("evaluation.") || chipType === "eval" || a.includes("score")) return <FileText {...props} />;
+  if (a.includes("login") || a.includes("session") || a.startsWith("auth.")) return <LogIn {...props} />;
+  if (a.startsWith("token") || chipType === "token") return <Key {...props} />;
+  return <Activity {...props} />;
 }
 
 // ── Component ─────────────────────────────────────────────────
@@ -170,15 +143,14 @@ export default function AuditLogPage() {
   const [datePreset, setDatePreset] = useState("all");
   const [sortKey, setSortKey] = useState("created_at");
   const [sortDir, setSortDir] = useState("desc");
-  const [viewMode, setViewMode] = useState("feed"); // "feed" | "table"
   const [selectedLog, setSelectedLog] = useState(null);
   const [savedView, setSavedView] = useState("All activity");
 
-  // Client-side filters (applied after data loads)
   const [typeFilter, setTypeFilter] = useState("");
   const [actorFilter, setActorFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [severityFilter, setSeverityFilter] = useState("");
 
-  // Pagination
   const [pageSize, setPageSize] = useState(50);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -196,7 +168,6 @@ export default function AuditLogPage() {
     isAuditStaleRefresh,
     hasAuditFilters,
     auditRangeError,
-    handleAuditRefresh,
     handleAuditReset,
     handleAuditLoadMore,
     handleAuditExport,
@@ -204,15 +175,6 @@ export default function AuditLogPage() {
     formatAuditTimestamp,
   } = useAuditLogFilters({ organizationId, isMobile: false, setMessage });
 
-  // Active filter count
-  const auditActiveFilterCount =
-    (auditSearch?.trim() ? 1 : 0) +
-    (auditFilters?.startDate ? 1 : 0) +
-    (auditFilters?.endDate ? 1 : 0) +
-    (typeFilter ? 1 : 0) +
-    (actorFilter ? 1 : 0);
-
-  // Real-time: refresh on new audit log inserts
   usePageRealtime({
     organizationId,
     channelName: "audit-log-page-live",
@@ -240,47 +202,60 @@ export default function AuditLogPage() {
     }
   }
 
-  // ── Client-side filtering ────────────────────────────────
-  const filteredLogs = useMemo(() => {
+  // ── Client-side filtering ─────────────────────────────────
+  // Base: typeFilter + actorFilter + categoryFilter + severityFilter (used for tab counts + KPIs)
+  const baseFilteredLogs = useMemo(() => {
     let rows = auditLogs;
-    if (typeFilter) {
-      rows = rows.filter((l) => getChip(l.resource_type, l.action).label === typeFilter);
-    }
-    if (actorFilter) {
-      rows = rows.filter((l) => getActorInfo(l).type === actorFilter);
-    }
+    if (typeFilter) rows = rows.filter((l) => getChip(l.resource_type, l.action).label === typeFilter);
+    if (actorFilter) rows = rows.filter((l) => getActorInfo(l).type === actorFilter);
+    if (categoryFilter) rows = rows.filter((l) => l.category === categoryFilter);
+    if (severityFilter) rows = rows.filter((l) => l.severity === severityFilter);
     return rows;
-  }, [auditLogs, typeFilter, actorFilter]);
+  }, [auditLogs, typeFilter, actorFilter, categoryFilter, severityFilter]);
 
-  // ── KPI derived values (from filtered data per CLAUDE.md rule) ──
-  const kpiBase = filteredLogs;
-  const total = kpiBase.length;
-  const today = kpiBase.filter((l) => {
+  // Full: base + saved view filter (used for table)
+  const filteredLogs = useMemo(() => {
+    const sv = SAVED_VIEWS.find((v) => v.label === savedView);
+    if (!sv?.filterFn) return baseFilteredLogs;
+    return baseFilteredLogs.filter(sv.filterFn);
+  }, [baseFilteredLogs, savedView]);
+
+  // ── KPI derived values ────────────────────────────────────
+  const total = baseFilteredLogs.length;
+  const today = baseFilteredLogs.filter((l) => {
     if (!l.created_at) return false;
     const d = new Date(l.created_at);
     const n = new Date();
     return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
   }).length;
-  const adminCount = kpiBase.filter((l) => getActorInfo(l).type === "admin").length;
-  const jurorCount = kpiBase.filter((l) => getActorInfo(l).type === "juror").length;
+  const adminCount = baseFilteredLogs.filter((l) => getActorInfo(l).type === "admin").length;
 
-  // KPI delta — compare today count vs yesterday
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const failedAuthCount = auditLogs.filter(
+    (l) => (l.action?.includes("login.failure") || l.action === "admin.login.failure") &&
+            l.created_at && (now - Date.parse(l.created_at)) < oneDayMs
+  ).length;
+  const highRiskCount = baseFilteredLogs.filter(
+    (l) => l.severity === "high" || l.severity === "critical"
+  ).length;
+
   const yesterdayCount = useMemo(() => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    return kpiBase.filter((l) => {
+    return baseFilteredLogs.filter((l) => {
       if (!l.created_at) return false;
       const d = new Date(l.created_at);
       return d.toDateString() === yesterday.toDateString();
     }).length;
-  }, [kpiBase]);
+  }, [baseFilteredLogs]);
 
   const todayDelta = yesterdayCount > 0
     ? Math.round(((today - yesterdayCount) / yesterdayCount) * 100)
     : null;
 
-  // ── Sorting ──────────────────────────────────────────────
-  const sortedAuditLogs = useMemo(() => {
+  // ── Sorting ───────────────────────────────────────────────
+  const sortedLogs = useMemo(() => {
     const rows = [...filteredLogs];
     rows.sort((a, b) => {
       const direction = sortDir === "asc" ? 1 : -1;
@@ -306,33 +281,15 @@ export default function AuditLogPage() {
     return rows;
   }, [filteredLogs, sortKey, sortDir]);
 
-  // ── Feed-specific derived values ─────────────────────────────
+  // ── Anomaly detection ────────────────────────────────────
   const anomaly = useMemo(() => detectAnomalies(auditLogs), [auditLogs]);
 
-  const feedLogs = useMemo(() => {
-    if (savedView === "All activity") return sortedAuditLogs;
-    const sv = SAVED_VIEWS.find((v) => v.label === savedView);
-    if (!sv?.filter) return sortedAuditLogs;
-    return sortedAuditLogs.filter((l) => l.action?.startsWith(sv.filter) || l.action === sv.filter);
-  }, [sortedAuditLogs, savedView]);
-
-  // ── Pagination ───────────────────────────────────────────
-  // Table view
-  const totalPages = Math.max(1, Math.ceil(sortedAuditLogs.length / pageSize));
+  // ── Pagination ────────────────────────────────────────────
+  const totalPages = Math.max(1, Math.ceil(sortedLogs.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
   const pageStart = (safePage - 1) * pageSize;
-  const pageEnd = Math.min(pageStart + pageSize, sortedAuditLogs.length);
-  const pagedLogs = sortedAuditLogs.slice(pageStart, pageEnd);
-
-  // Feed view
-  const feedTotalPages = Math.max(1, Math.ceil(feedLogs.length / pageSize));
-  const feedSafePage = Math.min(currentPage, feedTotalPages);
-  const feedPageStart = (feedSafePage - 1) * pageSize;
-  const feedPagedLogs = useMemo(
-    () => feedLogs.slice(feedPageStart, feedPageStart + pageSize),
-    [feedLogs, feedPageStart, pageSize]
-  );
-  const feedDayGroups = useMemo(() => groupByDay(feedPagedLogs), [feedPagedLogs]);
+  const pagedLogs = sortedLogs.slice(pageStart, pageStart + pageSize);
+  const pagedItems = useMemo(() => groupBulkEvents(pagedLogs), [pagedLogs]);
 
   function handleSort(key) {
     if (sortKey === key) {
@@ -343,16 +300,25 @@ export default function AuditLogPage() {
     setSortDir(key === "created_at" ? "desc" : "asc");
   }
 
+  const auditActiveFilterCount =
+    (datePreset !== "all" ? 1 : 0) +
+    (typeFilter ? 1 : 0) +
+    (actorFilter ? 1 : 0) +
+    (categoryFilter ? 1 : 0) +
+    (severityFilter ? 1 : 0);
+
   function handleClearAllFilters() {
     handleAuditReset();
     setDatePreset("all");
     setTypeFilter("");
     setActorFilter("");
+    setCategoryFilter("");
+    setSeverityFilter("");
     setCurrentPage(1);
   }
 
   return (
-    <div className="page">
+    <div id="page-audit" className="page audit-log-page">
       <div className="page-title">Audit Log</div>
       <div className="page-desc">
         Track admin actions, score changes, and access events for compliance and accountability.
@@ -370,8 +336,9 @@ export default function AuditLogPage() {
             className="anomaly-banner-action"
             type="button"
             onClick={() => {
-              setSavedView("Failed PIN attempts");
-              setViewMode("feed");
+              const view = anomaly.filterAction?.includes("login") ? "Failed auth" : "High risk";
+              setSavedView(view);
+              setCurrentPage(1);
             }}
           >
             View events →
@@ -398,9 +365,13 @@ export default function AuditLogPage() {
           <div className="scores-kpi-item-value">{auditLoading && total === 0 ? "—" : adminCount}</div>
           <div className="scores-kpi-item-label">Admin Actions</div>
         </div>
-        <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value">{auditLoading && total === 0 ? "—" : jurorCount}</div>
-          <div className="scores-kpi-item-label">Juror Events</div>
+        <div className="scores-kpi-item" style={{ cursor: failedAuthCount > 0 ? "pointer" : "default" }} onClick={() => failedAuthCount > 0 && setSavedView("Failed auth")}>
+          <div className={`scores-kpi-item-value${failedAuthCount > 0 ? " kpi-danger" : ""}`}>{auditLoading ? "—" : failedAuthCount}</div>
+          <div className="scores-kpi-item-label">Failed Auth (24h)</div>
+        </div>
+        <div className="scores-kpi-item" style={{ cursor: highRiskCount > 0 ? "pointer" : "default" }} onClick={() => highRiskCount > 0 && setSavedView("High risk")}>
+          <div className={`scores-kpi-item-value${highRiskCount > 0 ? " kpi-warning" : ""}`}>{auditLoading && total === 0 ? "—" : highRiskCount}</div>
+          <div className="scores-kpi-item-label">High Risk</div>
         </div>
       </div>
 
@@ -412,8 +383,8 @@ export default function AuditLogPage() {
       )}
 
       {/* Toolbar */}
-      <div className="audit-toolbar">
-        <div className="audit-search-wrap">
+      <div className="audit-toolbar mobile-toolbar-stack">
+        <div className="audit-search-wrap mobile-toolbar-search">
           <Search size={14} className="audit-search-icon" />
           <input
             className="audit-search-input"
@@ -425,32 +396,16 @@ export default function AuditLogPage() {
         </div>
 
         <FilterButton
+          className="mobile-toolbar-filter"
           activeCount={auditActiveFilterCount}
           isOpen={filterOpen}
           onClick={() => { setFilterOpen((v) => !v); setExportOpen(false); }}
         />
 
-        <div style={{ flex: 1 }} />
-
-        <div className="audit-view-toggle">
-          <button
-            type="button"
-            className={viewMode === "feed" ? "active" : undefined}
-            onClick={() => setViewMode("feed")}
-          >
-            <List size={12} /> Feed
-          </button>
-          <button
-            type="button"
-            className={viewMode === "table" ? "active" : undefined}
-            onClick={() => setViewMode("table")}
-          >
-            <Table2 size={12} /> Table
-          </button>
-        </div>
+        <div className="mobile-toolbar-spacer" />
 
         <button
-          className="btn btn-outline btn-sm"
+          className="btn btn-outline btn-sm mobile-toolbar-export"
           type="button"
           disabled={auditExporting}
           onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}
@@ -481,10 +436,10 @@ export default function AuditLogPage() {
                 value={datePreset}
                 onChange={(v) => applyDatePreset(v)}
                 options={[
-                  { value: "all", label: "All time" },
-                  { value: "today", label: "Today" },
-                  { value: "7d", label: "Last 7 days" },
-                  { value: "30d", label: "Last 30 days" },
+                  { value: "all",    label: "All time" },
+                  { value: "today",  label: "Today" },
+                  { value: "7d",     label: "Last 7 days" },
+                  { value: "30d",    label: "Last 30 days" },
                   { value: "custom", label: "Custom range…" },
                 ]}
                 ariaLabel="Date range"
@@ -532,6 +487,26 @@ export default function AuditLogPage() {
                 ariaLabel="Actor type"
               />
             </div>
+            <div className="filter-group">
+              <label>Category</label>
+              <CustomSelect
+                compact
+                value={categoryFilter}
+                onChange={(v) => { setCategoryFilter(v); setCurrentPage(1); }}
+                options={CATEGORY_OPTIONS}
+                ariaLabel="Event category"
+              />
+            </div>
+            <div className="filter-group">
+              <label>Severity</label>
+              <CustomSelect
+                compact
+                value={severityFilter}
+                onChange={(v) => { setSeverityFilter(v); setCurrentPage(1); }}
+                options={SEVERITY_OPTIONS}
+                ariaLabel="Event severity"
+              />
+            </div>
           </div>
           <button
             className="btn btn-outline btn-sm filter-clear-btn"
@@ -549,7 +524,7 @@ export default function AuditLogPage() {
         <ExportPanel
           title="Export Audit Log"
           subtitle="Download the full activity trail with timestamps, actors, and event details."
-          meta={`${total} events · ${hasAuditFilters || typeFilter || actorFilter ? "Filtered" : "All time"}`}
+          meta={`${total} events · ${hasAuditFilters || typeFilter || actorFilter || categoryFilter || severityFilter ? "Filtered" : "All time"}`}
           loading={auditExporting}
           onClose={() => setExportOpen(false)}
           onExport={async (fmt) => {
@@ -560,208 +535,298 @@ export default function AuditLogPage() {
         />
       )}
 
-      {/* Saved views row */}
-      {viewMode === "feed" && (
-        <div className="audit-saved-views">
-          <span className="audit-saved-views-label">Views</span>
-          {SAVED_VIEWS.map((sv) => (
-            <button
-              key={sv.label}
-              type="button"
-              className={`audit-view-chip${savedView === sv.label ? " active" : ""}`}
-              onClick={() => { setSavedView(sv.label); setCurrentPage(1); }}
-            >
-              {sv.label}
-              <span className="audit-view-chip-count">
-                {sv.filter
-                  ? sortedAuditLogs.filter((l) => l.action?.startsWith(sv.filter) || l.action === sv.filter).length
-                  : sortedAuditLogs.length}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Audit content — feed or table view */}
-      {viewMode === "table" ? (
-      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-        <div className="table-wrap">
-          <table className="audit-table">
-            <thead>
-              <tr>
-                <th
-                  className={`sortable${sortKey === "created_at" ? " sorted" : ""}`}
-                  style={{ width: 170 }}
-                  onClick={() => handleSort("created_at")}
-                >
-                  Timestamp <SortIcon colKey="created_at" sortKey={sortKey} sortDir={sortDir} />
-                </th>
-                <th
-                  className={`sortable${sortKey === "resource_type" ? " sorted" : ""}`}
-                  style={{ width: 95 }}
-                  onClick={() => handleSort("resource_type")}
-                >
-                  Type <SortIcon colKey="resource_type" sortKey={sortKey} sortDir={sortDir} />
-                </th>
-                <th
-                  className={`sortable${sortKey === "actor" ? " sorted" : ""}`}
-                  style={{ width: 200 }}
-                  onClick={() => handleSort("actor")}
-                >
-                  Actor <SortIcon colKey="actor" sortKey={sortKey} sortDir={sortDir} />
-                </th>
-                <th className={`sortable${sortKey === "action" ? " sorted" : ""}`} onClick={() => handleSort("action")}>
-                  Action <SortIcon colKey="action" sortKey={sortKey} sortDir={sortDir} />
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {showAuditSkeleton && (
-                Array.from({ length: 5 }, (_, i) => (
-                  <tr key={i}>
-                    <td colSpan={4}>
-                      <div className="audit-skeleton-row" />
-                    </td>
-                  </tr>
-                ))
-              )}
-
-              {!auditLoading && sortedAuditLogs.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="text-sm text-muted" style={{ textAlign: "center", padding: "22px 0" }}>
-                    {hasAuditFilters || typeFilter || actorFilter ? "No results for the current filters." : "No audit events yet."}
-                  </td>
-                </tr>
-              )}
-
-              {pagedLogs.map((log) => {
-                const chip = getChip(log.resource_type, log.action);
-                const actor = getActorInfo(log);
-                const ts = formatAuditTimestamp(log.created_at);
-                const detail = formatActionDetail(log);
-                return (
-                  <tr key={log.id} className={actor.type === "system" ? "audit-row-system" : ""}>
-                    <td className="audit-ts" data-label="Timestamp">
-                      <div className="audit-ts-main">{ts}</div>
-                    </td>
-                    <td data-label="Type">
-                      <span className={`audit-chip audit-chip-${chip.type}`}>{chip.label}</span>
-                    </td>
-                    <td className="audit-actor" data-label="Actor">
-                      {actor.type === "system" ? (
-                        <div className="audit-actor-avatar audit-actor-system">
-                          <Clock size={13} />
-                        </div>
-                      ) : (
-                        <div className={`audit-actor-avatar${actor.type === "juror" ? " audit-actor-juror" : ""}`}>
-                          {actor.initials}
-                        </div>
-                      )}
-                      <div className="audit-actor-info">
-                        <div className="audit-actor-name" style={actor.type === "system" ? { color: "var(--text-tertiary)" } : {}}>
-                          {actor.name}
-                        </div>
-                        <div className="audit-actor-role">{actor.role}</div>
-                      </div>
-                    </td>
-                    <td data-label="Action">
-                      <div className={`audit-action-main${isAuditStaleRefresh ? " opacity-40" : ""}`}>
-                        {formatActionLabel(log.action)}
-                      </div>
-                      {detail && (
-                        <div className="audit-action-detail">{detail}</div>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        <Pagination
-          currentPage={safePage}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          totalItems={sortedAuditLogs.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
-          itemLabel="events"
-          pageSizeOptions={[25, 50, 100]}
-          hasMore={auditHasMore}
-          onLoadMore={handleAuditLoadMore}
-          trailing={
-            <button
-              className="btn btn-outline btn-sm audit-refresh-btn"
-              type="button"
-              disabled={auditLoading}
-              onClick={() => { handleAuditRefresh(); setCurrentPage(1); }}
-            >
-              <RefreshCw size={11} />
-              Refresh
-            </button>
-          }
-        />
+      {/* Saved view tabs */}
+      <div className="audit-saved-views">
+        <span className="audit-saved-views-label">Views</span>
+        {SAVED_VIEWS.map((sv) => (
+          <button
+            key={sv.label}
+            type="button"
+            className={`audit-view-chip${savedView === sv.label ? " active" : ""}`}
+            onClick={() => { setSavedView(sv.label); setCurrentPage(1); setSelectedLog(null); }}
+          >
+            {sv.label}
+            <span className="audit-view-chip-count">
+              {sv.filterFn ? baseFilteredLogs.filter(sv.filterFn).length : baseFilteredLogs.length}
+            </span>
+          </button>
+        ))}
       </div>
-      ) : (
-        /* Feed view */
-        <div className="audit-feed-layout">
-          <div className="audit-feed">
-            {auditLoading && (
-              Array.from({ length: 5 }, (_, i) => (
-                <div key={i} className="audit-event-row">
-                  <div className="audit-event-time" /><div className="audit-event-body"><div className="audit-skeleton-row" /></div>
-                </div>
-              ))
-            )}
-            {!auditLoading && feedLogs.length === 0 && (
-              <div style={{ padding: "28px 20px", textAlign: "center", color: "var(--text-tertiary)", fontSize: 13 }}>
-                {hasAuditFilters || typeFilter || actorFilter ? "No results for the current filters." : "No audit events yet."}
-              </div>
-            )}
-            {feedDayGroups.map((group) => (
-              <div key={group.key} className="audit-day-group">
-                <div className="audit-day-header">
-                  <div className="audit-day-title">{group.label}</div>
-                  <div className="audit-day-count">{group.logs.length} events</div>
-                </div>
-                {groupBulkEvents(group.logs).map((item, idx) =>
-                  item.type === "bulk" ? (
-                    <BulkEventRow key={idx} item={item} onSelect={setSelectedLog} selectedId={selectedLog?.id} />
-                  ) : (
-                    <FeedEventRow key={item.log.id || idx} log={item.log} onSelect={setSelectedLog} selectedId={selectedLog?.id} />
-                  )
+
+      {/* Table + detail panel */}
+      <div className="audit-feed-layout" style={selectedLog ? {} : { gridTemplateColumns: "1fr" }}>
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          <div className="table-wrap">
+            <table className="audit-table">
+              <thead>
+                <tr>
+                  <th
+                    className={`sortable${sortKey === "created_at" ? " sorted" : ""}`}
+                    style={{ width: 170 }}
+                    onClick={() => handleSort("created_at")}
+                  >
+                    Timestamp <SortIcon colKey="created_at" sortKey={sortKey} sortDir={sortDir} />
+                  </th>
+                  <th
+                    className={`sortable${sortKey === "resource_type" ? " sorted" : ""}`}
+                    style={{ width: 95 }}
+                    onClick={() => handleSort("resource_type")}
+                  >
+                    Type <SortIcon colKey="resource_type" sortKey={sortKey} sortDir={sortDir} />
+                  </th>
+                  <th
+                    className={`sortable${sortKey === "actor" ? " sorted" : ""}`}
+                    style={{ width: 200 }}
+                    onClick={() => handleSort("actor")}
+                  >
+                    Actor <SortIcon colKey="actor" sortKey={sortKey} sortDir={sortDir} />
+                  </th>
+                  <th className={`sortable${sortKey === "action" ? " sorted" : ""}`} onClick={() => handleSort("action")}>
+                    Action <SortIcon colKey="action" sortKey={sortKey} sortDir={sortDir} />
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {showAuditSkeleton && (
+                  Array.from({ length: 5 }, (_, i) => (
+                    <tr key={i}>
+                      <td colSpan={4}>
+                        <div className="audit-skeleton-row" />
+                      </td>
+                    </tr>
+                  ))
                 )}
+
+                {!auditLoading && sortedLogs.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="text-sm text-muted" style={{ textAlign: "center", padding: "22px 0" }}>
+                      {hasAuditFilters || typeFilter || actorFilter || categoryFilter || severityFilter ? "No results for the current filters." : "No audit events yet."}
+                    </td>
+                  </tr>
+                )}
+
+                {pagedItems.map((item) => {
+                  if (item.type === "bulk") {
+                    const log = item.representative;
+                    const chip = getChip(log.resource_type, log.action);
+                    const actor = getActorInfo(log);
+                    const ts = formatAuditTimestamp(log.created_at);
+                    return (
+                      <tr key={`bulk-${log.id}`} className="audit-row-bulk" style={{ cursor: "pointer" }} onClick={() => setSelectedLog(log)}>
+                        <td className="audit-ts" data-label="Timestamp"><div className="audit-ts-main">{ts}</div></td>
+                        <td data-label="Type">
+                          <span className={`audit-chip audit-chip-${chip.type}`}>{chip.label}</span>
+                        </td>
+                        <td className="audit-actor" data-label="Actor">
+                          <div className={`audit-actor-avatar${actor.type === "juror" ? " audit-actor-juror" : actor.type === "system" ? " audit-actor-system" : ""}`}>
+                            {actor.type === "system" ? <Clock size={13} /> : actor.initials}
+                          </div>
+                          <div className="audit-actor-info">
+                            <div className="audit-actor-name">{actor.name}</div>
+                            <div className="audit-actor-role">{actor.role}</div>
+                          </div>
+                        </td>
+                        <td data-label="Action">
+                          <span className="audit-bulk-label">{item.count}× {formatActionLabel(log.action)}</span>
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  const log = item.log;
+                  const chip = getChip(log.resource_type, log.action);
+                  const actor = getActorInfo(log);
+                  const ts = formatAuditTimestamp(log.created_at);
+                  const detail = formatActionDetail(log);
+                  const sentence = formatSentence(log);
+                  const diffs = formatDiffChips(log);
+                  const isSelected = selectedLog?.id === log.id;
+                  const isWarning = isWarningAuditEvent(log);
+                  const showSevPill = log.severity && log.severity !== "info" && log.severity !== "low" && SEVERITY_META[log.severity];
+                  return (
+                    <tr
+                      key={log.id}
+                      className={[
+                        actor.type === "system" ? "audit-row-system" : "",
+                        isSelected ? "selected" : "",
+                        isWarning ? "audit-row-warning" : "",
+                      ].filter(Boolean).join(" ")}
+                      style={{ cursor: "pointer" }}
+                      onClick={() => setSelectedLog(isSelected ? null : log)}
+                    >
+                      <td className="audit-ts" data-label="Timestamp">
+                        <div className="audit-ts-main">{ts}</div>
+                      </td>
+                      <td data-label="Type">
+                        <span className={`audit-chip audit-chip-${chip.type}`}>{chip.label}</span>
+                      </td>
+                      <td className="audit-actor" data-label="Actor">
+                        {actor.type === "system" ? (
+                          <div className="audit-actor-avatar audit-actor-system">
+                            <Clock size={13} />
+                          </div>
+                        ) : (
+                          <div className={`audit-actor-avatar${actor.type === "juror" ? " audit-actor-juror" : ""}`}>
+                            {actor.initials}
+                          </div>
+                        )}
+                        <div className="audit-actor-info">
+                          <div className="audit-actor-name" style={actor.type === "system" ? { color: "var(--text-tertiary)" } : {}}>
+                            {actor.name}
+                          </div>
+                          <div className="audit-actor-role">{actor.role}</div>
+                        </div>
+                      </td>
+                      <td data-label="Action">
+                        <div className="audit-action-row">
+                          <span className={`audit-action-main${isAuditStaleRefresh ? " opacity-40" : ""}`}>
+                            {sentence.verb}
+                            {sentence.resource && (
+                              <> <span className="audit-action-resource">{sentence.resource}</span></>
+                            )}
+                          </span>
+                          {showSevPill && (
+                            <span className={`audit-sev-pill audit-sev-${log.severity}`}>
+                              {SEVERITY_META[log.severity].label}
+                            </span>
+                          )}
+                        </div>
+                        {diffs.length > 0 && (
+                          <div className="audit-diff-list">
+                            {diffs.map((d, i) => (
+                              <span key={i} className="audit-diff-chip">
+                                <span className="audit-diff-key">{d.key}:</span>
+                                {d.from != null && <span className="audit-diff-from">{d.from}</span>}
+                                {d.from != null && d.to != null && <span className="audit-diff-arrow">→</span>}
+                                {d.to != null && <span className="audit-diff-to">{d.to}</span>}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {!diffs.length && detail && (
+                          <div className="audit-action-detail">{detail}</div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile portrait card list */}
+          <div className="audit-card-list">
+            {showAuditSkeleton && Array.from({ length: 4 }, (_, i) => (
+              <div key={i} className="amc">
+                <div className="amc-body">
+                  <div className="audit-skeleton-row" style={{ width: "40%", marginBottom: 10 }} />
+                  <div className="audit-skeleton-row" style={{ width: "70%", marginBottom: 8 }} />
+                  <div className="audit-skeleton-row" style={{ width: "55%" }} />
+                </div>
               </div>
             ))}
 
-            <Pagination
-              currentPage={feedSafePage}
-              totalPages={feedTotalPages}
-              pageSize={pageSize}
-              totalItems={feedLogs.length}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
-              itemLabel="events"
-              pageSizeOptions={[25, 50, 100]}
-              hasMore={auditHasMore}
-              onLoadMore={handleAuditLoadMore}
-              trailing={
-                <button
-                  className="btn btn-outline btn-sm audit-refresh-btn"
-                  type="button"
-                  disabled={auditLoading}
-                  onClick={() => { handleAuditRefresh(); setCurrentPage(1); }}
+            {!auditLoading && sortedLogs.length === 0 && (
+              <div style={{ textAlign: "center", padding: "28px 0", fontSize: 13, color: "var(--text-tertiary)" }}>
+                {hasAuditFilters || typeFilter || actorFilter || categoryFilter || severityFilter ? "No results for the current filters." : "No audit events yet."}
+              </div>
+            )}
+
+            {pagedItems.map((item) => {
+              const log = item.type === "bulk" ? item.representative : item.log;
+              const chip = getChip(log.resource_type, log.action);
+              const actor = getActorInfo(log);
+              const ts = formatAuditTimestamp(log.created_at);
+              const detail = item.type === "bulk" ? `${item.count}× grouped` : formatActionDetail(log);
+              const cardSentence = item.type === "bulk" ? null : formatSentence(log);
+              const diffs = item.type === "bulk" ? [] : formatDiffChips(log);
+              const isSelected = selectedLog?.id === log.id;
+              const isWarning = isWarningAuditEvent(log);
+              const relTime = getRelativeTime(log.created_at);
+
+              let badge = null;
+              if (log.severity === "high" || log.severity === "critical") badge = { type: "security", label: (log.severity || "HIGH").toUpperCase() };
+              else if (isWarning) badge = { type: "security", label: "SECURITY" };
+              else if (chip.type === "export") badge = { type: "export", label: "CSV" };
+              else if (actor.type === "system") badge = { type: "system", label: "AUTO" };
+
+              return (
+                <div
+                  key={log.id}
+                  className={["amc", isWarning ? "amc-warning" : "", isSelected ? "selected" : ""].filter(Boolean).join(" ")}
+                  data-chip={chip.type}
+                  data-cat={log.category || undefined}
+                  data-sev={(log.severity === "high" || log.severity === "critical") ? log.severity : undefined}
+                  onClick={() => setSelectedLog(isSelected ? null : log)}
                 >
-                  <RefreshCw size={11} />
-                  Refresh
-                </button>
-              }
-            />
+                  <div className="amc-body">
+                    <div className="amc-header">
+                      <span className={`audit-chip audit-chip-${chip.type}`}>{chip.label}</span>
+                      <span className="amc-rel">{relTime}</span>
+                    </div>
+                    <div className="amc-actor">
+                      <div className={`amc-avatar${actor.type === "system" ? " amc-avatar-system" : actor.type === "juror" ? " amc-avatar-juror" : ""}`}>
+                        {actor.type === "system" ? <Clock size={14} /> : actor.initials}
+                      </div>
+                      <div className="amc-actor-info">
+                        <div className="amc-actor-name">{actor.name}</div>
+                        <div className="amc-actor-role">{actor.role}</div>
+                      </div>
+                    </div>
+                    <div className="amc-divider" />
+                    <div className="amc-action">
+                      <div className="amc-icon">
+                        <ActionIcon action={log.action} chipType={chip.type} />
+                      </div>
+                      <div className="amc-action-content">
+                        <div className="amc-action-title">
+                          {cardSentence?.verb ?? formatActionLabel(log.action)}
+                          {cardSentence?.resource && (
+                            <> <span className="audit-action-resource">{cardSentence.resource}</span></>
+                          )}
+                        </div>
+                        {diffs.length > 0 ? (
+                          <div className="amc-diff-list">
+                            {diffs.map((d, i) => (
+                              <span key={i} className="amc-diff-chip">
+                                <span className="amc-diff-key">{d.key}: </span>
+                                {d.from != null && <span className="amc-diff-from">{d.from}</span>}
+                                {d.from != null && d.to != null && <span className="amc-diff-arrow"> → </span>}
+                                {d.to != null && <span className="amc-diff-to">{d.to}</span>}
+                              </span>
+                            ))}
+                          </div>
+                        ) : detail ? (
+                          <div className="amc-action-detail">{detail}</div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="amc-footer">
+                    <span className="amc-ts">{ts}</span>
+                    {badge && <span className={`amc-badge amc-badge-${badge.type}`}>{badge.label}</span>}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <AuditEventDrawer log={selectedLog} onClose={() => setSelectedLog(null)} />
+
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={sortedLogs.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
+            itemLabel="events"
+            pageSizeOptions={[25, 50, 100]}
+            hasMore={auditHasMore}
+            onLoadMore={handleAuditLoadMore}
+          />
         </div>
-      )}
+
+        <AuditEventDrawer key={selectedLog?.id} log={selectedLog} onClose={() => setSelectedLog(null)} />
+      </div>
     </div>
   );
 }

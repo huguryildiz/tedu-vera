@@ -161,6 +161,14 @@ body:not(.dark-mode) .admin-sidebar .sb-account-item.danger:focus-visible{backgr
   .header-refresh-btn{padding:6px 8px}
 }
 
+.sb-tenant.readonly{
+  cursor:default !important;
+}
+
+.sb-tenant.readonly:hover{
+  background:rgba(255,255,255,0.03) !important;
+}
+
 @media (max-width: 900px) and (orientation: landscape) {
   .sidebar{transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);z-index:var(--z-modal)}
   .sidebar.mobile-open{transform:translateX(0)}

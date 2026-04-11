@@ -385,8 +385,8 @@ export default function ReviewsPage() {
           <div className="page-title">Reviews</div>
           <div className="page-desc">Inspect individual juror evaluations across projects and criteria.</div>
         </div>
-        <div className="reviews-actions">
-          <div style={{ position: "relative" }}>
+        <div className="reviews-actions mobile-toolbar-stack">
+          <div className="mobile-toolbar-search" style={{ position: "relative" }}>
             <Search size={14} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-tertiary)", pointerEvents: "none" }} />
             <input
               className="reviews-search"
@@ -397,14 +397,15 @@ export default function ReviewsPage() {
             />
           </div>
           <FilterButton
+            className="mobile-toolbar-filter"
             activeCount={activeFilterCount}
             isOpen={showFilter}
             onClick={() => { setShowFilter((v) => !v); setShowExport(false); }}
           />
-          <div style={{ flex: 1 }} />
+          <div className="mobile-toolbar-spacer" />
           <button
             type="button"
-            className={`btn btn-outline btn-sm${showExport ? " active" : ""}`}
+            className={`btn btn-outline btn-sm mobile-toolbar-export${showExport ? " active" : ""}`}
             onClick={() => { setShowExport((v) => !v); setShowFilter(false); }}
           >
             <Download size={14} style={{ verticalAlign: "-1px" }} />

@@ -24,6 +24,22 @@ function uuid(seedStr) {
 function sha256(val) { return crypto.createHash('sha256').update(val).digest('hex'); }
 function escapeSql(str) { if (!str) return ''; return str.replace(/'/g, "''"); }
 
+// Deterministic IP / device helpers — for audit log enrichment
+const IP_POOL = ['85.99.12.41', '213.74.55.108', '10.0.3.17', '77.246.118.22', '193.140.8.5', '88.222.147.93', '172.16.0.44'];
+function randIp() { return pick(IP_POOL); }
+const UA_POOL = [
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0',
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
+  'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.82 Mobile Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0',
+  'Mozilla/5.0 (iPad; CPU OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
+];
+function randUserAgent() { return pick(UA_POOL); }
+function randSessionId(salt) { return uuid(`session-${salt}-${randInt(1000, 9999)}`); }
+
 // Period start/end dates ARE the evaluation event window.
 // Academic 1-day events: start = end = evalDay.
 // Multi-day competitions: start = first eval day, end = last eval day.
@@ -151,12 +167,12 @@ const orgs = [
   { p: 3, name: 'TEKNOFEST', institution: 'Türkiye Technology Team Foundation', code: 'TEKNOFEST', type: 'competition', evalDays: 3, lang: 'tr', descLang: 'tr' },
   { p: 4, name: 'TÜBİTAK 2204-A', institution: 'Scientific and Technological Research Council of Türkiye', code: 'TUBITAK-2204A', type: 'competition', evalDays: 2, lang: 'tr', descLang: 'tr' },
   { p: 5, name: 'AP-S Student Design Contest', institution: 'IEEE Antennas and Propagation Society', code: 'IEEE-APSSDC', type: 'competition', evalDays: 2, lang: 'en', descLang: 'en' },
-  { p: 6, name: 'CanSat Competition', institution: 'American Astronautical Society', code: 'CANSAT-2025', type: 'competition', evalDays: 3, lang: 'en', descLang: 'en' }
+  { p: 6, name: 'CanSat Competition', institution: 'American Astronautical Society', code: 'CANSAT', type: 'competition', evalDays: 3, lang: 'en', descLang: 'en' }
 ];
 
 const orgCreatedDates = {
   'TEDU-EE': '2024-06-01', 'CMU-CS': '2024-06-15', 'TEKNOFEST': '2024-04-01',
-  'TUBITAK-2204A': '2024-04-15', 'IEEE-APSSDC': '2024-05-01', 'CANSAT-2025': '2024-04-20',
+  'TUBITAK-2204A': '2024-04-15', 'IEEE-APSSDC': '2024-05-01', 'CANSAT': '2024-04-20',
 };
 
 const orgSettings = {
@@ -165,7 +181,7 @@ const orgSettings = {
   'TEKNOFEST': '{"locale":"tr","notifications":{"email":true,"slack":false},"theme":"default","multi_day_event":true}',
   'TUBITAK-2204A': '{"locale":"tr","notifications":{"email":false,"slack":false},"theme":"default"}',
   'IEEE-APSSDC': '{"locale":"en","notifications":{"email":true,"slack":false},"theme":"default"}',
-  'CANSAT-2025': '{"locale":"en","notifications":{"email":true,"slack":true},"theme":"default","recovery_tracking":true}',
+  'CANSAT': '{"locale":"en","notifications":{"email":true,"slack":true},"theme":"default","recovery_tracking":true}',
 };
 
 const orgContactEmails = {
@@ -174,7 +190,7 @@ const orgContactEmails = {
   'TEKNOFEST':     'teknofest@vera-eval.app',
   'TUBITAK-2204A': 'tubitak-2204a@vera-eval.app',
   'IEEE-APSSDC':   'ieee-apssdc@vera-eval.app',
-  'CANSAT-2025':   'cansat-2025@vera-eval.app',
+  'CANSAT':   'cansat-2025@vera-eval.app',
 };
 
 out.push(`-- Organizations`);
@@ -205,7 +221,7 @@ const orgAdminNames = {
   'TEKNOFEST':    ['Cemil Bozkurt', 'Bahar Tandoğan'],
   'TUBITAK-2204A':['Prof. Ayşe Karataş'],
   'IEEE-APSSDC':  ['Dr. Gavin Pierce'],
-  'CANSAT-2025':  ['Harper Quinn']
+  'CANSAT':  ['Harper Quinn']
 };
 
 orgs.forEach(o => {
@@ -458,7 +474,7 @@ processOrgfw('IEEE-APSSDC', 'Design Contest Framework', '1.0',
   [{crit:'creativity',outs:[{code:'DC-1',weight:0.7},{code:'DC-4',weight:0.3}]},{crit:'technical_merit',outs:[{code:'DC-2',weight:0.8},{code:'DC-3',weight:0.2}]},{crit:'application_and_presentation',outs:[{code:'DC-3',weight:0.5},{code:'DC-4',weight:0.3},{code:'DC-1',weight:0.2}]}]
 );
 
-processOrgfw('CANSAT-2025', 'Mission Framework', '2025',
+processOrgfw('CANSAT', 'Mission Framework', '2025',
   [
     {key:'design_compliance',label:'Design Constraints Compliance',short:'Compliance',max:20,weight:20,color:'#6366F1',desc:'Evaluates adherence to all specified volume, mass, and structural design constraints, with documented margin analysis.',customRubric:[{min:18,max:20,label:'Excellent',description:'All constraints fully met with documented margin analysis.'},{min:14,max:17,label:'Good',description:'Constraints met with minor deviations.'},{min:10,max:13,label:'Developing',description:'One or more constraints marginally exceeded.'},{min:0,max:9,label:'Insufficient',description:'Multiple constraints violated.'}]},
     {key:'mission_execution',label:'Mission Execution & Telemetry',short:'Mission',max:35,weight:35,color:'#EF4444',desc:'Assesses successful execution of primary and secondary mission objectives with continuous and reliable telemetry throughout the flight.',customRubric:[{min:31,max:35,label:'Excellent',description:'Primary and secondary missions fully executed. Continuous telemetry.'},{min:24,max:30,label:'Good',description:'Primary mission completed. Minor telemetry gaps.'},{min:17,max:23,label:'Developing',description:'Primary mission partially completed.'},{min:0,max:16,label:'Insufficient',description:'Mission fails to execute.'}]},
@@ -504,7 +520,7 @@ const orgPeriodsDef = {
     {name:'2026 Contest',s:'Evaluation',start:'2026-07-25',end:'2026-07-26',desc:'IEEE AP-S Student Design Contest 2026 — 2-Day Evaluation (Jul 25–26)'},
     {name:'2025 Contest',s:'Evaluation',start:'2025-07-25',end:'2025-07-26',desc:'IEEE AP-S Student Design Contest 2025 — 2-Day Evaluation (Jul 25–26)'},
     {name:'2024 Contest',s:'Evaluation',start:'2024-07-25',end:'2024-07-26',desc:'IEEE AP-S Student Design Contest 2024 — 2-Day Evaluation (Jul 25–26)'}],
-  'CANSAT-2025': [
+  'CANSAT': [
     {name:'2026 Season',s:'Spring',start:'2026-06-24',end:'2026-06-26',desc:'CanSat 2026 Launch Competition — 3-Day Finals (Jun 24–26)'},
     {name:'2025 Season',s:'Spring',start:'2025-06-24',end:'2025-06-26',desc:'CanSat 2025 Launch Competition — 3-Day Finals (Jun 24–26)'},
     {name:'2024 Season',s:'Spring',start:'2024-06-24',end:'2024-06-26',desc:'CanSat 2024 Launch Competition — 3-Day Finals (Jun 24–26)'},
@@ -768,7 +784,7 @@ const criteriaEvolution = {
         ],
       }},
   },
-  'CANSAT-2025': {
+  'CANSAT': {
     1:{labels:{data_and_documentation:'Data Analysis & Reporting'},
       descOverrides:{
         design_compliance:'Assesses adherence to specified volume, mass, and structural design constraints with margin documentation.',
@@ -1085,7 +1101,7 @@ const projectPools = {
       {t:'Printed Yagi-Uda for Direction Finding',desc:'A five-element printed Yagi-Uda at 900 MHz with 9 dBi gain and 50° HPBW, used as the element in a four-quadrant DF array for wildlife VHF collar tracking.'},
     ],
   },
-  'CANSAT-2025': {
+  'CANSAT': {
     0: [
       {t:'Autogyro Descent and Precision Landing System',desc:'Replaces the traditional parachute with a folding autogyro rotor blade assembly that deploys at apogee. Achieves a controlled 5 m/s descent rate with GPS-guided heading corrections targeting a 10 m landing circle.'},
       {t:'Dual-Redundant Telemetry with LoRa Failover',desc:'Primary telemetry uses 915 MHz FSK at 19.2 kbps; a secondary LoRa channel activates automatically if packet loss exceeds 20%, ensuring continuous data downlink throughout the 600 m descent.'},
@@ -1125,7 +1141,7 @@ const orgAdvisors = {
   'TEKNOFEST': [{n:'Prof. Serhat Öztürk',aff:'İTÜ, Uçak Mühendisliği'},{n:'Dr. Fatma Korkmaz',aff:'ODTÜ, Havacılık'},{n:'Prof. Murat Yıldız',aff:'İTÜ, Makina Mühendisliği'},{n:'Dr. Zehra Aksoy',aff:'YTÜ, Mekatronik'},{n:'Prof. Hakan Güneş',aff:'Boğaziçi, Elektrik Müh.'},{n:'Dr. Canan Eriş',aff:'Eskişehir Teknik, Havacılık'}],
   'TUBITAK-2204A': [{n:'Dr. Merve Yıldırım',aff:'Ankara Fen Lisesi'},{n:'Selin Karadeniz',aff:'İstanbul Atatürk Fen Lisesi'},{n:'Ahmet Çelik',aff:'İzmir Fen Lisesi'},{n:'Dr. Burcu Eren',aff:'ODTÜ GV Lisesi'},{n:'Mehmet Kaya',aff:'Galatasaray Lisesi'}],
   'IEEE-APSSDC': [{n:'Prof. Harold Kim',aff:'U. Michigan, ECE'},{n:'Dr. Sarah Novak',aff:'Georgia Tech, ECE'},{n:'Prof. Wei Zhang',aff:'UCLA, EE'},{n:'Dr. Anita Patel',aff:'Purdue, ECE'},{n:'Prof. Gregory Harmon',aff:'Ohio State, ECE'}],
-  'CANSAT-2025': [{n:'Prof. Richard Kline',aff:'Virginia Tech, Aerospace'},{n:'Dr. Samantha Ford',aff:'MIT, AeroAstro'},{n:'Prof. Douglas Park',aff:'CU Boulder, Aerospace'},{n:'Dr. Yuki Tanaka',aff:'Caltech, GALCIT'},{n:'Prof. Brian Caldwell',aff:'Purdue, AAE'}],
+  'CANSAT': [{n:'Prof. Richard Kline',aff:'Virginia Tech, Aerospace'},{n:'Dr. Samantha Ford',aff:'MIT, AeroAstro'},{n:'Prof. Douglas Park',aff:'CU Boulder, Aerospace'},{n:'Dr. Yuki Tanaka',aff:'Caltech, GALCIT'},{n:'Prof. Brian Caldwell',aff:'Purdue, AAE'}],
 };
 
 const namesTr = [
@@ -1281,7 +1297,7 @@ const orgJurors = {
     {n:'Dr. Alice Bourne',aff:'Stanford, EE'},{n:'Prof. James Vickers',aff:'Arizona State, EE'},{n:'Dr. Valentina Russo',aff:'TU Delft, EE'},
     {n:'Prof. Ibrahim Hassan',aff:'Cairo U., Electronics'},{n:'Dr. Amy Chen',aff:'Caltech, EE'},
   ],
-  'CANSAT-2025': [
+  'CANSAT': [
     {n:'Dr. James Whitfield',aff:'Virginia Tech, Aerospace'},{n:'Prof. Laura Henderson',aff:'CU Boulder, Aerospace'},{n:'Col. Robert Drake',aff:'US Air Force Academy'},
     {n:'Dr. Megan Yoshida',aff:'NASA Goddard'},{n:'Prof. Nathan Cooper',aff:'Purdue, AAE'},{n:'Dr. Rebecca Stone',aff:'Johns Hopkins APL'},
     {n:'Prof. Tyler Grant',aff:'Georgia Tech, Aerospace'},{n:'Dr. Lisa Nakamura',aff:'NASA JPL'},{n:'Maj. David Wells',aff:'US Naval Academy'},
@@ -1323,7 +1339,7 @@ periodData.forEach(pd => {
   // Vary PIN-blocking count per org so Completed count ranges 10–13 across orgs.
   // Current period: org-specific (gives 10, 11, 12, or 13 Completed depending on juror pool).
   // Historical periods: 2 for prev, 1 for older/oldest.
-  const curPinBlocks = { 'TEDU-EE': 2, 'CMU-CS': 1, 'TEKNOFEST': 3, 'TUBITAK-2204A': 2, 'IEEE-APSSDC': 3, 'CANSAT-2025': 1 };
+  const curPinBlocks = { 'TEDU-EE': 2, 'CMU-CS': 1, 'TEKNOFEST': 3, 'TUBITAK-2204A': 2, 'IEEE-APSSDC': 3, 'CANSAT': 1 };
   const pinBlockCount = pd.isCur ? (curPinBlocks[pd.org] ?? 2) : (pd.histIdx === 1 ? 2 : 1);
 
   pJurors.forEach((j, jix) => {
@@ -1572,6 +1588,64 @@ function adminEmailFor(displayName) {
     + '@vera-eval.app';
 }
 
+// Derives audit taxonomy from action string (mirrors migration 044 CASE logic)
+function deriveAuditMeta(action) {
+  let category = 'data', severity = 'info', actorType = 'admin';
+
+  // category
+  if (['admin.login', 'admin.login.failure', 'admin.logout', 'admin.session_expired'].includes(action)) {
+    category = 'auth';
+  } else if (['admin.create', 'admin.updated', 'admin.role_granted', 'admin.role_revoked',
+    'memberships.insert', 'memberships.update', 'memberships.delete',
+    'admin_invites.insert', 'admin_invites.update', 'admin_invites.delete'].includes(action)) {
+    category = 'access';
+  } else if (['criteria.save', 'criteria.update', 'outcome.create', 'outcome.update', 'outcome.delete',
+    'organization.status_changed', 'frameworks.insert', 'frameworks.update', 'frameworks.delete',
+    'framework.create', 'framework.update', 'framework.delete'].includes(action)) {
+    category = 'config';
+  } else if (action.startsWith('export.') || action.startsWith('notification.') ||
+    action.startsWith('backup.') || action.startsWith('token.') || action.startsWith('entry_tokens.')) {
+    category = 'security';
+  }
+
+  // severity
+  if (['juror.pin_locked', 'juror.blocked'].includes(action)) {
+    severity = 'critical';
+  } else if (['period.lock', 'period.unlock', 'project.delete', 'organization.status_changed',
+    'backup.deleted', 'frameworks.delete', 'memberships.delete'].includes(action)) {
+    severity = 'high';
+  } else if (['admin.login.failure', 'admin.create', 'pin.reset', 'juror.pin_unlocked',
+    'juror.edit_mode_enabled', 'juror.edit_enabled', 'period.set_current', 'snapshot.freeze',
+    'application.approved', 'application.rejected', 'token.revoke', 'export.audit',
+    'backup.downloaded', 'criteria.save', 'criteria.update', 'outcome.create',
+    'outcome.update', 'outcome.delete', 'frameworks.update'].includes(action)) {
+    severity = 'medium';
+  } else if (['admin.updated', 'juror.edit_mode_closed_on_resubmit', 'token.generate',
+    'export.scores', 'export.rankings', 'export.heatmap', 'export.analytics', 'export.backup',
+    'backup.created', 'frameworks.insert', 'admin_invites.insert',
+    'memberships.insert', 'memberships.update'].includes(action)) {
+    severity = 'low';
+  }
+
+  // actorType
+  if (['evaluation.complete', 'score.update', 'score_sheets.insert',
+    'score_sheets.update', 'score_sheets.delete'].includes(action)) {
+    actorType = 'juror';
+  } else if (['snapshot.freeze', 'juror.pin_locked', 'juror.edit_mode_closed_on_resubmit',
+    'projects.insert', 'projects.update', 'projects.delete',
+    'jurors.insert', 'jurors.update', 'jurors.delete',
+    'periods.insert', 'periods.update', 'periods.delete',
+    'profiles.insert', 'profiles.update',
+    'org_applications.insert', 'org_applications.update', 'org_applications.delete',
+    'organizations.insert', 'organizations.update', 'admin_invites.update'].includes(action)) {
+    actorType = 'system';
+  } else if (action === 'application.submitted' || action === 'admin.login.failure') {
+    actorType = 'anonymous';
+  }
+
+  return { category, severity, actorType };
+}
+
 // ─── ORG-LEVEL EVENTS ───
 
 // 1. admin.login — 2-3 per org at creation, mixed "password"/"google" methods
@@ -1615,12 +1689,12 @@ periodData.filter(pd => pd.isCur).forEach(pd => {
   auditObjList.push({ action:'period.set_current', resType:'periods', resId:pd.id, orgId:o.id, userId:demoAdminId, details:`{"period_id":"${pd.id}","periodName":"${escapeSql(pd.name)} · ${pd.org}"}`, timeStr:randSqlTs(pd.start, 24, 72) });
 });
 
-// 5. organization.status_changed — CANSAT-2025 toggled disabled → active for demo
+// 5. organization.status_changed — CANSAT toggled disabled → active for demo
 {
-  const demoOrg = orgs.find(x => x.code === 'CANSAT-2025');
+  const demoOrg = orgs.find(x => x.code === 'CANSAT');
   if (demoOrg) {
-    auditObjList.push({ action:'organization.status_changed', resType:'organizations', resId:demoOrg.id, orgId:demoOrg.id, userId:demoAdminId, details:`{"orgCode":"CANSAT-2025","orgName":"CanSat Competition","previousStatus":"active","newStatus":"disabled","reason":"Pending annual renewal review"}`, timeStr:randSqlTs(orgCreatedDates['CANSAT-2025'], 720, 1440) });
-    auditObjList.push({ action:'organization.status_changed', resType:'organizations', resId:demoOrg.id, orgId:demoOrg.id, userId:demoAdminId, details:`{"orgCode":"CANSAT-2025","orgName":"CanSat Competition","previousStatus":"disabled","newStatus":"active","reason":"Renewal complete"}`, timeStr:randSqlTs(orgCreatedDates['CANSAT-2025'], 1440, 2160) });
+    auditObjList.push({ action:'organization.status_changed', resType:'organizations', resId:demoOrg.id, orgId:demoOrg.id, userId:demoAdminId, details:`{"orgCode":"CANSAT","orgName":"CanSat Competition","previousStatus":"active","newStatus":"disabled","reason":"Pending annual renewal review"}`, timeStr:randSqlTs(orgCreatedDates['CANSAT'], 720, 1440) });
+    auditObjList.push({ action:'organization.status_changed', resType:'organizations', resId:demoOrg.id, orgId:demoOrg.id, userId:demoAdminId, details:`{"orgCode":"CANSAT","orgName":"CanSat Competition","previousStatus":"disabled","newStatus":"active","reason":"Renewal complete"}`, timeStr:randSqlTs(orgCreatedDates['CANSAT'], 1440, 2160) });
   }
 }
 
@@ -1747,13 +1821,421 @@ periodData.forEach(pd => {
     const periodCountForOrg = periodData.filter(p => p.org === pd.org).length;
     auditObjList.push({ action:'export.backup', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"format":"xlsx","period_count":${periodCountForOrg},"org_id":"${o.id}"}`, timeStr:randSqlTs(pd.start, 48, 240) });
   }
+
+  // criteria.save — admin saves criteria config before each period's eval day
+  if (adminId) {
+    const periodCrits = periodCriteriaMap[pd.id] || [];
+    const adminNm = (orgAdminNames[pd.org] || [])[0] || '';
+    auditObjList.push({ action:'criteria.save', resType:'period_criteria', resId:pd.id, orgId:o.id, userId:adminId, actorName:adminNm, ip:randIp(), ua:randUserAgent(), sessionId:randSessionId(`critr-${pd.id}`), details:`{"period_id":"${pd.id}","criteria_count":${periodCrits.length},"periodName":"${escapeSql(pd.name)}"}`, timeStr:sqlTs(pd.start, -72) });
+  }
+
+  // period.lock — historical periods locked after evaluation completes
+  if (!pd.isCur && pd.histIdx >= 1 && adminId) {
+    const adminNm = (orgAdminNames[pd.org] || [])[0] || '';
+    auditObjList.push({ action:'period.lock', resType:'periods', resId:pd.id, orgId:o.id, userId:adminId, actorName:adminNm, ip:randIp(), ua:randUserAgent(), sessionId:randSessionId(`lock-${pd.id}`), details:`{"period_id":"${pd.id}","periodName":"${escapeSql(pd.name)}"}`, timeStr:randSqlTs(pd.evalDay, pd.evalDays * 24 + 48, pd.evalDays * 24 + 168) });
+  }
+
+  // backup.created + backup.downloaded — once per org at histIdx===2
+  if (pd.histIdx === 2 && adminId) {
+    const adminNm = (orgAdminNames[pd.org] || [])[0] || '';
+    const sizeMb = randInt(8, 25);
+    const fileName = `${pd.org.toLowerCase().replace(/-/g,'_')}_backup_${pd.start.replace(/-/g,'')}.zip`;
+    const bIp = randIp(), bUa = randUserAgent();
+    auditObjList.push({ action:'backup.created', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, actorName:adminNm, ip:bIp, ua:bUa, sessionId:randSessionId(`bkp-${pd.id}`), details:`{"file":"${fileName}","size_mb":${sizeMb},"period_id":"${pd.id}"}`, timeStr:randSqlTs(pd.start, 720, 1440) });
+    auditObjList.push({ action:'backup.downloaded', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, actorName:adminNm, ip:bIp, ua:bUa, sessionId:randSessionId(`bkpd-${pd.id}`), details:`{"file":"${fileName}","size_mb":${sizeMb}}`, timeStr:randSqlTs(pd.start, 1440, 2160) });
+  }
 });
 
-const auditBatcher = makeBatcher('audit_logs', 'id, organization_id, user_id, action, resource_type, resource_id, details, created_at');
+// ─── SECURITY ANOMALY — failed login burst for TEDU-EE ───
+// 5 rapid failed login attempts from a non-pool IP → triggers anomaly signal
+{
+  const teduOrg = orgs.find(x => x.code === 'TEDU-EE');
+  const teduAdminId = adminFor('TEDU-EE');
+  if (teduOrg && teduAdminId) {
+    const adminNm = (orgAdminNames['TEDU-EE'] || [])[0] || '';
+    const adminEmail = adminEmailFor(adminNm);
+    const suspiciousIp = '195.88.54.17'; // outside normal IP pool — anomaly signal
+    const suspiciousUa = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+    const burstDate = '2025-11-15';
+    for (let fi = 0; fi < 5; fi++) {
+      auditObjList.push({ action:'admin.login.failure', resType:'profiles', resId:teduAdminId, orgId:teduOrg.id, userId:null, _salt:fi, category:'auth', severity: fi >= 2 ? 'high' : 'medium', actorType:'anonymous', ip:suspiciousIp, ua:suspiciousUa, details:`{"email":"${adminEmail}","ip":"${suspiciousIp}","attempt":${fi+1}}`, timeStr:`(timestamp '${burstDate} 22:30:00' + interval '${fi * 3} minutes')` });
+    }
+  }
+}
+
+// ─── HIGH-VOLUME AUDIT EVENTS — 90-day spread ───────────────────────────────
+// Adds ~1800 new events: auth logins/logouts, data lifecycle, config changes,
+// access events, and anomaly signals spread over 90 days ending 2026-04-12.
+
+function dateAddDays(dateStr, days) {
+  const d = new Date(dateStr + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().substring(0, 10);
+}
+function bizTs(dateStr, dayOffset) {
+  const dt = dateAddDays(dateStr, dayOffset || 0);
+  const h = randInt(8, 17), m = randInt(0, 59), s = randInt(0, 59);
+  return `timestamp '${dt} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}'`;
+}
+
+const AUTH_SPREAD_START = '2026-01-12'; // 90 days before 2026-04-12
+
+// auth.admin.login.success + auth.admin.logout — 90-day daily spread
+orgs.forEach(o => {
+  const adminIds = orgAdminMap[o.code] || [];
+  const adminNames = orgAdminNames[o.code] || [];
+  if (adminIds.length === 0) return;
+  for (let day = 0; day < 90; day++) {
+    const dt = dateAddDays(AUTH_SPREAD_START, day);
+    const dow = new Date(dt + 'T12:00:00Z').getUTCDay();
+    const isWeekend = dow === 0 || dow === 6;
+    if (isWeekend && random() > 0.08) continue;
+    if (!isWeekend && random() < 0.12) continue;
+    const count = isWeekend ? 1 : randInt(1, 3);
+    for (let li = 0; li < count; li++) {
+      const aIdx = (day + li) % adminIds.length;
+      const adminId = adminIds[aIdx];
+      const adminNm = adminNames[aIdx] || '';
+      const method = random() < 0.55 ? 'password' : 'google';
+      const ip = randIp(), ua = randUserAgent();
+      const sid = randSessionId(`spread-${o.code}-${day}-${li}`);
+      const lts = bizTs(dt);
+      auditObjList.push({
+        action: 'auth.admin.login.success',
+        resType: 'profiles', resId: adminId, orgId: o.id,
+        userId: adminId, actorName: adminNm, ip, ua, sessionId: sid,
+        category: 'auth', severity: 'info', actorType: 'admin',
+        details: `{"method":"${method}","organization_id":"${o.id}"}`,
+        timeStr: lts, _salt: `ls-${o.code}-${day}-${li}`,
+      });
+      if (random() < 0.65) {
+        const lh = Math.min(randInt(2, 8) + randInt(8, 17), 22);
+        const lm2 = randInt(0, 59), ls2 = randInt(0, 59);
+        auditObjList.push({
+          action: 'auth.admin.logout',
+          resType: 'profiles', resId: adminId, orgId: o.id,
+          userId: adminId, actorName: adminNm, ip, ua, sessionId: sid,
+          category: 'auth', severity: 'info', actorType: 'admin',
+          details: `{"organization_id":"${o.id}"}`,
+          timeStr: `timestamp '${dt} ${String(lh).padStart(2,'0')}:${String(lm2).padStart(2,'0')}:${String(ls2).padStart(2,'0')}'`,
+          _salt: `lo-${o.code}-${day}-${li}`,
+        });
+      }
+    }
+  }
+});
+
+// auth.admin.password.reset — every other org
+orgs.filter((_, i) => i % 2 === 0).forEach(o => {
+  const adminId = adminFor(o.code);
+  const adminNm = (orgAdminNames[o.code] || [])[0] || '';
+  if (!adminId) return;
+  const adminEmail = adminEmailFor(adminNm);
+  const ip = randIp(), ua = randUserAgent();
+  const sid = randSessionId(`pwreset-${o.code}`);
+  const reqTs = bizTs(AUTH_SPREAD_START, 14);
+  const doneTs = bizTs(AUTH_SPREAD_START, 14);
+  auditObjList.push({
+    action: 'auth.admin.password.reset.requested',
+    resType: 'profiles', resId: adminId, orgId: o.id,
+    userId: adminId, actorName: adminNm, ip, ua, sessionId: sid,
+    category: 'auth', severity: 'low', actorType: 'admin',
+    details: `{"email":"${adminEmail}"}`,
+    timeStr: reqTs, _salt: `pwr-${o.code}`,
+  });
+  auditObjList.push({
+    action: 'auth.admin.password.reset.completed',
+    resType: 'profiles', resId: adminId, orgId: o.id,
+    userId: adminId, actorName: adminNm, ip, ua, sessionId: sid,
+    category: 'auth', severity: 'low', actorType: 'admin',
+    details: `{"email":"${adminEmail}"}`,
+    timeStr: doneTs, _salt: `pwc-${o.code}`,
+  });
+});
+
+// access.admin.impersonate — super-admin impersonates TEDU-EE and CMU-CS
+[{ orgCode: 'TEDU-EE' }, { orgCode: 'CMU-CS' }].forEach(pair => {
+  const targetOrg = orgs.find(x => x.code === pair.orgCode);
+  const targetAdminId = adminFor(pair.orgCode);
+  const targetNm = (orgAdminNames[pair.orgCode] || [])[0] || '';
+  if (!targetOrg || !targetAdminId) return;
+  const ip = randIp(), ua = randUserAgent();
+  const sid = randSessionId(`impersonate-${pair.orgCode}`);
+  const startTs = bizTs(AUTH_SPREAD_START, 30);
+  const endTs = bizTs(AUTH_SPREAD_START, 30);
+  auditObjList.push({
+    action: 'access.admin.impersonate.start',
+    resType: 'profiles', resId: targetAdminId, orgId: targetOrg.id,
+    userId: demoAdminId, actorName: 'Vera Platform Admin', ip, ua, sessionId: sid,
+    category: 'access', severity: 'high', actorType: 'admin',
+    details: `{"target_id":"${targetAdminId}","target_name":"${escapeSql(targetNm)}","organization_id":"${targetOrg.id}"}`,
+    timeStr: startTs, _salt: `imp-start-${pair.orgCode}`,
+  });
+  auditObjList.push({
+    action: 'access.admin.impersonate.end',
+    resType: 'profiles', resId: targetAdminId, orgId: targetOrg.id,
+    userId: demoAdminId, actorName: 'Vera Platform Admin', ip, ua, sessionId: sid,
+    category: 'access', severity: 'low', actorType: 'admin',
+    details: `{"target_id":"${targetAdminId}","target_name":"${escapeSql(targetNm)}"}`,
+    timeStr: endTs, _salt: `imp-end-${pair.orgCode}`,
+  });
+});
+
+// access.admin.role.granted / .revoked — orgs with secondary admin
+[{ orgCode: 'TEDU-EE' }, { orgCode: 'CMU-CS' }].forEach(pair => {
+  const adminIds = orgAdminMap[pair.orgCode] || [];
+  const adminNames = orgAdminNames[pair.orgCode] || [];
+  if (adminIds.length < 2) return;
+  const grantorId = adminIds[0], grantorNm = adminNames[0] || '';
+  const targetId = adminIds[1], targetNm = adminNames[1] || '';
+  const targetOrg = orgs.find(x => x.code === pair.orgCode);
+  if (!targetOrg) return;
+  const ip = randIp(), ua = randUserAgent();
+  const sid = randSessionId(`role-grant-${pair.orgCode}`);
+  auditObjList.push({
+    action: 'access.admin.role.granted',
+    resType: 'memberships', resId: targetId, orgId: targetOrg.id,
+    userId: grantorId, actorName: grantorNm, ip, ua, sessionId: sid,
+    category: 'access', severity: 'medium', actorType: 'admin',
+    details: `{"target_id":"${targetId}","target_name":"${escapeSql(targetNm)}","role":"org_admin","organization_id":"${targetOrg.id}"}`,
+    timeStr: bizTs(AUTH_SPREAD_START, 5), _salt: `role-grant-${pair.orgCode}`,
+  });
+  auditObjList.push({
+    action: 'access.admin.role.revoked',
+    resType: 'memberships', resId: targetId, orgId: targetOrg.id,
+    userId: grantorId, actorName: grantorNm, ip, ua, sessionId: sid,
+    category: 'access', severity: 'medium', actorType: 'admin',
+    details: `{"target_id":"${targetId}","target_name":"${escapeSql(targetNm)}","role":"org_admin","organization_id":"${targetOrg.id}"}`,
+    timeStr: bizTs(AUTH_SPREAD_START, 60), _salt: `role-revoke-${pair.orgCode}`,
+  });
+});
+
+// data.period.created / .updated — for every period
+periodData.forEach((pd, pdIdx) => {
+  const adminId = adminFor(pd.org);
+  const adminNm = (orgAdminNames[pd.org] || [])[0] || '';
+  const o = orgs.find(x => x.code === pd.org);
+  if (!adminId || !o) return;
+  const ip = randIp(), ua = randUserAgent();
+  const sid = randSessionId(`period-lifecycle-${pd.id}`);
+  const createdTs = bizTs(pd.start, -90 - pdIdx * 2);
+  auditObjList.push({
+    action: 'data.period.created',
+    resType: 'periods', resId: pd.id, orgId: o.id,
+    userId: adminId, actorName: adminNm, ip, ua, sessionId: sid,
+    category: 'data', severity: 'info', actorType: 'admin',
+    details: `{"periodName":"${escapeSql(pd.name)}","organization_id":"${o.id}"}`,
+    timeStr: createdTs, _salt: `pc-${pd.id}`,
+  });
+  auditObjList.push({
+    action: 'data.period.updated',
+    resType: 'periods', resId: pd.id, orgId: o.id,
+    userId: adminId, actorName: adminNm, ip, ua, sessionId: sid,
+    category: 'data', severity: 'info', actorType: 'admin',
+    details: `{"periodName":"${escapeSql(pd.name)}","changedFields":["evaluation_days","start_date"],"organization_id":"${o.id}"}`,
+    timeStr: bizTs(pd.start, -85 - pdIdx), _salt: `pu-${pd.id}`,
+  });
+});
+
+// data.project.created / .updated for all current projects; .deleted for 5 synthetic ones
+projList.forEach((p, pIdx) => {
+  const adminId = adminFor(p.org);
+  const adminNm = (orgAdminNames[p.org] || [])[0] || '';
+  const o = orgs.find(x => x.code === p.org);
+  if (!adminId || !o) return;
+  const ip = randIp(), ua = randUserAgent();
+  const createTs = bizTs(AUTH_SPREAD_START, -40 + (pIdx % 30));
+  auditObjList.push({
+    action: 'data.project.created',
+    resType: 'projects', resId: p.id, orgId: o.id,
+    userId: adminId, actorName: adminNm, ip, ua,
+    sessionId: randSessionId(`proj-create-${p.id}`),
+    category: 'data', severity: 'info', actorType: 'admin',
+    details: `{"title":"${escapeSql(p.title)}","organization_id":"${o.id}"}`,
+    timeStr: createTs, _salt: `proj-c-${p.id}`,
+  });
+  if (random() < 0.18) {
+    auditObjList.push({
+      action: 'data.project.updated',
+      resType: 'projects', resId: p.id, orgId: o.id,
+      userId: adminId, actorName: adminNm, ip, ua,
+      sessionId: randSessionId(`proj-upd-${p.id}`),
+      category: 'data', severity: 'info', actorType: 'admin',
+      details: `{"title":"${escapeSql(p.title)}","changedFields":["advisor","description"],"organization_id":"${o.id}"}`,
+      timeStr: bizTs(AUTH_SPREAD_START, -30 + (pIdx % 20)), _salt: `proj-u-${p.id}`,
+    });
+  }
+});
+// 5 synthetic deleted projects
+[
+  { title: 'Drone Nav System', org: 'TEDU-EE' },
+  { title: 'Smart Glove Interface', org: 'CMU-CS' },
+  { title: 'Solar Tracker v2', org: 'TEKNOFEST' },
+  { title: 'AI Crop Monitor', org: 'TUBITAK-2204A' },
+  { title: 'Passive Radar Demo', org: 'IEEE-APSSDC' },
+].forEach((proj, di) => {
+  const adminId = adminFor(proj.org);
+  const adminNm = (orgAdminNames[proj.org] || [])[0] || '';
+  const o = orgs.find(x => x.code === proj.org);
+  if (!adminId || !o) return;
+  const fakeId = uuid(`deleted-project-${proj.org}-${di}`);
+  auditObjList.push({
+    action: 'data.project.deleted',
+    resType: 'projects', resId: fakeId, orgId: o.id,
+    userId: adminId, actorName: adminNm, ip: randIp(), ua: randUserAgent(),
+    sessionId: randSessionId(`proj-del-${di}`),
+    category: 'data', severity: 'medium', actorType: 'admin',
+    details: `{"title":"${escapeSql(proj.title)}","organization_id":"${o.id}"}`,
+    timeStr: bizTs(AUTH_SPREAD_START, di * 7 + 10), _salt: `proj-d-${di}`,
+  });
+});
+
+// data.juror.created / .updated for all jurors; data.juror.imported bulk per org
+jurorIdList.forEach((j, jIdx) => {
+  const adminId = adminFor(j.org);
+  const adminNm = (orgAdminNames[j.org] || [])[0] || '';
+  const o = orgs.find(x => x.code === j.org);
+  if (!adminId || !o) return;
+  const createTs = bizTs(AUTH_SPREAD_START, -50 + (jIdx % 25));
+  auditObjList.push({
+    action: 'data.juror.created',
+    resType: 'jurors', resId: j.id, orgId: o.id,
+    userId: adminId, actorName: adminNm, ip: randIp(), ua: randUserAgent(),
+    sessionId: randSessionId(`juror-create-${j.id}`),
+    category: 'data', severity: 'info', actorType: 'admin',
+    details: `{"juror_name":"${escapeSql(j.n)}","organization_id":"${o.id}"}`,
+    timeStr: createTs, _salt: `jc-${j.id}`,
+  });
+  if (random() < 0.2) {
+    auditObjList.push({
+      action: 'data.juror.updated',
+      resType: 'jurors', resId: j.id, orgId: o.id,
+      userId: adminId, actorName: adminNm, ip: randIp(), ua: randUserAgent(),
+      sessionId: randSessionId(`juror-upd-${j.id}`),
+      category: 'data', severity: 'info', actorType: 'admin',
+      details: `{"juror_name":"${escapeSql(j.n)}","changedFields":["email"],"organization_id":"${o.id}"}`,
+      timeStr: bizTs(AUTH_SPREAD_START, -40 + (jIdx % 20)), _salt: `ju-${j.id}`,
+    });
+  }
+});
+orgs.forEach(o => {
+  const adminId = adminFor(o.code);
+  const adminNm = (orgAdminNames[o.code] || [])[0] || '';
+  if (!adminId) return;
+  const count = randInt(8, 22);
+  auditObjList.push({
+    action: 'data.juror.imported',
+    resType: 'jurors', resId: o.id, orgId: o.id,
+    userId: adminId, actorName: adminNm, ip: randIp(), ua: randUserAgent(),
+    sessionId: randSessionId(`juror-import-${o.code}`),
+    category: 'data', severity: 'info', actorType: 'admin',
+    details: `{"count":${count},"organization_id":"${o.id}","format":"CSV"}`,
+    timeStr: bizTs(AUTH_SPREAD_START, -55), _salt: `ji-${o.code}`,
+  });
+});
+
+// config.criteria.updated — once per period (with changedFields diff)
+periodData.forEach((pd, pdIdx) => {
+  const adminId = adminFor(pd.org);
+  const adminNm = (orgAdminNames[pd.org] || [])[0] || '';
+  const o = orgs.find(x => x.code === pd.org);
+  if (!adminId || !o) return;
+  auditObjList.push({
+    action: 'config.criteria.updated',
+    resType: 'criteria', resId: pd.id, orgId: o.id,
+    userId: adminId, actorName: adminNm, ip: randIp(), ua: randUserAgent(),
+    sessionId: randSessionId(`crit-upd-${pd.id}`),
+    category: 'config', severity: 'medium', actorType: 'admin',
+    details: `{"periodName":"${escapeSql(pd.name)}","changedFields":["design_weight","delivery_weight"],"fromTotal":100,"toTotal":100}`,
+    timeStr: bizTs(pd.start, -30 - pdIdx), _salt: `cu-${pd.id}`,
+  });
+});
+
+// config.outcome.updated — 2 per org
+orgs.forEach((o, oi) => {
+  const adminId = adminFor(o.code);
+  const adminNm = (orgAdminNames[o.code] || [])[0] || '';
+  if (!adminId) return;
+  ['PO-1', 'PO-3'].forEach((outcome, k) => {
+    auditObjList.push({
+      action: 'config.outcome.updated',
+      resType: 'outcomes', resId: o.id, orgId: o.id,
+      userId: adminId, actorName: adminNm, ip: randIp(), ua: randUserAgent(),
+      sessionId: randSessionId(`outcome-upd-${o.code}-${k}`),
+      category: 'config', severity: 'medium', actorType: 'admin',
+      details: `{"outcome":"${outcome}","changedFields":["description"],"organization_id":"${o.id}"}`,
+      timeStr: bizTs(AUTH_SPREAD_START, 10 + oi * 3 + k), _salt: `ou-${o.code}-${k}`,
+    });
+  });
+});
+
+// config.outcome_mapping.updated — once per period
+periodData.forEach((pd, pdIdx) => {
+  const adminId = adminFor(pd.org);
+  const adminNm = (orgAdminNames[pd.org] || [])[0] || '';
+  const o = orgs.find(x => x.code === pd.org);
+  if (!adminId || !o) return;
+  auditObjList.push({
+    action: 'config.outcome_mapping.updated',
+    resType: 'outcome_mappings', resId: pd.id, orgId: o.id,
+    userId: adminId, actorName: adminNm, ip: randIp(), ua: randUserAgent(),
+    sessionId: randSessionId(`mapping-upd-${pd.id}`),
+    category: 'config', severity: 'medium', actorType: 'admin',
+    details: `{"periodName":"${escapeSql(pd.name)}","mappingCount":${randInt(8, 14)},"organization_id":"${o.id}"}`,
+    timeStr: bizTs(pd.start, -25 - pdIdx), _salt: `om-${pd.id}`,
+  });
+});
+
+// config.organization.settings.updated — 2 per org
+orgs.forEach((o, oi) => {
+  const adminId = adminFor(o.code);
+  const adminNm = (orgAdminNames[o.code] || [])[0] || '';
+  if (!adminId) return;
+  [['locale','timezone'], ['notifications','theme']].forEach((fields, k) => {
+    auditObjList.push({
+      action: 'config.organization.settings.updated',
+      resType: 'organizations', resId: o.id, orgId: o.id,
+      userId: adminId, actorName: adminNm, ip: randIp(), ua: randUserAgent(),
+      sessionId: randSessionId(`org-settings-${o.code}-${k}`),
+      category: 'config', severity: 'low', actorType: 'admin',
+      details: `{"changedFields":["${fields.join('","')}"],"organization_id":"${o.id}"}`,
+      timeStr: bizTs(AUTH_SPREAD_START, 20 + oi * 2 + k * 5), _salt: `os-${o.code}-${k}`,
+    });
+  });
+});
+
+// security.anomaly.detected — 3 critical events across different orgs
+[
+  { orgCode: 'TEDU-EE', summary: '5 failed sign-ins from new IP 195.88.54.17 for koray.yilmazer@vera-eval.app', day: 45 },
+  { orgCode: 'CMU-CS', summary: 'Unusual export volume: 3 full score exports in 10 minutes', day: 62 },
+  { orgCode: 'TEKNOFEST', summary: 'Admin login from unrecognized country (DE) for cemil.bozkurt@vera-eval.app', day: 77 },
+].forEach((item, ai) => {
+  const o = orgs.find(x => x.code === item.orgCode);
+  if (!o) return;
+  auditObjList.push({
+    action: 'security.anomaly.detected',
+    resType: 'audit_logs', resId: o.id, orgId: o.id,
+    userId: null, actorName: 'System', ip: null, ua: null, sessionId: null,
+    category: 'security', severity: 'critical', actorType: 'system',
+    details: `{"summary":"${escapeSql(item.summary)}","organization_id":"${o.id}"}`,
+    timeStr: bizTs(AUTH_SPREAD_START, item.day), _salt: `anom-${ai}`,
+  });
+});
+
+const auditBatcher = makeBatcher('audit_logs', 'id, organization_id, user_id, action, resource_type, resource_id, category, severity, actor_type, actor_name, ip_address, user_agent, session_id, details, created_at');
 auditObjList.forEach(ad => {
-  const aId = uuid(`audit-${ad.action}-${ad.resId}-${String(ad.timeStr).substring(0,30)}`);
+  const saltKey = ad._salt !== undefined ? `-${ad._salt}` : '';
+  const aId = uuid(`audit-${ad.action}-${ad.resId}${saltKey}-${String(ad.timeStr).substring(0,30)}`);
   const userSql = ad.userId ? `'${ad.userId}'` : 'NULL';
-  auditBatcher.push(`('${aId}', '${ad.orgId}', ${userSql}, '${ad.action}', '${ad.resType}', '${ad.resId}', '${escapeSql(ad.details)}', ${ad.timeStr})`);
+  const meta = deriveAuditMeta(ad.action);
+  const cat = ad.category || meta.category;
+  const sev = ad.severity || meta.severity;
+  const act = ad.actorType || meta.actorType;
+  const actorNameSql = ad.actorName ? `'${escapeSql(ad.actorName)}'` : 'NULL';
+  const ipSql = ad.ip ? `'${ad.ip}'` : 'NULL';
+  const uaSql = ad.ua ? `'${escapeSql(ad.ua)}'` : 'NULL';
+  const sessionSql = ad.sessionId ? `'${ad.sessionId}'` : 'NULL';
+  auditBatcher.push(`('${aId}', '${ad.orgId}', ${userSql}, '${ad.action}', '${ad.resType}', '${ad.resId}', '${cat}', '${sev}', '${act}', ${actorNameSql}, ${ipSql}, ${uaSql}, ${sessionSql}, '${escapeSql(ad.details)}', ${ad.timeStr})`);
 });
 auditBatcher.flush(out);
 out.push('');
@@ -1794,15 +2276,15 @@ const curatedFeedback = new Map([
   ['period-IEEE-APSSDC-0|juror-IEEE-APSSDC-2', {rating:5,comment:'Best evaluation tool for design contest reviews.',pub:true}],
   ['period-IEEE-APSSDC-1|juror-IEEE-APSSDC-0', {rating:5,comment:null,pub:false}],
   ['period-IEEE-APSSDC-1|juror-IEEE-APSSDC-2', {rating:5,comment:'Used VERA again — consistently excellent.',pub:true}],
-  // CANSAT-2025
-  ['period-CANSAT-2025-0|juror-CANSAT-2025-0', {rating:5,comment:'Evaluated all teams in a single afternoon. Real-time rankings kept the event exciting.',pub:true}],
-  ['period-CANSAT-2025-0|juror-CANSAT-2025-1', {rating:4,comment:'Great for competition settings. Rubric sheet was very helpful.',pub:true}],
-  ['period-CANSAT-2025-0|juror-CANSAT-2025-3', {rating:3,comment:'Worked fine but would prefer larger text on the scoring interface.',pub:true}],
-  ['period-CANSAT-2025-1|juror-CANSAT-2025-0', {rating:4,comment:null,pub:false}],
-  ['period-CANSAT-2025-1|juror-CANSAT-2025-1', {rating:5,comment:'Even better than last year.',pub:true}],
-  ['period-CANSAT-2025-1|juror-CANSAT-2025-2', {rating:4,comment:'Straightforward and efficient. No training needed.',pub:true}],
-  ['period-CANSAT-2025-2|juror-CANSAT-2025-1', {rating:3,comment:null,pub:false}],
-  ['period-CANSAT-2025-2|juror-CANSAT-2025-2', {rating:5,comment:null,pub:false}],
+  // CANSAT
+  ['period-CANSAT-0|juror-CANSAT-0', {rating:5,comment:'Evaluated all teams in a single afternoon. Real-time rankings kept the event exciting.',pub:true}],
+  ['period-CANSAT-0|juror-CANSAT-1', {rating:4,comment:'Great for competition settings. Rubric sheet was very helpful.',pub:true}],
+  ['period-CANSAT-0|juror-CANSAT-3', {rating:3,comment:'Worked fine but would prefer larger text on the scoring interface.',pub:true}],
+  ['period-CANSAT-1|juror-CANSAT-0', {rating:4,comment:null,pub:false}],
+  ['period-CANSAT-1|juror-CANSAT-1', {rating:5,comment:'Even better than last year.',pub:true}],
+  ['period-CANSAT-1|juror-CANSAT-2', {rating:4,comment:'Straightforward and efficient. No training needed.',pub:true}],
+  ['period-CANSAT-2|juror-CANSAT-1', {rating:3,comment:null,pub:false}],
+  ['period-CANSAT-2|juror-CANSAT-2', {rating:5,comment:null,pub:false}],
   // TUBITAK-2204A
   ['period-TUBITAK-2204A-0|juror-TUBITAK-2204A-0', {rating:5,comment:'Araştırma projeleri için çok uygun bir değerlendirme aracı.',pub:true}],
   ['period-TUBITAK-2204A-0|juror-TUBITAK-2204A-1', {rating:4,comment:'Kriter bazlı puanlama çok iyi kurgulanmış.',pub:true}],
@@ -1846,7 +2328,7 @@ const feedbackCommentsTR = [
 ];
 
 const orgFeedbackLang = {
-  'TEDU-EE':'en', 'CMU-CS':'en', 'IEEE-APSSDC':'en', 'CANSAT-2025':'en',
+  'TEDU-EE':'en', 'CMU-CS':'en', 'IEEE-APSSDC':'en', 'CANSAT':'en',
   'TEKNOFEST':'tr', 'TUBITAK-2204A':'tr',
 };
 

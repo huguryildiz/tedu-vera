@@ -87,6 +87,7 @@ export {
   getActiveEntryTokenPlain,
   listAuditLogs,
   writeAuditLog,
+  writeAuthFailureEvent,
   fullExport,
   upsertProfile,
   getProfile,

@@ -5,23 +5,54 @@
 // Props: organizationId, selectedPeriodId from AdminLayout.
 // ============================================================
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { LockOpen, Settings, Check, Clock, AlertCircle } from "lucide-react";
 import { useAdminContext } from "../hooks/useAdminContext";
 import { usePinBlocking } from "../hooks/usePinBlocking";
 import { useSecurityPolicy } from "@/auth/SecurityPolicyContext";
+import { formatTs } from "../utils/adminUtils";
 import FbAlert from "@/shared/ui/FbAlert";
+import JurorBadge from "../components/JurorBadge";
+import UnlockAllModal from "../modals/UnlockAllModal";
 
-function formatEta(lockedUntil) {
+function groupBarColor(scored, total) {
+  if (total === 0) return "var(--text-tertiary)";
+  if (scored >= total) return "var(--success)";
+  if (scored > 0) return "var(--warning)";
+  return "var(--text-tertiary)";
+}
+
+function groupTextClass(scored, total) {
+  if (total === 0) return "jurors-table-groups jt-zero";
+  if (scored >= total) return "jurors-table-groups jt-done";
+  if (scored > 0) return "jurors-table-groups jt-partial";
+  return "jurors-table-groups jt-zero";
+}
+
+function formatAgo(iso) {
+  if (!iso) return "just now";
+  const secs = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (secs < 60) return "just now";
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function formatRemaining(lockedUntil) {
   if (!lockedUntil) return "—";
   const ms = new Date(lockedUntil) - Date.now();
   if (ms <= 0) return "Expired";
-  const mins = Math.ceil(ms / 60000);
-  return `${mins}m`;
-}
-
-function formatTime(iso) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const totalMins = Math.ceil(ms / 60000);
+  if (totalMins < 60) return `${totalMins}m left`;
+  const hours = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
+  if (hours < 24) return mins ? `${hours}h ${mins}m left` : `${hours}h left`;
+  const days = Math.floor(hours / 24);
+  return `${days}d+ left`;
 }
 
 function parseFailThreshold(value) {
@@ -40,6 +71,8 @@ function parseCooldownMinutes(value) {
 export default function PinBlockingPage() {
   const { selectedPeriodId } = useAdminContext();
   const policy = useSecurityPolicy();
+  const navigate = useNavigate();
+  const [unlockAllOpen, setUnlockAllOpen] = useState(false);
   const {
     lockedJurors,
     todayLockEvents,
@@ -48,21 +81,23 @@ export default function PinBlockingPage() {
     loadLockedJurors,
     handleUnlock,
     handleUnlockAll,
-  } =
-    usePinBlocking({ periodId: selectedPeriodId });
+  } = usePinBlocking({ periodId: selectedPeriodId });
 
   useEffect(() => {
     loadLockedJurors();
+    const id = setInterval(() => loadLockedJurors({ silent: true }), 30000);
+    return () => clearInterval(id);
   }, [loadLockedJurors]);
 
   const noPeriod = !selectedPeriodId;
   const failThreshold = parseFailThreshold(policy?.maxPinAttempts);
   const cooldownMinutes = parseCooldownMinutes(policy?.pinLockCooldown);
-  const cooldownBadge = `${cooldownMinutes}m`;
   const cooldownLabel = `${cooldownMinutes} minute${cooldownMinutes !== 1 ? "s" : ""}`;
 
+  const totalActive = lockedJurors.length;
+
   return (
-    <div className="page">
+    <div className="page pin-lock-page">
       <div className="page-title">PIN Blocking</div>
       <div className="page-desc" style={{ marginBottom: 14 }}>
         Monitor temporary PIN lockouts, review risk signals, and unlock juror access when required.
@@ -70,7 +105,28 @@ export default function PinBlockingPage() {
 
       {/* Lock policy alert */}
       <FbAlert variant="warning" style={{ marginBottom: 12 }} title="Lock policy is active">
-        Jurors are locked for {cooldownLabel} after {failThreshold} failed attempt{failThreshold !== 1 ? "s" : ""}. Manual unlock is logged in Audit Log.
+        Jurors are locked for {cooldownLabel} after {failThreshold} failed attempt{failThreshold !== 1 ? "s" : ""}.
+        Manual unlock is logged in Audit Log.{" "}
+        <button
+          type="button"
+          onClick={() => navigate("../audit-log")}
+          style={{
+            background: "none",
+            border: "none",
+            padding: 0,
+            font: "inherit",
+            color: "var(--primary, #2563eb)",
+            fontWeight: 500,
+            textDecoration: "none",
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+            marginLeft: 4,
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
+          onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+        >
+          View Audit Log →
+        </button>
       </FbAlert>
 
       {noPeriod ? (
@@ -79,28 +135,19 @@ export default function PinBlockingPage() {
         </div>
       ) : (
         <>
-          {/* KPI strip */}
-          <div className="scores-kpi-strip" style={{ marginBottom: 14 }}>
+          {/* KPI strip — live metrics only */}
+          <div className="scores-kpi-strip">
             <div className="scores-kpi-item">
-              <div
-                className="scores-kpi-item-value"
-                style={lockedJurors.length > 0 ? { color: "var(--danger)" } : undefined}
-              >
-                {loading ? "…" : lockedJurors.length}
+              <div className={`scores-kpi-item-value${totalActive > 0 ? " kpi-danger" : ""}`}>
+                {loading ? "…" : totalActive}
               </div>
               <div className="scores-kpi-item-label">Currently Locked</div>
             </div>
             <div className="scores-kpi-item">
-              <div className="scores-kpi-item-value">{loading ? "…" : todayLockEvents}</div>
-              <div className="scores-kpi-item-label">Today Lock Events</div>
-            </div>
-            <div className="scores-kpi-item">
-              <div className="scores-kpi-item-value">{failThreshold}</div>
-              <div className="scores-kpi-item-label">Fail Threshold</div>
-            </div>
-            <div className="scores-kpi-item">
-              <div className="scores-kpi-item-value">{cooldownBadge}</div>
-              <div className="scores-kpi-item-label">Auto Unlock Window</div>
+              <div className="scores-kpi-item-value">
+                <span className="accent">{loading ? "…" : todayLockEvents}</span>
+              </div>
+              <div className="scores-kpi-item-label">Today's Lock Events</div>
             </div>
           </div>
 
@@ -113,17 +160,22 @@ export default function PinBlockingPage() {
           {/* Active Lockouts */}
           <div className="card" style={{ marginBottom: 12 }}>
             <div className="card-header">
-              <div className="card-title">Active Lockouts</div>
+              <div>
+                <div className="card-title" style={{ display: "flex", alignItems: "center" }}>
+                  Active Lockouts
+                  {totalActive > 0 && <span className="pin-count-pill">{totalActive}</span>}
+                </div>
+                <div className="text-xs text-muted" style={{ marginTop: 1 }}>
+                  Jurors currently blocked from PIN entry
+                </div>
+              </div>
               <button
                 className="btn btn-sm"
                 style={{ background: "var(--danger)", color: "#fff" }}
-                disabled={lockedJurors.length === 0 || loading}
-                onClick={handleUnlockAll}
+                disabled={totalActive === 0 || loading}
+                onClick={() => setUnlockAllOpen(true)}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M7 11V7a5 5 0 0 1 9.9-1" />
-                  <rect x="3" y="11" width="18" height="10" rx="2" />
-                </svg>
+                <LockOpen size={14} />
                 Unlock All
               </button>
             </div>
@@ -132,49 +184,75 @@ export default function PinBlockingPage() {
                 <thead>
                   <tr>
                     <th>Juror</th>
-                    <th>Affiliation</th>
-                    <th>Failed Attempts</th>
+                    <th className="text-center">Progress</th>
+                    <th className="text-right">Failed Attempts</th>
                     <th>Lock Started</th>
                     <th>Unlock ETA</th>
-                    <th>Status</th>
                     <th className="text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={7} className="text-sm text-muted" style={{ textAlign: "center", padding: "18px 0" }}>
+                      <td colSpan={6} className="text-sm text-muted" style={{ textAlign: "center", padding: "18px 0" }}>
                         Loading…
                       </td>
                     </tr>
                   ) : lockedJurors.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="text-sm text-muted" style={{ textAlign: "center", padding: "18px 0" }}>
+                      <td colSpan={6} className="text-sm text-muted" style={{ textAlign: "center", padding: "18px 0" }}>
                         No active lockouts.
                       </td>
                     </tr>
                   ) : (
                     lockedJurors.map((j) => (
                       <tr key={j.jurorId}>
-                        <td data-label="Juror">{j.jurorName || "—"}</td>
-                        <td data-label="Affiliation">{j.affiliation || "—"}</td>
-                        <td data-label="Failed Attempts">{j.failedAttempts ?? "—"}</td>
-                        <td className="col-lock-started" data-label="Lock Started">{formatTime(j.lockedAt)}</td>
-                        <td data-label="Unlock ETA">{j.isBlocked ? "Permanent" : formatEta(j.lockedUntil)}</td>
-                        <td data-label="Status">
-                          <span
-                            style={{
-                              display: "inline-block",
-                              padding: "2px 8px",
-                              borderRadius: "var(--radius-sm)",
-                              fontSize: 12,
-                              fontWeight: 600,
-                              background: j.isBlocked ? "var(--danger-muted, #fee2e2)" : "var(--warning-muted, #fef9c3)",
-                              color: j.isBlocked ? "var(--danger)" : "var(--warning-fg, #854d0e)",
-                            }}
-                          >
-                            {j.isBlocked ? "Blocked" : "Locked"}
+                        <td data-label="Juror">
+                          <JurorBadge name={j.jurorName} affiliation={j.affiliation} size="sm" />
+                        </td>
+                        <td className="col-projects text-center" data-label="Progress">
+                          {(() => {
+                            const total = j.totalProjects || 0;
+                            const scored = j.completedProjects || 0;
+                            const pct = total > 0 ? Math.round((scored / total) * 100) : 0;
+                            return (
+                              <span className={groupTextClass(scored, total)}>
+                                {scored} / {total}
+                                <span className="jurors-group-bar">
+                                  <span
+                                    className="jurors-group-bar-fill"
+                                    style={{ width: `${pct}%`, background: groupBarColor(scored, total) }}
+                                  />
+                                </span>
+                              </span>
+                            );
+                          })()}
+                        </td>
+                        <td className={`col-fails${!j.failedAttempts ? " missing" : ""}`} data-label="Failed Attempts">
+                          <span className="fails-desktop">{j.failedAttempts ?? "—"}</span>
+                          <span className="fails-mobile">
+                            <AlertCircle size={11} strokeWidth={2} />
+                            <strong>{j.failedAttempts ?? "—"}</strong> failed
                           </span>
+                        </td>
+                        <td className="col-lock-started" data-label="Lock Started">
+                          <span className="lock-desktop vera-datetime-text">{formatTs(j.lockedAt)}</span>
+                          <span className="lock-mobile">
+                            <Clock size={10} strokeWidth={2} />
+                            Locked {formatAgo(j.lockedAt)}
+                          </span>
+                        </td>
+                        <td data-label="Unlock ETA">
+                          {(() => {
+                            const text = formatRemaining(j.lockedUntil);
+                            const expired = !j.lockedUntil || text === "Expired";
+                            return (
+                              <span className={`pin-eta-pill${expired ? " expired" : ""}`}>
+                                <span className="pin-eta-dot" />
+                                {text}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="col-actions text-right" data-label="Action">
                           <button
@@ -197,24 +275,62 @@ export default function PinBlockingPage() {
       {/* Policy Snapshot */}
       <div className="card">
         <div className="card-header">
-          <div className="card-title">Policy Snapshot</div>
-          <span className="text-sm text-muted">Applies to all jury access channels</span>
+          <div>
+            <div className="card-title">Policy Snapshot</div>
+            <div className="text-xs text-muted" style={{ marginTop: 1 }}>
+              Applies to all jury access channels
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("../settings")}
+            style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              font: "inherit",
+              fontSize: 12,
+              color: "var(--primary, #2563eb)",
+              fontWeight: 500,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
+            onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+          >
+            <Settings size={13} strokeWidth={2} />
+            Edit in Security Settings
+          </button>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 10 }}>
-          <div style={{ padding: "11px 12px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", background: "var(--surface-1)" }}>
-            <div className="text-xs text-muted" style={{ marginBottom: 3 }}>Max failed attempts</div>
-            <div style={{ fontWeight: 700, fontSize: 14 }}>{failThreshold} attempt{failThreshold !== 1 ? "s" : ""}</div>
+        <div className="pin-policy-grid" style={{ padding: "14px 16px" }}>
+          <div className="pin-policy-item">
+            <div className="pin-policy-label">Max failed attempts</div>
+            <div className="pin-policy-value">
+              {failThreshold} attempt{failThreshold !== 1 ? "s" : ""}
+            </div>
           </div>
-          <div style={{ padding: "11px 12px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", background: "var(--surface-1)" }}>
-            <div className="text-xs text-muted" style={{ marginBottom: 3 }}>Temporary lock duration</div>
-            <div style={{ fontWeight: 700, fontSize: 14 }}>{cooldownLabel}</div>
+          <div className="pin-policy-item">
+            <div className="pin-policy-label">Temporary lock duration</div>
+            <div className="pin-policy-value">{cooldownLabel}</div>
           </div>
-          <div style={{ padding: "11px 12px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", background: "var(--surface-1)" }}>
-            <div className="text-xs text-muted" style={{ marginBottom: 3 }}>Audit integration</div>
-            <div style={{ fontWeight: 700, fontSize: 14 }}>Enabled</div>
+          <div className="pin-policy-item">
+            <div className="pin-policy-label">Audit integration</div>
+            <div className="pin-policy-value success">
+              <Check size={14} strokeWidth={2.5} />
+              Enabled
+            </div>
           </div>
         </div>
       </div>
+
+      <UnlockAllModal
+        open={unlockAllOpen}
+        onClose={() => setUnlockAllOpen(false)}
+        lockedCount={totalActive}
+        onConfirm={handleUnlockAll}
+      />
     </div>
   );
 }

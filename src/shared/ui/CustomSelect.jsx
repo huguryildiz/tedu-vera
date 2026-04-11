@@ -28,6 +28,7 @@ export default function CustomSelect({
     onClose: handleClose,
     placement: "bottom-start",
     offset: 4,
+    zIndex: "var(--z-modal-dropdown)",
   });
 
   const selectedLabel = useMemo(() => {
@@ -58,7 +59,7 @@ export default function CustomSelect({
         <div
           ref={floatingRef}
           className={`filter-dropdown-menu custom-select-menu${menuClassName ? ` ${menuClassName}` : ""}`}
-          style={floatingStyle}
+          style={{ ...floatingStyle, minWidth: triggerRef.current?.getBoundingClientRect().width ?? 'auto' }}
           role="listbox"
           aria-label={ariaLabel}
         >

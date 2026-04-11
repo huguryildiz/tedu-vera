@@ -1,7 +1,131 @@
-/* PIN Blocking page — Phase 9 */
+/* PIN Blocking page — Premium layout */
+
+/* ─── ETA pill with live pulse ───────────────────────────── */
+.pin-eta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 8px;
+  border-radius: 999px;
+  background: var(--warning-muted, #fef3c7);
+  color: var(--warning-fg, #854d0e);
+  border: 1px solid var(--warning-border, #fde68a);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.pin-eta-pill .pin-eta-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--warning, #d97706);
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.18);
+  animation: pin-eta-pulse 1.8s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes pin-eta-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
+}
+.pin-eta-pill.expired {
+  background: var(--danger-muted, #fee2e2);
+  color: #991b1b;
+  border-color: #fecaca;
+}
+.pin-eta-pill.expired .pin-eta-dot {
+  background: var(--danger);
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.18);
+  animation: none;
+}
+body.dark-mode .pin-eta-pill {
+  background: rgba(217, 119, 6, 0.15);
+  color: #fcd34d;
+  border-color: rgba(252, 211, 77, 0.3);
+}
+body.dark-mode .pin-eta-pill.expired {
+  background: rgba(220, 38, 38, 0.15);
+  color: #fca5a5;
+  border-color: rgba(252, 165, 165, 0.3);
+}
+
+/* ─── Failed attempts cell — mirrors reviews .col-score ──── */
+.pin-lock-table .col-fails {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+.pin-lock-table .col-fails.missing {
+  color: var(--text-tertiary);
+}
+
+/* ─── Card header count pill ──────────────────────────────── */
+.pin-count-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+/* ─── Policy snapshot grid ────────────────────────────────── */
+.pin-policy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.pin-policy-item {
+  padding: 11px 13px;
+  background: var(--surface-1, #f3f4f6);
+  border: 1px solid var(--border-subtle, var(--border));
+  border-radius: var(--radius-sm);
+}
+.pin-policy-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.pin-policy-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.pin-policy-value.success { color: var(--success, #059669); }
+body.dark-mode .pin-policy-item {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ─── Responsive policy grid ──────────────────────────────── */
+@media (max-width: 900px) {
+  .pin-policy-grid { grid-template-columns: 1fr; }
+}
+
+/* ─── Desktop defaults: hide mobile-only elements ──────────── */
+.pin-lock-table .fails-mobile,
+.pin-lock-table .lock-mobile { display: none; }
 
 /* ─── Portrait card layout (≤ 768px portrait) ────────────────
-   Each lockout row becomes a card with a warning accent stripe.
+   Variant A: CSS Grid — 2 columns × 3 rows, explicit placement.
+     Row 1: Juror (col 1)      | ETA pill (col 2, right)
+     Row 2: Failed (col 1)     | Progress (col 2, right)
+     Row 3: Locked-ago (col 1) | Unlock (col 2)     [surface-1]
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: portrait) {
   .pin-lock-page .table-wrap {
@@ -16,11 +140,11 @@
   .pin-lock-table thead { display: none !important; }
   .pin-lock-table tbody { display: block; width: 100%; }
 
-  /* Card container */
+  /* Card container — 2×3 grid with explicit rows/cols */
   .pin-lock-table tbody tr {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
     width: 100%;
     box-sizing: border-box;
     background: var(--bg-card);
@@ -28,10 +152,10 @@
     border-left: 3px solid var(--warning);
     border-radius: var(--radius);
     margin-bottom: 10px;
-    padding: 14px 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    padding: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
     transition: box-shadow 0.15s, border-color 0.15s;
-    gap: 0;
   }
   .pin-lock-table tbody tr:hover {
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -39,52 +163,115 @@
 
   /* Base cell reset */
   .pin-lock-table td {
-    display: block;
-    border-bottom: none;
+    border: none;
     padding: 0;
-    box-sizing: border-box;
+    min-width: 0;
   }
+  .pin-lock-table td::before { display: none !important; }
 
-  /* data-label micro-labels */
-  .pin-lock-table td[data-label]::before {
-    content: attr(data-label);
-    display: block;
-    font-size: 8.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: var(--text-tertiary);
+  /* Swap desktop/mobile inline content */
+  .pin-lock-table .fails-desktop,
+  .pin-lock-table .lock-desktop { display: none; }
+  .pin-lock-table .fails-mobile {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-muted);
+    font-size: 11.5px;
+    font-family: inherit;
+  }
+  .pin-lock-table .fails-mobile svg { color: var(--text-tertiary); }
+  .pin-lock-table .fails-mobile strong {
+    color: var(--danger);
     font-weight: 600;
-    margin-bottom: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  .pin-lock-table .lock-mobile {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    font-weight: 500;
   }
 
-  /* Row 1: Juror (flex:1) + Status (auto) */
-  .pin-lock-table td:nth-child(1) { flex: 1 1 0; min-width: 0; order: 1; padding-bottom: 6px; font-weight: 600; font-size: 13px; }
-  .pin-lock-table td[data-label="Status"] { flex: 0 0 auto; order: 2; padding-bottom: 6px; padding-left: 12px; }
+  /* Juror cell — force single-line name/affiliation with ellipsis */
+  .pin-lock-table td:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 12px 6px 8px 14px;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .pin-lock-table td:nth-child(1) .jb-name,
+  .pin-lock-table td:nth-child(1) .jb-affiliation {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-  /* Row 2: Affiliation (full width) */
-  .pin-lock-table td:nth-child(2) { flex: 0 0 100%; order: 3; padding-bottom: 8px; color: var(--text-secondary); font-size: 12px; }
+  /* ETA pill — row 1, right column */
+  .pin-lock-table td[data-label="Unlock ETA"] {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 12px 14px 8px 6px;
+    align-self: center;
+    justify-self: end;
+  }
 
-  /* Row 3: Failed Attempts (auto) + Unlock ETA (flex:1) */
-  .pin-lock-table td:nth-child(3) { flex: 0 0 auto; order: 4; padding-right: 16px; padding-top: 6px; border-top: 1px solid var(--border); }
-  .pin-lock-table td[data-label="Unlock ETA"] { flex: 1 1 auto; order: 5; padding-top: 6px; border-top: 1px solid var(--border); }
+  /* Failed attempts — row 2, left (indented to align with juror name) */
+  .pin-lock-table .col-fails {
+    grid-column: 1;
+    grid-row: 2;
+    padding: 0 6px 12px 44px;
+    font-family: inherit;
+    font-size: 11.5px;
+    text-align: left;
+    color: var(--text-muted);
+  }
+  .pin-lock-table .col-fails.missing { color: var(--text-tertiary); }
 
-  /* Row 4: Action (full width, right-aligned) */
+  /* Progress — row 2, right */
+  .pin-lock-table td[data-label="Progress"] {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 0 14px 12px 6px;
+    align-self: center;
+    justify-self: end;
+  }
+
+  /* Footer row 3: Locked-ago (left) + Unlock (right), surface-1 bg */
+  .pin-lock-table td.col-lock-started {
+    grid-column: 1;
+    grid-row: 3;
+    padding: 9px 6px 9px 14px;
+    border-top: 1px solid var(--border-subtle);
+    background: var(--surface-1);
+    display: flex;
+    align-items: center;
+  }
   .pin-lock-table td.col-actions {
-    flex: 0 0 100%;
-    order: 10;
-    padding-top: 10px;
+    grid-column: 2;
+    grid-row: 3;
+    padding: 7px 14px 7px 6px;
+    border-top: 1px solid var(--border-subtle);
+    background: var(--surface-1);
     text-align: right;
-    border-top: 1px solid var(--border);
-    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
   }
-  .pin-lock-table td.col-actions::before { display: none; }
 
-  /* Hide Lock Started — redundant on mobile */
-  .pin-lock-table td.col-lock-started { display: none; }
+  /* Dark mode footer surface */
+  body.dark-mode .pin-lock-table td.col-lock-started,
+  body.dark-mode .pin-lock-table td.col-actions {
+    background: rgba(255, 255, 255, 0.03);
+  }
 }
 
 /* ─── Landscape compact (≤ 768px landscape) ──────────────────
    Normal table; hide Lock Started to save space.
+   Column order: Juror(1), Progress(2), Failed(3), LockStarted(4), ETA(5), Action(6)
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: landscape) {
   .pin-lock-page .table-wrap { overflow-x: auto; }

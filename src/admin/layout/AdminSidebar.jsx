@@ -2,6 +2,7 @@
 // Prototype source: lines 11580–11711
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Building, ClipboardList, KeyRound, Medal, QrCode, Route, ScrollText } from "lucide-react";
 import { useAuth } from "@/auth";
 import { useTheme } from "../../shared/theme/ThemeProvider";
 import Avatar from "@/shared/ui/Avatar";
@@ -37,7 +38,8 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
     setTenantMenuOpen(false);
   }
 
-  const showTenantWrap = organizations.length > 1 || isSuper;
+  const showTenantWrap = Boolean(activeOrganization) || organizations.length > 0 || isSuper;
+  const canSwitchTenants = isSuper && organizations.length > 1;
 
   return (
     <aside className={`sidebar${mobileOpen ? " mobile-open" : ""}`} id="sidebar-nav">
@@ -54,50 +56,52 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
         </button>
       </div>
 
-      {/* Tenant switcher */}
-      {showTenantWrap && (
-        <div className="sb-tenant-wrap" ref={tenantMenuRef}>
-          <div
-            className={`sb-tenant${tenantMenuOpen ? " open" : ""}`}
-            onClick={() => setTenantMenuOpen((v) => !v)}
-          >
-            <span className="sb-tenant-dot" />
-            <div className="sb-tenant-labels">
-              <span className="sb-tenant-name">{orgLabel}</span>
-              {activeOrganization?.institution && (
-                <span className="sb-tenant-inst">{activeOrganization.institution}</span>
-              )}
-            </div>
-            <span className="sb-tenant-chevron">▾</span>
-          </div>
-          <div className={`sb-tenant-menu${tenantMenuOpen ? " show" : ""}`}>
-            <div className="sb-tenant-menu-header">
-              <div className="sb-tenant-menu-header-title">Select organization</div>
-              <div className="sb-tenant-menu-header-sub">Switch between departments</div>
-            </div>
-            <div className="sb-tenant-menu-list">
-              {organizations.map((org) => (
-                <div
-                  key={org.id}
-                  className={`sb-tenant-item${org.id === activeOrganization?.id ? " active" : ""}`}
-                  onClick={() => handleTenantSelect(org)}
-                >
-                  <div className="sb-tenant-item-info">
-                    <div className="sb-tenant-item-dept">{org.name || org.code}</div>
-                    {org.institution && (
-                      <div className="sb-tenant-item-uni">{org.institution}</div>
-                    )}
-                  </div>
-                  {org.id === activeOrganization?.id && <span className="sb-tenant-item-check">✓</span>}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Nav */}
       <nav className="sb-nav">
+        {/* Tenant switcher */}
+        {showTenantWrap && (
+          <div className="sb-tenant-wrap" ref={tenantMenuRef}>
+            <div
+              className={`sb-tenant${canSwitchTenants && tenantMenuOpen ? " open" : ""}${!canSwitchTenants ? " readonly" : ""}`}
+              onClick={canSwitchTenants ? () => setTenantMenuOpen((v) => !v) : undefined}
+            >
+              <span className="sb-tenant-dot" />
+              <div className="sb-tenant-labels">
+                <span className="sb-tenant-name">{orgLabel}</span>
+                {activeOrganization?.institution && (
+                  <span className="sb-tenant-inst">{activeOrganization.institution}</span>
+                )}
+              </div>
+              {canSwitchTenants && <span className="sb-tenant-chevron">▾</span>}
+            </div>
+            {canSwitchTenants && (
+              <div className={`sb-tenant-menu${tenantMenuOpen ? " show" : ""}`}>
+                <div className="sb-tenant-menu-header">
+                  <div className="sb-tenant-menu-header-title">Select organization</div>
+                  <div className="sb-tenant-menu-header-sub">Switch between departments</div>
+                </div>
+                <div className="sb-tenant-menu-list">
+                  {organizations.map((org) => (
+                    <div
+                      key={org.id}
+                      className={`sb-tenant-item${org.id === activeOrganization?.id ? " active" : ""}`}
+                      onClick={() => handleTenantSelect(org)}
+                    >
+                      <div className="sb-tenant-item-info">
+                        <div className="sb-tenant-item-dept">{org.name || org.code}</div>
+                        {org.institution && (
+                          <div className="sb-tenant-item-uni">{org.institution}</div>
+                        )}
+                      </div>
+                      {org.id === activeOrganization?.id && <span className="sb-tenant-item-check">✓</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="sb-section">Overview</div>
         <button
           className={`sb-item${currentPage === "overview" ? " active" : ""}`}
@@ -115,9 +119,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
           className={`sb-item${currentPage === "rankings" ? " active" : ""}`}
           onClick={() => navTo("rankings")}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" />
-          </svg>
+          <Medal size={18} strokeWidth={1.8} />
           Rankings
         </button>
         <button
@@ -194,18 +196,14 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
           className={`sb-item${currentPage === "criteria" ? " active" : ""}`}
           onClick={() => navTo("criteria")}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-          </svg>
+          <ClipboardList size={18} strokeWidth={1.8} />
           Evaluation Criteria
         </button>
         <button
           className={`sb-item${currentPage === "outcomes" ? " active" : ""}`}
           onClick={() => navTo("outcomes")}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" />
-          </svg>
+          <Route size={18} strokeWidth={1.8} />
           Outcomes &amp; Mapping
         </button>
 
@@ -214,28 +212,21 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
           className={`sb-item${currentPage === "entry-control" ? " active" : ""}`}
           onClick={() => navTo("entry-control")}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg>
+          <QrCode size={18} strokeWidth={1.8} />
           Entry Control
         </button>
         <button
           className={`sb-item${currentPage === "pin-blocking" ? " active" : ""}`}
           onClick={() => navTo("pin-blocking")}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 1v6" /><path d="M8 7h8" /><path d="M5 11h14v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" />
-            <path d="M9 15a3 3 0 0 1 6 0" />
-          </svg>
+          <KeyRound size={18} strokeWidth={1.8} />
           PIN Blocking
         </button>
         <button
           className={`sb-item${currentPage === "audit-log" ? " active" : ""}`}
           onClick={() => navTo("audit-log")}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 12H3" /><path d="M16 6H3" /><path d="M12 18H3" /><path d="m16 12 5 3-5 3v-6Z" />
-          </svg>
+          <ScrollText size={18} strokeWidth={1.8} />
           Audit Log
         </button>
         {isSuper && (
@@ -245,10 +236,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
               className={`sb-item${currentPage === "organizations" ? " active" : ""}`}
               onClick={() => navTo("organizations")}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
+              <Building size={18} strokeWidth={1.8} />
               Organizations
             </button>
           </>

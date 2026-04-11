@@ -7,7 +7,9 @@
 // ============================================================
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, Check } from "lucide-react";
+import { useFloating } from "@/shared/hooks/useFloating";
 
 const STATE_META = {
   loading: {
@@ -49,7 +51,6 @@ const TONE_CLASS = {
 export default function SecuritySignalPill({ signal, onReviewSessions }) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef(null);
-  const popoverRef = useRef(null);
   const dialogId = useId();
 
   const state = signal?.state || "loading";
@@ -61,45 +62,44 @@ export default function SecuritySignalPill({ signal, onReviewSessions }) {
     setOpen((prev) => !prev);
   }, [isLoading]);
 
-  const handleClose = useCallback(() => {
-    setOpen(false);
-    // Return focus to the button for keyboard users
-    if (buttonRef.current) buttonRef.current.focus();
-  }, []);
+  const handleClose = useCallback(() => setOpen(false), []);
 
   const handleReview = useCallback(() => {
     if (typeof onReviewSessions === "function") onReviewSessions();
     setOpen(false);
   }, [onReviewSessions]);
 
-  // Outside click + Escape handling
+  const { floatingRef, floatingStyle, actualPlacement } = useFloating({
+    triggerRef: buttonRef,
+    isOpen: open,
+    onClose: handleClose,
+    placement: "bottom-end",
+    offset: 10,
+    zIndex: "var(--z-tooltip)",
+  });
+
+  const placementClass = actualPlacement.startsWith("top")
+    ? "sec-popover--above"
+    : "sec-popover--below";
+  const alignmentClass = actualPlacement.endsWith("start")
+    ? "sec-popover--align-start"
+    : "sec-popover--align-end";
+
   useEffect(() => {
     if (!open) return undefined;
 
-    function onDocClick(e) {
-      const pop = popoverRef.current;
-      const btn = buttonRef.current;
-      if (!pop || !btn) return;
-      if (pop.contains(e.target) || btn.contains(e.target)) return;
+    function onWindowKeyDown(e) {
+      if (e.key !== "Escape") return;
       setOpen(false);
-    }
-    function onKeyDown(e) {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        handleClose();
-      }
+      if (buttonRef.current) buttonRef.current.focus();
     }
 
-    document.addEventListener("mousedown", onDocClick);
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open, handleClose]);
+    window.addEventListener("keydown", onWindowKeyDown);
+    return () => window.removeEventListener("keydown", onWindowKeyDown);
+  }, [open]);
 
   return (
-    <div className="sec-pill-wrap" style={{ position: "relative", display: "inline-flex" }}>
+    <div className="sec-pill-wrap">
       <button
         ref={buttonRef}
         type="button"
@@ -115,11 +115,12 @@ export default function SecuritySignalPill({ signal, onReviewSessions }) {
         <ChevronDown className="sec-pill-chev" aria-hidden="true" />
       </button>
 
-      {open && signal && (
+      {open && signal && createPortal(
         <div
-          ref={popoverRef}
+          ref={floatingRef}
           id={dialogId}
-          className={`sec-popover sec-popover--${meta.tone}`}
+          className={`sec-popover sec-popover--${meta.tone} ${placementClass} ${alignmentClass}`}
+          style={floatingStyle}
           role="dialog"
           aria-labelledby={`${dialogId}-title`}
         >
@@ -168,7 +169,8 @@ export default function SecuritySignalPill({ signal, onReviewSessions }) {
               Review sessions →
             </button>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

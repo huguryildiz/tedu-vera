@@ -113,7 +113,8 @@ export default function AdminHeader({
         <div className={`dropdown${dropdownOpen ? " open" : ""}`}>
           <button
             ref={triggerRef}
-            className="dropdown-trigger"
+            className={`dropdown-trigger${dropdownOpen ? " open" : ""}`}
+            type="button"
             onClick={() => setDropdownOpen((v) => !v)}
           >
             <span className="dropdown-dot" />
@@ -128,7 +129,7 @@ export default function AdminHeader({
           {dropdownOpen && createPortal(
             <div
               ref={floatingRef}
-              className="dropdown-menu"
+              className="dropdown-menu show"
               style={floatingStyle}
             >
               {sortedPeriods.map((p) => (

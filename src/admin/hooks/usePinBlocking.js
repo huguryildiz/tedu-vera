@@ -5,7 +5,12 @@
 // ============================================================
 
 import { useCallback, useState } from "react";
-import { listLockedJurors, countTodayLockEvents, unlockJurorPin } from "../../shared/api";
+import {
+  listLockedJurors,
+  countTodayLockEvents,
+  unlockJurorPin,
+  listJurorsSummary,
+} from "../../shared/api";
 import { useToast } from "@/shared/hooks/useToast";
 
 export function usePinBlocking({ periodId }) {
@@ -15,28 +20,45 @@ export function usePinBlocking({ periodId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const loadLockedJurors = useCallback(async () => {
+  const loadLockedJurors = useCallback(async ({ silent = false } = {}) => {
     if (!periodId) {
       setLockedJurors([]);
       setTodayLockEvents(0);
       setError("");
       return;
     }
-    setLoading(true);
-    setError("");
+    if (!silent) {
+      setLoading(true);
+      setError("");
+    }
     try {
-      const [rows, todayCount] = await Promise.all([
+      const [rows, todayCount, summaries] = await Promise.all([
         listLockedJurors({ periodId }),
         countTodayLockEvents({ periodId }),
+        listJurorsSummary(periodId),
       ]);
-      setLockedJurors(rows || []);
+      const progressByJuror = new Map();
+      (summaries || []).forEach((s) => {
+        progressByJuror.set(String(s.jurorId), {
+          totalProjects: s.totalProjects || 0,
+          completedProjects: s.completedProjects || 0,
+        });
+      });
+      const enriched = (rows || []).map((r) => {
+        const p = progressByJuror.get(String(r.jurorId)) || { totalProjects: 0, completedProjects: 0 };
+        return { ...r, totalProjects: p.totalProjects, completedProjects: p.completedProjects };
+      });
+      setLockedJurors(enriched);
       setTodayLockEvents(todayCount || 0);
+      if (silent) setError("");
     } catch (e) {
-      setLockedJurors([]);
-      setTodayLockEvents(0);
-      setError(e?.message || "Could not load locked jurors.");
+      if (!silent) {
+        setLockedJurors([]);
+        setTodayLockEvents(0);
+        setError(e?.message || "Could not load locked jurors.");
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [periodId]);
 

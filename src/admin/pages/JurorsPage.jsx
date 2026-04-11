@@ -550,8 +550,8 @@ export default function JurorsPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="jurors-toolbar">
-        <div className="jurors-search-wrap">
+      <div className="jurors-toolbar mobile-toolbar-stack">
+        <div className="jurors-search-wrap mobile-toolbar-search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.3-4.3" />
@@ -565,12 +565,13 @@ export default function JurorsPage() {
           />
         </div>
         <FilterButton
+          className="mobile-toolbar-filter"
           activeCount={activeFilterCount}
           isOpen={filterOpen}
           onClick={() => { setFilterOpen((v) => !v); setExportOpen(false); }}
         />
-        <div className="jurors-toolbar-spacer" />
-        <button className="btn btn-outline btn-sm" onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}>
+        <div className="jurors-toolbar-spacer mobile-toolbar-spacer" />
+        <button className="btn btn-outline btn-sm mobile-toolbar-export" onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "-1px" }}>
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="7 10 12 15 17 10" />
@@ -578,7 +579,7 @@ export default function JurorsPage() {
           </svg>
           {" "}Export
         </button>
-        <button className="btn btn-outline btn-sm" onClick={() => setImportOpen(true)}>
+        <button className="btn btn-outline btn-sm mobile-toolbar-secondary" onClick={() => setImportOpen(true)}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "-1px" }}>
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="17 8 12 3 7 8" />
@@ -587,7 +588,7 @@ export default function JurorsPage() {
           {" "}Import
         </button>
         <button
-          className="btn btn-primary btn-sm"
+          className="btn btn-primary btn-sm mobile-toolbar-secondary"
           style={{ width: "auto", padding: "6px 14px", fontSize: "12px" }}
           onClick={openAddModal}
         >
