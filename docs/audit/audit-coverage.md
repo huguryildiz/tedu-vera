@@ -72,12 +72,12 @@ where the operation happens — see [Write Mechanisms](#write-mechanisms) below.
 | **DB trigger** (`trigger_audit_log`) | Postgres, on every CRUD via `AFTER INSERT/UPDATE/DELETE`         | Anything that changes row state in a tracked table. 14 tables: `organizations`, `periods`, `period_criteria`, `period_outcomes`, `period_criterion_outcome_maps`, `projects`, `jurors`, `score_sheets`, `score_sheet_items`, `memberships`, `entry_tokens`, `juror_period_auth`, `security_policy`, `audit_logs` (meta).   |
 | **SECURITY DEFINER RPC**             | The RPC itself, in the same transaction as the DB change         | Operations where we want richer semantic context than raw CRUD: score submission, period lock/unlock, criteria save, organization status change, outcome CRUD, token revoke, juror force-close, admin profile update, application approve/reject.                                                                          |
 | **Edge Function (service role)**     | The Edge Function, after the primary work succeeds               | Email notifications (entry token, juror PIN, export report, admin invite, application state, password change, password reset); admin login/logout (via Database Webhook on `auth.sessions`); file exports (via `log-export-event`); hourly anomaly sweep (via `audit-anomaly-sweep` cron). The audit write happens server-side — no client crash can drop it. |
-| **Blocking client write**            | The React app, via `writeAuditLog()` with `await` + `try/catch` | Narrow fallback: anomaly detection from the audit log viewer (provides instant UI feedback; cron covers server-side detection independently). Self-service password change safety net.                                                                                                                                    |
+| **Blocking client write**            | The React app, via `writeAuditLog()` with `await` + `try/catch` | Narrow fallback: self-service password change safety net only.                                                                                                                                    |
 
 **Rule of thumb:** if the operation touches the database, it is audited by a
 trigger or an RPC. If it sends an email or is triggered server-side, it is
-audited by the Edge Function. Only anomaly detection in the live UI uses the
-client-blocking path — and even that `await`s and surfaces failures.
+audited by the Edge Function. The only remaining client-blocking write is the
+password-change safety net in `AuthProvider.jsx`.
 
 **What migrations 050/051 removed:** every `writeAuditLog(...).catch(...)`
 fire-and-forget call from the API layer, the notification layer, and export
@@ -185,7 +185,7 @@ the database — there is no silent third path.
 | `security.entry_token.revoked`  | RPC (`rpc_admin_revoke_entry_token`)       | high     | [src/shared/api/admin/tokens.js](src/shared/api/admin/tokens.js)                                                                   |
 | `token.generate`                | RPC                                        | info     | Entry token generation                                                                                                              |
 | `security.pin_reset.requested`  | Edge Function (service role)               | medium   | [supabase/functions/request-pin-reset/index.ts](supabase/functions/request-pin-reset/index.ts) — locked juror requests PIN reset; `actor_type='juror'` |
-| `security.anomaly.detected`     | Edge Function (cron) + blocking client write | high   | Primary: [supabase/functions/audit-anomaly-sweep/index.ts](supabase/functions/audit-anomaly-sweep/index.ts) — runs hourly via Supabase scheduler, `actor_type='system'`. Secondary: [src/admin/pages/AuditLogPage.jsx](src/admin/pages/AuditLogPage.jsx) — instant UI feedback for the currently-loaded log window. |
+| `security.anomaly.detected`     | Edge Function (cron)                       | high   | [supabase/functions/audit-anomaly-sweep/index.ts](supabase/functions/audit-anomaly-sweep/index.ts) — runs hourly via Supabase scheduler; rules: `ip_multi_org` (≥2 distinct orgs from same IP), `pin_flood` (≥10 pin_locked/org/hour), `login_failure_burst` (≥5 failures/org/hour). `actor_type='system'`, `user_id=null`. UI anomaly banner in `AuditLogPage.jsx` provides instant local feedback but no longer writes to DB. |
 | `snapshot.freeze`               | RPC                                        | info     | Period freeze                                                                                                                       |
 | `backup.*`                      | RPC (`rpc_platform_backups_*`)             | info     | Platform backup flows ([sql/migrations/036_platform_backups_rpcs.sql](sql/migrations/036_platform_backups_rpcs.sql))                |
 
@@ -536,18 +536,30 @@ For a recent row, verify:
 
 ### Grep guard
 
-These are the ONLY allowed call sites for `writeAuditLog(`:
+The ONLY allowed call sites for `writeAuditLog(`:
 
 - `src/shared/api/admin/audit.js` (definition)
-- `src/admin/pages/AuditLogPage.jsx` (blocking anomaly detection — instant UI feedback)
+- `src/auth/AuthProvider.jsx` (password-change safety net — one blocking write)
 
 ```bash
 grep -rn "writeAuditLog(" src/
 ```
 
-Anything else means a fire-and-forget leak has reappeared — fix it before
-merging.
+Anything else means a fire-and-forget leak has reappeared — fix it before merging.
+
+### Chain integrity
+
+Super-admins can verify the `row_hash` chain from the Audit Log toolbar:
+
+```sql
+SELECT rpc_admin_verify_audit_chain('<org-id>');
+-- Returns { broken_links: [] } if intact, or timestamps of broken links.
+```
+
+The UI "Verify Integrity" button (visible only when `isSuper = true`) calls
+`verifyAuditChain(orgId)` from [src/shared/api/admin/audit.js](src/shared/api/admin/audit.js)
+and toasts the result.
 
 ---
 
-Last updated: 2026-04-12 (migrations 052–056 — taxonomy sync, hard-delete RLS, hash chain tamper evidence, anomaly cron, actor_type fix; auth events moved to `on-auth-event` Database Webhook; exports moved to `log-export-event` Edge Function; `audit-anomaly-sweep` cron deployed).
+Last updated: 2026-04-12 (migrations 052–056 — taxonomy sync, hard-delete RLS, hash chain tamper evidence, anomaly cron, actor_type fix; auth events moved to `on-auth-event` Database Webhook; exports moved to `log-export-event` Edge Function; `audit-anomaly-sweep` cron deployed with 3 rules; client-side anomaly DB write removed — cron is now the sole writer of `security.anomaly.detected`; `verifyAuditChain` API + Verify Integrity button added for super-admins).
