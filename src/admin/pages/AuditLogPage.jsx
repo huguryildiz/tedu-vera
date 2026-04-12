@@ -13,7 +13,7 @@ import { useAuditLogFilters } from "../hooks/useAuditLogFilters";
 import { usePageRealtime } from "../hooks/usePageRealtime";
 import ExportPanel from "../components/ExportPanel";
 import CustomSelect from "@/shared/ui/CustomSelect";
-import { getActorInfo, formatActionLabel, formatActionDetail, formatSentence, formatDiffChips, detectAnomalies, CATEGORY_META, SEVERITY_META, groupBulkEvents } from "../utils/auditUtils";
+import { getActorInfo, formatActionLabel, formatActionDetail, formatSentence, formatDiffChips, detectAnomalies, CATEGORY_META, SEVERITY_META, groupBulkEvents, formatEventMeta, addDaySeparators } from "../utils/auditUtils";
 import AuditEventDrawer from "../components/AuditEventDrawer";
 import Pagination from "@/shared/ui/Pagination";
 
@@ -285,6 +285,8 @@ export default function AuditLogPage() {
   }, [filteredLogs, sortKey, sortDir]);
 
   // ── Anomaly detection ────────────────────────────────────
+  // TODO: cron covers production detection (audit-anomaly-sweep Edge Function runs hourly).
+  // This effect provides instant UI feedback for the currently-loaded log window.
   const anomaly = useMemo(() => detectAnomalies(auditLogs), [auditLogs]);
 
   const lastAnomalyKeyRef = useRef(null);
@@ -315,7 +317,10 @@ export default function AuditLogPage() {
   const safePage = Math.min(currentPage, totalPages);
   const pageStart = (safePage - 1) * pageSize;
   const pagedLogs = sortedLogs.slice(pageStart, pageStart + pageSize);
-  const pagedItems = useMemo(() => groupBulkEvents(pagedLogs), [pagedLogs]);
+  const pagedItems = useMemo(
+    () => addDaySeparators(groupBulkEvents(pagedLogs), sortedLogs),
+    [pagedLogs, sortedLogs]
+  );
 
   function handleSort(key) {
     if (sortKey === key) {
@@ -632,6 +637,16 @@ export default function AuditLogPage() {
                 )}
 
                 {pagedItems.map((item) => {
+                  if (item.type === "day") {
+                    return (
+                      <tr key={`day-${item.label}`} className="audit-day-header">
+                        <td colSpan={4}>
+                          {item.label} — {item.count} event{item.count !== 1 ? "s" : ""}
+                        </td>
+                      </tr>
+                    );
+                  }
+
                   if (item.type === "bulk") {
                     const log = item.representative;
                     const chip = getChip(log.resource_type, log.action);
@@ -653,7 +668,20 @@ export default function AuditLogPage() {
                           </div>
                         </td>
                         <td data-label="Action">
-                          <span className="audit-bulk-label">{item.count}× {formatActionLabel(log.action)}</span>
+                          <div className="audit-action-row">
+                            <span className="audit-action-main">
+                              {item.count}× {formatActionLabel(log.action)}
+                            </span>
+                          </div>
+                          <div className="audit-event-code">
+                            {(() => {
+                              const ts0 = item.logs?.[0]?.created_at ? Date.parse(item.logs[0].created_at) : 0;
+                              const tsN = item.logs?.[item.logs.length - 1]?.created_at
+                                ? Date.parse(item.logs[item.logs.length - 1].created_at) : 0;
+                              const spanMs = Math.abs(ts0 - tsN);
+                              return formatEventMeta(log, { bulkCount: item.count, bulkSpanMs: spanMs });
+                            })()}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -663,9 +691,7 @@ export default function AuditLogPage() {
                   const chip = getChip(log.resource_type, log.action);
                   const actor = getActorInfo(log);
                   const ts = formatAuditTimestamp(log.created_at);
-                  const detail = formatActionDetail(log);
                   const sentence = formatSentence(log);
-                  const diffs = formatDiffChips(log);
                   const isSelected = selectedLog?.id === log.id;
                   const isWarning = isWarningAuditEvent(log);
                   const showSevPill = log.severity && log.severity !== "info" && log.severity !== "low" && SEVERITY_META[log.severity];
@@ -717,21 +743,7 @@ export default function AuditLogPage() {
                             </span>
                           )}
                         </div>
-                        {diffs.length > 0 && (
-                          <div className="audit-diff-list">
-                            {diffs.map((d, i) => (
-                              <span key={i} className="audit-diff-chip">
-                                <span className="audit-diff-key">{d.key}:</span>
-                                {d.from != null && <span className="audit-diff-from">{d.from}</span>}
-                                {d.from != null && d.to != null && <span className="audit-diff-arrow">→</span>}
-                                {d.to != null && <span className="audit-diff-to">{d.to}</span>}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        {!diffs.length && detail && (
-                          <div className="audit-action-detail">{detail}</div>
-                        )}
+                        <div className="audit-event-code">{formatEventMeta(log)}</div>
                       </td>
                     </tr>
                   );
