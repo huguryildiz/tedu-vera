@@ -483,3 +483,31 @@
    PIN-SCREEN GLOBAL PREMIUM ENHANCEMENT PASS
    Deeper atmosphere · richer glass · refined glow
    ═══════════════════════════════════════════════════ */
+
+/* ── Day separator row ──────────────────────────────────────── */
+.audit-day-header td {
+  padding: 5px 16px;
+  background: var(--surface-1);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-tertiary);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  pointer-events: none;
+  user-select: none;
+}
+.dark-mode .audit-day-header td {
+  background: var(--surface-2);
+}
+
+/* ── Event code / metadata second line ──────────────────────── */
+.audit-event-code {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  margin-top: 3px;
+  letter-spacing: -0.1px;
+  line-height: 1.3;
+}
