@@ -300,3 +300,101 @@ describe("formatEventMeta", () => {
     expect(formatEventMeta(log)).toBe("data.period.created");
   });
 });
+
+// ── addDaySeparators ─────────────────────────────────────────────────────────
+
+import { addDaySeparators } from "../utils/auditUtils.js";
+
+describe("addDaySeparators", () => {
+  const makeLog = (isoDate) => ({ id: isoDate, created_at: isoDate, user_id: "u1", resource_type: "periods" });
+
+  it("returns empty array for empty input", () => {
+    expect(addDaySeparators([], [])).toEqual([]);
+  });
+
+  it("inserts a single day header before the first group", () => {
+    const logs = [makeLog("2025-04-11T10:00:00Z")];
+    const items = [{ type: "single", log: logs[0] }];
+    const result = addDaySeparators(items, logs);
+    expect(result[0].type).toBe("day");
+    expect(result[1].type).toBe("single");
+  });
+
+  it("inserts a day header when the date changes between items", () => {
+    const log1 = makeLog("2025-04-11T10:00:00Z");
+    const log2 = makeLog("2025-04-10T10:00:00Z");
+    const allLogs = [log1, log2];
+    const items = [
+      { type: "single", log: log1 },
+      { type: "single", log: log2 },
+    ];
+    const result = addDaySeparators(items, allLogs);
+    // Structure: [day(Apr11), single, day(Apr10), single]
+    expect(result.length).toBe(4);
+    expect(result[0].type).toBe("day");
+    expect(result[2].type).toBe("day");
+  });
+
+  it("day header count equals total events on that date in allLogs", () => {
+    const log1a = makeLog("2025-04-11T10:00:00Z");
+    const log1b = makeLog("2025-04-11T11:00:00Z");
+    const log2  = makeLog("2025-04-10T10:00:00Z");
+    const allLogs = [log1a, log1b, log2];
+    const items = [
+      { type: "single", log: log1a },
+      { type: "single", log: log1b },
+      { type: "single", log: log2 },
+    ];
+    const result = addDaySeparators(items, allLogs);
+    const dayApr11 = result.find((r) => r.type === "day" && r.label.includes("11"));
+    expect(dayApr11.count).toBe(2);
+  });
+
+  it("uses representative.created_at for bulk items", () => {
+    const rep = makeLog("2025-04-11T10:00:00Z");
+    const items = [{ type: "bulk", count: 5, representative: rep, logs: [rep] }];
+    const result = addDaySeparators(items, [rep]);
+    expect(result[0].type).toBe("day");
+    expect(result[1].type).toBe("bulk");
+  });
+
+  it("day label includes weekday and month name", () => {
+    const log = makeLog("2025-04-11T10:00:00Z");
+    const items = [{ type: "single", log }];
+    const result = addDaySeparators(items, [log]);
+    // 2025-04-11 is a Friday
+    expect(result[0].label).toMatch(/friday/i);
+    expect(result[0].label).toMatch(/april/i);
+    expect(result[0].label).toMatch(/11/);
+  });
+
+  it("does not insert a header between items on the same day", () => {
+    const log1 = makeLog("2025-04-11T10:00:00Z");
+    const log2 = makeLog("2025-04-11T14:00:00Z");
+    const allLogs = [log1, log2];
+    const items = [
+      { type: "single", log: log1 },
+      { type: "single", log: log2 },
+    ];
+    const result = addDaySeparators(items, allLogs);
+    // Only 1 day header at the start, then 2 singles
+    expect(result.length).toBe(3);
+    expect(result[0].type).toBe("day");
+    expect(result[1].type).toBe("single");
+    expect(result[2].type).toBe("single");
+  });
+
+  it("does not group April 1 and March 1 together (month boundary check)", () => {
+    const apr1 = makeLog("2025-04-01T10:00:00Z");
+    const mar1 = makeLog("2025-03-01T10:00:00Z");
+    const allLogs = [apr1, mar1];
+    const items = [
+      { type: "single", log: apr1 },
+      { type: "single", log: mar1 },
+    ];
+    const result = addDaySeparators(items, allLogs);
+    // Must have 2 day headers — one for April, one for March
+    const dayHeaders = result.filter((r) => r.type === "day");
+    expect(dayHeaders.length).toBe(2);
+  });
+});

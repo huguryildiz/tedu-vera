@@ -1230,6 +1230,67 @@ export function formatEventMeta(log, opts = {}) {
   return action;
 }
 
+// ── addDaySeparators ──────────────────────────────────────────
+/**
+ * Insert `{ type: 'day', label, count }` sentinel items between groups
+ * that belong to different calendar days. Uses local date parts for
+ * comparison so the separator matches what the user sees.
+ *
+ * @param {Array} items     - Output of groupBulkEvents()
+ * @param {Array} allLogs   - Full sorted log array (for per-day counts)
+ * @returns {Array}         - items with day separators interleaved
+ */
+export function addDaySeparators(items, allLogs) {
+  if (!items.length) return [];
+
+  // Pre-compute per-day counts from the full dataset
+  const dayCounts = {};
+  for (const log of allLogs) {
+    const key = _localDateKey(log.created_at);
+    if (key) dayCounts[key] = (dayCounts[key] || 0) + 1;
+  }
+
+  const result = [];
+  let lastKey = null;
+
+  for (const item of items) {
+    const ts = item.type === "bulk"
+      ? item.representative?.created_at
+      : item.log?.created_at;
+    const key = _localDateKey(ts);
+
+    if (key && key !== lastKey) {
+      result.push({
+        type: "day",
+        label: _formatDayLabel(ts),
+        count: dayCounts[key] || 0,
+      });
+      lastKey = key;
+    }
+    result.push(item);
+  }
+  return result;
+}
+
+function _localDateKey(isoString) {
+  if (!isoString) return null;
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return null;
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+function _formatDayLabel(isoString) {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  return d.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 // ── detectAnomalies ───────────────────────────────────────────
 function _timeAgo(ms) {
   const diff = Date.now() - ms;
