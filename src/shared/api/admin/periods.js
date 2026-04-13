@@ -159,10 +159,10 @@ export async function listPeriodStats(organizationId) {
     { data: criteria, error: criteriaError },
     { data: scoreSheets, error: scoreSheetsError },
   ] = await Promise.all([
-    supabase.from("projects").select("id, period_id").in("period_id", periodIds),
-    supabase.from("juror_period_auth").select("id, period_id").in("period_id", periodIds),
-    supabase.from("period_criteria").select("id, period_id").in("period_id", periodIds),
-    supabase.from("score_sheets").select("id, period_id, status").in("period_id", periodIds),
+    supabase.from("projects").select("period_id").in("period_id", periodIds),
+    supabase.from("juror_period_auth").select("period_id").in("period_id", periodIds),
+    supabase.from("period_criteria").select("period_id").in("period_id", periodIds),
+    supabase.from("score_sheets").select("period_id, status").in("period_id", periodIds),
   ]);
 
   if (projectsError) throw projectsError;
@@ -179,44 +179,36 @@ export async function listPeriodStats(organizationId) {
   }
 
   // Count projects
-  if (projects) {
-    for (const project of projects) {
-      stats[project.period_id].projectCount += 1;
-    }
+  for (const project of (projects || [])) {
+    stats[project.period_id].projectCount += 1;
   }
 
   // Count jurors
-  if (jurors) {
-    for (const juror of jurors) {
-      stats[juror.period_id].jurorCount += 1;
-    }
+  for (const juror of (jurors || [])) {
+    stats[juror.period_id].jurorCount += 1;
   }
 
   // Count criteria
-  if (criteria) {
-    for (const criterion of criteria) {
-      stats[criterion.period_id].criteriaCount += 1;
-    }
+  for (const criterion of (criteria || [])) {
+    stats[criterion.period_id].criteriaCount += 1;
   }
 
   // Calculate progress for each period
-  if (scoreSheets) {
-    const sheetsByPeriod = {};
-    for (const sheet of scoreSheets) {
-      if (!sheetsByPeriod[sheet.period_id]) {
-        sheetsByPeriod[sheet.period_id] = { submitted: 0, total: 0 };
-      }
-      sheetsByPeriod[sheet.period_id].total += 1;
-      if (sheet.status === "submitted") {
-        sheetsByPeriod[sheet.period_id].submitted += 1;
-      }
+  const sheetsByPeriod = {};
+  for (const sheet of (scoreSheets || [])) {
+    if (!sheetsByPeriod[sheet.period_id]) {
+      sheetsByPeriod[sheet.period_id] = { submitted: 0, total: 0 };
     }
+    sheetsByPeriod[sheet.period_id].total += 1;
+    if (sheet.status === "submitted") {
+      sheetsByPeriod[sheet.period_id].submitted += 1;
+    }
+  }
 
-    for (const periodId of periodIds) {
-      if (sheetsByPeriod[periodId]) {
-        const { submitted, total } = sheetsByPeriod[periodId];
-        stats[periodId].progress = Math.round((submitted / total) * 100);
-      }
+  for (const periodId of periodIds) {
+    if (sheetsByPeriod[periodId]) {
+      const { submitted, total } = sheetsByPeriod[periodId];
+      stats[periodId].progress = Math.round((submitted / total) * 100);
     }
   }
 
