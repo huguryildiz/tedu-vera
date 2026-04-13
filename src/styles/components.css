@@ -3995,6 +3995,11 @@ body:not(.dark-mode) .maintenance-upcoming-banner {
   background: rgba(15,23,42,0.02);
   border-color: rgba(15,23,42,0.12);
 }
+.vera-es-action:focus-visible,
+.vera-es-clone-item:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
 
 /* Number badge */
 .vera-es-num {
