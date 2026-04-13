@@ -26,6 +26,7 @@ export {
   updatePeriodOutcomeConfig,
   savePeriodCriteria,
   getPeriodCounts,
+  listPeriodStats,
 } from "./periods";
 
 export {
@@ -101,6 +102,7 @@ export {
   updateOutcome,
   deleteOutcome,
   listFrameworkCriteria,
+  listPeriodCriteriaForMapping,
   listCriterionOutcomeMappings,
   upsertCriterionOutcomeMapping,
   deleteCriterionOutcomeMapping,

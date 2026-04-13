@@ -131,3 +131,94 @@ export async function savePeriodCriteria(periodId, criteria) {
   if (error) throw error;
   return Array.isArray(data) ? data : [];
 }
+
+/**
+ * Fetch aggregate stats (projects, jurors, criteria, score sheets) per period
+ * for an organization.
+ *
+ * @param {string} organizationId
+ * @returns {Object} map of { [periodId]: { projectCount, jurorCount, criteriaCount, progress } }
+ *          where progress = percentage of submitted score sheets (0-100)
+ */
+export async function listPeriodStats(organizationId) {
+  // Fetch all periods for the organization
+  const { data: periods, error: periodsError } = await supabase
+    .from("periods")
+    .select("id")
+    .eq("organization_id", organizationId);
+
+  if (periodsError) throw periodsError;
+  if (!periods || periods.length === 0) return {};
+
+  const periodIds = periods.map((p) => p.id);
+
+  // Fetch all data in parallel
+  const [
+    { data: projects, error: projectsError },
+    { data: jurors, error: jurorsError },
+    { data: criteria, error: criteriaError },
+    { data: scoreSheets, error: scoreSheetsError },
+  ] = await Promise.all([
+    supabase.from("projects").select("id, period_id").in("period_id", periodIds),
+    supabase.from("juror_period_auth").select("id, period_id").in("period_id", periodIds),
+    supabase.from("period_criteria").select("id, period_id").in("period_id", periodIds),
+    supabase.from("score_sheets").select("id, period_id, status").in("period_id", periodIds),
+  ]);
+
+  if (projectsError) throw projectsError;
+  if (jurorsError) throw jurorsError;
+  if (criteriaError) throw criteriaError;
+  if (scoreSheetsError) throw scoreSheetsError;
+
+  // Aggregate counts and progress by period
+  const stats = {};
+
+  // Initialize all periods with 0 counts
+  for (const periodId of periodIds) {
+    stats[periodId] = { projectCount: 0, jurorCount: 0, criteriaCount: 0, progress: 0 };
+  }
+
+  // Count projects
+  if (projects) {
+    for (const project of projects) {
+      stats[project.period_id].projectCount += 1;
+    }
+  }
+
+  // Count jurors
+  if (jurors) {
+    for (const juror of jurors) {
+      stats[juror.period_id].jurorCount += 1;
+    }
+  }
+
+  // Count criteria
+  if (criteria) {
+    for (const criterion of criteria) {
+      stats[criterion.period_id].criteriaCount += 1;
+    }
+  }
+
+  // Calculate progress for each period
+  if (scoreSheets) {
+    const sheetsByPeriod = {};
+    for (const sheet of scoreSheets) {
+      if (!sheetsByPeriod[sheet.period_id]) {
+        sheetsByPeriod[sheet.period_id] = { submitted: 0, total: 0 };
+      }
+      sheetsByPeriod[sheet.period_id].total += 1;
+      if (sheet.status === "submitted") {
+        sheetsByPeriod[sheet.period_id].submitted += 1;
+      }
+    }
+
+    for (const periodId of periodIds) {
+      if (sheetsByPeriod[periodId]) {
+        const { submitted, total } = sheetsByPeriod[periodId];
+        stats[periodId].progress = Math.round((submitted / total) * 100);
+      }
+    }
+  }
+
+  return stats;
+}
