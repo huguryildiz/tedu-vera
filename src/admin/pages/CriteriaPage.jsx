@@ -16,6 +16,7 @@ import {
   Copy,
   MoveUp,
   MoveDown,
+  Info,
 } from "lucide-react";
 import { useAdminContext } from "../hooks/useAdminContext";
 import { useToast } from "@/shared/hooks/useToast";
@@ -32,6 +33,7 @@ import Pagination from "@/shared/ui/Pagination";
 import {
   rescaleRubricBandsByWeight,
   defaultRubricBands,
+  nextCriterionColor,
 } from "@/admin/criteria/criteriaFormHelpers";
 import "../../styles/pages/criteria.css";
 
@@ -62,6 +64,8 @@ export default function CriteriaPage() {
     onDirtyChange,
     onCurrentSemesterChange,
     onNavigate,
+    loading: adminLoading,
+    sortedPeriods: contextPeriods = [],
   } = useAdminContext();
   const _toast = useToast();
   const setMessage = useCallback((msg) => { if (msg) _toast.success(msg); }, [_toast]);
@@ -113,6 +117,7 @@ export default function CriteriaPage() {
 
   // ── Clone state ───────────────────────────────────────────
   const [cloneLoading, setCloneLoading] = useState(false);
+  const [showClonePicker, setShowClonePicker] = useState(false);
 
   // ── Pagination ────────────────────────────────────────────
   const [currentPage, setCurrentPage] = useState(1);
@@ -188,6 +193,7 @@ export default function CriteriaPage() {
       label: (orig.label || "") + " (copy)",
       shortLabel: ((orig.shortLabel || "") + " Copy").substring(0, 15),
       key: `${orig.key || "crt"}-copy-${Date.now()}`,
+      color: nextCriterionColor(draftCriteria),
     };
     const next = [...draftCriteria];
     next.splice(index + 1, 0, copy);
@@ -339,7 +345,7 @@ export default function CriteriaPage() {
         />
       )}
       {/* No periods exist yet */}
-      {!periods.viewPeriodId && periods.periodList.length === 0 && !panelError && (
+      {!periods.viewPeriodId && periods.periodList.length === 0 && !panelError && !adminLoading && contextPeriods.length === 0 && loadingCount === 0 && (
         <div className="crt-empty-state">
           <div className="crt-empty-state-icon">
             <ClipboardList size={28} strokeWidth={1.5} />
@@ -359,7 +365,7 @@ export default function CriteriaPage() {
         </div>
       )}
       {/* Periods exist but none selected */}
-      {!periods.viewPeriodId && periods.periodList.length > 0 && (
+      {!periods.viewPeriodId && periods.periodList.length > 0 && !adminLoading && contextPeriods.length > 0 && loadingCount === 0 && (
         <div className="crt-empty-state">
           <div className="crt-empty-state-icon">
             <ClipboardList size={28} strokeWidth={1.5} />
@@ -383,48 +389,74 @@ export default function CriteriaPage() {
             )}
           </div>
 
-          {draftCriteria.length === 0 ? (
-            <div className="crt-empty-state">
-              <div className="crt-empty-state-icon">
-                <ClipboardX size={28} strokeWidth={1.5} />
-              </div>
-              <div className="crt-empty-state-title">No criteria defined yet</div>
-              <div className="crt-empty-state-desc">
-                Start by importing from a previous period or create from scratch.
-              </div>
-
-              {otherPeriods.length > 0 && (
-                <div className="crt-clone-card">
-                  <div className="crt-clone-label">Import from previous period</div>
-                  {otherPeriods.slice(0, 3).map((p) => (
-                    <button
-                      key={p.id}
-                      className="crt-clone-option"
-                      onClick={() => handleClone(p.id)}
-                      disabled={cloneLoading || isLocked}
-                      type="button"
-                    >
-                      <div>
-                        <div className="crt-clone-name">{p.name}</div>
-                        <div className="crt-clone-meta">
-                          {p.criteria_count || "—"} criteria
-                        </div>
-                      </div>
-                      <span className="crt-clone-btn">Clone</span>
-                    </button>
-                  ))}
+          {draftCriteria.length === 0 && !adminLoading && loadingCount === 0 && contextPeriods.length > 0 ? (
+            <div style={{ padding: "48px 24px", display: "flex", justifyContent: "center" }}>
+              <div className="vera-es-card">
+                <div className="vera-es-hero vera-es-hero--criteria">
+                  <div className="vera-es-icon vera-es-icon--criteria">
+                    <ClipboardX size={24} strokeWidth={1.65} />
+                  </div>
+                  <div>
+                    <div className="vera-es-title">No criteria defined for this period</div>
+                    <div className="vera-es-desc">
+                      Criteria are the scored dimensions jurors evaluate. Each criterion has a weight and optional rubric bands.
+                    </div>
+                  </div>
                 </div>
-              )}
-
-              <div style={{ marginTop: 18, fontSize: 12.5, color: "var(--text-tertiary)" }}>
-                or{" "}
-                <span
-                  style={{ color: "var(--accent)", fontWeight: 600, cursor: "pointer" }}
-                  onClick={() => setEditingIndex(-1)}
-                >
-                  + Add Criterion
-                </span>{" "}
-                to start from scratch
+                <div className="vera-es-actions">
+                  <button
+                    className="vera-es-action vera-es-action--primary-criteria"
+                    onClick={() => setShowClonePicker((s) => !s)}
+                    disabled={otherPeriods.length === 0}
+                  >
+                    <div className="vera-es-num vera-es-num--criteria">1</div>
+                    <div className="vera-es-action-text">
+                      <div className="vera-es-action-label">Import from a previous period</div>
+                      <div className="vera-es-action-sub">
+                        {otherPeriods.length === 0
+                          ? "No previous periods with criteria available"
+                          : "Clone criteria and weights from an existing period"}
+                      </div>
+                    </div>
+                    <span className="vera-es-badge vera-es-badge--criteria">Fastest</span>
+                  </button>
+                  <div className="vera-es-divider">or</div>
+                  <button
+                    className="vera-es-action vera-es-action--secondary"
+                    onClick={() => setEditingIndex(-1)}
+                  >
+                    <div className="vera-es-num vera-es-num--secondary">2</div>
+                    <div className="vera-es-action-text">
+                      <div className="vera-es-action-label">Create from scratch</div>
+                      <div className="vera-es-action-sub">Add criteria one by one with custom weights</div>
+                    </div>
+                    <span className="vera-es-badge vera-es-badge--secondary">Manual</span>
+                  </button>
+                </div>
+                {showClonePicker && otherPeriods.length > 0 && (
+                  <div className="vera-es-clone-list">
+                    <div className="vera-es-clone-list-label">Select a period to clone from</div>
+                    {otherPeriods.slice(0, 3).map((p) => (
+                      <button
+                        key={p.id}
+                        className="vera-es-clone-item"
+                        onClick={() => handleClone(p.id)}
+                        disabled={cloneLoading || isLocked}
+                        type="button"
+                      >
+                        <div>
+                          <div className="vera-es-clone-name">{p.name}</div>
+                          <div className="vera-es-clone-meta">{p.criteria_count || "—"} criteria</div>
+                        </div>
+                        <span className="vera-es-clone-cta">Clone</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="vera-es-footer">
+                  <Info size={12} strokeWidth={2} />
+                  Required · Weights must sum to 100 pts
+                </div>
               </div>
             </div>
           ) : (
