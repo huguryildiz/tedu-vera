@@ -24,6 +24,7 @@ import {
   Eye,
   Icon,
   CalendarRange,
+  Info,
 } from "lucide-react";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import SetCurrentPeriodModal from "../modals/SetCurrentPeriodModal";
@@ -532,31 +533,49 @@ export default function PeriodsPage() {
                       No periods match the current filter.
                     </div>
                   ) : (
-                    <div className="sw-empty-state">
-                      <div className="sw-empty-icon">
-                        <CalendarRange size={28} strokeWidth={1.5} />
+                    <div style={{ display: "flex", justifyContent: "center" }}>
+                      <div className="vera-es-card">
+                        <div className="vera-es-hero vera-es-hero--period">
+                          <div className="vera-es-icon vera-es-icon--period">
+                            <CalendarRange size={24} strokeWidth={1.65} />
+                          </div>
+                          <div>
+                            <div className="vera-es-title">No evaluation periods yet</div>
+                            <div className="vera-es-desc">
+                              An evaluation period defines the timeframe, criteria, and scope for jury evaluations. It is the foundation of your setup.
+                            </div>
+                          </div>
+                        </div>
+                        <div className="vera-es-actions">
+                          <button
+                            className="vera-es-action vera-es-action--primary-period"
+                            onClick={() => onNavigate?.("setup")}
+                          >
+                            <div className="vera-es-num vera-es-num--period">1</div>
+                            <div className="vera-es-action-text">
+                              <div className="vera-es-action-label">Use Setup Wizard</div>
+                              <div className="vera-es-action-sub">Guided 7-step configuration from scratch</div>
+                            </div>
+                            <span className="vera-es-badge vera-es-badge--period">Step 1</span>
+                          </button>
+                          <div className="vera-es-divider">or</div>
+                          <button
+                            className="vera-es-action vera-es-action--secondary"
+                            onClick={openAddDrawer}
+                          >
+                            <div className="vera-es-num vera-es-num--secondary">2</div>
+                            <div className="vera-es-action-text">
+                              <div className="vera-es-action-label">Create manually</div>
+                              <div className="vera-es-action-sub">Set name, dates, and options yourself</div>
+                            </div>
+                            <span className="vera-es-badge vera-es-badge--secondary">Manual</span>
+                          </button>
+                        </div>
+                        <div className="vera-es-footer">
+                          <Info size={12} strokeWidth={2} />
+                          Required · Step 1 of 7 in minimum setup
+                        </div>
                       </div>
-                      <div className="sw-empty-title">No evaluation periods yet</div>
-                      <div className="sw-empty-desc">
-                        An evaluation period is the foundation of your setup. It defines the timeframe, criteria, and scope for jury evaluations.
-                      </div>
-                      <div className="sw-empty-actions">
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => onNavigate?.("setup")}
-                          style={{ width: "auto", padding: "8px 20px" }}
-                        >
-                          Use Setup Wizard
-                        </button>
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={openAddDrawer}
-                          style={{ width: "auto", padding: "8px 20px" }}
-                        >
-                          + Create Period Manually
-                        </button>
-                      </div>
-                      <div className="sw-empty-context">Step 1 of 7 in minimum setup</div>
                     </div>
                   )}
                 </td>
