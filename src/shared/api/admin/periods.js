@@ -173,9 +173,9 @@ export async function listPeriodStats(organizationId) {
   // Aggregate counts and progress by period
   const stats = {};
 
-  // Initialize all periods with 0 counts
+  // Initialize all periods with 0 counts and null progress
   for (const periodId of periodIds) {
-    stats[periodId] = { projectCount: 0, jurorCount: 0, criteriaCount: 0, progress: 0 };
+    stats[periodId] = { projectCount: 0, jurorCount: 0, criteriaCount: 0, progress: null };
   }
 
   // Count projects
