@@ -996,59 +996,139 @@ DO $$
 DECLARE
   v_mudek UUID := '3ae7e475-dd51-45e7-a79a-1c159fbf6abc';
   v_abet  UUID := '253751a6-09dd-47d7-93b4-7064456e553c';
+  -- MÜDEK v3.1 criteria (fixed UUIDs — idempotent re-runs)
+  v_mudek_ct  UUID := 'fc1a0001-0000-4000-a000-000000000001';
+  v_mudek_cd  UUID := 'fc1a0001-0000-4000-a000-000000000002';
+  v_mudek_co  UUID := 'fc1a0001-0000-4000-a000-000000000003';
+  v_mudek_cw  UUID := 'fc1a0001-0000-4000-a000-000000000004';
+  -- MÜDEK outcome IDs (resolved at runtime)
+  v_o11  UUID; v_o12  UUID; v_o2   UUID; v_o31  UUID; v_o32  UUID;
+  v_o4   UUID; v_o5   UUID; v_o61  UUID; v_o62  UUID;
+  v_o71  UUID; v_o72  UUID; v_o81  UUID; v_o82  UUID;
+  v_o91  UUID; v_o92  UUID; v_o101 UUID; v_o102 UUID; v_o11l UUID;
 BEGIN
 
   -- ── MÜDEK v3.1 ──────────────────────────────────────────────────────────────
-  INSERT INTO frameworks (id, organization_id, name, description, version)
+  INSERT INTO frameworks (id, organization_id, name, description)
   VALUES (
     v_mudek, NULL,
     'MÜDEK v3.1',
-    'MÜDEK engineering accreditation framework — 18 programme outcomes (PO 1.1–11)',
-    '3.1'
+    'MÜDEK engineering accreditation framework — 18 programme outcomes (PO 1.1–11)'
   )
   ON CONFLICT (id) DO NOTHING;
 
   IF NOT EXISTS (SELECT 1 FROM framework_outcomes WHERE framework_id = v_mudek LIMIT 1) THEN
-    INSERT INTO framework_outcomes (framework_id, code, short_label, label, description, sort_order) VALUES
-      (v_mudek, 'PO 1.1',  'Knowledge Base',        'Knowledge of mathematics, natural sciences, fundamental engineering, computational methods, and discipline-specific topics.',                                                                                                         'Knowledge & Application',    1),
-      (v_mudek, 'PO 1.2',  'Knowledge Application', 'Ability to apply knowledge of mathematics, natural sciences, fundamental engineering, computational methods, and discipline-specific topics to solve complex engineering problems.',                                                  'Knowledge & Application',    2),
-      (v_mudek, 'PO 2',    'Problem Analysis',      'Ability to identify, formulate, and analyse complex engineering problems using fundamental science, mathematics, and engineering knowledge, while considering the relevant UN Sustainable Development Goals.',                         'Problem Analysis',           3),
-      (v_mudek, 'PO 3.1',  'Creative Design',       'Ability to design creative solutions to complex engineering problems.',                                                                                                                                                              'Design & Development',       4),
-      (v_mudek, 'PO 3.2',  'System Design',         'Ability to design complex systems, processes, devices, or products that meet current and future requirements while considering realistic constraints and conditions.',                                                                'Design & Development',       5),
-      (v_mudek, 'PO 4',    'Modern Tools',          'Ability to select and use appropriate techniques, resources, and modern engineering and computing tools — including prediction and modelling — for the analysis and solution of complex engineering problems, with awareness of their limitations.', 'Modern Tool Use', 6),
-      (v_mudek, 'PO 5',    'Research Methods',      'Ability to use research methods — including literature review, experiment design, experimentation, data collection, and analysis — to investigate complex engineering problems.',                                                     'Research',                   7),
-      (v_mudek, 'PO 6.1',  'Societal Impact',       'Knowledge of the effects of engineering applications on society, health and safety, the economy, sustainability, and the environment within the scope of UN Sustainable Development Goals.',                                         'Engineering & Society',      8),
-      (v_mudek, 'PO 6.2',  'Legal Awareness',       'Awareness of the legal consequences of engineering solutions.',                                                                                                                                                                     'Engineering & Society',      9),
-      (v_mudek, 'PO 7.1',  'Ethics',                'Knowledge of ethical responsibility and acting in accordance with engineering professional principles.',                                                                                                                             'Ethics & Diversity',         10),
-      (v_mudek, 'PO 7.2',  'Diversity & Inclusion', 'Awareness of impartiality, non-discrimination, and inclusivity with respect to diversity.',                                                                                                                                         'Ethics & Diversity',         11),
-      (v_mudek, 'PO 8.1',  'Team Leadership',       'Ability to work effectively as a team member or leader in intra-disciplinary teams (face-to-face, remote, or hybrid).',                                                                                                            'Teamwork',                   12),
-      (v_mudek, 'PO 8.2',  'Cross-disciplinary',    'Ability to work effectively as a team member or leader in multidisciplinary teams (face-to-face, remote, or hybrid).',                                                                                                             'Teamwork',                   13),
-      (v_mudek, 'PO 9.1',  'Oral Comm.',            'Ability to communicate effectively in speech on technical subjects, taking into account the diverse characteristics of the target audience (education, language, profession, etc.).',                                                'Communication',              14),
-      (v_mudek, 'PO 9.2',  'Written Comm.',         'Ability to communicate effectively in writing on technical subjects, taking into account the diverse characteristics of the target audience (education, language, profession, etc.).',                                               'Communication',              15),
-      (v_mudek, 'PO 10.1', 'Project Mgmt.',         'Knowledge of professional practices such as project management and economic feasibility analysis.',                                                                                                                                  'Business & Entrepreneurship', 16),
-      (v_mudek, 'PO 10.2', 'Entrepreneurship',      'Awareness of entrepreneurship and innovation.',                                                                                                                                                                                    'Business & Entrepreneurship', 17),
-      (v_mudek, 'PO 11',   'Lifelong Learning',     'Lifelong learning skills, including the ability to learn independently and continuously, adapt to new and emerging technologies, and think critically about technological change.',                                                  'Lifelong Learning',          18);
+    INSERT INTO framework_outcomes (framework_id, code, label, description, sort_order) VALUES
+      (v_mudek, 'PO 1.1',  'Knowledge of mathematics, natural sciences, fundamental engineering, computational methods, and discipline-specific topics.',                                                                                                         'Knowledge & Application',     1),
+      (v_mudek, 'PO 1.2',  'Ability to apply knowledge of mathematics, natural sciences, fundamental engineering, computational methods, and discipline-specific topics to solve complex engineering problems.',                                                  'Knowledge & Application',     2),
+      (v_mudek, 'PO 2',    'Ability to identify, formulate, and analyse complex engineering problems using fundamental science, mathematics, and engineering knowledge, while considering the relevant UN Sustainable Development Goals.',                         'Problem Analysis',            3),
+      (v_mudek, 'PO 3.1',  'Ability to design creative solutions to complex engineering problems.',                                                                                                                                                              'Design & Development',        4),
+      (v_mudek, 'PO 3.2',  'Ability to design complex systems, processes, devices, or products that meet current and future requirements while considering realistic constraints and conditions.',                                                                'Design & Development',        5),
+      (v_mudek, 'PO 4',    'Ability to select and use appropriate techniques, resources, and modern engineering and computing tools — including prediction and modelling — for the analysis and solution of complex engineering problems, with awareness of their limitations.', 'Modern Tool Use', 6),
+      (v_mudek, 'PO 5',    'Ability to use research methods — including literature review, experiment design, experimentation, data collection, and analysis — to investigate complex engineering problems.',                                                     'Research',                    7),
+      (v_mudek, 'PO 6.1',  'Knowledge of the effects of engineering applications on society, health and safety, the economy, sustainability, and the environment within the scope of UN Sustainable Development Goals.',                                         'Engineering & Society',       8),
+      (v_mudek, 'PO 6.2',  'Awareness of the legal consequences of engineering solutions.',                                                                                                                                                                     'Engineering & Society',       9),
+      (v_mudek, 'PO 7.1',  'Knowledge of ethical responsibility and acting in accordance with engineering professional principles.',                                                                                                                             'Ethics & Diversity',          10),
+      (v_mudek, 'PO 7.2',  'Awareness of impartiality, non-discrimination, and inclusivity with respect to diversity.',                                                                                                                                         'Ethics & Diversity',          11),
+      (v_mudek, 'PO 8.1',  'Ability to work effectively as a team member or leader in intra-disciplinary teams (face-to-face, remote, or hybrid).',                                                                                                            'Teamwork',                    12),
+      (v_mudek, 'PO 8.2',  'Ability to work effectively as a team member or leader in multidisciplinary teams (face-to-face, remote, or hybrid).',                                                                                                             'Teamwork',                    13),
+      (v_mudek, 'PO 9.1',  'Ability to communicate effectively in speech on technical subjects, taking into account the diverse characteristics of the target audience (education, language, profession, etc.).',                                                'Communication',               14),
+      (v_mudek, 'PO 9.2',  'Ability to communicate effectively in writing on technical subjects, taking into account the diverse characteristics of the target audience (education, language, profession, etc.).',                                               'Communication',               15),
+      (v_mudek, 'PO 10.1', 'Knowledge of professional practices such as project management and economic feasibility analysis.',                                                                                                                                  'Business & Entrepreneurship', 16),
+      (v_mudek, 'PO 10.2', 'Awareness of entrepreneurship and innovation.',                                                                                                                                                                                    'Business & Entrepreneurship', 17),
+      (v_mudek, 'PO 11',   'Lifelong learning skills, including the ability to learn independently and continuously, adapt to new and emerging technologies, and think critically about technological change.',                                                  'Lifelong Learning',           18);
   END IF;
 
   -- ── ABET (2026 – 2027) ───────────────────────────────────────────────────────
-  INSERT INTO frameworks (id, organization_id, name, description, version)
+  INSERT INTO frameworks (id, organization_id, name, description)
   VALUES (
     v_abet, NULL,
     'ABET (2026 – 2027)',
-    'ABET EAC Student Outcomes — SO 1 through SO 7 (2026-2027 Criteria)',
-    '2026-2027'
+    'ABET EAC Student Outcomes — SO 1 through SO 7 (2026-2027 Criteria)'
   )
   ON CONFLICT (id) DO NOTHING;
 
   IF NOT EXISTS (SELECT 1 FROM framework_outcomes WHERE framework_id = v_abet LIMIT 1) THEN
-    INSERT INTO framework_outcomes (framework_id, code, short_label, label, description, sort_order) VALUES
-      (v_abet, 'SO 1', 'Problem Solving',  'Ability to identify, formulate, and solve complex engineering problems by applying principles of engineering, science, and mathematics.',                                                                                                                       'Complex Problem Solving',          1),
-      (v_abet, 'SO 2', 'Eng. Design',      'Ability to apply engineering design to produce solutions that meet specified needs with consideration of public health, safety, and welfare, as well as global, cultural, social, environmental, and economic factors.',                                        'Engineering Design',               2),
-      (v_abet, 'SO 3', 'Communication',    'Ability to communicate effectively with a range of audiences.',                                                                                                                                                                                               'Effective Communication',          3),
-      (v_abet, 'SO 4', 'Ethics',           'Ability to recognize ethical and professional responsibilities in engineering situations and make informed judgments, which must consider the impact of engineering solutions in global, economic, environmental, and societal contexts.',                      'Ethics & Professional Responsibility', 4),
-      (v_abet, 'SO 5', 'Teamwork',         'Ability to function effectively on a team whose members together provide leadership, create a collaborative environment, establish goals, plan tasks, and meet objectives.',                                                                                   'Teamwork & Leadership',            5),
-      (v_abet, 'SO 6', 'Experimentation',  'Ability to develop and conduct appropriate experimentation, analyze and interpret data, and use engineering judgment to draw conclusions.',                                                                                                                    'Experimentation & Analysis',       6),
-      (v_abet, 'SO 7', 'Lifelong Learning','Ability to acquire and apply new knowledge as needed, using appropriate learning strategies.',                                                                                                                                                                'Lifelong Learning',                7);
+    INSERT INTO framework_outcomes (framework_id, code, label, description, sort_order) VALUES
+      (v_abet, 'SO 1', 'Ability to identify, formulate, and solve complex engineering problems by applying principles of engineering, science, and mathematics.',                                                                                                                       'Complex Problem Solving',             1),
+      (v_abet, 'SO 2', 'Ability to apply engineering design to produce solutions that meet specified needs with consideration of public health, safety, and welfare, as well as global, cultural, social, environmental, and economic factors.',                                        'Engineering Design',                  2),
+      (v_abet, 'SO 3', 'Ability to communicate effectively with a range of audiences.',                                                                                                                                                                                               'Effective Communication',             3),
+      (v_abet, 'SO 4', 'Ability to recognize ethical and professional responsibilities in engineering situations and make informed judgments, which must consider the impact of engineering solutions in global, economic, environmental, and societal contexts.',                      'Ethics & Professional Responsibility', 4),
+      (v_abet, 'SO 5', 'Ability to function effectively on a team whose members together provide leadership, create a collaborative environment, establish goals, plan tasks, and meet objectives.',                                                                                   'Teamwork & Leadership',               5),
+      (v_abet, 'SO 6', 'Ability to develop and conduct appropriate experimentation, analyze and interpret data, and use engineering judgment to draw conclusions.',                                                                                                                    'Experimentation & Analysis',          6),
+      (v_abet, 'SO 7', 'Ability to acquire and apply new knowledge as needed, using appropriate learning strategies.',                                                                                                                                                                'Lifelong Learning',                   7);
+  END IF;
+
+  -- ── MÜDEK v3.1 — 4 evaluation criteria ──────────────────────────────────────
+  IF NOT EXISTS (SELECT 1 FROM framework_criteria WHERE framework_id = v_mudek LIMIT 1) THEN
+    INSERT INTO framework_criteria (id, framework_id, key, label, short_label, description, max_score, weight, color, rubric_bands, sort_order) VALUES
+      (v_mudek_ct, v_mudek, 'technical', 'Technical Content',     'Technical',
+       'Evaluates the depth, correctness, and originality of the engineering work itself — independent of how well it is communicated. Assesses whether the team applied appropriate engineering knowledge, justified their design decisions, and demonstrated real technical mastery.',
+       30, 30, '#F59E0B',
+       '[{"min":27,"max":30,"label":"Excellent","description":"Problem is clearly defined with strong motivation. Design decisions are well-justified with engineering depth. Originality and mastery of relevant tools or methods are evident."},{"min":21,"max":26,"label":"Good","description":"Design is mostly clear and technically justified. Engineering decisions are largely supported."},{"min":13,"max":20,"label":"Developing","description":"Problem is stated but motivation or technical justification is insufficient."},{"min":0,"max":12,"label":"Insufficient","description":"Vague problem definition and unjustified decisions. Superficial technical content."}]',
+       1),
+      (v_mudek_cd, v_mudek, 'design',    'Written Communication', 'Written',
+       'Evaluates how effectively the team communicates their project in written and visual form on the poster — including layout, information hierarchy, figure quality, and the clarity of technical content for a mixed audience.',
+       30, 30, '#22C55E',
+       '[{"min":27,"max":30,"label":"Excellent","description":"Poster layout is intuitive with clear information flow. Visuals are fully labelled and high quality. Technical content is accessible to both technical and non-technical readers."},{"min":21,"max":26,"label":"Good","description":"Layout is mostly logical. Visuals are readable with minor gaps. Technical content is largely clear."},{"min":13,"max":20,"label":"Developing","description":"Occasional gaps in information flow. Some visuals are missing labels or captions. Technical content is only partially communicated."},{"min":0,"max":12,"label":"Insufficient","description":"Confusing layout. Low-quality or unlabelled visuals. Technical content is unclear or missing."}]',
+       2),
+      (v_mudek_co, v_mudek, 'delivery',  'Oral Communication',    'Oral',
+       'Evaluates the team''s ability to present their work verbally and to respond to questions from jurors with varying technical backgrounds. A key factor is conscious audience adaptation.',
+       30, 30, '#3B82F6',
+       '[{"min":27,"max":30,"label":"Excellent","description":"Presentation is consciously adapted for both technical and non-technical jury members. Q&A responses are accurate, clear, and audience-appropriate."},{"min":21,"max":26,"label":"Good","description":"Presentation is mostly clear and well-paced. Most questions answered correctly. Audience adaptation is generally evident."},{"min":13,"max":20,"label":"Developing","description":"Understandable but inconsistent. Limited audience adaptation. Time management or Q&A depth needs improvement."},{"min":0,"max":12,"label":"Insufficient","description":"Unclear or disorganised presentation. Most questions answered incorrectly or not at all."}]',
+       3),
+      (v_mudek_cw, v_mudek, 'teamwork',  'Teamwork',              'Teamwork',
+       'Evaluates visible evidence of equal and effective team participation during the poster session, as well as the group''s professional and ethical conduct in interacting with jurors.',
+       10, 10, '#EF4444',
+       '[{"min":9,"max":10,"label":"Excellent","description":"All members participate actively and equally. Professional and ethical conduct observed throughout."},{"min":7,"max":8,"label":"Good","description":"Most members contribute. Minor knowledge gaps. Professionalism mostly observed."},{"min":4,"max":6,"label":"Developing","description":"Uneven participation. Some members are passive or unprepared."},{"min":0,"max":3,"label":"Insufficient","description":"Very low participation or dominated by one person. Lack of professionalism observed."}]',
+       4);
+  END IF;
+
+  -- ── MÜDEK v3.1 — criterion → outcome maps ───────────────────────────────────
+  -- Technical: direct PO 1.2/2/3.1/3.2, indirect PO 1.1/4/5
+  -- Written:   direct PO 9.2,            indirect PO 6.1/10.1
+  -- Oral:      direct PO 9.1,            indirect PO 6.2/10.2
+  -- Teamwork:  direct PO 8.1/8.2,        indirect PO 7.1/7.2/11
+  IF NOT EXISTS (SELECT 1 FROM framework_criterion_outcome_maps WHERE framework_id = v_mudek LIMIT 1) THEN
+    SELECT id INTO v_o11  FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 1.1';
+    SELECT id INTO v_o12  FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 1.2';
+    SELECT id INTO v_o2   FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 2';
+    SELECT id INTO v_o31  FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 3.1';
+    SELECT id INTO v_o32  FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 3.2';
+    SELECT id INTO v_o4   FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 4';
+    SELECT id INTO v_o5   FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 5';
+    SELECT id INTO v_o61  FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 6.1';
+    SELECT id INTO v_o62  FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 6.2';
+    SELECT id INTO v_o71  FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 7.1';
+    SELECT id INTO v_o72  FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 7.2';
+    SELECT id INTO v_o81  FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 8.1';
+    SELECT id INTO v_o82  FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 8.2';
+    SELECT id INTO v_o91  FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 9.1';
+    SELECT id INTO v_o92  FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 9.2';
+    SELECT id INTO v_o101 FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 10.1';
+    SELECT id INTO v_o102 FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 10.2';
+    SELECT id INTO v_o11l FROM framework_outcomes WHERE framework_id = v_mudek AND code = 'PO 11';
+
+    INSERT INTO framework_criterion_outcome_maps (framework_id, criterion_id, outcome_id, coverage_type, weight) VALUES
+      (v_mudek, v_mudek_ct, v_o12,  'direct',   0.34),
+      (v_mudek, v_mudek_ct, v_o2,   'direct',   0.33),
+      (v_mudek, v_mudek_ct, v_o31,  'direct',   0.17),
+      (v_mudek, v_mudek_ct, v_o32,  'direct',   0.16),
+      (v_mudek, v_mudek_ct, v_o11,  'indirect', NULL),
+      (v_mudek, v_mudek_ct, v_o4,   'indirect', NULL),
+      (v_mudek, v_mudek_ct, v_o5,   'indirect', NULL),
+      (v_mudek, v_mudek_cd, v_o92,  'direct',   1.00),
+      (v_mudek, v_mudek_cd, v_o61,  'indirect', NULL),
+      (v_mudek, v_mudek_cd, v_o101, 'indirect', NULL),
+      (v_mudek, v_mudek_co, v_o91,  'direct',   1.00),
+      (v_mudek, v_mudek_co, v_o62,  'indirect', NULL),
+      (v_mudek, v_mudek_co, v_o102, 'indirect', NULL),
+      (v_mudek, v_mudek_cw, v_o81,  'direct',   0.50),
+      (v_mudek, v_mudek_cw, v_o82,  'direct',   0.50),
+      (v_mudek, v_mudek_cw, v_o71,  'indirect', NULL),
+      (v_mudek, v_mudek_cw, v_o72,  'indirect', NULL),
+      (v_mudek, v_mudek_cw, v_o11l, 'indirect', NULL)
+    ON CONFLICT (criterion_id, outcome_id) DO NOTHING;
   END IF;
 
 END;

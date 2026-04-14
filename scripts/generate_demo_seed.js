@@ -389,7 +389,9 @@ function processOrgfw(orgCode, fwName, criteria, outcomes, mappings) {
     for (const mo of m.outs) {
       const oId = oMap[mo.code]; const mId = uuid(`fw-map-${orgCode}-${m.crit}-${mo.code}`);
       o.mapsData.push({ id: mId, cId, oId, weight: mo.weight, critKey: m.crit, outCode: mo.code });
-      fwMaps.push(`INSERT INTO framework_criterion_outcome_maps (id, framework_id, criterion_id, outcome_id, weight) VALUES ('${mId}', '${fwId}', '${cId}', '${oId}', ${mo.weight}) ON CONFLICT DO NOTHING;`);
+      const coverType = mo.type || 'direct';
+      const weightVal = mo.weight != null ? mo.weight : 'NULL';
+      fwMaps.push(`INSERT INTO framework_criterion_outcome_maps (id, framework_id, criterion_id, outcome_id, coverage_type, weight) VALUES ('${mId}', '${fwId}', '${cId}', '${oId}', '${coverType}', ${weightVal}) ON CONFLICT DO NOTHING;`);
     }
   }
 }
@@ -431,19 +433,52 @@ processOrgfw('TEDU-EE', 'MUDEK v3.1',
       ] }
   ],
   [
-    ['MDK 1.2','Adequate knowledge in mathematics, science and engineering','Demonstrate sufficient knowledge of mathematics, natural sciences, and engineering fundamentals to solve complex engineering problems.','Knowledge Application'],
-    ['MDK 2','Ability to formulate and solve complex engineering problems','Identify, define, formulate, and solve complex engineering problems by selecting and applying appropriate analysis and modeling methods.','Problem Analysis'],
-    ['MDK 3','Ability to design solutions under realistic constraints','Design complex systems, processes, devices, or products under realistic constraints, applying creative and modern design methods to meet identified needs.','System Design'],
-    ['MDK 8.1','Ability to function effectively in disciplinary teams','Function effectively as a member or leader in disciplinary teams, taking individual responsibility within face-to-face, remote, or hybrid settings.','Team Leadership'],
-    ['MDK 8.2','Ability to work in multi-disciplinary teams','Work effectively in multidisciplinary teams, contributing expertise while integrating perspectives from other disciplines.','Cross-disciplinary'],
-    ['MDK 9.1','Oral communication effectiveness','Communicate effectively through oral presentations, adapting communication style to diverse audiences including technical and non-technical listeners.','Oral Comm.'],
-    ['MDK 9.2','Written communication effectiveness','Communicate effectively through written and visual means, producing clear technical documentation accessible to diverse audiences.','Written Comm.']
+    ['PO 1.1','Knowledge in mathematics, natural sciences, fundamental engineering, computational methods, and discipline-specific topics.','Demonstrate foundational knowledge in mathematics, natural sciences, fundamental engineering, and discipline-specific topics required for engineering practice.','Foundational Knowledge'],
+    ['PO 1.2','Ability to apply knowledge of mathematics, natural sciences, fundamental engineering, computation, and discipline-specific topics to solve complex engineering problems.','Apply foundational knowledge in mathematics, natural sciences, and engineering to analyse and solve complex engineering problems.','Knowledge Application'],
+    ['PO 2','Ability to identify, formulate, and analyse complex engineering problems using fundamental science, mathematics, and engineering knowledge, with consideration of relevant UN Sustainable Development Goals.','Identify, formulate, and analyse complex engineering problems using fundamental science and mathematics, with consideration of relevant UN SDGs.','Problem Analysis'],
+    ['PO 3.1','Ability to design creative solutions to complex engineering problems.','Design creative and original solutions to complex engineering problems.','Creative Solutions'],
+    ['PO 3.2','Ability to design complex systems, processes, devices, or products under realistic constraints and conditions, meeting current and future requirements.','Design complex systems, processes, devices, or products under realistic constraints, meeting current and future requirements.','System Design'],
+    ['PO 4','Ability to select and use appropriate techniques, resources, and modern engineering and IT tools including estimation and modelling for the analysis and solution of complex engineering problems, with awareness of their limitations.','Select and apply modern engineering tools, techniques, and resources for analysis and solution of complex problems, with awareness of limitations.','Modern Tools'],
+    ['PO 5','Ability to use research methods for investigating complex engineering problems, including literature review, experiment design, experimentation, data collection, and analysis and interpretation of results.','Apply research methods including literature review, experimentation, data collection, and result interpretation to investigate complex engineering problems.','Research Methods'],
+    ['PO 6.1','Knowledge of the impacts of engineering applications on society, health and safety, economy, sustainability, and the environment within the scope of UN Sustainable Development Goals.','Demonstrate knowledge of engineering impacts on society, health, safety, sustainability, and the environment within the scope of UN SDGs.','Societal Impact'],
+    ['PO 6.2','Awareness of the legal consequences of engineering solutions.','Show awareness of the legal consequences and responsibilities associated with engineering solutions and decisions.','Legal Awareness'],
+    ['PO 7.1','Knowledge of acting in accordance with engineering professional principles and ethical responsibility.','Demonstrate knowledge of professional engineering principles and the ability to act with ethical responsibility.','Ethics & Professionalism'],
+    ['PO 7.2','Awareness of non-discrimination, impartiality, and inclusivity of diversity.','Show awareness of non-discrimination, impartiality, and the importance of inclusive practice in engineering contexts.','Diversity & Inclusion'],
+    ['PO 8.1','Ability to work effectively as a team member or leader in intra-disciplinary teams in-person, remote, or hybrid.','Work effectively as a member or leader in intra-disciplinary engineering teams across in-person, remote, or hybrid settings.','Disciplinary Teamwork'],
+    ['PO 8.2','Ability to work effectively as a team member or leader in multidisciplinary teams in-person, remote, or hybrid.','Work effectively as a member or leader in multidisciplinary teams, integrating knowledge across disciplines in any work setting.','Multidisciplinary Teamwork'],
+    ['PO 9.1','Ability to communicate effectively on technical topics orally, adapting to audience differences in education, language, and profession.','Communicate effectively on technical topics through oral presentation, adapting to diverse audiences including technical and non-technical listeners.','Oral Comm.'],
+    ['PO 9.2','Ability to communicate effectively on technical topics in writing, adapting to audience differences in education, language, and profession.','Communicate effectively on technical topics through written and visual means, adapting to diverse audiences and purposes.','Written Comm.'],
+    ['PO 10.1','Knowledge of business practices such as project management and economic feasibility analysis.','Demonstrate knowledge of business practices including project management, planning, and economic feasibility analysis.','Project Management'],
+    ['PO 10.2','Awareness of entrepreneurship and innovation.','Show awareness of entrepreneurship, innovation, and the process of translating engineering knowledge into new products and services.','Entrepreneurship'],
+    ['PO 11','Lifelong learning skills including independent and continuous learning, adaptation to new and emerging technologies, and critical thinking about technological change.','Demonstrate lifelong learning skills including independent study, adaptation to emerging technologies, and critical thinking about technological change.','Lifelong Learning']
   ],
   [
-    {crit:'technical', outs:[{code:'MDK 1.2',weight:0.34},{code:'MDK 2',weight:0.33},{code:'MDK 3',weight:0.33}]},
-    {crit:'design', outs:[{code:'MDK 9.2',weight:1.0}]},
-    {crit:'delivery', outs:[{code:'MDK 9.1',weight:1.0}]},
-    {crit:'teamwork', outs:[{code:'MDK 8.1',weight:0.5},{code:'MDK 8.2',weight:0.5}]}
+    {crit:'technical', outs:[
+      {code:'PO 1.2',weight:0.34,type:'direct'},
+      {code:'PO 2',weight:0.33,type:'direct'},
+      {code:'PO 3.1',weight:0.17,type:'direct'},
+      {code:'PO 3.2',weight:0.16,type:'direct'},
+      {code:'PO 1.1',type:'indirect'},
+      {code:'PO 4',type:'indirect'},
+      {code:'PO 5',type:'indirect'}
+    ]},
+    {crit:'design', outs:[
+      {code:'PO 9.2',weight:1.0,type:'direct'},
+      {code:'PO 6.1',type:'indirect'},
+      {code:'PO 10.1',type:'indirect'}
+    ]},
+    {crit:'delivery', outs:[
+      {code:'PO 9.1',weight:1.0,type:'direct'},
+      {code:'PO 6.2',type:'indirect'},
+      {code:'PO 10.2',type:'indirect'}
+    ]},
+    {crit:'teamwork', outs:[
+      {code:'PO 8.1',weight:0.5,type:'direct'},
+      {code:'PO 8.2',weight:0.5,type:'direct'},
+      {code:'PO 7.1',type:'indirect'},
+      {code:'PO 7.2',type:'indirect'},
+      {code:'PO 11',type:'indirect'}
+    ]}
   ]
 );
 
