@@ -259,6 +259,128 @@
   border-color: rgba(96, 165, 250, 0.28);
 }
 
+/* ── Template trigger button ──────────────────────────────── */
+
+.crt-template-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.crt-template-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.crt-template-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Starter Criteria Drawer ─────────────────────────────── */
+
+.scd-section {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.scd-section:last-child {
+  border-bottom: none;
+}
+
+.scd-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.scd-chips-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.scd-empty-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.scd-template-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+}
+
+.scd-template-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.scd-template-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.scd-template-meta {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.scd-action-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.scd-use-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.06);
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  align-self: flex-start;
+}
+
+.scd-use-btn:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.scd-use-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .dark-mode .crt-table-card {
   background: var(--bg-card);
 }
