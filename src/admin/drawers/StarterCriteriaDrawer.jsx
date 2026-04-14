@@ -1,5 +1,13 @@
 // src/admin/drawers/StarterCriteriaDrawer.jsx
 
+import { useState } from "react";
+import { LayoutTemplate } from "lucide-react";
+import Drawer from "@/shared/ui/Drawer";
+import FbAlert from "@/shared/ui/FbAlert";
+import CustomSelect from "@/shared/ui/CustomSelect";
+
+// ── Starter template data ─────────────────────────────────
+
 export const STARTER_CRITERIA = [
   {
     key:        "written-communication",
@@ -63,6 +71,104 @@ export const STARTER_CRITERIA = [
   },
 ];
 
-export default function StarterCriteriaDrawer() {
-  return null;
+// ── Component ─────────────────────────────────────────────
+
+export default function StarterCriteriaDrawer({
+  open,
+  onClose,
+  draftCriteria,
+  otherPeriods,
+  isLocked,
+  onApplyTemplate,
+  onCopyFromPeriod,
+}) {
+  const [selectedPeriodId, setSelectedPeriodId] = useState("");
+
+  const hasExisting = draftCriteria.length > 0;
+  const totalMax = draftCriteria.reduce((s, c) => s + (Number(c.max) || 0), 0);
+  const isBalanced = hasExisting && totalMax === 100;
+
+  const periodOptions = otherPeriods.map((p) => ({
+    value: p.id,
+    label: p.name,
+  }));
+
+  function handleCopy() {
+    onCopyFromPeriod(selectedPeriodId);
+  }
+
+  function handleUseTemplate() {
+    onApplyTemplate(STARTER_CRITERIA);
+  }
+
+  return (
+    <Drawer
+      open={open}
+      onClose={onClose}
+      title="Load Template"
+      icon={(stroke) => <LayoutTemplate size={17} stroke={stroke} strokeWidth={2} />}
+    >
+      {/* ── Section 1: Active Criteria ──────────────────── */}
+      <div className="scd-section">
+        <div className="scd-section-label">Active Criteria</div>
+        {hasExisting ? (
+          <div className="scd-chips-row">
+            <span className="crt-chip neutral">{draftCriteria.length} {draftCriteria.length === 1 ? "criterion" : "criteria"}</span>
+            <span className={`crt-chip ${isBalanced ? "success" : "warning"}`}>
+              {totalMax} {isBalanced ? "pts · balanced" : "/ 100 pts"}
+            </span>
+          </div>
+        ) : (
+          <p className="scd-empty-hint">No criteria defined for this period.</p>
+        )}
+      </div>
+
+      {/* ── Section 2: Copy from Existing Period ────────── */}
+      <div className="scd-section">
+        <div className="scd-section-label">Copy from Existing Period</div>
+        <CustomSelect
+          value={selectedPeriodId}
+          onChange={setSelectedPeriodId}
+          options={periodOptions}
+          disabled={otherPeriods.length === 0 || isLocked}
+          placeholder={otherPeriods.length === 0 ? "No other periods available" : "Select a period…"}
+        />
+        <div className="scd-action-row">
+          {hasExisting && (
+            <FbAlert variant="warning">This will replace your current criteria.</FbAlert>
+          )}
+          <button
+            className="scd-use-btn"
+            onClick={handleCopy}
+            disabled={!selectedPeriodId || isLocked}
+          >
+            Copy &amp; Use
+          </button>
+        </div>
+      </div>
+
+      {/* ── Section 3: Starter Templates ────────────────── */}
+      <div className="scd-section">
+        <div className="scd-section-label">Starter Templates</div>
+        <div className="scd-template-card">
+          <div className="scd-template-info">
+            <div className="scd-template-name">Standard Evaluation</div>
+            <div className="scd-template-meta">4 criteria · 100 pts total</div>
+          </div>
+          <div className="scd-action-row">
+            {hasExisting && (
+              <FbAlert variant="warning">This will replace your current criteria.</FbAlert>
+            )}
+            <button
+              className="scd-use-btn"
+              onClick={handleUseTemplate}
+              disabled={isLocked}
+            >
+              Use Template
+            </button>
+          </div>
+        </div>
+      </div>
+    </Drawer>
+  );
 }
