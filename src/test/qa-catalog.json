@@ -4323,5 +4323,82 @@
   {
     "id": "criteria.rescale.05",
     "description": "rescaleRubricBandsByWeight: preserves level and desc, only changes min/max"
+  },
+  {
+    "id": "criteria.starter.01",
+    "module": "Criteria / Starter Drawer",
+    "area": "Starter Criteria — Data Integrity",
+    "story": "STARTER_CRITERIA constant",
+    "scenario": "has exactly 4 entries",
+    "whyItMatters": "Template must always load a full 4-criterion set.",
+    "risk": "Wrong count would produce a broken or oversized draft.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "criteria.starter.02",
+    "module": "Criteria / Starter Drawer",
+    "area": "Starter Criteria — Data Integrity",
+    "story": "STARTER_CRITERIA constant",
+    "scenario": "max values sum to exactly 100",
+    "whyItMatters": "The template is advertised as '100 pts total'; incorrect totals break the weight bar.",
+    "risk": "Draft weight would not equal 100, triggering a validation warning.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "criteria.starter.03",
+    "module": "Criteria / Starter Drawer",
+    "area": "Starter Criteria — Data Integrity",
+    "story": "STARTER_CRITERIA constant",
+    "scenario": "every criterion has all required keys",
+    "whyItMatters": "Missing keys cause silent rendering failures in the criterion editor.",
+    "risk": "Editor drawer would crash or show empty fields.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "criteria.starter.04",
+    "module": "Criteria / Starter Drawer",
+    "area": "Starter Criteria — Data Integrity",
+    "story": "STARTER_CRITERIA constant",
+    "scenario": "every criterion rubric has exactly 4 bands with correct level names",
+    "whyItMatters": "The rubric band editor assumes exactly 4 named levels.",
+    "risk": "Missing or mis-named levels would silently produce a broken rubric.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "criteria.starter.05",
+    "module": "Criteria / Starter Drawer",
+    "area": "Starter Criteria — Component",
+    "story": "Use Template button",
+    "scenario": "calls onApplyTemplate with STARTER_CRITERIA when clicked",
+    "whyItMatters": "The callback is how CriteriaPage receives and applies the template.",
+    "risk": "Wrong or empty argument means no criteria would be loaded.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "criteria.starter.06",
+    "module": "Criteria / Starter Drawer",
+    "area": "Starter Criteria — Component",
+    "story": "Copy & Use button",
+    "scenario": "calls onCopyFromPeriod with the selected period id when clicked",
+    "whyItMatters": "This is the only way the page knows which period to clone from.",
+    "risk": "Wrong id or no call means the clone action never fires.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "criteria.starter.07",
+    "module": "Criteria / Starter Drawer",
+    "area": "Starter Criteria — Component",
+    "story": "Overwrite warning",
+    "scenario": "shows FbAlert warning when draftCriteria is non-empty",
+    "whyItMatters": "Users with existing criteria must see the replace warning before committing.",
+    "risk": "Silent overwrite would destroy carefully configured criteria.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
   }
 ]
