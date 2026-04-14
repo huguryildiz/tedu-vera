@@ -54,8 +54,8 @@ organizations ──< periods
 organizations ──< jurors
 
 frameworks ──< framework_criteria
-frameworks ──< framework_outcomes ──< framework_criterion_outcome_maps
-period_criteria ──< framework_criterion_outcome_maps  (criterion_id)
+frameworks ──< framework_criteria ──< framework_criterion_outcome_maps  (criterion_id)
+frameworks ──< framework_outcomes ──< framework_criterion_outcome_maps  (outcome_id)
 
 periods >── frameworks              (period.framework_id)
 periods ──< projects
