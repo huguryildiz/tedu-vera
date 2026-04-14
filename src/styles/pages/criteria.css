@@ -1520,3 +1520,268 @@ body:not(.dark-mode) .crt-save-bar{background:#f6f8fb;border-top-color:#d8dee8;b
   }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   MOBILE CARD LIST  (≤ 768px)
+   Shown on small screens; table hidden via media query below.
+   ══════════════════════════════════════════════════════════════ */
+
+.crt-mobile-list {
+  display: none; /* shown via media query */
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px 16px;
+}
+
+/* ── Individual card ─────────────────────────────────────────── */
+
+.crt-mobile-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: border-color .15s;
+}
+
+.crt-mobile-card--locked {
+  border-left: 3px solid var(--warning);
+}
+
+/* ── Card header ─────────────────────────────────────────────── */
+
+.crt-mobile-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 10px;
+}
+
+.crt-mobile-card-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.crt-mobile-card-name {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--text-primary);
+  letter-spacing: -0.15px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crt-mobile-card-pts-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 7px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.crt-mobile-card-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  transition: background .13s, color .13s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.crt-mobile-card-menu-btn:hover {
+  background: var(--surface-1);
+  color: var(--text-primary);
+}
+
+/* ── Lock strip ──────────────────────────────────────────────── */
+
+.crt-mobile-lock-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: rgba(217, 119, 6, 0.07);
+  border-top: 1px solid rgba(217, 119, 6, 0.18);
+  border-bottom: 1px solid rgba(217, 119, 6, 0.18);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--warning);
+}
+
+.crt-mobile-lock-strip svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.dark-mode .crt-mobile-lock-strip {
+  background: rgba(251, 191, 36, 0.08);
+  border-color: rgba(251, 191, 36, 0.18);
+  color: #fbbf24;
+}
+
+/* ── Rubric band rows ────────────────────────────────────────── */
+
+.crt-mobile-bands {
+  padding: 0 14px 6px;
+  border-top: 1px solid var(--surface-1);
+}
+
+.crt-mobile-band-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-top: 1px solid rgba(15, 23, 42, 0.05);
+  gap: 8px;
+}
+
+.crt-mobile-band-row:first-child {
+  border-top: none;
+}
+
+.crt-mobile-band-name {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.05px;
+}
+
+/* Reuse existing band color tokens */
+.crt-mobile-band-row.crt-band-excellent .crt-mobile-band-name { color: #16a34a; }
+.crt-mobile-band-row.crt-band-good      .crt-mobile-band-name { color: #2563eb; }
+.crt-mobile-band-row.crt-band-fair      .crt-mobile-band-name { color: #d97706; }
+.crt-mobile-band-row.crt-band-poor      .crt-mobile-band-name { color: #dc2626; }
+
+/* Locked: all bands go muted */
+.crt-mobile-card--locked .crt-mobile-band-name {
+  color: var(--text-tertiary) !important;
+}
+
+.crt-mobile-band-range {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dark-mode .crt-mobile-band-row.crt-band-excellent .crt-mobile-band-name { color: #4ade80; }
+.dark-mode .crt-mobile-band-row.crt-band-good      .crt-mobile-band-name { color: #60a5fa; }
+.dark-mode .crt-mobile-band-row.crt-band-fair      .crt-mobile-band-name { color: #fbbf24; }
+.dark-mode .crt-mobile-band-row.crt-band-poor      .crt-mobile-band-name { color: #f87171; }
+
+/* ── Outcome pills ───────────────────────────────────────────── */
+
+.crt-mobile-outcomes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px 12px;
+  border-top: 1px solid var(--surface-1);
+}
+
+.crt-mobile-outcome-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.20);
+  font-size: 10.5px;
+  font-weight: 650;
+  color: var(--accent);
+  white-space: nowrap;
+  letter-spacing: -0.05px;
+}
+
+.crt-mobile-outcome-overflow {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  font-size: 10.5px;
+  font-weight: 650;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.dark-mode .crt-mobile-outcome-pill {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.30);
+}
+
+/* ── Lock badge (replaces Add button header chip on mobile) ───── */
+
+.crt-lock-badge {
+  display: none; /* shown via media query */
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  color: var(--warning);
+  letter-spacing: -0.05px;
+}
+
+.crt-lock-badge svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+}
+
+.dark-mode .crt-lock-badge {
+  background: rgba(251, 191, 36, 0.10);
+  border-color: rgba(251, 191, 36, 0.25);
+  color: #fbbf24;
+}
+
+/* ── Responsive breakpoint ───────────────────────────────────── */
+
+@media (max-width: 768px) {
+  /* Show mobile list, hide desktop table */
+  .crt-mobile-list {
+    display: flex;
+  }
+
+  .crt-table-card .crt-table,
+  .crt-table-card thead,
+  .crt-table-card tbody,
+  .crt-table-card tfoot {
+    display: none;
+  }
+
+  /* Show lock badge, hide Add button */
+  .crt-lock-badge {
+    display: inline-flex;
+  }
+
+  .crt-lock-badge ~ .crt-add-btn {
+    display: none;
+  }
+}
