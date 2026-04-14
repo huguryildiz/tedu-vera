@@ -960,7 +960,8 @@ orgs.forEach(o => {
       let coverageType = 'direct';
       if (idx >= 2 && random() > 0.5) coverageType = 'indirect';
       else if (idx === 1 && random() > 0.8) coverageType = 'indirect';
-      out.push(`INSERT INTO period_criterion_outcome_maps (id, period_id, period_criterion_id, period_outcome_id, coverage_type, weight) VALUES ('${pmId}', '${pId}', '${pcId}', '${poId}', '${coverageType}', ${m.weight}) ON CONFLICT DO NOTHING;`);
+      const pmWeight = m.weight != null ? m.weight : 'NULL';
+      out.push(`INSERT INTO period_criterion_outcome_maps (id, period_id, period_criterion_id, period_outcome_id, coverage_type, weight) VALUES ('${pmId}', '${pId}', '${pcId}', '${poId}', '${coverageType}', ${pmWeight}) ON CONFLICT DO NOTHING;`);
     });
 
     periodData.push({ id: pId, org: o.code, isCur: isCurrent, histIdx: idx, start: d.start, end: d.end, name: d.name, evalDay, evalDays, s: d.s });
