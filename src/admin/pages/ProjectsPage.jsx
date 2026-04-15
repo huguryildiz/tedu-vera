@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Pagination from "@/shared/ui/Pagination";
 import { useAdminContext } from "../hooks/useAdminContext";
-import { BarChart2, Filter, UserRound, MoreVertical, Pencil, Eye, Trash2, Icon } from "lucide-react";
+import { BarChart2, Filter, UserRound, MoreVertical, Pencil, Eye, Trash2, Icon, Users, Clock3 } from "lucide-react";
 import { useToast } from "@/shared/hooks/useToast";
 import { useAuth } from "@/auth";
 import FbAlert from "@/shared/ui/FbAlert";
@@ -20,6 +20,7 @@ import AddProjectDrawer from "../drawers/AddProjectDrawer";
 import ProjectScoresDrawer from "../drawers/ProjectScoresDrawer";
 import { downloadTable, generateTableBlob } from "../utils/downloadTable";
 import { StudentNames } from "@/shared/ui/EntityMeta";
+import { avatarGradient, initials } from "@/shared/ui/avatarColor";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import FloatingMenu from "@/shared/ui/FloatingMenu";
 import { formatDateTime as formatFull } from "@/shared/lib/dateUtils";
@@ -68,6 +69,43 @@ function formatRelative(ts) {
   return `${yrs % 1 === 0 ? yrs : yrs.toFixed(1)}yr ago`;
 }
 
+// Score band color for mobile ring. Matches variables.css semantic tokens.
+function scoreBandToken(score, max) {
+  if (score == null || !Number.isFinite(Number(score))) return "var(--text-tertiary)";
+  const pct = (Number(score) / (max || 100)) * 100;
+  if (pct >= 85) return "var(--success)";
+  if (pct >= 70) return "var(--warning)";
+  return "var(--danger)";
+}
+
+// Render up to 4 member chips + optional +N pill.
+function MemberChips({ members }) {
+  const arr = membersToArray(members);
+  if (!arr.length) {
+    return <span className="member-chips member-chips-empty">No team</span>;
+  }
+  const visible = arr.slice(0, 4);
+  const extra = arr.length - visible.length;
+  return (
+    <span className="member-chips">
+      {visible.map((name, i) => (
+        <span
+          key={`${name}-${i}`}
+          className="member-chip"
+          style={{ background: avatarGradient(name) }}
+          title={name}
+        >
+          {initials(name)}
+        </span>
+      ))}
+      {extra > 0 && (
+        <span className="member-chip member-chip-more" title={`${extra} more`}>
+          +{extra}
+        </span>
+      )}
+    </span>
+  );
+}
 
 function SortIcon({ colKey, sortKey, sortDir }) {
   if (sortKey !== colKey) {
@@ -542,13 +580,13 @@ export default function ProjectsPage() {
           <tbody>
             {loadingCount > 0 && filteredList.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ textAlign: "center", color: "var(--text-tertiary)", padding: "32px" }}>
+                <td colSpan={7} style={{ textAlign: "center", color: "var(--text-tertiary)", padding: "32px" }}>
                   Loading projects…
                 </td>
               </tr>
             ) : filteredList.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ textAlign: "center", padding: "48px 24px" }}>
+                <td colSpan={7} style={{ textAlign: "center", padding: "48px 24px" }}>
                   {!periods.viewPeriodId ? (
                     <div>
                       <div style={{ color: "var(--text-tertiary)", marginBottom: 12 }}>
@@ -571,12 +609,40 @@ export default function ProjectsPage() {
               </tr>
             ) : pagedList.map((project) => (
               <tr key={project.id} onClick={() => openDrawer(project)}>
-                <td className="text-center" data-label="No">
+                <td className="text-center col-no" data-label="No">
+                  <span className="mobile-rank-ring" aria-hidden="true">
+                    <span
+                      className="mobile-rank-ring-fill"
+                      style={(() => {
+                        const avg = projectAvgMap.get(project.id);
+                        const max = periodMaxScore || 100;
+                        const pct = avg != null && Number.isFinite(Number(avg))
+                          ? Math.min(360, (Number(avg) / max) * 360)
+                          : 0;
+                        return {
+                          "--pct": `${pct}deg`,
+                          "--ring": scoreBandToken(avg, max),
+                        };
+                      })()}
+                    >
+                      <span className="mobile-rank-ring-inner">
+                        <span className="mobile-rank-ring-num">
+                          {projectAvgMap.has(project.id)
+                            ? Math.round(Number(projectAvgMap.get(project.id)))
+                            : "—"}
+                        </span>
+                        <span className="mobile-rank-ring-lbl">AVG</span>
+                      </span>
+                    </span>
+                  </span>
                   {project.group_no != null
                     ? <span className="project-no-badge">P{project.group_no}</span>
                     : <span style={{ color: "var(--text-tertiary)", fontSize: 11 }}>—</span>}
                 </td>
-                <td data-label="Project Title">
+                <td data-label="Project Title" className="col-title">
+                  <span className="mobile-eyebrow">
+                    PROJECT{project.group_no != null ? ` · P${project.group_no}` : ""}
+                  </span>
                   <div style={{ fontWeight: 600, lineHeight: 1.35 }}>{project.title}</div>
                   {project.advisor && (() => {
                     const advisors = project.advisor.split(",").map((s) => s.trim()).filter(Boolean);
@@ -594,7 +660,11 @@ export default function ProjectsPage() {
                   })()}
                 </td>
                 <td className="col-members" data-label="Team Members">
-                  <StudentNames names={project.members} />
+                  <span className="members-text"><StudentNames names={project.members} /></span>
+                  <span className="members-chips-wrap">
+                    <span className="members-chips-label">Team</span>
+                    <MemberChips members={project.members} />
+                  </span>
                 </td>
                 <td className="text-center avg-score-cell" data-label="Avg Score">
                   {projectAvgMap.has(project.id)
@@ -650,6 +720,13 @@ export default function ProjectsPage() {
                       Delete Project
                     </button>
                   </FloatingMenu>
+                </td>
+                <td className="col-footer" aria-hidden="true">
+                  <span><strong>{membersToArray(project.members).length}</strong> members</span>
+                  <span><strong>{projectEvalCountMap.get(project.id) ?? 0}</strong> evaluations</span>
+                  <PremiumTooltip text={formatFull(project.updated_at)}>
+                    <span>{formatRelative(project.updated_at)}</span>
+                  </PremiumTooltip>
                 </td>
               </tr>
             ))}
