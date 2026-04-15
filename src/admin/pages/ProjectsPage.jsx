@@ -17,6 +17,7 @@ import { parseProjectsCsv } from "../utils/csvParser";
 import ExportPanel from "../components/ExportPanel";
 import EditProjectDrawer from "../drawers/EditProjectDrawer";
 import AddProjectDrawer from "../drawers/AddProjectDrawer";
+import ProjectScoresDrawer from "../drawers/ProjectScoresDrawer";
 import { downloadTable, generateTableBlob } from "../utils/downloadTable";
 import { StudentNames } from "@/shared/ui/EntityMeta";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
@@ -86,9 +87,10 @@ export default function ProjectsPage() {
     isDemoMode = false,
     onDirtyChange,
     onCurrentSemesterChange,
-    onViewReviews,
     onNavigate,
     rawScores,
+    summaryData,
+    allJurors,
     sortedPeriods,
   } = useAdminContext();
   const _toast = useToast();
@@ -140,6 +142,9 @@ export default function ProjectsPage() {
   // Detail drawer
   const [drawerProject, setDrawerProject] = useState(null);
 
+  // View Scores drawer
+  const [scoresProject, setScoresProject] = useState(null);
+
   // Delete confirmation
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -159,6 +164,22 @@ export default function ProjectsPage() {
     for (const [pid, totals] of byProject) {
       map.set(pid, (totals.reduce((s, v) => s + v, 0) / totals.length).toFixed(1));
     }
+    return map;
+  }, [rawScores]);
+
+  // Per-project distinct juror count (for mobile footer "N evaluations").
+  const projectEvalCountMap = useMemo(() => {
+    const map = new Map();
+    if (!rawScores?.length) return map;
+    const byProject = new Map();
+    for (const r of rawScores) {
+      const pid = r.projectId || r.project_id;
+      const jid = r.jurorId || r.juror_id;
+      if (!pid || !jid) continue;
+      if (!byProject.has(pid)) byProject.set(pid, new Set());
+      byProject.get(pid).add(jid);
+    }
+    for (const [pid, set] of byProject) map.set(pid, set.size);
     return map;
   }, [rawScores]);
 
@@ -610,16 +631,14 @@ export default function ProjectsPage() {
                       <Pencil size={13} />
                       Edit Project
                     </button>
+                    <button
+                      className="floating-menu-item"
+                      onMouseDown={() => { setOpenMenuId(null); setScoresProject(project); }}
+                    >
+                      <BarChart2 size={13} />
+                      View Scores
+                    </button>
                     <div className="floating-menu-divider" />
-                    {onViewReviews && (
-                      <>
-                        <button className="floating-menu-item" onMouseDown={() => { setOpenMenuId(null); onViewReviews(); }}>
-                          <BarChart2 size={13} />
-                          View Reviews
-                        </button>
-                        <div className="floating-menu-divider" />
-                      </>
-                    )}
                     <button
                       className="floating-menu-item danger"
                       onMouseDown={() => {
@@ -758,6 +777,17 @@ export default function ProjectsPage() {
           if (result?.ok === false) throw new Error(result.formError || "Import failed.");
           return result;
         }}
+      />
+      <ProjectScoresDrawer
+        open={!!scoresProject}
+        onClose={() => setScoresProject(null)}
+        project={scoresProject}
+        periodId={periods.viewPeriodId}
+        periodLabel={periods.viewPeriodLabel}
+        rawScores={rawScores}
+        summaryData={summaryData}
+        allJurors={allJurors}
+        onOpenReviews={() => onNavigate?.("reviews")}
       />
       <DeleteProjectModal
         open={!!deleteTarget}
