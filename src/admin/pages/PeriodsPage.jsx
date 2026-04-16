@@ -137,7 +137,6 @@ function ReadinessBadge({ readiness, onOpen }) {
       type="button"
       className={`periods-readiness-badge${isReady ? " ready" : " blocked"}`}
       onClick={onOpen}
-      title={isReady ? "Ready to publish" : `${required.length} issue${required.length === 1 ? "" : "s"} before publish`}
     >
       {isReady ? (
         <>
@@ -915,6 +914,7 @@ export default function PeriodsPage() {
                     "mcard",
                     isCurrent ? "sem-row-current" : isDraft ? "sem-row-draft" : "",
                     openMenuId === period.id ? "is-active" : "",
+                    readinessOpenId === period.id ? "sem-row-readiness-open" : "",
                   ].filter(Boolean).join(" ")}
                 >
                   {/* Period name */}
