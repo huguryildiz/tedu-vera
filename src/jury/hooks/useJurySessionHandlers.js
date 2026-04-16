@@ -101,10 +101,22 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
   // Kept as a plain async function (intentionally NOT useCallback):
   // including it in any deps array causes infinite render loops.
   const _loadPeriod = async (period, overrideJurorId, options = {}) => {
-    if (period?.is_locked) {
+    // Lifecycle gate: jurors can only score Published or Live periods.
+    //   - Closed (closed_at set): scoring window is over
+    //   - Draft (is_locked=false): not yet published, structure can still change
+    // Published and Live (is_locked=true, closed_at null) both accept scores.
+    if (period?.closed_at) {
+      loading.periodSelectLockRef.current = false;
       loading.setLoadingState(null);
       editState.setEditLockActive(true);
-      identity.setAuthError("This evaluation period is locked. Please contact the coordinators.");
+      identity.setAuthError("This evaluation period has been closed. Please contact the coordinators.");
+      workflow.setStep("identity");
+      return;
+    }
+    if (period && period.is_locked === false) {
+      loading.periodSelectLockRef.current = false;
+      loading.setLoadingState(null);
+      identity.setAuthError("This evaluation period is not yet published.");
       workflow.setStep("identity");
       return;
     }
@@ -217,9 +229,11 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
       workflow.submitPendingRef.current = false;
       loading.setLoadingState(null);
       const canEdit = !!editStateResult?.edit_allowed;
-      const periodLocked = !!period?.is_locked;
+      // New lifecycle: `is_locked=true` means Published/Live (scoring is
+      // active). Only `closed_at` freezes the scoring window.
+      const periodClosed = !!period?.closed_at;
       editState.setEditAllowed(canEdit);
-      editState.setEditLockActive(Boolean(editStateResult?.lock_active || periodLocked));
+      editState.setEditLockActive(Boolean(editStateResult?.lock_active || periodClosed));
 
       const progressCheckData = buildProgressCheck(
         projectList,
@@ -248,6 +262,7 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
       }
     } catch (e) {
       if (e?.name === "AbortError") return; // superseded by a newer load — ignore
+      loading.periodSelectLockRef.current = false;
       loading.setLoadingState(null);
       identity.setAuthError("Could not load projects. Please try again.");
       workflow.setStep("identity");
@@ -265,14 +280,29 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
       // periodSelectLockRef: intentionally NOT reset on success — once the juror
       // advances past period selection they cannot navigate back, so the lock is
       // permanent for the session. Reset only on error (to allow retry) or resetAll.
-      if (loading.periodSelectLockRef.current) return;
+      if (loading.periodSelectLockRef.current) {
+        // A stale lock (e.g. leftover from a previous session or double-submit)
+        // must not leave a spinning loader on screen. Clear loading state and
+        // return the user to the identity form so they can try again.
+        loading.setLoadingState(null);
+        return;
+      }
       if (!selectedPeriod) {
         identity.setAuthError("Selected period could not be found. Please try again.");
         workflow.setStep("period");
         return;
       }
-      if (selectedPeriod?.is_locked) {
-        identity.setAuthError("This evaluation period is locked. Please contact the coordinators.");
+      // Lifecycle gate: mirror _loadPeriod. Published/Live (is_locked=true,
+      // closed_at null) accept scoring; Draft and Closed do not.
+      if (selectedPeriod?.closed_at) {
+        loading.setLoadingState(null);
+        identity.setAuthError("This evaluation period has been closed. Please contact the coordinators.");
+        workflow.setStep(loading.periods.length > 1 ? "period" : "identity");
+        return;
+      }
+      if (selectedPeriod && selectedPeriod.is_locked === false) {
+        loading.setLoadingState(null);
+        identity.setAuthError("This evaluation period is not yet published.");
         workflow.setStep(loading.periods.length > 1 ? "period" : "identity");
         return;
       }
@@ -361,6 +391,10 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
     if (affiliationParam != null) identity.setAffiliation(affiliation);
     if (emailParam != null) identity.setJurorEmail(emailParam);
     identity.setAuthError("");
+    // If a previous hydrate/load attempt failed, this lock may stay true and
+    // silently short-circuit handlePeriodSelect. Starting from identity should
+    // always begin with a fresh selection lock.
+    loading.periodSelectLockRef.current = false;
     loading.loadAbortRef.current?.abort();
     const ctrl = new AbortController();
     loading.loadAbortRef.current = ctrl;
@@ -368,10 +402,16 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
     try {
       if (DEMO_MODE) {
         await ensureDemoAnonSession();
-        if (ctrl.signal.aborted) return;
+        if (ctrl.signal.aborted) {
+          loading.setLoadingState(null);
+          return;
+        }
 
         const demoPeriod = await resolveDemoPeriod(ctrl.signal);
-        if (ctrl.signal.aborted) return;
+        if (ctrl.signal.aborted) {
+          loading.setLoadingState(null);
+          return;
+        }
 
         if (!demoPeriod) {
           loading.setPeriods([]);
@@ -432,7 +472,10 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
       loading.setLoadingState(null);
       workflow.setStep("period");
     } catch (e) {
-      if (e?.name === "AbortError") return;
+      if (e?.name === "AbortError") {
+        loading.setLoadingState(null);
+        return;
+      }
       loading.setLoadingState(null);
       identity.setAuthError("Could not load periods. Please try again.");
     }
