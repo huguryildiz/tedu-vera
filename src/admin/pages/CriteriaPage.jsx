@@ -25,6 +25,7 @@ import {
 import { useAdminContext } from "../hooks/useAdminContext";
 import { useToast } from "@/shared/hooks/useToast";
 import { useManagePeriods } from "../hooks/useManagePeriods";
+import { usePeriodOutcomes } from "../hooks/usePeriodOutcomes";
 import Modal from "@/shared/ui/Modal";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import FbAlert from "@/shared/ui/FbAlert";
@@ -140,6 +141,13 @@ export default function CriteriaPage() {
   const [cloneLoading, setCloneLoading] = useState(false);
   const [showClonePicker, setShowClonePicker] = useState(false);
 
+  // ── Pending import preview ────────────────────────────────
+  // Mirrors OutcomesPage's framework-import banner: when the user picks a
+  // clone source or a starter template, we stage the draft and show a
+  // "Criteria ready to apply" card until they confirm via SaveBar. "Start
+  // from blank" bypasses this and drops straight into the editable table.
+  const [pendingCriteriaPreview, setPendingCriteriaPreview] = useState(null);
+
   // ── Scratch mode: skip empty state, show full criteria card ──
   // Derived from DB: true when period has criteria_name set or criteria already exist.
   const [startingBlank, setStartingBlank] = useState(false);
@@ -155,6 +163,10 @@ export default function CriteriaPage() {
   const outcomeConfig = periods.outcomeConfig || [];
   const isLocked = !!(viewPeriod?.is_locked);
   const [saving, setSaving] = useState(false);
+
+  // Single outcome-mapping draft owned at the page level; the edit drawer
+  // mutates this instance so the SaveBar commits mappings alongside criteria.
+  const po = usePeriodOutcomes({ periodId: periods.viewPeriodId });
 
   // Effective criteria_name accounts for any draft rename queued in the hook.
   // `pendingCriteriaName === undefined` → no change; otherwise use the pending
@@ -252,6 +264,24 @@ export default function CriteriaPage() {
     setSaving(true);
     try {
       await periods.commitDraft();
+      // Outcome mappings edited via the criterion drawer live in po's draft;
+      // commit them after criteria so mapping target IDs (period_criterion_id)
+      // are stable. After the mapping commit we re-fetch period_criteria so
+      // the Mapping column reflects the fresh DB state — without this the
+      // listPeriodCriteria call inside periods.commitDraft() runs BEFORE the
+      // mappings land in the DB, leaving draftCriteria[i].outcomes stale until
+      // the page is remounted.
+      //
+      // organizationId is passed so commitDraft can honor a pendingFrameworkImport
+      // if the user queued one on OutcomesPage before navigating here — otherwise
+      // it throws "organizationId required to import framework".
+      if (po.itemsDirty) {
+        await po.commitDraft({ organizationId });
+        await periods.reloadCriteria();
+      }
+      // Commit succeeded — clear the "ready to apply" preview so the criteria
+      // table takes over from the banner on the next render.
+      setPendingCriteriaPreview(null);
     } catch (err) {
       const raw = err?.message || "";
       let msg = "Failed to save criteria. Please try again.";
@@ -275,6 +305,8 @@ export default function CriteriaPage() {
 
   const handleDiscard = () => {
     periods.discardDraft();
+    po.discardDraft();
+    setPendingCriteriaPreview(null);
   };
 
   // ── Period rename handlers ────────────────────────────────────
@@ -359,7 +391,11 @@ export default function CriteriaPage() {
         const sourcePeriod = periods.periodList.find((p) => p.id === sourcePeriodId);
         const cloneName = `${sourcePeriod?.criteria_name || sourcePeriod?.name || "Criteria"} (copy)`;
         periods.setPendingCriteriaName(cloneName);
-        _toast.success(`Cloned ${cloned.length} criteria — click Save to apply.`);
+        setPendingCriteriaPreview({
+          kind: "clone",
+          sourceLabel: sourcePeriod?.name || "another period",
+        });
+        setShowClonePicker(false);
       } else {
         _toast.info("Source period has no criteria to clone");
       }
@@ -370,11 +406,13 @@ export default function CriteriaPage() {
     }
   };
 
-  // Start-blank just queues the criteria_name in the draft — the empty-state
-  // card disappears and the criteria table appears with the banner up.
+  // Start-blank queues the criteria_name in the draft and surfaces the same
+  // "ready to apply" banner used by clone/template, matching the framework
+  // blank-start flow on OutcomesPage: nothing hits the DB until Save.
   const handleStartBlank = () => {
     setStartingBlank(true);
     periods.setPendingCriteriaName("Custom Criteria");
+    setPendingCriteriaPreview({ kind: "blank" });
     setStartingBlank(false);
   };
 
@@ -429,13 +467,45 @@ export default function CriteriaPage() {
         </div>
       )}
       {/* Weight budget bar */}
-      {periods.viewPeriodId && draftCriteria.length > 0 && (
+      {periods.viewPeriodId && draftCriteria.length > 0 && !pendingCriteriaPreview && (
         <WeightBudgetBar
           criteria={draftCriteria}
           onDistribute={handleDistribute}
           onAutoFill={handleAutoFill}
           locked={isLocked}
         />
+      )}
+      {/* Criteria ready to apply — inline preview before commit. Mirrors the
+          framework-import banner on OutcomesPage so clone / template / blank
+          imports are explicit: nothing touches the DB until the user hits Save. */}
+      {periods.viewPeriodId && pendingCriteriaPreview && (
+        <div style={{ padding: "48px 24px", display: "flex", justifyContent: "center" }}>
+          <div className="vera-es-card">
+            <div className="vera-es-hero vera-es-hero--fw">
+              <div className="vera-es-icon vera-es-icon--fw">
+                <ClipboardList size={24} strokeWidth={1.65} />
+              </div>
+              <div>
+                <div className="vera-es-title">Criteria ready to apply</div>
+                <div className="vera-es-desc">
+                  <strong style={{ color: "var(--text-primary)" }}>
+                    {effectiveCriteriaName || "Criteria"}
+                  </strong>{" "}
+                  {pendingCriteriaPreview.kind === "blank"
+                    ? "will be created as a blank criteria set for this period. No criteria will be added until you define them."
+                    : pendingCriteriaPreview.kind === "clone"
+                    ? `will be cloned from ${pendingCriteriaPreview.sourceLabel} as the criteria set for this period — ${draftCriteria.length} criteria totaling ${draftCriteria.reduce((s, c) => s + (Number(c.max) || 0), 0)} pts.`
+                    : `will be applied from ${pendingCriteriaPreview.sourceLabel} as the criteria set for this period — ${draftCriteria.length} criteria totaling ${draftCriteria.reduce((s, c) => s + (Number(c.max) || 0), 0)} pts.`}
+                  {" "}Save to apply, or Discard to cancel.
+                </div>
+              </div>
+            </div>
+            <div className="vera-es-footer">
+              <Info size={12} strokeWidth={2} />
+              Nothing has been written to the database yet.
+            </div>
+          </div>
+        </div>
       )}
       {/* No periods exist yet */}
       {!periods.viewPeriodId && periods.periodList.length === 0 && !panelError && !adminLoading && contextPeriods.length === 0 && loadingCount === 0 && (
@@ -553,6 +623,10 @@ export default function CriteriaPage() {
                       onClick={() => {
                         periods.updateDraft(STARTER_CRITERIA);
                         periods.setPendingCriteriaName("VERA Standard");
+                        setPendingCriteriaPreview({
+                          kind: "template",
+                          sourceLabel: "the VERA Standard template",
+                        });
                         setShowClonePicker(false);
                       }}
                       disabled={cloneLoading || isLocked}
@@ -572,8 +646,9 @@ export default function CriteriaPage() {
               </div>
             </div>
           )}
-      {/* Criteria table — shown when criteria exist OR scratch mode active */}
-      {periods.viewPeriodId && (draftCriteria.length > 0 || scratchMode) && (
+      {/* Criteria table — shown when criteria exist OR scratch mode active,
+          but hidden while a clone/template import is awaiting confirmation. */}
+      {periods.viewPeriodId && (draftCriteria.length > 0 || scratchMode) && !pendingCriteriaPreview && (
         <div className="crt-table-card">
           <div className="crt-table-card-header">
             <div className="crt-card-title-group">
@@ -1144,7 +1219,7 @@ export default function CriteriaPage() {
       </Modal>
       {/* Save bar */}
       <SaveBar
-        isDirty={periods.isDraftDirty}
+        isDirty={periods.isDraftDirty || po.itemsDirty}
         canSave={periods.canSaveDraft}
         total={draftCriteria.length > 0 ? periods.draftTotal : undefined}
         statusText={
@@ -1169,6 +1244,7 @@ export default function CriteriaPage() {
         onSave={handleSave}
         disabled={loadingCount > 0}
         isLocked={isLocked}
+        po={po}
       />
       <StarterCriteriaDrawer
         open={starterDrawerOpen}

@@ -24,6 +24,7 @@ function makeChain(rows, error = null) {
     select:  vi.fn().mockReturnThis(),
     eq:      vi.fn().mockReturnThis(),
     order:   vi.fn().mockReturnThis(),
+    limit:   vi.fn().mockReturnThis(),
     single:  vi.fn().mockResolvedValue({ data: data[0] ?? null, error }),
     then:    p.then.bind(p),
     catch:   p.catch.bind(p),

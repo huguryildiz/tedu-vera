@@ -5,6 +5,17 @@
 import { supabase } from "../core/client";
 import { formatMembers } from "../fieldMapping";
 
+// Safety cap for unbounded scoring queries. Real periods are well under
+// this (~500 projects × ~10 jurors = 5k rows). If we ever hit it, the
+// console warning surfaces the need for server-side aggregation.
+const SCORE_QUERY_CAP = 20000;
+const warnIfCapped = (label, rows) => {
+  if (rows && rows.length >= SCORE_QUERY_CAP) {
+    // eslint-disable-next-line no-console
+    console.warn(`[${label}] hit row cap (${SCORE_QUERY_CAP}); consider server-side aggregation`);
+  }
+};
+
 /**
  * Pivots score_sheet_items rows into a flat { [criterionKey]: value } object.
  * @param {Array} items - score_sheet_items rows with joined period_criteria
@@ -36,8 +47,10 @@ export async function getScores(periodId) {
       project:projects(id, title, members, project_no),
       juror:jurors(id, juror_name, affiliation)
     `)
-    .eq("period_id", periodId);
+    .eq("period_id", periodId)
+    .limit(SCORE_QUERY_CAP);
   if (error) throw error;
+  warnIfCapped("getScores", data);
   return (data || []).map((row) => {
     const { scores, total } = pivotItems(row.items);
     return {
@@ -132,8 +145,10 @@ export async function getProjectSummary(periodId) {
       items:score_sheet_items(score_value, period_criteria(key))
     `)
     .eq("period_id", periodId)
-    .eq("status", "submitted");
+    .eq("status", "submitted")
+    .limit(SCORE_QUERY_CAP);
   if (sheetErr) throw sheetErr;
+  warnIfCapped("getProjectSummary", sheets);
 
   // Aggregate scores per project
   const scoresByProject = {};

@@ -602,10 +602,6 @@ export default function PeriodsPage() {
       <div className="periods-table-card">
         <div className="periods-table-card-header">
           <div className="periods-table-card-title">All Evaluation Periods</div>
-          <div className="periods-summary-badge">
-            <CalendarRange size={13} strokeWidth={2.2} />
-            {totalPeriods} {totalPeriods === 1 ? "period" : "periods"}{activePeriods > 0 ? ` · ${activePeriods} active` : ""}
-          </div>
         </div>
         <div className="periods-table-scroll">
           <div className="sem-table-wrap">
@@ -698,11 +694,11 @@ export default function PeriodsPage() {
               return (
                 <tr
                   key={period.id}
-                  className={
-                    isCurrent ? "sem-row-current"
-                    : status === "draft" ? "sem-row-draft"
-                    : undefined
-                  }
+                  className={[
+                    "mcard",
+                    isCurrent ? "sem-row-current" : status === "draft" ? "sem-row-draft" : "",
+                    openMenuId === period.id ? "is-active" : "",
+                  ].filter(Boolean).join(" ")}
                 >
                   {/* Period name */}
                   <td data-label="Evaluation Period">

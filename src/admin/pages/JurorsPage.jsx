@@ -235,6 +235,21 @@ export default function JurorsPage() {
     (affilFilter !== "all" ? 1 : 0);
 
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
+    return window.matchMedia("(max-width: 768px)").matches;
+  });
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const mql = window.matchMedia("(max-width: 768px)");
+    const handler = (e) => setIsMobile(e.matches);
+    if (mql.addEventListener) mql.addEventListener("change", handler);
+    else mql.addListener(handler);
+    return () => {
+      if (mql.removeEventListener) mql.removeEventListener("change", handler);
+      else mql.removeListener(handler);
+    };
+  }, []);
 
   // Import CSV state
   const [importOpen, setImportOpen] = useState(false);
@@ -810,7 +825,7 @@ export default function JurorsPage() {
               const lastActive = juror.lastSeenAt || juror.last_activity_at || juror.finalSubmittedAt || juror.final_submitted_at;
 
               return (
-                <tr key={jid} onClick={() => openEditModal(juror)}>
+                <tr key={jid}>
                   <td className="col-juror">
                     <JurorBadge name={name} affiliation={juror.affiliation} size="sm" />
                   </td>
@@ -842,7 +857,7 @@ export default function JurorsPage() {
                   </td>
                   <td className="col-actions" style={{ textAlign: "right" }}>
                     <FloatingMenu
-                      isOpen={openMenuId === jid}
+                      isOpen={openMenuId === jid && !isMobile}
                       onClose={() => setOpenMenuId(null)}
                       placement="bottom-end"
                       trigger={
@@ -910,13 +925,13 @@ export default function JurorsPage() {
                   </td>
                   {/* Mobile card — hidden on desktop, shown at ≤768px */}
                   <td className="col-mobile-card">
-                    <div className={`jc${openMenuId === jid ? " menu-open" : ""}`}>
+                    <div className={`mcard jc${openMenuId === jid ? " is-active" : ""}`}>
                       <div className="jc-main">
                         <JurorBadge name={name} affiliation={juror.affiliation} size="lg" />
                         <div className="jc-right">
                           <JurorStatusPill status={status} />
                           <FloatingMenu
-                            isOpen={openMenuId === jid}
+                            isOpen={openMenuId === jid && isMobile}
                             onClose={() => setOpenMenuId(null)}
                             placement="bottom-end"
                             trigger={

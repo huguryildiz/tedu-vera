@@ -139,20 +139,12 @@
     padding: 2px 0 4px;
   }
 
-  /* ── Individual audit card ── */
+  /* ── Individual audit card ──
+     Shell (border, radius, background, active state) comes from
+     the global `.mcard` in components.css. Only page-specific
+     interactions (cursor + hover elevation) stay here. */
   .amc {
-    position: relative;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    background: var(--bg-card);
-    overflow: hidden;
     cursor: pointer;
-    transition: box-shadow .18s, border-color .18s, transform .18s;
-  }
-  .dark-mode .amc {
-    background: linear-gradient(145deg, #0f1629 0%, #0a1020 100%);
-    border-color: rgba(127,153,205,0.22);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 12px rgba(2,6,23,0.3);
   }
   .amc:hover { border-color: var(--border-strong); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
   .dark-mode .amc:hover {
@@ -160,31 +152,8 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 6px 20px rgba(2,6,23,0.42);
     transform: translateY(-1px);
   }
-  .amc.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-ring); }
-  .dark-mode .amc.selected {
-    border-color: rgba(89,160,255,0.85);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 1px rgba(89,160,255,0.3), 0 0 16px rgba(59,130,246,0.28);
-  }
 
-  /* Left accent bar coloured by chip type */
-  .amc::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0; width: 3px;
-    background: var(--amc-accent, var(--accent));
-    border-radius: 14px 0 0 14px;
-  }
-  .amc[data-chip="juror"]     { --amc-accent: var(--warning); }
-  .amc[data-chip="eval"]      { --amc-accent: var(--accent); }
-  .amc[data-chip="export"]    { --amc-accent: #a855f7; }
-  .amc[data-chip="period"]    { --amc-accent: var(--success); }
-  .amc[data-chip="security"]  { --amc-accent: var(--danger); }
-  .amc[data-chip="token"]     { --amc-accent: #06b6d4; }
-  .amc[data-chip="backup"]    { --amc-accent: #10b981; }
-  .amc[data-chip="framework"] { --amc-accent: #0ea5e9; }
-  .amc[data-chip="project"]   { --amc-accent: #06b6d4; }
-
-  /* Warning variant */
+  /* Warning variant — only the border tint; base shell still from .mcard */
   .amc.amc-warning { border-color: rgba(245,158,11,0.35); }
   .dark-mode .amc.amc-warning {
     background: linear-gradient(145deg, #19130b 0%, #110d08 100%);
@@ -192,7 +161,7 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 12px rgba(19,13,7,0.4);
   }
 
-  /* Card body */
+  /* Card body — extra left padding so content clears the (now-removed) accent bar region */
   .amc-body { padding: 12px 14px 10px 17px; }
 
   /* Header: chip + relative time */

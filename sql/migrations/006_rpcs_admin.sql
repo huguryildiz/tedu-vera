@@ -451,48 +451,30 @@ BEGIN
     RAISE EXCEPTION 'unauthorized';
   END IF;
 
-  SELECT COALESCE(
-    json_agg(
-      jsonb_build_object(
-        'id',                 o.id,
-        'code',               o.code,
-        'name',               o.name,
-        'institution',        o.institution,
-        'contact_email',      o.contact_email,
-        'status',             o.status,
-        'settings',           o.settings,
-        'created_at',         o.created_at,
-        'updated_at',         o.updated_at,
-        'active_period_name', p_curr.name,
-        'juror_count',        j_cnt.juror_count,
-        'project_count',      pr_cnt.project_count,
-        'memberships',        m_agg.data,
-        'org_applications',   a_agg.data
-      ) ORDER BY o.name
-    ),
-    '[]'::json
-  )
-  INTO v_result
-  FROM organizations o
-  LEFT JOIN LATERAL (
-    SELECT name
+  -- Pre-aggregate per-org data into CTEs with single table passes, then join
+  -- to organizations once. Previous LATERAL-subquery variant re-scanned each
+  -- child table once per organization (N orgs × 5 scans); with grouped CTEs
+  -- each table is scanned exactly once and hash-joined.
+  WITH active_periods AS (
+    SELECT organization_id, name
     FROM periods
-    WHERE organization_id = o.id AND is_current = true
-    LIMIT 1
-  ) p_curr ON true
-  LEFT JOIN LATERAL (
-    SELECT COUNT(*) AS juror_count
-    FROM jurors j
-    WHERE j.organization_id = o.id
-  ) j_cnt ON true
-  LEFT JOIN LATERAL (
-    SELECT COUNT(*) AS project_count
-    FROM periods cp
-    JOIN projects pr ON pr.period_id = cp.id
-    WHERE cp.organization_id = o.id AND cp.is_current = true
-  ) pr_cnt ON true
-  LEFT JOIN LATERAL (
-    SELECT COALESCE(
+    WHERE is_current = true
+  ),
+  juror_counts AS (
+    SELECT organization_id, COUNT(*)::int AS juror_count
+    FROM jurors
+    GROUP BY organization_id
+  ),
+  project_counts AS (
+    SELECT p.organization_id, COUNT(pr.id)::int AS project_count
+    FROM periods p
+    JOIN projects pr ON pr.period_id = p.id
+    WHERE p.is_current = true
+    GROUP BY p.organization_id
+  ),
+  mem_agg AS (
+    SELECT
+      m.organization_id,
       json_agg(
         jsonb_build_object(
           'id',              m.id,
@@ -506,16 +488,15 @@ BEGIN
             'email',        u.email
           )
         )
-      ),
-      '[]'::json
-    ) AS data
+      ) AS data
     FROM memberships m
-    LEFT JOIN profiles p ON p.id = m.user_id
+    LEFT JOIN profiles p   ON p.id = m.user_id
     LEFT JOIN auth.users u ON u.id = m.user_id
-    WHERE m.organization_id = o.id
-  ) m_agg ON true
-  LEFT JOIN LATERAL (
-    SELECT COALESCE(
+    GROUP BY m.organization_id
+  ),
+  app_agg AS (
+    SELECT
+      a.organization_id,
       json_agg(
         jsonb_build_object(
           'id',              a.id,
@@ -525,12 +506,38 @@ BEGIN
           'status',          a.status,
           'created_at',      a.created_at
         )
-      ),
-      '[]'::json
-    ) AS data
+      ) AS data
     FROM org_applications a
-    WHERE a.organization_id = o.id
-  ) a_agg ON true;
+    GROUP BY a.organization_id
+  )
+  SELECT COALESCE(
+    json_agg(
+      jsonb_build_object(
+        'id',                 o.id,
+        'code',               o.code,
+        'name',               o.name,
+        'institution',        o.institution,
+        'contact_email',      o.contact_email,
+        'status',             o.status,
+        'settings',           o.settings,
+        'created_at',         o.created_at,
+        'updated_at',         o.updated_at,
+        'active_period_name', ap.name,
+        'juror_count',        COALESCE(jc.juror_count, 0),
+        'project_count',      COALESCE(pc.project_count, 0),
+        'memberships',        COALESCE(ma.data, '[]'::json),
+        'org_applications',   COALESCE(aa.data, '[]'::json)
+      ) ORDER BY o.name
+    ),
+    '[]'::json
+  )
+  INTO v_result
+  FROM organizations o
+  LEFT JOIN active_periods ap ON ap.organization_id = o.id
+  LEFT JOIN juror_counts   jc ON jc.organization_id = o.id
+  LEFT JOIN project_counts pc ON pc.organization_id = o.id
+  LEFT JOIN mem_agg        ma ON ma.organization_id = o.id
+  LEFT JOIN app_agg        aa ON aa.organization_id = o.id;
 
   RETURN v_result;
 END;
@@ -1120,6 +1127,16 @@ REVOKE ALL ON FUNCTION public.rpc_platform_metrics() FROM PUBLIC, authenticated,
 -- unambiguous for PostgREST callers that omit p_force.
 DROP FUNCTION IF EXISTS public.rpc_period_freeze_snapshot(UUID);
 
+-- Criteria and outcomes are managed as independent collections per period.
+-- - p_force = false (initial freeze, e.g. first jury entry or period creation):
+--     Fills period_criteria, period_outcomes, and period_criterion_outcome_maps
+--     from the assigned framework if the snapshot has not been frozen yet.
+-- - p_force = true  (framework reassignment from OutcomesPage):
+--     Re-seeds ONLY period_outcomes and period_criterion_outcome_maps.
+--     period_criteria is NEVER touched — criteria are managed separately via
+--     the CriteriaPage flow. Mappings are re-inserted based on existing
+--     period_criteria whose source_criterion_id matches the new framework's
+--     criteria; unmatched criteria simply end up unmapped.
 CREATE OR REPLACE FUNCTION public.rpc_period_freeze_snapshot(
   p_period_id UUID,
   p_force     BOOLEAN DEFAULT false
@@ -1143,12 +1160,13 @@ BEGIN
     RETURN json_build_object('ok', false, 'error', 'period_has_no_framework');
   END IF;
 
-  -- Force re-seed: clear existing snapshot so the new framework's data is copied fresh.
-  -- Used when a framework is reassigned to a period that already has a snapshot.
+  -- Force re-seed of outcomes + mappings only.
+  -- period_criteria is intentionally preserved so the user's criteria setup
+  -- survives a framework switch. Mappings must go because they reference the
+  -- outcomes we are about to delete.
   IF p_force THEN
     DELETE FROM period_criterion_outcome_maps WHERE period_id = p_period_id;
     DELETE FROM period_outcomes                 WHERE period_id = p_period_id;
-    DELETE FROM period_criteria                 WHERE period_id = p_period_id;
     UPDATE periods SET snapshot_frozen_at = NULL WHERE id = p_period_id;
     v_period.snapshot_frozen_at := NULL;
   END IF;
@@ -1165,17 +1183,23 @@ BEGIN
     v_period.snapshot_frozen_at := NULL;
   END IF;
 
-  INSERT INTO period_criteria (
-    period_id, source_criterion_id, key, label,
-    description, max_score, weight, color, rubric_bands, sort_order
-  )
-  SELECT p_period_id, fc.id, fc.key, fc.label,
-    fc.description, fc.max_score, fc.weight, fc.color, fc.rubric_bands, fc.sort_order
-  FROM framework_criteria fc
-  WHERE fc.framework_id = v_period.framework_id
-  ON CONFLICT (period_id, key) DO NOTHING;
+  -- period_criteria is only seeded on a non-forced freeze. On force (framework
+  -- reassignment) we leave existing criteria alone — see header comment.
+  IF NOT p_force THEN
+    INSERT INTO period_criteria (
+      period_id, source_criterion_id, key, label,
+      description, max_score, weight, color, rubric_bands, sort_order
+    )
+    SELECT p_period_id, fc.id, fc.key, fc.label,
+      fc.description, fc.max_score, fc.weight, fc.color, fc.rubric_bands, fc.sort_order
+    FROM framework_criteria fc
+    WHERE fc.framework_id = v_period.framework_id
+    ON CONFLICT (period_id, key) DO NOTHING;
 
-  GET DIAGNOSTICS v_criteria_count = ROW_COUNT;
+    GET DIAGNOSTICS v_criteria_count = ROW_COUNT;
+  ELSE
+    SELECT COUNT(*) INTO v_criteria_count FROM period_criteria WHERE period_id = p_period_id;
+  END IF;
 
   INSERT INTO period_outcomes (
     period_id, source_outcome_id, code, label, description, sort_order
@@ -1187,6 +1211,9 @@ BEGIN
 
   GET DIAGNOSTICS v_outcomes_count = ROW_COUNT;
 
+  -- Re-link mappings where existing period_criteria.source_criterion_id matches
+  -- the new framework's criterion IDs. Unmatched criteria end up unmapped and
+  -- can be remapped manually from the UI.
   INSERT INTO period_criterion_outcome_maps (
     period_id, period_criterion_id, period_outcome_id, coverage_type, weight
   )
@@ -1204,6 +1231,63 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.rpc_period_freeze_snapshot(UUID, BOOLEAN) TO authenticated;
+
+-- =============================================================================
+-- rpc_admin_period_unassign_framework
+-- =============================================================================
+-- Detach the framework from a period AND wipe the period's outcome snapshot
+-- atomically. Without this, clearing `periods.framework_id` alone leaves
+-- `period_outcomes` and `period_criterion_outcome_maps` rows behind, which
+-- keeps showing up as stale mapping codes in CriteriaPage's Mapping column
+-- (listPeriodCriteria joins through the mappings table).
+--
+-- `period_criteria` is intentionally preserved — criteria are independent
+-- from outcomes per the project's data model. The DB cascade on
+-- `period_criterion_outcome_maps.period_outcome_id` handles map deletion
+-- when we drop period_outcomes.
+CREATE OR REPLACE FUNCTION public.rpc_admin_period_unassign_framework(
+  p_period_id UUID
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_period          periods%ROWTYPE;
+  v_outcomes_count  INT;
+  v_maps_count      INT;
+BEGIN
+  SELECT * INTO v_period FROM periods WHERE id = p_period_id;
+  IF NOT FOUND THEN
+    RETURN json_build_object('ok', false, 'error', 'period_not_found');
+  END IF;
+
+  SELECT COUNT(*) INTO v_maps_count
+  FROM period_criterion_outcome_maps
+  WHERE period_id = p_period_id;
+
+  SELECT COUNT(*) INTO v_outcomes_count
+  FROM period_outcomes
+  WHERE period_id = p_period_id;
+
+  DELETE FROM period_criterion_outcome_maps WHERE period_id = p_period_id;
+  DELETE FROM period_outcomes                 WHERE period_id = p_period_id;
+
+  UPDATE periods
+  SET framework_id        = NULL,
+      snapshot_frozen_at  = NULL
+  WHERE id = p_period_id;
+
+  RETURN json_build_object(
+    'ok', true,
+    'outcomes_removed', v_outcomes_count,
+    'mappings_removed', v_maps_count
+  );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.rpc_admin_period_unassign_framework(UUID) TO authenticated;
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- H) SYSTEM CONFIG

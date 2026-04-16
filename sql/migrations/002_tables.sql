@@ -48,6 +48,11 @@ CREATE TABLE memberships (
   UNIQUE(user_id, organization_id)
 );
 
+-- organization_id is the second column of the UNIQUE composite, so lookups
+-- filtering only by organization_id (common in tenant RLS checks) need a
+-- standalone index to avoid full scans.
+CREATE INDEX idx_memberships_organization_id ON memberships(organization_id);
+
 -- =============================================================================
 -- 4. ORG_APPLICATIONS
 -- =============================================================================
@@ -194,6 +199,8 @@ CREATE TABLE jurors (
   updated_at       TIMESTAMPTZ DEFAULT now()
 );
 
+CREATE INDEX idx_jurors_organization_id ON jurors(organization_id);
+
 -- =============================================================================
 -- 12. JUROR_PERIOD_AUTH
 -- =============================================================================
@@ -319,6 +326,11 @@ CREATE INDEX idx_audit_logs_severity
 CREATE INDEX idx_audit_logs_actor_type
   ON audit_logs (organization_id, actor_type, created_at DESC);
 
+-- Filter by user_id (admin activity review across orgs)
+CREATE INDEX idx_audit_logs_user_id
+  ON audit_logs (user_id, created_at DESC)
+  WHERE user_id IS NOT NULL;
+
 -- =============================================================================
 -- 15. PERIOD_CRITERIA (snapshot)
 -- =============================================================================
@@ -405,6 +417,7 @@ CREATE TABLE score_sheet_items (
 );
 
 CREATE INDEX idx_score_sheet_items_sheet ON score_sheet_items(score_sheet_id);
+CREATE INDEX idx_score_sheet_items_period_criterion ON score_sheet_items(period_criterion_id);
 
 -- =============================================================================
 -- 20. MAINTENANCE_MODE (single-row config)
@@ -605,6 +618,10 @@ CREATE TRIGGER on_auth_user_confirmed
 -- Only tables that need live updates are included to minimise WAL overhead.
 -- RLS still applies to all realtime subscriptions.
 -- Note: ALTER PUBLICATION is idempotent for tables already in the publication.
+--
+-- audit_logs intentionally excluded: every mutation trigger writes here, so
+-- including it in the publication causes WAL amplification on every admin
+-- action. The Audit Log page uses polling/on-demand refresh instead.
 
 ALTER PUBLICATION supabase_realtime ADD TABLE
   score_sheets,
@@ -612,8 +629,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE
   juror_period_auth,
   projects,
   periods,
-  jurors,
-  audit_logs;
+  jurors;
 
 -- =============================================================================
 -- BACKFILL: periods.criteria_name

@@ -790,7 +790,7 @@ export default function AuditLogPage() {
           {/* Mobile portrait card list */}
           <div className="audit-card-list">
             {showAuditSkeleton && Array.from({ length: 4 }, (_, i) => (
-              <div key={i} className="amc">
+              <div key={i} className="mcard amc">
                 <div className="amc-body">
                   <div className="audit-skeleton-row" style={{ width: "40%", marginBottom: 10 }} />
                   <div className="audit-skeleton-row" style={{ width: "70%", marginBottom: 8 }} />
@@ -827,8 +827,7 @@ export default function AuditLogPage() {
               return (
                 <div
                   key={log.id}
-                  className={["amc", isWarning ? "amc-warning" : "", isSelected ? "selected" : ""].filter(Boolean).join(" ")}
-                  data-chip={chip.type}
+                  className={["mcard", "amc", isWarning ? "amc-warning" : "", isSelected ? "is-active" : ""].filter(Boolean).join(" ")}
                   data-cat={log.category || undefined}
                   data-sev={(log.severity === "high" || log.severity === "critical") ? log.severity : undefined}
                   onClick={() => setSelectedLog(isSelected ? null : log)}

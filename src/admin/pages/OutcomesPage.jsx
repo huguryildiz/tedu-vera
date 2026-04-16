@@ -4,7 +4,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Pencil, Trash2, Copy, MoreVertical, BadgeCheck, Network, AlertCircle, XCircle, CheckCircle, AlertTriangle, Circle, Info, Lock, LockKeyhole, PencilLine } from "lucide-react";
-import { updateFramework, cloneFramework, assignFrameworkToPeriod, createFramework, listFrameworks, freezePeriodSnapshot } from "@/shared/api";
+import { updateFramework, cloneFramework, assignFrameworkToPeriod, unassignPeriodFramework, listFrameworks } from "@/shared/api";
 import { useAdminContext } from "../hooks/useAdminContext";
 import { usePeriodOutcomes } from "../hooks/usePeriodOutcomes";
 import { useToast } from "@/shared/hooks/useToast";
@@ -289,95 +289,51 @@ export default function OutcomesPage() {
   const [unassignFwConfirmText, setUnassignFwConfirmText] = useState("");
   const [unassignFwSubmitting, setUnassignFwSubmitting] = useState(false);
 
+  // Framework import confirm modal (shown before committing a queued import
+  // when the period already has saved outcomes/mappings that would be replaced).
+  const [importConfirmOpen, setImportConfirmOpen] = useState(false);
+
   // Panel error
   const [panelError, setPanelError] = useState("");
 
-  // Blank framework creation
-  const [assigningBlank, setAssigningBlank] = useState(false);
+  // Framework picker expand/collapse (draft-first: Start-from-blank and clone
+  // choices set `fw.pendingFrameworkImport` and are applied on Save; no DB write
+  // runs here.)
   const [showFwPicker, setShowFwPicker] = useState(false);
-  const [cloningFw, setCloningFw] = useState(false);
 
-  // Pending framework confirmation: framework cloned+assigned but user hasn't confirmed yet
-  // { fwId, name } — set after clone+assign; Save clears it, Discard unassigns+reloads
-  const [pendingConfirm, setPendingConfirm] = useState(null);
-
-  const handleStartBlank = async () => {
-    if (!selectedPeriodId) return;
+  const requireOrg = () => {
     if (!organizationId) {
       toast.error("No active organization selected. Switch to a tenant from the org switcher.");
-      return;
+      return false;
     }
-    setAssigningBlank(true);
-    try {
-      const newFw = await createFramework({ name: "Custom Outcome", organization_id: organizationId });
-      await assignFrameworkToPeriod(selectedPeriodId, newFw.id);
-      // Force-refreeze so any stale period_outcomes from a previously
-      // assigned framework are wiped — a blank framework has no outcomes,
-      // so the snapshot lands empty.
-      await freezePeriodSnapshot(selectedPeriodId, true);
-      await Promise.all([fetchData?.(), fw.loadAll()]);
-      onFrameworksChange?.();
-      // Route through the confirm banner like clone flows: Save acknowledges,
-      // Discard unassigns. Keeps the UX identical regardless of entry path.
-      setPendingConfirm({ fwId: newFw.id, name: "Custom Outcome" });
-    } catch (e) {
-      toast.error(e?.message || "Failed to create outcome set");
-    } finally {
-      setAssigningBlank(false);
-    }
+    return true;
   };
 
-  // ── Deferred clone executors (called on Save) ─────────────────
-
-  const runCloneFromPeriod = async (period) => {
-    setCloningFw(true);
-    try {
-      const fwName = frameworks.find((f) => f.id === period.framework_id)?.name || "Custom Outcome";
-      const newFw = await cloneFramework(period.framework_id, `${fwName} (copy)`, organizationId);
-      await assignFrameworkToPeriod(selectedPeriodId, newFw.id);
-      await freezePeriodSnapshot(selectedPeriodId, true);
-      await Promise.all([fetchData?.(), fw.loadAll()]);
-      onFrameworksChange?.();
-      setPendingConfirm({ fwId: newFw.id, name: fwName });
-    } finally {
-      setCloningFw(false);
-    }
+  const handleStartBlank = () => {
+    if (!selectedPeriodId || !requireOrg()) return;
+    fw.setPendingFrameworkImport({ kind: "blank", proposedName: "Custom Outcome" });
   };
 
-  const runCloneTemplate = async (template) => {
-    setCloningFw(true);
-    try {
-      const newFw = await cloneFramework(template.id, template.name, organizationId);
-      await assignFrameworkToPeriod(selectedPeriodId, newFw.id);
-      await freezePeriodSnapshot(selectedPeriodId, true);
-      await Promise.all([fetchData?.(), fw.loadAll()]);
-      onFrameworksChange?.();
-      setPendingConfirm({ fwId: newFw.id, name: template.name });
-    } finally {
-      setCloningFw(false);
-    }
-  };
-
-  // ── Framework picker handlers ─────────────────────────────────
-
-  const handleCloneFromPeriod = async (period) => {
-    if (!selectedPeriodId) return;
-    if (!organizationId) {
-      toast.error("No active organization selected. Switch to a tenant from the org switcher.");
-      return;
-    }
+  const handleCloneFromPeriod = (period) => {
+    if (!selectedPeriodId || !requireOrg()) return;
     setShowFwPicker(false);
-    await runCloneFromPeriod(period);
+    const fwName =
+      frameworks.find((f) => f.id === period.framework_id)?.name || "Custom Outcome";
+    fw.setPendingFrameworkImport({
+      kind: "clonePeriod",
+      sourceFrameworkId: period.framework_id,
+      proposedName: `${fwName} (copy)`,
+    });
   };
 
-  const handleCloneTemplate = async (template) => {
-    if (!selectedPeriodId) return;
-    if (!organizationId) {
-      toast.error("No active organization selected. Switch to a tenant from the org switcher.");
-      return;
-    }
+  const handleCloneTemplate = (template) => {
+    if (!selectedPeriodId || !requireOrg()) return;
     setShowFwPicker(false);
-    await runCloneTemplate(template);
+    fw.setPendingFrameworkImport({
+      kind: "cloneTemplate",
+      sourceFrameworkId: template.id,
+      proposedName: template.name,
+    });
   };
 
   // Inline framework rename
@@ -543,28 +499,35 @@ export default function OutcomesPage() {
 
   // ── Draft save/discard ────────────────────────────────────
 
-  const handleSaveDraft = async () => {
+  // Core commit flow — runs the queued draft (import + diffs + rename) against
+  // the DB. Split out so the framework-import confirm modal can call it after
+  // the user confirms, while the non-destructive path can call it directly.
+  const runSaveDraft = async () => {
     try {
       // Unassign supersedes all other edits — if the user queued it, the
-      // framework goes away and everything else is moot.
+      // framework goes away and everything else is moot. Use the atomic RPC
+      // so period_outcomes + period_criterion_outcome_maps are wiped in the
+      // same transaction that clears framework_id. Without this, stale rows
+      // linger and CriteriaPage's Mapping column keeps showing outcome codes
+      // from the removed framework.
       if (fw.pendingUnassign) {
-        await assignFrameworkToPeriod(selectedPeriodId, null);
+        await unassignPeriodFramework(selectedPeriodId);
         await Promise.all([fetchData?.(), fw.loadAll()]);
         onFrameworksChange?.();
-        setPendingConfirm(null);
         toast.success("Outcomes removed from this period");
         return;
       }
 
-      // Framework import (pendingConfirm) — the clone+assign RPCs already
-      // ran when the user clicked the import item; Save just acknowledges.
-      if (pendingConfirm) {
-        setPendingConfirm(null);
+      // Outcome/mapping diffs (and framework import if queued). commitDraft
+      // runs the framework create/clone + assign + freeze when an import is
+      // pending, then processes any outcome/mapping diff on top.
+      const hadImport = !!fw.pendingFrameworkImport;
+      if (fw.itemsDirty || fw.pendingFrameworkImport) {
+        await fw.commitDraft({ organizationId });
       }
-
-      // Outcome/mapping diffs.
-      if (fw.itemsDirty) {
-        await fw.commitDraft();
+      if (hadImport) {
+        await fetchData?.();
+        onFrameworksChange?.();
       }
 
       // Framework rename — clone-if-shared or update-in-place.
@@ -590,25 +553,28 @@ export default function OutcomesPage() {
     }
   };
 
-  const handleDiscardDraft = async () => {
-    // Reset any draft-only intents first — this is a no-op on the server.
-    fw.discardDraft();
-
-    // A freshly-imported framework already hit the server; rolling back that
-    // commit means unassigning it and reloading.
-    if (pendingConfirm) {
-      setCloningFw(true);
-      try {
-        await assignFrameworkToPeriod(selectedPeriodId, null);
-        await Promise.all([fetchData?.(), fw.loadAll()]);
-        onFrameworksChange?.();
-        setPendingConfirm(null);
-      } catch (e) {
-        toast.error(e?.message || "Failed to remove framework");
-      } finally {
-        setCloningFw(false);
-      }
+  // SaveBar entry point. When the draft includes a framework import and the
+  // period already has saved outcomes/mappings, show an inline confirm so the
+  // user understands the outcome set will be replaced (criteria are preserved).
+  const handleSaveDraft = async () => {
+    const hasExistingOutcomes =
+      (fw.savedOutcomesCount ?? 0) > 0 || (fw.savedMappingsCount ?? 0) > 0;
+    if (fw.pendingFrameworkImport && hasExistingOutcomes) {
+      setImportConfirmOpen(true);
+      return;
     }
+    await runSaveDraft();
+  };
+
+  const handleConfirmImport = async () => {
+    setImportConfirmOpen(false);
+    await runSaveDraft();
+  };
+
+  const handleDiscardDraft = () => {
+    // All intents (outcome/mapping edits, rename, unassign, framework import)
+    // live in the hook's draft — discardDraft resets them without any RPC.
+    fw.discardDraft();
   };
 
   // ── Unassign framework handler ─────────────────────────────
@@ -623,7 +589,9 @@ export default function OutcomesPage() {
 
   // ── Render ────────────────────────────────────────────────
 
-  const noFramework = !adminLoading && !frameworkId;
+  const pendingImport = fw.pendingFrameworkImport;
+  const noFramework = !adminLoading && !frameworkId && !pendingImport;
+  const showPendingImportView = !adminLoading && !frameworkId && !!pendingImport;
 
   return (
     <div id="page-accreditation">
@@ -661,7 +629,6 @@ export default function OutcomesPage() {
                     setAddDrawerOpen(true);
                   }
                 }}
-                disabled={assigningBlank || cloningFw}
               >
                 <div className="vera-es-num vera-es-num--fw">1</div>
                 <div className="vera-es-action-text">
@@ -687,7 +654,6 @@ export default function OutcomesPage() {
                               key={p.id}
                               className="vera-es-clone-item"
                               onClick={() => handleCloneFromPeriod(p)}
-                              disabled={cloningFw}
                             >
                               <div>
                                 <div className="vera-es-clone-name">{p.name}</div>
@@ -711,7 +677,6 @@ export default function OutcomesPage() {
                           type="button"
                           className="vera-es-clone-item"
                           onClick={() => handleCloneTemplate(fw)}
-                          disabled={cloningFw}
                         >
                           <div>
                             <div className="vera-es-clone-name">{fw.name}</div>
@@ -730,14 +695,11 @@ export default function OutcomesPage() {
               <button
                 className="vera-es-action vera-es-action--secondary"
                 onClick={handleStartBlank}
-                disabled={assigningBlank || cloningFw}
               >
                 <div className="vera-es-num vera-es-num--secondary">2</div>
                 <div className="vera-es-action-text">
                   <div className="vera-es-action-label">Start from blank</div>
-                  <div className="vera-es-action-sub">
-                    {assigningBlank ? "Creating framework…" : "Add your own outcomes from scratch"}
-                  </div>
+                  <div className="vera-es-action-sub">Add your own outcomes from scratch</div>
                 </div>
                 <span className="vera-es-badge vera-es-badge--secondary">Manual</span>
               </button>
@@ -745,6 +707,30 @@ export default function OutcomesPage() {
             <div className="vera-es-footer">
               <Info size={12} strokeWidth={2} />
               Optional step · Recommended for accreditation
+            </div>
+          </div>
+        </div>
+      ) : showPendingImportView ? (
+        <div style={{ padding: "48px 24px", display: "flex", justifyContent: "center" }}>
+          <div className="vera-es-card">
+            <div className="vera-es-hero vera-es-hero--fw">
+              <div className="vera-es-icon vera-es-icon--fw">
+                <Network size={24} strokeWidth={1.65} />
+              </div>
+              <div>
+                <div className="vera-es-title">Framework ready to apply</div>
+                <div className="vera-es-desc">
+                  <strong style={{ color: "var(--text-primary)" }}>{pendingImport.proposedName}</strong>{" "}
+                  {pendingImport.kind === "blank"
+                    ? "will be created as a blank framework for this period. No outcomes will be added until you define them."
+                    : "will be cloned as a new framework for this period, carrying the source outcomes and mappings."}
+                  {" "}Save to apply, or Discard to cancel.
+                </div>
+              </div>
+            </div>
+            <div className="vera-es-footer">
+              <Info size={12} strokeWidth={2} />
+              Nothing has been written to the database yet.
             </div>
           </div>
         </div>
@@ -988,12 +974,25 @@ export default function OutcomesPage() {
         onClose={() => setAddDrawerOpen(false)}
         frameworkName={frameworkName}
         frameworkId={frameworkId}
-        platformFrameworks={platformFrameworks}
-        organizationId={organizationId}
-        selectedPeriodId={selectedPeriodId}
-        onFrameworksChange={onFrameworksChange}
+        platformFrameworks={effectivePlatformFrameworks}
         criteria={drawerCriteria}
         onSave={handleAddOutcome}
+        onSelectFrameworkTemplate={(template) => {
+          if (!selectedPeriodId || !requireOrg()) return;
+          if (template) {
+            fw.setPendingFrameworkImport({
+              kind: "cloneTemplate",
+              sourceFrameworkId: template.id,
+              proposedName: template.name,
+            });
+          } else {
+            fw.setPendingFrameworkImport({
+              kind: "blank",
+              proposedName: "Custom Outcome",
+            });
+          }
+          setAddDrawerOpen(false);
+        }}
       />
       {/* Edit Outcome Drawer */}
       <OutcomeDetailDrawer
@@ -1140,13 +1139,56 @@ export default function OutcomesPage() {
           </button>
         </div>
       </Modal>
+      {/* Framework import confirm — shown when a period already has outcomes
+          and the user is replacing the framework. Criteria are preserved. */}
+      <Modal
+        open={importConfirmOpen}
+        onClose={() => { if (!fw.saving) setImportConfirmOpen(false); }}
+        size="sm"
+        centered
+      >
+        <div className="fs-modal-header">
+          <div className="fs-modal-icon warning">
+            <Network size={22} strokeWidth={2} />
+          </div>
+          <div className="fs-title" style={{ textAlign: "center" }}>Replace Outcome Set?</div>
+          <div className="fs-subtitle" style={{ textAlign: "center", marginTop: 4 }}>
+            You are about to replace this period's outcome set with{" "}
+            <strong style={{ color: "var(--text-primary)" }}>
+              {fw.pendingFrameworkImport?.proposedName || "a new framework"}
+            </strong>.
+          </div>
+        </div>
+        <div className="fs-modal-footer" style={{ justifyContent: "center", background: "transparent", borderTop: "none", paddingTop: 0 }}>
+          <button
+            type="button"
+            className="fs-btn fs-btn-secondary"
+            onClick={() => setImportConfirmOpen(false)}
+            disabled={fw.saving}
+            style={{ flex: 1 }}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="fs-btn fs-btn-primary"
+            onClick={handleConfirmImport}
+            disabled={fw.saving}
+            style={{ flex: 1 }}
+          >
+            <AsyncButtonContent loading={fw.saving} loadingText="Replacing…">
+              Replace Outcomes
+            </AsyncButtonContent>
+          </button>
+        </div>
+      </Modal>
       <SaveBar
-        isDirty={fw.isDirty || !!pendingConfirm}
+        isDirty={fw.isDirty}
         canSave={true}
         total={100}
         onSave={handleSaveDraft}
         onDiscard={handleDiscardDraft}
-        saving={fw.saving || cloningFw}
+        saving={fw.saving}
       />
     </div>
   );

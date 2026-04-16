@@ -17,7 +17,7 @@ AS $$
   SELECT EXISTS (
     SELECT 1
     FROM memberships
-    WHERE user_id = auth.uid()
+    WHERE user_id = (SELECT auth.uid())
       AND organization_id IS NULL
   );
 $$;
@@ -39,7 +39,7 @@ SET search_path = public
 AS $$
   SELECT organization_id
   FROM memberships
-  WHERE user_id = auth.uid()
+  WHERE user_id = (SELECT auth.uid())
     AND status = 'active'
     AND role = 'org_admin'
     AND organization_id IS NOT NULL;

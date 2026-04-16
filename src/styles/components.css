@@ -456,8 +456,8 @@ body:not(.dark-mode) .consensus-sub-disputed .consensus-sub-sigma{color:#e11d48}
 
 /* ── Shared avg score typography (Heatmap/Jurors/etc.) ── */
 .avg-score-cell{font-family:var(--mono);font-variant-numeric:tabular-nums}
-.avg-score-value{font-weight:700;color:var(--accent)}
-.avg-score-max{font-weight:400;color:var(--text-tertiary);font-size:10px}
+.avg-score-value{font-family:var(--mono);font-weight:700;color:var(--accent);letter-spacing:-0.3px}
+.avg-score-max{font-family:var(--mono);font-weight:400;color:var(--text-tertiary);font-size:10px;letter-spacing:-0.2px}
 .avg-score-empty{color:var(--text-tertiary)}
 
 /* ── Reusable inline spinner for action buttons ── */
@@ -2128,12 +2128,23 @@ body:not(.dark-mode) tbody tr:hover td {
 }
 
 /* ── Card-layout tables in mobile portrait: td[data-label] cells must not show
-      per-cell hover backgrounds or row borders — the card (tr) is the visual unit ── */
+      per-cell backgrounds, hover fills, or row borders — the card (tr) is the
+      visual unit and any per-cell bg creates a nested-panel look (see CLAUDE.md).
+      Uses !important + .dark-mode prefix to beat .dark-mode tbody tr:hover td
+      which paints rgba(255,255,255,0.025) on every cell (sticky-hover after tap
+      makes this visible on iOS even without a real pointer). ── */
 @media (max-width: 768px) and (orientation: portrait) {
-  tbody tr:hover td[data-label] {
+  td[data-label],
+  .dark-mode td[data-label],
+  body:not(.dark-mode) td[data-label],
+  tbody tr:hover td[data-label],
+  tbody tr:focus td[data-label],
+  tbody tr:active td[data-label],
+  .dark-mode tbody tr:hover td[data-label],
+  .dark-mode tbody tr:focus td[data-label],
+  .dark-mode tbody tr:active td[data-label],
+  body:not(.dark-mode) tbody tr:hover td[data-label] {
     background: transparent !important;
-  }
-  td[data-label] {
     border-bottom: none !important;
   }
 }
@@ -3086,24 +3097,9 @@ body:not(.dark-mode) .tab-btn.active {
     box-shadow: var(--card-i-shadow-base);
     transition: var(--card-i-transition);
   }
-  #page-platform-control .organizations-table tbody tr:hover {
-    border-color: var(--accent);
-    box-shadow: var(--card-i-shadow-hover);
-  }
-  #page-platform-control .organizations-table tbody tr:active {
-    transform: scale(0.985);
-    border-color: var(--accent);
-    box-shadow: var(--card-i-shadow-active);
-    background: var(--card-i-bg-active);
-  }
   #page-platform-control .organizations-table tbody tr.menu-open {
     border-color: var(--accent);
     box-shadow: var(--card-i-shadow-open);
-  }
-  #page-platform-control .organizations-table tbody tr:focus-visible {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: var(--card-i-shadow-focus);
   }
   #page-platform-control .organizations-table tbody td {
     padding: 0;
@@ -3323,7 +3319,7 @@ body:not(.dark-mode) .tab-btn.active {
     display: inline-block;
     padding: 2px 8px;
     border-radius: 99px;
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent); /* nested-panel-ok: pill component */
     border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
     font-weight: 600;
     font-size: 10.5px;
@@ -3369,12 +3365,11 @@ body:not(.dark-mode) .tab-btn.active {
     color: var(--text-tertiary);
     margin-bottom: 2px;
   }
-  /* Reason — inset box */
+  /* Reason — inset box (border only, no bg per "no inner panels" rule) */
   #page-platform-control .unlock-requests-table tbody td[data-label="Reason"] {
     grid-area: reason;
     margin: 8px 12px 0;
     padding: 8px 10px;
-    background: var(--bg-2, var(--bg-surface)) !important;
     border: 1px solid var(--border) !important;
     border-radius: 6px;
     font-size: 11.5px;
@@ -4600,35 +4595,15 @@ body:not(.dark-mode) .vera-es-pending-wrap {
   border-color: rgba(59,130,246,0.50);
 }
 
-/* ── Interactive card states — projects + periods ─────────── */
+/* ── Card state — projects + periods ───────────────────────
+   Cards are not tappable (kebab is the sole entrypoint).
+   Only .menu-open indicates kebab state; the shared mobile.css
+   block handles the base shadow + transition. */
 @media (max-width: 768px) {
-  #projects-main-table tbody tr,
-  .sem-table tbody tr {
-    box-shadow: var(--card-i-shadow-base);
-    transition: var(--card-i-transition);
-  }
-  #projects-main-table tbody tr:hover,
-  .sem-table tbody tr:hover {
-    border-color: var(--accent);
-    box-shadow: var(--card-i-shadow-hover);
-  }
-  #projects-main-table tbody tr:active,
-  .sem-table tbody tr:active {
-    transform: scale(0.985);
-    border-color: var(--accent);
-    box-shadow: var(--card-i-shadow-active);
-    background: var(--card-i-bg-active);
-  }
   #projects-main-table tbody tr.menu-open,
   .sem-table tbody tr.menu-open {
     border-color: var(--accent);
     box-shadow: var(--card-i-shadow-open);
-  }
-  #projects-main-table tbody tr:focus-visible,
-  .sem-table tbody tr:focus-visible {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: var(--card-i-shadow-focus);
   }
 }
 
@@ -4907,4 +4882,64 @@ body:not(.dark-mode) .vera-es-pending-wrap {
   color: #4ade80;
   background: rgba(74, 222, 128, 0.09);
   border-color: rgba(74, 222, 128, 0.20);
+}
+
+/* ── unified mobile card (.mcard) ─────────────────────────────
+   Single shell for admin mobile cards (Audit, Jurors, Projects,
+   Periods, Rankings). Pages keep their layout classes; shell
+   comes from here. Active state is `.mcard.is-active` — applied
+   when a kebab menu opens on that card, or the card is selected.
+
+   Scoped to mobile portrait so it's safe to apply on `<tr>`
+   elements that are regular table rows at desktop.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 768px) and (orientation: portrait) {
+  .mcard {
+    position: relative;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    overflow: hidden;
+    box-sizing: border-box;
+    transition: box-shadow .18s, border-color .18s, transform .18s;
+  }
+  .dark-mode .mcard {
+    background: linear-gradient(145deg, #0f1629 0%, #0a1020 100%);
+    border-color: rgba(127, 153, 205, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 4px 12px rgba(2, 6, 23, 0.30);
+  }
+
+  .mcard.is-active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-ring);
+  }
+  .dark-mode .mcard.is-active {
+    border-color: rgba(89, 160, 255, 0.85);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 1px rgba(89, 160, 255, 0.30),
+      0 0 16px rgba(59, 130, 246, 0.28);
+  }
+
+  /* Inner parts (optional helpers, not required by all pages) */
+  .mcard-body { padding: 12px 14px 10px; }
+
+  .mcard-divider {
+    height: 1px;
+    background: var(--border);
+    opacity: 0.7;
+  }
+  .dark-mode .mcard-divider {
+    background: rgba(127, 153, 205, 0.20);
+    opacity: 1;
+  }
+
+  .mcard-footer {
+    border-top: 1px solid var(--border);
+    background: var(--surface-1);
+  }
+  .dark-mode .mcard-footer {
+    background: rgba(255, 255, 255, 0.03);
+    border-top-color: rgba(127, 153, 205, 0.15);
+  }
 }

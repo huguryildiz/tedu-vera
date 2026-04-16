@@ -3,17 +3,17 @@
 // Targets the framework_outcomes table.
 //
 // Props:
-//   open                — boolean
-//   onClose             — () => void
-//   frameworkName       — string — shown in header tag
-//   frameworkId         — string | null — current period's framework
-//   platformFrameworks  — [{ id, name, description }] — global templates
-//   organizationId      — string
-//   selectedPeriodId    — string
-//   onFrameworksChange  — () => void — triggers reload after framework assignment
-//   criteria            — [{ id, label, color }] — for criterion mapping chips
-//   onSave              — ({ code, shortLabel, description, criterionIds }) => Promise<void>
-//   error               — string | null
+//   open                       — boolean
+//   onClose                    — () => void
+//   frameworkName              — string — shown in header tag
+//   frameworkId                — string | null — current period's framework
+//   platformFrameworks         — [{ id, name, description }] — global templates
+//   criteria                   — [{ id, label, color }] — for criterion mapping chips
+//   onSave                     — ({ code, shortLabel, description, criterionIds }) => Promise<void>
+//   onSelectFrameworkTemplate  — (template|null) => void — parent queues a
+//                                framework import (clone template / start blank);
+//                                the drawer does NOT write to the DB itself.
+//   error                      — string | null
 
 import { useState, useEffect } from "react";
 import { AlertCircle, BadgeCheck, Info, PlusCircle, X, Check } from "lucide-react";
@@ -22,8 +22,6 @@ import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
 import AutoTextarea from "@/shared/ui/AutoTextarea";
 import InlineError from "@/shared/ui/InlineError";
-import { useToast } from "@/shared/hooks/useToast";
-import { cloneFramework, assignFrameworkToPeriod, createFramework } from "@/shared/api";
 
 const EMPTY = { code: "", shortLabel: "", description: "", criterionIds: [] };
 
@@ -33,39 +31,21 @@ export default function AddOutcomeDrawer({
   frameworkName = "",
   frameworkId = null,
   platformFrameworks = [],
-  organizationId,
-  selectedPeriodId,
-  onFrameworksChange,
   criteria = [],
   onSave,
+  onSelectFrameworkTemplate,
   error,
 }) {
-  const toast = useToast();
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [assigningFw, setAssigningFw] = useState(false);
 
   useEffect(() => {
-    if (open) { setForm(EMPTY); setSaveError(""); setSaving(false); setAssigningFw(false); }
+    if (open) { setForm(EMPTY); setSaveError(""); setSaving(false); }
   }, [open]);
 
-  const handleSelectTemplate = async (fw) => {
-    if (!organizationId || !selectedPeriodId) return;
-    setAssigningFw(true);
-    try {
-      const autoName = fw ? fw.name : "Custom Outcome";
-      const newFw = fw
-        ? await cloneFramework(fw.id, autoName, organizationId)
-        : await createFramework({ name: autoName, organization_id: organizationId });
-      await assignFrameworkToPeriod(selectedPeriodId, newFw.id);
-      toast.success(fw ? `"${fw.name}" framework assigned` : "Blank framework created");
-      onFrameworksChange?.();
-    } catch (e) {
-      toast.error(e?.message || "Failed to assign framework");
-    } finally {
-      setAssigningFw(false);
-    }
+  const handleSelectTemplate = (fw) => {
+    onSelectFrameworkTemplate?.(fw || null);
   };
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
@@ -136,7 +116,7 @@ export default function AddOutcomeDrawer({
                   type="button"
                   className="fw-template-card"
                   onClick={() => handleSelectTemplate(fw)}
-                  disabled={assigningFw}
+                 
                 >
                   <div className="fw-template-card-icon">
                     <BadgeCheck size={20} strokeWidth={1.75} />
@@ -165,7 +145,7 @@ export default function AddOutcomeDrawer({
               className="fw-template-card"
               style={{ width: "100%" }}
               onClick={() => handleSelectTemplate(null)}
-              disabled={assigningFw}
+             
             >
               <div className="fw-template-card-icon">
                 <PlusCircle size={20} strokeWidth={1.75} />
@@ -274,7 +254,7 @@ export default function AddOutcomeDrawer({
         )}
       </div>
       <div className="fs-drawer-footer">
-        <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose} disabled={saving || assigningFw}>
+        <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose} disabled={saving}>
           Cancel
         </button>
         {!noFramework && (

@@ -37,8 +37,7 @@
 .juror-action-sep { height: 1px; background: var(--border); margin: 4px 8px }
 
 /* ─── Table row interaction ───────────────────────────────── */
-#jurors-main-table tbody tr { cursor: pointer; transition: background .1s, box-shadow .1s }
-#jurors-main-table tbody tr:hover { background: rgba(59,130,246,.03) }
+#jurors-main-table tbody tr { transition: background .1s, box-shadow .1s }
 #jurors-main-table tbody tr.row-menu-open { background: var(--surface-1); box-shadow: inset 3px 0 0 var(--accent) }
 
 /* ─── Avatar ──────────────────────────────────────────────── */
@@ -131,8 +130,7 @@
 .jurors-table-active[data-juror-tooltip]:hover::after{left:auto;right:0;transform:none}
 
 /* ─── Table row states ─── */
-#jurors-main-table tbody tr{cursor:pointer;transition:background .1s,box-shadow .1s}
-#jurors-main-table tbody tr:hover{background:rgba(59,130,246,0.03)}
+#jurors-main-table tbody tr{transition:background .1s,box-shadow .1s}
 #jurors-main-table tbody tr.row-menu-open{background:var(--surface-1);box-shadow:inset 3px 0 0 var(--accent)}
 
 /* ─── Pagination ─── */
@@ -161,8 +159,7 @@
 .juror-action-sep{height:1px;background:var(--border);margin:4px 8px}
 .manage-student-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .manage-student-row .modal-input{flex:1}
-#projects-main-table tbody tr{cursor:pointer;transition:background .12s}
-#projects-main-table tbody tr:hover{background:var(--surface-1)}
+#projects-main-table tbody tr{transition:background .12s}
 #projects-main-table tbody tr.row-menu-open{background:var(--surface-1);box-shadow:inset 3px 0 0 var(--accent)}
 /* ─── Semesters Page ─── */
 .sem-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
@@ -357,7 +354,6 @@
     padding: 0;
     margin-bottom: 8px;
     box-shadow: none;
-    cursor: pointer;
   }
 
   /* Hide all desktop columns explicitly — generic td{display:none} loses to Safari cascade */
@@ -374,43 +370,19 @@
   #jurors-main-table tbody tr:hover { background: none; }
   #jurors-main-table tbody tr.row-menu-open { background: none; box-shadow: none; }
 
-  /* ── Card shell ── */
+  /* ── Card shell ──
+     Shell comes from global `.mcard`. `.jc` stays as a hook for
+     juror-specific overrides but owns no shell rules. Cards are
+     not tappable — kebab is the sole entrypoint. Active state
+     (`.is-active`) is toggled by JurorsPage when `openMenuId`
+     matches this card. */
   .jc {
     width: 100%;
-    box-sizing: border-box;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     overflow: visible;
-    position: relative;
-    /* Pre-state shadow keeps the glow transition smooth */
-    box-shadow: var(--card-i-shadow-base);
-    transition: var(--card-i-transition);
-  }
-
-  .jc:hover {
-    border-color: var(--accent);
-    box-shadow: var(--card-i-shadow-hover);
-  }
-  .jc:active {
-    transform: scale(0.985);
-    border-color: var(--accent);
-    box-shadow: var(--card-i-shadow-active);
-    background: var(--card-i-bg-active);
-    opacity: 1;
-  }
-  .jc.menu-open {
-    border-color: var(--accent);
-    box-shadow: var(--card-i-shadow-open);
-  }
-  .jc:focus-visible {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: var(--card-i-shadow-focus);
   }
 
   /* Dim non-active cards while a menu is open */
-  #jurors-main-table tbody.has-open-menu .col-mobile-card .jc:not(.menu-open) {
+  #jurors-main-table tbody.has-open-menu .col-mobile-card .jc:not(.is-active) {
     opacity: 0.35;
   }
 

@@ -133,9 +133,9 @@ sql/
 |---|------|---------|
 | 000 | `000_dev_teardown.sql` | **DEV/TEST ONLY** — drops all v1 objects; never run on live prod |
 | 001 | `001_extensions.sql` | `uuid-ossp`, `pgcrypto` |
-| 002 | `002_tables.sql` | All tables, ENUMs (including audit taxonomy), views, indexes in FK dependency order; Realtime publication (7 tables); single-row config tables seeded inline |
-| 003 | `003_helpers_and_triggers.sql` | `current_user_is_super_admin()`, `_assert_super_admin()`, `_assert_org_admin()`, `trigger_set_updated_at()`, `trigger_audit_log()` (with category/severity/actor_type/diff); `trigger_auto_lock_period_on_token()` (auto-locks period on first entry_token INSERT); `_assert_period_unlocked(period_id)` + BEFORE triggers on `projects`, `jurors`, `periods`, `period_criteria`, `period_outcomes`, `period_criterion_outcome_maps` that raise `period_locked` on writes to a locked period (jurors INSERT and `periods.is_locked`/`is_current` toggles stay allowed); trigger attachments on all tables |
-| 004 | `004_rls.sql` | RLS policies for all tables — including audit no-delete policy and backup storage policies |
+| 002 | `002_tables.sql` | All tables, ENUMs (including audit taxonomy), views, indexes in FK dependency order; Realtime publication (6 tables — `audit_logs` excluded to avoid WAL amplification on every mutation trigger); single-row config tables seeded inline. Perf indexes: `idx_memberships_organization_id`, `idx_jurors_organization_id`, `idx_score_sheet_items_period_criterion`, `idx_audit_logs_user_id` |
+| 003 | `003_helpers_and_triggers.sql` | `current_user_is_super_admin()`, `_assert_super_admin()`, `_assert_org_admin()`, `trigger_set_updated_at()`, `trigger_audit_log()` (with category/severity/actor_type/diff); `trigger_auto_lock_period_on_token()` (auto-locks period on first entry_token INSERT); `_assert_period_unlocked(period_id)` + BEFORE triggers on `projects`, `jurors`, `periods`, `period_criteria`, `period_outcomes`, `period_criterion_outcome_maps` that raise `period_locked` on writes to a locked period (jurors INSERT and `periods.is_locked`/`is_current` toggles stay allowed); trigger attachments on all tables. Helper functions use `(SELECT auth.uid())` subquery wrap so PG evaluates it once per query instead of per row |
+| 004 | `004_rls.sql` | RLS policies for all tables — including audit no-delete policy and backup storage policies. All tenant-scoped policies wrap `auth.uid()` as `(SELECT auth.uid())` to keep the planner from re-evaluating it for every candidate row |
 | 005 | `005_rpcs_jury.sql` | Jury RPCs: entry-token validation, authenticate, verify PIN, upsert score (no `is_locked` guard — `is_locked` is a structural-fields freeze, not a scoring block), finalize submission, rankings, feedback |
 | 006 | `006_rpcs_admin.sql` | Admin RPCs: jury mgmt (edit-mode toggle no longer gated by `is_locked`), org lifecycle, entry tokens (incl. `rpc_admin_revoke_entry_token` period-wide revoke), period config, system config, audit write helpers (`_audit_write`, `rpc_admin_write_audit_event`, `rpc_admin_log_period_lock`), public auth helpers |
 | 007 | `007_identity.sql` | `admin_user_sessions` table + RLS; invite-flow RPCs (`rpc_org_admin_cancel_invite`, `rpc_accept_invite`); `rpc_admin_revoke_admin_session` (audited) |
@@ -243,7 +243,8 @@ Single-row configuration table seeded inline in `002_tables.sql`.
 
 | Function | Purpose |
 |----------|---------|
-| `rpc_period_freeze_snapshot(period_id)` | Copy framework criteria/outcomes into period snapshot tables; idempotent |
+| `rpc_period_freeze_snapshot(period_id, force)` | Freeze period snapshot from framework. `force=false` (initial freeze, e.g. first jury entry or period creation) copies criteria+outcomes+mappings and is idempotent. `force=true` (framework reassignment from OutcomesPage) re-seeds outcomes+mappings only — `period_criteria` is preserved because criteria and outcomes are managed as independent collections per period. |
+| `rpc_admin_period_unassign_framework(period_id)` | Atomically detach framework from a period: delete all `period_outcomes` (cascades to `period_criterion_outcome_maps`) and clear `framework_id` + `snapshot_frozen_at`. `period_criteria` is preserved. Prevents stale mapping codes from appearing on the Criteria page after an unassign. |
 | `rpc_juror_reset_pin(period_id, juror_id)` | Generate + hash new PIN; clear lockout; write audit event |
 | `rpc_juror_toggle_edit_mode(period_id, juror_id, enabled, reason, duration_minutes)` | Open/close juror edit window; write audit event |
 | `rpc_juror_unlock_pin(period_id, juror_id)` | Clear PIN lockout; generate and return new PIN; write audit event |
@@ -315,8 +316,10 @@ Single-row configuration table seeded inline in `002_tables.sql`.
 
 ## Realtime
 
-Seven tables are added to the `supabase_realtime` Postgres publication (migration `002`).
-Only these tables are published to minimise WAL overhead.
+Six tables are added to the `supabase_realtime` Postgres publication (migration `002`).
+`audit_logs` is intentionally **excluded**: every mutation trigger writes an audit row,
+so including it caused WAL amplification proportional to overall write activity. The
+Audit Log page uses polling / on-demand refresh instead.
 
 | Table | Consumer | Event |
 |-------|----------|-------|
@@ -326,7 +329,6 @@ Only these tables are published to minimise WAL overhead.
 | `projects` | `useAdminRealtime` | `*` — project list changes |
 | `periods` | `useAdminRealtime` | `*` — period lock / activation changes |
 | `jurors` | `useAdminRealtime` | `*` — juror roster changes |
-| `audit_logs` | `usePageRealtime` (AuditLogPage) | `INSERT` — new audit entries |
 
 RLS still applies to all Realtime channels — clients only receive rows they are
 authorised to read regardless of publication membership.

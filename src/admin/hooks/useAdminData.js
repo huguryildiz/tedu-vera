@@ -23,6 +23,13 @@ import {
 import { sortPeriodsByStartDateDesc } from "../../shared/periodSort";
 import { useAdminRealtime } from "./useAdminRealtime";
 
+// Module-scoped cache for the details view. Scores are large; re-fetching
+// every period on every tab switch is wasteful. Entries are invalidated
+// per-period when the main view's rawScores changes for that period.
+// Key: `${organizationId}:${periodId}` → { scores, summary }
+const detailsCache = new Map();
+const detailsKeyFor = (orgId, periodId) => `${orgId}:${periodId}`;
+
 // ── Hook ──────────────────────────────────────────────────────
 
 /**
@@ -221,11 +228,30 @@ export function useAdminData({
   // ── Background (silent) refresh ────────────────────────────
   // Assigned each render so the Realtime hook always calls the latest
   // closure without needing to rebuild the subscription.
-  bgRefresh.current = async () => {
+  //
+  // Accepts a list of tables that fired events so we can refetch only
+  // the affected slices instead of always firing all three RPCs.
+  bgRefresh.current = async (changedTables = []) => {
     if (!organizationIdRef.current) return;
+    const all = !changedTables || changedTables.length === 0;
+    const touched = new Set(changedTables);
+    const needPeriods  = all || touched.has("periods");
+    const needScores   = all || touched.has("score_sheets") || touched.has("score_sheet_items");
+    const needSummary  = all || touched.has("score_sheets") || touched.has("score_sheet_items") || touched.has("projects");
+    const needJurors   = all || touched.has("juror_period_auth") || touched.has("jurors");
     try {
-      let periods = await listPeriods(organizationIdRef.current);
-      setPeriodList(periods);
+      // Always need an up-to-date period list for targetId resolution when
+      // scores/summary/jurors need a refresh (a deleted period invalidates
+      // the current selection). When only jurors or periods changed, we can
+      // skip the explicit list fetch in the score branch since we fall into
+      // the needPeriods path below.
+      let periods = null;
+      if (needPeriods || needScores || needSummary || needJurors) {
+        periods = await listPeriods(organizationIdRef.current);
+        setPeriodList(periods);
+      }
+      if (!periods) return;
+
       const activeId = periods.find((p) => p.is_current)?.id || periods[0]?.id || "";
       const selectedId = selectedPeriodRef.current;
       const selectedIsValid = !!selectedId && periods.some((p) => p.id === selectedId);
@@ -234,14 +260,16 @@ export function useAdminData({
       if (periodId !== selectedPeriodRef.current) {
         onSelectedPeriodChange(periodId);
       }
-      const [scores, summary, jurors] = await Promise.all([
-        getScores(periodId),
-        getProjectSummary(periodId),
-        listJurorsSummary(periodId).catch(() => []),
-      ]);
-      setRawScores(scores);
-      setSummaryData(summary);
-      setAllJurors(jurors);
+
+      const tasks = [];
+      tasks.push(needScores  ? getScores(periodId)              : Promise.resolve(null));
+      tasks.push(needSummary ? getProjectSummary(periodId)      : Promise.resolve(null));
+      tasks.push(needJurors  ? listJurorsSummary(periodId).catch(() => []) : Promise.resolve(null));
+      const [scores, summary, jurors] = await Promise.all(tasks);
+
+      if (scores  !== null) setRawScores(scores);
+      if (summary !== null) setSummaryData(summary);
+      if (jurors  !== null) setAllJurors(jurors);
       setLastRefresh(new Date());
     } catch {
       // Silent — don't flash error on background sync
@@ -252,9 +280,14 @@ export function useAdminData({
   useAdminRealtime({ organizationId, onRefreshRef: bgRefresh });
 
   // ── Details invalidation ───────────────────────────────────
-  // Reset the cache key when rawScores changes so the next visit to
-  // the Details view triggers a full reload.
+  // When rawScores changes, invalidate only the cache entry for the
+  // currently selected period (the one the main view was displaying),
+  // not every period. This keeps other periods warm across tab switches.
   useEffect(() => {
+    const orgId = organizationIdRef.current;
+    const periodId = selectedPeriodRef.current;
+    if (!orgId || !periodId) return;
+    detailsCache.delete(detailsKeyFor(orgId, periodId));
     detailsKeyRef.current = "";
   }, [rawScores]);
 
@@ -267,25 +300,34 @@ export function useAdminData({
   useEffect(() => {
     if (scoresView !== "details") return;
     if (!sortedPeriods.length) return;
-    if (!organizationIdRef.current) return;
+    const orgId = organizationIdRef.current;
+    if (!orgId) return;
     if (detailsKeyRef.current === detailsKey && detailsScores.length) return;
     let cancelled = false;
     setDetailsLoading(true);
     (async () => {
       try {
+        // Per-period cache: only fetch what we don't already have.
+        // Fetch missing periods in parallel; hits come back instantly.
         const results = await Promise.all(
           sortedPeriods.map(async (period) => {
-            const [scores, summary] = await Promise.all([
-              getScores(period.id),
-              getProjectSummary(period.id).catch(() => []),
-            ]);
-            const summaryMap = new Map(summary.map((p) => [p.id, p]));
-            const rows = scores.map((r) => ({
+            const cacheKey = detailsKeyFor(orgId, period.id);
+            let cached = detailsCache.get(cacheKey);
+            if (!cached) {
+              const [scores, summary] = await Promise.all([
+                getScores(period.id),
+                getProjectSummary(period.id).catch(() => []),
+              ]);
+              cached = { scores, summary };
+              detailsCache.set(cacheKey, cached);
+            }
+            const summaryMap = new Map(cached.summary.map((p) => [p.id, p]));
+            const rows = cached.scores.map((r) => ({
               ...r,
               period: period.name || "",
               students: summaryMap.get(r.projectId)?.students ?? "",
             }));
-            return { rows, summary };
+            return { rows, summary: cached.summary };
           })
         );
         if (cancelled) return;

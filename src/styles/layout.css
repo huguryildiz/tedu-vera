@@ -2503,7 +2503,7 @@ body:not(.dark-mode) .admin-sidebar .sb-account-item.danger:focus-visible{
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background: var(--text-quaternary);
+    background: var(--text-quaternary); /* nested-panel-ok: 4px dot separator */
     opacity: 0.85;
     flex-shrink: 0;
   }

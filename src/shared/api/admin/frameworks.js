@@ -136,3 +136,17 @@ export async function assignFrameworkToPeriod(periodId, frameworkId) {
     .eq("id", periodId);
   if (error) throw error;
 }
+
+/**
+ * Detach the framework from a period and wipe its outcome snapshot atomically.
+ * Removes all period_outcomes (which cascades to period_criterion_outcome_maps)
+ * and clears framework_id + snapshot_frozen_at. Criteria are preserved.
+ * Returns { ok, outcomes_removed, mappings_removed }.
+ */
+export async function unassignPeriodFramework(periodId) {
+  const { data, error } = await supabase.rpc("rpc_admin_period_unassign_framework", {
+    p_period_id: periodId,
+  });
+  if (error) throw error;
+  return data;
+}

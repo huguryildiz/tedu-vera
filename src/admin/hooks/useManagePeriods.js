@@ -611,6 +611,25 @@ export function useManagePeriods({
     clearCriteriaScratch(viewPeriodId);
   }, [viewPeriodId]);
 
+  // Re-fetch period_criteria rows (with mapping-joined outcomes) and rebaseline
+  // the saved + draft state. Used after an out-of-band change to
+  // period_criterion_outcome_maps (e.g. outcome mapping commit on this page,
+  // framework reassignment on the OutcomesPage) so the Mapping column reflects
+  // the fresh DB state without requiring a page remount.
+  const reloadCriteria = useCallback(async () => {
+    if (!viewPeriodId) return;
+    try {
+      const rows = await listPeriodCriteria(viewPeriodId);
+      const fresh = getActiveCriteria(rows);
+      setCriteriaConfig(fresh);
+      setSavedCriteria(fresh);
+      setDraftCriteria(structuredClone(fresh));
+      clearCriteriaScratch(viewPeriodId);
+    } catch {
+      // Non-fatal: a page switch will re-fetch on mount.
+    }
+  }, [viewPeriodId]);
+
   const handleDuplicatePeriod = async (periodId) => {
     if (!periodId) return { ok: false };
     setMessage("");
@@ -719,6 +738,7 @@ export function useManagePeriods({
     setPendingCriteriaName,
     markClearAll,
     applySavedCriteria,
+    reloadCriteria,
     applyPeriodPatch,
     removePeriod,
     loadPeriods,

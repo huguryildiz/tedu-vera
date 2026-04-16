@@ -1281,19 +1281,23 @@ textarea.fs-outcome-input{min-height:38px;max-height:120px}
   margin-bottom: 6px;
 }
 .psd-kpi-value {
+  font-family: var(--mono);
   font-size: 19px;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
   display: inline-flex;
   align-items: baseline;
   gap: 2px;
 }
 .psd-kpi-denom {
+  font-family: var(--mono);
   color: var(--text-tertiary);
   font-size: 14px;
   font-weight: 600;
+  letter-spacing: -0.3px;
 }
 .psd-kpi-delta {
   font-size: 10.5px;
@@ -1369,11 +1373,13 @@ textarea.fs-outcome-input{min-height:38px;max-height:120px}
 .psd-bar-fill.good { background: linear-gradient(90deg, var(--success, #10b981), #34d399); }
 .psd-bar-fill.warn { background: linear-gradient(90deg, var(--warning, #f59e0b), #fbbf24); }
 .psd-crit-score {
+  font-family: var(--mono);
   font-variant-numeric: tabular-nums;
   font-size: 13px;
   font-weight: 700;
   text-align: right;
   color: var(--text-primary);
+  letter-spacing: -0.3px;
 }
 .psd-crit-band {
   font-size: 9.5px;
@@ -1422,12 +1428,14 @@ textarea.fs-outcome-input{min-height:38px;max-height:120px}
 }
 .psd-tag.outlier { background: rgba(225,29,72,0.12); color: var(--danger); }
 .psd-juror-score {
+  font-family: var(--mono);
   font-variant-numeric: tabular-nums;
   font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
   min-width: 44px;
   text-align: right;
+  letter-spacing: -0.3px;
 }
 .psd-juror-score.muted { color: var(--text-tertiary); }
 

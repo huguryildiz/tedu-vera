@@ -103,6 +103,7 @@ export {
   deleteFramework,
   cloneFramework,
   assignFrameworkToPeriod,
+  unassignPeriodFramework,
   listOutcomes,
   createOutcome,
   updateOutcome,

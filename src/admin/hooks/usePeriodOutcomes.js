@@ -20,6 +20,10 @@ import {
   deletePeriodOutcome,
   upsertPeriodCriterionOutcomeMap,
   deletePeriodCriterionOutcomeMap,
+  createFramework,
+  cloneFramework,
+  assignFrameworkToPeriod,
+  freezePeriodSnapshot,
 } from "@/shared/api";
 import {
   getOutcomesScratch,
@@ -55,8 +59,13 @@ export function usePeriodOutcomes({ periodId }) {
   // ── Draft meta (framework-level ops queued for next save) ─
   // `pendingFrameworkName` undefined means no rename queued.
   // `pendingUnassign` true means "on commit, unassign the framework".
+  // `pendingFrameworkImport` null means no framework import queued; otherwise
+  //   { kind: 'blank' | 'clonePeriod' | 'cloneTemplate',
+  //     sourceFrameworkId?: string, proposedName: string }
+  //   is applied before outcome/mapping diff on commit.
   const [pendingFrameworkName, setPendingFrameworkNameState] = useState(undefined);
   const [pendingUnassign, setPendingUnassignState] = useState(false);
+  const [pendingFrameworkImport, setPendingFrameworkImportState] = useState(null);
 
   // ── Shared state ──────────────────────────────────────────
   const [criteria, setCriteria] = useState([]);
@@ -81,6 +90,7 @@ export function usePeriodOutcomes({ periodId }) {
       setCriteria([]);
       setPendingFrameworkNameState(undefined);
       setPendingUnassignState(false);
+      setPendingFrameworkImportState(null);
       return;
     }
     let alive = true;
@@ -107,12 +117,14 @@ export function usePeriodOutcomes({ periodId }) {
               : undefined
           );
           setPendingUnassignState(!!scratch.pendingUnassign);
+          setPendingFrameworkImportState(scratch.pendingFrameworkImport || null);
         } else {
           clearOutcomesScratch(periodId);
           setDraftOutcomes(o);
           setDraftMappings(m);
           setPendingFrameworkNameState(undefined);
           setPendingUnassignState(false);
+          setPendingFrameworkImportState(null);
         }
       } catch (err) {
         if (!alive) return;
@@ -152,6 +164,7 @@ export function usePeriodOutcomes({ periodId }) {
       setDraftMappings(m);
       setPendingFrameworkNameState(undefined);
       setPendingUnassignState(false);
+      setPendingFrameworkImportState(null);
     } catch (err) {
       if (!mountedRef.current) return;
       setError(err?.message || "Failed to load outcomes data");
@@ -190,8 +203,12 @@ export function usePeriodOutcomes({ periodId }) {
   }, [draftOutcomes, savedOutcomes, draftMappings, savedMappings]);
 
   const isDirty = useMemo(
-    () => itemsDirty || pendingFrameworkName !== undefined || pendingUnassign,
-    [itemsDirty, pendingFrameworkName, pendingUnassign]
+    () =>
+      itemsDirty ||
+      pendingFrameworkName !== undefined ||
+      pendingUnassign ||
+      pendingFrameworkImport !== null,
+    [itemsDirty, pendingFrameworkName, pendingUnassign, pendingFrameworkImport]
   );
 
   // ── SessionStorage sync ───────────────────────────────────
@@ -202,11 +219,12 @@ export function usePeriodOutcomes({ periodId }) {
       const payload = { outcomes: draftOutcomes, mappings: draftMappings };
       if (pendingFrameworkName !== undefined) payload.pendingFrameworkName = pendingFrameworkName;
       if (pendingUnassign) payload.pendingUnassign = true;
+      if (pendingFrameworkImport) payload.pendingFrameworkImport = pendingFrameworkImport;
       setOutcomesScratch(periodId, payload);
     } else if (savedOutcomes.length > 0 || savedMappings.length > 0) {
       clearOutcomesScratch(periodId);
     }
-  }, [periodId, isDirty, draftOutcomes, draftMappings, savedOutcomes, savedMappings, pendingFrameworkName, pendingUnassign]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [periodId, isDirty, draftOutcomes, draftMappings, savedOutcomes, savedMappings, pendingFrameworkName, pendingUnassign, pendingFrameworkImport]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Coverage helpers ───────────────────────────────────────
 
@@ -389,6 +407,7 @@ export function usePeriodOutcomes({ periodId }) {
     setDraftMappings(savedMappings);
     setPendingFrameworkNameState(undefined);
     setPendingUnassignState(false);
+    setPendingFrameworkImportState(null);
   }, [savedOutcomes, savedMappings, periodId]);
 
   // ── Framework-level draft setters (no RPC — deferred to Save) ──
@@ -401,16 +420,31 @@ export function usePeriodOutcomes({ periodId }) {
   const markUnassign = useCallback(() => {
     setPendingUnassignState(true);
     // Clear local outcome/mapping draft — on save the whole framework will be
-    // dropped. Rename intent is also void once the framework goes away.
+    // dropped. Rename intent and import intent are also void once the framework
+    // goes away.
     setDraftOutcomes([]);
     setDraftMappings([]);
     setPendingFrameworkNameState(undefined);
+    setPendingFrameworkImportState(null);
+  }, []);
+
+  const setPendingFrameworkImport = useCallback((intent) => {
+    setPendingFrameworkImportState(intent || null);
+    if (intent) {
+      // Import supersedes unassign and rename; reset item drafts — user will
+      // add outcomes after save, or let freeze populate from clone source.
+      setPendingUnassignState(false);
+      setPendingFrameworkNameState(undefined);
+      setDraftOutcomes([]);
+      setDraftMappings([]);
+    }
   }, []);
 
   // ── commitDraft ───────────────────────────────────────────
 
-  const commitDraft = useCallback(async () => {
+  const commitDraft = useCallback(async (opts = {}) => {
     if (!periodId) return;
+    const { organizationId } = opts;
     setSaving(true);
     try {
       // If the user queued an unassign, skip outcome/mapping diffs entirely —
@@ -420,6 +454,43 @@ export function usePeriodOutcomes({ periodId }) {
         clearOutcomesScratch(periodId);
         return;
       }
+
+      // Framework import: create/clone + assign + freeze. After freeze,
+      // period_outcomes + period_criterion_outcome_maps are re-seeded from
+      // the new framework (empty for blank, seeded for clone). The force
+      // freeze preserves period_criteria — criteria are managed as an
+      // independent collection per period via the CriteriaPage flow, so a
+      // framework reassignment never touches them. Mappings that reference
+      // the old outcomes are wiped and re-linked where existing criteria's
+      // source_criterion_id matches. In-memory savedOutcomes/savedMappings
+      // from before this call are now stale (the outcome rows were replaced),
+      // so diffing against them would raise outcome_not_found. Skip the diff
+      // step entirely; subsequent edits go through a normal commit.
+      if (pendingFrameworkImport) {
+        // Called without organizationId (e.g. from CriteriaPage, or while the
+        // admin's activeOrganization has not yet hydrated for super-admins).
+        // A framework import is an OutcomesPage-owned operation; committing
+        // outcome/mapping item diffs here would also be unsafe because
+        // setPendingFrameworkImport already emptied draftOutcomes/draftMappings.
+        // Leave the import queued in scratch so the next save on OutcomesPage
+        // (with organizationId) can fulfill it, and no-op here.
+        if (!organizationId) return;
+        const { kind, sourceFrameworkId, proposedName } = pendingFrameworkImport;
+        const newFw =
+          kind === "blank"
+            ? await createFramework({
+                name: proposedName,
+                organization_id: organizationId,
+              })
+            : await cloneFramework(sourceFrameworkId, proposedName, organizationId);
+        await assignFrameworkToPeriod(periodId, newFw.id);
+        await freezePeriodSnapshot(periodId, true);
+        setPendingFrameworkImportState(null);
+        clearOutcomesScratch(periodId);
+        await loadAll();
+        return;
+      }
+
       const tempIdMap = {};
 
       // 1. Create new outcomes (those with temp IDs)
@@ -528,12 +599,14 @@ export function usePeriodOutcomes({ periodId }) {
     } finally {
       if (mountedRef.current) setSaving(false);
     }
-  }, [periodId, draftOutcomes, savedOutcomes, draftMappings, savedMappings, loadAll, pendingUnassign]);
+  }, [periodId, draftOutcomes, savedOutcomes, draftMappings, savedMappings, loadAll, pendingUnassign, pendingFrameworkImport]);
 
   return {
     outcomes: draftOutcomes,
     criteria,
     mappings: draftMappings,
+    savedOutcomesCount: savedOutcomes.length,
+    savedMappingsCount: savedMappings.length,
     loading,
     error,
     saving,
@@ -541,6 +614,7 @@ export function usePeriodOutcomes({ periodId }) {
     itemsDirty,
     pendingFrameworkName,
     pendingUnassign,
+    pendingFrameworkImport,
     loadAll,
     commitDraft,
     discardDraft,
@@ -555,5 +629,6 @@ export function usePeriodOutcomes({ periodId }) {
     cycleCoverage,
     setPendingFrameworkName,
     markUnassign,
+    setPendingFrameworkImport,
   };
 }

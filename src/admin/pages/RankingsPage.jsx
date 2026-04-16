@@ -907,7 +907,7 @@ export default function RankingsPage() {
                     const members = proj.members || proj.students || "";
 
                     return (
-                      <tr key={proj.id} className={rank <= 3 ? "ranking-highlight" : ""}>
+                      <tr key={proj.id} className={`mcard${rank <= 3 ? " ranking-highlight" : ""}`}>
                         <td className="col-rank" data-label="Rank">
                           <MedalCell rank={rank} />
                         </td>

@@ -176,9 +176,6 @@ export default function ProjectsPage() {
   const [editDrawerProject, setEditDrawerProject] = useState(null);
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
 
-  // Detail drawer
-  const [drawerProject, setDrawerProject] = useState(null);
-
   // View Scores drawer
   const [scoresProject, setScoresProject] = useState(null);
 
@@ -378,10 +375,6 @@ export default function ProjectsPage() {
       const fieldErr = result.fieldErrors?.group_no;
       throw new Error(fieldErr || result.message || "Could not add project.");
     }
-  }
-
-  function openDrawer(project) {
-    setDrawerProject(project);
   }
 
   return (
@@ -607,7 +600,7 @@ export default function ProjectsPage() {
                 </td>
               </tr>
             ) : pagedList.map((project) => (
-              <tr key={project.id} onClick={() => openDrawer(project)}>
+              <tr key={project.id} className={`mcard${openMenuId === project.id ? " is-active" : ""}`}>
                 <td className="text-center col-no" data-label="No">
                   <span className="mobile-rank-ring" aria-hidden="true">
                     <span
@@ -748,94 +741,6 @@ export default function ProjectsPage() {
         onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
         itemLabel="projects"
       />
-      {/* Project detail drawer */}
-      {drawerProject && (
-        <>
-          <div className="juror-drawer-overlay show" onClick={() => setDrawerProject(null)} />
-          <div className="juror-drawer show">
-            <div className="juror-drawer-header">
-              <span className="jd-title">Project Details</span>
-              <button className="juror-drawer-close" onClick={() => setDrawerProject(null)}>×</button>
-            </div>
-            <div style={{ padding: "20px 24px 0" }}>
-              <div style={{ fontWeight: 700, fontSize: "14px", lineHeight: 1.4, letterSpacing: "-0.2px" }}>
-                {drawerProject.title}
-              </div>
-              <div style={{ marginTop: "6px" }}>
-                {drawerProject.group_no != null
-                  ? <span className="project-no-badge">P{drawerProject.group_no}</span>
-                  : <span className="text-xs text-muted">—</span>}
-              </div>
-            </div>
-            <div className="juror-drawer-details" style={{ marginTop: "8px" }}>
-              {drawerProject.advisor && (
-                <div className="juror-drawer-row">
-                  <span className="juror-drawer-row-label">Advisor</span>
-                  <span className="juror-drawer-row-value">{drawerProject.advisor}</span>
-                </div>
-              )}
-              <div className="juror-drawer-row">
-                <span className="juror-drawer-row-label">Team Members</span>
-                <span className="juror-drawer-row-value">
-                  <StudentNames names={drawerProject.members} />
-                  {!membersToArray(drawerProject.members).length ? "—" : null}
-                </span>
-              </div>
-              <div className="juror-drawer-row">
-                <span className="juror-drawer-row-label">Last Updated</span>
-                <span className="juror-drawer-row-value">
-                  <PremiumTooltip text={formatFull(drawerProject.updated_at)}>
-                    <span>{formatRelative(drawerProject.updated_at)}</span>
-                  </PremiumTooltip>
-                </span>
-              </div>
-            </div>
-            <div className="juror-drawer-actions">
-              <button className="btn btn-outline btn-sm" onClick={() => { const p = drawerProject; setDrawerProject(null); openEditDrawer(p); }}>
-                <Icon
-                  iconNode={[]}
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </Icon>
-                Edit Project
-              </button>
-              <button
-                className="btn btn-outline btn-sm"
-                style={{ color: "var(--danger)", borderColor: "rgba(225,29,72,0.3)" }}
-                onClick={() => {
-                  const t = drawerProject;
-                  setDrawerProject(null);
-                  setDeleteTarget(t);
-                }}
-              >
-                <Icon
-                  iconNode={[]}
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                </Icon>
-                Delete Project
-              </button>
-            </div>
-          </div>
-        </>
-      )}
       {/* Edit project drawer */}
       <EditProjectDrawer
         open={editDrawerOpen}

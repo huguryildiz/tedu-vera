@@ -21,7 +21,6 @@ import {
 } from "../criteria/criteriaFormHelpers";
 import OutcomePillSelector from "../criteria/OutcomePillSelector";
 import RubricBandEditor from "../criteria/RubricBandEditor";
-import { usePeriodOutcomes } from "../hooks/usePeriodOutcomes";
 
 export default function EditSingleCriterionDrawer({
   open,
@@ -35,6 +34,9 @@ export default function EditSingleCriterionDrawer({
   disabled,
   isLocked,
   initialTab,       // optional: 'details' | 'rubric' | 'mapping'
+  po,               // shared usePeriodOutcomes draft from CriteriaPage —
+                    // mapping edits mutate this instance so the page-level
+                    // SaveBar commits mappings alongside criteria.
 }) {
   const isNew = editIndex == null || editIndex < 0;
   const formRef = useRef(null);
@@ -82,7 +84,6 @@ export default function EditSingleCriterionDrawer({
   // ── Period outcomes + mappings (source of truth: period_criterion_outcome_maps)
   const periodId = period?.id || null;
   const criterionId = !isNew ? criterion?.dbId || criterion?.id || null : null;
-  const po = usePeriodOutcomes({ periodId });
 
   // Outcome options for the Mapping tab: prefer hook data (period-scoped),
   // fall back to parent's outcomeConfig (framework-level) when the hook
@@ -116,29 +117,25 @@ export default function EditSingleCriterionDrawer({
     [po.outcomes]
   );
 
-  // Toggle mapping by diffing current vs next code list.
-  const [mappingBusy, setMappingBusy] = useState(false);
-  const handleMappingChange = useCallback(async (nextCodes) => {
-    if (!periodId || !criterionId || mappingBusy) return;
+  // Toggle mapping by diffing current vs next code list. Writes go to the
+  // page-level usePeriodOutcomes draft — the SaveBar on CriteriaPage commits
+  // them alongside criteria changes.
+  const handleMappingChange = useCallback((nextCodes) => {
+    if (!periodId || !criterionId) return;
     const current = new Set(mappedCodes);
     const next = new Set(nextCodes);
     const toAdd = [...next].filter((c) => !current.has(c));
     const toRemove = [...current].filter((c) => !next.has(c));
     if (toAdd.length === 0 && toRemove.length === 0) return;
-    setMappingBusy(true);
-    try {
-      for (const code of toAdd) {
-        const outcomeId = outcomeIdByCode.get(code);
-        if (outcomeId) await po.addMapping(criterionId, outcomeId, "direct");
-      }
-      for (const code of toRemove) {
-        const outcomeId = outcomeIdByCode.get(code);
-        if (outcomeId) await po.removeMapping(criterionId, outcomeId);
-      }
-    } finally {
-      setMappingBusy(false);
+    for (const code of toAdd) {
+      const outcomeId = outcomeIdByCode.get(code);
+      if (outcomeId) po.addMapping(criterionId, outcomeId, "direct");
     }
-  }, [periodId, criterionId, mappingBusy, mappedCodes, outcomeIdByCode, po]);
+    for (const code of toRemove) {
+      const outcomeId = outcomeIdByCode.get(code);
+      if (outcomeId) po.removeMapping(criterionId, outcomeId);
+    }
+  }, [periodId, criterionId, mappedCodes, outcomeIdByCode, po]);
 
   // Legacy sanitizer kept for disposable-draft check compatibility.
   const sanitizeOutcomes = useCallback(() => mappedCodes, [mappedCodes]);
@@ -541,7 +538,7 @@ export default function EditSingleCriterionDrawer({
                 selected={mappedCodes}
                 outcomeConfig={outcomeOptions}
                 onChange={handleMappingChange}
-                disabled={fullyLocked || mappingBusy}
+                disabled={fullyLocked}
               />
             ) : (
               <div style={{ fontSize: 12, color: "var(--text-tertiary)", padding: "20px 0" }}>

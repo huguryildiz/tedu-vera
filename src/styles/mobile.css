@@ -18,6 +18,49 @@ html, body {
   max-width: 100vw;
 }
 
+/* ── 2a. Global tap-highlight suppression ───────────────────
+   iOS Safari / Android Chrome paint a translucent dark
+   rectangle (native `-webkit-tap-highlight-color`, default
+   ≈ rgba(0,0,0,0.4)) over the nearest clickable/focusable
+   ancestor on every tap. Across the app this surfaces as a
+   phantom dark box on cards, rows, buttons and toggles.
+   Kill it universally — deliberate `:active` / `:focus-visible`
+   styles remain the sole source of press/focus feedback.
+   ─────────────────────────────────────────────────────── */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── 2b. Touch-only pseudo-hover suppression ────────────────
+   Touch browsers fire `:hover` on tap and keep it "sticky"
+   until the next tap elsewhere — producing a persistent
+   hover overlay that reads as a pressed-state background.
+   On coarse-pointer / no-hover devices, flatten `:hover` on
+   the list/table row-cards back to their base surface.
+   Deliberate `:active` / `:focus-visible` / `.menu-open`
+   feedback still fires. Desktop hover is untouched.
+   ─────────────────────────────────────────────────────── */
+@media (hover: none), (pointer: coarse) {
+  #projects-main-table tbody tr:hover,
+  #jurors-main-table tbody tr:hover,
+  .sem-table tbody tr:hover,
+  .organizations-table tbody tr:hover,
+  .ranking-table tbody tr:hover,
+  .reviews-table tbody tr:hover,
+  .crt-table tbody tr:hover,
+  .entry-history-table tbody tr:hover,
+  .pin-lock-table tbody tr:hover,
+  .overview-top-projects-table tbody tr:hover,
+  .acc-table tbody tr.acc-row:hover {
+    background: var(--bg-card);
+    border-color: var(--border);
+    box-shadow: var(--card-i-shadow-base);
+  }
+}
+
 /* ── 3. Admin header — notch safe-area ── */
 @media (max-width: 768px) {
   .admin-header {
@@ -333,4 +376,86 @@ body:not(.dark-mode) :is(
   .grouped-cb-input-wrap
 ) {
   background-color: var(--field-bg) !important;
+}
+
+/* ───────────────────────────────────────────────────────────
+   Global mobile interactive-card states
+   Unifies the Organizations-style blue border + glow across
+   every table that converts to stacked cards on mobile.
+   Uses the shared --card-i-* tokens from variables.css.
+   ─────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #projects-main-table tbody tr,
+  #jurors-main-table tbody tr,
+  .sem-table tbody tr,
+  .organizations-table tbody tr,
+  .ranking-table tbody tr,
+  .reviews-table tbody tr,
+  .crt-table tbody tr,
+  .entry-history-table tbody tr,
+  .pin-lock-table tbody tr,
+  .overview-top-projects-table tbody tr,
+  .acc-table tbody tr.acc-row {
+    box-shadow: var(--card-i-shadow-base);
+    transition: border-color .15s, box-shadow .2s;
+    /* iOS Safari paints a translucent dark rectangle around the nearest
+       text-selectable container on long-press (the native selection
+       preview). Row-cards are not tappable and their text is informational,
+       so disable selection + the long-press callout to eliminate the
+       phantom overlay. Kebab menu remains the sole interaction entrypoint. */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Cards are not tappable — kebab menu is the sole row entrypoint.
+     No :hover, :active, or :focus-visible accents (mobile Safari leaves
+     :hover stuck after a tap, which was creating persistent blue rings).
+     Only .is-active (or legacy .menu-open / .row-menu-open) indicates
+     the kebab is open. */
+  #projects-main-table tbody tr.menu-open,
+  #projects-main-table tbody tr.row-menu-open,
+  #projects-main-table tbody tr.is-active,
+  #jurors-main-table tbody tr.menu-open,
+  #jurors-main-table tbody tr.row-menu-open,
+  #jurors-main-table tbody tr.is-active,
+  .sem-table tbody tr.menu-open,
+  .sem-table tbody tr.is-active,
+  .organizations-table tbody tr.menu-open,
+  .organizations-table tbody tr.is-active,
+  .ranking-table tbody tr.menu-open,
+  .ranking-table tbody tr.is-active,
+  .reviews-table tbody tr.menu-open,
+  .crt-table tbody tr.menu-open,
+  .entry-history-table tbody tr.menu-open,
+  .pin-lock-table tbody tr.menu-open,
+  .overview-top-projects-table tbody tr.menu-open,
+  .acc-table tbody tr.acc-row.menu-open {
+    border-color: var(--accent);
+    box-shadow: var(--card-i-shadow-open);
+  }
+}
+
+/* ───────────────────────────────────────────────────────────
+   No nested panels on mobile portrait
+   On portrait ≤ 768px every data table converts to stacked
+   row-cards. The parent .table-wrap (and dark-mode glass
+   variant) must be fully transparent so the row-cards sit
+   directly on the page background — otherwise the wrapper +
+   inner row each render a panel layer and produce the
+   "nested panel" look forbidden by CLAUDE.md.
+   !important is required to beat .dark-mode .table-wrap in
+   components.css which applies glass bg + backdrop-filter.
+   ─────────────────────────────────────────────────────────── */
+@media (max-width: 768px) and (orientation: portrait) {
+  .table-wrap,
+  .dark-mode .table-wrap,
+  body:not(.dark-mode) .table-wrap {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
 }

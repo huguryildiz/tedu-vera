@@ -791,6 +791,8 @@ processOrgfw('CANSAT', 'Mission Framework',
 // PERIODS — per-period event timelines, criteria evolution
 // ═══════════════════════════════════════════════════════════════
 
+out.push(`-- Pacing: give IO budget time to replenish on nano tier`);
+out.push(`SELECT pg_sleep(5);`);
 out.push(`-- Periods and Snapshots`);
 const periodData = [];
 
@@ -1505,6 +1507,7 @@ out.push('');
 // PROJECTS — expanded pools with descriptions
 // ═══════════════════════════════════════════════════════════════
 
+out.push(`SELECT pg_sleep(5);`);
 out.push(`-- Projects`);
 
 const projectPools = {
@@ -1844,6 +1847,7 @@ out.push('');
 // JURORS — expanded roster (~68)
 // ═══════════════════════════════════════════════════════════════
 
+out.push(`SELECT pg_sleep(5);`);
 out.push(`-- Jurors and Auth`);
 function jurorEmail(name) {
   return name.replace(/^(Prof\.|Dr\.|Col\.|Maj\.)\s*/i, '').trim().toLowerCase().replace(/\s+/g, '.').replace(/[şŞ]/g,'s').replace(/[çÇ]/g,'c').replace(/[ğĞ]/g,'g').replace(/[ıİ]/g,'i').replace(/[öÖ]/g,'o').replace(/[üÜ]/g,'u').replace(/[â]/g,'a') + '@vera-eval.app';
@@ -1998,6 +2002,7 @@ out.push('');
 // SCORING — juror personality bias, variable coverage, bilingual comments
 // ═══════════════════════════════════════════════════════════════
 
+out.push(`SELECT pg_sleep(5);`);
 out.push(`-- Scoring`);
 const ssBatcher  = makeBatcher('score_sheets',      'id, period_id, project_id, juror_id, status, comment, started_at, last_activity_at');
 const ssiBatcher = makeBatcher('score_sheet_items', 'id, score_sheet_id, period_criterion_id, score_value');
@@ -2169,6 +2174,7 @@ out.push('');
 // AUDIT LOGS — comprehensive, per-period, time-coherent
 // ═══════════════════════════════════════════════════════════════
 
+out.push(`SELECT pg_sleep(5);`);
 out.push(`-- Audit Logs`);
 let auditObjList = [];
 

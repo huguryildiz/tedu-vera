@@ -15,7 +15,7 @@ import { formatDateTime, formatDate } from "../../shared/lib/dateUtils";
 
 // ── Constants ─────────────────────────────────────────────────
 
-export const AUDIT_PAGE_SIZE = 120;
+export const AUDIT_PAGE_SIZE = 50;
 
 export const CATEGORY_META = {
   auth:     { label: "Auth",     cssClass: "cat-auth",     color: "#3b82f6" },
