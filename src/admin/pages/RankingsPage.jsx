@@ -398,23 +398,25 @@ export default function RankingsPage() {
       rankMap.set(p.id, Number.isFinite(p?.totalAvg) ? rk : '');
     }
     return [
-      { key: 'rank',      label: 'Rank',                  getValue: r => rankMap.get(r.id) ?? '' },
-      { key: 'title',     label: 'Project Title',         getValue: r => r.title || r.name || '' },
-      { key: 'members',   label: 'Team Members',          getValue: r => fmtMembers(r.members || r.students) },
+      { key: 'rank',      label: 'Rank',                  sortKey: 'rank',      thClass: 'col-rank',                        getValue: r => rankMap.get(r.id) ?? '' },
+      { key: 'title',     label: 'Project Title',         sortKey: 'project',                                               getValue: r => r.title || r.name || '' },
+      { key: 'members',   label: 'Team Members',                                                                            getValue: r => fmtMembers(r.members || r.students) },
       ...criteriaConfig.map(c => ({
         key: c.id,
         label: `${c.shortLabel || c.label} (${c.max})`,
+        sortKey: c.id,
+        thClass: 'col-criteria-th',
         getValue: r => Number.isFinite(r.avg?.[c.id]) ? Number(r.avg[c.id].toFixed(2)) : '',
       })),
-      { key: 'avg',       label: `Average (${totalMax})`, getValue: r => Number.isFinite(r.totalAvg) ? Number(r.totalAvg.toFixed(2)) : '' },
-      { key: 'consensus', label: 'Consensus',             getValue: r => {
+      { key: 'avg',       label: `Average (${totalMax})`, sortKey: 'avg',       thClass: 'text-right', style: { paddingRight: 18 }, getValue: r => Number.isFinite(r.totalAvg) ? Number(r.totalAvg.toFixed(2)) : '' },
+      { key: 'consensus', label: 'Consensus',             sortKey: 'consensus', thClass: 'text-center',                    getValue: r => {
           const c = consensusMap?.[r.id];
           if (!c) return '';
           const lvl = c.level === 'high' ? 'High' : c.level === 'moderate' ? 'Moderate' : 'Disputed';
           return `${lvl} (σ=${c.sigma})`;
         },
       },
-      { key: 'count',     label: 'Jurors Evaluated',      getValue: r => r.count ?? '' },
+      { key: 'count',     label: 'Jurors Evaluated',      sortKey: 'jurors',    thClass: 'text-right',                     getValue: r => r.count ?? '' },
     ];
   }, [filteredRows, criteriaConfig, totalMax, consensusMap]);
 
@@ -830,60 +832,30 @@ export default function RankingsPage() {
               </colgroup>
               <thead>
                 <tr>
-                  <th
-                    className={`col-rank sortable${sortField === "rank" ? " sorted" : ""}`}
-                    onClick={() => handleSort("rank")}
-                  >
-                    Rank
-                    <SortIcon field="rank" sortField={sortField} sortDir={sortDir} />
-                  </th>
-                  <th
-                    className={`sortable${sortField === "project" ? " sorted" : ""}`}
-                    onClick={() => handleSort("project")}
-                  >
-                    Project Title
-                    <SortIcon field="project" sortField={sortField} sortDir={sortDir} />
-                  </th>
-                  <th>Team Members</th>
-                  {criteriaConfig.map((c) => (
+                  {columns.map(col => (
                     <th
-                      key={c.id}
-                      className={`sortable col-criteria-th${sortField === c.id ? " sorted" : ""}`}
-                      onClick={() => handleSort(c.id)}
+                      key={col.key}
+                      className={[
+                        col.sortKey ? `sortable${sortField === col.sortKey ? ' sorted' : ''}` : '',
+                        col.thClass || '',
+                      ].filter(Boolean).join(' ') || undefined}
+                      style={col.style}
+                      onClick={col.sortKey ? () => handleSort(col.sortKey) : undefined}
                     >
-                      {c.shortLabel || c.label} ({c.max})
-                      <SortIcon field={c.id} sortField={sortField} sortDir={sortDir} />
+                      {col.key === 'consensus' ? (
+                        <div className="col-info">
+                          {col.label}
+                          <SortIcon field={col.sortKey} sortField={sortField} sortDir={sortDir} />
+                          <span ref={consensusIconRef} className="col-info-icon" onClick={openConsensusPopover}>?</span>
+                        </div>
+                      ) : (
+                        <>
+                          {col.label}
+                          {col.sortKey && <SortIcon field={col.sortKey} sortField={sortField} sortDir={sortDir} />}
+                        </>
+                      )}
                     </th>
                   ))}
-                  <th
-                    className={`sortable text-right${sortField === "avg" ? " sorted" : ""}`}
-                    style={{ paddingRight: 18 }}
-                    onClick={() => handleSort("avg")}
-                  >
-                    Average ({criteriaConfig.reduce((s, c) => s + (c.max || 0), 0)})
-                    <SortIcon field="avg" sortField={sortField} sortDir={sortDir} />
-                  </th>
-                  <th
-                    className={`sortable text-center${sortField === "consensus" ? " sorted" : ""}`}
-                    onClick={() => handleSort("consensus")}
-                  >
-                    <div className="col-info">
-                      Consensus
-                      <SortIcon field="consensus" sortField={sortField} sortDir={sortDir} />
-                      <span
-                        ref={consensusIconRef}
-                        className="col-info-icon"
-                        onClick={openConsensusPopover}
-                      >?</span>
-                    </div>
-                  </th>
-                  <th
-                    className={`sortable text-right${sortField === "jurors" ? " sorted" : ""}`}
-                    onClick={() => handleSort("jurors")}
-                  >
-                    Jurors Evaluated
-                    <SortIcon field="jurors" sortField={sortField} sortDir={sortDir} />
-                  </th>
                 </tr>
               </thead>
               <tbody>

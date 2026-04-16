@@ -15,6 +15,7 @@ import { usePageRealtime } from "../hooks/usePageRealtime";
 import ExportPanel from "../components/ExportPanel";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import { getActorInfo, formatActionLabel, formatActionDetail, formatSentence, formatDiffChips, detectAnomalies, CATEGORY_META, SEVERITY_META, groupBulkEvents, formatEventMeta, addDaySeparators } from "../utils/auditUtils";
+import { AUDIT_TABLE_COLUMNS } from "../utils/auditColumns";
 import AuditEventDrawer from "../components/AuditEventDrawer";
 import Pagination from "@/shared/ui/Pagination";
 
@@ -609,37 +610,16 @@ export default function AuditLogPage() {
               </colgroup>
               <thead>
                 <tr>
-                  <th
-                    className={`sortable${sortKey === "created_at" ? " sorted" : ""}`}
-                    style={{ width: 170 }}
-                    onClick={() => handleSort("created_at")}
-                  >
-                    Timestamp <SortIcon colKey="created_at" sortKey={sortKey} sortDir={sortDir} />
-                  </th>
-                  <th
-                    className={`sortable${sortKey === "resource_type" ? " sorted" : ""}`}
-                    style={{ width: 95 }}
-                    onClick={() => handleSort("resource_type")}
-                  >
-                    Type <SortIcon colKey="resource_type" sortKey={sortKey} sortDir={sortDir} />
-                  </th>
-                  <th
-                    className={`sortable${sortKey === "actor" ? " sorted" : ""}`}
-                    style={{ width: 200 }}
-                    onClick={() => handleSort("actor")}
-                  >
-                    Actor <SortIcon colKey="actor" sortKey={sortKey} sortDir={sortDir} />
-                  </th>
-                  <th className={`sortable${sortKey === "action" ? " sorted" : ""}`} onClick={() => handleSort("action")}>
-                    Action <SortIcon colKey="action" sortKey={sortKey} sortDir={sortDir} />
-                  </th>
-                  <th
-                    className={`sortable${sortKey === "severity" ? " sorted" : ""}`}
-                    style={{ width: 90 }}
-                    onClick={() => handleSort("severity")}
-                  >
-                    Severity <SortIcon colKey="severity" sortKey={sortKey} sortDir={sortDir} />
-                  </th>
+                  {AUDIT_TABLE_COLUMNS.map(col => (
+                    <th
+                      key={col.key}
+                      className={`sortable${sortKey === col.sortKey ? " sorted" : ""}`}
+                      style={col.style}
+                      onClick={() => handleSort(col.sortKey)}
+                    >
+                      {col.label} <SortIcon colKey={col.sortKey} sortKey={sortKey} sortDir={sortDir} />
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>

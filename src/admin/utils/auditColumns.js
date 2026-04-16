@@ -25,21 +25,28 @@ export const AUDIT_TABLE_COLUMNS = [
   {
     key: 'ts',
     label: 'Timestamp',
+    sortKey: 'created_at',
+    style: { width: 170 },
     getValue: (r) => formatAuditTimestamp(r.created_at),
   },
   {
     key: 'type',
     label: 'Type',
+    sortKey: 'resource_type',
+    style: { width: 95 },
     getValue: (r) => getChipLabel(r.resource_type),
   },
   {
     key: 'actor',
     label: 'Actor',
+    sortKey: 'actor',
+    style: { width: 200 },
     getValue: (r) => getActorInfo(r).name,
   },
   {
     key: 'action',
     label: 'Action',
+    sortKey: 'action',
     getValue: (r) => {
       const s = formatSentence(r);
       if (!s) return r.action ?? '—';
@@ -49,6 +56,8 @@ export const AUDIT_TABLE_COLUMNS = [
   {
     key: 'severity',
     label: 'Severity',
+    sortKey: 'severity',
+    style: { width: 90 },
     getValue: (r) => SEVERITY_META[r.severity]?.label ?? r.severity ?? '—',
   },
 ];

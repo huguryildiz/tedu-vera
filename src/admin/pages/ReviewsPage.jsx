@@ -287,18 +287,18 @@ export default function ReviewsPage() {
 
   const maxTotal = criteriaConfig.reduce((s, c) => s + (c.max || 0), 0);
   const columns = useMemo(() => [
-    { key: 'juror',       label: 'Juror',                    getValue: r => r.juryName ?? '' },
-    { key: 'no',          label: 'No',                       getValue: r => r.groupNo != null ? `P${r.groupNo}` : '—' },
-    { key: 'project',     label: 'Project',                  getValue: r => r.title || r.projectName || '—' },
-    { key: 'members',     label: 'Team Members',             getValue: r => Array.isArray(r.students) ? r.students.join(', ') : (r.students ?? '—') },
+    { key: 'juror',       label: 'Juror',              sortKey: 'juryName',          getValue: r => r.juryName ?? '' },
+    { key: 'no',          label: 'No',                 sortKey: 'groupNo',           thClass: 'text-center', style: { width: 46 }, getValue: r => r.groupNo != null ? `P${r.groupNo}` : '—' },
+    { key: 'project',     label: 'Project',            sortKey: 'title',             getValue: r => r.title || r.projectName || '—' },
+    { key: 'members',     label: 'Team Members',                                     getValue: r => Array.isArray(r.students) ? r.students.join(', ') : (r.students ?? '—') },
     ...scoreCols.filter(c => c.key !== 'total').map(c => ({
-      key: c.key, label: c.label, getValue: r => r[c.key] ?? '—',
+      key: c.key, label: c.label, sortKey: c.key, thClass: 'text-right', getValue: r => r[c.key] ?? '—',
     })),
-    { key: 'total',       label: `Total (${maxTotal})`,      getValue: r => r.total ?? '—' },
-    { key: 'status',      label: 'Status',                   getValue: r => r.effectiveStatus ?? '—' },
-    { key: 'progress',    label: 'Progress',                 getValue: r => r.jurorStatus ?? '—' },
-    { key: 'comment',     label: 'Comment',                  getValue: r => r.comments ?? '' },
-    { key: 'submittedAt', label: 'Submitted At',             getValue: r => formatTs(r.finalSubmittedAt || r.updatedAt) },
+    { key: 'total',       label: `Total (${maxTotal})`, sortKey: 'total',            thClass: 'text-right', getValue: r => r.total ?? '—' },
+    { key: 'status',      label: 'Status',              sortKey: 'effectiveStatus',  thClass: 'text-center', getValue: r => r.effectiveStatus ?? '—' },
+    { key: 'progress',    label: 'Progress',            sortKey: 'jurorStatus',      thClass: 'text-center', getValue: r => r.jurorStatus ?? '—' },
+    { key: 'comment',     label: 'Comment',                                          getValue: r => r.comments ?? '' },
+    { key: 'submittedAt', label: 'Submitted At',        sortKey: 'finalSubmittedMs', thClass: 'text-right', getValue: r => formatTs(r.finalSubmittedAt || r.updatedAt) },
   ], [scoreCols, maxTotal]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
@@ -783,38 +783,20 @@ export default function ReviewsPage() {
         <table className="reviews-table table-standard table-pill-balance">
           <thead>
             <tr>
-              <th className={`sortable${sortKey === "juryName" ? " sorted" : ""}`} onClick={() => handleSort("juryName")}>
-                Juror <SortIcon colKey="juryName" sortKey={sortKey} sortDir={sortDir} />
-              </th>
-              <th className={`text-center sortable${sortKey === "groupNo" ? " sorted" : ""}`} style={{ width: 46 }} onClick={() => handleSort("groupNo")}>
-                No <SortIcon colKey="groupNo" sortKey={sortKey} sortDir={sortDir} />
-              </th>
-              <th className={`sortable${sortKey === "title" ? " sorted" : ""}`} onClick={() => handleSort("title")}>
-                Project <SortIcon colKey="title" sortKey={sortKey} sortDir={sortDir} />
-              </th>
-              <th>Team Members</th>
-              {scoreCols.filter((c) => c.key !== "total").map((col) => (
+              {columns.map(col => (
                 <th
                   key={col.key}
-                  className={`text-right sortable${sortKey === col.key ? " sorted" : ""}`}
-                  onClick={() => handleSort(col.key)}
+                  className={[
+                    col.sortKey ? `sortable${sortKey === col.sortKey ? ' sorted' : ''}` : '',
+                    col.thClass || '',
+                  ].filter(Boolean).join(' ') || undefined}
+                  style={col.style}
+                  onClick={col.sortKey ? () => handleSort(col.sortKey) : undefined}
                 >
-                  {col.label.split(" / ")[0]} <SortIcon colKey={col.key} sortKey={sortKey} sortDir={sortDir} />
+                  {col.label}
+                  {col.sortKey && <SortIcon colKey={col.sortKey} sortKey={sortKey} sortDir={sortDir} />}
                 </th>
               ))}
-              <th className={`text-right sortable${sortKey === "total" ? " sorted" : ""}`} onClick={() => handleSort("total")}>
-                Total ({criteriaConfig.reduce((s, c) => s + (c.max || 0), 0)}) <SortIcon colKey="total" sortKey={sortKey} sortDir={sortDir} />
-              </th>
-              <th className={`text-center sortable${sortKey === "effectiveStatus" ? " sorted" : ""}`} onClick={() => handleSort("effectiveStatus")}>
-                Status <SortIcon colKey="effectiveStatus" sortKey={sortKey} sortDir={sortDir} />
-              </th>
-              <th className={`text-center sortable${sortKey === "jurorStatus" ? " sorted" : ""}`} onClick={() => handleSort("jurorStatus")}>
-                Progress <SortIcon colKey="jurorStatus" sortKey={sortKey} sortDir={sortDir} />
-              </th>
-              <th>Comment</th>
-              <th className={`text-right sortable${sortKey === "finalSubmittedMs" ? " sorted" : ""}`} onClick={() => handleSort("finalSubmittedMs")}>
-                Submitted At <SortIcon colKey="finalSubmittedMs" sortKey={sortKey} sortDir={sortDir} />
-              </th>
             </tr>
           </thead>
           <tbody>
