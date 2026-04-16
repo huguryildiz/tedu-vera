@@ -20,6 +20,8 @@ import {
   checkPeriodReadiness,
   publishPeriod,
   closePeriod,
+  generateEntryToken,
+  getActiveEntryTokenPlain,
 } from "@/shared/api";
 import {
   Lock,
@@ -45,6 +47,8 @@ import {
   ArrowRight,
   Send,
   Archive,
+  QrCode,
+  Link as LinkIcon,
 } from "lucide-react";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import SetCurrentPeriodModal from "../modals/SetCurrentPeriodModal";
@@ -555,12 +559,51 @@ export default function PeriodsPage() {
       delete next[target.id];
       return next;
     });
+
+    // Auto-generate a QR entry token on first publish so the admin doesn't
+    // have to make a second trip to Entry Control. If publish was a no-op
+    // (already published) we skip this — the existing token is still valid.
+    let tokenToastSuffix = "";
+    if (!result?.already_published) {
+      try {
+        await generateEntryToken(target.id);
+        tokenToastSuffix = " QR ready.";
+      } catch {
+        tokenToastSuffix = " (Generate QR manually.)";
+      }
+    }
+
     _toast.success(
       result?.already_published
         ? `${target.name || "Period"} was already published.`
-        : `${target.name || "Period"} published — ready for QR generation.`
+        : `${target.name || "Period"} published.${tokenToastSuffix}`
     );
     setPublishTarget(null);
+  }
+
+  async function handleCopyEntryLink(period) {
+    try {
+      const token = await getActiveEntryTokenPlain(period.id);
+      if (!token) {
+        _toast.error("No active QR token. Open Entry Control to generate one.");
+        return;
+      }
+      const basePath = isDemoMode ? "/demo" : "";
+      const url = `${window.location.origin}${basePath}/eval?t=${encodeURIComponent(token)}`;
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = url;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch { /* noop */ }
+        document.body.removeChild(ta);
+      }
+      _toast.success("Entry link copied to clipboard.");
+    } catch {
+      _toast.error("Could not copy entry link. Try Entry Control.");
+    }
   }
 
   async function handleRevertPeriod() {
@@ -1137,6 +1180,31 @@ export default function PeriodsPage() {
                         <Copy size={13} />
                         Duplicate Period
                       </button>
+
+                      {/* Entry access — only for Published/Live (locked, not closed) */}
+                      {period.is_locked && !period.closed_at && (
+                        <>
+                          <div className="floating-menu-divider" />
+                          <button
+                            className="floating-menu-item"
+                            onMouseDown={() => { setOpenMenuId(null); handleCopyEntryLink(period); }}
+                          >
+                            <LinkIcon size={13} />
+                            Copy Entry Link
+                          </button>
+                          <button
+                            className="floating-menu-item"
+                            onMouseDown={() => {
+                              setOpenMenuId(null);
+                              onCurrentSemesterChange?.(period.id);
+                              onNavigate?.("entry-control");
+                            }}
+                          >
+                            <QrCode size={13} />
+                            View QR Code
+                          </button>
+                        </>
+                      )}
 
                       {/* Close Period — only for Published/Live (locked but not yet closed) */}
                       {period.is_locked && !period.closed_at && (
