@@ -786,7 +786,7 @@ export default function ReviewsPage() {
       />
       {/* Table */}
       <div className="table-wrap table-wrap--split">
-        <table className="reviews-table">
+        <table className="reviews-table table-standard table-pill-balance">
           <thead>
             <tr>
               <th className={`sortable${sortKey === "juryName" ? " sorted" : ""}`} onClick={() => handleSort("juryName")}>

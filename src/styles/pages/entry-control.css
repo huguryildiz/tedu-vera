@@ -267,8 +267,8 @@
   .entry-control-page .table-wrap { overflow-x: auto; }
   .entry-history-table { min-width: 940px; }
 
-  .entry-history-table thead th { padding: 6px 10px; font-size: 10px; }
-  .entry-history-table tbody td { padding: 6px 10px; font-size: 12px; }
+  .entry-history-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }
+  .entry-history-table tbody td { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-body-size); }
 }
 
 /* ─── Status cell with revoked timestamp ────────────────────── */

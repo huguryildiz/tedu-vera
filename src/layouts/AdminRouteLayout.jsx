@@ -471,6 +471,7 @@ export default function AdminRouteLayout() {
           onPeriodChange={(periodId) => { setSelectedPeriodId(periodId); fetchData(periodId); }}
           onRefresh={fetchData}
           refreshing={loading}
+          navigateTo={navigateTo}
         />
 
         <div className="admin-content">

@@ -755,7 +755,7 @@ export default function JurorsPage() {
       )}
       {/* Table */}
       <div className="table-wrap table-wrap--split">
-        <table id="jurors-main-table">
+        <table id="jurors-main-table" className="table-standard table-pill-balance">
           <thead>
             <tr>
               <th className={`sortable${sortKey === "name" ? " sorted" : ""}`} onClick={() => handleSort("name")}>

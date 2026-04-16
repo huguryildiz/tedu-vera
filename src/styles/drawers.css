@@ -330,9 +330,9 @@ textarea.fs-input { height: auto; padding: 9px var(--field-px, 12px); }
 .fs-upload-file-meta { font-size: 10.5px; color: var(--text-tertiary); }
 
 /* ─── Preview table ─── */
-.fs-preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.fs-preview-table th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); padding: 6px 10px; background: var(--surface-1); border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
-.fs-preview-table td { padding: 6px 10px; border-bottom: 1px solid var(--surface-1); color: var(--text-primary); }
+.fs-preview-table { width: 100%; border-collapse: collapse; }
+.fs-preview-table th { text-transform: uppercase; color: var(--text-tertiary); background: var(--surface-1); border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.fs-preview-table td { border-bottom: 1px solid var(--surface-1); color: var(--text-primary); }
 .fs-preview-table tr:last-child td { border-bottom: none; }
 .fs-preview-table tbody tr:hover { background: rgba(0, 0, 0, 0.01); }
 .fs-preview-table tr.row-error { background: rgba(225, 29, 72, 0.02); }
@@ -770,9 +770,9 @@ textarea.fs-input{height:auto;padding:9px var(--field-px,12px)}
 .fs-upload-file-meta{font-size:10.5px;color:var(--text-tertiary)}
 
 /* Preview table */
-.fs-preview-table{width:100%;border-collapse:collapse;font-size:12px}
-.fs-preview-table th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-tertiary);padding:6px 10px;background:var(--surface-1);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
-.fs-preview-table td{padding:6px 10px;border-bottom:1px solid var(--surface-1);color:var(--text-primary)}
+.fs-preview-table{width:100%;border-collapse:collapse}
+.fs-preview-table th{text-transform:uppercase;color:var(--text-tertiary);background:var(--surface-1);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.fs-preview-table td{border-bottom:1px solid var(--surface-1);color:var(--text-primary)}
 .fs-preview-table tr:last-child td{border-bottom:none}
 .fs-preview-table tbody tr:hover{background:rgba(0,0,0,0.01)}
 .fs-preview-table tr.row-error{background:rgba(225,29,72,0.02)}.fs-preview-table tr.row-error td{color:var(--danger)}

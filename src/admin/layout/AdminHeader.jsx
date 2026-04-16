@@ -1,11 +1,12 @@
 // src/admin/layout/AdminHeader.jsx — Phase 1
 // Prototype source: lines 11722–11754
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/auth";
 import { useFloating } from "@/shared/hooks/useFloating";
+import { sortPeriodsForPopover } from "@/shared/periodSort";
 
-import { Icon } from "lucide-react";
+import { Search, Check, Calendar, Menu, ChevronDown, RefreshCw, FileEdit, Play, Archive } from "lucide-react";
 
 const PAGE_LABELS = {
   overview: "Overview",
@@ -25,6 +26,64 @@ const PAGE_LABELS = {
   export: "Export",
 };
 
+// ── Period status helpers ─────────────────────────────────────
+const STATUS_ICON = {
+  "status-draft":   <FileEdit size={11} strokeWidth={2.2} />,
+  "status-live":    <Play size={11} strokeWidth={2.2} />,
+  "status-closed":  <Archive size={11} strokeWidth={2.2} />,
+};
+
+function getPeriodStatus(p) {
+  if (!p) return null;
+  if (p.closed_at || p.visibility === "hidden") return { label: "Closed", cls: "status-closed" };
+  if (p.is_locked || p.eval_locked) return { label: "Live", cls: "status-live" };
+  return { label: "Draft", cls: "status-draft" };
+}
+
+function formatPeriodMeta(p) {
+  if (!p) return "";
+  const parts = [];
+  if (p.semester_name && p.semester_name !== p.name) parts.push(p.semester_name);
+  if (p.end_date) {
+    try {
+      const d = new Date(p.end_date);
+      if (!isNaN(d)) parts.push(d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }));
+    } catch {}
+  }
+  return parts.join(" · ");
+}
+
+// ── Period item row ───────────────────────────────────────────
+function PeriodRow({ period, isPinned, onSelect }) {
+  const status = getPeriodStatus(period);
+  const meta = formatPeriodMeta(period);
+
+  return (
+    <div
+      className={`period-popover-item${isPinned ? " pinned" : ""}`}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onSelect(period.id);
+      }}
+    >
+      <div className="period-popover-item-info">
+        <span className="period-popover-item-name">
+          {period.name || period.semester_name}
+        </span>
+        {meta && <span className="period-popover-item-meta">{meta}</span>}
+      </div>
+      {status && (
+        <span className={`period-status-pill ${status.cls}`}>
+          {STATUS_ICON[status.cls]}
+          {status.label}
+        </span>
+      )}
+      <Check size={16} strokeWidth={2.5} className="period-popover-check" />
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────
 export default function AdminHeader({
   currentPage,
   onMobileMenuOpen,
@@ -33,10 +92,13 @@ export default function AdminHeader({
   onPeriodChange,
   onRefresh,
   refreshing = false,
+  navigateTo,
 }) {
   const { activeOrganization } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [iconSpinning, setIconSpinning] = useState(false);
+  const [search, setSearch] = useState("");
+  const searchRef = useRef(null);
   const triggerRef = useRef(null);
 
   const { floatingRef, floatingStyle } = useFloating({
@@ -52,6 +114,53 @@ export default function AdminHeader({
   const selectedPeriod = sortedPeriods.find((p) => p.id === selectedPeriodId);
   const periodLabel = selectedPeriod?.name || selectedPeriod?.semester_name || "—";
 
+  // Threshold to show search input
+  const SEARCH_THRESHOLD = 8;
+  const showSearch = sortedPeriods.length >= SEARCH_THRESHOLD;
+
+  // Compute popover structure
+  const popoverData = useMemo(
+    () => sortPeriodsForPopover(sortedPeriods, selectedPeriodId),
+    [sortedPeriods, selectedPeriodId]
+  );
+
+  // Filter by search query
+  const filteredData = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return popoverData;
+
+    const matches = (p) => {
+      const name = (p.name || p.semester_name || "").toLowerCase();
+      return name.includes(q);
+    };
+
+    return {
+      pinned: popoverData.pinned && matches(popoverData.pinned) ? popoverData.pinned : null,
+      recent: popoverData.recent.filter(matches),
+      all: popoverData.all.filter(matches),
+    };
+  }, [popoverData, search]);
+
+  // How many items are NOT shown in pinned + recent (only relevant when not searching)
+  const hiddenCount = useMemo(() => {
+    const shownIds = new Set();
+    if (filteredData.pinned) shownIds.add(filteredData.pinned.id);
+    filteredData.recent.forEach((p) => shownIds.add(p.id));
+    return filteredData.all.filter((p) => !shownIds.has(p.id)).length;
+  }, [filteredData]);
+
+  const hasResults = search
+    ? (filteredData.pinned || filteredData.all.length > 0)
+    : (filteredData.pinned || filteredData.recent.length > 0);
+
+  // Auto-focus search when popover opens
+  useEffect(() => {
+    if (dropdownOpen && showSearch) {
+      requestAnimationFrame(() => searchRef.current?.focus());
+    }
+    if (!dropdownOpen) setSearch("");
+  }, [dropdownOpen, showSearch]);
+
   useEffect(() => {
     if (!refreshing && iconSpinning) setIconSpinning(false);
   }, [refreshing, iconSpinning]);
@@ -66,6 +175,16 @@ export default function AdminHeader({
     }
   };
 
+  const handleSelect = (id) => {
+    onPeriodChange?.(id);
+    setDropdownOpen(false);
+  };
+
+  const handleViewAll = () => {
+    setDropdownOpen(false);
+    navigateTo?.("periods");
+  };
+
   return (
     <header className="admin-header">
       <button
@@ -74,20 +193,7 @@ export default function AdminHeader({
         aria-label="Open navigation"
         onClick={onMobileMenuOpen}
       >
-        <Icon
-          iconNode={[]}
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round">
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </Icon>
+        <Menu size={18} />
       </button>
       <div className="header-breadcrumb">
         <strong>{orgLabel}</strong>&nbsp;/&nbsp;<span>{pageLabel}</span>
@@ -101,22 +207,7 @@ export default function AdminHeader({
             onClick={handleRefreshClick}
             disabled={refreshing}
           >
-            <Icon
-              iconNode={[]}
-              className={`refresh-icon${iconSpinning ? " spinning" : ""}`}
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round">
-              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-              <path d="M3 3v5h5" />
-              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-              <path d="M21 21v-5h-5" />
-            </Icon>
+            <RefreshCw size={14} className={`refresh-icon${iconSpinning ? " spinning" : ""}`} />
             <span>Refresh</span>
           </button>
         </div>
@@ -133,42 +224,113 @@ export default function AdminHeader({
             <span className="dropdown-trigger-labels">
               <span className="dropdown-trigger-period">{periodLabel}</span>
             </span>
-            <Icon
-              iconNode={[]}
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2">
-              <path d="m6 9 6 6 6-6" />
-            </Icon>
+            <ChevronDown size={12} />
           </button>
           {dropdownOpen && createPortal(
             <div
               ref={floatingRef}
-              className="dropdown-menu show"
+              className="dropdown-menu show period-popover"
               style={floatingStyle}
             >
-              {sortedPeriods
-                .filter((p) => {
-                  const label = (p.name || p.semester_name || "").trim();
-                  return label.length > 0;
-                })
-                .map((p) => (
-                <div
-                  key={p.id}
-                  className={`dropdown-item${p.id === selectedPeriodId ? " selected" : ""}`}
+              {/* Search */}
+              {showSearch && (
+                <div className="period-popover-search" style={{ position: "relative" }}>
+                  <span className="period-popover-search-icon">
+                    <Search size={14} />
+                  </span>
+                  <input
+                    ref={searchRef}
+                    type="text"
+                    placeholder="Search periods…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") {
+                        e.stopPropagation();
+                        if (search) setSearch("");
+                        else setDropdownOpen(false);
+                      }
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Scrollable list */}
+              <div className="period-popover-list">
+                {/* Pinned selected period */}
+                {filteredData.pinned && (
+                  <>
+                    <PeriodRow
+                      period={filteredData.pinned}
+                      isPinned
+                      onSelect={handleSelect}
+                    />
+                    {(search ? filteredData.all.length > 1 : filteredData.recent.length > 0) && (
+                      <div className="period-popover-divider" />
+                    )}
+                  </>
+                )}
+
+                {/* No search: show recent 5 */}
+                {!search && filteredData.recent.length > 0 && (
+                  <>
+                    <div className="period-popover-section">Recent</div>
+                    {filteredData.recent.map((p) => (
+                      <PeriodRow
+                        key={p.id}
+                        period={p}
+                        isPinned={false}
+                        onSelect={handleSelect}
+                      />
+                    ))}
+                  </>
+                )}
+
+                {/* Search active: show ALL matching periods (excluding pinned) */}
+                {search && (() => {
+                  const pinnedId = filteredData.pinned?.id;
+                  const results = filteredData.all.filter((p) => p.id !== pinnedId);
+                  if (results.length === 0) return null;
+                  const total = results.length + (filteredData.pinned ? 1 : 0);
+                  return (
+                    <>
+                      <div className="period-popover-section">Results ({total})</div>
+                      {results.map((p) => (
+                        <PeriodRow
+                          key={p.id}
+                          period={p}
+                          isPinned={false}
+                          onSelect={handleSelect}
+                        />
+                      ))}
+                    </>
+                  );
+                })()}
+
+                {/* Empty search state */}
+                {!hasResults && search && (
+                  <div className="period-popover-empty">
+                    No periods matching &ldquo;{search}&rdquo;
+                  </div>
+                )}
+              </div>
+
+              {/* Footer — View all periods */}
+              <div className="period-popover-footer">
+                <button
+                  className="period-popover-footer-btn"
+                  type="button"
                   onMouseDown={(e) => {
                     e.preventDefault();
-                    onPeriodChange?.(p.id);
-                    setDropdownOpen(false);
+                    handleViewAll();
                   }}
                 >
-                  {p.name || p.semester_name}
-                  {p.closed_at ? <span className="dropdown-item-meta">Closed</span> : (p.is_locked || p.eval_locked) ? <span className="dropdown-item-meta">Locked</span> : null}
-                </div>
-              ))}
+                  <Calendar size={14} />
+                  {hiddenCount > 0
+                    ? `View all periods (${sortedPeriods.length})`
+                    : "Manage periods"}
+                </button>
+              </div>
             </div>,
             document.body
           )}

@@ -31,6 +31,7 @@ export default function Pagination({
   hasMore = false,
   onLoadMore,
   trailing,
+  density = "standard",
 }) {
   if (totalItems === 0) return null;
 
@@ -47,6 +48,8 @@ export default function Pagination({
   }
   const showLeadingEllipsis = pageNums.length > 0 && pageNums[0] > 1;
   const showTrailingEllipsis = pageNums.length > 0 && pageNums[pageNums.length - 1] < totalPages;
+  const safeDensity = density === "dense" ? "dense" : "standard";
+  const iconSize = safeDensity === "dense" ? 10 : 11;
 
   const isFirst = safePage <= 1;
   const isLast = safePage >= totalPages && !hasMore;
@@ -61,7 +64,7 @@ export default function Pagination({
   }
 
   return (
-    <div className="pagination-bar">
+    <div className={`pagination-bar pagination-bar--${safeDensity}`}>
       <div className="pagination-info">
         {totalItems === 0
           ? "No results"
@@ -77,7 +80,7 @@ export default function Pagination({
             onClick={() => onPageChange(1)}
             aria-label="First page"
           >
-            <ChevronsLeft size={11} />
+            <ChevronsLeft size={iconSize} />
           </button>
           <button
             type="button"
@@ -86,7 +89,7 @@ export default function Pagination({
             onClick={() => onPageChange(Math.max(1, safePage - 1))}
             aria-label="Previous page"
           >
-            <ChevronLeft size={11} />
+            <ChevronLeft size={iconSize} />
           </button>
 
           {showLeadingEllipsis && <span className="pagination-ellipsis">…</span>}
@@ -112,7 +115,7 @@ export default function Pagination({
             onClick={handleNext}
             aria-label="Next page"
           >
-            <ChevronRight size={11} />
+            <ChevronRight size={iconSize} />
           </button>
           <button
             type="button"
@@ -121,7 +124,7 @@ export default function Pagination({
             onClick={() => onPageChange(totalPages)}
             aria-label="Last page"
           >
-            <ChevronsRight size={11} />
+            <ChevronsRight size={iconSize} />
           </button>
         </div>
       )}

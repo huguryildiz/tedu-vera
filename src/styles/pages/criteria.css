@@ -1409,8 +1409,8 @@ body:not(.dark-mode) .crt-save-bar{background:#f6f8fb;border-top-color:#d8dee8;b
   .criteria-page .table-wrap { overflow-x: auto; }
   .crt-table { min-width: 1080px; }
 
-  .crt-table thead th { padding: 6px 10px; font-size: 10px; }
-  .crt-table tbody td { padding: 6px 10px; font-size: 12px; }
+  .crt-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }
+  .crt-table tbody td { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-body-size); }
 }
 
 /* ── Inline weight edit ── */

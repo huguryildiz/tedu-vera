@@ -47,7 +47,7 @@ export function CoverageMatrix({ criteria = [], outcomes = [] }) {
 
   return (
     <>
-      <table className="coverage-matrix">
+      <table className="coverage-matrix table-dense table-pill-balance">
         <thead>
           <tr>
             <th>Outcome</th>

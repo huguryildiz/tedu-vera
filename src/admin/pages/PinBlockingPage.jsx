@@ -183,7 +183,7 @@ export default function PinBlockingPage() {
               </button>
             </div>
             <div className="table-wrap">
-              <table className="pin-lock-table">
+              <table className="pin-lock-table table-standard table-pill-balance">
                 <thead>
                   <tr>
                     <th>Juror</th>

@@ -599,7 +599,7 @@ export default function AuditLogPage() {
       <div className="audit-feed-layout" style={selectedLog ? {} : { gridTemplateColumns: "1fr" }}>
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
           <div className="table-wrap">
-            <table className="audit-table">
+            <table className="audit-table table-standard table-pill-balance">
               <colgroup>
                 <col style={{ width: 170 }} />
                 <col style={{ width: 95 }} />

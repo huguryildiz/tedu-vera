@@ -413,7 +413,7 @@ export default function OverviewPage() {
           </div>
 
           <div className="table-wrap" style={{ border: "none", borderRadius: 0 }}>
-            <table id="overview-juror-table" className={jurorTableExpanded ? "expanded" : ""}>
+            <table id="overview-juror-table" className={`table-standard table-pill-balance${jurorTableExpanded ? " expanded" : ""}`}>
               <thead>
                 <tr>
                   {[
@@ -682,7 +682,7 @@ export default function OverviewPage() {
           </a>
         </div>
         <div className="table-wrap overview-top-projects-wrap" style={{ border: "none" }}>
-          <table className="overview-top-projects-table">
+          <table className="overview-top-projects-table table-standard table-pill-balance">
             <thead>
               <tr>
                 <th style={{ width: 32 }}>#</th>

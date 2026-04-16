@@ -577,7 +577,7 @@ export default function ProjectsPage() {
       )}
       {/* Table */}
       <div className="table-wrap table-wrap--split">
-        <table id="projects-main-table">
+        <table id="projects-main-table" className="table-standard table-pill-balance">
           <thead>
             <tr>
               {COLUMNS.map((c) => (

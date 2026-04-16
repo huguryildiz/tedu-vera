@@ -136,7 +136,7 @@ export default function JurorReviewsModal({
         </div>
 
         <div className="jrm-table-wrap">
-          <table className="jrm-table">
+          <table className="jrm-table table-standard table-pill-balance">
             <thead>
               <tr>
                 <th>No</th>

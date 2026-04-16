@@ -730,7 +730,7 @@ export default function CriteriaPage() {
               )}
             </div>
           </div>
-            <table className="crt-table">
+            <table className="crt-table table-standard table-pill-balance">
               <colgroup>
                 <col style={{ width: "4%" }} />
                 <col style={{ width: "41%" }} />

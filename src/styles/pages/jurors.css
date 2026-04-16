@@ -45,15 +45,6 @@
 .j-row { display: flex; align-items: center; gap: 10px }
 .jt-name { font-weight: 600; font-size: 13px; color: var(--text-primary) }
 
-/* ─── Pagination ──────────────────────────────────────────── */
-.jurors-pagination { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--bg-card); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); font-size: 12px; color: var(--text-tertiary) }
-.jurors-pagination-info span { font-weight: 500 }
-.jurors-pagination-pages { display: flex; gap: 4px }
-.jurors-pagination-pages button { padding: 4px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); cursor: pointer; font-size: 12px; color: var(--text-secondary); transition: all .12s }
-.jurors-pagination-pages button:hover:not(:disabled) { background: var(--surface-1); color: var(--text-primary) }
-.jurors-pagination-pages button.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600 }
-.jurors-pagination-pages button:disabled { opacity: 0.4; cursor: default }
-
 /* ─── Juror detail drawer ─────────────────────────────────── */
 .juror-drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.3); z-index: 200; animation: fadeIn .15s ease-out }
 .juror-drawer-overlay.show { display: block }
@@ -133,16 +124,6 @@
 #jurors-main-table tbody tr{transition:background .1s,box-shadow .1s}
 #jurors-main-table tbody tr.row-menu-open{background:var(--surface-1);box-shadow:inset 3px 0 0 var(--accent)}
 
-/* ─── Pagination ─── */
-.jurors-pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--border);background:var(--bg-card);border-radius:0 0 var(--radius) var(--radius);font-size:12px;color:var(--text-tertiary)}
-.jurors-pagination-info{display:flex;align-items:center;gap:6px}
-.jurors-pagination-info span{font-weight:500}
-.jurors-pagination-pages{display:flex;align-items:center;gap:3px}
-.jurors-pagination-pages button{padding:5px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);font-family:var(--font);font-size:11px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .12s;line-height:1.2}
-.jurors-pagination-pages button:hover:not(:disabled){border-color:var(--accent);color:var(--accent);background:rgba(59,130,246,0.04)}
-.jurors-pagination-pages button.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;box-shadow:0 1px 3px rgba(37,99,235,0.2)}
-.jurors-pagination-pages button:disabled{opacity:.35;cursor:default}
-
 /* ─── Row action menu ─── */
 .juror-action-wrap{position:relative}
 .juror-action-btn{padding:4px 6px;border:1px solid transparent;border-radius:var(--radius-sm);background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--text-tertiary);font-size:12px;transition:all .12s}
@@ -192,12 +173,12 @@
 .dark-mode .sem-banner-action:hover{background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.3)}
 .sem-table-wrap{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow-x:auto;overflow-y:hidden}
 .sem-table{width:100%;border-collapse:collapse}
-.sem-table thead th{background:var(--surface-1);font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding:10px 16px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.sem-table thead th{background:var(--surface-1);color:var(--text-tertiary);text-transform:uppercase;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
 .sem-table thead th.text-center{text-align:center}
 .sem-table tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
 .sem-table tbody tr:last-child{border-bottom:none}
 .sem-table tbody tr:hover{background:var(--surface-1)}
-.sem-table tbody td{padding:14px 16px;font-size:13px;vertical-align:middle}
+.sem-table tbody td{vertical-align:middle}
 .sem-table tbody td.text-center{text-align:center}
 .sem-row-current{background:rgba(59,130,246,0.03);border-left:3px solid var(--accent)}
 .sem-row-current:hover{background:rgba(59,130,246,0.05) !important}

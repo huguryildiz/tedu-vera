@@ -987,7 +987,7 @@ export default function PeriodsPage() {
         </div>
         <div className="periods-table-scroll">
           <div className="sem-table-wrap">
-        <table className="sem-table">
+        <table className="sem-table table-standard table-pill-balance">
           <thead>
             <tr>
               <th className={`sortable${sortKey === "name" ? " sorted" : ""}`} style={{ minWidth: "140px" }} onClick={() => handleSort("name")}>

@@ -340,7 +340,7 @@ export default function HeatmapPage() {
       {/* ── Matrix ── */}
       <div className="matrix-wrap">
         <table
-          className="matrix-table"
+          className="matrix-table table-dense table-pill-balance"
           role="grid"
           aria-label="Juror scoring heatmap"
         >
@@ -387,8 +387,8 @@ export default function HeatmapPage() {
             ) : visibleJurors.map((juror, jurorIdx) => (
               <tr key={juror.key}>
                 <td className="sticky-col" role="rowheader">
-                  <JurorBadge name={juror.name || juror.juror_name} affiliation={juror.dept || juror.affiliation} size="sm" />
-                  <div style={{ marginTop: 4 }}>
+                  <div className="table-cell-stack">
+                    <JurorBadge name={juror.name || juror.juror_name} affiliation={juror.dept || juror.affiliation} size="sm" />
                     <JurorStatusPill status={jurorWorkflowMap.get(juror.key)} />
                   </div>
                 </td>

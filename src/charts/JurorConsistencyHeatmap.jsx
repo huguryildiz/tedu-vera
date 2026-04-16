@@ -29,7 +29,7 @@ export function JurorConsistencyHeatmap({ dashboardStats = [], submittedData = [
 
   return (
     <div className="ga-heatmap-wrap">
-      <table className="ga-heatmap">
+      <table className="ga-heatmap table-dense table-pill-balance">
         <thead>
           <tr>
             <th>Criterion</th>

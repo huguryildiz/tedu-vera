@@ -318,20 +318,14 @@
 }
 
 .jrm-table th {
-  font-size: 10px;
-  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.55px;
   color: var(--text-tertiary);
-  padding: 12px 16px;
   border-bottom: 1px solid var(--border);
   background: rgba(15, 23, 42, 0.03);
 }
 
 .jrm-table td {
-  padding: 14px 16px;
   border-bottom: 1px solid var(--border);
-  font-size: 13px;
   color: var(--text-primary);
   vertical-align: middle;
 }
@@ -355,8 +349,9 @@
 
 .jrm-score {
   font-family: var(--mono);
-  font-size: 24px;
+  font-size: 14px;
   font-weight: 700;
+  line-height: 1.35;
   color: var(--text-primary);
 }
 

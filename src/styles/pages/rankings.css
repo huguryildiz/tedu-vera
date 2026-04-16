@@ -98,6 +98,6 @@
   .rankings-page .table-wrap { overflow-x: auto; }
   .ranking-table { min-width: 1080px; }
 
-  .ranking-table thead th { padding: 6px 10px; font-size: 10px; }
-  .ranking-table tbody td { padding: 6px 10px; font-size: 12px; }
+  .ranking-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }
+  .ranking-table tbody td { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-body-size); }
 }

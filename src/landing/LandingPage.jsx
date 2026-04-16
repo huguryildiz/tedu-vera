@@ -965,7 +965,7 @@ export function LandingPage() {
           </Icon>
           How VERA compares
         </div>
-        <table className="compare-table">
+        <table className="compare-table table-standard">
           <thead>
             <tr>
               <th></th>

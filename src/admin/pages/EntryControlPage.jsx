@@ -1106,7 +1106,7 @@ export default function EntryControlPage() {
           </span>
         </div>
         <div className="table-wrap">
-          <table className="entry-history-table">
+          <table className="entry-history-table table-standard table-pill-balance">
             <thead>
               <tr>
                 <th className={`sortable${historySortKey === "access_id" ? " sorted" : ""}`} onClick={() => handleHistorySort("access_id")}>

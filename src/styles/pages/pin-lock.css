@@ -285,6 +285,6 @@ body.dark-mode .pin-policy-item {
   .pin-lock-page .table-wrap { overflow-x: auto; }
   .pin-lock-table { min-width: 900px; }
 
-  .pin-lock-table thead th { padding: 6px 10px; font-size: 10px; }
-  .pin-lock-table tbody td { padding: 6px 10px; font-size: 12px; }
+  .pin-lock-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }
+  .pin-lock-table tbody td { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-body-size); }
 }

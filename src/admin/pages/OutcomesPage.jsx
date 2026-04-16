@@ -906,7 +906,7 @@ export default function OutcomesPage() {
                   <div className="acc-empty-desc">Click "+ Add Outcome" to define your first programme outcome.</div>
                 </div>
               ) : (
-                <table className="acc-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                <table className="acc-table table-standard table-pill-balance" style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
                       <th style={{ width: 80 }} className="sortable sorted" onClick={() => { setSortOrder(prev => prev === "asc" ? "desc" : "asc"); setCurrentPage(1); }}>

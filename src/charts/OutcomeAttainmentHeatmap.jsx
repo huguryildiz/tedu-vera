@@ -22,35 +22,22 @@ export function OutcomeAttainmentHeatmap({ rows = [], outcomeMeta = [] }) {
   if (!rows.length || !outcomeMeta.length) return null;
 
   return (
-    <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-      <table style={{
-        minWidth: Math.max(400, 220 + rows.length * 100),
-        borderCollapse: "separate",
-        borderSpacing: "4px 6px",
-      }}>
+    <div className="outcome-attainment-wrap">
+      <table
+        className="outcome-attainment-table table-dense table-like"
+        style={{ minWidth: Math.max(400, 220 + rows.length * 100) }}
+      >
         <colgroup>
           <col style={{ width: 220, minWidth: 220 }} />
           {rows.map((r) => <col key={r.period} style={{ minWidth: 90 }} />)}
         </colgroup>
         <thead>
           <tr>
-            <th style={{
-              textAlign: "left",
-              fontSize: 10,
-              color: "var(--text-muted)",
-              fontWeight: 500,
-              paddingBottom: 6,
-            }}>
+            <th className="outcome-attainment-head outcome-attainment-head--left">
               Outcome
             </th>
             {rows.map((r) => (
-              <th key={r.period} style={{
-                textAlign: "center",
-                fontSize: 10,
-                color: "var(--text-muted)",
-                fontWeight: 500,
-                paddingBottom: 6,
-              }}>
+              <th key={r.period} className="outcome-attainment-head">
                 {r.period}
               </th>
             ))}
@@ -60,27 +47,14 @@ export function OutcomeAttainmentHeatmap({ rows = [], outcomeMeta = [] }) {
           {outcomeMeta.map((o) => (
             <tr key={o.code}>
               {/* Outcome label */}
-              <td style={{
-                fontSize: 11,
-                color: "var(--text-secondary)",
-                fontWeight: 600,
-                paddingRight: 12,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}>
-                <span style={{
-                  display: "inline-block",
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: o.color,
-                  marginRight: 6,
-                  flexShrink: 0,
-                }} />
+              <td className="outcome-attainment-label">
+                <span
+                  className="outcome-attainment-dot"
+                  style={{ background: o.color }}
+                />
                 {o.code}
                 {o.label && (
-                  <span style={{ fontWeight: 400, color: "var(--text-muted)", marginLeft: 5 }}>
+                  <span className="outcome-attainment-secondary">
                     {o.label.length > 28 ? `${o.label.slice(0, 28)}…` : o.label}
                   </span>
                 )}
@@ -104,7 +78,7 @@ export function OutcomeAttainmentHeatmap({ rows = [], outcomeMeta = [] }) {
                         )}
                       </>
                     ) : (
-                      <span style={{ fontSize: 11, color: "var(--text-muted)" }}>—</span>
+                      <span className="outcome-attainment-empty">—</span>
                     )}
                   </td>
                 );

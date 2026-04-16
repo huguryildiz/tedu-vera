@@ -914,8 +914,8 @@
   #page-accreditation .table-wrap { overflow-x: auto; }
   .acc-table { min-width: 1120px; }
 
-  .acc-table thead th { padding: 6px 10px; font-size: 10px; }
-  .acc-table tbody td { padding: 6px 8px; font-size: 12px; }
+  .acc-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }
+  .acc-table tbody td { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-body-size); }
 }
 
 /* ── Framework Picker Drawer (fpd-*) ────────────────────────────── */

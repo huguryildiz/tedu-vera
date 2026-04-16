@@ -37,12 +37,12 @@
 
 /* Audit table */
 .audit-table{width:100%;border-collapse:collapse;table-layout:fixed}
-.audit-table thead th{position:sticky;top:0;z-index:2;background:var(--surface-1);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-tertiary);padding:10px 16px;border-bottom:1px solid var(--border);white-space:nowrap}
+.audit-table thead th{position:sticky;top:0;z-index:2;background:var(--surface-1);text-transform:uppercase;color:var(--text-tertiary);border-bottom:1px solid var(--border);white-space:nowrap}
 .audit-table tbody tr{transition:background .12s}
 .audit-table tbody tr:not(.audit-day-header):hover{background:var(--accent-soft)}
 .audit-table tbody tr.audit-row-system{background:var(--surface-1)}
 .audit-table tbody tr.audit-row-system:hover{background:color-mix(in srgb, var(--surface-1) 70%, var(--accent-soft))}
-.audit-table tbody td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+.audit-table tbody td{border-bottom:1px solid var(--border);vertical-align:middle}
 .audit-table tbody tr:last-child td{border-bottom:none}
 
 /* Timestamp cell */
@@ -293,8 +293,8 @@
   .audit-log-page .table-wrap { overflow-x: auto; }
   .audit-table { min-width: 980px; }
 
-  .audit-table thead th { padding: 6px 10px; font-size: 10px; }
-  .audit-table tbody td { padding: 6px 10px; font-size: 12px; }
+  .audit-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }
+  .audit-table tbody td { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-body-size); }
 }
 
 /* ─── Category dot ───────────────────────────────── */

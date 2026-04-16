@@ -8,6 +8,7 @@
     "dev:demo": "vite --mode e2e",
     "check:no-native-select": "node scripts/check-no-native-select.mjs",
     "check:no-nested-panels": "node scripts/check-no-nested-panels.mjs",
+    "check:no-table-font-override": "node scripts/check-no-table-font-override.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",

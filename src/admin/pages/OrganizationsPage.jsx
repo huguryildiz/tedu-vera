@@ -1430,7 +1430,7 @@ export default function OrganizationsPage() {
           )}
 
           <div className="table-wrap table-wrap--split">
-            <table className="organizations-table">
+            <table className="organizations-table table-standard table-pill-balance">
               <thead>
                 <tr>
                   <th className={`sortable${orgSortKey === "institution" ? " sorted" : ""}`} onClick={() => handleOrgSort("institution")}>Organization <SortIcon colKey="institution" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
@@ -1781,7 +1781,7 @@ export default function OrganizationsPage() {
 
             <div className="card" style={{ padding: 0, overflow: "hidden" }}>
               <div className="table-wrap table-wrap--split">
-                <table className="organizations-table unlock-requests-table">
+                <table className="organizations-table unlock-requests-table table-standard table-pill-balance">
                   <thead>
                     <tr>
                       <th className={`sortable${unlockSortKey === "organization_name" ? " sorted" : ""}`} onClick={() => handleUnlockSort("organization_name")}>Organization <SortIcon colKey="organization_name" sortKey={unlockSortKey} sortDir={unlockSortDir} /></th>

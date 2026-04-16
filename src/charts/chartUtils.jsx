@@ -36,7 +36,7 @@ export function ChartDataTable({ caption, headers = [], rows = [] }) {
     <details ref={detailsRef} className="chart-data-table">
       <summary className="chart-data-table-summary">View data table</summary>
       <div className="chart-data-table-scroll">
-        <table>
+        <table className="table-dense table-pill-balance">
           {caption && <caption>{caption}</caption>}
           <thead>
             <tr>

@@ -818,7 +818,7 @@ export default function RankingsPage() {
         {/* ── Rankings Table ───────────────────────────────────── */}
         <div id="sub-rankings">
           <div className="table-wrap table-wrap--split">
-            <table className="ranking-table">
+            <table className="ranking-table table-standard table-pill-balance">
               <colgroup>
                 <col style={{ width: 42 }} />
                 <col style={{ width: "24%" }} />

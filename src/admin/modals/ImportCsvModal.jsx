@@ -248,7 +248,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
 
                 <div style={{ border: "1px solid var(--border)", borderRadius: "var(--radius)", overflow: "hidden" }}>
                   <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-                    <table className="fs-preview-table">
+                    <table className="fs-preview-table table-dense table-pill-balance">
                       <thead>
                         <tr>
                           <th style={{ width: 36 }}>Row</th>
@@ -261,7 +261,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                       <tbody>
                         {rows.map((row) => (
                           <tr key={row.rowNum} className={row.status === "skip" ? "row-skip" : row.status === "err" ? "row-error" : undefined}>
-                            <td style={{ fontFamily: "var(--mono)", color: "var(--text-tertiary)", fontSize: 10 }}>{row.rowNum}</td>
+                            <td className="mono table-secondary">{row.rowNum}</td>
                             <td style={{ fontFamily: "var(--mono)" }}>{row.groupNo ?? "—"}</td>
                             <td>{row.title}</td>
                             <td style={{ color: row.status === "ok" ? "var(--text-secondary)" : undefined }}>{row.members}</td>
@@ -276,9 +276,9 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                     </table>
                   </div>
                   {rows.length < totalCount && (
-                    <div style={{
+                    <div className="table-secondary" style={{
                       padding: "6px 10px", background: "var(--surface-1)",
-                      fontSize: 10, color: "var(--text-tertiary)", borderTop: "1px solid var(--border)",
+                      color: "var(--text-tertiary)", borderTop: "1px solid var(--border)",
                     }}>
                       Showing {rows.length} of {totalCount} rows
                     </div>

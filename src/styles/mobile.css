@@ -226,35 +226,29 @@ html {
    Per-page column visibility lives in each page's own CSS file.
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: landscape) {
-  /* Shared compact header */
-  #jurors-main-table thead th,
-  #projects-main-table thead th,
-  .sem-table thead th {
-    padding: 6px 10px;
-    font-size: 10px;
+  /* Shared table rhythm (token-driven) */
+  table.table-standard thead th {
+    padding: var(--table-cell-py) var(--table-cell-px);
+    font-size: var(--table-header-size);
   }
-
-  /* Shared compact body */
-  #jurors-main-table tbody td,
-  #projects-main-table tbody td,
-  .sem-table tbody td {
-    padding: 6px 10px;
-    font-size: 12px;
+  table.table-standard tbody td {
+    padding: var(--table-cell-py) var(--table-cell-px);
+    font-size: var(--table-body-size);
   }
 
   /* Jurors — compact avatar */
-  #jurors-main-table .j-av { width: 24px; height: 24px; font-size: 9px; }
+  #jurors-main-table.table-standard .j-av { width: 26px; height: 26px; font-size: 9px; }
   #jurors-main-table .j-row { gap: 7px; }
 
   /* Jurors — compact progress bar */
-  #jurors-main-table .jurors-group-bar { width: 38px; }
-  #jurors-main-table .jurors-table-groups { font-size: 11px; gap: 5px; }
+  #jurors-main-table.table-standard .jurors-group-bar { width: 42px; }
+  #jurors-main-table.table-standard .jurors-table-groups { font-size: var(--table-secondary-size); gap: 6px; }
 
   /* Periods — compact status pills */
-  .sem-table .sem-status { padding: 2px 7px; font-size: 10.5px; }
+  .sem-table.table-standard .sem-status { padding: var(--table-pill-py) var(--table-pill-px); font-size: var(--table-pill-size); }
 
   /* Projects — compact number badge */
-  #projects-main-table .project-no-badge { font-size: 10px; padding: 2px 5px; }
+  #projects-main-table.table-standard .project-no-badge { font-size: var(--table-pill-size); padding: var(--table-pill-py) var(--table-pill-px); }
 }
 
 /* ── 13. Listing toolbars — portrait stack pattern ──────────

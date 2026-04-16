@@ -78,9 +78,9 @@
 /* ── Base pill ───────────────────────────────────────────── */
 .pill {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 10px; border-radius: 999px;
-  font-size: 10.5px; font-weight: 600; white-space: nowrap;
-  border: 1px solid transparent; letter-spacing: -0.01em; line-height: 1.5;
+  padding: var(--table-pill-py, 3px) var(--table-pill-px, 10px); border-radius: 999px;
+  font-size: var(--table-pill-size, 10.5px); font-weight: 600; white-space: nowrap;
+  border: 1px solid transparent; letter-spacing: -0.01em; line-height: var(--table-pill-line-height, 1.5);
 }
 .pill svg { width: 11px; height: 11px; flex-shrink: 0; }
 

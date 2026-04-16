@@ -1,0 +1,293 @@
+/* ─────────────────────────────────────────────────────────────
+   Unified Table Typography + Density System (Jurors baseline)
+   Variants: .table-standard (default), .table-dense (high-density)
+   Utilities: .table-secondary, .table-cell-stack, .table-pill-balance, .table-like
+   ─────────────────────────────────────────────────────────── */
+
+table.table-standard,
+table.table-dense,
+.table-like {
+  --table-current-header-size: var(--table-header-size);
+  --table-current-header-weight: var(--table-header-weight);
+  --table-current-header-line-height: var(--table-header-line-height);
+  --table-current-header-letter-spacing: var(--table-header-letter-spacing);
+  --table-current-body-size: var(--table-body-size);
+  --table-current-body-line-height: var(--table-body-line-height);
+  --table-current-secondary-size: var(--table-secondary-size);
+  --table-current-secondary-line-height: var(--table-secondary-line-height);
+  --table-current-cell-py: var(--table-cell-py);
+  --table-current-cell-px: var(--table-cell-px);
+  --table-current-row-min-height: var(--table-row-min-height);
+  --table-current-pill-size: var(--table-pill-size);
+  --table-current-pill-line-height: var(--table-pill-line-height);
+  --table-current-pill-py: var(--table-pill-py);
+  --table-current-pill-px: var(--table-pill-px);
+}
+
+table.table-dense,
+.table-like.table-dense {
+  --table-current-header-size: var(--table-dense-header-size);
+  --table-current-header-weight: var(--table-dense-header-weight);
+  --table-current-header-line-height: var(--table-dense-header-line-height);
+  --table-current-header-letter-spacing: var(--table-dense-header-letter-spacing);
+  --table-current-body-size: var(--table-dense-body-size);
+  --table-current-body-line-height: var(--table-dense-body-line-height);
+  --table-current-secondary-size: var(--table-dense-secondary-size);
+  --table-current-secondary-line-height: var(--table-dense-secondary-line-height);
+  --table-current-cell-py: var(--table-dense-cell-py);
+  --table-current-cell-px: var(--table-dense-cell-px);
+  --table-current-row-min-height: var(--table-dense-row-min-height);
+  --table-current-pill-size: var(--table-dense-pill-size);
+  --table-current-pill-line-height: var(--table-dense-pill-line-height);
+  --table-current-pill-py: var(--table-dense-pill-py);
+  --table-current-pill-px: var(--table-dense-pill-px);
+}
+
+table.table-standard,
+table.table-dense {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--table-current-body-size);
+  line-height: var(--table-current-body-line-height);
+}
+
+table.table-standard thead th,
+table.table-dense thead th {
+  font-size: var(--table-current-header-size);
+  font-weight: var(--table-current-header-weight);
+  line-height: var(--table-current-header-line-height);
+  letter-spacing: var(--table-current-header-letter-spacing);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  padding: var(--table-current-cell-py) var(--table-current-cell-px);
+  min-height: var(--table-current-row-min-height);
+}
+
+table.table-standard tbody td,
+table.table-dense tbody td {
+  font-size: var(--table-current-body-size);
+  line-height: var(--table-current-body-line-height);
+  color: var(--text-secondary);
+  padding: var(--table-current-cell-py) var(--table-current-cell-px);
+  min-height: var(--table-current-row-min-height);
+  vertical-align: middle;
+}
+
+table.table-standard td[colspan],
+table.table-dense td[colspan] {
+  padding-top: calc(var(--table-current-cell-py) + 10px);
+  padding-bottom: calc(var(--table-current-cell-py) + 10px);
+}
+
+table.table-standard tr:last-child td,
+table.table-dense tr:last-child td {
+  border-bottom: none;
+}
+
+table.table-standard tbody tr,
+table.table-dense tbody tr {
+  transition: background 0.12s ease;
+}
+
+table.table-standard tbody tr:hover,
+table.table-dense tbody tr:hover {
+  background: var(--surface-1);
+}
+
+table.table-standard .text-sm,
+table.table-dense .text-sm,
+table.table-standard .text-xs,
+table.table-dense .text-xs,
+table.table-standard .text-muted,
+table.table-dense .text-muted,
+.table-secondary {
+  font-size: var(--table-current-secondary-size, var(--table-secondary-size));
+  line-height: var(--table-current-secondary-line-height, var(--table-secondary-line-height));
+}
+
+.table-secondary {
+  color: var(--text-tertiary);
+}
+
+table.table-standard .mono,
+table.table-dense .mono {
+  font-size: inherit;
+}
+
+table.table-standard .col-actions,
+table.table-dense .col-actions {
+  white-space: nowrap;
+}
+
+.table-cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+table.table-dense .table-cell-stack {
+  gap: 3px;
+}
+
+.table-pill-balance .pill,
+.table-pill-balance .badge,
+.table-pill-balance .coverage-chip,
+.table-pill-balance .row-status,
+.table-pill-balance .sem-status,
+.table-pill-balance .acc-coverage {
+  font-size: var(--table-current-pill-size, var(--table-pill-size));
+  line-height: var(--table-current-pill-line-height, var(--table-pill-line-height));
+}
+
+.table-pill-balance .pill,
+.table-pill-balance .badge,
+.table-pill-balance .coverage-chip,
+.table-pill-balance .row-status,
+.table-pill-balance .sem-status {
+  padding: var(--table-current-pill-py, var(--table-pill-py)) var(--table-current-pill-px, var(--table-pill-px));
+}
+
+.table-pill-balance .project-no-badge {
+  font-size: var(--table-current-pill-size, var(--table-pill-size));
+}
+
+.table-pill-balance .badge svg,
+.table-pill-balance .pill svg,
+.table-pill-balance .coverage-chip svg {
+  width: 11px;
+  height: 11px;
+}
+
+table.ga-heatmap.table-dense thead th, /* table-font-ok */
+table.matrix-table.table-dense thead th.col-project,
+table.outcome-attainment-table.table-dense thead th {
+  text-transform: none;
+  letter-spacing: 0.2px;
+}
+
+table.coverage-matrix.table-dense thead th:first-child {
+  text-transform: none;
+}
+
+table.matrix-table.table-dense .m-cell {
+  font-size: var(--table-current-body-size);
+  line-height: var(--table-current-body-line-height);
+}
+
+table.matrix-table.table-dense td.sticky-col,
+table.matrix-table.table-dense th.sticky-col,
+table.matrix-table.table-dense th.col-project,
+table.matrix-table.table-dense .m-cell {
+  padding-top: var(--table-current-cell-py);
+  padding-bottom: var(--table-current-cell-py);
+}
+
+.outcome-attainment-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table.outcome-attainment-table {
+  border-collapse: separate;
+  border-spacing: 4px 6px;
+}
+
+table.outcome-attainment-table thead th.outcome-attainment-head {
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: var(--table-current-header-size);
+  font-weight: var(--table-current-header-weight);
+  text-transform: none;
+  letter-spacing: 0.2px;
+  padding: 0 6px 6px;
+  background: transparent;
+  border-bottom: none;
+}
+
+table.outcome-attainment-table thead th.outcome-attainment-head--left {
+  text-align: left;
+}
+
+table.outcome-attainment-table tbody td.outcome-attainment-label {
+  font-size: var(--table-current-secondary-size);
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 12px;
+  border-bottom: none;
+}
+
+.outcome-attainment-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.outcome-attainment-secondary {
+  font-size: var(--table-current-secondary-size);
+  color: var(--text-tertiary);
+  font-weight: 400;
+  margin-left: 5px;
+}
+
+.outcome-attainment-empty {
+  font-size: var(--table-current-secondary-size);
+  color: var(--text-tertiary);
+}
+
+.table-like {
+  font-size: var(--table-current-body-size);
+  line-height: var(--table-current-body-line-height);
+}
+
+.table-like .table-like-header {
+  font-size: var(--table-current-header-size);
+  font-weight: var(--table-current-header-weight);
+  line-height: var(--table-current-header-line-height);
+  letter-spacing: var(--table-current-header-letter-spacing);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.table-like .table-like-cell {
+  padding: var(--table-current-cell-py) var(--table-current-cell-px);
+  min-height: var(--table-current-row-min-height);
+}
+
+.table-like .table-like-secondary {
+  font-size: var(--table-current-secondary-size);
+  line-height: var(--table-current-secondary-line-height);
+  color: var(--text-tertiary);
+}
+
+.pagination-bar {
+  --table-pagination-current-size: var(--table-pagination-size);
+  --table-pagination-btn-py: 5px;
+  --table-pagination-btn-px: 10px;
+  --table-pagination-btn-min: 28px;
+}
+
+.pagination-bar.pagination-bar--dense {
+  --table-pagination-current-size: var(--table-dense-pagination-size);
+  --table-pagination-btn-py: 4px;
+  --table-pagination-btn-px: 8px;
+  --table-pagination-btn-min: 26px;
+}
+
+.pagination-info,
+.pagination-sizes,
+.pagination-ellipsis,
+.pagination-btn {
+  font-size: var(--table-pagination-current-size);
+}
+
+.pagination-btn {
+  padding: var(--table-pagination-btn-py) var(--table-pagination-btn-px);
+  min-width: var(--table-pagination-btn-min);
+}

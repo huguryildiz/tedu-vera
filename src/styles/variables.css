@@ -46,6 +46,19 @@ button,input,select,textarea{font-family:var(--font)}
   --field-success-ring:0 0 0 3px var(--success-ring);
   --font:'Plus Jakarta Sans',-apple-system,sans-serif;
   --mono:'JetBrains Mono',monospace;
+  /* ── Unified table typography + density scale (Jurors baseline) ── */
+  --table-header-size:10px;--table-header-weight:600;--table-header-line-height:1.3;--table-header-letter-spacing:0.6px;
+  --table-body-size:13px;--table-body-line-height:1.35;
+  --table-secondary-size:12px;--table-secondary-line-height:1.45;
+  --table-cell-py:11px;--table-cell-px:16px;--table-row-min-height:42px;
+  --table-pill-size:10.5px;--table-pill-line-height:1.5;--table-pill-py:3px;--table-pill-px:10px;
+  --table-pagination-size:12px;
+  --table-dense-header-size:9.5px;--table-dense-header-weight:600;--table-dense-header-line-height:1.3;--table-dense-header-letter-spacing:0.5px;
+  --table-dense-body-size:12px;--table-dense-body-line-height:1.35;
+  --table-dense-secondary-size:11px;--table-dense-secondary-line-height:1.4;
+  --table-dense-cell-py:8px;--table-dense-cell-px:12px;--table-dense-row-min-height:36px;
+  --table-dense-pill-size:10px;--table-dense-pill-line-height:1.4;--table-dense-pill-py:2px;--table-dense-pill-px:8px;
+  --table-dense-pagination-size:11px;
   /* ── Floating UI Z-Index Scale ── */
   --z-base:              1;   /* chart tooltips, base content */
   --z-sticky:           50;   /* sidebar, demo banner, sticky headers */
