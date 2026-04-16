@@ -121,6 +121,12 @@ export function useManagePeriods({
   const [pendingCriteriaName, setPendingCriteriaNameState] = useState(undefined);
   const [pendingClearAll, setPendingClearAll] = useState(false);
 
+  // ── Pending import preview (sessionStorage-backed, survives navigation) ──
+  // Mirrors usePeriodOutcomes's pendingFrameworkImport so the "Criteria ready
+  // to apply" banner is restored when the user navigates away and back.
+  const [pendingCriteriaPreviewKind, setPendingCriteriaPreviewKindState] = useState(null);
+  const [pendingCriteriaPreviewSource, setPendingCriteriaPreviewSourceState] = useState(null);
+
   // Criteria reload — only when the period itself changes (not framework).
   // framework_id changes must NOT reset draftCriteria: the user may have an
   // unsaved draft (e.g. VERA Standard template applied via updateDraft) that
@@ -132,6 +138,8 @@ export function useManagePeriods({
       setDraftCriteria([]);
       setPendingCriteriaNameState(undefined);
       setPendingClearAll(false);
+      setPendingCriteriaPreviewKindState(null);
+      setPendingCriteriaPreviewSourceState(null);
       return;
     }
     let alive = true;
@@ -162,6 +170,10 @@ export function useManagePeriods({
               : undefined
           );
         }
+        // Restore "ready to apply" banner state from scratch so navigation
+        // away and back shows the banner again (OutcomesPage pattern).
+        setPendingCriteriaPreviewKindState(scratch?.pendingCriteriaPreviewKind ?? null);
+        setPendingCriteriaPreviewSourceState(scratch?.pendingCriteriaPreviewSource ?? null);
       } catch {
         if (alive) {
           setCriteriaConfig([]);
@@ -169,6 +181,8 @@ export function useManagePeriods({
           setDraftCriteria([]);
           setPendingCriteriaNameState(undefined);
           setPendingClearAll(false);
+          setPendingCriteriaPreviewKindState(null);
+          setPendingCriteriaPreviewSourceState(null);
         }
       }
     })();
@@ -182,16 +196,18 @@ export function useManagePeriods({
   useEffect(() => {
     if (!viewPeriodId) return;
     const itemsDirty = JSON.stringify(draftCriteria) !== JSON.stringify(savedCriteria);
-    const metaDirty = pendingCriteriaName !== undefined || pendingClearAll;
+    const metaDirty = pendingCriteriaName !== undefined || pendingClearAll || pendingCriteriaPreviewKind !== null;
     if (itemsDirty || metaDirty) {
       const payload = { items: draftCriteria };
       if (pendingCriteriaName !== undefined) payload.pendingCriteriaName = pendingCriteriaName;
       if (pendingClearAll) payload.pendingClearAll = true;
+      if (pendingCriteriaPreviewKind !== null) payload.pendingCriteriaPreviewKind = pendingCriteriaPreviewKind;
+      if (pendingCriteriaPreviewSource !== null) payload.pendingCriteriaPreviewSource = pendingCriteriaPreviewSource;
       setCriteriaScratch(viewPeriodId, payload);
     } else if (savedCriteria.length > 0) {
       clearCriteriaScratch(viewPeriodId);
     }
-  }, [draftCriteria, savedCriteria, pendingCriteriaName, pendingClearAll, viewPeriodId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [draftCriteria, savedCriteria, pendingCriteriaName, pendingClearAll, pendingCriteriaPreviewKind, pendingCriteriaPreviewSource, viewPeriodId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Outcomes reload — re-runs when period changes OR when a framework is
   // assigned (framework_id change means new outcomes are now available).
@@ -551,6 +567,8 @@ export function useManagePeriods({
       setPendingCriteriaNameState(undefined);
       setPendingClearAll(false);
       clearCriteriaScratch(viewPeriodId);
+      setPendingCriteriaPreviewKindState(null);
+      setPendingCriteriaPreviewSourceState(null);
       setMessage("Criteria saved successfully.");
     } catch (e) {
       const raw = String(e?.message || e?.details || "");
@@ -576,12 +594,22 @@ export function useManagePeriods({
     setDraftCriteria(structuredClone(savedCriteria));
     setPendingCriteriaNameState(undefined);
     setPendingClearAll(false);
+    setPendingCriteriaPreviewKindState(null);
+    setPendingCriteriaPreviewSourceState(null);
   }, [savedCriteria, viewPeriodId]);
 
   const updateDraft = useCallback((newDraft) => {
     setDraftCriteria(newDraft);
     // If user re-populates criteria after marking clear-all, cancel the clear.
     if (newDraft.length > 0) setPendingClearAll(false);
+  }, []);
+
+  // Set the pending import preview kind (and optional source label). Persisted
+  // via the criteria scratch so the "Criteria ready to apply" banner survives
+  // navigation (mirrors usePeriodOutcomes.setPendingFrameworkImport).
+  const setPendingCriteriaPreview = useCallback((kind, sourceLabel = null) => {
+    setPendingCriteriaPreviewKindState(kind);
+    setPendingCriteriaPreviewSourceState(sourceLabel);
   }, []);
 
   // Queue a rename to be applied on the next commitDraft. Pass the new name,
@@ -599,6 +627,8 @@ export function useManagePeriods({
     setPendingClearAll(true);
     setDraftCriteria([]);
     setPendingCriteriaNameState(undefined);
+    setPendingCriteriaPreviewKindState(null);
+    setPendingCriteriaPreviewSourceState(null);
   }, []);
 
   // Sync both savedCriteria and draftCriteria to the given value (e.g. after a
@@ -729,6 +759,9 @@ export function useManagePeriods({
     savedCriteria,
     pendingCriteriaName,
     pendingClearAll,
+    pendingCriteriaPreviewKind,
+    pendingCriteriaPreviewSource,
+    setPendingCriteriaPreview,
     isDraftDirty,
     draftTotal,
     canSaveDraft,

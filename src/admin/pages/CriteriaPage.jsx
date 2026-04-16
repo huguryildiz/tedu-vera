@@ -142,11 +142,10 @@ export default function CriteriaPage() {
   const [showClonePicker, setShowClonePicker] = useState(false);
 
   // ── Pending import preview ────────────────────────────────
-  // Mirrors OutcomesPage's framework-import banner: when the user picks a
-  // clone source or a starter template, we stage the draft and show a
-  // "Criteria ready to apply" card until they confirm via SaveBar. "Start
-  // from blank" bypasses this and drops straight into the editable table.
-  const [pendingCriteriaPreview, setPendingCriteriaPreview] = useState(null);
+  // Derived from hook state (sessionStorage-backed via criteria scratch) so
+  // the "Criteria ready to apply" banner is restored when the user navigates
+  // away and back — identical to OutcomesPage's pendingFrameworkImport pattern.
+  // Do not use local useState here; write via periods.setPendingCriteriaPreview.
 
   // ── Scratch mode: skip empty state, show full criteria card ──
   // Derived from DB: true when period has criteria_name set or criteria already exist.
@@ -175,12 +174,22 @@ export default function CriteriaPage() {
   const effectiveCriteriaName =
     pendingCriteriaName !== undefined ? pendingCriteriaName : viewPeriod?.criteria_name;
 
-  // Scratch mode: setup has been initiated once the period has a criteria_name
-  // (or draft name), draft items exist, or draft rename is queued. A pending
-  // clear-all forces the empty state back so the user can pick a starting point.
+  // Scratch mode: the period already has criteria_name committed to DB, or draft
+  // items exist. A pending-only criteria name (pendingCriteriaName set but not yet
+  // saved to DB) does NOT activate scratch mode — that state is represented by
+  // pendingCriteriaPreview showing the "ready to apply" banner instead. This
+  // prevents the table from appearing immediately when the user navigated away
+  // from an uncommitted blank-start (which wrote pendingCriteriaName to scratch
+  // but has no DB state yet). A pending clear-all forces the empty state back so
+  // the user can pick a new starting point.
   const scratchMode =
     !periods.pendingClearAll &&
-    (!!effectiveCriteriaName || draftCriteria.length > 0);
+    (!!viewPeriod?.criteria_name || draftCriteria.length > 0);
+
+  // Pending import preview — built from hook state so it survives navigation.
+  const pendingCriteriaPreview = periods.pendingCriteriaPreviewKind
+    ? { kind: periods.pendingCriteriaPreviewKind, sourceLabel: periods.pendingCriteriaPreviewSource }
+    : null;
 
   const totalPages = Math.max(1, Math.ceil(draftCriteria.length / pageSize));
   const safePage = Math.min(currentPage, Math.max(1, totalPages));
@@ -279,9 +288,6 @@ export default function CriteriaPage() {
         await po.commitDraft({ organizationId });
         await periods.reloadCriteria();
       }
-      // Commit succeeded — clear the "ready to apply" preview so the criteria
-      // table takes over from the banner on the next render.
-      setPendingCriteriaPreview(null);
     } catch (err) {
       const raw = err?.message || "";
       let msg = "Failed to save criteria. Please try again.";
@@ -306,7 +312,6 @@ export default function CriteriaPage() {
   const handleDiscard = () => {
     periods.discardDraft();
     po.discardDraft();
-    setPendingCriteriaPreview(null);
   };
 
   // ── Period rename handlers ────────────────────────────────────
@@ -391,10 +396,7 @@ export default function CriteriaPage() {
         const sourcePeriod = periods.periodList.find((p) => p.id === sourcePeriodId);
         const cloneName = `${sourcePeriod?.criteria_name || sourcePeriod?.name || "Criteria"} (copy)`;
         periods.setPendingCriteriaName(cloneName);
-        setPendingCriteriaPreview({
-          kind: "clone",
-          sourceLabel: sourcePeriod?.name || "another period",
-        });
+        periods.setPendingCriteriaPreview("clone", sourcePeriod?.name || "another period");
         setShowClonePicker(false);
       } else {
         _toast.info("Source period has no criteria to clone");
@@ -412,7 +414,7 @@ export default function CriteriaPage() {
   const handleStartBlank = () => {
     setStartingBlank(true);
     periods.setPendingCriteriaName("Custom Criteria");
-    setPendingCriteriaPreview({ kind: "blank" });
+    periods.setPendingCriteriaPreview("blank", null);
     setStartingBlank(false);
   };
 
@@ -538,7 +540,7 @@ export default function CriteriaPage() {
         </div>
       )}
       {/* Empty state — no card wrapper when no criteria */}
-      {periods.viewPeriodId && draftCriteria.length === 0 && !scratchMode && !adminLoading && loadingCount === 0 && contextPeriods.length > 0 && (
+      {periods.viewPeriodId && draftCriteria.length === 0 && !scratchMode && !pendingCriteriaPreview && !adminLoading && loadingCount === 0 && contextPeriods.length > 0 && (
             <div style={{ padding: "48px 24px", display: "flex", justifyContent: "center" }}>
               <div className="vera-es-card">
                 <div className="vera-es-hero vera-es-hero--fw">
@@ -623,10 +625,7 @@ export default function CriteriaPage() {
                       onClick={() => {
                         periods.updateDraft(STARTER_CRITERIA);
                         periods.setPendingCriteriaName("VERA Standard");
-                        setPendingCriteriaPreview({
-                          kind: "template",
-                          sourceLabel: "the VERA Standard template",
-                        });
+                        periods.setPendingCriteriaPreview("template", "the VERA Standard template");
                         setShowClonePicker(false);
                       }}
                       disabled={cloneLoading || isLocked}
