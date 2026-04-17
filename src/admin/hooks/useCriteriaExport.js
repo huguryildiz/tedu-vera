@@ -5,11 +5,12 @@ import { logExportInitiated } from "@/shared/api";
 import { useAuth } from "@/auth";
 
 const COLUMNS = [
-  { label: "#",            width: 6  },
-  { label: "Criterion",    width: 28 },
-  { label: "Weight",       width: 10 },
-  { label: "Rubric Bands", width: 36 },
-  { label: "Mapping",      width: 24 },
+  { label: "#",                       width: 6  },
+  { label: "Criterion",               width: 28 },
+  { label: "Criterion Description",   width: 34 },
+  { label: "Weight",                  width: 10 },
+  { label: "Rubric Bands",            width: 36 },
+  { label: "Mapping",                 width: 24 },
 ];
 
 function rubricBandsText(criterion) {
@@ -33,6 +34,7 @@ function getCriteriaRows(criteria) {
   return (criteria || []).map((c, i) => [
     i + 1,
     c.label || "",
+    c.blurb || "",
     c.max ?? "",
     rubricBandsText(c),
     mappingText(c),

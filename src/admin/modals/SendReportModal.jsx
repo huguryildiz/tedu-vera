@@ -15,6 +15,7 @@
 //   onSend        — legacy: ({ recipients, message, includeCharts, ccMyself }) => Promise<void>
 
 import { useState, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useToast } from "@/shared/hooks/useToast";
 import { useAuth } from "@/auth";
 import { sendExportReport } from "@/shared/api/admin/notifications";
@@ -179,7 +180,7 @@ export default function SendReportModal({
   const iconLabel = FORMAT_ICON[format] || "XLS";
   const iconClass = `export-option-icon export-option-icon--${format}`;
 
-  return (
+  return createPortal(
     <>
       {/* Overlay */}
       <div
@@ -356,6 +357,7 @@ export default function SendReportModal({
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

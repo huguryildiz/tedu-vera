@@ -148,7 +148,7 @@
 }
 
 .periods-table-card .sem-table {
-  min-width: 820px;
+  min-width: 600px;
   width: 100%;
 }
 
@@ -552,7 +552,7 @@ button.periods-cset-badge:hover svg {
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 900px) and (orientation: landscape) {
   .sem-table-wrap { overflow-x: auto; }
-  .sem-table { min-width: 1120px; }
+  .sem-table { min-width: 700px; }
   .sem-name      { font-size: 13px; }
 }
 
@@ -756,7 +756,7 @@ button.periods-cset-badge:hover svg {
 }
 
 .periods-readiness-section-label.required { color: #e11d48; }
-.periods-readiness-section-label.optional { color: var(--text-tertiary); }
+.periods-readiness-section-label.optional { color: #b45309; }
 
 .periods-readiness-row {
   display: flex;
@@ -768,7 +768,7 @@ button.periods-cset-badge:hover svg {
 }
 
 .periods-readiness-row.required > svg { color: #e11d48; flex-shrink: 0; margin-top: 2px; }
-.periods-readiness-row.optional > svg { color: var(--text-tertiary); flex-shrink: 0; margin-top: 2px; }
+.periods-readiness-row.optional > svg { color: #b45309; flex-shrink: 0; margin-top: 2px; }
 
 .periods-readiness-msg {
   flex: 1;
@@ -777,39 +777,42 @@ button.periods-cset-badge:hover svg {
   text-justify: inter-word;
 }
 
-.periods-readiness-row.optional .periods-readiness-msg {
-  color: var(--text-secondary);
+.periods-readiness-row.required .periods-readiness-msg {
+  color: #e11d48;
 }
+
+.periods-readiness-row.optional .periods-readiness-msg {
+  color: #92400e;
+}
+
+.dark-mode .periods-readiness-section-label.optional { color: #fbbf24; }
+.dark-mode .periods-readiness-row.optional > svg { color: #fbbf24; }
+.dark-mode .periods-readiness-row.optional .periods-readiness-msg { color: #fcd34d; }
 
 .periods-readiness-fix {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: transparent;
-  border: 1px solid var(--border);
+  padding: 0;
+  background: none;
+  border: none;
   color: var(--accent);
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: background 0.13s, border-color 0.13s;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.13s, opacity 0.13s;
 }
 
 .periods-readiness-fix:hover {
-  background: rgba(99, 102, 241, 0.08);
-  border-color: rgba(99, 102, 241, 0.35);
+  opacity: 0.75;
 }
 
 .dark-mode .periods-readiness-fix {
   color: rgb(165, 180, 252);
-}
-
-.dark-mode .periods-readiness-fix:hover {
-  background: rgba(129, 140, 248, 0.13);
-  border-color: rgba(129, 140, 248, 0.40);
 }
 
 /* ─── Lifecycle Guide block ──────────────────────────────── */

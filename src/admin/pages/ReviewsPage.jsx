@@ -10,7 +10,7 @@
 
 import { useMemo, useState } from "react";
 import { useAdminContext } from "../hooks/useAdminContext";
-import { CheckCircle2, Download, Filter, MessageSquare, Search, Send, X, Icon } from "lucide-react";
+import { CheckCircle2, Download, Filter, MessageSquare, Search, Send, X, Icon, XCircle } from "lucide-react";
 import { useReviewsFilters } from "../hooks/useReviewsFilters";
 import { logExportInitiated } from "@/shared/api";
 import { useToast } from "@/shared/hooks/useToast";
@@ -288,7 +288,7 @@ export default function ReviewsPage() {
   const maxTotal = criteriaConfig.reduce((s, c) => s + (c.max || 0), 0);
   const columns = useMemo(() => [
     { key: 'juror',       label: 'Juror',              sortKey: 'juryName',          getValue: r => r.juryName ?? '' },
-    { key: 'no',          label: 'No',                 sortKey: 'groupNo',           thClass: 'text-center', style: { width: 46 }, getValue: r => r.groupNo != null ? `P${r.groupNo}` : '—' },
+    { key: 'no',          label: 'No',                 sortKey: 'groupNo',           thClass: 'text-center', getValue: r => r.groupNo != null ? `P${r.groupNo}` : '—' },
     { key: 'project',     label: 'Project',            sortKey: 'title',             getValue: r => r.title || r.projectName || '—' },
     { key: 'members',     label: 'Team Members',                                     getValue: r => Array.isArray(r.students) ? r.students.join(', ') : (r.students ?? '—') },
     ...scoreCols.filter(c => c.key !== 'total').map(c => ({
@@ -702,8 +702,8 @@ export default function ReviewsPage() {
             />
           </div>
           <button type="button" className="btn btn-outline btn-sm filter-clear-btn" onClick={handleClearFilters}>
-            <X size={12} style={{ opacity: 0.5 }} />
-            Clear all
+            <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
+            {" "}Clear all
           </button>
         </div>
       </div>
@@ -780,7 +780,21 @@ export default function ReviewsPage() {
       />
       {/* Table */}
       <div className="table-wrap table-wrap--split">
-        <table className="reviews-table table-standard table-pill-balance">
+        <table className="reviews-table table-standard table-pill-balance" style={{ tableLayout: "fixed", width: "100%" }}>
+          <colgroup>
+            <col style={{ width: 148 }} />{/* Juror */}
+            <col style={{ width: 44 }} />{/* No */}
+            <col />{/* Project — flexible */}
+            <col style={{ width: 110 }} />{/* Team Members */}
+            {scoreCols.filter(c => c.key !== "total").map(c => (
+              <col key={c.key} style={{ width: 60 }} />
+            ))}{/* Each criterion score */}
+            <col style={{ width: 64 }} />{/* Total */}
+            <col style={{ width: 72 }} />{/* Status */}
+            <col style={{ width: 60 }} />{/* Progress */}
+            <col style={{ width: 72 }} />{/* Comment */}
+            <col style={{ width: 76 }} />{/* Submitted At */}
+          </colgroup>
           <thead>
             <tr>
               {columns.map(col => (

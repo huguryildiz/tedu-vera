@@ -287,11 +287,15 @@ export default function AuthProvider({ children }) {
 
     // Only clear persisted session when preference is explicitly false.
     // Missing key (legacy sessions) should not force logout.
-    try {
-      if (localStorage.getItem(KEYS.ADMIN_REMEMBER_ME) === "false") {
-        clearPersistedSession();
-      }
-    } catch {}
+    // Skip on jury/eval paths — clearing localStorage auth there fires a
+    // SIGNED_OUT storage event that logs the admin out in other tabs.
+    if (!skipAdminBootstrap) {
+      try {
+        if (localStorage.getItem(KEYS.ADMIN_REMEMBER_ME) === "false") {
+          clearPersistedSession();
+        }
+      } catch {}
+    }
   }, [fetchMemberships]);
 
   useEffect(() => {

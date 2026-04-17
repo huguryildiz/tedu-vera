@@ -96,7 +96,7 @@
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: landscape) {
   .rankings-page .table-wrap { overflow-x: auto; }
-  .ranking-table { min-width: 1080px; }
+  .ranking-table { min-width: 700px; }
 
   .ranking-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }
   .ranking-table tbody td { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-body-size); }

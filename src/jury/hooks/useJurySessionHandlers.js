@@ -20,7 +20,7 @@
 import { useCallback } from "react";
 import { getActiveCriteria } from "../../shared/criteriaHelpers";
 import { DEMO_MODE } from "@/shared/lib/demoMode";
-import { supabase, clearPersistedSession } from "@/shared/lib/supabaseClient";
+import { clearPersistedSession } from "@/shared/lib/supabaseClient";
 import { getJuryAccess, getJuryAccessGrant } from "../../shared/storage";
 import * as publicApi from "../../shared/api";
 import {
@@ -50,10 +50,14 @@ import { buildProgressCheck } from "../utils/progress";
 const listPeriods = publicApi.listPeriodsPublic || publicApi.listPeriods;
 
 async function ensureDemoAnonSession() {
-  // Demo flow must run on anon context. A stale admin session can inject an
-  // expired Bearer token and cause intermittent 401 on period queries.
+  // Clear the persisted admin session token from localStorage so it cannot be
+  // restored on reload. The in-memory session (if valid) will still be used for
+  // subsequent queries, but the admin JWT grants full access so public jury
+  // queries succeed regardless.
+  // NOTE: supabase.auth.signOut({ scope:"local" }) is intentionally NOT called —
+  // it broadcasts SIGNED_OUT via BroadcastChannel to all same-origin tabs,
+  // including an admin panel tab open at /demo/admin, signing the admin out.
   clearPersistedSession();
-  try { await supabase.auth.signOut({ scope: "local" }); } catch {}
 }
 
 async function resolveDemoPeriod(signal) {

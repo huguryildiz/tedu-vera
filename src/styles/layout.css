@@ -128,7 +128,7 @@
 .mobile-menu-btn:focus-visible{outline:2px solid var(--btn-focus-ring-brand,#6366f1);outline-offset:2px}
 
 /* Admin content area */
-.admin-content{padding:24px 28px;flex:1}
+.admin-content{padding:24px 28px;flex:1;min-width:0;max-width:100%}
 
 /* Light-mode sidebar overrides */
 body:not(.dark-mode) .sidebar .sb-account-item .fs-icon.identity,
@@ -167,7 +167,11 @@ body:not(.dark-mode) .admin-sidebar .sb-account-item.danger:focus-visible{backgr
    Unified table scroll contract (non-portrait)
    - Portrait phone layouts can stay card-based.
    - Landscape/mobile-tablet + desktop must keep horizontal
-     swipe/scroll available for all table wrappers.
+     swipe/scroll available for all table wrappers until a page
+     is individually optimized (table-layout: fixed + explicit
+     column percentages). The goal of "no desktop overflow" is
+     pursued via per-page column strategy, NOT by globally forcing
+     widths here — that caused cell overlap.
    ─────────────────────────────────────────────────────────── */
 @media (min-width: 769px), (max-width: 768px) and (orientation: landscape) {
   .table-wrap,
@@ -476,6 +480,14 @@ body:not(.dark-mode) .admin-sidebar .sb-account-item.danger:focus-visible{
   min-width:280px;max-width:340px;max-height:380px;
   display:flex;flex-direction:column;overflow:hidden;
   padding:0;
+}
+
+/* ── Header label ── */
+.period-popover-header{
+  padding:10px 12px 8px;
+  font-size:9.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.7px;color:var(--text-tertiary);
+  user-select:none;border-bottom:1px solid var(--border);
 }
 
 /* ── Search ── */

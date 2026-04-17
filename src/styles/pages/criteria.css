@@ -69,6 +69,8 @@
   background: var(--bg-card);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
+  overflow-x: hidden;
+  min-width: 0;
   margin-bottom: 16px;
 }
 
@@ -512,7 +514,8 @@
 .crt-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: fixed !important;
+  overflow: hidden;
 }
 
 .crt-table thead th {
@@ -521,7 +524,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-tertiary);
-  padding: 8px 12px;
+  padding: 7px 10px;
   text-align: left;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
@@ -529,7 +532,7 @@
 
 .crt-table thead th:first-child {
   text-align: center;
-  padding-left: 16px;
+  padding-left: 14px;
   padding-right: 4px;
 }
 
@@ -562,15 +565,15 @@
 }
 
 .crt-table td {
-  padding: 10px 12px;
+  padding: 8px 10px;
   vertical-align: middle;
 }
 
 .crt-table td:first-child {
   text-align: center;
-  padding-left: 16px;
+  padding-left: 14px;
   padding-right: 4px;
-  padding-top: 13px;
+  padding-top: 10px;
 }
 
 /* Row color accent */
@@ -629,15 +632,25 @@
   hyphens: auto;
   overflow-wrap: anywhere;
 }
-/* Match lock-notice body typography in landscape/table view. */
+/* Clamp description to 2 lines in table rows — full text shown in the edit drawer. */
+#page-criteria .crt-table td:nth-child(2) {
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 0;
+}
+
 #page-criteria .crt-table td:nth-child(2) .crt-desc {
   font-size: 11px !important;
   line-height: 1.45 !important;
-  text-align: justify !important;
-  text-justify: auto !important;
-  text-align-last: left !important;
-  hyphens: auto;
-  overflow-wrap: anywhere;
+  text-align: left !important;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .crt-weight-cell {
@@ -668,7 +681,7 @@
 .crt-rubric-bands {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 3px;
   align-items: center;
 }
 
@@ -676,9 +689,9 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  padding: 2px 7px;
+  padding: 2px 5px;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 600;
   letter-spacing: 0;
   border: none;
@@ -689,7 +702,7 @@
 
 .crt-band-pill .crt-band-range {
   font-weight: 700;
-  font-size: 10px;
+  font-size: 9.5px;
 }
 
 .crt-band-excellent {
@@ -1407,7 +1420,7 @@ body:not(.dark-mode) .crt-save-bar{background:#f6f8fb;border-top-color:#d8dee8;b
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: landscape) {
   .criteria-page .table-wrap { overflow-x: auto; }
-  .crt-table { min-width: 1080px; }
+  .crt-table { min-width: 700px; }
 
   .crt-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }
   .crt-table tbody td { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-body-size); }
@@ -1921,15 +1934,16 @@ body:not(.dark-mode) .crt-save-bar{background:#f6f8fb;border-top-color:#d8dee8;b
   display: inline-flex;
   align-items: center;
   padding: 3px 9px;
-  border-radius: 7px;
+  border-radius: 6px;
   background: var(--surface-1);
   border: 1px solid var(--border);
   font-family: var(--mono);
   font-size: 11px;
-  font-weight: 700;
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: var(--text-tertiary);
   white-space: nowrap;
   flex-shrink: 0;
+  letter-spacing: 0.2px;
 }
 
 .crt-mobile-card-menu-btn {
@@ -1951,6 +1965,17 @@ body:not(.dark-mode) .crt-save-bar{background:#f6f8fb;border-top-color:#d8dee8;b
 .crt-mobile-card-menu-btn:hover {
   background: var(--surface-1);
   color: var(--text-primary);
+}
+
+/* ── Section label (Rubric Bands / Outcomes) ─────────────────── */
+
+.crt-mobile-section-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.65px;
+  color: var(--text-tertiary);
+  margin-bottom: 5px;
 }
 
 /* ── Rubric band rows ────────────────────────────────────────── */
@@ -2002,13 +2027,10 @@ body:not(.dark-mode) .crt-save-bar{background:#f6f8fb;border-top-color:#d8dee8;b
   color: inherit;
 }
 
-/* Locked: all bands go muted */
+/* Locked: keep semantic colors but reduce opacity slightly */
 .crt-mobile-card--locked .crt-mobile-band-row {
-  background: var(--surface-1);
-  border-color: var(--border);
-  color: var(--text-tertiary);
+  opacity: 0.7;
 }
-.crt-mobile-card--locked .crt-mobile-band-name { color: inherit; }
 
 .crt-mobile-band-range {
   font-family: var(--mono);
@@ -2049,11 +2071,17 @@ body:not(.dark-mode) .crt-save-bar{background:#f6f8fb;border-top-color:#d8dee8;b
 
 .crt-mobile-outcomes {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
   gap: 5px;
   padding: 8px 16px 12px;
   border-top: 1px solid var(--surface-1);
+}
+
+.crt-mobile-outcomes-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
 }
 
 .crt-mobile-outcome-pill {
@@ -2141,73 +2169,20 @@ body:not(.dark-mode) .crt-save-bar{background:#f6f8fb;border-top-color:#d8dee8;b
   hyphens: auto;
 }
 
-/* ── Responsive breakpoint (≤ 768px portrait → swipeable table) ─────── */
+/* ── Responsive breakpoint (≤ 768px portrait → card list) ─────── */
 
 @media (max-width: 768px) and (orientation: portrait) {
-  /* Criteria page keeps the desktop table model on phones via horizontal swipe. */
+  /* Show the dedicated mobile card list; hide the desktop table. */
   .crt-mobile-list {
+    display: flex !important;
+  }
+
+  #page-criteria .crt-table-card table.crt-table {
     display: none !important;
   }
 
-  #page-criteria .crt-table-card {
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
-  }
-
-  #page-criteria .crt-table {
-    display: table !important;
-    min-width: 1080px !important;
-    width: 1080px;
-    table-layout: fixed;
-  }
-
-  #page-criteria .crt-table thead { display: table-header-group !important; }
-  #page-criteria .crt-table tbody { display: table-row-group !important; }
-  #page-criteria .crt-table tfoot { display: table-footer-group !important; }
-  #page-criteria .crt-table tr { display: table-row !important; }
-
-  #page-criteria .crt-table th,
-  #page-criteria .crt-table td {
-    display: table-cell !important;
-    width: auto !important;
-    padding: 10px 12px !important;
-    text-align: left !important;
-    border-top: none !important;
-  }
-
-  #page-criteria .crt-table td[data-label]::before {
-    content: none !important;
+  #page-criteria .crt-table-card thead {
     display: none !important;
-  }
-
-  #page-criteria .crt-table td:first-child {
-    display: table-cell !important;
-    text-align: center !important;
-    padding-left: 16px !important;
-    padding-right: 4px !important;
-    padding-top: 13px !important;
-  }
-
-  #page-criteria .crt-table tbody tr {
-    border-bottom: 1px solid rgba(15,23,42,0.04) !important;
-    border-left: none !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    cursor: default;
-  }
-
-  #page-criteria .crt-table tbody tr:last-child {
-    border-bottom: none !important;
-  }
-
-  #page-criteria .crt-table td.col-crt-actions {
-    text-align: center !important;
-    position: static !important;
   }
 
   .crt-lock-badge {

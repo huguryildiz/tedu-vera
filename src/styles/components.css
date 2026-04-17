@@ -810,11 +810,35 @@ tbody tr:hover{background:var(--surface-1)}
 
 .floating-menu-item:hover{background:var(--bg-hover, #f3f4f6)}
 
+.floating-menu-item:disabled{opacity:0.45;cursor:not-allowed;pointer-events:none}
+
+.dark-mode .floating-menu-item:disabled{opacity:0.35}
+
 .floating-menu-item.danger{color:var(--color-danger, #ef4444)}
 
 .floating-menu-item.danger:hover{background:var(--color-danger-bg, #fef2f2)}
 
 .floating-menu-divider{height:1px;background:var(--border-color, #e5e7eb);margin:4px 0}
+
+@keyframes publish-ready-pulse {
+  0%,100%{background:transparent}
+  50%{background:rgba(99,102,241,0.08)}
+}
+
+.floating-menu-item.publish-ready{
+  color:#4f46e5;
+  font-weight:600;
+  animation:publish-ready-pulse 2s ease-in-out infinite;
+}
+
+.floating-menu-item.publish-ready:hover{
+  background:rgba(99,102,241,0.12);
+  animation:none;
+}
+
+.dark-mode .floating-menu-item.publish-ready{color:#a5b4fc}
+
+.dark-mode .floating-menu-item.publish-ready:hover{background:rgba(129,140,248,0.15)}
 
 /* Shared custom select */
 .custom-select{position:relative;min-width:0;width:100%}

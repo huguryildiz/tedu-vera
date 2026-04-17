@@ -23,7 +23,8 @@ async function getValidSession() {
   // getSession() may return a cached token that is already expired.
   if (activeSession?.expires_at && Date.now() / 1000 > activeSession.expires_at - 30) {
     const { data } = await supabase.auth.refreshSession();
-    activeSession = data?.session || null;
+    // Keep original session if refresh fails — 401 retry will handle a truly expired token.
+    if (data?.session) activeSession = data.session;
   }
 
   return activeSession;
@@ -68,6 +69,9 @@ export async function invokeEdgeFunction(name, { body, headers: extraHeaders = {
   }
 
   if (!res.ok) {
+    if (res.status === 401) {
+      return { data: null, error: new Error("Session expired. Please reload the page and try again.") };
+    }
     const text = await res.text().catch(() => `HTTP ${res.status}`);
     return { data: null, error: new Error(text) };
   }

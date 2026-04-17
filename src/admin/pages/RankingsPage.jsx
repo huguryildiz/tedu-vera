@@ -8,7 +8,7 @@ import { logExportInitiated } from "@/shared/api";
 import { useToast } from "@/shared/hooks/useToast";
 import { useAuth } from "@/auth";
 import SendReportModal from "@/admin/modals/SendReportModal";
-import { GitCompare, Filter, Icon } from "lucide-react";
+import { GitCompare, Filter, Icon, XCircle } from "lucide-react";
 import CompareProjectsModal from "@/admin/modals/CompareProjectsModal";
 import { StudentNames } from "@/shared/ui/EntityMeta";
 import CustomSelect from "@/shared/ui/CustomSelect";
@@ -644,21 +644,8 @@ export default function RankingsPage() {
               />
             </div>
             <button className="btn btn-outline btn-sm filter-clear-btn" onClick={clearFilters}>
-              <Icon
-                iconNode={[]}
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ opacity: 0.5 }}>
-                <path d="M18 6 6 18" />
-                <path d="m6 6 12 12" />
-              </Icon>{" "}
-              Clear all
+              <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
+              {" "}Clear all
             </button>
           </div>
           <div className="filter-tags" />

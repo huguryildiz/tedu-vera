@@ -52,6 +52,7 @@ import {
   ChevronDown,
   ChevronUp,
   Workflow,
+  XCircle,
 } from "lucide-react";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import { useFloating } from "@/shared/hooks/useFloating";
@@ -66,6 +67,7 @@ import { formatDateTime as formatFull } from "@/shared/lib/dateUtils";
 import {
   setRawToken as storageSetRawToken,
   clearRawToken as storageClearRawToken,
+  getRawToken as storageGetRawToken,
 } from "@/shared/storage/adminStorage";
 import "../../styles/pages/periods.css";
 import "../../styles/pages/setup-wizard.css";
@@ -225,7 +227,7 @@ function ReadinessPopover({ readiness, onFix }) {
           )}
           {optional.length > 0 && (
             <div className="periods-readiness-section">
-              <div className="periods-readiness-section-label optional">Informational</div>
+              <div className="periods-readiness-section-label optional">Optional</div>
               {optional.map((issue) => {
                 const target = fixTargetFor(issue.check);
                 return (
@@ -795,7 +797,7 @@ export default function PeriodsPage() {
 
   async function handleCopyEntryLink(period) {
     try {
-      const token = await getActiveEntryTokenPlain(period.id);
+      const token = storageGetRawToken(period.id) || await getActiveEntryTokenPlain(period.id);
       if (!token) {
         _toast.error("No active QR token. Open Entry Control to generate one.");
         return;
@@ -885,6 +887,15 @@ export default function PeriodsPage() {
     setDeletePeriodTarget(null);
   }
 
+  function refreshReadinessFor(periodId) {
+    if (!periodId) return;
+    checkPeriodReadiness(periodId)
+      .then((r) => {
+        if (r) setPeriodReadiness((prev) => ({ ...prev, [periodId]: r }));
+      })
+      .catch(() => {});
+  }
+
   async function handleSavePeriod(data) {
     if (periodDrawerTarget) {
       const result = await periods.handleUpdatePeriod({
@@ -899,6 +910,7 @@ export default function PeriodsPage() {
       if (result && !result.ok && result.fieldErrors?.name) {
         throw new Error(result.fieldErrors.name);
       }
+      refreshReadinessFor(periodDrawerTarget.id);
     } else {
       const result = await periods.handleCreatePeriod({
         name: data.name,
@@ -911,6 +923,7 @@ export default function PeriodsPage() {
       if (result && !result.ok && result.fieldErrors?.name) {
         throw new Error(result.fieldErrors.name);
       }
+      if (result?.id) refreshReadinessFor(result.id);
     }
   }
 
@@ -1056,8 +1069,8 @@ export default function PeriodsPage() {
               />
             </div>
             <button className="btn btn-outline btn-sm filter-clear-btn" onClick={clearAllFilters}>
-              <X size={12} strokeWidth={2} style={{ opacity: 0.5 }} />
-              {" "}Clear
+              <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
+              {" "}Clear all
             </button>
           </div>
         </div>
@@ -1069,6 +1082,7 @@ export default function PeriodsPage() {
           subtitle="Download period records with project counts, juror counts, and status history."
           meta={`${totalPeriods} periods · All records`}
           organization={activeOrganization?.name || ""}
+          department={activeOrganization?.institution || ""}
           onClose={() => setExportOpen(false)}
           generateFile={async (fmt) => {
             const header = ["Period", "Status", "Date Range", "Progress", "Projects", "Jurors", "Criteria Set", "Outcome", "Updated At"];
@@ -1178,27 +1192,39 @@ export default function PeriodsPage() {
         </div>
         <div className="periods-table-scroll">
           <div className="sem-table-wrap">
-        <table className="sem-table table-standard table-pill-balance">
+        <table className="sem-table table-standard table-pill-balance" style={{ tableLayout: "fixed", width: "100%" }}>
+          <colgroup>
+            <col />{/* Period — flexible, absorbs remaining space */}
+            <col style={{ width: 78 }} />{/* Status */}
+            <col style={{ width: 96 }} />{/* Date Range */}
+            <col style={{ width: 52 }} />{/* Progress */}
+            <col style={{ width: 44 }} />{/* Projects */}
+            <col style={{ width: 42 }} />{/* Jurors */}
+            <col style={{ width: 88 }} />{/* Criteria Set */}
+            <col style={{ width: 70 }} />{/* Outcome */}
+            <col style={{ width: 62 }} />{/* Updated At */}
+            <col style={{ width: 32 }} />{/* Actions */}
+          </colgroup>
           <thead>
             <tr>
-              <th className={`sortable${sortKey === "name" ? " sorted" : ""}`} style={{ minWidth: "140px" }} onClick={() => handleSort("name")}>
+              <th className={`sortable${sortKey === "name" ? " sorted" : ""}`} onClick={() => handleSort("name")}>
                 Period <SortIcon colKey="name" sortKey={sortKey} sortDir={sortDir} />
               </th>
-              <th className={`sortable${sortKey === "status" ? " sorted" : ""}`} style={{ width: "84px" }} onClick={() => handleSort("status")}>
+              <th className={`sortable${sortKey === "status" ? " sorted" : ""}`} onClick={() => handleSort("status")}>
                 Status <SortIcon colKey="status" sortKey={sortKey} sortDir={sortDir} />
               </th>
-              <th className={`sortable${sortKey === "start_date" ? " sorted" : ""}`} style={{ width: "110px" }} onClick={() => handleSort("start_date")}>
+              <th className={`sortable${sortKey === "start_date" ? " sorted" : ""}`} onClick={() => handleSort("start_date")}>
                 Date Range <SortIcon colKey="start_date" sortKey={sortKey} sortDir={sortDir} />
               </th>
-              <th style={{ width: "60px", textAlign: "center" }}>Progress</th>
-              <th className="col-projects" style={{ width: "48px", textAlign: "center" }}>Projects</th>
-              <th className="col-jurors" style={{ width: "44px", textAlign: "center" }}>Jurors</th>
-              <th style={{ width: "100px" }}>Criteria Set</th>
-              <th style={{ width: "80px" }}>Outcome</th>
-              <th className={`sortable${sortKey === "updated_at" ? " sorted" : ""}`} style={{ width: "70px" }} onClick={() => handleSort("updated_at")}>
+              <th style={{ textAlign: "center" }}>Progress</th>
+              <th className="col-projects" style={{ textAlign: "center" }}>Projects</th>
+              <th className="col-jurors" style={{ textAlign: "center" }}>Jurors</th>
+              <th>Criteria Set</th>
+              <th>Outcome</th>
+              <th className={`sortable${sortKey === "updated_at" ? " sorted" : ""}`} onClick={() => handleSort("updated_at")}>
                 Updated At <SortIcon colKey="updated_at" sortKey={sortKey} sortDir={sortDir} />
               </th>
-              <th style={{ width: "32px" }}>Actions</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -1523,7 +1549,7 @@ export default function PeriodsPage() {
                           const blockerCount = (readiness?.issues || []).filter((i) => i.severity === "required").length;
                           return (
                             <button
-                              className="floating-menu-item"
+                              className={`floating-menu-item${isReady ? " publish-ready" : ""}`}
                               disabled={!isReady}
                               onMouseDown={() => {
                                 if (!isReady) return;

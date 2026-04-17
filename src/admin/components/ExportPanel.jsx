@@ -61,6 +61,7 @@ export default function ExportPanel({
   reportTitle,
   periodName,
   organization,
+  department = "",
   loading = false,
   style,
 }) {
@@ -147,6 +148,7 @@ export default function ExportPanel({
         reportTitle={reportTitle || title.replace("Export ", "")}
         periodName={periodName}
         organization={organization}
+        department={department}
         generateFile={generateFile}
       />
     </>

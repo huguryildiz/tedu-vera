@@ -93,6 +93,7 @@ export async function generateTableBlob(format, opts) {
     header = [],
     rows = [],
     colWidths,
+    pdfColumnStyles = {},
     extraSections = [],
   } = opts;
 
@@ -160,7 +161,8 @@ export async function generateTableBlob(format, opts) {
       headStyles,
       alternateRowStyles: { fillColor: [248, 250, 252] },
       margin: { left: 14, right: 14 },
-      tableWidth: "auto",
+      tableWidth: pageW - 28,
+      columnStyles: pdfColumnStyles,
     });
 
     extraSections.forEach((sec) => {
@@ -174,7 +176,7 @@ export async function generateTableBlob(format, opts) {
         headStyles,
         alternateRowStyles: { fillColor: [248, 250, 252] },
         margin: { left: 14, right: 14 },
-        tableWidth: "auto",
+        tableWidth: pageW - 28,
       });
     });
 

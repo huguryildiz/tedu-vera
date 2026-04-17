@@ -1,6 +1,18 @@
 /* Projects page — Phase 7 */
 
+/* ─── Desktop: override layout.css max-content so table fits viewport ── */
+@media (min-width: 769px) {
+  #page-projects .table-wrap {
+    overflow-x: hidden !important;
+  }
+  #page-projects #projects-main-table {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
 /* ─── Table row interaction ───────────────────────────────── */
+#projects-main-table { table-layout: fixed; width: 100%; }
 #projects-main-table tbody tr { transition: background .1s, box-shadow .1s }
 #projects-main-table tbody tr.row-menu-open { background: var(--surface-1); box-shadow: inset 3px 0 0 var(--accent) }
 
@@ -9,6 +21,24 @@
   font-family: inherit;
   font-variant-numeric: normal;
   font-feature-settings: normal;
+}
+
+/* ─── Team Members column: horizontal wrap matching Rankings style ── */
+#projects-main-table td.col-members .team-members-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  overflow: hidden;
+}
+#projects-main-table td.col-members .team-member-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+#projects-main-table td.col-members .team-member-name {
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* ─── Mobile-only elements are hidden on desktop / landscape ── */
@@ -278,7 +308,7 @@
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 900px) and (orientation: landscape) {
   #page-projects .table-wrap { overflow-x: auto; }
-  #projects-main-table { min-width: 980px; }
+  #projects-main-table { min-width: 700px; }
 
   /* Title — tighten text slightly */
   #projects-main-table td:nth-child(2) > div:first-child { font-size: 12px; }

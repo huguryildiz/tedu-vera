@@ -912,7 +912,7 @@
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: landscape) {
   #page-accreditation .table-wrap { overflow-x: auto; }
-  .acc-table { min-width: 1120px; }
+  .acc-table { min-width: 700px; }
 
   .acc-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }
   .acc-table tbody td { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-body-size); }
@@ -1937,4 +1937,22 @@
 
 .dark-mode .fw-chip-rename-input {
   color: var(--accent-light, #93c5fd);
+}
+
+/* ── Clickable KPI strip (coverage filter drilldown) ──────── */
+#page-accreditation .scores-kpi-item {
+  cursor: pointer;
+  transition: background-color .12s, border-color .12s, box-shadow .12s;
+  outline: none;
+}
+#page-accreditation .scores-kpi-item:hover {
+  background: var(--surface-1);
+}
+#page-accreditation .scores-kpi-item:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-soft, rgba(79, 70, 229, 0.25));
+}
+#page-accreditation .scores-kpi-item--active {
+  border-color: var(--accent);
+  box-shadow: inset 0 2px 0 var(--accent);
+  background: var(--surface-1);
 }

@@ -1410,19 +1410,7 @@ export default function OrganizationsPage() {
                   className="btn btn-outline btn-sm filter-clear-btn"
                   onClick={() => { setOrgStatusFilter("all"); setOrgStaffingFilter("all"); }}
                 >
-                  <Icon
-                    iconNode={[]}
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{ opacity: 0.5 }}>
-                    <path d="M18 6 6 18" /><path d="m6 6 12 12" />
-                  </Icon>
+                  <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
                   {" "}Clear all
                 </button>
               </div>

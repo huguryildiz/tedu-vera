@@ -34,6 +34,7 @@ import {
   Upload,
   Plus,
   Info,
+  XCircle,
 } from "lucide-react";
 import { downloadTable, generateTableBlob } from "../utils/downloadTable";
 import { FilterButton } from "@/shared/ui/FilterButton";
@@ -672,19 +673,7 @@ export default function JurorsPage() {
               />
             </div>
             <button className="btn btn-outline btn-sm filter-clear-btn" onClick={() => { setStatusFilter("all"); setAffilFilter("all"); }}>
-              <Icon
-                iconNode={[]}
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ opacity: 0.5 }}>
-                <path d="M18 6 6 18" /><path d="m6 6 12 12" />
-              </Icon>
+              <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
               {" "}Clear all
             </button>
           </div>
@@ -698,6 +687,7 @@ export default function JurorsPage() {
           meta={`${periods.viewPeriodLabel} · ${totalJurors} jurors`}
           periodName={periods.viewPeriodLabel}
           organization={activeOrganization?.name || ""}
+          department={activeOrganization?.institution || ""}
           onClose={() => setExportOpen(false)}
           generateFile={async (fmt) => {
     const header = JUROR_COLUMNS.map((c) => c.label);
@@ -755,7 +745,15 @@ export default function JurorsPage() {
       )}
       {/* Table */}
       <div className="table-wrap table-wrap--split">
-        <table id="jurors-main-table" className="table-standard table-pill-balance">
+        <table id="jurors-main-table" className="table-standard table-pill-balance" style={{ tableLayout: "fixed", width: "100%" }}>
+          <colgroup>
+            <col />{/* Juror Name — flexible */}
+            <col style={{ width: 92 }} />{/* Projects Evaluated */}
+            <col style={{ width: 92 }} />{/* Average Score */}
+            <col style={{ width: 96 }} />{/* Status */}
+            <col style={{ width: 100 }} />{/* Last Active */}
+            <col style={{ width: 44 }} />{/* Actions */}
+          </colgroup>
           <thead>
             <tr>
               <th className={`sortable${sortKey === "name" ? " sorted" : ""}`} onClick={() => handleSort("name")}>
@@ -773,7 +771,7 @@ export default function JurorsPage() {
               <th className={`sortable${sortKey === "lastActive" ? " sorted" : ""}`} onClick={() => handleSort("lastActive")}>
                 Last Active <SortIcon colKey="lastActive" sortKey={sortKey} sortDir={sortDir} />
               </th>
-              <th style={{ width: "48px", textAlign: "right" }}>Actions</th>
+              <th style={{ textAlign: "right" }}>Actions</th>
             </tr>
           </thead>
           <tbody className={openMenuId ? "has-open-menu" : ""}>

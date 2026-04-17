@@ -252,20 +252,20 @@ async function resolveAdminEmails(
   };
 }
 
-async function resolveOrgName(organizationId: string, fallback: string): Promise<string> {
+async function resolveOrgData(organizationId: string, fallback: string): Promise<{ name: string; institution: string }> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-  if (!supabaseUrl || !serviceKey || !organizationId) return fallback;
+  if (!supabaseUrl || !serviceKey || !organizationId) return { name: fallback, institution: "" };
 
   const service = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false },
   });
   const { data } = await service
     .from("organizations")
-    .select("name")
+    .select("name, institution")
     .eq("id", organizationId)
     .single();
-  return data?.name || fallback;
+  return { name: data?.name || fallback, institution: data?.institution || "" };
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
@@ -299,9 +299,9 @@ Deno.serve(async (req: Request) => {
 
     switch (payload.type) {
       case "application_submitted": {
-        // Look up org name and admin recipients from DB
+        // Look up org name/institution and admin recipients from DB
         const orgId = payload.tenant_id || "";
-        const orgName = await resolveOrgName(orgId, tenantLabel);
+        const { name: orgName, institution: orgInstitution } = await resolveOrgData(orgId, tenantLabel);
         const { toEmails, ccEmails } = await resolveAdminEmails(orgId);
 
         to = toEmails;
@@ -317,12 +317,28 @@ Deno.serve(async (req: Request) => {
 
         subject = `New admin application: ${payload.applicant_name || "Unknown"} → ${orgName}`;
         body = `${payload.applicant_name || "A user"}${payload.applicant_email ? ` (${payload.applicant_email})` : ""} has applied for admin access to ${orgName}.`;
+
+        const scopeCardHtml = `
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(108,71,255,0.08); border:1px solid rgba(108,71,255,0.25); border-radius:12px; margin:4px 0 8px;">
+            ${orgInstitution ? `<tr><td style="padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.06);">
+              <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:#6c47ff; font-weight:600; margin-bottom:4px;">Organization</div>
+              <div style="font-size:15px; color:#f1f5f9; font-weight:600;">${escapeHtml(orgInstitution)}</div>
+            </td></tr>` : ""}
+            <tr><td style="padding:12px 16px;">
+              <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:#6c47ff; font-weight:600; margin-bottom:4px;">Program</div>
+              <div style="font-size:15px; color:#f1f5f9; font-weight:600;">${escapeHtml(orgName)}</div>
+            </td></tr>
+          </table>`;
+
         html = buildHtmlTemplate({
           title: "New Admin Application",
           intro: "A new admin application was submitted.",
           rawHtmlLines: [
-            `<p style="margin:0 0 8px; font-size:14px; line-height:1.7; color:#a0aec0;">${escapeHtml(payload.applicant_name || "A user")}${payload.applicant_email ? ` <span style="color:#6c47ff;">(${escapeHtml(payload.applicant_email)})</span>` : ""} requested admin access to <strong style="color:#f1f5f9;">${escapeHtml(orgName)}</strong>.</p>`,
-          ],
+            `<p style="margin:0 0 4px; font-size:18px; font-weight:700; color:#ffffff;">${escapeHtml(payload.applicant_name || "A user")}</p>`,
+            payload.applicant_email ? `<p style="margin:0 0 16px; font-size:13px; color:#6c47ff;">${escapeHtml(payload.applicant_email)}</p>` : "",
+            scopeCardHtml,
+            `<p style="margin:12px 0 0; font-size:14px; line-height:1.7; color:#a0aec0;">Review and approve or reject this application from your admin panel.</p>`,
+          ].filter(Boolean),
           ctaLabel: reviewUrl ? "Review Application" : undefined,
           ctaUrl: reviewUrl || undefined,
           logoUrl: logoUrl || undefined,
@@ -333,7 +349,7 @@ Deno.serve(async (req: Request) => {
       case "application_approved": {
         // Resolve org name from DB (tenant_name in payload may be empty)
         const orgId = payload.tenant_id || "";
-        const orgName = orgId ? await resolveOrgName(orgId, tenantLabel) : tenantLabel;
+        const { name: orgName } = orgId ? await resolveOrgData(orgId, tenantLabel) : { name: tenantLabel };
 
         // CC super admins if ccOnTenantApplication is on.
         const service = getServiceClientOrNull();
@@ -362,7 +378,7 @@ Deno.serve(async (req: Request) => {
       case "application_rejected": {
         // Resolve org name from DB (tenant_name in payload may be empty)
         const orgId = payload.tenant_id || "";
-        const orgName = orgId ? await resolveOrgName(orgId, tenantLabel) : tenantLabel;
+        const { name: orgName } = orgId ? await resolveOrgData(orgId, tenantLabel) : { name: tenantLabel };
 
         // CC super admins if ccOnTenantApplication is on.
         const service = getServiceClientOrNull();

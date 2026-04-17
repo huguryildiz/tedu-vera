@@ -232,6 +232,9 @@ export default function AdminHeader({
               className="dropdown-menu show period-popover"
               style={floatingStyle}
             >
+              {/* Header */}
+              <div className="period-popover-header">Evaluation Period</div>
+
               {/* Search */}
               {showSearch && (
                 <div className="period-popover-search" style={{ position: "relative" }}>

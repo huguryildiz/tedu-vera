@@ -79,12 +79,19 @@ function buildHtml(params: {
 
   const icon = formatIcon(params.mimeType);
 
-  const metaParts: string[] = [];
-  if (params.organization) metaParts.push(escapeHtml(params.organization));
-  if (params.department) metaParts.push(escapeHtml(params.department));
-  if (params.periodName) metaParts.push(escapeHtml(params.periodName));
-  const metaLine = metaParts.length
-    ? `<p style="margin:0 0 16px;font-size:13px;color:#718096;">${metaParts.join(" &middot; ")}</p>`
+  const scopeRows: Array<{ label: string; value: string }> = [];
+  if (params.organization) scopeRows.push({ label: "ORGANIZATION", value: escapeHtml(params.organization) });
+  if (params.department) scopeRows.push({ label: "PROGRAM", value: escapeHtml(params.department) });
+  if (params.periodName) scopeRows.push({ label: "PERIOD", value: escapeHtml(params.periodName) });
+  const scopeBlock = scopeRows.length
+    ? `<div style="margin:0 0 18px;border:1px solid rgba(108,71,255,0.5);border-radius:16px;background:rgba(255,255,255,0.03);overflow:hidden;">` +
+      scopeRows.map((row, i) =>
+        `<div style="padding:14px 18px;${i > 0 ? "border-top:1px solid rgba(255,255,255,0.08);" : ""}">` +
+        `<p style="margin:0;font-size:11px;line-height:1.3;letter-spacing:1.2px;color:#7c5cff;font-weight:700;">${row.label}</p>` +
+        `<p style="margin:6px 0 0;font-size:16px;line-height:1.4;color:#f1f5f9;font-weight:700;">${row.value}</p>` +
+        `</div>`
+      ).join("") +
+      `</div>`
     : "";
 
   const sentByLine = params.senderName
@@ -118,7 +125,7 @@ function buildHtml(params: {
           <tr><td style="padding:0 48px 8px;">
             <p style="margin:0;font-size:15px;line-height:1.7;color:#a0aec0;">A VERA evaluation report has been shared with you.</p>
             ${sentByLine}
-            ${metaLine}
+            ${scopeBlock}
             ${messageBlock}
             <!-- File attachment card -->
             <div style="padding:16px;background:rgba(0,0,0,0.3);border-radius:12px;border:1px solid rgba(108,71,255,0.3);display:flex;">

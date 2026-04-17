@@ -3,7 +3,9 @@
 // Matches vera-premium-prototype.html mockup.
 
 import { useState, useRef, useEffect } from "react";
-import { Pencil, Trash2, Copy, MoreVertical, BadgeCheck, Network, AlertCircle, XCircle, CheckCircle, AlertTriangle, Circle, Info, Lock, LockKeyhole, PencilLine, Download } from "lucide-react";
+import { Pencil, Trash2, Copy, MoreVertical, BadgeCheck, Network, AlertCircle, XCircle, CheckCircle, AlertTriangle, Circle, Info, Lock, LockKeyhole, PencilLine, Download, Filter } from "lucide-react";
+import { FilterButton } from "@/shared/ui/FilterButton";
+import CustomSelect from "@/shared/ui/CustomSelect";
 import { updateFramework, cloneFramework, assignFrameworkToPeriod, unassignPeriodFramework, listFrameworks } from "@/shared/api";
 import { useAdminContext } from "../hooks/useAdminContext";
 import { usePeriodOutcomes } from "../hooks/usePeriodOutcomes";
@@ -33,7 +35,7 @@ function coverageBadgeClass(type) {
 function coverageLabel(type) {
   if (type === "direct") return "Direct";
   if (type === "indirect") return "Indirect";
-  return "Not mapped";
+  return "Unmapped";
 }
 
 // ── Coverage legend data ────────────────────────────────────
@@ -55,7 +57,7 @@ const COVERAGE_LEGEND = [
   },
   {
     key: "none",
-    label: "Not Mapped",
+    label: "Unmapped",
     desc: "No assessment method assigned. Map criteria for direct assessment, or mark as indirect if assessed externally.",
     icon: Circle,
     cls: "unmapped",
@@ -284,6 +286,16 @@ export default function OutcomesPage() {
   const [exportOpen, setExportOpen] = useState(false);
   const [pageSize, setPageSize] = useState(15);
   const [currentPage, setCurrentPage] = useState(1);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [coverageFilter, setCoverageFilter] = useState("all"); // all | direct | indirect | none
+  const [criterionFilter, setCriterionFilter] = useState("all"); // all | <criterionId>
+  const activeFilterCount =
+    (coverageFilter !== "all" ? 1 : 0) + (criterionFilter !== "all" ? 1 : 0);
+
+  // Reset page on filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [coverageFilter, criterionFilter]);
 
   // Drawers
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
@@ -360,9 +372,19 @@ export default function OutcomesPage() {
     return sortOrder === "desc" ? -cmp : cmp;
   });
 
-  const totalPages = Math.max(1, Math.ceil(sortedOutcomes.length / pageSize));
+  const filteredOutcomes = sortedOutcomes.filter((o) => {
+    const cov = fw.getCoverage(o.id);
+    if (coverageFilter !== "all" && cov !== coverageFilter) return false;
+    if (criterionFilter !== "all") {
+      const mapped = fw.getMappedCriteria(o.id);
+      if (!mapped.some((c) => c.id === criterionFilter)) return false;
+    }
+    return true;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredOutcomes.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
-  const pageRows = sortedOutcomes.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const pageRows = filteredOutcomes.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   const totalOutcomes = fw.outcomes.length;
   const directCount = fw.outcomes.filter((o) => fw.getCoverage(o.id) === "direct").length;
@@ -772,19 +794,79 @@ export default function OutcomesPage() {
 
           {/* KPI strip */}
           <div className="scores-kpi-strip">
-            <div className="scores-kpi-item">
+            <div
+              className={`scores-kpi-item ${coverageFilter === "all" ? "scores-kpi-item--active" : ""}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setCoverageFilter("all");
+                setFilterOpen(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setCoverageFilter("all");
+                  setFilterOpen(false);
+                }
+              }}
+            >
               <div className="scores-kpi-item-value">{totalOutcomes}</div>
               <div className="scores-kpi-item-label">Total Outcomes</div>
             </div>
-            <div className="scores-kpi-item">
+            <div
+              className={`scores-kpi-item ${coverageFilter === "direct" ? "scores-kpi-item--active" : ""}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setCoverageFilter("direct");
+                setFilterOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setCoverageFilter("direct");
+                  setFilterOpen(true);
+                }
+              }}
+            >
               <div className="scores-kpi-item-value success">{directCount}</div>
               <div className="scores-kpi-item-label">Direct</div>
             </div>
-            <div className="scores-kpi-item">
+            <div
+              className={`scores-kpi-item ${coverageFilter === "indirect" ? "scores-kpi-item--active" : ""}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setCoverageFilter("indirect");
+                setFilterOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setCoverageFilter("indirect");
+                  setFilterOpen(true);
+                }
+              }}
+            >
               <div className="scores-kpi-item-value warning">{indirectCount}</div>
               <div className="scores-kpi-item-label">Indirect</div>
             </div>
-            <div className="scores-kpi-item">
+            <div
+              className={`scores-kpi-item ${coverageFilter === "none" ? "scores-kpi-item--active" : ""}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setCoverageFilter("none");
+                setFilterOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setCoverageFilter("none");
+                  setFilterOpen(true);
+                }
+              }}
+            >
               <div className="scores-kpi-item-value muted">{unmappedCount}</div>
               <div className="scores-kpi-item-label">Unmapped</div>
             </div>
@@ -887,9 +969,14 @@ export default function OutcomesPage() {
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <FilterButton
+                  activeCount={activeFilterCount}
+                  isOpen={filterOpen}
+                  onClick={() => { setFilterOpen((v) => !v); setExportOpen(false); }}
+                />
                 <button
                   className="btn btn-outline btn-sm"
-                  onClick={() => setExportOpen((v) => !v)}
+                  onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}
                 >
                   <Download size={14} strokeWidth={2} style={{ verticalAlign: "-1px" }} />
                   {" "}Export
@@ -915,11 +1002,64 @@ export default function OutcomesPage() {
                 title="Export Outcomes"
                 subtitle="Download programme outcomes with criterion mappings and coverage analysis."
                 meta={`${(fw.outcomes || []).length} outcomes · ${selectedPeriod?.name || "—"}`}
+                periodName={selectedPeriod?.name || ""}
                 organization={activeOrganization?.name || ""}
+                department={activeOrganization?.institution || ""}
                 onClose={() => setExportOpen(false)}
                 generateFile={generateOutcomesFile}
                 onExport={handleOutcomesExport}
               />
+            )}
+            {filterOpen && (
+              <div className="filter-panel show">
+                <div className="filter-panel-header">
+                  <div>
+                    <h4>
+                      <Filter size={14} style={{ display: "inline", marginRight: 4, opacity: 0.5, verticalAlign: "-1px" }} />
+                      Filter Outcomes
+                    </h4>
+                    <div className="filter-panel-sub">Narrow outcomes by coverage and mapped criterion.</div>
+                  </div>
+                  <button className="filter-panel-close" aria-label="Close filter panel" onClick={() => setFilterOpen(false)}>&#215;</button>
+                </div>
+                <div className="filter-row">
+                  <div className="filter-group">
+                    <label>Coverage</label>
+                    <CustomSelect
+                      compact
+                      value={coverageFilter}
+                      onChange={(v) => setCoverageFilter(v)}
+                      options={[
+                        { value: "all", label: "All coverage" },
+                        { value: "direct", label: "Direct" },
+                        { value: "indirect", label: "Indirect" },
+                        { value: "none", label: "Unmapped" },
+                      ]}
+                      ariaLabel="Coverage"
+                    />
+                  </div>
+                  <div className="filter-group">
+                    <label>Mapped Criterion</label>
+                    <CustomSelect
+                      compact
+                      value={criterionFilter}
+                      onChange={(v) => setCriterionFilter(v)}
+                      options={[
+                        { value: "all", label: "All criteria" },
+                        ...drawerCriteria.map((c) => ({ value: c.id, label: c.label })),
+                      ]}
+                      ariaLabel="Mapped Criterion"
+                    />
+                  </div>
+                  <button
+                    className="btn btn-outline btn-sm filter-clear-btn"
+                    onClick={() => { setCoverageFilter("all"); setCriterionFilter("all"); }}
+                  >
+                    <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
+                    {" "}Clear all
+                  </button>
+                </div>
+              </div>
             )}
             <div className="table-wrap" style={{ border: "none" }}>
               {fw.loading && fw.outcomes.length === 0 ? (
@@ -948,6 +1088,24 @@ export default function OutcomesPage() {
                     </tr>
                   </thead>
                   <tbody>
+                    {pageRows.length === 0 && fw.outcomes.length > 0 && (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: "center", padding: "40px 24px", color: "var(--text-tertiary)" }}>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                            <BadgeCheck size={28} strokeWidth={1.4} style={{ opacity: 0.35 }} />
+                            <span style={{ fontSize: 13, fontWeight: 500 }}>No outcomes match the current filter</span>
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-sm"
+                              style={{ marginTop: 6 }}
+                              onClick={() => { setCoverageFilter("all"); setCriterionFilter("all"); }}
+                            >
+                              Clear filters
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                     {pageRows.map((outcome) => (
                       <OutcomeRow
                         key={outcome.id}
@@ -989,7 +1147,7 @@ export default function OutcomesPage() {
               currentPage={safePage}
               totalPages={totalPages}
               pageSize={pageSize}
-              totalItems={sortedOutcomes.length}
+              totalItems={filteredOutcomes.length}
               onPageChange={setCurrentPage}
               onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
               itemLabel="outcomes"

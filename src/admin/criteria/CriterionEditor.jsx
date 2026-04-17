@@ -48,7 +48,14 @@ export default function CriterionEditor({
         </div>
 
         <div className="crt-card-header-right">
-          <span className="crt-card-pts">
+          <span
+            className="crt-card-pts"
+            style={{
+              backgroundColor: `${row.color || "#94A3B8"}18`,
+              borderColor: `${row.color || "#94A3B8"}40`,
+              color: row.color || "var(--text-tertiary)",
+            }}
+          >
             {row.max !== "" ? `${row.max} pts` : "—"}
           </span>
 

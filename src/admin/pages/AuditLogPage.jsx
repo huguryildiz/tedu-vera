@@ -4,7 +4,7 @@
 
 import { useMemo, useState } from "react";
 import { useAdminContext } from "../hooks/useAdminContext";
-import { Search, Download, X, Clock, AlertTriangle, Filter, Lock, Shield, UserCheck, Activity, Key, Package, Calendar, LogIn, FileText, ShieldCheck } from "lucide-react";
+import { Search, Download, X, Clock, AlertTriangle, Filter, Lock, Shield, UserCheck, Activity, Key, Package, Calendar, LogIn, FileText, ShieldCheck, XCircle } from "lucide-react";
 import { useToast } from "@/shared/hooks/useToast";
 import { verifyAuditChain } from "@/shared/api";
 import { useAuth } from "@/auth";
@@ -343,9 +343,10 @@ export default function AuditLogPage() {
       const result = await verifyAuditChain(organizationId);
       const broken = Array.isArray(result) ? result : (result?.broken_links ?? result?.broken ?? []);
       if (!broken.length) {
-        _toast.success("Hash chain intact — no tampering detected.");
+        _toast.success("No tampering detected — all records are intact.");
       } else {
-        _toast.error(`Chain broken at ${broken.length} point(s). Earliest: ${broken[0]}`);
+        const earliest = broken[0]?.id ?? broken[0]?.created_at ?? broken[0]?.seq ?? JSON.stringify(broken[0]);
+        _toast.error(`Chain broken at ${broken.length} point(s). Earliest: ${earliest}`);
       }
     } catch (e) {
       _toast.error(`Integrity check failed: ${e?.message || "Unknown error"}`);
@@ -574,8 +575,8 @@ export default function AuditLogPage() {
             type="button"
             onClick={handleClearAllFilters}
           >
-            <X size={12} style={{ opacity: 0.5 }} />
-            Clear all
+            <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
+            {" "}Clear all
           </button>
         </div>
       )}

@@ -7,17 +7,26 @@ import { useAuth } from "@/auth";
 const COLUMNS = [
   { label: "Code",            width: 10 },
   { label: "Outcome",         width: 30 },
+  { label: "Description",     width: 40 },
   { label: "Mapped Criteria", width: 40 },
   { label: "Coverage",        width: 12 },
 ];
+
+// Landscape A4 usable = 269mm; Code+Outcome+Coverage fixed, Description=MappedCriteria=(269-68)/2
+const PDF_COL_STYLES = {
+  0: { cellWidth: 14 },   // Code
+  1: { cellWidth: 32 },   // Outcome
+  2: { cellWidth: 100 },  // Description
+  3: { cellWidth: 101 },  // Mapped Criteria
+  4: { cellWidth: 22 },   // Coverage
+};
 
 function mappedCriteriaText(outcomeId, criteria, mappings) {
   return (mappings || [])
     .filter((m) => m.period_outcome_id === outcomeId)
     .map((m) => {
       const c = (criteria || []).find((cr) => cr.id === m.period_criterion_id);
-      const type = m.coverage_type === "direct" ? "Direct" : "Indirect";
-      return c ? `${c.label} (${type})` : "";
+      return c ? c.label : "";
     })
     .filter(Boolean)
     .join(", ");
@@ -29,7 +38,7 @@ function getOutcomesRows(outcomes, criteria, mappings) {
     const directCount  = om.filter((m) => m.coverage_type === "direct").length;
     const indirectCount = om.filter((m) => m.coverage_type === "indirect").length;
     const coverage     = directCount > 0 ? "Direct" : indirectCount > 0 ? "Indirect" : "Unmapped";
-    return [o.code || "", o.label || "", mappedCriteriaText(o.id, criteria, mappings), coverage];
+    return [o.code || "", o.label || "", o.description || "", mappedCriteriaText(o.id, criteria, mappings), coverage];
   });
 }
 
@@ -50,9 +59,10 @@ export function useOutcomesExport({ outcomes, criteria, mappings, periodName }) 
         organization: orgName,
         department:   deptName,
         pdfTitle:     "VERA — Outcomes & Mapping",
-        header:       COLUMNS.map((c) => c.label),
-        rows:         getOutcomesRows(outcomes, criteria, mappings),
-        colWidths:    COLUMNS.map((c) => c.width),
+        header:          COLUMNS.map((c) => c.label),
+        rows:            getOutcomesRows(outcomes, criteria, mappings),
+        colWidths:       COLUMNS.map((c) => c.width),
+        pdfColumnStyles: PDF_COL_STYLES,
       }),
     [outcomes, criteria, mappings, periodName, tenantCode, orgName, deptName]
   );
@@ -82,9 +92,10 @@ export function useOutcomesExport({ outcomes, criteria, mappings, periodName }) 
         organization: orgName,
         department:   deptName,
         pdfTitle:     "VERA — Outcomes & Mapping",
-        header:       COLUMNS.map((c) => c.label),
-        rows:         getOutcomesRows(outcomes, criteria, mappings),
-        colWidths:    COLUMNS.map((c) => c.width),
+        header:          COLUMNS.map((c) => c.label),
+        rows:            getOutcomesRows(outcomes, criteria, mappings),
+        colWidths:       COLUMNS.map((c) => c.width),
+        pdfColumnStyles: PDF_COL_STYLES,
       });
     },
     [outcomes, criteria, mappings, periodName, tenantCode, orgName, deptName, organizationId]

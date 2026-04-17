@@ -418,11 +418,10 @@
 .reviews-table tbody tr.partial-row{background:rgba(217,119,6,0.025)}
 .reviews-table tbody tr.partial-row:hover{background:rgba(217,119,6,0.06)}
 /* ── Column: Juror ── */
-.reviews-table .col-juror{min-width:160px;vertical-align:middle}
+.reviews-table .col-juror{vertical-align:middle}
 /* ── Column: Project ── */
 .reviews-table .col-project{
-  min-width:180px;
-  max-width:260px;
+  min-width:0;
   white-space:normal;
   word-break:break-word;
   overflow-wrap:break-word;
@@ -433,7 +432,7 @@
   vertical-align:middle;
 }
 /* ── Column: Team Members — vertical stack in table context ── */
-.reviews-table .col-members{min-width:160px;vertical-align:middle}
+.reviews-table .col-members{vertical-align:middle}
 .reviews-table .col-members .team-members-inline{
   display:flex;
   flex-direction:column;
@@ -677,7 +676,7 @@
    ══════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) and (orientation: landscape) {
   .reviews-page .table-wrap { overflow-x: auto; }
-  .reviews-table { min-width: 1220px; }
+  .reviews-table { min-width: 800px; }
 
   /* Token-driven table rhythm */
   .reviews-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }

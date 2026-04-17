@@ -22,6 +22,8 @@ import {
   MoveDown,
   Info,
   Download,
+  Filter,
+  XCircle,
 } from "lucide-react";
 import { useAdminContext } from "../hooks/useAdminContext";
 import { useToast } from "@/shared/hooks/useToast";
@@ -47,6 +49,8 @@ import "../../styles/pages/criteria.css";
 import { useAuth } from "@/auth";
 import ExportPanel from "../components/ExportPanel";
 import { useCriteriaExport } from "../hooks/useCriteriaExport";
+import { FilterButton } from "@/shared/ui/FilterButton";
+import CustomSelect from "@/shared/ui/CustomSelect";
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -80,8 +84,7 @@ export default function CriteriaPage() {
   } = useAdminContext();
   const _toast = useToast();
   const setMessage = useCallback((msg) => { if (msg) _toast.success(msg); }, [_toast]);
-  // Criteria table stays as a swipeable table on mobile instead of card layout.
-  const shouldUseCardLayout = false;
+  const shouldUseCardLayout = true;
 
   const [panelError, setPanelErrorState] = useState("");
   const setPanelError = useCallback((_panel, msg) => setPanelErrorState(msg || ""), []);
@@ -131,6 +134,11 @@ export default function CriteriaPage() {
 
   const [openMenuId, setOpenMenuId] = useState(null);
   const [exportOpen, setExportOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [mappingFilter, setMappingFilter] = useState("all");   // all | mapped | unmapped
+  const [rubricFilter, setRubricFilter] = useState("all");     // all | defined | none
+  const activeFilterCount =
+    (mappingFilter !== "all" ? 1 : 0) + (rubricFilter !== "all" ? 1 : 0);
 
   // ── Delete modal state ────────────────────────────────────────
 
@@ -161,6 +169,11 @@ export default function CriteriaPage() {
   // ── Pagination ────────────────────────────────────────────
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
+
+  // ── Reset page to 1 when filters change ────────────────────
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [mappingFilter, rubricFilter]);
 
   // ── Derived data ──────────────────────────────────────────────
 
@@ -204,9 +217,19 @@ export default function CriteriaPage() {
     ? { kind: periods.pendingCriteriaPreviewKind, sourceLabel: periods.pendingCriteriaPreviewSource }
     : null;
 
-  const totalPages = Math.max(1, Math.ceil(draftCriteria.length / pageSize));
+  const filteredCriteria = draftCriteria.filter((c) => {
+    const hasMapping = Array.isArray(c.outcomes) && c.outcomes.length > 0;
+    const hasRubric = Array.isArray(c.rubric) && c.rubric.length > 0;
+    if (mappingFilter === "mapped" && !hasMapping) return false;
+    if (mappingFilter === "unmapped" && hasMapping) return false;
+    if (rubricFilter === "defined" && !hasRubric) return false;
+    if (rubricFilter === "none" && hasRubric) return false;
+    return true;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredCriteria.length / pageSize));
   const safePage = Math.min(currentPage, Math.max(1, totalPages));
-  const pageRows = draftCriteria.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const pageRows = filteredCriteria.slice((safePage - 1) * pageSize, safePage * pageSize);
 
 
   // ── Weight budget handlers ─────────────────────────────────────
@@ -725,9 +748,14 @@ export default function CriteriaPage() {
               </div>
             </div>
             <div className="crt-header-actions">
+              <FilterButton
+                activeCount={activeFilterCount}
+                isOpen={filterOpen}
+                onClick={() => { setFilterOpen((v) => !v); setExportOpen(false); }}
+              />
               <button
                 className="btn btn-outline btn-sm"
-                onClick={() => setExportOpen((v) => !v)}
+                onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}
               >
                 <Download size={14} strokeWidth={2} style={{ verticalAlign: "-1px" }} />
                 {" "}Export
@@ -753,29 +781,74 @@ export default function CriteriaPage() {
               title="Export Criteria"
               subtitle="Download evaluation criteria with rubric bands and outcome mappings."
               meta={`${(draftCriteria || []).length} criteria · ${periods.viewPeriodLabel || "—"}`}
+              periodName={periods.viewPeriodLabel || ""}
               organization={activeOrganization?.name || ""}
+              department={activeOrganization?.institution || ""}
               onClose={() => setExportOpen(false)}
               generateFile={generateCriteriaFile}
               onExport={handleCriteriaExport}
             />
           )}
+          {filterOpen && (
+            <div className="filter-panel show">
+              <div className="filter-panel-header">
+                <div>
+                  <h4>
+                    <Filter size={14} style={{ display: "inline", marginRight: 4, opacity: 0.5, verticalAlign: "-1px" }} />
+                    Filter Criteria
+                  </h4>
+                  <div className="filter-panel-sub">Narrow criteria by outcome mapping and rubric state.</div>
+                </div>
+                <button className="filter-panel-close" aria-label="Close filter panel" onClick={() => setFilterOpen(false)}>&#215;</button>
+              </div>
+              <div className="filter-row">
+                <div className="filter-group">
+                  <label>Mapping</label>
+                  <CustomSelect
+                    compact
+                    value={mappingFilter}
+                    onChange={(v) => setMappingFilter(v)}
+                    options={[
+                      { value: "all", label: "All mappings" },
+                      { value: "mapped", label: "Mapped to outcomes" },
+                      { value: "unmapped", label: "Unmapped" },
+                    ]}
+                    ariaLabel="Mapping"
+                  />
+                </div>
+                <div className="filter-group">
+                  <label>Rubric</label>
+                  <CustomSelect
+                    compact
+                    value={rubricFilter}
+                    onChange={(v) => setRubricFilter(v)}
+                    options={[
+                      { value: "all", label: "All rubrics" },
+                      { value: "defined", label: "Rubric defined" },
+                      { value: "none", label: "No rubric" },
+                    ]}
+                    ariaLabel="Rubric"
+                  />
+                </div>
+                <button
+                  className="btn btn-outline btn-sm filter-clear-btn"
+                  onClick={() => { setMappingFilter("all"); setRubricFilter("all"); }}
+                >
+                  <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
+                  {" "}Clear all
+                </button>
+              </div>
+            </div>
+          )}
             <table className="crt-table table-standard table-pill-balance">
-              <colgroup>
-                <col style={{ width: "4%" }} />
-                <col style={{ width: "41%" }} />
-                <col style={{ width: "8%" }} />
-                <col style={{ width: "24%" }} />
-                <col style={{ width: "16%" }} />
-                <col style={{ width: "7%" }} />
-              </colgroup>
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th className="col-criterion">Criterion</th>
-                  <th className="col-weight">Weight</th>
-                  <th className="col-rubric">Rubric Bands</th>
-                  <th className="col-mapping">Mapping</th>
-                  <th className="col-action">Actions</th>
+                  <th style={{ width: "3%" }}>#</th>
+                  <th className="col-criterion" style={{ width: "42%" }}>Criterion</th>
+                  <th className="col-weight" style={{ width: "7%" }}>Weight</th>
+                  <th className="col-rubric" style={{ width: "16%" }}>Rubric Bands</th>
+                  <th className="col-mapping" style={{ width: "13%" }}>Mapping</th>
+                  <th className="col-action" style={{ width: "6%" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -784,14 +857,29 @@ export default function CriteriaPage() {
                     <td colSpan={6} style={{ textAlign: "center", padding: "40px 24px", color: "var(--text-tertiary)" }}>
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
                         <ClipboardList size={28} strokeWidth={1.4} style={{ opacity: 0.35 }} />
-                        <span style={{ fontSize: 13, fontWeight: 500 }}>No criteria yet</span>
-                        <span style={{ fontSize: 12, opacity: 0.6 }}>Click "+ Add Criterion" above to add your first criterion.</span>
+                        <span style={{ fontSize: 13, fontWeight: 500 }}>
+                          {activeFilterCount > 0 ? "No criteria match the current filter" : "No criteria yet"}
+                        </span>
+                        <span style={{ fontSize: 12, opacity: 0.6 }}>
+                          {activeFilterCount > 0
+                            ? (
+                              <button
+                                type="button"
+                                className="btn btn-outline btn-sm"
+                                style={{ marginTop: 6 }}
+                                onClick={() => { setMappingFilter("all"); setRubricFilter("all"); }}
+                              >
+                                Clear filters
+                              </button>
+                            )
+                            : "Click \"+​ Add Criterion\" above to add your first criterion."}
+                        </span>
                       </div>
                     </td>
                   </tr>
                 )}
                 {pageRows.map((criterion, rowIdx) => {
-                  const i = (safePage - 1) * pageSize + rowIdx;
+                  const i = draftCriteria.indexOf(criterion);
                   const rubric = Array.isArray(criterion.rubric) ? criterion.rubric : [];
                   const menuKey = `crt-row-${i}`;
                   const isMenuOpen = openMenuId === menuKey;
@@ -930,7 +1018,7 @@ export default function CriteriaPage() {
           {shouldUseCardLayout && draftCriteria.length > 0 && (
             <div className="crt-mobile-list">
               {pageRows.map((criterion, rowIdx) => {
-                const i = (safePage - 1) * pageSize + rowIdx;
+                const i = draftCriteria.indexOf(criterion);
                 const rubric = Array.isArray(criterion.rubric) ? criterion.rubric : [];
                 const outcomes = criterion.outcomes || [];
                 const visibleOutcomes = outcomes.slice(0, 4);
@@ -952,7 +1040,14 @@ export default function CriteriaPage() {
                       <span className="crt-mobile-card-name">
                         {criterion.label || criterion.shortLabel || `Criterion ${i + 1}`}
                       </span>
-                      <span className="crt-mobile-card-pts-badge">
+                      <span
+                        className="crt-mobile-card-pts-badge"
+                        style={{
+                          backgroundColor: `${color || "#94A3B8"}18`,
+                          borderColor: `${color || "#94A3B8"}40`,
+                          color: color || "var(--text-tertiary)",
+                        }}
+                      >
                         {criterion.max != null ? `${criterion.max} pts` : "—"}
                       </span>
                       <FloatingMenu
@@ -1026,6 +1121,7 @@ export default function CriteriaPage() {
                     {/* Rubric band rows */}
                     {rubric.length > 0 && (
                       <div className="crt-mobile-bands">
+                        <div className="crt-mobile-section-label">Rubric Bands</div>
                         {rubric.map((band, bi) => (
                           <div
                             key={bi}
@@ -1046,22 +1142,25 @@ export default function CriteriaPage() {
                     {/* Outcome pills */}
                     {outcomes.length > 0 && (
                       <div className="crt-mobile-outcomes">
-                        {visibleOutcomes.map((code) => {
-                          const isIndirect = criterion.outcomeTypes?.[code] === "indirect";
-                          return (
-                            <span
-                              key={code}
-                              className={`crt-mobile-outcome-pill${isIndirect ? " indirect" : ""}`}
-                            >
-                              {code}
+                        <div className="crt-mobile-section-label">Outcomes</div>
+                        <div className="crt-mobile-outcomes-pills">
+                          {visibleOutcomes.map((code) => {
+                            const isIndirect = criterion.outcomeTypes?.[code] === "indirect";
+                            return (
+                              <span
+                                key={code}
+                                className={`crt-mobile-outcome-pill${isIndirect ? " indirect" : ""}`}
+                              >
+                                {code}
+                              </span>
+                            );
+                          })}
+                          {overflowCount > 0 && (
+                            <span className="crt-mobile-outcome-overflow">
+                              +{overflowCount}
                             </span>
-                          );
-                        })}
-                        {overflowCount > 0 && (
-                          <span className="crt-mobile-outcome-overflow">
-                            +{overflowCount}
-                          </span>
-                        )}
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1074,7 +1173,7 @@ export default function CriteriaPage() {
               currentPage={safePage}
               totalPages={totalPages}
               pageSize={pageSize}
-              totalItems={draftCriteria.length}
+              totalItems={filteredCriteria.length}
               onPageChange={setCurrentPage}
               onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
               itemLabel="criteria"

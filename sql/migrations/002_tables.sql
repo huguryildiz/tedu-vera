@@ -304,11 +304,16 @@ CREATE TABLE audit_logs (
   diff             JSONB,
   -- hash-chain (added via 054_audit_hash_chain)
   row_hash         TEXT,
+  -- true insertion-order counter; avoids backdated created_at breaking the chain
+  chain_seq        BIGSERIAL,
   created_at       TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE INDEX idx_audit_logs_organization_created
   ON audit_logs (organization_id, created_at DESC);
+
+CREATE INDEX idx_audit_logs_chain_seq
+  ON audit_logs (organization_id, chain_seq DESC);
 
 -- Filtered list by category (most common query pattern)
 CREATE INDEX idx_audit_logs_category_created

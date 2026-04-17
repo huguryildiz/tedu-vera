@@ -34,6 +34,24 @@
   <div id="preview"></div>
 
   <script>
+    function mkScopeBlock(org, program, period) {
+      return `
+        <div style="margin:0 0 18px; border:1px solid rgba(108,71,255,0.5); border-radius:16px; background:rgba(255,255,255,0.03); overflow:hidden;">
+          <div style="padding:14px 18px;">
+            <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">ORGANIZATION</p>
+            <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${org}</p>
+          </div>
+          <div style="padding:14px 18px; border-top:1px solid rgba(255,255,255,0.08);">
+            <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">PROGRAM</p>
+            <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${program}</p>
+          </div>
+          <div style="padding:14px 18px; border-top:1px solid rgba(255,255,255,0.08);">
+            <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">PERIOD</p>
+            <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${period}</p>
+          </div>
+        </div>`;
+    }
+
     function tpl(title, intro, body, ctaLabel) {
       return `
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0f0f1a; padding:40px 0;">
@@ -72,21 +90,7 @@
       const periodName = "Spring 2026";
       const expiresIn = "24h left";
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=12&color=ffffff&bgcolor=1a1a2e&data=${encodeURIComponent(tokenUrl)}`;
-      const scopeBlock = `
-        <div style="margin:0 0 18px; border:1px solid rgba(108,71,255,0.5); border-radius:16px; background:rgba(255,255,255,0.03); overflow:hidden;">
-          <div style="padding:14px 18px;">
-            <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">ORGANIZATION</p>
-            <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${organizationInstitution}</p>
-          </div>
-          <div style="padding:14px 18px; border-top:1px solid rgba(255,255,255,0.08);">
-            <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">PROGRAM</p>
-            <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${organizationName}</p>
-          </div>
-          <div style="padding:14px 18px; border-top:1px solid rgba(255,255,255,0.08);">
-            <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">PERIOD</p>
-            <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${periodName}</p>
-          </div>
-        </div>`;
+      const scopeBlock = mkScopeBlock(organizationInstitution, organizationName, periodName);
 
       return `
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0f0f1a; padding:40px 0;">
@@ -139,21 +143,7 @@
         `<span style="display:inline-block;width:52px;height:64px;line-height:64px;text-align:center;background:rgba(255,255,255,0.06);border:2px solid rgba(108,71,255,0.4);border-radius:8px;font-size:36px;font-weight:800;color:#ffffff;font-family:monospace;margin:0 4px;">${d}</span>`
       ).join("");
 
-      const scopeBlock = `
-        <div style="margin:0 0 18px; border:1px solid rgba(108,71,255,0.5); border-radius:16px; background:rgba(255,255,255,0.03); overflow:hidden;">
-          <div style="padding:14px 18px;">
-            <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">ORGANIZATION</p>
-            <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${organization}</p>
-          </div>
-          <div style="padding:14px 18px; border-top:1px solid rgba(255,255,255,0.08);">
-            <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">PROGRAM</p>
-            <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${affiliation}</p>
-          </div>
-          <div style="padding:14px 18px; border-top:1px solid rgba(255,255,255,0.08);">
-            <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">PERIOD</p>
-            <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${periodLabel}</p>
-          </div>
-        </div>`;
+      const scopeBlock = mkScopeBlock(organization, affiliation, periodLabel);
 
       return `
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0f0f1a; padding:40px 0;">
@@ -209,7 +199,7 @@
       const subjectPreview = "VERA Evaluation Report";
 
       const sentByLine = `<p style="margin:4px 0 16px;font-size:13px;color:#718096;">Sent by <strong style="color:#a0aec0;">${senderName}</strong></p>`;
-      const metaLine = `<p style="margin:0 0 16px;font-size:13px;color:#718096;">${organization} &middot; ${department} &middot; ${periodName}</p>`;
+      const scopeBlock = mkScopeBlock(organization, department, periodName);
       const messageBlock = `<div style="margin:0 0 20px;padding:14px 16px;background:rgba(255,255,255,0.05);border-radius:10px;border:1px solid rgba(255,255,255,0.08);">
         <p style="margin:0 0 4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#718096;">Message from ${senderName}</p>
         <p style="margin:0;font-size:14px;line-height:1.7;color:#a0aec0;white-space:pre-wrap;">${message}</p>
@@ -233,7 +223,7 @@
               <tr><td style="padding:0 48px 8px;">
                 <p style="margin:0; font-size:15px; line-height:1.7; color:#a0aec0;">A VERA evaluation report has been shared with you.</p>
                 ${sentByLine}
-                ${metaLine}
+                ${scopeBlock}
                 ${messageBlock}
                 <div style="padding:16px; background:rgba(0,0,0,0.3); border-radius:12px; border:1px solid rgba(108,71,255,0.3);">
                   <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
@@ -311,7 +301,7 @@
       const orgName      = "TED University";
       const periodName   = "EE 492 — Spring 2026";
       const message      = "I forgot my PIN and cannot proceed. Please reset it as soon as possible.";
-      const metaLine     = [affiliation, orgName].filter(Boolean).join(" &middot; ");
+      const scopeBlock   = mkScopeBlock(orgName, affiliation, periodName);
 
       const messageBlock = `
         <tr><td style="padding:0 48px 16px;">
@@ -335,12 +325,11 @@
               <tr><td align="center" style="padding:0 48px 8px;">
                 <p style="margin:0; font-size:15px; line-height:1.7; color:#a0aec0;">A juror has been locked out and is requesting a PIN reset.</p>
               </td></tr>
-              <tr><td style="padding:0 48px 16px;">
-                <div style="padding:16px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.06); border-radius:12px;">
-                  <p style="margin:0 0 4px; font-size:18px; font-weight:700; color:#ffffff;">${jurorName}</p>
-                  <p style="margin:0 0 16px; font-size:13px; color:#6c47ff;">${metaLine}</p>
-                  <p style="margin:0; font-size:13px; color:#718096;">Period: <strong style="color:#a0aec0;">${periodName}</strong></p>
-                </div>
+              <tr><td style="padding:0 48px 4px;">
+                <p style="margin:0; font-size:18px; font-weight:700; color:#ffffff;">${jurorName}</p>
+              </td></tr>
+              <tr><td style="padding:8px 48px 16px;">
+                ${scopeBlock}
               </td></tr>
               ${messageBlock}
               <tr><td style="padding:0 48px 16px;">
@@ -358,6 +347,17 @@
       const inviteUrl    = "https://vera-eval.app/invite/accept";
       const organization = "TED University";
       const programName  = "Electrical &amp; Electronics Engineering";
+      const scopeBlock = `
+        <div style="margin:0 0 18px; border:1px solid rgba(108,71,255,0.5); border-radius:16px; background:rgba(255,255,255,0.03); overflow:hidden;">
+          <div style="padding:14px 18px;">
+            <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">ORGANIZATION</p>
+            <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${organization}</p>
+          </div>
+          <div style="padding:14px 18px; border-top:1px solid rgba(255,255,255,0.08);">
+            <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">PROGRAM</p>
+            <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${programName}</p>
+          </div>
+        </div>`;
       return `
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0f0f1a; padding:40px 0;">
           <tr><td align="center">
@@ -373,20 +373,7 @@
                 <p style="margin:0; font-size:15px; line-height:1.7; color:#a0aec0;">You've been invited to join VERA as an organization administrator with access to the following scope:</p>
               </td></tr>
               <tr><td style="padding:0 48px 12px;">
-                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(108,71,255,0.08); border:1px solid rgba(108,71,255,0.25); border-radius:12px;">
-                  <tr>
-                    <td style="padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.06);">
-                      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:#6c47ff; font-weight:600; margin-bottom:4px;">Organization</div>
-                      <div style="font-size:15px; color:#f1f5f9; font-weight:600;">${organization}</div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding:12px 16px;">
-                      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:#6c47ff; font-weight:600; margin-bottom:4px;">Program</div>
-                      <div style="font-size:15px; color:#f1f5f9; font-weight:600;">${programName}</div>
-                    </td>
-                  </tr>
-                </table>
+                ${scopeBlock}
               </td></tr>
               <tr><td style="padding:0 48px 8px;">
                 <p style="margin:0 0 8px; font-size:14px; line-height:1.7; color:#a0aec0;">Click the button below to accept your invitation and set up your account. You will be asked to choose a password to complete the process.</p>
@@ -408,7 +395,8 @@
     function submittedTpl() {
       const applicantName  = "Dr. Elif Yıldız";
       const applicantEmail = "elif.yildiz@tedu.edu.tr";
-      const orgName        = "TED University — Electrical & Electronics Engineering";
+      const organization   = "TED University";
+      const programName    = "Electrical &amp; Electronics Engineering";
       const reviewUrl      = "https://vera-eval.app?admin";
 
       return `
@@ -425,12 +413,25 @@
               <tr><td align="center" style="padding:0 48px 20px;">
                 <p style="margin:0; font-size:15px; line-height:1.7; color:#a0aec0;">A new admin application was submitted.</p>
               </td></tr>
+              <tr><td style="padding:0 48px 4px;">
+                <p style="margin:0 0 2px; font-size:18px; font-weight:700; color:#ffffff;">${applicantName}</p>
+                <p style="margin:0 0 12px; font-size:13px; color:#6c47ff;">${applicantEmail}</p>
+              </td></tr>
               <tr><td style="padding:0 48px 20px;">
-                <div style="padding:16px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.06); border-radius:12px;">
-                  <p style="margin:0 0 4px; font-size:18px; font-weight:700; color:#ffffff;">${applicantName}</p>
-                  <p style="margin:0 0 12px; font-size:13px; color:#6c47ff;">${applicantEmail}</p>
-                  <p style="margin:0; font-size:13px; color:#718096;">Requested access to <strong style="color:#a0aec0;">${orgName}</strong></p>
-                </div>
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(108,71,255,0.08); border:1px solid rgba(108,71,255,0.25); border-radius:12px; margin:4px 0 8px;">
+                  <tr>
+                    <td style="padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.06);">
+                      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:#6c47ff; font-weight:600; margin-bottom:4px;">Organization</div>
+                      <div style="font-size:15px; color:#f1f5f9; font-weight:600;">${organization}</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:12px 16px;">
+                      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:#6c47ff; font-weight:600; margin-bottom:4px;">Program</div>
+                      <div style="font-size:15px; color:#f1f5f9; font-weight:600;">${programName}</div>
+                    </td>
+                  </tr>
+                </table>
               </td></tr>
               <tr><td style="padding:0 48px 20px;">
                 <p style="margin:0; font-size:14px; line-height:1.7; color:#a0aec0;">Review and approve or reject this application from your admin panel.</p>
@@ -451,7 +452,7 @@
       const affiliation = "Electrical Engineering";
       const orgName     = "TED University";
       const periodName  = "EE 492 — Spring 2026";
-      const metaLine    = [affiliation, orgName].filter(Boolean).join(" &middot; ");
+      const scopeBlock  = mkScopeBlock(orgName, affiliation, periodName);
 
       return `
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0f0f1a; padding:40px 0;">
@@ -467,12 +468,11 @@
               <tr><td align="center" style="padding:0 48px 20px;">
                 <p style="margin:0; font-size:15px; line-height:1.7; color:#a0aec0;">A juror has submitted their scores and is requesting the ability to edit them.</p>
               </td></tr>
-              <tr><td style="padding:0 48px 20px;">
-                <div style="padding:16px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.06); border-radius:12px;">
-                  <p style="margin:0 0 4px; font-size:18px; font-weight:700; color:#ffffff;">${jurorName}</p>
-                  <p style="margin:0 0 16px; font-size:13px; color:#6c47ff;">${metaLine}</p>
-                  <p style="margin:0; font-size:13px; color:#718096;">Period: <strong style="color:#a0aec0;">${periodName}</strong></p>
-                </div>
+              <tr><td style="padding:0 48px 4px;">
+                <p style="margin:0; font-size:18px; font-weight:700; color:#ffffff;">${jurorName}</p>
+              </td></tr>
+              <tr><td style="padding:8px 48px 20px;">
+                ${scopeBlock}
               </td></tr>
               <tr><td style="padding:0 48px 20px;">
                 <p style="margin:0; font-size:14px; line-height:1.7; color:#a0aec0;">To allow this juror to edit their scores, go to <strong style="color:#f1f5f9;">Settings &rarr; Jurors</strong> in your admin panel and enable <strong style="color:#f1f5f9;">Edit Mode</strong> for this juror.</p>
@@ -488,9 +488,11 @@
     function unlockRequestedTpl() {
       const requesterName  = "Dr. Elif Yıldız";
       const periodName     = "Spring 2026";
-      const orgName        = "TED University — Electrical & Electronics Engineering";
+      const organization   = "TED University";
+      const programName    = "Electrical &amp; Electronics Engineering";
       const reason         = "Criterion 3 label had a typo that misleads jurors. We need to fix the wording and re-generate the QR before finalising the rankings.";
       const reviewUrl      = "https://vera-eval.app/admin/unlock-requests";
+      const scopeBlock     = mkScopeBlock(organization, programName, periodName);
 
       return `
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0f0f1a; padding:40px 0;">
@@ -506,12 +508,11 @@
               <tr><td align="center" style="padding:0 48px 20px;">
                 <p style="margin:0; font-size:15px; line-height:1.7; color:#a0aec0;">An org admin has requested to unlock a period that already has evaluation scores.</p>
               </td></tr>
-              <tr><td style="padding:0 48px 8px;">
-                <div style="padding:16px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.06); border-radius:12px;">
-                  <p style="margin:0 0 4px; font-size:18px; font-weight:700; color:#ffffff;">${requesterName}</p>
-                  <p style="margin:0 0 12px; font-size:13px; color:#a78bfa;">${orgName}</p>
-                  <p style="margin:0; font-size:13px; color:#718096;">Period: <strong style="color:#a0aec0;">${periodName}</strong></p>
-                </div>
+              <tr><td style="padding:0 48px 4px;">
+                <p style="margin:0; font-size:18px; font-weight:700; color:#ffffff;">${requesterName}</p>
+              </td></tr>
+              <tr><td style="padding:8px 48px 8px;">
+                ${scopeBlock}
                 <p style="margin:14px 0 0; padding:12px 14px; font-size:13px; line-height:1.6; color:#cbd5e1; background:rgba(255,255,255,0.04); border-left:3px solid #a78bfa; border-radius:6px;">
                   <strong style="color:#f1f5f9;">Reason:</strong> ${reason}
                 </p>
@@ -533,7 +534,8 @@
     function unlockResolvedTpl(decision) {
       const isApproved   = decision === "approved";
       const periodName   = "Spring 2026";
-      const orgName      = "TED University — Electrical & Electronics Engineering";
+      const organization = "TED University";
+      const programName  = "Electrical &amp; Electronics Engineering";
       const reviewNote   = isApproved
         ? "Approved — please apply the label fix and re-generate the QR code. Existing scores are unaffected."
         : "Rejected — the change you described would adjust criterion weights, which invalidates the scores already submitted. Correct the label after the evaluation closes.";
@@ -567,12 +569,11 @@
               <tr><td align="center" style="padding:0 48px 20px;">
                 <p style="margin:0; font-size:15px; line-height:1.7; color:#a0aec0;">${intro}</p>
               </td></tr>
+              <tr><td style="padding:0 48px 4px;">
+                <p style="margin:0 0 6px; font-size:11px; line-height:1.3; letter-spacing:1.2px; font-weight:700; color:${accent};">${decisionPill}</p>
+              </td></tr>
               <tr><td style="padding:0 48px 8px;">
-                <div style="padding:16px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.06); border-radius:12px;">
-                  <p style="margin:0 0 6px; font-size:11px; line-height:1.3; letter-spacing:1.2px; font-weight:700; color:${accent};">${decisionPill}</p>
-                  <p style="margin:0 0 4px; font-size:18px; font-weight:700; color:#ffffff;">${periodName}</p>
-                  <p style="margin:0; font-size:13px; color:#718096;">${orgName}</p>
-                </div>
+                ${mkScopeBlock(organization, programName, periodName)}
                 <p style="margin:14px 0 0; padding:12px 14px; font-size:13px; line-height:1.6; color:#cbd5e1; background:rgba(255,255,255,0.04); border-left:3px solid #a78bfa; border-radius:6px;">
                   <strong style="color:#f1f5f9;">Review note:</strong> ${reviewNote}
                 </p>

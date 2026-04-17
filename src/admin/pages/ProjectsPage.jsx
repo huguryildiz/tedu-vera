@@ -29,11 +29,11 @@ import "../../styles/pages/projects.css";
 
 // ── Column config — single source of truth for table headers and export ──
 const COLUMNS = [
-  { key: "group_no",   label: "No",            colWidth: 52,   exportWidth: 8  },
-  { key: "title",      label: "Project Title",  colWidth: null, exportWidth: 36 },
-  { key: "members",    label: "Team Members",   colWidth: null, exportWidth: 42, colClass: "col-members" },
-  { key: "avg_score",  label: "Avg Score",      colWidth: 90,   exportWidth: 10 },
-  { key: "updated_at", label: "Last Updated",   colWidth: 130,  exportWidth: 18, colClass: "col-updated" },
+  { key: "group_no",   label: "No",            colWidth: "4%",  exportWidth: 8  },
+  { key: "title",      label: "Project Title",  colWidth: "38%", exportWidth: 36 },
+  { key: "members",    label: "Team Members",   colWidth: "28%", exportWidth: 42, colClass: "col-members" },
+  { key: "avg_score",  label: "Avg Score",      colWidth: "9%",  exportWidth: 10 },
+  { key: "updated_at", label: "Last Updated",   colWidth: "13%", exportWidth: 18, colClass: "col-updated" },
 ];
 
 function getProjectCell(p, key, avgMap) {
@@ -522,6 +522,7 @@ export default function ProjectsPage() {
           meta={`${periods.viewPeriodLabel} · ${totalProjects} projects`}
           periodName={periods.viewPeriodLabel}
           organization={activeOrganization?.name || ""}
+          department={activeOrganization?.institution || ""}
           onClose={() => setExportOpen(false)}
           generateFile={async (fmt) => {
             const header = COLUMNS.map((c) => c.label);
@@ -592,7 +593,7 @@ export default function ProjectsPage() {
                     : c.label} <SortIcon colKey={c.key} sortKey={sortKey} sortDir={sortDir} />
                 </th>
               ))}
-              <th style={{ width: 48, textAlign: "right" }}>Actions</th>
+              <th style={{ width: "8%", textAlign: "right" }}>Actions</th>
             </tr>
           </thead>
           <tbody>

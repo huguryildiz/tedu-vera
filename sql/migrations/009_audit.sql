@@ -239,12 +239,15 @@ GRANT EXECUTE ON FUNCTION public.rpc_write_auth_failure_event(TEXT, TEXT) TO aut
 -- and the previous row's hash (for the same org). Any deletion or modification of
 -- a past row invalidates all subsequent hashes.
 --
--- Note: concurrent inserts within the same millisecond may share the same
--- prev_hash (fork), which is acceptable for VERA's low-concurrency audit volume.
--- Rows inserted before this trigger was created have row_hash = NULL
--- and are treated as "pre-chain era".
+-- chain_seq (BIGSERIAL) is the authoritative insertion-order counter.
+-- Ordering by created_at was fragile: backdated rows (e.g. demo seed) would
+-- appear before earlier-inserted hashed rows in verification, breaking the chain.
+-- chain_seq is assigned by PostgreSQL at INSERT time and is immune to this.
 --
--- row_hash column is defined in 002_tables.sql (TEXT, nullable).
+-- Rows without row_hash (pre-chain era or reset rows) are skipped by both
+-- the trigger lookup and the verification walk.
+--
+-- row_hash and chain_seq columns are defined in 002_tables.sql.
 
 -- -----------------------------------------------------------------------------
 -- 3a. Trigger function: compute and attach SHA-256 chain hash on each INSERT
@@ -258,13 +261,14 @@ DECLARE
   v_prev_hash   TEXT;
   v_chain_input TEXT;
 BEGIN
-  -- Find the hash of the most recent row for the same organization_id.
-  -- IS NOT DISTINCT FROM handles NULL org_id (super-admin events) correctly.
+  -- Find the hash of the most recent row for the same organization_id,
+  -- ordered by chain_seq (true insertion order) rather than created_at so that
+  -- backdated rows cannot corrupt the chain.
   SELECT row_hash INTO v_prev_hash
   FROM audit_logs
   WHERE organization_id IS NOT DISTINCT FROM NEW.organization_id
     AND row_hash IS NOT NULL
-  ORDER BY created_at DESC, id DESC
+  ORDER BY chain_seq DESC
   LIMIT 1;
 
   -- Build the chain input: chain breaks if any field is tampered.
@@ -309,12 +313,14 @@ DECLARE
   v_expected    TEXT;
   v_chain_input TEXT;
 BEGIN
+  -- Walk rows in true insertion order (chain_seq) rather than created_at so that
+  -- backdated rows (e.g. demo seed with old timestamps) don't break the chain.
   FOR v_row IN
     SELECT id, action, organization_id, created_at, row_hash
     FROM audit_logs
     WHERE organization_id IS NOT DISTINCT FROM p_org_id
       AND row_hash IS NOT NULL
-    ORDER BY created_at ASC, id ASC
+    ORDER BY chain_seq ASC
   LOOP
     v_chain_input :=
       v_row.id::text                                       ||
@@ -514,6 +520,7 @@ BEGIN
 END;
 $$;
 
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_set_period_lock(UUID, BOOLEAN) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.rpc_admin_set_period_lock(UUID, BOOLEAN) TO authenticated;
 
 -- =============================================================================
@@ -1409,3 +1416,86 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.rpc_admin_force_close_juror_edit_mode(UUID, UUID) TO authenticated;
+
+-- =============================================================================
+-- SECURITY: Revoke default PUBLIC execute from all admin/authenticated-only RPCs
+-- =============================================================================
+-- PostgreSQL grants EXECUTE to PUBLIC by default when a function is created.
+-- Every admin RPC that is not intentionally public must be revoked here so that
+-- unauthenticated (anon) callers cannot invoke them. This block covers RPCs
+-- defined across migrations 006–009. The GRANT TO authenticated in each
+-- function's own section remains intact and is not affected by this REVOKE.
+--
+-- Functions intentionally left with PUBLIC access (excluded from this block):
+--   rpc_public_*       — unauthenticated by design
+--   rpc_jury_*         — session-token auth (no Supabase Auth JWT required)
+--   rpc_landing_stats, rpc_check_email_available, rpc_get_public_feedback,
+--   rpc_write_auth_failure_event, rpc_submit_jury_feedback, rpc_get_period_impact
+-- =============================================================================
+
+-- from 006_rpcs_admin
+REVOKE EXECUTE ON FUNCTION public.rpc_juror_reset_pin(UUID, UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_juror_toggle_edit_mode(UUID, UUID, BOOLEAN, TEXT, INT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_juror_unlock_pin(UUID, UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_find_user_by_email(TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_approve_application(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_reject_application(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_list_organizations() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_create_org_and_membership(TEXT, TEXT, TEXT, TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_check_period_readiness(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_publish_period(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_close_period(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_generate_entry_token(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_entry_token_revoke(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_request_unlock(UUID, TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_super_admin_resolve_unlock(UUID, TEXT, TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_list_unlock_requests(TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_period_freeze_snapshot(UUID, BOOLEAN) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_period_unassign_framework(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_get_maintenance() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_get_security_policy() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_set_security_policy(JSONB) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_write_audit_event(JSONB) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_log_period_lock(UUID, TEXT, JSONB) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_request_to_join_org(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_approve_join_request(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_reject_join_request(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_clone_framework(UUID, TEXT, UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_duplicate_period(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_set_period_criteria_name(UUID, TEXT) FROM PUBLIC;
+
+-- from 007_identity
+REVOKE EXECUTE ON FUNCTION public.rpc_org_admin_cancel_invite(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_accept_invite() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_revoke_admin_session(UUID) FROM PUBLIC;
+
+-- from 008_platform
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_get_platform_settings() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_set_platform_settings(TEXT, TEXT, BOOLEAN) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_set_maintenance(TEXT, TIMESTAMPTZ, INT, TEXT, UUID[], BOOLEAN) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_cancel_maintenance() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_write_audit_log(TEXT, TEXT, UUID, JSONB, UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_backup_list(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_backup_register(UUID, TEXT, BIGINT, TEXT, JSONB, UUID[], TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_backup_delete(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_backup_record_download(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_get_backup_schedule() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_set_backup_schedule(TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_platform_metrics() FROM PUBLIC;
+
+-- from 009_audit (rpc_admin_set_period_lock already revoked inline above)
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_save_period_criteria(UUID, JSONB) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_reorder_period_criteria(UUID, JSONB) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_create_framework_outcome(UUID, TEXT, TEXT, TEXT, INT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_update_framework_outcome(UUID, JSONB) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_delete_framework_outcome(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_create_period_outcome(UUID, TEXT, TEXT, TEXT, INT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_update_period_outcome(UUID, JSONB) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_delete_period_outcome(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_upsert_period_criterion_outcome_map(UUID, UUID, UUID, TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_delete_period_criterion_outcome_map(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_update_organization(UUID, JSONB) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_update_member_profile(UUID, TEXT, UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_revoke_entry_token(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_verify_audit_chain(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_force_close_juror_edit_mode(UUID, UUID) FROM PUBLIC;

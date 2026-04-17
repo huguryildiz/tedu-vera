@@ -151,7 +151,7 @@ export default function OutcomeDetailDrawer({ open, onClose, outcome, criteria =
           <div className="fs-alert-icon" style={{ width: 24, height: 24 }}><Info size={15} /></div>
           <div className="fs-alert-body">
             <div className="fs-alert-desc" style={{ fontSize: 11 }}>
-              Select criteria that explicitly assess this outcome. Mapped criteria contribute to <strong style={{ color: "var(--success)" }}>Direct</strong> coverage. Outcomes with no selected criteria remain <strong style={{ color: "var(--warning)" }}>Indirect</strong> or <strong>Not mapped</strong>.
+              Select criteria that explicitly assess this outcome. Mapped criteria contribute to <strong style={{ color: "var(--success)" }}>Direct</strong> coverage. Outcomes with no selected criteria remain <strong style={{ color: "var(--warning)" }}>Indirect</strong> or <strong>Unmapped</strong>.
             </div>
           </div>
         </div>

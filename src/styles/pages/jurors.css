@@ -472,7 +472,7 @@
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 900px) and (orientation: landscape) {
   #page-jurors .table-wrap { overflow-x: auto; }
-  #jurors-main-table { min-width: 920px; width: 100%; }
+  #jurors-main-table { min-width: 600px; width: 100%; }
 
   /* Mobile card column hidden — desktop columns take over */
   #jurors-main-table .col-mobile-card { display: none !important; }
