@@ -6,8 +6,14 @@
 
 /* ── Field inputs ─────────────────────────────────────────── */
 
-/* Global textarea resize — all textareas are vertically resizable by default */
-textarea { resize: vertical; }
+/* Global textarea auto-grow — fits content height, no scrollbar.
+   field-sizing: content is native CSS (Chrome 123+, FF 130+, Safari 18+).
+   JS fallback in main.jsx covers the initial-render case and older browsers. */
+textarea {
+  field-sizing: content;
+  overflow: hidden;
+  resize: vertical;
+}
 
 /* Global placeholder tone */
 input::placeholder,

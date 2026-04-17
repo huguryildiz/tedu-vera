@@ -480,7 +480,101 @@ export default function CriteriaPage() {
           <div className="page-title">Evaluation Criteria</div>
           <div className="page-desc">Define scoring rubrics and criteria weights for the active evaluation period.</div>
         </div>
+        {periods.viewPeriodId && (draftCriteria.length > 0 || scratchMode) && !pendingCriteriaPreview && (
+          <div className="crt-header-actions">
+            <FilterButton
+              activeCount={activeFilterCount}
+              isOpen={filterOpen}
+              onClick={() => { setFilterOpen((v) => !v); setExportOpen(false); }}
+            />
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}
+            >
+              <Download size={14} strokeWidth={2} style={{ verticalAlign: "-1px" }} />
+              {" "}Export
+            </button>
+            {isLocked ? (
+              <div className="crt-lock-badge">
+                <Lock size={11} strokeWidth={2.2} />
+                Evaluation Active
+              </div>
+            ) : (
+              <button
+                className="crt-add-btn"
+                onClick={() => setEditingIndex(-1)}
+              >
+                <Plus size={13} strokeWidth={2.2} />
+                Add Criterion
+              </button>
+            )}
+          </div>
+        )}
       </div>
+      {exportOpen && (
+        <ExportPanel
+          title="Export Criteria"
+          subtitle="Download evaluation criteria with rubric bands and outcome mappings."
+          meta={`${(draftCriteria || []).length} criteria · ${periods.viewPeriodLabel || "—"}`}
+          periodName={periods.viewPeriodLabel || ""}
+          organization={activeOrganization?.name || ""}
+          department={activeOrganization?.institution || ""}
+          onClose={() => setExportOpen(false)}
+          generateFile={generateCriteriaFile}
+          onExport={handleCriteriaExport}
+        />
+      )}
+      {filterOpen && (
+        <div className="filter-panel show">
+          <div className="filter-panel-header">
+            <div>
+              <h4>
+                <Filter size={14} style={{ display: "inline", marginRight: 4, opacity: 0.5, verticalAlign: "-1px" }} />
+                Filter Criteria
+              </h4>
+              <div className="filter-panel-sub">Narrow criteria by outcome mapping and rubric state.</div>
+            </div>
+            <button className="filter-panel-close" aria-label="Close filter panel" onClick={() => setFilterOpen(false)}>&#215;</button>
+          </div>
+          <div className="filter-row">
+            <div className="filter-group">
+              <label>Mapping</label>
+              <CustomSelect
+                compact
+                value={mappingFilter}
+                onChange={(v) => setMappingFilter(v)}
+                options={[
+                  { value: "all", label: "All mappings" },
+                  { value: "mapped", label: "Mapped to outcomes" },
+                  { value: "unmapped", label: "Unmapped" },
+                ]}
+                ariaLabel="Mapping"
+              />
+            </div>
+            <div className="filter-group">
+              <label>Rubric</label>
+              <CustomSelect
+                compact
+                value={rubricFilter}
+                onChange={(v) => setRubricFilter(v)}
+                options={[
+                  { value: "all", label: "All rubrics" },
+                  { value: "defined", label: "Rubric defined" },
+                  { value: "none", label: "No rubric" },
+                ]}
+                ariaLabel="Rubric"
+              />
+            </div>
+            <button
+              className="btn btn-outline btn-sm filter-clear-btn"
+              onClick={() => { setMappingFilter("all"); setRubricFilter("all"); }}
+            >
+              <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
+              {" "}Clear all
+            </button>
+          </div>
+        </div>
+      )}
       {/* Lock banner */}
       {isLocked && periods.viewPeriodId && (
         <div className="lock-notice">
@@ -747,99 +841,7 @@ export default function CriteriaPage() {
                 {draftCriteria.length} {draftCriteria.length === 1 ? "criterion" : "criteria"} · {periods.draftTotal ?? 0} pts
               </div>
             </div>
-            <div className="crt-header-actions">
-              <FilterButton
-                activeCount={activeFilterCount}
-                isOpen={filterOpen}
-                onClick={() => { setFilterOpen((v) => !v); setExportOpen(false); }}
-              />
-              <button
-                className="btn btn-outline btn-sm"
-                onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}
-              >
-                <Download size={14} strokeWidth={2} style={{ verticalAlign: "-1px" }} />
-                {" "}Export
-              </button>
-              {isLocked ? (
-                <div className="crt-lock-badge">
-                  <Lock size={11} strokeWidth={2.2} />
-                  Evaluation Active
-                </div>
-              ) : (
-                <button
-                  className="crt-add-btn"
-                  onClick={() => setEditingIndex(-1)}
-                >
-                  <Plus size={13} strokeWidth={2.2} />
-                  Add Criterion
-                </button>
-              )}
-            </div>
           </div>
-          {exportOpen && (
-            <ExportPanel
-              title="Export Criteria"
-              subtitle="Download evaluation criteria with rubric bands and outcome mappings."
-              meta={`${(draftCriteria || []).length} criteria · ${periods.viewPeriodLabel || "—"}`}
-              periodName={periods.viewPeriodLabel || ""}
-              organization={activeOrganization?.name || ""}
-              department={activeOrganization?.institution || ""}
-              onClose={() => setExportOpen(false)}
-              generateFile={generateCriteriaFile}
-              onExport={handleCriteriaExport}
-            />
-          )}
-          {filterOpen && (
-            <div className="filter-panel show">
-              <div className="filter-panel-header">
-                <div>
-                  <h4>
-                    <Filter size={14} style={{ display: "inline", marginRight: 4, opacity: 0.5, verticalAlign: "-1px" }} />
-                    Filter Criteria
-                  </h4>
-                  <div className="filter-panel-sub">Narrow criteria by outcome mapping and rubric state.</div>
-                </div>
-                <button className="filter-panel-close" aria-label="Close filter panel" onClick={() => setFilterOpen(false)}>&#215;</button>
-              </div>
-              <div className="filter-row">
-                <div className="filter-group">
-                  <label>Mapping</label>
-                  <CustomSelect
-                    compact
-                    value={mappingFilter}
-                    onChange={(v) => setMappingFilter(v)}
-                    options={[
-                      { value: "all", label: "All mappings" },
-                      { value: "mapped", label: "Mapped to outcomes" },
-                      { value: "unmapped", label: "Unmapped" },
-                    ]}
-                    ariaLabel="Mapping"
-                  />
-                </div>
-                <div className="filter-group">
-                  <label>Rubric</label>
-                  <CustomSelect
-                    compact
-                    value={rubricFilter}
-                    onChange={(v) => setRubricFilter(v)}
-                    options={[
-                      { value: "all", label: "All rubrics" },
-                      { value: "defined", label: "Rubric defined" },
-                      { value: "none", label: "No rubric" },
-                    ]}
-                    ariaLabel="Rubric"
-                  />
-                </div>
-                <button
-                  className="btn btn-outline btn-sm filter-clear-btn"
-                  onClick={() => { setMappingFilter("all"); setRubricFilter("all"); }}
-                >
-                  <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
-                  {" "}Clear all
-                </button>
-              </div>
-            </div>
-          )}
             <table className="crt-table table-standard table-pill-balance">
               <thead>
                 <tr>

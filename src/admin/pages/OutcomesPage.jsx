@@ -633,10 +633,106 @@ export default function OutcomesPage() {
         <FbAlert variant="danger" style={{ marginBottom: 16 }}>{panelError}</FbAlert>
       )}
       {/* Page title */}
-      <div style={{ marginBottom: 16 }}>
-        <div className="page-title">Outcomes &amp; Mapping</div>
-        <div className="page-desc">Map evaluation criteria to programme outcomes and track coverage.</div>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 16 }}>
+        <div>
+          <div className="page-title">Outcomes &amp; Mapping</div>
+          <div className="page-desc">Map evaluation criteria to programme outcomes and track coverage.</div>
+        </div>
+        {!noFramework && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <FilterButton
+              activeCount={activeFilterCount}
+              isOpen={filterOpen}
+              onClick={() => { setFilterOpen((v) => !v); setExportOpen(false); }}
+            />
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}
+            >
+              <Download size={14} strokeWidth={2} style={{ verticalAlign: "-1px" }} />
+              {" "}Export
+            </button>
+            {isLocked ? (
+              <span className="acc-lock-badge">
+                <Lock size={11} strokeWidth={2.5} />
+                Evaluation Active
+              </span>
+            ) : (
+              <button
+                className="btn btn-primary btn-sm"
+                style={{ width: "auto", padding: "6px 14px", fontSize: 12, background: "var(--accent)", boxShadow: "none" }}
+                onClick={() => setAddDrawerOpen(true)}
+              >
+                + Add Outcome
+              </button>
+            )}
+          </div>
+        )}
       </div>
+      {exportOpen && (
+        <ExportPanel
+          title="Export Outcomes"
+          subtitle="Download programme outcomes with criterion mappings and coverage analysis."
+          meta={`${(fw.outcomes || []).length} outcomes · ${selectedPeriod?.name || "—"}`}
+          periodName={selectedPeriod?.name || ""}
+          organization={activeOrganization?.name || ""}
+          department={activeOrganization?.institution || ""}
+          onClose={() => setExportOpen(false)}
+          generateFile={generateOutcomesFile}
+          onExport={handleOutcomesExport}
+        />
+      )}
+      {filterOpen && (
+        <div className="filter-panel show">
+          <div className="filter-panel-header">
+            <div>
+              <h4>
+                <Filter size={14} style={{ display: "inline", marginRight: 4, opacity: 0.5, verticalAlign: "-1px" }} />
+                Filter Outcomes
+              </h4>
+              <div className="filter-panel-sub">Narrow outcomes by coverage and mapped criterion.</div>
+            </div>
+            <button className="filter-panel-close" aria-label="Close filter panel" onClick={() => setFilterOpen(false)}>&#215;</button>
+          </div>
+          <div className="filter-row">
+            <div className="filter-group">
+              <label>Coverage</label>
+              <CustomSelect
+                compact
+                value={coverageFilter}
+                onChange={(v) => setCoverageFilter(v)}
+                options={[
+                  { value: "all", label: "All coverage" },
+                  { value: "direct", label: "Direct" },
+                  { value: "indirect", label: "Indirect" },
+                  { value: "none", label: "Unmapped" },
+                ]}
+                ariaLabel="Coverage"
+              />
+            </div>
+            <div className="filter-group">
+              <label>Mapped Criterion</label>
+              <CustomSelect
+                compact
+                value={criterionFilter}
+                onChange={(v) => setCriterionFilter(v)}
+                options={[
+                  { value: "all", label: "All criteria" },
+                  ...drawerCriteria.map((c) => ({ value: c.id, label: c.label })),
+                ]}
+                ariaLabel="Mapped Criterion"
+              />
+            </div>
+            <button
+              className="btn btn-outline btn-sm filter-clear-btn"
+              onClick={() => { setCoverageFilter("all"); setCriterionFilter("all"); }}
+            >
+              <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
+              {" "}Clear all
+            </button>
+          </div>
+        </div>
+      )}
       {noFramework ? (
         <div style={{ padding: "48px 24px", display: "flex", justifyContent: "center" }}>
           <div className="vera-es-card">
@@ -968,99 +1064,7 @@ export default function OutcomesPage() {
                   {totalOutcomes} outcome{totalOutcomes !== 1 ? "s" : ""} · {directCount} direct
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <FilterButton
-                  activeCount={activeFilterCount}
-                  isOpen={filterOpen}
-                  onClick={() => { setFilterOpen((v) => !v); setExportOpen(false); }}
-                />
-                <button
-                  className="btn btn-outline btn-sm"
-                  onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}
-                >
-                  <Download size={14} strokeWidth={2} style={{ verticalAlign: "-1px" }} />
-                  {" "}Export
-                </button>
-                {isLocked ? (
-                  <span className="acc-lock-badge">
-                    <Lock size={11} strokeWidth={2.5} />
-                    Evaluation Active
-                  </span>
-                ) : (
-                  <button
-                    className="btn btn-primary btn-sm"
-                    style={{ width: "auto", padding: "6px 14px", fontSize: 12, background: "var(--accent)", boxShadow: "none" }}
-                    onClick={() => setAddDrawerOpen(true)}
-                  >
-                    + Add Outcome
-                  </button>
-                )}
-              </div>
             </div>
-            {exportOpen && (
-              <ExportPanel
-                title="Export Outcomes"
-                subtitle="Download programme outcomes with criterion mappings and coverage analysis."
-                meta={`${(fw.outcomes || []).length} outcomes · ${selectedPeriod?.name || "—"}`}
-                periodName={selectedPeriod?.name || ""}
-                organization={activeOrganization?.name || ""}
-                department={activeOrganization?.institution || ""}
-                onClose={() => setExportOpen(false)}
-                generateFile={generateOutcomesFile}
-                onExport={handleOutcomesExport}
-              />
-            )}
-            {filterOpen && (
-              <div className="filter-panel show">
-                <div className="filter-panel-header">
-                  <div>
-                    <h4>
-                      <Filter size={14} style={{ display: "inline", marginRight: 4, opacity: 0.5, verticalAlign: "-1px" }} />
-                      Filter Outcomes
-                    </h4>
-                    <div className="filter-panel-sub">Narrow outcomes by coverage and mapped criterion.</div>
-                  </div>
-                  <button className="filter-panel-close" aria-label="Close filter panel" onClick={() => setFilterOpen(false)}>&#215;</button>
-                </div>
-                <div className="filter-row">
-                  <div className="filter-group">
-                    <label>Coverage</label>
-                    <CustomSelect
-                      compact
-                      value={coverageFilter}
-                      onChange={(v) => setCoverageFilter(v)}
-                      options={[
-                        { value: "all", label: "All coverage" },
-                        { value: "direct", label: "Direct" },
-                        { value: "indirect", label: "Indirect" },
-                        { value: "none", label: "Unmapped" },
-                      ]}
-                      ariaLabel="Coverage"
-                    />
-                  </div>
-                  <div className="filter-group">
-                    <label>Mapped Criterion</label>
-                    <CustomSelect
-                      compact
-                      value={criterionFilter}
-                      onChange={(v) => setCriterionFilter(v)}
-                      options={[
-                        { value: "all", label: "All criteria" },
-                        ...drawerCriteria.map((c) => ({ value: c.id, label: c.label })),
-                      ]}
-                      ariaLabel="Mapped Criterion"
-                    />
-                  </div>
-                  <button
-                    className="btn btn-outline btn-sm filter-clear-btn"
-                    onClick={() => { setCoverageFilter("all"); setCriterionFilter("all"); }}
-                  >
-                    <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
-                    {" "}Clear all
-                  </button>
-                </div>
-              </div>
-            )}
             <div className="table-wrap" style={{ border: "none" }}>
               {fw.loading && fw.outcomes.length === 0 ? (
                 <div className="acc-empty-state" style={{ padding: "32px 24px" }}>

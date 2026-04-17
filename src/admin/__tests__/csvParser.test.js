@@ -32,20 +32,23 @@ describe("parseJurorsCsv", () => {
 });
 
 describe("parseProjectsCsv", () => {
-  qaTest("import.csv.project.duplicate", async () => {
+  qaTest("import.csv.project.ignores_group_no", async () => {
+    // Group column is present in CSV but must be ignored — DB assigns project_no.
     const csv = "Group,Title,Members\n5,Drone Nav,Can E.\n9,IoT Hub,Elif S.";
-    const existing = [{ group_no: 5 }];
-    const result = await parseProjectsCsv(csvFile(csv), existing);
-    expect(result.rows[0].status).toBe("skip");
-    expect(result.rows[1].status).toBe("ok");
-    expect(result.stats.duplicate).toBe(1);
-    expect(result.stats.valid).toBe(1);
-  });
-
-  qaTest("import.csv.project.no-existing", async () => {
-    const csv = "Group,Title,Members\n5,Drone Nav,Can E.";
     const result = await parseProjectsCsv(csvFile(csv));
     expect(result.rows[0].status).toBe("ok");
+    expect(result.rows[1].status).toBe("ok");
     expect(result.stats.duplicate).toBe(0);
+    expect(result.stats.valid).toBe(2);
+    // No groupNo surfaced in row objects.
+    expect(result.rows[0].groupNo).toBeUndefined();
+  });
+
+  qaTest("import.csv.project.missing_title", async () => {
+    const csv = "Title,Members\n,Solo dev";
+    const result = await parseProjectsCsv(csvFile(csv));
+    expect(result.rows[0].status).toBe("err");
+    expect(result.rows[0].statusLabel).toBe("Missing title");
+    expect(result.stats.error).toBe(1);
   });
 });

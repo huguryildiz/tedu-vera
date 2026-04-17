@@ -130,16 +130,16 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
                 {project?.groupNo != null && (
                   <span style={{
                     fontSize: "11px",
-                    fontWeight: 600,
+                    fontWeight: 700,
                     lineHeight: 1,
                     padding: "3px 7px",
                     borderRadius: 99,
-                    background: "var(--bg-tertiary, #f1f5f9)",
-                    color: "var(--text-secondary, #64748b)",
-                    letterSpacing: "0.02em",
+                    background: "var(--accent-alpha, rgba(99,102,241,0.12))",
+                    color: "var(--accent, #6366f1)",
+                    letterSpacing: "0.04em",
                     fontFamily: "var(--mono)",
                   }}>
-                    #{project.groupNo}
+                    P{project.groupNo}
                   </span>
                 )}
               </div>
@@ -188,7 +188,7 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
             <input
               className="fs-input locked"
               type="text"
-              value={project?.groupNo ?? ""}
+              value={project?.groupNo != null ? `P${project.groupNo}` : ""}
               readOnly
               disabled
               style={{ fontFamily: "var(--mono)" }}
@@ -233,7 +233,7 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
             <input
               className="fs-input"
               type="text"
-              placeholder="e.g. Dr. Ali Yılmaz, Prof. Aylin Kaya"
+              placeholder="e.g., Dr. Ali Yılmaz, Prof. Aylin Kaya"
               value={form.advisor}
               onChange={(e) => set("advisor", e.target.value)}
               disabled={saving}
@@ -251,7 +251,6 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
               onChange={(e) => set("description", e.target.value)}
               disabled={saving}
               rows={3}
-              style={{ minHeight: 52 }}
             />
           </div>
         </div>

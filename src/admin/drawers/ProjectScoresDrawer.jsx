@@ -14,7 +14,7 @@
 //   onOpenReviews — () => void (navigate to Reviews page scoped to this project)
 
 import { useEffect, useMemo, useState } from "react";
-import { BarChart2, X, ArrowRight, FileText, AlertTriangle } from "lucide-react";
+import { ClipboardList, X, ArrowRight, FileText, AlertTriangle } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import { TeamMembersInline } from "@/shared/ui/EntityMeta";
 import JurorBadge from "@/admin/components/JurorBadge";
@@ -198,7 +198,7 @@ export default function ProjectScoresDrawer({
         <div className="fs-drawer-header-row">
           <div style={{ display: "flex", alignItems: "flex-start", gap: 12, minWidth: 0 }}>
             <div className="fs-icon identity">
-              <BarChart2 size={17} strokeWidth={2} />
+              <ClipboardList size={17} strokeWidth={2} />
             </div>
             <div style={{ minWidth: 0 }}>
               <div className="fs-title-eyebrow">Project Scores</div>
@@ -228,7 +228,7 @@ export default function ProjectScoresDrawer({
         <div className="psd-kpi-row">
           <div className="psd-kpi">
             <div className="psd-kpi-label">Final Score</div>
-            <div className="psd-kpi-value">
+            <div className="psd-kpi-value psd-kpi-value--accent">
               {finalScore != null ? finalScore.toFixed(1) : "—"}
             </div>
             <div className={`psd-kpi-delta ${deltaVsAvg != null && deltaVsAvg >= 0 ? "up" : deltaVsAvg != null ? "down" : ""}`}>

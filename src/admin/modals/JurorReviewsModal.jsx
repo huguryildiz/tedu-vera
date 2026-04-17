@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ClipboardCheck, ExternalLink, X, Icon } from "lucide-react";
+import { ClipboardCheck, ClipboardList, ExternalLink, X, Icon } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import { formatTs } from "@/admin/utils/adminUtils";
 
@@ -62,6 +62,7 @@ export default function JurorReviewsModal({
   open,
   onClose,
   onOpenFullReviews,
+  onViewProjectScores,
   juror,
   scoreRows = [],
   projects = [],
@@ -144,12 +145,13 @@ export default function JurorReviewsModal({
                 <th className="text-right">Score</th>
                 <th>Status</th>
                 <th className="text-right">Submitted At</th>
+                {onViewProjectScores && <th />}
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="jrm-empty">
+                  <td colSpan={onViewProjectScores ? 6 : 5} className="jrm-empty">
                     No reviews found for this juror in the selected period.
                   </td>
                 </tr>
@@ -172,6 +174,19 @@ export default function JurorReviewsModal({
                         </span>
                       </td>
                       <td className="jrm-submitted text-right vera-datetime-text">{formatTs(row.updatedAt || row.createdAt)}</td>
+                      {onViewProjectScores && (
+                        <td className="jrm-action text-right">
+                          {row.reviewState === "scored" && (
+                            <button
+                              className="jrm-scores-btn"
+                              title="View full scores for this project"
+                              onClick={() => { onClose?.(); onViewProjectScores(row.projectId); }}
+                            >
+                              <ClipboardList size={13} />
+                            </button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   );
                 })

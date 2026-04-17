@@ -130,7 +130,7 @@ export default function EnableEditingModal({ open, onClose, juror, onEnable }) {
             minLength={5}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="e.g. Correcting accidental criterion mismatch"
+            placeholder="e.g., Correcting accidental criterion mismatch"
             disabled={enabling}
           />
           <div className="eem-helper">

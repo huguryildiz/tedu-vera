@@ -181,7 +181,7 @@ export default function IdentityStep({ state, onBack }) {
             <input
               type="text"
               className="form-input"
-              placeholder="e.g. Jane Smith"
+              placeholder="e.g., Jane Smith"
               value={juryName}
               onChange={(e) => setJuryName(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -198,7 +198,7 @@ export default function IdentityStep({ state, onBack }) {
           <input
             type="text"
             className="form-input"
-            placeholder="e.g. TED University / EE"
+            placeholder="e.g., TED University / EE"
             value={affiliation}
             onChange={(e) => setAffiliation(e.target.value)}
             onKeyDown={handleKeyDown}

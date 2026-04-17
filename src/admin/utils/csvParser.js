@@ -19,8 +19,8 @@ function normalizeHeader(h) {
   return String(h ?? "").trim().toLowerCase().replace(/[\s#\-./]+/g, "_");
 }
 
+// Project numbers are DB-assigned; we do not accept group_no from CSV.
 const PROJECT_COL_MAP = {
-  group_no: ["group_no", "group_", "group_number", "groupno", "group", "no", "g"],
   title:    ["title", "project_title", "project_name", "name", "baslik", "başlık"],
   members:  ["members", "students", "team_members", "team", "student_names", "uyeler", "üyeler"],
 };
@@ -32,7 +32,7 @@ const JUROR_COL_MAP = {
 };
 
 // Positional order — used when a field has no header match
-const PROJECT_POSITIONAL = ["group_no", "title", "members"];
+const PROJECT_POSITIONAL = ["title", "members"];
 const JUROR_POSITIONAL   = ["juror_name", "affiliation", "email"];
 
 /**
@@ -92,7 +92,7 @@ function detectAndMap(rawRows, colMap, positionalOrder) {
  * @returns {{ rows, stats, detectedColumns, warningMessage, file }}
  *   rows: [{ rowNum, groupNo, title, members, status, statusLabel, group_no }]
  */
-export async function parseProjectsCsv(file, existingProjects = []) {
+export async function parseProjectsCsv(file) {
   return new Promise((resolve) => {
     Papa.parse(file, {
       header: false,
@@ -101,73 +101,46 @@ export async function parseProjectsCsv(file, existingProjects = []) {
         const { dataRows, colIndices, detectedColumns, hasHeader, firstDataIdx = 0 } =
           detectAndMap(data, PROJECT_COL_MAP, PROJECT_POSITIONAL);
 
-        const existingGroupNos = new Set(
-          existingProjects
-            .map((p) => p.group_no)
-            .filter((n) => n != null)
-            .map((n) => parseInt(n, 10))
-            .filter((n) => !isNaN(n))
-        );
-
         const rowOffset = firstDataIdx + (hasHeader ? 2 : 1);
         const rows = [];
-        let valid = 0, duplicate = 0, error = 0;
+        let valid = 0, error = 0;
 
         dataRows.forEach((raw, i) => {
           const rowNum = i + rowOffset;
-          const groupNoRaw = (raw[colIndices.group_no] ?? "").toString().trim();
-          const title      = (raw[colIndices.title]    ?? "").toString().trim();
-          const members    = (raw[colIndices.members]  ?? "").toString().trim();
+          const title   = (raw[colIndices.title]   ?? "").toString().trim();
+          const members = (raw[colIndices.members] ?? "").toString().trim();
 
-          const groupNo  = groupNoRaw !== "" ? parseInt(groupNoRaw, 10) : NaN;
-          const hasGroup = !isNaN(groupNo);
           const hasTitle = title.length > 0;
-
           let status = "ok", statusLabel = "";
-          if (!hasGroup || !hasTitle) {
+          if (!hasTitle) {
             status = "err";
-            statusLabel = !hasGroup ? "Missing group no" : "Missing title";
+            statusLabel = "Missing title";
             error += 1;
-          } else if (hasGroup && existingGroupNos.has(groupNo)) {
-            status = "skip";
-            statusLabel = "Duplicate";
-            duplicate += 1;
           } else {
             valid += 1;
           }
 
           rows.push({
             rowNum,
-            groupNo: hasGroup ? groupNo : (groupNoRaw || "—"),
-            title:   title || "—",
+            title: title || "—",
             members,
             status,
             statusLabel,
-            group_no: hasGroup ? groupNo : null,
           });
         });
 
         let warningMessage = null;
-        if (duplicate > 0 || error > 0) {
-          const parts = [];
-          if (duplicate > 0) parts.push(`${duplicate} duplicate`);
-          if (error > 0) parts.push(`${error} error${error !== 1 ? "s" : ""}`);
-          const title = parts.join(", ");
+        if (error > 0) {
           const details = rows
-            .filter((r) => r.status !== "ok")
-            .map((r) => {
-              if (r.status === "skip") return `Row ${r.rowNum}: Group ${r.groupNo} already exists (will be skipped).`;
-              if (r.status === "err") return `Row ${r.rowNum}: ${r.statusLabel || "invalid"} (cannot import).`;
-              return null;
-            })
-            .filter(Boolean)
+            .filter((r) => r.status === "err")
+            .map((r) => `Row ${r.rowNum}: ${r.statusLabel || "invalid"} (cannot import).`)
             .join(" ");
-          warningMessage = { title, desc: details };
+          warningMessage = { title: `${error} error${error !== 1 ? "s" : ""}`, desc: details };
         }
 
         resolve({
           rows,
-          stats: { valid, duplicate, error, total: dataRows.length },
+          stats: { valid, duplicate: 0, error, total: dataRows.length },
           detectedColumns,
           warningMessage,
           file: { name: file.name, sizeLabel: sizeLabel(file) },

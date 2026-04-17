@@ -168,7 +168,7 @@ export default function RubricBandEditor({ bands, onChange, disabled, criterionM
                     className={`crt-band-input${levelError ? " error" : ""}`}
                     value={band.level}
                     onChange={(e) => setBand(bi, "level", e.target.value)}
-                    placeholder="e.g. Excellent"
+                    placeholder="e.g., Excellent"
                     disabled={disabled}
                     aria-label={`Band ${bi + 1} level`}
                   />

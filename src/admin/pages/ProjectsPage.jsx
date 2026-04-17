@@ -9,6 +9,7 @@ import { useAuth } from "@/auth";
 import FbAlert from "@/shared/ui/FbAlert";
 import DeleteProjectModal from "../modals/DeleteProjectModal";
 import { FilterButton } from "@/shared/ui/FilterButton";
+import CustomSelect from "@/shared/ui/CustomSelect";
 import { getPeriodMaxScore, logExportInitiated } from "@/shared/api";
 import { useManagePeriods } from "../hooks/useManagePeriods";
 import { useManageProjects } from "../hooks/useManageProjects";
@@ -168,6 +169,12 @@ export default function ProjectsPage() {
   // Local UI state
   const [search, setSearch] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    evalStatus: "all",
+    advisor:    "",
+    scoreBand:  "all",
+    teamSize:   "all",
+  });
   const [exportOpen, setExportOpen] = useState(false);
   const [sortKey, setSortKey] = useState("group_no");
   const [sortDir, setSortDir] = useState("asc");
@@ -262,16 +269,63 @@ export default function ProjectsPage() {
 
   const projectList = projects.projects || [];
 
-  // Filter by search
+  const distinctAdvisors = useMemo(() => {
+    const set = new Set();
+    for (const p of projectList) {
+      (p.advisor || "").split(",").map((s) => s.trim()).filter(Boolean).forEach((a) => set.add(a));
+    }
+    return [...set].sort((a, b) => a.localeCompare(b, "tr"));
+  }, [projectList]);
+
+  const filterActiveCount = [
+    filters.evalStatus !== "all",
+    filters.advisor !== "",
+    filters.scoreBand !== "all",
+    filters.teamSize !== "all",
+  ].filter(Boolean).length;
+
+  // Filter by search + criteria
   const filteredList = useMemo(() => {
-    if (!search.trim()) return projectList;
-    const q = search.toLowerCase();
-    return projectList.filter((p) =>
-      (p.title || "").toLowerCase().includes(q) ||
-      membersToString(p.members).toLowerCase().includes(q) ||
-      String(p.group_no || "").includes(q)
-    );
-  }, [projectList, search]);
+    let list = projectList;
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((p) =>
+        (p.title || "").toLowerCase().includes(q) ||
+        membersToString(p.members).toLowerCase().includes(q) ||
+        String(p.group_no || "").includes(q)
+      );
+    }
+
+    list = list.filter((p) => {
+      if (filters.evalStatus === "evaluated" && !projectAvgMap.has(p.id)) return false;
+      if (filters.evalStatus === "not_evaluated" && projectAvgMap.has(p.id)) return false;
+
+      if (filters.advisor) {
+        const advisors = (p.advisor || "").split(",").map((s) => s.trim());
+        if (!advisors.includes(filters.advisor)) return false;
+      }
+
+      if (filters.scoreBand !== "all" && projectAvgMap.has(p.id)) {
+        const max = periodMaxScore || 100;
+        const pct = (Number(projectAvgMap.get(p.id)) / max) * 100;
+        if (filters.scoreBand === "high" && pct < 85) return false;
+        if (filters.scoreBand === "mid" && (pct < 70 || pct >= 85)) return false;
+        if (filters.scoreBand === "low" && pct >= 70) return false;
+      }
+
+      if (filters.teamSize !== "all") {
+        const count = membersToArray(p.members).length;
+        if (filters.teamSize === "small" && count > 2) return false;
+        if (filters.teamSize === "mid" && (count < 3 || count > 4)) return false;
+        if (filters.teamSize === "large" && count < 5) return false;
+      }
+
+      return true;
+    });
+
+    return list;
+  }, [projectList, search, filters, projectAvgMap, periodMaxScore]);
 
   // Pagination state
   const [pageSize, setPageSize] = useState(25);
@@ -383,6 +437,23 @@ export default function ProjectsPage() {
     }
   }
 
+  async function handleDuplicate(project) {
+    setOpenMenuId(null);
+    const maxNo = Math.max(0, ...projectList.map((p) => Number(p.group_no) || 0));
+    const result = await projects.handleAddProject({
+      title: `Copy of ${project.title}`.slice(0, 100),
+      advisor: project.advisor || "",
+      description: project.description || "",
+      group_no: maxNo + 1,
+      members: membersToArray(project.members),
+    });
+    if (result?.ok === false) {
+      _toast.error(result.message || "Could not duplicate project.");
+    } else {
+      _toast.success("Project duplicated.");
+    }
+  }
+
   return (
     <div id="page-projects">
       {/* Header */}
@@ -434,7 +505,7 @@ export default function ProjectsPage() {
         </div>
         <FilterButton
           className="mobile-toolbar-filter"
-          activeCount={0}
+          activeCount={filterActiveCount}
           isOpen={filterOpen}
           onClick={() => { setFilterOpen((v) => !v); setExportOpen(false); }}
         />
@@ -503,6 +574,7 @@ export default function ProjectsPage() {
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Add Projects</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Import CSV</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Edit Projects</span>
+              <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Duplicate Projects</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Delete Projects</span>
             </div>
           </div>
@@ -517,10 +589,61 @@ export default function ProjectsPage() {
                 <Filter size={14} style={{ verticalAlign: "-1px", marginRight: "4px", opacity: 0.5, display: "inline" }} />
                 Filter Projects
               </h4>
-              <div className="filter-panel-sub">Narrow projects by evaluation coverage and advisor, or change sort order.</div>
+              <div className="filter-panel-sub">Narrow projects by evaluation coverage, advisor, score band, or team size.</div>
             </div>
             <button className="filter-panel-close" onClick={() => setFilterOpen(false)}>&#215;</button>
           </div>
+          <div className="filter-row">
+            <div className="filter-row-label">Evaluation Status</div>
+            <div className="filter-toggle-group">
+              {[["all", "All"], ["evaluated", "Evaluated"], ["not_evaluated", "Not Evaluated"]].map(([val, label]) => (
+                <button
+                  key={val}
+                  className={`filter-toggle-btn${filters.evalStatus === val ? " filter-toggle-btn--active" : ""}`}
+                  onClick={() => setFilters((f) => ({ ...f, evalStatus: val }))}
+                >{label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="filter-row">
+            <div className="filter-row-label">Advisor</div>
+            <CustomSelect
+              value={filters.advisor}
+              onChange={(val) => setFilters((f) => ({ ...f, advisor: val }))}
+              options={[{ value: "", label: "All Advisors" }, ...distinctAdvisors.map((a) => ({ value: a, label: a }))]}
+              placeholder="All Advisors"
+            />
+          </div>
+          <div className="filter-row">
+            <div className="filter-row-label">Score Band</div>
+            <div className="filter-toggle-group">
+              {[["all", "All"], ["high", "High ≥85%"], ["mid", "Mid 70–84%"], ["low", "Low <70%"]].map(([val, label]) => (
+                <button
+                  key={val}
+                  className={`filter-toggle-btn${filters.scoreBand === val ? " filter-toggle-btn--active" : ""}`}
+                  onClick={() => setFilters((f) => ({ ...f, scoreBand: val }))}
+                >{label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="filter-row">
+            <div className="filter-row-label">Team Size</div>
+            <div className="filter-toggle-group">
+              {[["all", "All"], ["small", "1–2"], ["mid", "3–4"], ["large", "5+"]].map(([val, label]) => (
+                <button
+                  key={val}
+                  className={`filter-toggle-btn${filters.teamSize === val ? " filter-toggle-btn--active" : ""}`}
+                  onClick={() => setFilters((f) => ({ ...f, teamSize: val }))}
+                >{label}</button>
+              ))}
+            </div>
+          </div>
+          {filterActiveCount > 0 && (
+            <button
+              className="filter-clear-link"
+              onClick={() => setFilters({ evalStatus: "all", advisor: "", scoreBand: "all", teamSize: "all" })}
+            >Clear all filters</button>
+          )}
         </div>
       )}
       {/* Export panel */}
@@ -804,6 +927,15 @@ export default function ProjectsPage() {
                       Edit Project
                     </button>
                     <button
+                      className="floating-menu-item"
+                      onMouseDown={() => { if (!isLocked) handleDuplicate(project); }}
+                      disabled={isLocked}
+                      style={isLocked ? { opacity: 0.4, pointerEvents: "none" } : {}}
+                    >
+                      <Copy size={13} />
+                      Duplicate Project
+                    </button>
+                    <button
                       className={`floating-menu-item${isLocked ? " floating-menu-item--highlight" : ""}`}
                       onMouseDown={() => { setOpenMenuId(null); setScoresProject(project); }}
                     >
@@ -862,7 +994,7 @@ export default function ProjectsPage() {
       <ImportCsvModal
         open={importOpen}
         onClose={() => setImportOpen(false)}
-        parseFile={(f) => parseProjectsCsv(f, projects.projects)}
+        parseFile={(f) => parseProjectsCsv(f)}
         onImport={async (rows) => {
           cancelImportRef.current = false;
           const result = await projects.handleImportProjects(rows, { cancelRef: cancelImportRef });

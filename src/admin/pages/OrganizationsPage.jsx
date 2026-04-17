@@ -648,15 +648,15 @@ export default function OrganizationsPage() {
         <div className="fs-drawer-body" style={{ gap: 16 }}>
           <div className="fs-field">
             <label className="fs-field-label">Organization</label>
-            <input className="fs-input" type="text" value={createForm.university || ""} onChange={(e) => setCreateForm((prev) => ({ ...prev, university: e.target.value }))} placeholder="e.g. IEEE Antennas and Propagation Society" />
+            <input className="fs-input" type="text" value={createForm.university || ""} onChange={(e) => setCreateForm((prev) => ({ ...prev, university: e.target.value }))} placeholder="e.g., IEEE Antennas and Propagation Society" />
           </div>
           <div className="fs-field">
             <label className="fs-field-label">Program</label>
-            <input className="fs-input" type="text" value={createForm.department || ""} onChange={(e) => setCreateForm((prev) => ({ ...prev, department: e.target.value }))} placeholder="e.g. AP-S Student Design Contest" />
+            <input className="fs-input" type="text" value={createForm.department || ""} onChange={(e) => setCreateForm((prev) => ({ ...prev, department: e.target.value }))} placeholder="e.g., AP-S Student Design Contest" />
           </div>
           <div className="fs-field">
             <label className="fs-field-label">Code</label>
-            <input className="fs-input" type="text" value={createForm.shortLabel || ""} onChange={(e) => { const shortLabel = e.target.value.toUpperCase(); setCreateForm((prev) => ({ ...prev, shortLabel, code: shortLabel.toLowerCase().replace(/\s+/g, "-") })); }} placeholder="e.g. IEEE-APSSDC" style={{ textTransform: "uppercase", fontFamily: "var(--mono)" }} />
+            <input className="fs-input" type="text" value={createForm.shortLabel || ""} onChange={(e) => { const shortLabel = e.target.value.toUpperCase(); setCreateForm((prev) => ({ ...prev, shortLabel, code: shortLabel.toLowerCase().replace(/\s+/g, "-") })); }} placeholder="e.g., IEEE-APSSDC" style={{ textTransform: "uppercase", fontFamily: "var(--mono)" }} />
           </div>
           <div className="fs-field">
             <label className="fs-field-label">Contact Email</label>
@@ -709,15 +709,15 @@ export default function OrganizationsPage() {
         <div className="fs-drawer-body" style={{ gap: 16 }}>
           <div className="fs-field">
             <label className="fs-field-label">Organization</label>
-            <input className="fs-input" type="text" value={editForm.university || ""} onChange={(e) => setEditForm((prev) => ({ ...prev, university: e.target.value }))} placeholder="e.g. IEEE Antennas and Propagation Society" />
+            <input className="fs-input" type="text" value={editForm.university || ""} onChange={(e) => setEditForm((prev) => ({ ...prev, university: e.target.value }))} placeholder="e.g., IEEE Antennas and Propagation Society" />
           </div>
           <div className="fs-field">
             <label className="fs-field-label">Program</label>
-            <input className="fs-input" type="text" value={editForm.name || ""} onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="e.g. AP-S Student Design Contest" />
+            <input className="fs-input" type="text" value={editForm.name || ""} onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="e.g., AP-S Student Design Contest" />
           </div>
           <div className="fs-field">
             <label className="fs-field-label">Code</label>
-            <input className="fs-input" type="text" value={editForm.shortLabel || ""} onChange={(e) => { const shortLabel = e.target.value.toUpperCase(); setEditForm((prev) => ({ ...prev, shortLabel, code: shortLabel.toLowerCase().replace(/\s+/g, "-") })); }} placeholder="e.g. APSSDC" style={{ textTransform: "uppercase", fontFamily: "var(--mono)" }} />
+            <input className="fs-input" type="text" value={editForm.shortLabel || ""} onChange={(e) => { const shortLabel = e.target.value.toUpperCase(); setEditForm((prev) => ({ ...prev, shortLabel, code: shortLabel.toLowerCase().replace(/\s+/g, "-") })); }} placeholder="e.g., APSSDC" style={{ textTransform: "uppercase", fontFamily: "var(--mono)" }} />
           </div>
           <div className="fs-field">
             <label className="fs-field-label">Status</label>

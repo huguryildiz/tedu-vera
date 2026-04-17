@@ -252,7 +252,6 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                       <thead>
                         <tr>
                           <th style={{ width: 36 }}>Row</th>
-                          <th style={{ width: 50 }}>Group</th>
                           <th>Title</th>
                           <th>Team Members</th>
                           <th style={{ width: 76 }}>Status</th>
@@ -262,7 +261,6 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                         {rows.map((row) => (
                           <tr key={row.rowNum} className={row.status === "skip" ? "row-skip" : row.status === "err" ? "row-error" : undefined}>
                             <td className="mono table-secondary">{row.rowNum}</td>
-                            <td style={{ fontFamily: "var(--mono)" }}>{row.groupNo ?? "—"}</td>
                             <td>{row.title}</td>
                             <td style={{ color: row.status === "ok" ? "var(--text-secondary)" : undefined }}>{row.members}</td>
                             <td>

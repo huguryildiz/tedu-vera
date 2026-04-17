@@ -7,13 +7,25 @@
 //   onSave     — (data) => Promise<void>
 //   error      — string | null
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AlertCircle, Icon } from "lucide-react";
+
+const HANDLE_SVG = (
+  <Icon
+    iconNode={[]}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2">
+    <circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/>
+    <circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/>
+  </Icon>
+);
 import Drawer from "@/shared/ui/Drawer";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
 
-const EMPTY = { groupNo: "", title: "", advisor: "", description: "", members: [""] };
+const EMPTY = { title: "", advisor: "", description: "", members: [""] };
 
 export default function AddProjectDrawer({ open, onClose, onSave, error }) {
   const [form, setForm] = useState(EMPTY);
@@ -35,12 +47,30 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
   const removeMember = (i) =>
     setForm((f) => ({ ...f, members: f.members.filter((_, idx) => idx !== i) }));
 
+  const dragIndex = useRef(null);
+  const dragOverIndex = useRef(null);
+
+  const onDragStart = (i) => { dragIndex.current = i; };
+  const onDragEnter = (i) => { dragOverIndex.current = i; };
+  const onDragEnd = () => {
+    const from = dragIndex.current;
+    const to = dragOverIndex.current;
+    if (from === null || to === null || from === to) return;
+    setForm((f) => {
+      const m = [...f.members];
+      const [moved] = m.splice(from, 1);
+      m.splice(to, 0, moved);
+      return { ...f, members: m };
+    });
+    dragIndex.current = null;
+    dragOverIndex.current = null;
+  };
+
   const handleSave = async () => {
     setSaveError("");
     setSaving(true);
     try {
       await onSave?.({
-        groupNo: form.groupNo.trim(),
         title: form.title.trim(),
         advisor: form.advisor.trim() || null,
         description: form.description.trim() || null,
@@ -97,20 +127,6 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
 
         <div className="fs-field">
           <label className="fs-field-label">
-            Project No <span className="fs-field-req">*</span>
-          </label>
-          <input
-            className="fs-input"
-            type="text"
-            placeholder="e.g. 1, 2, 3A"
-            value={form.groupNo}
-            onChange={(e) => set("groupNo", e.target.value)}
-            disabled={saving}
-          />
-        </div>
-
-        <div className="fs-field">
-          <label className="fs-field-label">
             Title <span className="fs-field-req">*</span>
           </label>
           <input
@@ -130,7 +146,7 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
           <input
             className="fs-input"
             type="text"
-            placeholder="e.g. Dr. Ali Yılmaz, Prof. Aylin Kaya"
+            placeholder="e.g., Dr. Ali Yılmaz, Prof. Aylin Kaya"
             value={form.advisor}
             onChange={(e) => set("advisor", e.target.value)}
             disabled={saving}
@@ -152,10 +168,19 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
         </div>
 
         <div className="fs-field">
-          <label className="fs-field-label">Team Members</label>
+          <label className="fs-field-label">Team Members <span className="fs-field-req">*</span></label>
           {form.members.map((m, i) => (
-            <div key={i} className="fs-list-row">
-              <span className="fs-list-num">{i + 1}</span>
+            <div
+              key={i}
+              className="fs-list-row"
+              draggable
+              onDragStart={() => onDragStart(i)}
+              onDragEnter={() => onDragEnter(i)}
+              onDragEnd={onDragEnd}
+              onDragOver={(e) => e.preventDefault()}
+              style={{ cursor: "grab" }}
+            >
+              <div className="fs-list-handle" title="Drag to reorder" style={{ cursor: "grab" }}>{HANDLE_SVG}</div>
               <input
                 className="fs-input"
                 type="text"
@@ -163,6 +188,7 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
                 value={m}
                 onChange={(e) => setMember(i, e.target.value)}
                 disabled={saving}
+                style={{ cursor: "text" }}
               />
               {form.members.length > 1 && (
                 <button
@@ -202,7 +228,7 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
           className="fs-btn fs-btn-primary"
           type="button"
           onClick={handleSave}
-          disabled={saving || !form.groupNo.trim() || !form.title.trim()}
+          disabled={saving || !form.title.trim() || !form.members.some((m) => m.trim())}
         >
           <span className="btn-loading-content">
             <AsyncButtonContent loading={saving} loadingText="Saving…">Add Project</AsyncButtonContent>

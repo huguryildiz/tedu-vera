@@ -366,6 +366,30 @@
   white-space: nowrap;
 }
 
+.jrm-action {
+  width: 36px;
+  padding: 0 8px !important;
+}
+
+.jrm-scores-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.jrm-scores-btn:hover {
+  background: var(--surface-hover);
+  color: var(--primary);
+}
+
 .jrm-empty {
   text-align: center;
   color: var(--text-tertiary);

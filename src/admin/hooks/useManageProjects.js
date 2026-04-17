@@ -121,11 +121,9 @@ export function useManageProjects({
         viewPeriodLabel && viewPeriodLabel !== "—"
           ? viewPeriodLabel
           : "selected period";
-      let imported = 0, skipped = 0, failed = 0;
+      let imported = 0, failed = 0;
       for (const row of rows) {
         if (cancelRef?.current) {
-          // Soft-cancel: user requested stop between rows.
-          // Note: true request abort is not feasible with current Supabase RPC wrappers.
           return { ok: false, cancelled: true };
         }
         const membersJsonb = membersToJsonb(row.members);
@@ -134,43 +132,18 @@ export function useManageProjects({
             { ...row, members: membersJsonb, periodId: viewPeriodId }
           );
           imported += 1;
-        } catch (e) {
-          const msg = String(e?.message || "");
-          const msgLower = msg.toLowerCase();
-          if (
-            msg.includes("project_group_exists") ||
-            msgLower.includes("projects_period_group_no_key") ||
-            msgLower.includes("duplicate key value violates unique constraint")
-          ) {
-            skipped += 1;
-            continue;
-          }
+        } catch {
           failed += 1;
         }
       }
-      // Full refresh to get server-confirmed IDs and normalize client state
       await loadProjects(viewPeriodId);
-      setMessage(
-        skipped > 0
-          ? `Groups imported for Period ${periodContext}, skipped ${skipped} existing groups`
-          : `Groups imported for Period ${periodContext}`
-      );
-      return { ok: true, imported, skipped, failed };
+      setMessage(`Projects imported for Period ${periodContext}`);
+      return { ok: true, imported, skipped: 0, failed };
     } catch (e) {
-      const msg = String(e?.message || "");
-      const msgLower = msg.toLowerCase();
-      if (
-        msg.includes("project_group_exists") ||
-        msgLower.includes("projects_period_group_no_key") ||
-        msgLower.includes("duplicate key value violates unique constraint")
-      ) {
-        return { ok: false, formError: "Some groups already exist. Refresh and try again." };
-      } else {
-        return {
-          ok: false,
-          formError: msg || "Could not import groups. Check the CSV format and try again.",
-        };
-      }
+      return {
+        ok: false,
+        formError: e?.message || "Could not import projects. Check the CSV format and try again.",
+      };
     } finally {
       decLoading();
     }
@@ -198,33 +171,17 @@ export function useManageProjects({
       if (targetPeriodId === viewPeriodId) {
         await loadProjects(targetPeriodId);
       }
+      const assignedNo = res?.project_no;
       setMessage(
         targetPeriodName
-          ? `Group ${row.group_no} created in Period ${targetPeriodName}`
-          : `Group ${row.group_no} created`
+          ? `Project P${assignedNo} created in Period ${targetPeriodName}`
+          : `Project P${assignedNo} created`
       );
       return { ok: true };
     } catch (e) {
-      const msg = String(e?.message || "");
-      const msgLower = msg.toLowerCase();
-      if (
-        msg.includes("project_group_exists") ||
-        msgLower.includes("projects_period_group_no_key") ||
-        msgLower.includes("duplicate key value violates unique constraint")
-      ) {
-        return {
-          ok: false,
-          fieldErrors: {
-            group_no: `Group ${row.group_no} already exists. Use 'Edit' to update.`,
-          },
-        };
-      } else {
-        setPanelError(
-          "projects",
-          msg || "Could not save group. Try again or check your session."
-        );
-        return { ok: false };
-      }
+      const msg = e?.message || "Could not save project. Try again or check your session.";
+      setPanelError("projects", msg);
+      return { ok: false };
     } finally {
       decLoading();
     }
@@ -280,18 +237,14 @@ export function useManageProjects({
     clearPanelError("projects");
     incLoading();
     try {
-      const existingGroupNos = projects.map((p) => p.group_no).filter(Number.isFinite);
-      const nextGroupNo = existingGroupNos.length > 0 ? Math.max(...existingGroupNos) + 1 : 1;
       const res = await createProject({
         title: `${project.title} (Copy)`,
-        group_no: nextGroupNo,
         members: Array.isArray(project.members) ? project.members : [],
         periodId: viewPeriodId,
       });
-      const projectId = res?.project_id || res?.projectId;
-      if (!projectId) throw new Error("Could not duplicate project.");
+      if (!res?.id) throw new Error("Could not duplicate project.");
       await loadProjects(viewPeriodId);
-      setMessage(`Project duplicated as No. ${nextGroupNo}`);
+      setMessage(`Project duplicated as P${res.project_no}`);
       return { ok: true };
     } catch (e) {
       setPanelError("projects", e?.message || "Could not duplicate project.");

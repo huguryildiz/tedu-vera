@@ -113,7 +113,7 @@ export default function RequestRevertModal({ open, onClose, period, onRequest })
             id="request-unlock-reason"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="e.g. Criterion 3 label has a typo that must be corrected before results are published."
+            placeholder="e.g., Criterion 3 label has a typo that must be corrected before results are published."
             rows={4}
             disabled={submitting}
             style={{

@@ -455,7 +455,7 @@ export default function RegisterScreen({ onRegister, onSwitchToLogin, onReturnHo
                   value={orgName}
                   onChange={(e) => { setOrgName(e.target.value); markTouched("org"); }}
                   onBlur={() => markTouched("org")}
-                  placeholder="e.g. TED University — Electrical Engineering"
+                  placeholder="e.g., TED University — Electrical Engineering"
                   autoComplete="organization"
                   disabled={loading}
                 />

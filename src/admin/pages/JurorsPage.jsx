@@ -14,6 +14,7 @@ import ResetPinModal from "../modals/ResetPinModal";
 import ImportJurorsModal from "../modals/ImportJurorsModal";
 import EnableEditingModal from "../modals/EnableEditingModal";
 import JurorReviewsModal from "../modals/JurorReviewsModal";
+import ProjectScoresDrawer from "../drawers/ProjectScoresDrawer";
 import AddJurorDrawer from "../drawers/AddJurorDrawer";
 import EditJurorDrawer from "../drawers/EditJurorDrawer";
 import { sendJurorPinEmail, getActiveEntryTokenPlain, logExportInitiated } from "@/shared/api";
@@ -25,6 +26,7 @@ import {
   LockOpen,
   Lock,
   FileText,
+  ClipboardList,
   Trash2,
   Clock,
   MoreVertical,
@@ -180,6 +182,9 @@ export default function JurorsPage() {
     onCurrentSemesterChange,
     onViewReviews,
     onNavigate,
+    rawScores = [],
+    summaryData = [],
+    allJurors = [],
   } = useAdminContext();
   const _toast = useToast();
   const { activeOrganization } = useAuth();
@@ -261,6 +266,7 @@ export default function JurorsPage() {
   // Enable editing mode modal
   const [editModeJuror, setEditModeJuror] = useState(null);
   const [reviewsJuror, setReviewsJuror] = useState(null);
+  const [scoresProject, setScoresProject] = useState(null);
 
   // ── Data loading ────────────────────────────────────────────
   useEffect(() => {
@@ -960,6 +966,13 @@ export default function JurorsPage() {
                       )}
                       <button
                         className="floating-menu-item"
+                        onMouseDown={() => { setOpenMenuId(null); setReviewsJuror(juror); }}
+                      >
+                        <ClipboardList size={13} />
+                        View Scores
+                      </button>
+                      <button
+                        className="floating-menu-item"
                         onMouseDown={() => {
                           setOpenMenuId(null);
                           setReviewsJuror(juror);
@@ -1005,6 +1018,10 @@ export default function JurorsPage() {
                             <button className="floating-menu-item" onMouseDown={() => { setOpenMenuId(null); openPinResetModal(juror); }}>
                               <Lock size={13} />
                               Reset PIN
+                            </button>
+                            <button className="floating-menu-item" onMouseDown={() => { setOpenMenuId(null); setReviewsJuror(juror); }}>
+                              <ClipboardList size={13} />
+                              View Scores
                             </button>
                             <button className="floating-menu-item" onMouseDown={() => { setOpenMenuId(null); setReviewsJuror(juror); }}>
                               <FileText size={13} />
@@ -1147,6 +1164,26 @@ export default function JurorsPage() {
           setReviewsJuror(null);
           onViewReviews?.(reviewsJuror);
         }}
+        onViewProjectScores={(projectId) => {
+          const project = projectsHook.projects.find(
+            (p) => String(p.id || p.project_id) === String(projectId)
+          );
+          if (project) {
+            setReviewsJuror(null);
+            setScoresProject(project);
+          }
+        }}
+      />
+      <ProjectScoresDrawer
+        open={!!scoresProject}
+        onClose={() => setScoresProject(null)}
+        project={scoresProject}
+        periodId={periods.viewPeriodId}
+        periodLabel={periods.viewPeriodLabel}
+        rawScores={rawScores}
+        summaryData={summaryData}
+        allJurors={allJurors}
+        onOpenReviews={() => onNavigate?.("reviews")}
       />
       <ImportJurorsModal
         open={importOpen}

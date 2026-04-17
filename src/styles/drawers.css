@@ -1292,6 +1292,9 @@ textarea.fs-outcome-input{min-height:38px;max-height:120px}
   align-items: baseline;
   gap: 2px;
 }
+.psd-kpi-value--accent {
+  color: var(--accent);
+}
 .psd-kpi-denom {
   font-family: var(--mono);
   color: var(--text-tertiary);
@@ -1378,7 +1381,7 @@ textarea.fs-outcome-input{min-height:38px;max-height:120px}
   font-size: 13px;
   font-weight: 700;
   text-align: right;
-  color: var(--text-primary);
+  color: var(--accent);
   letter-spacing: -0.3px;
 }
 .psd-crit-band {
@@ -1432,7 +1435,7 @@ textarea.fs-outcome-input{min-height:38px;max-height:120px}
   font-variant-numeric: tabular-nums;
   font-size: 13px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--accent);
   min-width: 44px;
   text-align: right;
   letter-spacing: -0.3px;

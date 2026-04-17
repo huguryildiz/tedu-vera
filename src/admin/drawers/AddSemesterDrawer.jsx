@@ -100,7 +100,7 @@ export default function AddSemesterDrawer({ open, onClose, onSave, existingPerio
 
         <div className="fs-field">
           <label className="fs-field-label">Period Name <span className="fs-field-req">*</span></label>
-          <input className="fs-input" type="text" placeholder="e.g. Fall 2025" value={form.name} onChange={(e) => set("name", e.target.value)} disabled={saving} />
+          <input className="fs-input" type="text" placeholder="e.g., Fall 2025" value={form.name} onChange={(e) => set("name", e.target.value)} disabled={saving} />
         </div>
 
         <div className="fs-field">

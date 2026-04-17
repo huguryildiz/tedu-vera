@@ -145,7 +145,7 @@ export default function LockedStep({ state, onBack }) {
             {/* Optional message */}
             <textarea
               className="locked-message-area"
-              placeholder={'Add an optional note (e.g. "I think I was given the wrong PIN")'}
+              placeholder={'Add an optional note (e.g., "I think I was given the wrong PIN")'}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={3}

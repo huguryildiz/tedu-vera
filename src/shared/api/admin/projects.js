@@ -19,6 +19,9 @@ export async function listProjects(periodId) {
   }));
 }
 
+// project_no is always DB-assigned via the BEFORE INSERT trigger; callers
+// never supply it. On update, omitting project_no from the upsert preserves
+// the existing value via Supabase's ON CONFLICT DO UPDATE semantics.
 export async function createProject(payload) {
   const { data, error } = await supabase
     .from("projects")
@@ -28,7 +31,6 @@ export async function createProject(payload) {
       members: payload.members ?? [],
       advisor_name: payload.advisor_name ?? payload.advisor ?? null,
       description: payload.description || null,
-      project_no: payload.group_no ?? payload.project_no ?? null,
     })
     .select()
     .single();
@@ -47,7 +49,6 @@ export async function upsertProject(payload) {
         members: payload.members ?? [],
         advisor_name: payload.advisor_name ?? payload.advisor ?? null,
         description: payload.description || null,
-        project_no: payload.group_no ?? payload.project_no ?? null,
       },
       { onConflict: "id" }
     )

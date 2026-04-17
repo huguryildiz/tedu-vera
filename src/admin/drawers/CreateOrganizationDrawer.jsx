@@ -118,7 +118,7 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
           <input
             className="fs-input"
             type="text"
-            placeholder="e.g. Bilkent Computer Engineering"
+            placeholder="e.g., Bilkent Computer Engineering"
             value={form.name}
             onChange={(e) => set("name", e.target.value)}
             disabled={saving}
@@ -132,7 +132,7 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
           <textarea
             className="fs-input"
             style={{ resize: "vertical", overflow: "hidden", padding: "10px 12px", fontSize: 13, marginTop: 2, minHeight: 40, textTransform: "uppercase" }}
-            placeholder="e.g. BILKENT-CS"
+            placeholder="e.g., BILKENT-CS"
             value={form.shortLabel}
             onChange={(e) => set("shortLabel", e.target.value.toUpperCase())}
             disabled={saving}
@@ -147,7 +147,7 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
             <input
               className="fs-input"
               type="text"
-              placeholder="e.g. Bilkent University"
+              placeholder="e.g., Bilkent University"
               value={form.university}
               onChange={(e) => set("university", e.target.value)}
               disabled={saving}
@@ -158,7 +158,7 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
             <input
               className="fs-input"
               type="text"
-              placeholder="e.g. CS"
+              placeholder="e.g., CS"
               value={form.department}
               onChange={(e) => set("department", e.target.value)}
               disabled={saving}

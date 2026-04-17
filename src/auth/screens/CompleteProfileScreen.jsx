@@ -180,7 +180,7 @@ export default function CompleteProfileScreen({ user, onComplete, onSignOut }) {
                   type="text"
                   value={orgName}
                   onChange={(e) => setOrgName(e.target.value)}
-                  placeholder="e.g. TED University — Electrical Engineering"
+                  placeholder="e.g., TED University — Electrical Engineering"
                   autoComplete="organization"
                   disabled={loading}
                 />
