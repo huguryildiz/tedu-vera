@@ -629,7 +629,7 @@ button.periods-cset-badge:hover svg {
     font-weight: 700;
     letter-spacing: 0.7px;
     text-transform: uppercase;
-    color: var(--text-secondary);
+    color: var(--text-tertiary);
     margin-bottom: 7px;
   }
 
