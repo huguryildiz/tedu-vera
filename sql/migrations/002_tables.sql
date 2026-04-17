@@ -151,7 +151,6 @@ CREATE TABLE periods (
   start_date          DATE,
   end_date            DATE,
   is_locked           BOOLEAN DEFAULT false,
-  is_visible          BOOLEAN DEFAULT true,
   activated_at        TIMESTAMPTZ,
   snapshot_frozen_at  TIMESTAMPTZ,
   closed_at           TIMESTAMPTZ,

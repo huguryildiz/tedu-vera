@@ -2613,7 +2613,7 @@ GRANT EXECUTE ON FUNCTION public.rpc_admin_clone_framework(UUID, TEXT, UUID) TO 
 -- rpc_admin_duplicate_period
 -- Clones an existing period's configuration into a brand-new period:
 --   • new periods row ("<name> (copy)", same season/description, dates NULL,
---     is_locked=false, is_visible=true, criteria_name copied)
+--     is_locked=false, criteria_name copied)
 --   • if source has a framework, clones it ("<framework_name> (copy)") and
 --     attaches to the new period
 --   • freezes the snapshot so period_criteria / period_outcomes /
@@ -2659,7 +2659,7 @@ BEGIN
 
   INSERT INTO periods (
     organization_id, framework_id, name, season, description,
-    start_date, end_date, is_locked, is_visible, criteria_name
+    start_date, end_date, is_locked, criteria_name
   ) VALUES (
     v_src.organization_id,
     v_new_fw_id,
@@ -2669,7 +2669,6 @@ BEGIN
     NULL,
     NULL,
     false,
-    true,
     v_src.criteria_name
   )
   RETURNING id INTO v_new_period_id;

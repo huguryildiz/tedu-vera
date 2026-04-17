@@ -304,7 +304,7 @@ CREATE POLICY "periods_select" ON periods FOR SELECT USING (
 
 -- Public: jury anon flow reads visible periods
 CREATE POLICY "periods_select_public_visible" ON periods
-  FOR SELECT USING (is_visible = true);
+  FOR SELECT USING (is_locked = true);
 
 CREATE POLICY "periods_insert" ON periods FOR INSERT WITH CHECK (
   organization_id IN (
@@ -360,7 +360,7 @@ CREATE POLICY "projects_select" ON projects FOR SELECT USING (
 -- Public: jury anon flow reads projects of visible periods
 CREATE POLICY "projects_select_public_by_period" ON projects
   FOR SELECT USING (
-    period_id IN (SELECT id FROM periods WHERE is_visible = true)
+    period_id IN (SELECT id FROM periods WHERE is_locked = true)
   );
 
 CREATE POLICY "projects_insert" ON projects FOR INSERT WITH CHECK (
@@ -625,7 +625,7 @@ CREATE POLICY "score_sheet_items_delete" ON score_sheet_items FOR DELETE USING (
 ALTER TABLE period_criteria ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "period_criteria_select_public" ON period_criteria FOR SELECT USING (
-  period_id IN (SELECT id FROM periods WHERE is_visible = true)
+  period_id IN (SELECT id FROM periods WHERE is_locked = true)
 );
 
 CREATE POLICY "period_criteria_select" ON period_criteria FOR SELECT USING (
@@ -675,7 +675,7 @@ CREATE POLICY "period_outcomes_select" ON period_outcomes FOR SELECT USING (
 -- Public: jury anon flow reads outcome descriptions
 CREATE POLICY "period_outcomes_select_public" ON period_outcomes
   FOR SELECT USING (
-    period_id IN (SELECT id FROM periods WHERE is_visible = true)
+    period_id IN (SELECT id FROM periods WHERE is_locked = true)
   );
 
 CREATE POLICY "period_outcomes_insert" ON period_outcomes FOR INSERT WITH CHECK (
@@ -718,7 +718,7 @@ CREATE POLICY "period_criterion_outcome_maps_select" ON period_criterion_outcome
 -- Public: jury anon flow reads mudek mappings
 CREATE POLICY "period_criterion_outcome_maps_select_public" ON period_criterion_outcome_maps
   FOR SELECT USING (
-    period_id IN (SELECT id FROM periods WHERE is_visible = true)
+    period_id IN (SELECT id FROM periods WHERE is_locked = true)
   );
 
 CREATE POLICY "period_criterion_outcome_maps_insert" ON period_criterion_outcome_maps FOR INSERT WITH CHECK (

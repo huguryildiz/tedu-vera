@@ -393,6 +393,30 @@ CREATE TRIGGER block_projects_on_locked_period
   BEFORE INSERT OR UPDATE OR DELETE ON projects
   FOR EACH ROW EXECUTE FUNCTION trigger_block_projects_on_locked_period();
 
+-- ── projects: auto-assign project_no on INSERT when null ──────────────────
+-- Gaps from deletions are preserved (no renumbering). Advisory xact lock on
+-- period_id serializes concurrent inserts into the same period.
+CREATE OR REPLACE FUNCTION public.trigger_assign_project_no()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+BEGIN
+  IF NEW.project_no IS NULL THEN
+    PERFORM pg_advisory_xact_lock(hashtextextended(NEW.period_id::text, 0));
+    SELECT COALESCE(MAX(project_no), 0) + 1
+      INTO NEW.project_no
+      FROM projects
+     WHERE period_id = NEW.period_id;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER assign_project_no
+  BEFORE INSERT ON projects
+  FOR EACH ROW EXECUTE FUNCTION trigger_assign_project_no();
+
 -- ── jurors: block UPDATE/DELETE if juror is assigned to any locked period ──
 -- INSERT is intentionally unguarded so rpc_jury_authenticate can register
 -- new jurors during a locked period.
@@ -431,7 +455,7 @@ CREATE TRIGGER block_jurors_on_locked_period
 --   is_locked (unlock flow), activated_at, snapshot_frozen_at,
 --   closed_at (close flow), updated_at.
 -- Blocked: name, season, description, start_date, end_date, framework_id,
--- is_visible, organization_id.
+-- organization_id.
 CREATE OR REPLACE FUNCTION public.trigger_block_periods_on_locked_mutate()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -465,7 +489,6 @@ BEGIN
       NEW.start_date      IS DISTINCT FROM OLD.start_date      OR
       NEW.end_date        IS DISTINCT FROM OLD.end_date        OR
       NEW.framework_id    IS DISTINCT FROM OLD.framework_id    OR
-      NEW.is_visible      IS DISTINCT FROM OLD.is_visible      OR
       NEW.organization_id IS DISTINCT FROM OLD.organization_id THEN
     RAISE EXCEPTION 'period_locked' USING
       ERRCODE = 'check_violation',
