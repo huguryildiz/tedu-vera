@@ -1333,10 +1333,37 @@ export default function PeriodsPage() {
                   key={period.id}
                   className={[
                     "mcard",
-                    isDraft ? "sem-row-draft" : "",
+                    "sem-row-" + (state === "draft_ready" || state === "draft_incomplete" ? "draft" : state),
                     openMenuId === period.id ? "is-active" : "",
                   ].filter(Boolean).join(" ")}
                 >
+                  {/* Mobile ring (portrait only — hidden on desktop via CSS) */}
+                  <td className="periods-mobile-ring">
+                    {(() => {
+                      const ring = computeRingModel({
+                        state,
+                        readiness: periodReadiness[period.id],
+                        stats: periodStats[period.id],
+                      });
+                      const pct = ring.percent;
+                      const deg = pct == null ? 0 : Math.round((pct / 100) * 360);
+                      return (
+                        <div
+                          className={`periods-mring ${ring.stateClass}`}
+                          style={{ "--pct": `${deg}deg` }}
+                          aria-label={`${period.name} — ${pct == null ? "loading" : pct + "%"} ${ring.label.toLowerCase()}`}
+                        >
+                          <div className="periods-mring-fill">
+                            <div className="periods-mring-inner">
+                              <span className="periods-mring-num">{pct == null ? "—" : `${pct}%`}</span>
+                              <span className="periods-mring-lbl">{ring.label}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </td>
+
                   {/* Period name */}
                   <td data-label="Evaluation Period">
                     <div className="sem-name" style={period.is_locked ? { color: "var(--text-secondary)" } : undefined}>
@@ -1397,12 +1424,13 @@ export default function PeriodsPage() {
                     </span>
                   </td>
 
-                  {/* Mobile stats strip */}
-                  <td className="periods-mobile-stats">
-                    <div className="periods-mobile-stats-row">
+                  {/* Mobile footer (stats + updated) */}
+                  <td className="periods-mobile-footer">
+                    <div className="periods-mobile-footer-stats">
                       <span className="periods-m-stat"><span className={`val${(periodStats[period.id]?.projectCount || 0) === 0 ? " zero" : ""}`}>{periodStats[period.id]?.projectCount ?? "—"}</span> projects</span>
                       <span className="periods-m-stat"><span className={`val${(periodStats[period.id]?.jurorCount || 0) === 0 ? " zero" : ""}`}>{periodStats[period.id]?.jurorCount ?? "—"}</span> jurors</span>
                     </div>
+                    <span className="periods-mobile-footer-updated">{formatRelative(period.updated_at)}</span>
                   </td>
 
                   {/* Criteria Set */}
