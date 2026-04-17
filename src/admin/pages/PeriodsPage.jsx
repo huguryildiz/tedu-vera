@@ -1539,7 +1539,7 @@ export default function PeriodsPage() {
                         })()
                       )}
                       {period.is_locked ? (
-                        <button className="floating-menu-item" disabled>
+                        <button className="floating-menu-item danger" disabled>
                           <Trash2 size={13} />
                           Delete Period
                         </button>
