@@ -1410,7 +1410,7 @@ orgs.forEach(o => {
         const cDescSql = c.desc ? `'${escapeSql(c.desc)}'` : 'NULL';
         out.push(`INSERT INTO framework_criteria (id, framework_id, key, label, description, max_score, weight, color, rubric_bands, sort_order) VALUES ('${fcId}', '${fwId}', '${c.key}', '${escapeSql(c.label)}', ${cDescSql}, ${c.max}, ${c.weight}, '${c.color}', '${rubricJson}', ${c.sortOrder}) ON CONFLICT DO NOTHING;`);
       });
-      out.push(`INSERT INTO periods (id, organization_id, framework_id, name, season, description, start_date, end_date, is_locked, is_visible, criteria_name, snapshot_frozen_at, activated_at, closed_at, updated_at) VALUES ('${pId}', '${o.id}', '${fwId}', '${escapeSql(d.name)}', ${sn}, '${escapeSql(d.desc)}', '${d.start}', '${d.end}', false, false, '${escapeSql(criteriaName)}', NULL, NULL, NULL, ${draftTs}) ON CONFLICT DO NOTHING;`);
+      out.push(`INSERT INTO periods (id, organization_id, framework_id, name, season, description, start_date, end_date, is_locked, criteria_name, snapshot_frozen_at, activated_at, closed_at, updated_at) VALUES ('${pId}', '${o.id}', '${fwId}', '${escapeSql(d.name)}', ${sn}, '${escapeSql(d.desc)}', '${d.start}', '${d.end}', false, '${escapeSql(criteriaName)}', NULL, NULL, NULL, ${draftTs}) ON CONFLICT DO NOTHING;`);
       return; // draft periods have no period_criteria, projects, jurors, or tokens
     }
 
@@ -1428,7 +1428,7 @@ orgs.forEach(o => {
     const closedAtSql = isCurrent ? 'NULL' : sqlTs(d.end, 24);
     // Insert all periods as unlocked so child-record triggers don't fire.
     // All activated periods are locked together after child inserts below.
-    out.push(`INSERT INTO periods (id, organization_id, framework_id, name, season, description, start_date, end_date, is_locked, is_visible, criteria_name, snapshot_frozen_at, activated_at, closed_at, updated_at) VALUES ('${pId}', '${o.id}', '${fwId}', '${escapeSql(d.name)}', ${sn}, '${escapeSql(d.desc)}', ${startDateSql}, ${endDateSql}, false, true, '${escapeSql(criteriaName)}', ${frozenTs}, ${activatedTs}, ${closedAtSql}, ${updatedTs}) ON CONFLICT DO NOTHING;`);
+    out.push(`INSERT INTO periods (id, organization_id, framework_id, name, season, description, start_date, end_date, is_locked, criteria_name, snapshot_frozen_at, activated_at, closed_at, updated_at) VALUES ('${pId}', '${o.id}', '${fwId}', '${escapeSql(d.name)}', ${sn}, '${escapeSql(d.desc)}', ${startDateSql}, ${endDateSql}, false, '${escapeSql(criteriaName)}', ${frozenTs}, ${activatedTs}, ${closedAtSql}, ${updatedTs}) ON CONFLICT DO NOTHING;`);
 
     const evo = (criteriaEvolution[o.code] || {})[idx] || null;
     const removedKeys = evo?.removeCriteria || [];
@@ -3191,7 +3191,7 @@ out.push('');
 // activated period. Historical periods carry closed_at (Closed state);
 // the current demo period has closed_at NULL (Live state).
 out.push(`-- Publish all activated periods (is_locked=true). Historical periods already have closed_at stamped.`);
-out.push(`UPDATE periods SET is_locked = true WHERE activated_at IS NOT NULL AND is_visible = true;`);
+out.push(`UPDATE periods SET is_locked = true WHERE activated_at IS NOT NULL;`);
 out.push('');
 
 // ═══════════════════════════════════════════════════════════════
