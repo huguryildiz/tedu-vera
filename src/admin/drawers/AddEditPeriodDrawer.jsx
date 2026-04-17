@@ -214,36 +214,6 @@ export default function AddEditPeriodDrawer({
           </div>
         </div>
 
-        {/* ── ADD MODE: EVALUATION SETTINGS ── */}
-        {!isEdit && (
-          <div className="fs-section">
-            <div className="fs-section-header">
-              <div className="fs-section-title">Evaluation Settings</div>
-            </div>
-
-            <div className="fs-field">
-              <label className="fs-field-label">Evaluation Lock</label>
-              <CustomSelect
-                value={formIsLocked}
-                onChange={setFormIsLocked}
-                options={LOCK_OPTIONS}
-                disabled={saving}
-                ariaLabel="Evaluation lock"
-              />
-            </div>
-
-            <div className="fs-field">
-              <label className="fs-field-label">Visibility</label>
-              <CustomSelect
-                value={formIsVisible}
-                onChange={setFormIsVisible}
-                options={VISIBILITY_OPTIONS}
-                disabled={saving}
-                ariaLabel="Visibility"
-              />
-            </div>
-          </div>
-        )}
 
         {/* ── EDIT MODE: EVALUATION SETTINGS ── */}
         {isEdit && (
@@ -318,13 +288,6 @@ export default function AddEditPeriodDrawer({
           </div>
         )}
 
-        {/* ── ADD MODE: INFO BANNER ── */}
-        {!isEdit && (
-          <FbAlert variant="info" style={{ marginTop: 4 }}>
-            After creating, use the Criteria Set and Outcome columns in the table
-            to configure scoring or copy criteria from another period.
-          </FbAlert>
-        )}
       </div>
       {/* ── Footer ── */}
       <div className="fs-drawer-footer">
