@@ -682,15 +682,29 @@
     text-overflow: ellipsis;
   }
 
-  /* ── SVG donut ring ── */
+  /* ── Conic-gradient donut ring ── */
   .rmc-ring-wrap {
-    position: relative;
-    width: 44px;
-    height: 44px;
     flex-shrink: 0;
   }
 
-  .rmc-ring-label {
+  .rmc-ring-fill {
+    position: relative;
+    display: block;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: conic-gradient(var(--ring, var(--text-tertiary)) var(--pct, 0deg), var(--border) 0);
+  }
+
+  .rmc-ring-fill::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    background: var(--bg-card);
+    border-radius: 50%;
+  }
+
+  .rmc-ring-inner {
     position: absolute;
     inset: 0;
     display: flex;
@@ -698,13 +712,15 @@
     align-items: center;
     justify-content: center;
     line-height: 1;
-    pointer-events: none;
+    z-index: 1;
   }
 
   .rmc-ring-score {
     font-size: 13px;
     font-weight: 800;
     line-height: 1;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
   }
 
   .rmc-ring-denom {
@@ -712,6 +728,8 @@
     color: var(--text-tertiary);
     line-height: 1;
     margin-top: 1px;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
   }
 
   /* ── Project + team block ── */
@@ -731,13 +749,12 @@
 
   .rmc-project-badge {
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--accent);
-    background: var(--accent-soft);
-    border-radius: 4px;
-    padding: 2px 5px;
     flex-shrink: 0;
     font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
     line-height: 1.4;
     letter-spacing: 0.3px;
   }
@@ -771,47 +788,23 @@
     flex-shrink: 0;
   }
 
-  .rmc-team-chips {
+  .rmc-team-row .team-members-inline {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-  }
-
-  .rmc-member-chip {
-    display: inline-flex;
+    flex: 1;
+    gap: 5px 8px;
     align-items: center;
-    gap: 4px;
-    background: var(--surface-1);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 2px 7px 2px 3px;
   }
 
   .rmc-member-chip--overflow {
+    display: inline-flex;
+    align-items: center;
     padding: 2px 8px;
     font-size: 10px;
     color: var(--text-tertiary);
-    justify-content: center;
-  }
-
-  .rmc-member-av {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 8px;
-    font-weight: 700;
-    color: #fff;
-    flex-shrink: 0;
-    line-height: 1;
-  }
-
-  .rmc-member-name {
-    font-size: 10px;
-    color: var(--text-secondary);
-    white-space: nowrap;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 20px;
   }
 
   /* ── Score grid ── */
@@ -858,11 +851,14 @@
     font-weight: 800;
     color: var(--text-primary);
     font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
   }
 
   .rmc-cell-max {
     font-size: 9px;
     color: var(--text-tertiary);
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
   }
 
   .rmc-cell-bar-track {
@@ -883,14 +879,103 @@
     border-top: 1px solid var(--border);
     padding-top: 9px;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
     gap: 8px;
+  }
+
+  .rmc-footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .rmc-footer-col--right {
+    align-items: flex-end;
+  }
+
+  .rmc-footer-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   .rmc-footer-left {
     display: flex;
     align-items: center;
     gap: 4px;
+  }
+
+  .rmc-comment-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    color: var(--text-tertiary);
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+    flex-shrink: 0;
+  }
+  .rmc-comment-btn:active,
+  .rmc-comment-btn--active {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  .rmc-comment-panel {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .rmc-comment-panel-icon {
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .rmc-comment-panel-text {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    text-align: left;
+  }
+
+  /* ── Submitted At row ── */
+  .rmc-submitted {
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .rmc-submitted-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .rmc-submitted-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
   }
 }

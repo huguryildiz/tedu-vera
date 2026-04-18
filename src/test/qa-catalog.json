@@ -4479,6 +4479,17 @@
     "severity": "normal"
   },
   {
+    "id": "reviews.mobile_card.08",
+    "module": "Reviews / Mobile Card",
+    "area": "Reviews Mobile Card — Rendering",
+    "story": "Submitted At Row",
+    "scenario": "renders Submitted At label with formatted timestamp when finalSubmittedAt is set, and em-dash when missing",
+    "whyItMatters": "Admins need to know when each juror locked in their score; parity with the desktop Submitted At column.",
+    "risk": "Missing timestamp row hides review audit info on mobile.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
     "id": "heatmap.mobile.sort.01",
     "module": "Heatmap / Mobile",
     "area": "Heatmap — Mobile Sort",

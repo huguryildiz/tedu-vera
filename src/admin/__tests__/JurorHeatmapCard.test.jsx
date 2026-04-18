@@ -9,8 +9,11 @@ vi.mock("../../admin/components/JurorBadge.jsx", () => ({
 vi.mock("../../admin/components/JurorStatusPill.jsx", () => ({
   default: ({ status }) => <div data-testid="status">{status}</div>,
 }));
+vi.mock("../pages/AvgDonut.jsx", () => ({
+  default: ({ value, max }) => <div data-testid="avg-donut">{value}/{max}</div>,
+}));
 
-import JurorHeatmapCard from "../pages/heatmap/JurorHeatmapCard.jsx";
+import JurorHeatmapCard from "../pages/JurorHeatmapCard.jsx";
 
 const juror = { key: "j1", name: "Dr. Alper Kılıç", dept: "EE" };
 const rows = [

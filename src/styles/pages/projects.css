@@ -13,6 +13,8 @@
   #page-projects > .mobile-primary-below-kpi { order: -1; }
   /* .sem-header-actions (toolbar) defaults to order: 0 → falls below Add button */
 
+  /* Breathing room between last toolbar button (Import) and the lock banner */
+  #page-projects > .lock-notice { margin-top: 14px; }
   /* Breathing room between last toolbar button (Import) and the first project card */
   #page-projects > .table-wrap { margin-top: 14px; }
 }

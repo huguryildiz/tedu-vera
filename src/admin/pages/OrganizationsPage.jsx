@@ -410,47 +410,6 @@ export default function OrganizationsPage() {
   }, [sortedFilteredOrgs, orgSafePage, orgPageSize]);
 
   // Mobile card spacing: detect whether organization title wraps.
-  const orgTitleRefs = useRef(new Map());
-  const [singleLineOrgTitleMap, setSingleLineOrgTitleMap] = useState({});
-
-  const registerOrgTitleRef = useCallback((orgId, node) => {
-    const key = String(orgId);
-    if (node) orgTitleRefs.current.set(key, node);
-    else orgTitleRefs.current.delete(key);
-  }, []);
-
-  const measureOrgTitleLines = useCallback(() => {
-    if (typeof window === "undefined") return;
-    const next = {};
-    orgTitleRefs.current.forEach((el, orgId) => {
-      const style = window.getComputedStyle(el);
-      const lineHeight = parseFloat(style.lineHeight);
-      const boxHeight = el.getBoundingClientRect().height;
-      const isSingle = Number.isFinite(lineHeight) && lineHeight > 0
-        ? boxHeight <= lineHeight * 1.85
-        : true;
-      next[orgId] = isSingle;
-    });
-
-    setSingleLineOrgTitleMap((prev) => {
-      const prevKeys = Object.keys(prev);
-      const nextKeys = Object.keys(next);
-      if (prevKeys.length === nextKeys.length && nextKeys.every((k) => prev[k] === next[k])) return prev;
-      return next;
-    });
-  }, []);
-
-  useEffect(() => {
-    const raf = window.requestAnimationFrame(() => measureOrgTitleLines());
-    return () => window.cancelAnimationFrame(raf);
-  }, [pagedOrgs, measureOrgTitleLines]);
-
-  useEffect(() => {
-    const onResize = () => measureOrgTitleLines();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [measureOrgTitleLines]);
-
   // ── Unlock Requests logic ────────────────────────────────────
 
   const loadUnlockRequests = useCallback(async (status) => {
@@ -1504,14 +1463,9 @@ export default function OrganizationsPage() {
                         key={org.id}
                         className={openOrgActionMenuId === org.id ? "menu-open" : ""}
                         data-initials={initials}
-                        data-org-title-lines={singleLineOrgTitleMap[String(org.id)] ? "single" : "multi"}
                         style={{ "--org-hue": hue }}
                       >
-                        <td
-                          data-label="Organization"
-                          ref={(el) => registerOrgTitleRef(org.id, el)}
-                          style={{ fontWeight: 600 }}
-                        >
+                        <td data-label="Organization" style={{ fontWeight: 600 }}>
                           {org.institution || "—"}
                         </td>
                         <td data-label="Program">{org.name}</td>

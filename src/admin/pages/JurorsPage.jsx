@@ -1020,9 +1020,7 @@ export default function JurorsPage() {
                           {juror.affiliation && (
                             <span className="jc-meta-org">{juror.affiliation}</span>
                           )}
-                          <span className="jc-meta-pill">
-                            <JurorStatusPill status={status} />
-                          </span>
+                          <JurorStatusPill status={status} className="jc-meta-pill" />
                         </div>
                         <FloatingMenu
                           isOpen={openMenuId === jid && shouldUseCardLayout}

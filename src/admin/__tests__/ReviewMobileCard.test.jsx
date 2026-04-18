@@ -66,9 +66,9 @@ describe("ReviewMobileCard", () => {
       effectiveStatus: "empty",
       jurorStatus: "not_started",
     };
-    render(<ReviewMobileCard row={emptyRow} criteria={CRITERIA_4} />);
+    const { container } = render(<ReviewMobileCard row={emptyRow} criteria={CRITERIA_4} />);
     // Ring center shows em-dash when total is null
-    expect(screen.getByText("—")).toBeTruthy();
+    expect(container.querySelector(".rmc-ring-score").textContent).toBe("—");
     // All score cells have the empty class (opacity: 0.4)
     const cells = document.querySelectorAll(".rmc-score-cell--empty");
     expect(cells.length).toBe(4);
@@ -86,14 +86,13 @@ describe("ReviewMobileCard", () => {
       students: "Alice Smith, Bob Jones, Carol White, Dave Brown, Eve Davis",
     };
     render(<ReviewMobileCard row={fiveMemberRow} criteria={CRITERIA_4} />);
-    // First 4 show surnames; overflow chip shows +1
-    expect(screen.getByText(/Smith/)).toBeTruthy();
-    expect(screen.getByText(/Jones/)).toBeTruthy();
-    expect(screen.getByText(/White/)).toBeTruthy();
-    expect(screen.getByText(/Brown/)).toBeTruthy();
-    expect(screen.getByText("+1")).toBeTruthy();
-    // Eve Davis must NOT appear as a chip
-    expect(screen.queryByText(/Davis/)).toBeNull();
+    // All 5 members shown — no cap, no overflow chip
+    expect(screen.getByText("Alice Smith")).toBeTruthy();
+    expect(screen.getByText("Bob Jones")).toBeTruthy();
+    expect(screen.getByText("Carol White")).toBeTruthy();
+    expect(screen.getByText("Dave Brown")).toBeTruthy();
+    expect(screen.getByText("Eve Davis")).toBeTruthy();
+    expect(screen.queryByText(/^\+\d/)).toBeNull();
   });
 
   qaTest("reviews.mobile_card.06", () => {
@@ -115,5 +114,18 @@ describe("ReviewMobileCard", () => {
     expect(footer).toBeTruthy();
     // lucide-react renders SVGs — check one is present inside the footer-left
     expect(footer.querySelector("svg")).toBeTruthy();
+  });
+
+  qaTest("reviews.mobile_card.08", () => {
+    const withTs = { ...FULL_ROW, finalSubmittedAt: "18.04.2026 14:32:00" };
+    const { container, rerender } = render(<ReviewMobileCard row={withTs} criteria={CRITERIA_4} />);
+    const submittedRow = container.querySelector(".rmc-submitted");
+    expect(submittedRow).toBeTruthy();
+    expect(submittedRow.querySelector(".rmc-submitted-label").textContent).toContain("Submitted At");
+    expect(submittedRow.querySelector(".rmc-submitted-value").textContent).toBe("18.04.202614:32");
+
+    const noTs = { ...FULL_ROW, finalSubmittedAt: null, updatedAt: null };
+    rerender(<ReviewMobileCard row={noTs} criteria={CRITERIA_4} />);
+    expect(container.querySelector(".rmc-submitted-value").textContent).toBe("—");
   });
 });

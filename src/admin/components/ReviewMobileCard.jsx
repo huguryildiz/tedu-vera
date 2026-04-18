@@ -1,5 +1,8 @@
-import { MessageSquare } from "lucide-react";
+import { useState } from "react";
+import { MessageSquare, Clock } from "lucide-react";
 import { jurorInitials, jurorAvatarBg, jurorAvatarFg } from "../utils/jurorIdentity";
+import { TeamMembersInline } from "../../shared/ui/EntityMeta";
+import { formatTs } from "../utils/adminUtils";
 import ScoreStatusPill from "./ScoreStatusPill";
 import JurorStatusPill from "./JurorStatusPill";
 
@@ -10,72 +13,32 @@ const CELL_COLORS = [
   "var(--purple, #a78bfa)",
 ];
 
-const MEMBER_PALETTE = ["#6c63ff", "#22c55e", "#f59e0b", "#3b82f6", "#ec4899"];
-
-function hashStr(s) {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
-function memberAvatarColor(name) {
-  const surname = (name || "").trim().split(/\s+/).pop() || name;
-  return MEMBER_PALETTE[hashStr(surname) % MEMBER_PALETTE.length];
-}
-
-function parseMemberLabel(raw) {
-  const parts = (raw || "").trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return { initial: "?", display: raw };
-  const initial = parts[0].charAt(0).toUpperCase();
-  const surname = parts[parts.length - 1];
-  const display = parts.length === 1 ? surname : `${initial}. ${surname}`;
-  return { initial, display };
-}
-
-function parseStudents(students) {
-  if (!students) return [];
-  return String(students).split(",").map((s) => s.trim()).filter(Boolean);
-}
-
-const RING_R = 16;
-const RING_CIRC = 2 * Math.PI * RING_R;
-
-function ringStrokeColor(total, totalMax) {
-  if (total === null || total === undefined) return "var(--text-tertiary)";
-  const pct = total / totalMax;
-  if (pct >= 0.7) return "var(--accent)";
-  if (pct >= 0.4) return "var(--warning)";
+function scoreBandColor(total, totalMax) {
+  if (total == null || !Number.isFinite(Number(total))) return "var(--text-tertiary)";
+  const pct = (Number(total) / (totalMax || 100)) * 100;
+  if (pct >= 85) return "var(--success)";
+  if (pct >= 70) return "var(--warning)";
   return "var(--danger)";
 }
 
 function RingDonut({ total, totalMax }) {
-  const hasValue = total !== null && total !== undefined;
-  const pct = hasValue ? Math.max(0, Math.min(1, total / totalMax)) : 0;
-  const dashFill = pct * RING_CIRC;
-  const color = ringStrokeColor(total, totalMax);
+  const hasValue = total != null;
+  const color = scoreBandColor(total, totalMax);
+  const deg = hasValue ? Math.min(360, (Number(total) / (totalMax || 100)) * 360) : 0;
 
   return (
     <div className="rmc-ring-wrap">
-      <svg width={44} height={44} viewBox="0 0 44 44" aria-hidden="true">
-        <circle cx={22} cy={22} r={RING_R} fill="none" stroke="var(--border)" strokeWidth={4.5} />
-        {hasValue && (
-          <circle
-            cx={22} cy={22} r={RING_R}
-            fill="none"
-            stroke={color}
-            strokeWidth={4.5}
-            strokeDasharray={`${dashFill} ${RING_CIRC}`}
-            strokeLinecap="round"
-            transform="rotate(-90 22 22)"
-          />
-        )}
-      </svg>
-      <div className="rmc-ring-label">
-        <span className="rmc-ring-score" style={{ color }}>
-          {hasValue ? total : "—"}
+      <span
+        className="rmc-ring-fill"
+        style={{ "--pct": `${deg}deg`, "--ring": color }}
+      >
+        <span className="rmc-ring-inner">
+          <span className="rmc-ring-score" style={{ color }}>
+            {hasValue ? total : "—"}
+          </span>
+          <span className="rmc-ring-denom">/{totalMax}</span>
         </span>
-        <span className="rmc-ring-denom">/{totalMax}</span>
-      </div>
+      </span>
     </div>
   );
 }
@@ -118,35 +81,12 @@ function ScoreCell({ criterion, value, colorIndex, isLastOdd }) {
   );
 }
 
-const MAX_CHIPS = 4;
-
 function MemberChips({ students }) {
-  const members = parseStudents(students);
-  if (members.length === 0) return null;
-
-  const visible = members.slice(0, MAX_CHIPS);
-  const overflow = members.length - MAX_CHIPS;
-
+  if (!students || (Array.isArray(students) && students.length === 0)) return null;
   return (
     <div className="rmc-team-row">
-      <span className="rmc-team-label">TEAM</span>
-      <div className="rmc-team-chips">
-        {visible.map((name, i) => {
-          const { initial, display } = parseMemberLabel(name);
-          const bg = memberAvatarColor(name);
-          return (
-            <span key={i} className="rmc-member-chip">
-              <span className="rmc-member-av" style={{ background: bg }}>
-                {initial}
-              </span>
-              <span className="rmc-member-name">{display}</span>
-            </span>
-          );
-        })}
-        {overflow > 0 && (
-          <span className="rmc-member-chip rmc-member-chip--overflow">+{overflow}</span>
-        )}
-      </div>
+      <span className="rmc-team-label">TEAM MEMBERS</span>
+      <TeamMembersInline names={students} />
     </div>
   );
 }
@@ -155,6 +95,9 @@ export default function ReviewMobileCard({ row, criteria }) {
   const totalMax = criteria.reduce((s, c) => s + (Number(c.max) || 0), 0);
   const isPartial = row.effectiveStatus === "partial";
   const isOdd = criteria.length % 2 !== 0;
+  const [commentOpen, setCommentOpen] = useState(false);
+  const submittedTs = formatTs(row.finalSubmittedAt || row.updatedAt);
+  const hasSubmittedTs = submittedTs && submittedTs !== "—";
 
   return (
     <div className={`rmc-card${isPartial ? " rmc-card--partial" : ""}`}>
@@ -210,16 +153,47 @@ export default function ReviewMobileCard({ row, criteria }) {
       )}
 
       <div className="rmc-footer">
-        <div className="rmc-footer-left">
-          {row.comments && (
-            <MessageSquare
-              size={11}
-              style={{ color: "var(--text-tertiary)", marginRight: 4, flexShrink: 0 }}
-            />
-          )}
-          <ScoreStatusPill status={row.effectiveStatus} />
+        <div className="rmc-footer-col">
+          <span className="rmc-footer-label">Score Status</span>
+          <div className="rmc-footer-left">
+            {row.comments && (
+              <button
+                className={`rmc-comment-btn${commentOpen ? " rmc-comment-btn--active" : ""}`}
+                onClick={() => setCommentOpen((v) => !v)}
+                aria-label="Toggle comment"
+              >
+                <MessageSquare size={11} />
+              </button>
+            )}
+            <ScoreStatusPill status={row.effectiveStatus} />
+          </div>
         </div>
-        <JurorStatusPill status={row.jurorStatus} />
+        <div className="rmc-footer-col rmc-footer-col--right">
+          <span className="rmc-footer-label">Juror Progress</span>
+          <JurorStatusPill status={row.jurorStatus} />
+        </div>
+      </div>
+
+      {commentOpen && row.comments && (
+        <div className="rmc-comment-panel">
+          <MessageSquare size={12} className="rmc-comment-panel-icon" />
+          <p className="rmc-comment-panel-text">{row.comments}</p>
+        </div>
+      )}
+
+      <div className="rmc-submitted">
+        <span className="rmc-submitted-label">
+          <Clock size={11} strokeWidth={2} />
+          Submitted At
+        </span>
+        <span className="rmc-submitted-value vera-datetime-text">
+          {hasSubmittedTs ? (
+            <>
+              <span>{submittedTs.split(" ")[0]}</span>
+              <span className="rmc-submitted-time">{submittedTs.split(" ")[1]}</span>
+            </>
+          ) : "—"}
+        </span>
       </div>
     </div>
   );

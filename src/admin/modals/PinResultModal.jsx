@@ -9,7 +9,7 @@
 //   newPin      — string (4-digit PIN)
 //   onSendEmail — ({ email, includeQr }) => Promise<void>
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle, AlertCircle, Info, Icon } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import JurorBadge from "../components/JurorBadge";
@@ -17,8 +17,12 @@ import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 
 export default function PinResultModal({ open, onClose, juror, newPin, onSendEmail }) {
   const [copied, setCopied] = useState(false);
-  const [emailRecipient, setEmailRecipient] = useState("");
+  const [emailRecipient, setEmailRecipient] = useState(juror?.email || "");
   const [includeQr, setIncludeQr] = useState(true);
+
+  useEffect(() => {
+    if (open) setEmailRecipient(juror?.email || "");
+  }, [open, juror?.email]);
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState(null); // null | "sent" | "error"
   const [sendError, setSendError] = useState("");
@@ -47,7 +51,7 @@ export default function PinResultModal({ open, onClose, juror, newPin, onSendEma
     setSendResult(null);
     setSendError("");
     try {
-      const email = (emailRecipient || juror?.email || "").trim();
+      const email = emailRecipient.trim();
       const result = await onSendEmail?.({ email, includeQr });
       if (result?.sent === false) {
         setSendResult("error");
@@ -216,7 +220,7 @@ export default function PinResultModal({ open, onClose, juror, newPin, onSendEma
             <input
               className="fs-input"
               type="email"
-              value={emailRecipient || juror?.email || ""}
+              value={emailRecipient}
               onChange={(e) => setEmailRecipient(e.target.value)}
               placeholder="juror@university.edu"
               style={{ fontSize: 11.5, flex: 1 }}
@@ -226,7 +230,7 @@ export default function PinResultModal({ open, onClose, juror, newPin, onSendEma
               type="button"
               className="fs-btn fs-btn-primary fs-btn-sm"
               onClick={handleSend}
-              disabled={sending || !((emailRecipient || juror?.email || "").trim())}
+              disabled={sending || !emailRecipient.trim()}
             >
               <span className="btn-loading-content">
                 <AsyncButtonContent loading={sending} loadingText="Sending…">

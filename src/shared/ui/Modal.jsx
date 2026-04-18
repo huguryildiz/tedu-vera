@@ -33,6 +33,7 @@ export default function Modal({ open, onClose, size = "md", centered = false, ch
         ref={containerRef}
         role="dialog"
         aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
       >
         {children}
       </div>

@@ -465,6 +465,17 @@ button.periods-cset-badge:hover svg {
   /* Card shell comes from global .mcard. Layout (grid + areas) here.
      4 columns so meta + cfg can split into left/right halves without
      cells colliding inside a shared area. */
+  .periods-page .sem-table tbody tr,
+  .periods-page .sem-table tbody tr.mcard,
+  .periods-page.dark-mode .sem-table tbody tr,
+  body.dark-mode .periods-page .sem-table tbody tr,
+  .periods-page .sem-table tbody tr:hover,
+  .periods-page .sem-table tbody tr.is-active,
+  .periods-page .sem-table tbody tr.menu-open {
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+  }
   .sem-table tbody tr {
     display: grid;
     grid-template-columns: auto 1fr 1fr auto;
@@ -512,7 +523,7 @@ button.periods-cset-badge:hover svg {
   }
   .periods-mring-fill::after {
     content:""; position:absolute; inset:3px; border-radius:50%;
-    background: var(--bg-card);
+    background: var(--bg-page);
   }
   .periods-mring-inner {
     position: absolute; inset: 0;
@@ -623,7 +634,7 @@ button.periods-cset-badge:hover svg {
   .sem-table td[data-label="Criteria Set"],
   .sem-table td[data-label="Outcome Set"] {
     padding: 10px 14px;
-    background: linear-gradient(180deg, rgba(248,250,253,0.6) 0%, rgba(243,246,251,0.9) 100%) !important; /* nested-panel-ok */
+    background: transparent !important;
     border-top: 1px solid var(--border);
   }
   .sem-table td[data-label="Criteria Set"] {
@@ -703,7 +714,7 @@ button.periods-cset-badge:hover svg {
   /* ── Dark mode — repaint config strip + ring track ── */
   .dark-mode .sem-table td[data-label="Criteria Set"],
   .dark-mode .sem-table td[data-label="Outcome Set"] {
-    background: linear-gradient(180deg, rgba(21, 29, 50, 0.40) 0%, rgba(28, 39, 64, 0.55) 100%) !important; /* nested-panel-ok */
+    background: transparent !important;
     border-top-color: rgba(255, 255, 255, 0.06);
   }
   .dark-mode .sem-table td[data-label="Criteria Set"] {
@@ -724,6 +735,24 @@ button.periods-cset-badge:hover svg {
 @media (max-width: 768px) and (orientation: portrait) {
   .periods-mobile-ring { display: block; }
   .periods-mobile-footer { display: flex; }
+}
+
+/* ── Kill touch-device sticky hover artifacts on Periods mobile cards.
+   Loaded AFTER mobile.css so these win on coarse pointer. ─────────── */
+@media (hover: none), (pointer: coarse) {
+  .periods-page .sem-table tbody tr,
+  .periods-page .sem-table tbody tr:hover,
+  .periods-page .sem-table tbody tr.menu-open,
+  .periods-page .sem-table tbody tr.is-active {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .periods-page .sem-action-btn:hover,
+  .periods-page .sem-action-btn:focus {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-tertiary);
+  }
 }
 
 /* ─── Landscape compact ───────────────────────────────────────

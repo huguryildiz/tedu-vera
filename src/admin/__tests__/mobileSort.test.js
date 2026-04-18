@@ -1,6 +1,6 @@
 import { describe, expect } from "vitest";
 import { qaTest } from "../../test/qaTest.js";
-import { sortMobileJurors, MOBILE_SORT_KEYS } from "../pages/heatmap/mobileSort.js";
+import { sortMobileJurors, MOBILE_SORT_KEYS } from "../pages/mobileSort.js";
 
 const jurors = [
   { key: "a", name: "Zeynep Ak",  dept: "EE"      },

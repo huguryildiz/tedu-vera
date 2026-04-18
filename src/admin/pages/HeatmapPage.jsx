@@ -16,6 +16,7 @@ import { generateTableBlob } from "../utils/downloadTable";
 import SendReportModal from "@/admin/modals/SendReportModal";
 import JurorBadge from "../components/JurorBadge";
 import JurorStatusPill from "../components/JurorStatusPill";
+import HeatmapMobileList from "./HeatmapMobileList.jsx";
 
 // ── Score color band ──────────────────────────────────────────
 // Returns a CSS variable name for the cell background color.
@@ -245,19 +246,19 @@ export default function HeatmapPage() {
             Compare juror scoring patterns across projects and criteria.
           </div>
         </div>
+        <div className="matrix-tabs hm-criteria-tabs">
+          {criteriaTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={`matrix-tab${activeTab === tab.id ? " active" : ""}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
         <div className="analytics-actions">
-          <div className="matrix-tabs">
-            {criteriaTabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                className={`matrix-tab${activeTab === tab.id ? " active" : ""}`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
           <button
             type="button"
             className="btn btn-outline btn-sm"
@@ -353,6 +354,21 @@ export default function HeatmapPage() {
             pdfTitle: "VERA — Heatmap", header, rows,
           });
         }}
+      />
+
+      <HeatmapMobileList
+        visibleJurors={visibleJurors}
+        groups={groups || []}
+        lookup={lookup}
+        activeTab={activeTab}
+        activeCriteria={activeCriteria}
+        tabLabel={tabLabel}
+        tabMax={tabMax}
+        jurorRowAvgs={jurorRowAvgs}
+        visibleAverages={visibleAverages}
+        overallAvg={overallAvg}
+        jurorWorkflowMap={jurorWorkflowMap}
+        getCellDisplay={getCellDisplay}
       />
 
       {/* ── Matrix ── */}

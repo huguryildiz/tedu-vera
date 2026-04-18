@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect } from "vitest";
 import { qaTest } from "../../test/qaTest.js";
-import AvgDonut from "../pages/heatmap/AvgDonut.jsx";
+import AvgDonut from "../pages/AvgDonut.jsx";
 
 describe("AvgDonut", () => {
   qaTest("heatmap.mobile.donut.01", () => {
