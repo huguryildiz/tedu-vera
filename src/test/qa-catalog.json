@@ -4402,6 +4402,83 @@
     "severity": "normal"
   },
   {
+    "id": "reviews.mobile_card.01",
+    "module": "Reviews / Mobile Card",
+    "area": "Reviews Mobile Card — Rendering",
+    "story": "Full Row Render",
+    "scenario": "renders all criterion score cells with correct score values",
+    "whyItMatters": "The 2×2 score grid is the primary information surface of the new card; every criterion must map correctly from the enriched row.",
+    "risk": "Wrong key lookup would silently display zeros or dashes for all scores.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "reviews.mobile_card.02",
+    "module": "Reviews / Mobile Card",
+    "area": "Reviews Mobile Card — Rendering",
+    "story": "Partial Row",
+    "scenario": "applies amber left border class when effectiveStatus is partial",
+    "whyItMatters": "Partial state is the most important visual signal — a juror has scored some but not all criteria.",
+    "risk": "Missing visual indicator would make partial rows indistinguishable from complete ones.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "reviews.mobile_card.03",
+    "module": "Reviews / Mobile Card",
+    "area": "Reviews Mobile Card — Rendering",
+    "story": "Empty Row",
+    "scenario": "shows dash in ring center and fades all score cells when total is null",
+    "whyItMatters": "An unscored row must clearly signal absence of data rather than displaying misleading zeros.",
+    "risk": "Rendering 0 instead of dash would suggest a zero score was entered intentionally.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "reviews.mobile_card.04",
+    "module": "Reviews / Mobile Card",
+    "area": "Reviews Mobile Card — Rendering",
+    "story": "No-Team Row",
+    "scenario": "omits the team row entirely when students is empty string",
+    "whyItMatters": "If no students are assigned, the TEAM label and chip row must not appear — no empty-state placeholder.",
+    "risk": "Rendering an empty TEAM row would confuse admins into thinking student data failed to load.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "reviews.mobile_card.05",
+    "module": "Reviews / Mobile Card",
+    "area": "Reviews Mobile Card — Rendering",
+    "story": "Team Overflow",
+    "scenario": "shows first 4 member chips plus a +N overflow chip when team has 5 members",
+    "whyItMatters": "Cards must not stretch arbitrarily wide from long member lists; overflow chips keep layout consistent.",
+    "risk": "No cap would allow many-member teams to break card layout on narrow screens.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "reviews.mobile_card.06",
+    "module": "Reviews / Mobile Card",
+    "area": "Reviews Mobile Card — Rendering",
+    "story": "Odd Criterion Count Grid",
+    "scenario": "last score cell spans two columns when criterion count is odd",
+    "whyItMatters": "A 3-criterion period is common; the orphan cell must span full width so the grid does not have an empty half-column.",
+    "risk": "Without span, the last cell would only fill the left column, leaving a gap on the right.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "reviews.mobile_card.07",
+    "module": "Reviews / Mobile Card",
+    "area": "Reviews Mobile Card — Rendering",
+    "story": "Comment Indicator",
+    "scenario": "shows MessageSquare icon in footer when row.comments is non-empty",
+    "whyItMatters": "Admins need a visual hint that a juror left a comment, since the full text is deferred to a future drawer.",
+    "risk": "No indicator would hide comments entirely on mobile.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
     "id": "heatmap.mobile.sort.01",
     "module": "Heatmap / Mobile",
     "area": "Heatmap — Mobile Sort",
