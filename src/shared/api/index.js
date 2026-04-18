@@ -69,6 +69,7 @@ export {
   listLockedJurors,
   countTodayLockEvents,
   unlockJurorPin,
+  notifyJuror,
   listOrganizations,
   createOrganization,
   updateOrganization,

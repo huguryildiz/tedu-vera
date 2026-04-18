@@ -361,23 +361,6 @@ export default function ReviewsPage() {
           </button>
         </div>
       </div>
-      {/* Filter status banner */}
-      {activeFilterCount > 0 && (
-        <div className="fb-banner fbb-success">
-          <CheckCircle2 size={16} />
-          <span className="fb-banner-text">
-            {activeFilterCount} filter{activeFilterCount !== 1 ? "s" : ""} applied — showing {sorted.length} of {enriched.length} result{enriched.length !== 1 ? "s" : ""}
-          </span>
-          <button
-            type="button"
-            className="fb-banner-action"
-            style={{ color: "var(--fb-success-text)" }}
-            onClick={handleClearFilters}
-          >
-            Clear filters →
-          </button>
-        </div>
-      )}
       {/* KPI strip */}
       <div className="scores-kpi-strip">
         <div className="scores-kpi-item">

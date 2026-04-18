@@ -1,48 +1,48 @@
 // src/admin/hooks/useAdminRealtime.js
 // ============================================================
-// Manages the Supabase Realtime subscription for the admin panel.
+// Manages the Supabase Realtime subscription for the admin panel's
+// score cluster.
 //
-// Extracted from useAdminData.js (Phase 5 — Final Decomposition).
+// Scope (narrowed 2026-04): only score-related tables. `jurors` and
+// `periods` subscriptions now live in useManageJurors / useManagePeriods
+// so they only run on pages that manage those entities.
 //
-// Accepts a ref object whose .current holds the background-refresh
-// callback. Using a ref (instead of a plain function) keeps this
-// effect's dependency array stable — the subscription is only
-// torn down and rebuilt when organizationId changes, not on every render.
+// Tables covered here:
+//   score_sheets, score_sheet_items, juror_period_auth, projects
+// All four are period-scoped (no organization_id column). RLS drops
+// cross-tenant rows on the server, so no client filter is needed.
 //
-// Scope narrowing:
-//   * periods and jurors subscriptions filter on organization_id so other
-//     tenants' events never reach this WS connection.
-//   * score_sheets / score_sheet_items / juror_period_auth / projects have
-//     no organization_id column — they're scoped by period_id. RLS drops
-//     cross-tenant rows on the server, so we don't add a client filter.
+// Gating:
+//   * `enabled` prop controls whether the subscription is established.
+//     Callers pass `false` on routes that don't display score data
+//     (e.g. settings, jurors, periods) to avoid a high-frequency WS
+//     stream during live jury days.
 //
 // Selective refresh:
 //   * Each event's table name is collected into a pending set.
 //   * After the 600 ms debounce, the set is passed to onRefreshRef.current()
-//     so useAdminData only fetches the slices that actually changed, instead
-//     of always firing scores + summary + jurors on every event.
+//     so useAdminData only fetches the slices that actually changed.
 // ============================================================
 
 import { useEffect, useRef } from "react";
 import { supabase } from "@/shared/lib/supabaseClient";
 
 /**
- * useAdminRealtime — Supabase Realtime subscription for admin panel data.
- *
- * Subscribes to all relevant tables and calls onRefreshRef.current(tables)
- * (debounced 600 ms) with the set of tables that fired events in the window.
+ * useAdminRealtime — Supabase Realtime subscription for admin score data.
  *
  * @param {object} opts
- * @param {string} opts.organizationId               Current tenant ID for scoping the subscription.
+ * @param {string} opts.organizationId               Current tenant ID (guard only; tables below have no org column).
+ * @param {boolean} [opts.enabled=true]              When false, no channel is opened.
  * @param {React.MutableRefObject<Function>} opts.onRefreshRef
  *   Ref whose .current is the background-refresh callback. Called with
  *   (tables: string[]) so the consumer can refresh only affected slices.
  */
-export function useAdminRealtime({ organizationId, onRefreshRef }) {
+export function useAdminRealtime({ organizationId, onRefreshRef, enabled = true }) {
   const bgTimerRef = useRef(null);
   const pendingTablesRef = useRef(new Set());
 
   useEffect(() => {
+    if (!enabled) return;
     if (!organizationId) return;
 
     const scheduleBgRefresh = (table) => () => {
@@ -56,11 +56,8 @@ export function useAdminRealtime({ organizationId, onRefreshRef }) {
       }, 600);
     };
 
-    const orgFilter = `organization_id=eq.${organizationId}`;
-
     const channel = supabase
       .channel("admin-panel-live")
-      // Period-scoped tables — RLS drops cross-tenant rows server-side.
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "score_sheets" },
@@ -81,17 +78,6 @@ export function useAdminRealtime({ organizationId, onRefreshRef }) {
         { event: "*", schema: "public", table: "projects" },
         scheduleBgRefresh("projects"),
       )
-      // Org-scoped tables — narrow at WS level.
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "periods", filter: orgFilter },
-        scheduleBgRefresh("periods"),
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "jurors", filter: orgFilter },
-        scheduleBgRefresh("jurors"),
-      )
       .subscribe();
 
     return () => {
@@ -102,5 +88,5 @@ export function useAdminRealtime({ organizationId, onRefreshRef }) {
       pendingTablesRef.current.clear();
       supabase.removeChannel(channel);
     };
-  }, [organizationId, onRefreshRef]);
+  }, [enabled, organizationId, onRefreshRef]);
 }

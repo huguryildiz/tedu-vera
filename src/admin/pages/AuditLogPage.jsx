@@ -684,7 +684,10 @@ export default function AuditLogPage() {
                           <span className={`audit-chip audit-chip-${chip.type}`}>{chip.label}</span>
                         </td>
                         <td className="audit-actor" data-label="Actor">
-                          <div className={`audit-actor-avatar${actor.type === "juror" ? " audit-actor-juror" : actor.type === "system" ? " audit-actor-system" : ""}`}>
+                          <div
+                            className={`audit-actor-avatar${actor.type === "system" ? " audit-actor-system" : ""}`}
+                            style={actor.bg ? { background: actor.bg, color: actor.fg } : undefined}
+                          >
                             {actor.type === "system" ? <Clock size={13} /> : actor.initials}
                           </div>
                           <div className="audit-actor-info">
@@ -750,7 +753,10 @@ export default function AuditLogPage() {
                             <Clock size={13} />
                           </div>
                         ) : (
-                          <div className={`audit-actor-avatar${actor.type === "juror" ? " audit-actor-juror" : ""}`}>
+                          <div
+                            className="audit-actor-avatar"
+                            style={actor.bg ? { background: actor.bg, color: actor.fg } : undefined}
+                          >
                             {actor.initials}
                           </div>
                         )}
@@ -837,7 +843,10 @@ export default function AuditLogPage() {
                       <span className="amc-rel">{relTime}</span>
                     </div>
                     <div className="amc-actor">
-                      <div className={`amc-avatar${actor.type === "system" ? " amc-avatar-system" : actor.type === "juror" ? " amc-avatar-juror" : ""}`}>
+                      <div
+                        className={`amc-avatar${actor.type === "system" ? " amc-avatar-system" : ""}`}
+                        style={actor.bg ? { background: actor.bg, color: actor.fg } : undefined}
+                      >
                         {actor.type === "system" ? <Clock size={14} /> : actor.initials}
                       </div>
                       <div className="amc-actor-info">

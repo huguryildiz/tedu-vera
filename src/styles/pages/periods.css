@@ -362,6 +362,7 @@ button.periods-cset-badge:hover svg {
 .sem-table tbody tr { border-bottom: 1px solid var(--border); transition: background .12s }
 .sem-table tbody tr:last-child { border-bottom: none }
 .sem-table tbody tr:hover { background: var(--surface-1) }
+.sem-table tbody tr.es-row:hover { background: transparent; }
 .sem-table tbody td { vertical-align: middle }
 
 /* ─── Current period row ──────────────────────────────────── */

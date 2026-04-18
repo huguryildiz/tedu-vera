@@ -22,8 +22,9 @@ import ExportPanel from "../components/ExportPanel";
 import {
   SquarePen,
   Filter,
-  LockOpen,
+  RotateCcw,
   Lock,
+  KeyRound,
   ClipboardList,
   Trash2,
   Clock,
@@ -36,6 +37,7 @@ import {
   Plus,
   Info,
   XCircle,
+  Bell,
 } from "lucide-react";
 import { downloadTable, generateTableBlob } from "../utils/downloadTable";
 import { FilterButton } from "@/shared/ui/FilterButton";
@@ -114,7 +116,7 @@ function getJurorCell(j, key, avgMap) {
   if (key === "progress") {
     const scored = j.overviewScoredProjects ?? 0;
     const total  = j.overviewTotalProjects  ?? 0;
-    return `${scored} / ${total}`;
+    return `${scored} of ${total}`;
   }
   if (key === "avgScore") {
     const jid = String(j.jurorId || j.juror_id || "");
@@ -175,6 +177,7 @@ export default function JurorsPage() {
     onCurrentSemesterChange,
     onViewReviews,
     onNavigate,
+    bgRefresh,
   } = useAdminContext();
   const _toast = useToast();
   const { activeOrganization } = useAuth();
@@ -195,6 +198,7 @@ export default function JurorsPage() {
     onCurrentPeriodChange: onCurrentSemesterChange,
     setPanelError,
     clearPanelError,
+    bgRefresh,
   });
 
   const projectsHook = useManageProjects({
@@ -220,6 +224,7 @@ export default function JurorsPage() {
     setPanelError,
     clearPanelError,
     setEvalLockError: periods.setEvalLockError,
+    bgRefresh,
   });
 
   // ── Local UI state ──────────────────────────────────────────
@@ -228,12 +233,14 @@ export default function JurorsPage() {
   const [exportOpen, setExportOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [affilFilter, setAffilFilter] = useState("all");
+  const [progressFilter, setProgressFilter] = useState("all");
   const [sortKey, setSortKey] = useState("name");
   const [sortDir, setSortDir] = useState("asc");
 
   const activeFilterCount =
     (statusFilter !== "all" ? 1 : 0) +
-    (affilFilter !== "all" ? 1 : 0);
+    (affilFilter !== "all" ? 1 : 0) +
+    (progressFilter !== "all" ? 1 : 0);
 
   const [openMenuId, setOpenMenuId] = useState(null);
   const { shouldUseCardLayout } = useAdminResponsiveTableMode();
@@ -299,17 +306,29 @@ export default function JurorsPage() {
       list = list.filter((j) => getLiveOverviewStatus(j, editWindowNowMs) === statusFilter);
     }
     if (affilFilter !== "all") {
-      list = list.filter((j) => (j.affiliation || "").includes(affilFilter));
+      list = list.filter((j) => (j.affiliation || "") === affilFilter);
+    }
+    if (progressFilter !== "all") {
+      list = list.filter((j) => {
+        const scored = j.overviewScoredProjects || 0;
+        const total = j.overviewTotalProjects || 0;
+        const pct = total > 0 ? scored / total : 0;
+        if (progressFilter === "not_started") return scored === 0;
+        if (progressFilter === "partial_low")  return pct > 0 && pct < 0.5;
+        if (progressFilter === "partial_high") return pct >= 0.5 && pct < 1;
+        if (progressFilter === "complete")     return total > 0 && scored >= total;
+        return true;
+      });
     }
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((j) =>
-        (j.juror_name || "").toLowerCase().includes(q) ||
+        (j.juryName || j.juror_name || "").toLowerCase().includes(q) ||
         (j.affiliation || "").toLowerCase().includes(q)
       );
     }
     return list;
-  }, [jurorList, statusFilter, affilFilter, search, editWindowNowMs]);
+  }, [jurorList, statusFilter, affilFilter, progressFilter, search, editWindowNowMs]);
 
   // Per-juror average score map (only completed scores, i.e. total != null)
   const jurorAvgMap = useMemo(() => {
@@ -633,7 +652,23 @@ export default function JurorsPage() {
                 ariaLabel="Affiliation"
               />
             </div>
-            <button className="btn btn-outline btn-sm filter-clear-btn" onClick={() => { setStatusFilter("all"); setAffilFilter("all"); }}>
+            <div className="filter-group">
+              <label>Scoring Progress</label>
+              <CustomSelect
+                compact
+                value={progressFilter}
+                onChange={(v) => setProgressFilter(v)}
+                options={[
+                  { value: "all",          label: "All progress" },
+                  { value: "not_started",  label: "Not started (0%)" },
+                  { value: "partial_low",  label: "Partial (< 50%)" },
+                  { value: "partial_high", label: "Partial (≥ 50%)" },
+                  { value: "complete",     label: "Complete (100%)" },
+                ]}
+                ariaLabel="Scoring Progress"
+              />
+            </div>
+            <button className="btn btn-outline btn-sm filter-clear-btn" onClick={() => { setStatusFilter("all"); setAffilFilter("all"); setProgressFilter("all"); }}>
               <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
               {" "}Clear all
             </button>
@@ -802,7 +837,7 @@ export default function JurorsPage() {
                         {activeFilterCount > 0 && (
                           <button
                             className="btn btn-primary btn-sm"
-                            onClick={() => { setStatusFilter("all"); setAffilFilter("all"); }}
+                            onClick={() => { setStatusFilter("all"); setAffilFilter("all"); setProgressFilter("all"); }}
                           >
                             <XCircle size={13} strokeWidth={2.2} /> Clear filters
                           </button>
@@ -921,7 +956,7 @@ export default function JurorsPage() {
                         Edit Juror
                       </button>
                       <button className="floating-menu-item" onMouseDown={() => { setOpenMenuId(null); openPinResetModal(juror); }}>
-                        <Lock size={13} />
+                        <KeyRound size={13} />
                         Reset PIN
                       </button>
                       <div className="floating-menu-divider" />
@@ -934,17 +969,17 @@ export default function JurorsPage() {
                               setEditModeJuror(juror);
                             }}
                           >
-                            <LockOpen size={13} />
-                            Enable Editing Mode
+                            <RotateCcw size={13} />
+                            Reopen Evaluation
                           </button>
                         ) : (
-                          <PremiumTooltip text="Juror must complete their submission before editing can be unlocked.">
+                          <PremiumTooltip text="Juror must complete their submission before evaluation can be reopened.">
                             <button
                               className="floating-menu-item disabled"
                               disabled
                             >
                               <Lock size={13} />
-                              Enable Editing Mode
+                              Reopen Evaluation
                             </button>
                           </PremiumTooltip>
                         )
@@ -956,10 +991,16 @@ export default function JurorsPage() {
                         <ClipboardList size={13} />
                         View Scores
                       </button>
+                      {juror.email && (
+                        <button className="floating-menu-item" onMouseDown={() => { setOpenMenuId(null); jurorsHook.handleNotifyJuror(juror); }}>
+                          <Bell size={13} />
+                          Notify Juror
+                        </button>
+                      )}
                       <div className="floating-menu-divider" />
                       <button className="floating-menu-item danger" onMouseDown={() => { setOpenMenuId(null); openRemoveModal(juror); }}>
                         <Trash2 size={13} />
-                        Remove Juror
+                        Delete Juror
                       </button>
                     </FloatingMenu>
                   </td>
@@ -1004,17 +1045,39 @@ export default function JurorsPage() {
                             Edit Juror
                           </button>
                           <button className="floating-menu-item" onMouseDown={() => { setOpenMenuId(null); openPinResetModal(juror); }}>
-                            <Lock size={13} />
+                            <KeyRound size={13} />
                             Reset PIN
                           </button>
+                          {status !== "editing" && (
+                            status === "completed" ? (
+                              <button
+                                className="floating-menu-item"
+                                onMouseDown={() => { setOpenMenuId(null); setEditModeJuror(juror); }}
+                              >
+                                <RotateCcw size={13} />
+                                Reopen Evaluation
+                              </button>
+                            ) : (
+                              <button className="floating-menu-item disabled" disabled>
+                                <Lock size={13} />
+                                Reopen Evaluation
+                              </button>
+                            )
+                          )}
                           <button className="floating-menu-item floating-menu-item--highlight" onMouseDown={() => { setOpenMenuId(null); setScoresJuror(juror); }}>
                             <ClipboardList size={13} />
                             View Scores
                           </button>
+                          {juror.email && (
+                            <button className="floating-menu-item" onMouseDown={() => { setOpenMenuId(null); jurorsHook.handleNotifyJuror(juror); }}>
+                              <Bell size={13} />
+                              Notify Juror
+                            </button>
+                          )}
                           <div className="floating-menu-divider" />
                           <button className="floating-menu-item danger" onMouseDown={() => { setOpenMenuId(null); openRemoveModal(juror); }}>
                             <Trash2 size={13} />
-                            Remove Juror
+                            Delete Juror
                           </button>
                         </FloatingMenu>
                       </div>
@@ -1130,7 +1193,7 @@ export default function JurorsPage() {
         newPin={jurorsHook.resetPinInfo?.pin_plain_once}
         onSendEmail={handleSendPinEmail}
       />
-      {/* Remove Juror Modal */}
+      {/* Delete Juror Modal */}
       <RemoveJurorModal
         open={!!removeJuror}
         onClose={() => setRemoveJuror(null)}

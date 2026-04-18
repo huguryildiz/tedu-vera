@@ -9,7 +9,7 @@
 //   loading — boolean
 //   onConfirm — () => void
 
-import { AlertTriangle, Icon } from "lucide-react";
+import { AlertTriangle, KeyRound, Icon } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import JurorBadge from "../components/JurorBadge";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
@@ -23,15 +23,7 @@ export default function PinResetConfirmModal({ open, onClose, juror, loading, on
         <div className="fs-modal-header-row">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div className="fs-icon" style={{ background: "var(--surface-2)" }}>
-              <Icon
-                iconNode={[]}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2">
-                <rect x="3" y="11" width="18" height="10" rx="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </Icon>
+              <KeyRound size={17} strokeWidth={2} />
             </div>
             <div className="fs-title-group">
               <div className="fs-title">Reset Juror PIN</div>

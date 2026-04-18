@@ -4,6 +4,7 @@
 // ============================================================
 
 import { supabase } from "../core/client";
+import { invokeEdgeFunction } from "../core/invokeEdgeFunction";
 
 export async function createJuror(payload) {
   // Insert juror
@@ -143,5 +144,12 @@ export async function unlockJurorPin({ jurorId, periodId }) {
   });
   if (error) throw error;
   if (data?.error_code) throw new Error(data.error_code);
+  return data;
+}
+
+export async function notifyJuror({ jurorId, periodId }) {
+  if (!jurorId || !periodId) throw new Error("notifyJuror: jurorId and periodId required");
+  const { data, error } = await invokeEdgeFunction("notify-juror", { body: { juror_id: jurorId, period_id: periodId } });
+  if (error) throw error;
   return data;
 }

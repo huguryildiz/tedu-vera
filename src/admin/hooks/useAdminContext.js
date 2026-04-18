@@ -8,6 +8,10 @@ export function useAdminContext() {
   const ctx = useOutletContext() ?? {};
   return {
     ...ctx,
+    // bgRefresh: mutable ref from useAdminData. Pages/hooks with their own
+    // Realtime subscriptions call `.current?.([tables])` to trigger a
+    // selective refresh of the central score/juror/period store.
+    bgRefresh: ctx.bgRefresh,
     // Derived convenience fields
     organizationId: ctx.activeOrganization?.id,
     periodName:

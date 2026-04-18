@@ -54,6 +54,7 @@ export {
   listLockedJurors,
   countTodayLockEvents,
   unlockJurorPin,
+  notifyJuror,
 } from "./jurors";
 
 export {

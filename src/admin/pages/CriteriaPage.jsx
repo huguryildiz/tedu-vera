@@ -81,6 +81,7 @@ export default function CriteriaPage() {
     onNavigate,
     loading: adminLoading,
     sortedPeriods: contextPeriods = [],
+    bgRefresh,
   } = useAdminContext();
   const _toast = useToast();
   const setMessage = useCallback((msg) => { if (msg) _toast.success(msg); }, [_toast]);
@@ -105,6 +106,7 @@ export default function CriteriaPage() {
     onCurrentPeriodChange: onCurrentSemesterChange,
     setPanelError,
     clearPanelError,
+    bgRefresh,
   });
 
   useEffect(() => {
@@ -1045,23 +1047,31 @@ export default function CriteriaPage() {
                   >
                     {/* Header */}
                     <div className="crt-mobile-card-header">
-                      <span
-                        className="crt-mobile-card-color-dot"
-                        style={{ backgroundColor: color }}
-                      />
-                      <span className="crt-mobile-card-name">
-                        {criterion.label || criterion.shortLabel || `Criterion ${i + 1}`}
-                      </span>
-                      <span
-                        className="crt-mobile-card-pts-badge"
-                        style={{
-                          backgroundColor: `${color || "#94A3B8"}18`,
-                          borderColor: `${color || "#94A3B8"}40`,
-                          color: color || "var(--text-tertiary)",
-                        }}
+                      <button
+                        className="crt-mobile-card-header-tap"
+                        onClick={() => !isLocked && openEditor(i)}
+                        style={{ cursor: isLocked ? "default" : "pointer" }}
+                        tabIndex={isLocked ? -1 : 0}
+                        aria-label={`Edit ${criterion.label || `Criterion ${i + 1}`}`}
                       >
-                        {criterion.max != null ? `${criterion.max} pts` : "—"}
-                      </span>
+                        <span
+                          className="crt-mobile-card-color-dot"
+                          style={{ backgroundColor: color }}
+                        />
+                        <span className="crt-mobile-card-name">
+                          {criterion.label || criterion.shortLabel || `Criterion ${i + 1}`}
+                        </span>
+                        <span
+                          className="crt-mobile-card-pts-badge"
+                          style={{
+                            backgroundColor: `${color || "#94A3B8"}18`,
+                            borderColor: `${color || "#94A3B8"}40`,
+                            color: color || "var(--text-tertiary)",
+                          }}
+                        >
+                          {criterion.max != null ? `${criterion.max} pts` : "—"}
+                        </span>
+                      </button>
                       <FloatingMenu
                         trigger={
                           <button

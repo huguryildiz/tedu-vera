@@ -13,12 +13,20 @@ import { qaTest } from "../../test/qaTest.js";
 // ── Mocks (before imports that touch these modules) ────────────────────────
 
 // Prevent VITE_SUPABASE_URL errors from direct supabase client access.
-vi.mock("@/shared/lib/supabaseClient", () => ({
-  supabase: {
-    from: vi.fn(),
-    rpc: vi.fn(),
-  },
-}));
+vi.mock("@/shared/lib/supabaseClient", () => {
+  const channel = {
+    on: vi.fn(function () { return this; }),
+    subscribe: vi.fn(function () { return this; }),
+  };
+  return {
+    supabase: {
+      from: vi.fn(),
+      rpc: vi.fn(),
+      channel: vi.fn(() => channel),
+      removeChannel: vi.fn(),
+    },
+  };
+});
 
 // Mock the whole shared API so no network calls go out.
 vi.mock("../../shared/api", () => ({

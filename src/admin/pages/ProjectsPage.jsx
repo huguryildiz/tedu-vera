@@ -127,6 +127,7 @@ export default function ProjectsPage() {
     summaryData,
     allJurors,
     sortedPeriods,
+    bgRefresh,
   } = useAdminContext();
   const _toast = useToast();
   const { activeOrganization } = useAuth();
@@ -147,6 +148,7 @@ export default function ProjectsPage() {
     onCurrentPeriodChange: onCurrentSemesterChange,
     setPanelError,
     clearPanelError,
+    bgRefresh,
   });
 
   const isLocked = !!(periods.viewPeriod?.is_locked);

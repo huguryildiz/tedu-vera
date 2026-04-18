@@ -17,7 +17,9 @@ import {
   resetJurorPin,
   setJurorEditMode,
   forceCloseJurorEditMode,
+  notifyJuror,
 } from "../../shared/api";
+import { usePageRealtime } from "./usePageRealtime";
 
 const getJurorNameById = (list, jurorId) => {
   const target = (list || []).find(
@@ -51,6 +53,7 @@ export function useManageJurors({
   setPanelError,
   clearPanelError,
   setEvalLockError,
+  bgRefresh,
 }) {
   const [jurors, setJurors] = useState([]);
   const [scoreRows, setScoreRows] = useState([]);
@@ -197,8 +200,31 @@ export function useManageJurors({
     jurorTimerRef.current = setTimeout(() => {
       jurorTimerRef.current = null;
       loadJurorsAndEnrich().catch(() => {});
+      // Propagate to the central admin store so overview/rankings/jurors
+      // cross-page data (allJurors in useAdminData) stays in sync. Safe no-op
+      // when the central store isn't mounted on this page.
+      bgRefresh?.current?.(["jurors"]);
     }, 400);
-  }, [loadJurorsAndEnrich]);
+  }, [loadJurorsAndEnrich, bgRefresh]);
+
+  // ── Realtime subscription — jurors table (tenant-scoped) ──
+  // Any change to jurors for this organization triggers a debounced refresh.
+  const onJurorRealtime = useCallback(() => {
+    scheduleJurorRefresh();
+  }, [scheduleJurorRefresh]);
+  usePageRealtime({
+    organizationId,
+    channelName: "manage-jurors-live",
+    subscriptions: [
+      {
+        table: "jurors",
+        event: "*",
+        filter: organizationId ? `organization_id=eq.${organizationId}` : undefined,
+        onPayload: onJurorRealtime,
+      },
+    ],
+    deps: [onJurorRealtime],
+  });
 
   // ── Juror CRUD handlers ──────────────────────────────────
   const handleAddJuror = async (row) => {
@@ -614,6 +640,18 @@ export function useManageJurors({
     }
   };
 
+  const handleNotifyJuror = async (juror) => {
+    const jurorId = juror?.juror_id || juror?.jurorId;
+    const periodId = viewPeriodIdRef.current;
+    const name = juror?.juryName || juror?.juror_name || "juror";
+    try {
+      await notifyJuror({ jurorId, periodId });
+      setMessage(`Reminder sent to ${name}.`);
+    } catch {
+      setPanelError("jurors", "Failed to send reminder. Please try again.");
+    }
+  };
+
   return {
     jurors,
     scoreRows,
@@ -639,5 +677,6 @@ export function useManageJurors({
     handleCopyPin,
     handleToggleJurorEdit,
     handleForceCloseJurorEdit,
+    handleNotifyJuror,
   };
 }

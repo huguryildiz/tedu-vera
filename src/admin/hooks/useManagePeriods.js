@@ -37,6 +37,7 @@ import {
   setCriteriaScratch,
   clearCriteriaScratch,
 } from "../../shared/storage/adminStorage";
+import { usePageRealtime } from "./usePageRealtime";
 
 const defaultSettings = { evalLockActive: false };
 
@@ -65,6 +66,7 @@ export function useManagePeriods({
   decLoading,
   setPanelError,
   clearPanelError,
+  bgRefresh,
 }) {
   const [periodList, setPeriodList] = useState([]);
   const [currentPeriodId, setCurrentPeriodId] = useState("");
@@ -286,6 +288,41 @@ export function useManagePeriods({
       setCurrentPeriodId(pickDefaultPeriod(periods)?.id || "");
     }
   }, [organizationId, currentPeriodId]);
+
+  // ── Realtime subscription — periods table (tenant-scoped) ──
+  // Debounced so bursts (multi-row imports, bulk updates) collapse.
+  const periodRealtimeTimerRef = useRef(null);
+  const onPeriodRealtime = useCallback(() => {
+    if (periodRealtimeTimerRef.current) return;
+    periodRealtimeTimerRef.current = setTimeout(() => {
+      periodRealtimeTimerRef.current = null;
+      refreshPeriods().catch(() => {});
+      // Keep the central admin store in sync as well — the header's period
+      // dropdown (sortedPeriods) is owned by useAdminData.
+      bgRefresh?.current?.(["periods"]);
+    }, 400);
+  }, [refreshPeriods, bgRefresh]);
+  useEffect(() => {
+    return () => {
+      if (periodRealtimeTimerRef.current) {
+        clearTimeout(periodRealtimeTimerRef.current);
+        periodRealtimeTimerRef.current = null;
+      }
+    };
+  }, []);
+  usePageRealtime({
+    organizationId,
+    channelName: "manage-periods-live",
+    subscriptions: [
+      {
+        table: "periods",
+        event: "*",
+        filter: organizationId ? `organization_id=eq.${organizationId}` : undefined,
+        onPayload: onPeriodRealtime,
+      },
+    ],
+    deps: [onPeriodRealtime],
+  });
 
   // ── Period CRUD handlers ───────────────────────────────
   const handleCreatePeriod = async (payload) => {

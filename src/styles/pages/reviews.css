@@ -88,7 +88,7 @@
 
 .reviews-table .col-submitted {
   white-space: nowrap;
-  color: inherit;
+  font-size: 11px;
 }
 
 .reviews-table .text-sm { font-size: 12px; }
@@ -266,8 +266,8 @@
   padding-left:0 !important;
 }
 .reviews-page .reviews-header-left{
-  width:100%;
-  align-self:stretch;
+  flex:1;
+  min-width:0;
 }
 .reviews-page .reviews-header-left .page-title,
 .reviews-page .reviews-header-left .page-desc{
@@ -462,7 +462,7 @@
 .reviews-table .col-score.missing{color:var(--text-tertiary)}
 .reviews-table .col-comment{max-width:220px;font-size:11px;color:var(--text-tertiary);vertical-align:middle}
 .reviews-table .col-comment-inner{display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default}
-.reviews-table .col-submitted{white-space:nowrap;color:inherit;vertical-align:middle}
+.reviews-table .col-submitted{white-space:nowrap;font-size:11px;vertical-align:middle}
 .reviews-table .col-status{vertical-align:middle}
 .reviews-table .col-progress{vertical-align:middle}
 .reviews-table .col-no{vertical-align:middle}

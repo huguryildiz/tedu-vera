@@ -14,6 +14,7 @@
 // ============================================================
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   getScores,
   listJurorsSummary,
@@ -23,6 +24,25 @@ import {
 import { sortPeriodsByStartDateDesc } from "../../shared/periodSort";
 import { pickDefaultPeriod } from "../../jury/utils/periodSelection";
 import { useAdminRealtime } from "./useAdminRealtime";
+
+// Routes that display score data. The score-cluster Realtime channel is only
+// opened on these. Keeps the high-frequency `score_sheet_items` WS stream from
+// running on settings/jurors/periods/orgs pages during live jury days.
+const SCORES_ACTIVE_PATHS = new Set([
+  "overview",
+  "rankings",
+  "heatmap",
+  "analytics",
+  "reviews",
+  "outcomes",
+  "entry-control",
+  "pin-blocking",
+]);
+
+const isScoresActivePath = (pathname) => {
+  const last = String(pathname || "").split("/").filter(Boolean).pop() || "";
+  return SCORES_ACTIVE_PATHS.has(last);
+};
 
 // Module-scoped cache for the details view. Scores are large; re-fetching
 // every period on every tab switch is wasteful. Entries are invalidated
@@ -278,7 +298,11 @@ export function useAdminData({
   };
 
   // ── Realtime subscription (delegated) ─────────────────────
-  useAdminRealtime({ organizationId, onRefreshRef: bgRefresh });
+  // Scope narrowed to score-cluster tables only. Gated by current route so
+  // the WS channel is not opened on non-score admin pages.
+  const location = useLocation();
+  const scoresActive = isScoresActivePath(location.pathname);
+  useAdminRealtime({ organizationId, onRefreshRef: bgRefresh, enabled: scoresActive });
 
   // ── Details invalidation ───────────────────────────────────
   // When rawScores changes, invalidate only the cache entry for the
@@ -361,5 +385,8 @@ export function useAdminData({
     authError,
     lastRefresh,
     fetchData,
+    // Exposed so pages (via useAdminContext) can trigger a selective refresh
+    // after their own Realtime subscriptions fire (jurors, periods, …).
+    bgRefresh,
   };
 }

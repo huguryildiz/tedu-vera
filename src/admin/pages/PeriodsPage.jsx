@@ -496,6 +496,7 @@ export default function PeriodsPage() {
     onDirtyChange,
     onCurrentSemesterChange,
     onNavigate,
+    bgRefresh,
   } = useAdminContext();
   const _toast = useToast();
   const { activeOrganization } = useAuth();
@@ -516,6 +517,7 @@ export default function PeriodsPage() {
     onCurrentPeriodChange: onCurrentSemesterChange,
     setPanelError,
     clearPanelError,
+    bgRefresh,
   });
 
   // Period stats state
@@ -531,26 +533,24 @@ export default function PeriodsPage() {
   const [exportOpen, setExportOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateRangeFilter, setDateRangeFilter] = useState("all");
-  const [frameworkFilter, setFrameworkFilter] = useState("all");
+  const [outcomeFilter, setOutcomeFilter] = useState("all");
   const [progressFilter, setProgressFilter] = useState("all");
-  const [readinessFilter, setReadinessFilter] = useState("all");
-  const [hasProjectsFilter, setHasProjectsFilter] = useState("all");
-  const [hasJurorsFilter, setHasJurorsFilter] = useState("all");
+  const [criteriaFilter, setCriteriaFilter] = useState("all");
+  const [setupFilter, setSetupFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState("start_date");
   const [sortDir, setSortDir] = useState("desc");
 
   // Active filter count
-  const activeFilterCount = [statusFilter, dateRangeFilter, frameworkFilter, progressFilter, readinessFilter, hasProjectsFilter, hasJurorsFilter].filter((v) => v !== "all").length;
+  const activeFilterCount = [statusFilter, dateRangeFilter, outcomeFilter, progressFilter, criteriaFilter, setupFilter].filter((v) => v !== "all").length;
 
   function clearAllFilters() {
     setStatusFilter("all");
     setDateRangeFilter("all");
-    setFrameworkFilter("all");
+    setOutcomeFilter("all");
     setProgressFilter("all");
-    setReadinessFilter("all");
-    setHasProjectsFilter("all");
-    setHasJurorsFilter("all");
+    setCriteriaFilter("all");
+    setSetupFilter("all");
   }
 
   // Delete period modal
@@ -689,9 +689,9 @@ export default function PeriodsPage() {
       }
 
       // Framework
-      if (frameworkFilter !== "all") {
-        if (frameworkFilter === "not_set" && p.framework_id) return false;
-        if (frameworkFilter !== "not_set" && p.framework_id !== frameworkFilter) return false;
+      if (outcomeFilter !== "all") {
+        if (outcomeFilter === "not_set" && p.framework_id) return false;
+        if (outcomeFilter !== "not_set" && p.framework_id !== outcomeFilter) return false;
       }
 
       // Progress
@@ -703,29 +703,22 @@ export default function PeriodsPage() {
         if (progressFilter === "complete" && !isClosed && (progress === null || progress < 100)) return false;
       }
 
-      // Readiness (draft periods only)
-      if (readinessFilter !== "all") {
-        if (readinessFilter === "ready" && state !== "draft_ready") return false;
-        if (readinessFilter === "incomplete" && state !== "draft_incomplete") return false;
+      // Criteria set
+      if (criteriaFilter !== "all") {
+        const count = stats.criteriaCount ?? 0;
+        if (criteriaFilter === "has" && count === 0) return false;
+        if (criteriaFilter === "none" && count > 0) return false;
       }
 
-      // Has projects
-      if (hasProjectsFilter !== "all") {
-        const count = stats.projectCount ?? 0;
-        if (hasProjectsFilter === "yes" && count === 0) return false;
-        if (hasProjectsFilter === "no" && count > 0) return false;
-      }
-
-      // Has jurors
-      if (hasJurorsFilter !== "all") {
-        const count = stats.jurorCount ?? 0;
-        if (hasJurorsFilter === "yes" && count === 0) return false;
-        if (hasJurorsFilter === "no" && count > 0) return false;
+      // Setup
+      if (setupFilter !== "all") {
+        if (setupFilter === "no_projects" && (stats.projectCount ?? 0) > 0) return false;
+        if (setupFilter === "no_jurors" && (stats.jurorCount ?? 0) > 0) return false;
       }
 
       return true;
     });
-  }, [periodList, search, statusFilter, dateRangeFilter, frameworkFilter, progressFilter, readinessFilter, hasProjectsFilter, hasJurorsFilter, periodStats, periodReadiness]);
+  }, [periodList, search, statusFilter, dateRangeFilter, outcomeFilter, progressFilter, criteriaFilter, setupFilter, periodStats, periodReadiness]);
 
   const sortedFilteredList = useMemo(() => {
     const statusRank = { draft_incomplete: 1, draft_ready: 2, published: 3, live: 4, closed: 5 };
@@ -1016,7 +1009,7 @@ export default function PeriodsPage() {
                 <Filter size={14} strokeWidth={2} style={{ verticalAlign: "-1px", marginRight: "4px", opacity: 0.5, display: "inline" }} />
                 Filter Periods
               </h4>
-              <div className="filter-panel-sub">Narrow evaluation periods by status, date, framework, and setup state.</div>
+              <div className="filter-panel-sub">Narrow evaluation periods by status, date, criteria set, outcome set, and setup state.</div>
             </div>
             <button className="filter-panel-close" onClick={() => setFilterOpen(false)}>&#215;</button>
           </div>
@@ -1053,20 +1046,6 @@ export default function PeriodsPage() {
               />
             </div>
             <div className="filter-group">
-              <label>Framework</label>
-              <CustomSelect
-                compact
-                value={frameworkFilter}
-                onChange={setFrameworkFilter}
-                options={[
-                  { value: "all", label: "All" },
-                  { value: "not_set", label: "Not set" },
-                  ...(frameworks || []).map((fw) => ({ value: fw.id, label: fw.name })),
-                ]}
-                ariaLabel="Framework"
-              />
-            </div>
-            <div className="filter-group">
               <label>Progress</label>
               <CustomSelect
                 compact
@@ -1082,46 +1061,46 @@ export default function PeriodsPage() {
               />
             </div>
             <div className="filter-group">
-              <label>Readiness</label>
+              <label>Criteria Set</label>
               <CustomSelect
                 compact
-                value={readinessFilter}
-                onChange={setReadinessFilter}
+                value={criteriaFilter}
+                onChange={setCriteriaFilter}
                 options={[
                   { value: "all", label: "All" },
-                  { value: "ready", label: "Ready to publish" },
-                  { value: "incomplete", label: "Has issues" },
+                  { value: "has", label: "Has criteria" },
+                  { value: "none", label: "Not set" },
                 ]}
-                ariaLabel="Readiness"
+                ariaLabel="Criteria Set"
               />
             </div>
             <div className="filter-group">
-              <label>Has Projects</label>
+              <label>Outcome Set</label>
               <CustomSelect
                 compact
-                value={hasProjectsFilter}
-                onChange={setHasProjectsFilter}
+                value={outcomeFilter}
+                onChange={setOutcomeFilter}
                 options={[
                   { value: "all", label: "All" },
-                  { value: "yes", label: "Yes" },
-                  { value: "no", label: "No" },
+                  { value: "not_set", label: "Not set" },
+                  ...(frameworks || []).map((fw) => ({ value: fw.id, label: fw.name })),
                 ]}
-                ariaLabel="Has Projects"
+                ariaLabel="Outcome Set"
               />
             </div>
             <div className="filter-group">
-              <label>Has Jurors</label>
-              <CustomSelect
-                compact
-                value={hasJurorsFilter}
-                onChange={setHasJurorsFilter}
-                options={[
-                  { value: "all", label: "All" },
-                  { value: "yes", label: "Yes" },
-                  { value: "no", label: "No" },
-                ]}
-                ariaLabel="Has Jurors"
-              />
+              <label>Setup</label>
+              <div className="filter-toggle-group">
+                {[["all", "All"], ["no_projects", "No Projects"], ["no_jurors", "No Jurors"]].map(([val, lbl]) => (
+                  <button
+                    key={val}
+                    className={`filter-toggle-btn${setupFilter === val ? " filter-toggle-btn--active" : ""}`}
+                    onClick={() => setSetupFilter(val)}
+                  >
+                    {lbl}
+                  </button>
+                ))}
+              </div>
             </div>
             <button className="btn btn-outline btn-sm filter-clear-btn" onClick={clearAllFilters}>
               <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
@@ -1294,13 +1273,41 @@ export default function PeriodsPage() {
                 </td>
               </tr>
             ) : filteredList.length === 0 ? (
-              <tr>
+              <tr className="es-row">
                 <td colSpan={10} style={{ textAlign: "center", padding: "48px 24px" }}>
                   {activeFilterCount > 0 || search.trim() ? (
-                    <div style={{ color: "var(--text-tertiary)" }}>
-                      {search.trim() && activeFilterCount === 0
-                        ? "No periods match your search."
-                        : "No periods match the current filter."}
+                    <div className="vera-es-no-data">
+                      <div className="vera-es-icon vera-es-icon--project">
+                        <Search size={20} strokeWidth={1.8} />
+                      </div>
+                      <div className="vera-es-no-data-title">No periods match your filters</div>
+                      <div className="vera-es-no-data-desc">
+                        {search.trim() && activeFilterCount === 0
+                          ? "No periods match your current search. Try a different keyword."
+                          : search.trim() && activeFilterCount > 0
+                            ? "Try adjusting your search or clearing active filters to see more periods."
+                            : "Try adjusting or clearing the active filters to see more periods."}
+                      </div>
+                      <div className="vera-es-no-data-actions">
+                        {search.trim() && (
+                          <button className="btn btn-outline btn-sm" onClick={() => setSearch("")}>
+                            <XCircle size={13} strokeWidth={2} /> Clear search
+                          </button>
+                        )}
+                        {activeFilterCount > 0 && (
+                          <button className="btn btn-outline btn-sm" onClick={() => {
+                            setStatusFilter("all");
+                            setDateRangeFilter("all");
+                            setFrameworkFilter("all");
+                            setProgressFilter("all");
+                            setReadinessFilter("all");
+                            setHasProjectsFilter("all");
+                            setHasJurorsFilter("all");
+                          }}>
+                            <XCircle size={13} strokeWidth={2} /> Clear filters
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <div style={{ display: "flex", justifyContent: "center" }}>

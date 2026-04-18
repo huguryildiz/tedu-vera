@@ -33,25 +33,6 @@ function formatRelative(ts) {
   return `${Math.floor(diff / 86_400_000)}d ago`;
 }
 
-function SessionStatusPill({ status }) {
-  const active = status === "in_progress" || status === "editing";
-  return (
-    <span
-      style={{
-        display: "inline-flex", alignItems: "center", gap: 5,
-        padding: "3px 10px", borderRadius: 999, fontSize: 11, fontWeight: 600,
-        background: active ? "rgba(16,185,129,0.12)" : "var(--surface-2)",
-        color: active ? "var(--success)" : "var(--text-tertiary)",
-        border: `1px solid ${active ? "rgba(16,185,129,0.25)" : "var(--border)"}`,
-      }}
-    >
-      {active && (
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--success)", display: "inline-block" }} />
-      )}
-      {active ? "Active session" : "No active session"}
-    </span>
-  );
-}
 
 export default function EditJurorDrawer({ open, onClose, juror, onSave, onResetPin, onRemove, error }) {
   const [form, setForm] = useState({ name: "", affiliation: "", email: "" });
@@ -225,102 +206,7 @@ export default function EditJurorDrawer({ open, onClose, juror, onSave, onResetP
           </div>
         )}
 
-        {/* ── Security & Access ── */}
-        <div className="fs-section">
-          <div className="fs-section-header">
-            <span className="fs-section-title">Security &amp; Access</span>
-          </div>
-          <div style={{ fontSize: 12, color: "var(--text-tertiary)", marginBottom: 12, lineHeight: 1.5 }}>
-            PIN-based authentication for the jury evaluation form. Manage access credentials and session control.
-          </div>
 
-          <div className="fs-info-row">
-            <span className="fs-info-row-label">Current PIN</span>
-            <span className="fs-info-row-value" style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text-tertiary)", fontSize: 12 }}>
-              <span style={{ fontFamily: "var(--mono)", letterSpacing: "0.35em", fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>
-                • • • •
-              </span>
-              <span style={{ fontSize: 10, color: "var(--text-tertiary)" }}>hidden</span>
-            </span>
-          </div>
-
-          <div className="fs-info-row">
-            <span className="fs-info-row-label">Session Status</span>
-            <span className="fs-info-row-value">
-              <SessionStatusPill status={juror?.overviewStatus} />
-            </span>
-          </div>
-
-          {juror?.email && (
-            <div className="fs-info-row">
-              <span className="fs-info-row-label">Email</span>
-              <span className="fs-info-row-value" style={{ fontFamily: "var(--mono)", fontSize: 12 }}>
-                {form.email || juror.email}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* ── Irreversible Actions ── */}
-        <div className="fs-danger-zone">
-          <div className="fs-danger-zone-title">
-            <Icon
-              iconNode={[]}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </Icon>
-            Irreversible Actions
-          </div>
-          <div className="fs-danger-zone-desc">
-            Resetting the PIN invalidates the current one. Removing the juror permanently deletes all their scores for this evaluation period.
-          </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button
-              className="fs-btn fs-btn-danger-outline fs-btn-sm"
-              type="button"
-              onClick={() => onResetPin?.(juror)}
-              style={{ display: "flex", alignItems: "center", gap: 6 }}
-            >
-              <Icon
-                iconNode={[]}
-                viewBox="0 0 24 24"
-                width="13"
-                height="13"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2">
-                <rect x="3" y="11" width="18" height="10" rx="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </Icon>
-              Reset PIN
-            </button>
-            <button
-              className="fs-btn fs-btn-danger-outline fs-btn-sm"
-              type="button"
-              onClick={() => onRemove?.(juror)}
-              style={{ display: "flex", alignItems: "center", gap: 6 }}
-            >
-              <Icon
-                iconNode={[]}
-                viewBox="0 0 24 24"
-                width="13"
-                height="13"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2">
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-              </Icon>
-              Remove Juror
-            </button>
-          </div>
-        </div>
       </div>
       <div className="fs-drawer-footer">
         <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose} disabled={saving}>

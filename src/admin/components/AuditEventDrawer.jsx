@@ -135,7 +135,10 @@ export default function AuditEventDrawer({ log, onClose }) {
 
           {/* Actor */}
           <div className="audit-drawer-actor-row audit-drawer-section">
-            <div className={`audit-drawer-avatar${actor.type === "system" ? " system" : actor.type === "juror" ? " juror" : ""}`}>
+            <div
+              className={`audit-drawer-avatar${actor.type === "system" ? " system" : ""}`}
+              style={actor.bg ? { background: actor.bg, color: actor.fg } : undefined}
+            >
               {actor.initials ?? <Bot size={11} />}
             </div>
             <div className="audit-drawer-actor-info">

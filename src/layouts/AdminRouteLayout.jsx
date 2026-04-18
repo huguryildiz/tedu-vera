@@ -13,7 +13,7 @@
 // ============================================================
 
 import { lazy, Suspense, useRef, useMemo, useState, useEffect, useCallback, Component } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth";
 import { useMaintenanceStatus } from "@/components/MaintenanceGate";
 import { AlertTriangle, Icon } from "lucide-react";
@@ -150,6 +150,7 @@ export default function AdminRouteLayout() {
     loadError,
     lastRefresh,
     fetchData,
+    bgRefresh,
   } = useAdminData({
     organizationId: activeOrganization?.id,
     selectedPeriodId,
@@ -308,6 +309,7 @@ export default function AdminRouteLayout() {
     loadError,
     lastRefresh,
     fetchData,
+    bgRefresh,
     selectedPeriod,
     selectedPeriodId,
     setSelectedPeriodId,
@@ -331,7 +333,7 @@ export default function AdminRouteLayout() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [
     rawScores, summaryData, allJurors, sortedPeriods,
-    loading, loadError, lastRefresh, fetchData,
+    loading, loadError, lastRefresh, fetchData, bgRefresh,
     selectedPeriod, selectedPeriodId, setSelectedPeriodId,
     criteriaConfig, outcomeConfig, frameworks, reloadFrameworks, reloadCriteriaAndOutcomes,
     frameworkThreshold, groups, matrixJurors, activeOrganization,
@@ -348,6 +350,12 @@ export default function AdminRouteLayout() {
   };
 
   if (!user) {
+    // Demo admin session can be cleared when a juror flow starts in the same
+    // browser (useJuryLoading.clearPersistedSession). Instead of showing a
+    // login form, bounce through /demo so DemoAdminLoader auto-logs back in.
+    if (isDemoMode && location.pathname.startsWith("/demo/admin")) {
+      return <Navigate to="/demo" replace />;
+    }
     return (
       <AuthFormErrorBoundary
         fallback={

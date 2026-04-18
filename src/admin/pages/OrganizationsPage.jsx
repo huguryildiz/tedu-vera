@@ -2,7 +2,7 @@
 // Super-admin only: organization management, pending approvals, governance.
 // Extracted from SettingsPage.jsx as part of Settings restructure.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAdminContext } from "../hooks/useAdminContext";
 import { useAuth } from "@/auth";
@@ -165,6 +165,23 @@ function StatusPill({ status }) {
   );
 }
 
+// ── Helpers ─────────────────────────────────────────────────
+
+function getOrgInitials(name) {
+  const raw = String(name || "").trim();
+  if (!raw) return "?";
+  const words = raw.split(/\s+/).filter(Boolean);
+  if (/^[A-Z0-9]{2,5}$/.test(words[0])) return words[0];
+  return words.slice(0, 3).map((w) => w[0]).join("").toUpperCase();
+}
+
+function getOrgHue(name) {
+  const s = String(name || "");
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h % 360;
+}
+
 // ── Main Component ────────────────────────────────────────────
 
 export default function OrganizationsPage() {
@@ -297,10 +314,7 @@ export default function OrganizationsPage() {
       }
     }
 
-    const liveEvaluations = orgList.reduce(
-      (sum, o) => (getOrgMeta(o).period && getOrgMeta(o).period !== "—" ? sum + 1 : sum),
-      0,
-    );
+    const liveEvaluations = orgList.filter((o) => o.active_period_name).length;
     const totalJurors = orgList.reduce((sum, o) => {
       const jurors = getOrgMeta(o).jurors;
       return sum + (Number.isFinite(jurors) ? jurors : 0);
@@ -394,6 +408,48 @@ export default function OrganizationsPage() {
     const start = (orgSafePage - 1) * orgPageSize;
     return sortedFilteredOrgs.slice(start, start + orgPageSize);
   }, [sortedFilteredOrgs, orgSafePage, orgPageSize]);
+
+  // Mobile card spacing: detect whether organization title wraps.
+  const orgTitleRefs = useRef(new Map());
+  const [singleLineOrgTitleMap, setSingleLineOrgTitleMap] = useState({});
+
+  const registerOrgTitleRef = useCallback((orgId, node) => {
+    const key = String(orgId);
+    if (node) orgTitleRefs.current.set(key, node);
+    else orgTitleRefs.current.delete(key);
+  }, []);
+
+  const measureOrgTitleLines = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const next = {};
+    orgTitleRefs.current.forEach((el, orgId) => {
+      const style = window.getComputedStyle(el);
+      const lineHeight = parseFloat(style.lineHeight);
+      const boxHeight = el.getBoundingClientRect().height;
+      const isSingle = Number.isFinite(lineHeight) && lineHeight > 0
+        ? boxHeight <= lineHeight * 1.85
+        : true;
+      next[orgId] = isSingle;
+    });
+
+    setSingleLineOrgTitleMap((prev) => {
+      const prevKeys = Object.keys(prev);
+      const nextKeys = Object.keys(next);
+      if (prevKeys.length === nextKeys.length && nextKeys.every((k) => prev[k] === next[k])) return prev;
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    const raf = window.requestAnimationFrame(() => measureOrgTitleLines());
+    return () => window.cancelAnimationFrame(raf);
+  }, [pagedOrgs, measureOrgTitleLines]);
+
+  useEffect(() => {
+    const onResize = () => measureOrgTitleLines();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [measureOrgTitleLines]);
 
   // ── Unlock Requests logic ────────────────────────────────────
 
@@ -1425,7 +1481,6 @@ export default function OrganizationsPage() {
                   <th className={`sortable${orgSortKey === "name" ? " sorted" : ""}`} onClick={() => handleOrgSort("name")}>Program <SortIcon colKey="name" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
                   <th className={`sortable${orgSortKey === "code" ? " sorted" : ""}`} onClick={() => handleOrgSort("code")}>Code <SortIcon colKey="code" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
                   <th className={`sortable${orgSortKey === "status" ? " sorted" : ""}`} onClick={() => handleOrgSort("status")}>Status <SortIcon colKey="status" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
-                  <th>Active Period</th>
                   <th className={`text-center sortable${orgSortKey === "admins" ? " sorted" : ""}`} onClick={() => handleOrgSort("admins")}>Admins <SortIcon colKey="admins" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
                   <th className={`sortable${orgSortKey === "created_at" ? " sorted" : ""}`} onClick={() => handleOrgSort("created_at")}>Created <SortIcon colKey="created_at" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
                   <th className="text-right">Actions</th>
@@ -1434,7 +1489,7 @@ export default function OrganizationsPage() {
               <tbody>
                 {sortedFilteredOrgs.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="text-sm text-muted" style={{ textAlign: "center", padding: "18px 0" }}>
+                    <td colSpan={7} className="text-sm text-muted" style={{ textAlign: "center", padding: "18px 0" }}>
                       No organizations found.
                     </td>
                   </tr>
@@ -1442,13 +1497,26 @@ export default function OrganizationsPage() {
                   pagedOrgs.map((org) => {
                     const meta = getOrgMeta(org);
                     const code = String(org.code || "").toUpperCase();
+                    const initials = getOrgInitials(org.institution);
+                    const hue = getOrgHue(org.institution);
                     return (
-                      <tr key={org.id} className={openOrgActionMenuId === org.id ? "menu-open" : ""}>
-                        <td data-label="Organization" style={{ fontWeight: 600 }}>{org.institution || "—"}</td>
+                      <tr
+                        key={org.id}
+                        className={openOrgActionMenuId === org.id ? "menu-open" : ""}
+                        data-initials={initials}
+                        data-org-title-lines={singleLineOrgTitleMap[String(org.id)] ? "single" : "multi"}
+                        style={{ "--org-hue": hue }}
+                      >
+                        <td
+                          data-label="Organization"
+                          ref={(el) => registerOrgTitleRef(org.id, el)}
+                          style={{ fontWeight: 600 }}
+                        >
+                          {org.institution || "—"}
+                        </td>
                         <td data-label="Program">{org.name}</td>
-                        <td data-label="Code" className="mono">{code || "—"}</td>
+                        <td data-label="Code" className="mono"><span className="org-code-pill">{code || "—"}</span></td>
                         <td data-label="Status"><OrgStatusBadge status={org.status} /></td>
-                        <td data-label="Active Period">{meta.period || "—"}</td>
                         <td data-label="Admins" className="text-center mono org-admin-count-cell">
                           <span className="org-admin-count-label">Admins:</span>{" "}
                           {org.tenantAdmins?.filter((a) => a.status === "active").length ?? 0}

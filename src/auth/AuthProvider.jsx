@@ -18,6 +18,7 @@ import { getSession, getMyJoinRequests, listOrganizationsPublic, getSecurityPoli
 import { KEYS } from "@/shared/storage/keys";
 import { DEMO_MODE } from "@/shared/lib/demoMode";
 import { getAdminDeviceId, getAuthMethodLabelFromSession, parseUserAgent } from "@/shared/lib/adminSession";
+import { toastStore } from "@/shared/lib/toastStore";
 import { SecurityPolicyContext, DEFAULT_POLICY } from "./SecurityPolicyContext";
 
 export const AuthContext = createContext(null);
@@ -378,11 +379,52 @@ export default function AuthProvider({ children }) {
     });
   }, [session, user]);
 
+  const sessionExpiredHandledRef = useRef(false);
+
   useEffect(() => {
-    if (!session?.user?.id) return undefined;
+    if (!session?.user?.id) {
+      sessionExpiredHandledRef.current = false;
+      return undefined;
+    }
+
+    const handleExpired = async () => {
+      if (sessionExpiredHandledRef.current) return;
+      const path = typeof window !== "undefined" ? window.location.pathname : "";
+      if (isJuryOrEvalPath(path)) return;
+
+      // Before concluding the session is dead, try refreshing — the token may
+      // still be valid in memory even if localStorage was cleared by another tab.
+      try {
+        const { data } = await supabase.auth.refreshSession();
+        if (data?.session) return; // session recovered; do nothing
+      } catch {
+        // refresh failed — fall through to sign-out
+      }
+
+      sessionExpiredHandledRef.current = true;
+      toastStore.emit({
+        type: "warning",
+        message: "Session expired. Please sign in again.",
+      });
+      try {
+        await supabase.auth.signOut({ scope: "local" });
+      } catch {}
+      const target = path.startsWith("/demo") ? "/demo" : "/login";
+      if (typeof window !== "undefined" && window.location.pathname !== target) {
+        window.location.assign(target);
+      }
+    };
 
     const safeTouch = () => {
-      touchCurrentAdminSession().catch(() => {});
+      if (typeof window !== "undefined" && isJuryOrEvalPath(window.location.pathname)) {
+        return;
+      }
+      touchCurrentAdminSession().catch((err) => {
+        const msg = String(err?.message || "");
+        if (msg.toLowerCase().includes("session expired")) {
+          handleExpired();
+        }
+      });
     };
 
     safeTouch();

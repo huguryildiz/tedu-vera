@@ -369,35 +369,6 @@
   color: var(--text-tertiary);
 }
 
-/* ─── Filter toggle group ─────────────────────────────────── */
-.filter-toggle-group {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  align-items: center;
-  min-height: 38px;
-}
-.filter-toggle-btn {
-  padding: 4px 11px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  background: var(--surface-1);
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background .12s, color .12s, border-color .12s;
-  white-space: nowrap;
-}
-.filter-toggle-btn:hover {
-  background: var(--surface-2);
-  border-color: var(--border-strong);
-}
-.filter-toggle-btn--active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
 
 /* ─── Filter clear link ───────────────────────────────────── */
 .filter-clear-link {

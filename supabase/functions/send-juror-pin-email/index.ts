@@ -85,13 +85,16 @@ function buildHtml(params: {
     `<span style="display:inline-block;width:52px;height:64px;line-height:64px;text-align:center;background:rgba(255,255,255,0.06);border:2px solid rgba(108,71,255,0.4);border-radius:8px;font-size:36px;font-weight:800;color:#ffffff;font-family:monospace;margin:0 4px;">${escapeHtml(d)}</span>`
   ).join("");
 
+  const qrLogoUrl = "https://vera-eval.app/vera_logo_white.png";
   const qrUrl = params.tokenUrl
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=12&color=ffffff&bgcolor=1a1a2e&data=${encodeURIComponent(params.tokenUrl)}`
+    ? `https://quickchart.io/qr?text=${encodeURIComponent(params.tokenUrl)}&size=220&ecLevel=H&dark=0f2044&light=ffffff&centerImageUrl=${encodeURIComponent(qrLogoUrl)}&centerImageSizeRatio=0.24`
     : "";
 
   const ctaBlock = params.tokenUrl
     ? `<tr><td align="center" style="padding:8px 48px 20px;">
-        <img src="${qrUrl}" alt="Scan to join evaluation" width="180" height="180" style="display:block;margin:0 auto;border-radius:12px;" />
+        <div style="display:inline-block;background:#ffffff;border-radius:16px;padding:12px;box-shadow:0 4px 20px rgba(0,0,0,0.25);">
+          <img src="${qrUrl}" alt="Scan to join evaluation" width="180" height="180" style="display:block;border-radius:8px;" />
+        </div>
         <p style="margin:10px 0 0;font-size:12px;color:#718096;">Scan with your phone camera</p>
       </td></tr>
       <tr><td align="center" style="padding:4px 48px 28px;">

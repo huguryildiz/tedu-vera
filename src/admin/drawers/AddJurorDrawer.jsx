@@ -129,6 +129,10 @@ export default function AddJurorDrawer({ open, onClose, onSave, periodName, erro
               autoComplete="off"
               spellCheck="false"
             />
+            <div style={{ marginTop: 5, display: "flex", alignItems: "center", gap: 5, color: "var(--text-tertiary)", fontSize: 11 }}>
+              <Info size={11} strokeWidth={2} />
+              Used to send PIN and evaluation QR code via email.
+            </div>
           </div>
         </div>
 

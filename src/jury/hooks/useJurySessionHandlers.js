@@ -20,7 +20,6 @@
 import { useCallback } from "react";
 import { getActiveCriteria } from "../../shared/criteriaHelpers";
 import { DEMO_MODE } from "@/shared/lib/demoMode";
-import { clearPersistedSession } from "@/shared/lib/supabaseClient";
 import { getJuryAccess, getJuryAccessGrant } from "../../shared/storage";
 import * as publicApi from "../../shared/api";
 import {
@@ -50,14 +49,10 @@ import { buildProgressCheck } from "../utils/progress";
 const listPeriods = publicApi.listPeriodsPublic || publicApi.listPeriods;
 
 async function ensureDemoAnonSession() {
-  // Clear the persisted admin session token from localStorage so it cannot be
-  // restored on reload. The in-memory session (if valid) will still be used for
-  // subsequent queries, but the admin JWT grants full access so public jury
-  // queries succeed regardless.
-  // NOTE: supabase.auth.signOut({ scope:"local" }) is intentionally NOT called —
-  // it broadcasts SIGNED_OUT via BroadcastChannel to all same-origin tabs,
-  // including an admin panel tab open at /demo/admin, signing the admin out.
-  clearPersistedSession();
+  // Intentionally a no-op. Previously this called clearPersistedSession() to
+  // strip the admin JWT from localStorage, but that fires a cross-tab `storage`
+  // event which Supabase SDK treats as SIGNED_OUT in the admin tab. Leaving the
+  // JWT in storage is safe in demo (only one user: the demo admin).
 }
 
 async function resolveDemoPeriod(signal) {

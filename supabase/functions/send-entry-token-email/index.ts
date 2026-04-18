@@ -184,6 +184,10 @@ Deno.serve(async (req: Request) => {
       expiryNote,
     ].filter(Boolean).join("\n\n");
 
+    const envLogoUrl = Deno.env.get("NOTIFICATION_LOGO_URL") || "";
+    const qrLogoUrl = "https://vera-eval.app/vera_logo_white.png";
+    const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(payload.tokenUrl)}&size=220&ecLevel=H&dark=0f2044&light=ffffff&centerImageUrl=${encodeURIComponent(qrLogoUrl)}&centerImageSizeRatio=0.24`;
+
     const html = buildHtml({
       title: "Jury Evaluation Access",
       intro: `You have been invited to participate in a jury evaluation.`,
@@ -191,13 +195,15 @@ Deno.serve(async (req: Request) => {
         scopeBlock,
         `<p style="margin:0 0 16px;font-size:14px;line-height:1.7;color:#a0aec0;">Tap the button below or scan the QR code to open the evaluation platform. ${escapeHtml(expiryNote)}</p>`,
         `<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="padding:0 0 16px;">` +
-        `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=12&color=ffffff&bgcolor=1a1a2e&data=${encodeURIComponent(payload.tokenUrl)}" alt="Scan to join evaluation" width="180" height="180" style="display:block;border-radius:12px;" />` +
+        `<div style="display:inline-block;background:#ffffff;border-radius:16px;padding:12px;box-shadow:0 4px 20px rgba(0,0,0,0.25);">` +
+        `<img src="${qrUrl}" alt="Scan to join evaluation" width="180" height="180" style="display:block;border-radius:8px;" />` +
+        `</div>` +
         `<p style="margin:8px 0 0;font-size:12px;color:#718096;">Scan with your phone camera</p>` +
         `</td></tr></table>`,
       ],
       ctaLabel: "Join Evaluation",
       ctaUrl: payload.tokenUrl,
-      logoUrl: Deno.env.get("NOTIFICATION_LOGO_URL") || "",
+      logoUrl: envLogoUrl,
     });
 
     const resendKey = Deno.env.get("RESEND_API_KEY");

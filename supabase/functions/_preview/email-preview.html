@@ -30,6 +30,7 @@
     <button onclick="show('unlockRequested', this)">Unlock Requested</button>
     <button onclick="show('unlockApproved', this)">Unlock Approved</button>
     <button onclick="show('unlockRejected', this)">Unlock Rejected</button>
+    <button onclick="show('jurorReminder', this)">Juror Reminder</button>
   </nav>
   <div id="preview"></div>
 
@@ -89,7 +90,8 @@
       const organizationName = "Electrical-Electronics Engineering";
       const periodName = "Spring 2026";
       const expiresIn = "24h left";
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=12&color=ffffff&bgcolor=1a1a2e&data=${encodeURIComponent(tokenUrl)}`;
+      const qrLogoUrl = "https://vera-eval.app/vera_logo_white.png";
+      const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(tokenUrl)}&size=220&ecLevel=H&dark=0f2044&light=ffffff&centerImageUrl=${encodeURIComponent(qrLogoUrl)}&centerImageSizeRatio=0.24`;
       const scopeBlock = mkScopeBlock(organizationInstitution, organizationName, periodName);
 
       return `
@@ -110,7 +112,9 @@
                 ${scopeBlock}
                 <p style="margin:0 0 16px; font-size:14px; line-height:1.7; color:#a0aec0;">Tap the button below or scan the QR code to open the evaluation platform. Your link is valid for <strong style="color:#fff;">${expiresIn}</strong> — use it promptly.</p>
                 <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="padding:0 0 16px;">
-                  <img src="${qrUrl}" alt="Scan to join evaluation" width="180" height="180" style="display:block; border-radius:12px;" />
+                  <div style="display:inline-block;background:#ffffff;border-radius:16px;padding:12px;box-shadow:0 4px 20px rgba(0,0,0,0.25);">
+                    <img src="${qrUrl}" alt="Scan to join evaluation" width="180" height="180" style="display:block; border-radius:8px;" />
+                  </div>
                   <p style="margin:8px 0 0; font-size:12px; color:#718096;">Scan with your phone camera</p>
                 </td></tr></table>
               </td></tr>
@@ -170,7 +174,9 @@
                 <p style="margin:12px 0 0; font-size:11px; color:#4a5568;">This PIN will not be shown again after this email.</p>
               </td></tr>
               <tr><td align="center" style="padding:8px 48px 20px;">
-                <img src="${`https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=12&color=ffffff&bgcolor=1a1a2e&data=${encodeURIComponent(tokenUrl)}`}" alt="Scan to join evaluation" width="180" height="180" style="display:block; margin:0 auto; border-radius:12px;" />
+                <div style="display:inline-block;background:#ffffff;border-radius:16px;padding:12px;box-shadow:0 4px 20px rgba(0,0,0,0.25);">
+                  <img src="${qrUrl}" alt="Scan to join evaluation" width="180" height="180" style="display:block; border-radius:8px;" />
+                </div>
                 <p style="margin:10px 0 0; font-size:12px; color:#718096;">Scan with your phone camera</p>
               </td></tr>
               <tr><td align="center" style="padding:4px 48px 28px;">
@@ -594,6 +600,83 @@
         </table>`;
     }
 
+    function jurorReminderTpl() {
+      const jurorName = "Dr. Ayşe Kaya";
+      const org = "TED University";
+      const institution = "TED University";
+      const period = "Spring 2025 — Capstone Evaluation";
+      const completed = 3;
+      const total = 8;
+      const remaining = total - completed;
+      const pct = Math.round((completed / total) * 100);
+      const evalUrl = "https://vera-eval.app?eval=demo-token-preview";
+      const qrLogoUrl = "https://vera-eval.app/vera_logo_white.png";
+      const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(evalUrl)}&size=220&ecLevel=H&dark=0f2044&light=ffffff&centerImageUrl=${encodeURIComponent(qrLogoUrl)}&centerImageSizeRatio=0.24`;
+
+      const scopeBlock = mkScopeBlock(institution, org, period);
+
+      const progressBar = `
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+          style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;margin:0 0 16px;">
+          <tr><td style="padding:14px 16px;">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:#a0aec0;margin-bottom:8px;">Evaluation Progress</div>
+            <div style="background:rgba(255,255,255,0.08);border-radius:99px;height:8px;overflow:hidden;margin-bottom:8px;">
+              <div style="background:linear-gradient(90deg,#6c47ff,#a78bfa);height:8px;width:${pct}%;border-radius:99px;"></div>
+            </div>
+            <div style="font-size:13px;color:#a0aec0;">
+              <strong style="color:#f1f5f9;">${completed}</strong> of <strong style="color:#f1f5f9;">${total}</strong> projects completed
+              &mdash; <span style="color:#f59e0b;">${remaining} remaining</span>
+            </div>
+          </td></tr>
+        </table>`;
+
+      const cta = `<a href="${evalUrl}"
+        style="display:inline-block;background:linear-gradient(135deg,#6c47ff,#a78bfa);color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;padding:14px 36px;border-radius:50px;letter-spacing:0.3px;box-shadow:0 4px 20px rgba(108,71,255,0.45);">
+        Continue Evaluation &rarr;
+      </a>`;
+
+      const qrBlock = `
+        <div style="text-align:center;margin-top:24px;">
+          <p style="margin:0 0 10px;font-size:12px;color:#4a5568;">Or scan the QR code to open on your device</p>
+          <div style="display:inline-block;background:#ffffff;border-radius:14px;padding:10px;box-shadow:0 4px 16px rgba(0,0,0,0.2);">
+            <img src="${qrUrl}" alt="QR Code" width="140" height="140" style="display:block;border-radius:6px;" />
+          </div>
+        </div>`;
+
+      return `
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0f0f1a;padding:40px 0;">
+          <tr><td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" border="0"
+              style="max-width:600px;width:100%;background:linear-gradient(160deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%);border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.5);">
+              <tr><td style="background:linear-gradient(90deg,#6c47ff,#a78bfa,#6c47ff);height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+              <tr><td align="center" style="padding:40px 40px 20px;">
+                <img src="https://vera-eval.app/vera_logo_dark.png" alt="VERA" width="120" style="display:block;border:0;" />
+              </td></tr>
+              <tr><td align="center" style="padding:8px 48px 12px;">
+                <h1 style="margin:0;font-size:25px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">Evaluation Reminder</h1>
+              </td></tr>
+              <tr><td align="center" style="padding:0 48px 20px;">
+                <p style="margin:0;font-size:15px;line-height:1.7;color:#a0aec0;">Hello, <strong style="color:#f1f5f9;">${jurorName}</strong>. Please complete your pending jury evaluations.</p>
+              </td></tr>
+              <tr><td style="padding:0 48px 8px;">
+                ${scopeBlock}
+                ${progressBar}
+                <p style="margin:0 0 8px;font-size:14px;line-height:1.7;color:#a0aec0;text-align:justify;text-justify:inter-word;">
+                  Please access the evaluation platform to complete the remaining assessments. Your evaluations are important for the final ranking and accreditation report.
+                </p>
+              </td></tr>
+              <tr><td align="center" style="padding:16px 48px 24px;">${cta}</td></tr>
+              <tr><td style="padding:0 48px;">${qrBlock}</td></tr>
+              <tr><td style="padding:16px 48px 0;"><div style="border-top:1px solid rgba(255,255,255,0.08);font-size:0;">&nbsp;</div></td></tr>
+              <tr><td align="center" style="padding:16px 48px 30px;">
+                <p style="margin:0;font-size:12px;color:#4a5568;line-height:1.6;">&copy; 2026 VERA. All rights reserved.</p>
+              </td></tr>
+              <tr><td style="background:linear-gradient(90deg,#6c47ff,#a78bfa,#6c47ff);height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+            </table>
+          </td></tr>
+        </table>`;
+    }
+
     const templates = {
       reset:           tpl("Reset Password",       "There is a password reset request for your VERA account.",        "Use the button below to create your new password.",                                          "Reset Password"),
       changed:         tpl("Password Changed",     "Your VERA account password was successfully updated.",            "If you did not make this change, please contact support immediately.",                     "Go to VERA"),
@@ -610,6 +693,7 @@
       unlockRequested: unlockRequestedTpl(),
       unlockApproved:  unlockResolvedTpl("approved"),
       unlockRejected:  unlockResolvedTpl("rejected"),
+      jurorReminder:   jurorReminderTpl(),
     };
 
     function show(key, btn) {

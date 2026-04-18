@@ -8,10 +8,11 @@
 //   onEnable         — ({ reason, durationMinutes }) => Promise<void>
 
 import { useState } from "react";
-import { LockOpen, Info } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import CustomSelect from "@/shared/ui/CustomSelect";
+import FbAlert from "@/shared/ui/FbAlert";
 
 const UNIT_CLAMP = { minutes: [1, 240], hours: [1, 48] };
 
@@ -48,7 +49,7 @@ export default function EnableEditingModal({ open, onClose, juror, onEnable }) {
       await onEnable({ reason: reason.trim(), durationMinutes });
       // Success — parent closes modal via setEditModeJuror(null)
     } catch (e) {
-      setError(e?.message || "Could not enable editing mode. Please try again.");
+      setError(e?.message || "Could not reopen evaluation. Please try again.");
     } finally {
       setEnabling(false);
     }
@@ -58,9 +59,9 @@ export default function EnableEditingModal({ open, onClose, juror, onEnable }) {
     <Modal open={open} onClose={handleClose} size="sm" centered>
       <div className="fs-modal-header eem-header">
         <div className="fs-modal-icon eem-icon">
-          <LockOpen size={19} />
+          <RotateCcw size={19} />
         </div>
-        <div className="fs-title eem-title">Enable Editing Mode</div>
+        <div className="fs-title eem-title">Reopen Evaluation</div>
         <div className="fs-subtitle eem-subtitle">
           Temporarily allow <strong>{juror?.name}</strong>{" "}
           to update submitted scores.
@@ -72,21 +73,14 @@ export default function EnableEditingModal({ open, onClose, juror, onEnable }) {
       </div>
 
       <div className="fs-modal-body eem-body">
-        <div className="crt-info-banner eem-info-card">
-          <div className="crt-info-banner-icon">
-            <Info size={16} />
-          </div>
-          <div className="crt-info-banner-body">
-            <div className="crt-info-banner-desc">
-              The juror will be able to modify their submitted scores until the editing
-              window expires or they resubmit.
-            </div>
-          </div>
-        </div>
+        <FbAlert variant="info">
+          The juror will be able to modify their submitted scores until the editing
+          window expires or they resubmit.
+        </FbAlert>
 
         <div className="eem-field">
           <label className="eem-label">
-            Duration
+            Duration <span className="eem-required">*</span>
           </label>
           <div className="eem-duration-row">
             <input
@@ -165,10 +159,10 @@ export default function EnableEditingModal({ open, onClose, juror, onEnable }) {
           style={{ flex: 1, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
         >
           <span className="btn-loading-content">
-            <AsyncButtonContent loading={enabling} loadingText="Enabling…">
+            <AsyncButtonContent loading={enabling} loadingText="Reopening…">
               <>
-                <LockOpen size={13} />
-                Enable
+                <RotateCcw size={13} />
+                Reopen
               </>
             </AsyncButtonContent>
           </span>

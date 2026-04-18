@@ -35,7 +35,6 @@ import { useState, useEffect, useRef } from "react";
 import { listProjects, listPeriodsPublic as listPeriods, verifyEntryToken } from "../../shared/api";
 import { getJuryAccess, KEYS } from "../../shared/storage";
 import { DEMO_MODE } from "@/shared/lib/demoMode";
-import { clearPersistedSession } from "@/shared/lib/supabaseClient";
 import { buildTokenPeriod, pickDemoPeriod, pickDefaultPeriod } from "../utils/periodSelection";
 
 const DEMO_ENTRY_TOKEN = import.meta.env.VITE_DEMO_ENTRY_TOKEN || "";
@@ -68,16 +67,11 @@ export function useJuryLoading() {
     const ctrl = new AbortController();
     const run = async () => {
       try {
-        // Demo mode: clear any stale admin session token from localStorage so
-        // it cannot be restored on a future page reload. The in-memory session
-        // (if active) will be used for queries — the admin JWT has full access,
-        // so public period/project queries succeed regardless.
-        // NOTE: We intentionally skip supabase.auth.signOut() here because
-        // scope:"local" broadcasts SIGNED_OUT via BroadcastChannel to ALL tabs,
-        // including an admin panel tab open at /demo/admin — signing the admin out.
-        if (DEMO_MODE) {
-          clearPersistedSession();
-        }
+        // Demo mode: do NOT clear the persisted session here.
+        // clearPersistedSession() removes the localStorage auth key, which fires
+        // a cross-tab `storage` event — Supabase SDK in the admin tab detects it
+        // and emits SIGNED_OUT, kicking the admin out. In demo there is only one
+        // user (the demo admin), so leaving the JWT in storage is safe.
 
         // Demo mode: prefer the period granted by the scanned entry token.
         // Only fall back to VITE_DEMO_ENTRY_TOKEN when no granted period exists.

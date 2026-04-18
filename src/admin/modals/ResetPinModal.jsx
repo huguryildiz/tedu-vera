@@ -8,7 +8,7 @@
 //   onConfirm — () => Promise<void>
 
 import { useState } from "react";
-import { AlertTriangle, Icon } from "lucide-react";
+import { AlertTriangle, KeyRound, Icon } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import JurorBadge from "../components/JurorBadge";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
@@ -31,15 +31,7 @@ export default function ResetPinModal({ open, onClose, juror, onConfirm }) {
         <div className="fs-modal-header-row">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div className="fs-icon accent">
-              <Icon
-                iconNode={[]}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2">
-                <rect width="18" height="11" x="3" y="11" rx="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </Icon>
+              <KeyRound size={17} strokeWidth={2} />
             </div>
             <div className="fs-title-group">
               <div className="fs-title">Reset Juror PIN</div>

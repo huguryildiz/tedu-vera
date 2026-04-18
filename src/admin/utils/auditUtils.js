@@ -12,6 +12,7 @@ import {
   isValidDateParts,
 } from "../../shared/dateBounds";
 import { formatDateTime, formatDate } from "../../shared/lib/dateUtils";
+import { jurorInitials, jurorAvatarBg, jurorAvatarFg } from "./jurorIdentity";
 
 // ── Constants ─────────────────────────────────────────────────
 
@@ -252,28 +253,28 @@ export function getActorInfo(log) {
     const colName = log.actor_name || null;
     if (log.actor_type === "juror") {
       const name = colName || log.details?.actor_name || "Juror";
-      return { type: "juror", name, role: "Juror", initials: getInitials(name) };
+      return { type: "juror", name, role: "Juror", initials: jurorInitials(name), bg: jurorAvatarBg(name), fg: jurorAvatarFg(name) };
     }
     if (log.actor_type === "system") {
-      return { type: "system", name: "System", role: "Automated", initials: null };
+      return { type: "system", name: "System", role: "Automated", initials: null, bg: null, fg: null };
     }
     if (log.actor_type === "anonymous") {
-      return { type: "system", name: "Anonymous", role: "Unauthenticated", initials: "?" };
+      return { type: "system", name: "Anonymous", role: "Unauthenticated", initials: "?", bg: null, fg: null };
     }
     // admin
     const name = colName || log.profiles?.display_name || "Admin";
-    return { type: "admin", name, role: "Organization Admin", initials: getInitials(name) };
+    return { type: "admin", name, role: "Organization Admin", initials: getInitials(name), bg: null, fg: null };
   }
   // Legacy fallback for rows without actor_type column
   if (log.user_id) {
     const name = log.profiles?.display_name || "Admin";
-    return { type: "admin", name, role: "Organization Admin", initials: getInitials(name) };
+    return { type: "admin", name, role: "Organization Admin", initials: getInitials(name), bg: null, fg: null };
   }
   if (JUROR_ACTIONS.has(log.action) && log.details?.actor_name) {
     const name = log.details.actor_name;
-    return { type: "juror", name, role: "Juror", initials: getInitials(name) };
+    return { type: "juror", name, role: "Juror", initials: jurorInitials(name), bg: jurorAvatarBg(name), fg: jurorAvatarFg(name) };
   }
-  return { type: "system", name: "System", role: "Automated", initials: null };
+  return { type: "system", name: "System", role: "Automated", initials: null, bg: null, fg: null };
 }
 
 // ── Event metadata ─────────────────────────────────────────────
