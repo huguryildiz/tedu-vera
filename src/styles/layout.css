@@ -1911,7 +1911,7 @@ body:not(.dark-mode) .admin-sidebar .sb-account-item.danger:focus-visible{
   #page-jurors #jurors-main-table td:nth-child(6) .juror-action-btn svg {
     opacity: 0.9;
   }
-  #page-jurors #jurors-main-table tbody tr.row-menu-open {
+  #page-jurors #jurors-main-table tbody tr.is-selected {
     border-color: rgba(59,130,246,0.28);
     box-shadow: inset 2px 0 0 var(--accent), 0 6px 16px rgba(15,23,42,0.08);
   }

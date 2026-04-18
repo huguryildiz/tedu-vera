@@ -3139,7 +3139,7 @@ body:not(.dark-mode) .tab-btn.active {
     position: relative;
     overflow: hidden;
   }
-  #page-platform-control .organizations-table tbody tr.menu-open {
+  #page-platform-control .organizations-table tbody tr.is-selected {
     border-color: var(--accent);
     box-shadow: var(--card-i-shadow-open);
   }
@@ -4912,13 +4912,12 @@ body:not(.dark-mode) .vera-es-pending-wrap {
 }
 
 /* ── Card state — projects + periods ───────────────────────
-   Cards are not tappable (kebab is the sole entrypoint).
-   Only .menu-open indicates kebab state; the shared mobile.css
-   block handles the base shadow + transition. */
+   Adds a shadow lift to the globally-driven .is-selected state
+   (see the .is-selected block at the bottom of this file).
+   Shared mobile.css handles the base shadow + transition. */
 @media (max-width: 768px) {
-  #projects-main-table tbody tr.menu-open,
-  .sem-table tbody tr.menu-open {
-    border-color: var(--accent);
+  #projects-main-table tbody tr.is-selected,
+  .sem-table tbody tr.is-selected {
     box-shadow: var(--card-i-shadow-open);
   }
 }
@@ -5317,7 +5316,7 @@ body:not(.dark-mode) .vera-es-pending-wrap {
   color: var(--text-secondary);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .row-action-btn {
     min-width: 44px;
     min-height: 44px;

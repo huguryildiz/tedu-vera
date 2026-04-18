@@ -44,17 +44,17 @@ html {
    feedback still fires. Desktop hover is untouched.
    ─────────────────────────────────────────────────────── */
 @media (hover: none), (pointer: coarse) {
-  #projects-main-table tbody tr:hover,
-  #jurors-main-table tbody tr:hover,
-  .sem-table tbody tr:hover,
-  .organizations-table tbody tr:hover,
-  .ranking-table tbody tr:hover,
-  .reviews-table tbody tr:hover,
-  .crt-table tbody tr:hover,
-  .entry-history-table tbody tr:hover,
-  .pin-lock-table tbody tr:hover,
-  .overview-top-projects-table tbody tr:hover,
-  .acc-table tbody tr.acc-row:hover {
+  #projects-main-table tbody tr:hover:not(.is-selected),
+  #jurors-main-table tbody tr:hover:not(.is-selected),
+  .sem-table tbody tr:hover:not(.is-selected),
+  .organizations-table tbody tr:hover:not(.is-selected),
+  .ranking-table tbody tr:hover:not(.is-selected),
+  .reviews-table tbody tr:hover:not(.is-selected),
+  .crt-table tbody tr:hover:not(.is-selected),
+  .entry-history-table tbody tr:hover:not(.is-selected),
+  .pin-lock-table tbody tr:hover:not(.is-selected),
+  .overview-top-projects-table tbody tr:hover:not(.is-selected),
+  .acc-table tbody tr.acc-row:hover:not(.is-selected) {
     background: var(--bg-card);
     border-color: var(--border);
     box-shadow: var(--card-i-shadow-base);

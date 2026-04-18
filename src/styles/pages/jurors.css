@@ -38,7 +38,7 @@
 
 /* ─── Table row interaction ───────────────────────────────── */
 #jurors-main-table tbody tr { transition: background .1s, box-shadow .1s }
-#jurors-main-table tbody tr.row-menu-open { background: var(--surface-1); box-shadow: inset 3px 0 0 var(--accent) }
+#jurors-main-table tbody tr.is-selected { background: var(--surface-1); box-shadow: inset 3px 0 0 var(--accent) }
 
 /* ─── Avatar ──────────────────────────────────────────────── */
 .j-av { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; letter-spacing: 0.3px }
@@ -126,7 +126,7 @@
 
 /* ─── Table row states ─── */
 #jurors-main-table tbody tr{transition:background .1s,box-shadow .1s}
-#jurors-main-table tbody tr.row-menu-open{background:var(--surface-1);box-shadow:inset 3px 0 0 var(--accent)}
+#jurors-main-table tbody tr.is-selected{background:var(--surface-1);box-shadow:inset 3px 0 0 var(--accent)}
 
 /* ─── Row action menu — trigger in global .row-action-btn ─── */
 .juror-action-wrap{position:relative}
@@ -143,7 +143,7 @@
 .manage-student-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .manage-student-row .modal-input{flex:1}
 #projects-main-table tbody tr{transition:background .12s}
-#projects-main-table tbody tr.row-menu-open{background:var(--surface-1);box-shadow:inset 3px 0 0 var(--accent)}
+#projects-main-table tbody tr.is-selected{background:var(--surface-1);box-shadow:inset 3px 0 0 var(--accent)}
 /* ─── Semesters Page ─── */
 .sem-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
 .sem-header-left{flex:1;min-width:0}
@@ -369,7 +369,7 @@
   /* Desktop <tr> hover / selected states bleed through in mobile as a full-row background wash
      behind the .jc card — neutralise them here; .jc handles all interaction feedback itself */
   #jurors-main-table tbody tr:hover { background: none; }
-  #jurors-main-table tbody tr.row-menu-open { background: none; box-shadow: none; }
+  #jurors-main-table tbody tr.is-selected { background: none; box-shadow: none; }
 
   /* ── Card shell ──
      Shell comes from global `.mcard`. `.jc` stays as a hook for

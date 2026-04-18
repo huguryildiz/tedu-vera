@@ -469,9 +469,7 @@ button.periods-cset-badge:hover svg {
   .periods-page .sem-table tbody tr.mcard,
   .periods-page.dark-mode .sem-table tbody tr,
   body.dark-mode .periods-page .sem-table tbody tr,
-  .periods-page .sem-table tbody tr:hover,
-  .periods-page .sem-table tbody tr.is-active,
-  .periods-page .sem-table tbody tr.menu-open {
+  .periods-page .sem-table tbody tr:hover {
     background: transparent !important;
     background-image: none !important;
     box-shadow: none !important;
