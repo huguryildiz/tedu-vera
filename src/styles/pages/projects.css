@@ -32,9 +32,10 @@
 }
 
 /* ─── Table row interaction ───────────────────────────────── */
+/* Row selection is driven globally by .is-selected in components.css
+   (border-only; spec requires bg/shadow untouched). */
 #projects-main-table { table-layout: fixed; width: 100%; }
 #projects-main-table tbody tr { transition: background .1s, box-shadow .1s }
-#projects-main-table tbody tr.is-selected { background: var(--surface-1); box-shadow: inset 3px 0 0 var(--accent) }
 
 /* ─── Last Updated cell — no mono/tabular-nums ───────────── */
 #projects-main-table .vera-datetime-text {

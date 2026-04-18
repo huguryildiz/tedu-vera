@@ -1157,13 +1157,6 @@ body:not(.dark-mode) .admin-sidebar .sb-account-item.danger:focus-visible{
   #jurors-main-table td:nth-child(2) {
     display: none;
   }
-  #jurors-main-table td:nth-child(6) .juror-action-btn {
-    width: 30px;
-    height: 30px;
-    padding: 0;
-    border-color: var(--border);
-    border-radius: 8px;
-  }
 
   /* ── 1E. SEMESTERS TABLE → Card layout ── */
   .sem-table-wrap { overflow: visible !important; }
@@ -1246,14 +1239,6 @@ body:not(.dark-mode) .admin-sidebar .sb-account-item.danger:focus-visible{
     grid-area: actions;
     justify-self: end;
     align-self: start;
-  }
-  .sem-table td:nth-child(6) .sem-action-btn {
-    width: 27px;
-    height: 27px;
-    padding: 0;
-    border-color: rgba(148,163,184,0.2);
-    border-radius: 9px;
-    background: rgba(15,23,42,0.02);
   }
   .sem-table .sem-name { font-size: 12.8px; line-height: 1.2; }
   .sem-table .sem-name-sub {
@@ -1390,12 +1375,6 @@ body:not(.dark-mode) .admin-sidebar .sb-account-item.danger:focus-visible{
     grid-area: edit;
     justify-self: end;
     align-self: start;
-  }
-  #page-criteria .crt-table .juror-action-btn {
-    width: 30px;
-    height: 30px;
-    border-radius: 9px;
-    border-color: var(--border);
   }
 
 
@@ -1901,20 +1880,7 @@ body:not(.dark-mode) .admin-sidebar .sb-account-item.danger:focus-visible{
     justify-self: end;
     padding-bottom: 2px;
   }
-  #page-jurors #jurors-main-table td:nth-child(6) .juror-action-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    border-color: rgba(148,163,184,0.2);
-    background: rgba(15,23,42,0.02);
-  }
-  #page-jurors #jurors-main-table td:nth-child(6) .juror-action-btn svg {
-    opacity: 0.9;
-  }
-  #page-jurors #jurors-main-table tbody tr.is-selected {
-    border-color: rgba(59,130,246,0.28);
-    box-shadow: inset 2px 0 0 var(--accent), 0 6px 16px rgba(15,23,42,0.08);
-  }
+  /* Row selection style comes from components.css .is-selected (border-only). */
   /* Projects page portrait: restore breathing room and clearer hierarchy */
   #page-projects .scores-kpi-strip {
     display: grid;
@@ -3075,13 +3041,11 @@ body:not(.dark-mode) .admin-sidebar .sb-account-item.danger:focus-visible{
   }
   #jurors-main-table td:nth-child(5) { font-size: 10px; padding-top: 5px; }
   #jurors-main-table td:nth-child(3) .jurors-group-bar { width: 62px; }
-  #jurors-main-table td:nth-child(6) .juror-action-btn { width: 30px; height: 30px; }
   .sem-table tbody { gap: 4px; }
   .sem-table tbody tr { row-gap: 4px; column-gap: 7px; padding: 8px 10px; }
   .sem-table .sem-name { font-size: 12.5px; }
   .sem-table .sem-name-sub { font-size: 9.5px; line-height: 1.32; }
   .sem-table .sem-status { min-height: 26px; padding: 3px 9px; font-size: 10.5px; }
-  .sem-table td:nth-child(6) .sem-action-btn { width: 27px; height: 27px; }
   .sem-table td:nth-child(5) { padding-top: 5px; font-size: 9.8px; }
 
   /* ── Reviews legend/footer: single-column, calmer rhythm ── */

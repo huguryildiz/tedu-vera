@@ -36,9 +36,10 @@
 .juror-action-item.danger:hover { background: var(--danger-soft) }
 .juror-action-sep { height: 1px; background: var(--border); margin: 4px 8px }
 
-/* ─── Table row interaction ───────────────────────────────── */
+/* ─── Table row interaction ─────────────────────────────────
+   Row selection is driven globally by .is-selected in
+   components.css (border-only; spec requires bg/shadow untouched). */
 #jurors-main-table tbody tr { transition: background .1s, box-shadow .1s }
-#jurors-main-table tbody tr.is-selected { background: var(--surface-1); box-shadow: inset 3px 0 0 var(--accent) }
 
 /* ─── Avatar ──────────────────────────────────────────────── */
 .j-av { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; letter-spacing: 0.3px }
@@ -124,9 +125,8 @@
 /* position override: right-align tooltip on last-active cell (would overflow right edge otherwise) */
 .jurors-table-active[data-juror-tooltip]:hover::after{left:auto;right:0;transform:none}
 
-/* ─── Table row states ─── */
+/* ─── Table row transitions — selection style comes from components.css .is-selected ─── */
 #jurors-main-table tbody tr{transition:background .1s,box-shadow .1s}
-#jurors-main-table tbody tr.is-selected{background:var(--surface-1);box-shadow:inset 3px 0 0 var(--accent)}
 
 /* ─── Row action menu — trigger in global .row-action-btn ─── */
 .juror-action-wrap{position:relative}
@@ -143,7 +143,6 @@
 .manage-student-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .manage-student-row .modal-input{flex:1}
 #projects-main-table tbody tr{transition:background .12s}
-#projects-main-table tbody tr.is-selected{background:var(--surface-1);box-shadow:inset 3px 0 0 var(--accent)}
 /* ─── Semesters Page ─── */
 .sem-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
 .sem-header-left{flex:1;min-width:0}
@@ -366,10 +365,8 @@
   #jurors-main-table .col-actions { display: none !important; }
   #jurors-main-table .col-mobile-card { display: block; padding: 0; width: 100%; box-sizing: border-box; }
 
-  /* Desktop <tr> hover / selected states bleed through in mobile as a full-row background wash
-     behind the .jc card — neutralise them here; .jc handles all interaction feedback itself */
+  /* Desktop <tr> hover state bleed — neutralise; .jc handles all interaction feedback itself. */
   #jurors-main-table tbody tr:hover { background: none; }
-  #jurors-main-table tbody tr.is-selected { background: none; box-shadow: none; }
 
   /* ── Card shell ──
      Shell comes from global `.mcard`. `.jc` stays as a hook for

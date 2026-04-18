@@ -3139,9 +3139,9 @@ body:not(.dark-mode) .tab-btn.active {
     position: relative;
     overflow: hidden;
   }
+  /* Border-only selection — background/shadow untouched per spec. */
   #page-platform-control .organizations-table tbody tr.is-selected {
     border-color: var(--accent);
-    box-shadow: var(--card-i-shadow-open);
   }
   #page-platform-control .organizations-table tbody td {
     padding: 0;
@@ -4911,16 +4911,9 @@ body:not(.dark-mode) .vera-es-pending-wrap {
   .vera-es-no-data-hint { text-align: left; }
 }
 
-/* ── Card state — projects + periods ───────────────────────
-   Adds a shadow lift to the globally-driven .is-selected state
-   (see the .is-selected block at the bottom of this file).
-   Shared mobile.css handles the base shadow + transition. */
-@media (max-width: 768px) {
-  #projects-main-table tbody tr.is-selected,
-  .sem-table tbody tr.is-selected {
-    box-shadow: var(--card-i-shadow-open);
-  }
-}
+/* Border-only selection is driven globally by the .is-selected
+   block at the bottom of this file. Per-page shadow/background
+   accents removed — spec requires bg/shadow untouched on selection. */
 
 /* ── Lock Notice Banner (shared — Outcomes + Criteria pages) ── */
 
