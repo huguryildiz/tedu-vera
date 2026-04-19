@@ -299,6 +299,16 @@ html {
     max-width: none;
   }
 
+  .mobile-toolbar-stack .rankings-search-wrap {
+    width: 100%;
+    min-width: 0;
+  }
+  .mobile-toolbar-stack .rankings-search-input {
+    width: 100% !important;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
   .mobile-toolbar-stack .mobile-toolbar-filter { order: 2; }
   .mobile-toolbar-stack .mobile-toolbar-export { order: 3; }
   .mobile-toolbar-stack .mobile-toolbar-secondary { order: 4; }

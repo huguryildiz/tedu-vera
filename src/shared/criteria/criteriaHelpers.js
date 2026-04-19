@@ -133,7 +133,8 @@ export function normalizeCriterionFromDb(row) {
     max:        Number(row.max_score) || 0,
     weight:     row.weight ?? null,
     blurb:      row.description || "",
-    outcomes:   Array.isArray(row.outcomes) ? row.outcomes : [],
+    outcomes:     Array.isArray(row.outcomes) ? row.outcomes : [],
+    outcomeTypes: row.outcomeTypes || {},
     rubric:     Array.isArray(row.rubric_bands)
       ? row.rubric_bands.map((b) => ({
           level: b.level ?? b.label ?? "",

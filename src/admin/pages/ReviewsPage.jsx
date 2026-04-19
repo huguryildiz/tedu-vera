@@ -274,9 +274,10 @@ export default function ReviewsPage() {
     if (!multiSearchQuery) return enriched;
     const q = multiSearchQuery.trim().toLowerCase();
     if (!q) return enriched;
-    return enriched.filter((r) =>
-      `${r.juryName ?? ""} ${r.affiliation ?? ""} ${r.title ?? ""}`.toLowerCase().includes(q)
-    );
+    return enriched.filter((r) => {
+      const members = Array.isArray(r.students) ? r.students.join(" ") : (r.students ?? "");
+      return `${r.juryName ?? ""} ${r.affiliation ?? ""} ${r.title ?? ""} ${members}`.toLowerCase().includes(q);
+    });
   }, [enriched, multiSearchQuery]);
 
   const filterState = useMemo(
@@ -314,14 +315,14 @@ export default function ReviewsPage() {
   const columns = useMemo(() => [
     { key: 'juror',       label: 'Juror',              sortKey: 'juryName',          getValue: r => r.juryName ?? '' },
     { key: 'no',          label: 'No',                 sortKey: 'groupNo',           thClass: 'text-center', getValue: r => r.groupNo != null ? `P${r.groupNo}` : '—' },
-    { key: 'project',     label: 'Project',            sortKey: 'title',             getValue: r => r.title || r.projectName || '—' },
+    { key: 'project',     label: 'Project Title',      sortKey: 'title',             getValue: r => r.title || r.projectName || '—' },
     { key: 'members',     label: 'Team Members',                                     getValue: r => Array.isArray(r.students) ? r.students.join(', ') : (r.students ?? '—') },
     ...scoreCols.filter(c => c.key !== 'total').map(c => ({
       key: c.key, label: c.label, sortKey: c.key, thClass: 'text-right', getValue: r => r[c.key] ?? '—',
     })),
     { key: 'total',       label: `Total (${maxTotal})`, sortKey: 'total',            thClass: 'text-right', getValue: r => r.total ?? '—' },
-    { key: 'status',      label: 'Status',              sortKey: 'effectiveStatus',  thClass: 'text-center', getValue: r => r.effectiveStatus ?? '—' },
-    { key: 'progress',    label: 'Progress',            sortKey: 'jurorStatus',      thClass: 'text-center', getValue: r => r.jurorStatus ?? '—' },
+    { key: 'status',      label: 'Score Status',        sortKey: 'effectiveStatus',  thClass: 'text-center', getValue: r => r.effectiveStatus ?? '—' },
+    { key: 'progress',    label: 'Juror Progress',      sortKey: 'jurorStatus',      thClass: 'text-center', getValue: r => r.jurorStatus ?? '—' },
     { key: 'comment',     label: 'Comment',                                          getValue: r => r.comments ?? '' },
     { key: 'submittedAt', label: 'Submitted At',        sortKey: 'finalSubmittedMs', thClass: 'text-right', getValue: r => formatTs(r.finalSubmittedAt || r.updatedAt) },
   ], [scoreCols, maxTotal]);
@@ -489,7 +490,7 @@ export default function ReviewsPage() {
             <input
               className="reviews-search"
               type="text"
-              placeholder="Search juror or project..."
+              placeholder="Search juror, project, or member..."
               value={multiSearchQuery}
               onChange={(e) => { setMultiSearchQuery(e.target.value); setCurrentPage(1); }}
             />
@@ -790,7 +791,7 @@ export default function ReviewsPage() {
                         const missing = val === null || val === undefined;
                         return (
                           <td key={col.key} className={`col-score${missing ? " missing" : ""}`} data-label={col.label.split(" / ")[0]}>
-                            {missing ? "—" : val}
+                            {missing ? "—" : <span style={{ color: col.color }}>{val}</span>}
                           </td>
                         );
                       })}
@@ -812,12 +813,9 @@ export default function ReviewsPage() {
                       </td>
                       <td className="col-comment">
                         {row.comments ? (
-                          <PremiumTooltip text={row.comments}>
-                            <span className="col-comment-inner">
-                              <MessageSquare size={10} style={{ verticalAlign: "-1px", marginRight: 3, opacity: 0.4 }} />
-                              {row.comments}
-                            </span>
-                          </PremiumTooltip>
+                          <span className="col-comment-inner">
+                            {row.comments}
+                          </span>
                         ) : "—"}
                       </td>
                       <td className="col-submitted text-right vera-datetime-text">

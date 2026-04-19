@@ -282,7 +282,7 @@ body.dark-mode .pin-policy-item {
    Column order: Juror(1), Progress(2), Failed(3), LockStarted(4), ETA(5), Action(6)
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: landscape) {
-  .pin-lock-page .table-wrap { overflow-x: auto; }
+  .pin-lock-page .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
   .pin-lock-table { min-width: 900px; }
 
   .pin-lock-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }

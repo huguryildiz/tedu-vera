@@ -20,6 +20,7 @@ export function buildScoreCols(criteria = []) {
       key: c.id,
       label: `${c.shortLabel || c.label} (${c.max})`,
       sortKey: c.id,
+      color: c.color,
     })),
   ];
   const totalMax = criteria.reduce((s, c) => s + (Number(c.max) || 0), 0);

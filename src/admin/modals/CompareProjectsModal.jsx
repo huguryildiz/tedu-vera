@@ -45,6 +45,34 @@ function computeSigma(projectId, rawScores, criteriaConfig) {
   return Math.sqrt(variance).toFixed(2);
 }
 
+function RadarAxisTick({ x, y, payload, textAnchor }) {
+  const words = (payload.value || "").split(" ");
+  const lineH = 14;
+  const lines = [];
+  let cur = "";
+  for (const w of words) {
+    const test = cur ? `${cur} ${w}` : w;
+    if (test.length > 12 && cur) { lines.push(cur); cur = w; }
+    else cur = test;
+  }
+  if (cur) lines.push(cur);
+  const totalH = lines.length * lineH;
+  return (
+    <text
+      x={x}
+      y={y - totalH / 2 + lineH / 2}
+      textAnchor={textAnchor}
+      fontSize={11}
+      fontWeight={600}
+      fill="var(--text-secondary, #475569)"
+    >
+      {lines.map((line, i) => (
+        <tspan key={i} x={x} dy={i === 0 ? 0 : lineH}>{line}</tspan>
+      ))}
+    </text>
+  );
+}
+
 function CompareTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
@@ -261,19 +289,16 @@ export default function CompareProjectsModal({
         <div className="compare-grid">
           {/* Radar chart */}
           <div>
-            <ResponsiveContainer width="100%" height={280}>
-              <RadarChart data={radarData}>
+            <ResponsiveContainer width="100%" height={300}>
+              <RadarChart data={radarData} margin={{ top: 16, right: 64, bottom: 16, left: 64 }}>
                 <PolarGrid
                   gridType="polygon"
                   stroke="rgba(0,0,0,0.06)"
                 />
                 <PolarAngleAxis
                   dataKey="axis"
-                  tick={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    fill: "var(--text-secondary, #475569)",
-                  }}
+                  tick={<RadarAxisTick />}
+                  tickSize={18}
                 />
                 <PolarRadiusAxis
                   domain={[0, 100]}

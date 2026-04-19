@@ -4,17 +4,6 @@ import JurorBadge from "../components/JurorBadge.jsx";
 import JurorStatusPill from "../components/JurorStatusPill.jsx";
 import AvgDonut from "./AvgDonut.jsx";
 
-function textVar(score, max) {
-  if (score == null || max <= 0) return null;
-  const pct = (score / max) * 100;
-  if (pct >= 90) return "var(--score-excellent-text)";
-  if (pct >= 80) return "var(--score-high-text)";
-  if (pct >= 75) return "var(--score-good-text)";
-  if (pct >= 70) return "var(--score-adequate-text)";
-  if (pct >= 60) return "var(--score-low-text)";
-  return "var(--score-poor-text)";
-}
-
 function bgVar(score, max) {
   if (score == null || max <= 0) return null;
   const pct = (score / max) * 100;
@@ -50,7 +39,7 @@ function RowItem({ row, tabLabel }) {
       </li>
     );
   }
-  const color = row.partial ? "var(--score-partial-text)" : textVar(row.score, row.max);
+  const color = row.partial ? "var(--score-partial-text)" : "var(--accent)";
   const aria = row.partial
     ? `${row.title}: partial ${row.score}`
     : `${row.title}: ${row.score}`;
@@ -58,7 +47,7 @@ function RowItem({ row, tabLabel }) {
     <li className="hm-row" aria-label={aria}>
       <span className="hm-row-code">{row.label}</span>
       <span className="hm-row-title">{row.title}</span>
-      <span className="hm-score-value" style={{ color }}>
+      <span className={`hm-score-value proj-score-value${row.partial ? " partial" : ""}`} style={row.partial ? { color } : undefined}>
         {row.score}
         {row.partial && <span className="m-flag" aria-hidden="true">!</span>}
         <span className="m-cell-tip">

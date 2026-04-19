@@ -304,7 +304,7 @@
   #page-jurors > .jurors-page-header { display: contents; }
   #page-jurors > .jurors-page-header > .jurors-page-header-top { display: contents; }
   #page-jurors > .jurors-page-header > .jurors-page-header-top > .jurors-page-header-left { order: -4; }
-  #page-jurors > .fb-banner { order: -3; }
+  #page-jurors > .fb-banner { order: -3; margin-top: 12px; }
   #page-jurors > .scores-kpi-strip { order: -2; }
   #page-jurors > .mobile-primary-below-kpi { order: -1; }
   /* .sem-header-actions (toolbar) defaults to order: 0 → falls below Add button */
@@ -335,10 +335,11 @@
   }
 
   /* <tr> is the card shell (via .mcard) — only col-mobile-card is shown */
-  #jurors-main-table tbody tr {
+  #page-jurors #jurors-main-table tbody tr {
     display: block;
     width: 100%;
     box-sizing: border-box;
+    padding: 0;
     margin-bottom: 12px;
   }
 
@@ -534,7 +535,7 @@
    table sizing and jurors-specific overrides.
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 900px) and (orientation: landscape) {
-  #page-jurors .table-wrap { overflow-x: auto; }
+  #page-jurors .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
   #jurors-main-table { min-width: 600px; width: 100%; }
 
   /* Mobile card column hidden — desktop columns take over */

@@ -25,10 +25,18 @@
   margin-left: 0;
 }
 
+/* ── Mobile-only cells: hidden everywhere except portrait ─────── */
+.ranking-table .rk-mobile-only { display: none; }
+.ranking-table .rk-mem-label { display: none; }
+
+/* ── Desktop col-avg: show plain number, hide donut ──────────── */
+.ranking-table td.col-avg .avg-donut { display: none; }
+
 /* ─── Portrait card layout (≤ 768px portrait) ────────────────
    Criteria heat-cells hidden; key columns shown as a card.
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: portrait) {
+  /* ── Table → card shell ── */
   .rankings-page .table-wrap {
     overflow: hidden;
     border: none;
@@ -39,55 +47,329 @@
 
   .ranking-table { display: contents; }
   .ranking-table thead { display: none !important; }
-  .ranking-table tbody { display: block; width: 100%; }
+  /* layout.css sets display:flex on tbody — override */
+  .ranking-table tbody { display: block !important; width: 100%; max-width: 100%; overflow: hidden; }
 
-  /* Card container — layout only; shell from global `.mcard`. */
+  /* ── Card grid ── */
   .ranking-table tbody tr {
-    display: grid;
-    grid-template-columns: 44px 1fr auto;
+    display: grid !important;
+    grid-template-columns: 40px 1fr 52px;
+    grid-template-rows: auto auto auto auto;
     grid-template-areas:
-      "rank title avg"
-      "rank members members"
-      "rank consensus jurors";
+      "rank  title  donut"
+      "mem   mem    mem  "
+      "crit  crit   crit "
+      "foot  foot   foot ";
     width: 100%;
-    margin-bottom: 10px;
-    padding: 14px 16px;
-    gap: 4px 10px;
-  }
-  /* Top-3 highlight stays */
-  .ranking-table tbody tr.ranking-highlight {
-    border-left: 3px solid var(--accent);
+    max-width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 8px;
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+    border-radius: 10px;
+    /* Neutralise layout.css ranking-highlight blue border tint */
+    border: 1px solid var(--border);
   }
 
-  /* Base cell reset */
+  /* ── Base cell reset ── */
   .ranking-table td {
     display: block;
     border-bottom: none;
     padding: 0;
     box-sizing: border-box;
+    /* layout.css sets margin/font overrides on td.col-avg — reset */
+    margin: 0;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
   }
 
-  /* data-label micro-labels */
-  .ranking-table td[data-label]::before {
-    content: attr(data-label);
-    display: block;
-    font-size: 8.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: var(--text-tertiary);
+  /* hide data-label pseudo in portrait */
+  .ranking-table td[data-label]::before { display: none; }
+
+  /* Neutralise layout.css .ranking-highlight blue border-color tint */
+  .ranking-table tbody tr.ranking-highlight { border-color: var(--border); }
+
+  /* ── Top-3 left border (explicit full border so color doesn't bleed from layout.css) ── */
+  .ranking-table tbody tr.ranking-top-1 { border: 1px solid var(--border); border-left: 3px solid #f59e0b; }
+  .ranking-table tbody tr.ranking-top-2 { border: 1px solid var(--border); border-left: 3px solid #94a3b8; }
+  .ranking-table tbody tr.ranking-top-3 { border: 1px solid var(--border); border-left: 3px solid #cd7c5a; }
+
+  /* ── RANK column ── */
+  .ranking-table td.col-rank {
+    grid-area: rank;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 12px 0 0 8px;
+  }
+
+  .ranking-table td.col-rank .ranking-medal { font-size: 22px; line-height: 1; }
+  .ranking-table td.col-rank .ranking-medal-cell { display: flex; align-items: center; justify-content: center; }
+
+  .ranking-table td.col-rank .ranking-num {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  /* ── TITLE column ── */
+  .ranking-table td.col-project {
+    grid-area: title;
+    padding: 12px 0 6px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    font-size: 12.5px;
     font-weight: 600;
-    margin-bottom: 2px;
+    color: var(--text-primary);
+    line-height: 1.35;
   }
 
-  /* Grid area assignments */
-  .ranking-table td.col-rank     { grid-area: rank; align-self: center; }
-  .ranking-table td.col-project  { grid-area: title; font-size: 13px; font-weight: 600; }
-  .ranking-table td.col-students { grid-area: members; font-size: 11px; color: var(--text-secondary); }
-  .ranking-table td.col-avg      { grid-area: avg; text-align: right; font-size: 15px; font-weight: 700; font-family: var(--mono); }
-  .ranking-table td.consensus-cell { grid-area: consensus; align-self: center; text-align: left; }
-  .ranking-table td.col-jurors   { grid-area: jurors; text-align: right; font-size: 11px; color: var(--text-tertiary); align-self: center; }
+  .ranking-table td.col-project .ranking-proj-no {
+    display: block;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--accent);
+    background: none;
+    border: none;
+    padding: 0;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    /* override global components.css margin-right:7px + mono font */
+    margin-right: 0;
+    font-family: inherit;
+  }
 
-  /* Hide criteria heat cells */
+  /* ── DONUT column (col-avg) ── */
+  .ranking-table td.col-avg {
+    grid-area: donut;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px 10px 0 0;
+    /* override layout.css: margin-left:auto, flex-shrink:0, font overrides */
+    margin-left: 0;
+    flex-shrink: unset;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+  }
+
+  .ranking-table td.col-avg .rk-avg-num { display: none; }
+  .ranking-table td.col-avg .avg-donut  { display: block; }
+
+  .ranking-table td.col-avg .avg-donut,
+  .ranking-table td.col-avg .avg-donut-fill {
+    width: 52px;
+    height: 52px;
+  }
+
+  /* ── TEAM MEMBERS ── */
+  /* layout.css hides col-students in portrait — override with !important */
+  .ranking-table td.col-students {
+    grid-area: mem;
+    display: block !important;
+    padding: 4px 12px 10px;
+    font-size: inherit;
+    color: inherit;
+    background: var(--surface-1); /* nested-panel-ok */
+  }
+
+  .ranking-table td.col-students .rk-mem-label {
+    display: block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+  }
+
+  .ranking-table td.col-students .team-members-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+  }
+
+  .ranking-table td.col-students[data-label]::before { display: none; }
+
+  /* ── CRITERIA MINI-BARS ── */
+  .rk-crit-label {
+    display: block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+  }
+
+  .ranking-table td.rk-criteria-cell {
+    grid-area: crit;
+    display: block;
+    border-top: 1px solid var(--border);
+    padding: 7px 12px 9px;
+    background: var(--surface-1); /* nested-panel-ok */
+  }
+
+  .rk-criteria {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .rk-criterion {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr) 44px;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .rk-crit-name {
+    font-size: 11px;
+    color: var(--text-secondary);
+    min-width: 0;
+  }
+
+  .rk-crit-bar {
+    height: 5px;
+    min-height: 5px;
+    border-radius: 99px;
+    background: var(--surface-2);
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .rk-crit-fill {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.3s ease;
+  }
+
+  .rk-crit-val {
+    text-align: right;
+    font-size: 11px;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rk-crit-val-num {
+    font-weight: 600;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rk-crit-val-max {
+    color: var(--text-tertiary);
+    font-weight: 400;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rk-crit-val-empty {
+    color: var(--text-tertiary);
+  }
+
+  /* ── FOOTER ── */
+  .ranking-table td.rk-footer-cell {
+    grid-area: foot;
+    display: block;
+    border-top: 1px solid var(--border);
+    padding: 6px 12px 8px;
+    background: var(--surface-1); /* nested-panel-ok */
+  }
+
+  .rk-foot-label {
+    display: block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+  }
+
+  .rk-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .rk-consensus {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .rk-consensus::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  .rk-cons-high     { background: rgba(74,222,128,0.12); color: #4ade80; }
+  .rk-cons-high::before  { background: #4ade80; }
+  .rk-cons-moderate { background: rgba(96,165,250,0.12); color: #60a5fa; }
+  .rk-cons-moderate::before { background: #60a5fa; }
+  .rk-cons-disputed { background: rgba(248,113,113,0.12); color: #f87171; }
+  .rk-cons-disputed::before { background: #f87171; }
+  .rk-cons-none     { color: var(--text-tertiary); }
+
+  .rk-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .rk-sigma {
+    font-size: 9px;
+    color: var(--text-tertiary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rk-jurors {
+    font-size: 9px;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2px 7px;
+  }
+
+  /* ── Hide cells that moved into footer ── */
+  .ranking-table td.consensus-cell { display: none; }
+  .ranking-table td.col-jurors     { display: none; }
+
+  /* ── Hide heat cells ── */
   .ranking-table td.heat-cell { display: none; }
 }
 
@@ -95,7 +377,7 @@
    Keep desktop-like table with all columns and horizontal scroll.
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: landscape) {
-  .rankings-page .table-wrap { overflow-x: auto; }
+  .rankings-page .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
   .ranking-table { min-width: 700px; }
 
   .ranking-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }

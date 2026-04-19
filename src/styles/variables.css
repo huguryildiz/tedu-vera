@@ -95,7 +95,7 @@ body:not(.dark-mode) .card.danger-zone-card{background:rgba(225,29,72,0.13);bord
 body:not(.dark-mode) .table-wrap{background:#fafbfd;border-color:#d8dee8}
 body:not(.dark-mode) table thead th{background:#f0f3f7;color:#475569;border-bottom-color:#d0d7e2}
 body:not(.dark-mode) table tbody td{border-bottom-color:#e8ecf2}
-body:not(.dark-mode) table tbody tr:hover{background:rgba(59,130,246,0.025)}
+body:not(.dark-mode) table tbody tr:hover{background:#eef2f8}
 body:not(.dark-mode) .scores-kpi-strip{background:#fafbfd;border-color:#d8dee8;box-shadow:0 1px 3px rgba(15,23,42,0.03)}
 body:not(.dark-mode) .scores-kpi-item{border-right-color:#e4e9f1}
 body:not(.dark-mode) .crud-form-group input,body:not(.dark-mode) .crud-form-group select,body:not(.dark-mode) .crud-form-group textarea{background:#ffffff;border-color:#cdd5e0}

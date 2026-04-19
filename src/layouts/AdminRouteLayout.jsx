@@ -253,7 +253,9 @@ export default function AdminRouteLayout() {
     }
   }, [sortedPeriods.length, loading, isDemoMode, currentPage, basePath, navigate]);
 
-  const frameworkThreshold = frameworks[0]?.default_threshold ?? 70;
+  const frameworkThreshold = (
+    frameworks.find((f) => f.id === selectedPeriod?.framework_id) ?? frameworks[0]
+  )?.default_threshold ?? 70;
 
   // Groups derived from project summaries
   const groups = useMemo(

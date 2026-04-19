@@ -1,7 +1,7 @@
 // src/admin/criteria/CriterionEditor.jsx
 // Renders a single criterion row's expanded/collapsed content.
 
-import Tooltip from "@/shared/ui/Tooltip";
+import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import InlineError from "@/shared/ui/InlineError";
 import AutoTextarea from "@/shared/ui/AutoTextarea";
 import {
@@ -59,7 +59,7 @@ export default function CriterionEditor({
             {row.max !== "" ? `${row.max} pts` : "—"}
           </span>
 
-          <Tooltip text={row._expanded ? "Collapse" : "Expand"}>
+          <PremiumTooltiptext={row._expanded ? "Collapse" : "Expand"}>
             <button
               type="button"
               className={`crt-card-toggle${row._expanded ? " open" : ""}`}
@@ -70,7 +70,7 @@ export default function CriterionEditor({
             >
               <ChevronRightIcon />
             </button>
-          </Tooltip>
+          </PremiumTooltip>
 
           {!fullyLocked && (
             <button

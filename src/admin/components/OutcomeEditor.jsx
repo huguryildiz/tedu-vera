@@ -49,7 +49,7 @@ import {
   XIcon,
 } from "@/shared/ui/Icons";
 import DangerIconButton from "./DangerIconButton";
-import Tooltip from "@/shared/ui/Tooltip";
+import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import { CSS } from "@dnd-kit/utilities";
 
 // ── Internal helpers ──────────────────────────────────────────
@@ -202,11 +202,11 @@ function getMudekDisplayName(row, index) {
 function OutcomeLanguageFlag({ language, label }) {
   const symbol = language === "tr" ? "🇹🇷" : "🇬🇧";
   return (
-    <Tooltip text={label}>
+    <PremiumTooltiptext={label}>
       <span className="outcome-editor-row-flag" role="img" aria-label={label}>
         {symbol}
       </span>
-    </Tooltip>
+    </PremiumTooltip>
   );
 }
 
@@ -469,7 +469,7 @@ export default function OutcomeEditor({
                       <div className="outcome-editor-row-top">
                         <div className="outcome-editor-row-head">
                           <div className="outcome-editor-row-leading">
-                            <Tooltip text="Drag to reorder">
+                            <PremiumTooltiptext="Drag to reorder">
                               <button
                                 type="button"
                                 className="vera-drag-handle"
@@ -480,7 +480,7 @@ export default function OutcomeEditor({
                               >
                                 <GripVerticalIcon />
                               </button>
-                            </Tooltip>
+                            </PremiumTooltip>
 
                             <div className="outcome-editor-row-main">
                               <div className="outcome-editor-row-title-line">
@@ -493,7 +493,7 @@ export default function OutcomeEditor({
                           </div>
 
                           <div className="outcome-editor-row-actions">
-                            <Tooltip text={row._expanded ? "Collapse outcome" : "Expand outcome"}>
+                            <PremiumTooltiptext={row._expanded ? "Collapse outcome" : "Expand outcome"}>
                               <button
                                 type="button"
                                 className="outcome-editor-row-expand-btn vera-expand-btn"
@@ -504,7 +504,7 @@ export default function OutcomeEditor({
                               >
                                 {row._expanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
                               </button>
-                            </Tooltip>
+                            </PremiumTooltip>
                             <DangerIconButton
                               Icon={XIcon}
                               onClick={() => removeRow(i)}

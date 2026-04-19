@@ -160,6 +160,15 @@ table.table-dense .table-cell-stack {
   height: 11px;
 }
 
+/* Project title cell — shared across Projects and Rankings tables */
+.proj-title-text {
+  font-size: var(--table-body-size);
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
 table.ga-heatmap.table-dense thead th, /* table-font-ok */
 table.matrix-table.table-dense thead th.col-project,
 table.outcome-attainment-table.table-dense thead th {

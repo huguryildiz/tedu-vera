@@ -460,6 +460,10 @@ body:not(.dark-mode) .consensus-sub-disputed .consensus-sub-sigma{color:#e11d48}
 .avg-score-max{font-family:var(--mono);font-weight:400;color:var(--text-tertiary);font-size:10px;letter-spacing:-0.2px}
 .avg-score-empty{color:var(--text-tertiary)}
 
+/* ── Global project score typography ── */
+/* Apply to any element displaying a numeric project score. */
+.proj-score-value{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent)}
+
 /* ── Reusable inline spinner for action buttons ── */
 @keyframes fs-btn-spin{to{transform:rotate(360deg)}}
 .fs-btn-spinner{animation:fs-btn-spin .8s linear infinite}
@@ -962,11 +966,19 @@ tbody tr:hover{background:var(--surface-1)}
 .ranking-table th.sorted{color:var(--text-primary)}
 .ranking-table td{padding:7px 14px;border-bottom:1px solid var(--surface-1);vertical-align:middle}
 .ranking-table .col-avg{font-family:var(--mono);font-size:14px;font-weight:700;text-align:right;letter-spacing:-0.3px}
-.ranking-table .col-rank{width:42px;text-align:center;vertical-align:middle;padding-left:10px;padding-right:4px}
+.ranking-table .col-rank{width:1px;white-space:nowrap;text-align:center;vertical-align:middle;padding-left:10px;padding-right:10px}
 .ranking-table .col-students{font-size:12px;color:var(--text-secondary)}
-.ranking-table .col-project{font-weight:600;font-size:12.5px;line-height:1.4;transition:color .12s}
+.ranking-table .col-project{font-weight:500;font-size:12.5px;line-height:1.4;transition:color .12s}
+.ranking-proj-no{display:none;font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:0.3px;margin-right:7px;opacity:0.85}
+.rankings-search-wrap{position:relative;display:flex;align-items:center;gap:0}
+.rankings-search-icon{position:absolute;left:9px;color:var(--text-tertiary);pointer-events:none;flex-shrink:0}
+.rankings-search-input{height:32px;padding:0 28px 0 28px;border:1px solid var(--border);border-radius:8px;background:var(--surface-1);color:var(--text-primary);font-size:12.5px;width:210px;transition:border-color .15s,box-shadow .15s;outline:none}
+.rankings-search-input::placeholder{color:var(--text-tertiary)}
+.rankings-search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(var(--accent-rgb,99,102,241),.12)}
+.rankings-search-clear{position:absolute;right:7px;background:none;border:none;padding:0;display:flex;align-items:center;color:var(--text-tertiary);cursor:pointer;transition:color .12s}
+.rankings-search-clear:hover{color:var(--text-secondary)}
 .ranking-table .col-jurors{font-family:var(--mono);font-size:11px;color:var(--text-tertiary);text-align:right;width:56px}
-.ranking-num{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text-tertiary)}
+.ranking-num{font-family:var(--mono);font-size:12px;font-weight:800;color:var(--text-secondary);display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;min-width:30px;border-radius:50%;background:var(--bg-elevated);border:1.5px solid var(--border);line-height:1;flex-shrink:0}
 #sub-rankings .table-wrap{box-shadow:0 1px 3px rgba(0,0,0,0.04);overflow-x:auto}
 @media (min-width: 901px){
   #sub-rankings .table-wrap{
@@ -2158,10 +2170,11 @@ body:not(.dark-mode) th {
 
 body:not(.dark-mode) td {
   border-bottom-color: #edf1f7 !important;
+  transition: background .12s;
 }
 
 body:not(.dark-mode) tbody tr:hover td {
-  background: #f8fafd !important;
+  background: #eef2f8 !important;
 }
 
 /* ── Card-layout tables in mobile portrait: td[data-label] cells must not show
@@ -3717,7 +3730,7 @@ body:not(.dark-mode) .ph-avatar-menu-item:hover { background: rgba(241,245,249,0
 body:not(.dark-mode) .ph-avatar-menu-item--danger:hover { background: rgba(239,68,68,0.06); }
 
 /* ── PremiumTooltip — global glass tooltip ─────────────────────── */
-.premium-tooltip-wrap{position:relative;display:block;width:100%}
+.premium-tooltip-wrap{position:relative;display:inline-flex;align-items:center}
 .premium-tooltip-box{
   position:fixed;z-index:var(--z-tooltip);pointer-events:none;
   background:rgba(12,18,32,0.82);

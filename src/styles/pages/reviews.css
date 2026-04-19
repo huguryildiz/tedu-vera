@@ -79,9 +79,6 @@
 
 .reviews-table .col-comment {
   max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   color: var(--text-secondary);
   font-size: 11px;
 }
@@ -501,7 +498,7 @@
 .reviews-table th .sort-icon{opacity:0;margin-left:2px;font-size:8px;transition:opacity .12s}
 .reviews-table th.sortable:hover .sort-icon{opacity:0.4}
 .reviews-table th.sortable.sorted .sort-icon{opacity:1;color:var(--accent)}
-.reviews-table td{border-bottom:1px solid var(--border);vertical-align:top}
+.reviews-table td{border-bottom:1px solid var(--border);vertical-align:middle}
 .reviews-table tr:last-child td{border-bottom:none}
 .reviews-table tbody tr{transition:background .1s}
 .reviews-table tbody tr:hover{background:var(--accent-soft)}
@@ -547,11 +544,11 @@
   white-space:nowrap;
 }
 /* ── Score columns ── */
-.reviews-table .col-total{font-family:var(--mono);font-size:13px;font-weight:700;text-align:right;vertical-align:middle;white-space:nowrap}
+.reviews-table .col-total{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px;font-weight:700;text-align:right;vertical-align:middle;white-space:nowrap}
 .reviews-table .col-score{font-family:var(--mono);font-size:12px;font-weight:500;text-align:right;color:var(--text-primary);vertical-align:middle}
 .reviews-table .col-score.missing{color:var(--text-tertiary)}
-.reviews-table .col-comment{max-width:220px;font-size:11px;color:var(--text-tertiary);vertical-align:middle}
-.reviews-table .col-comment-inner{display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default}
+.reviews-table .col-comment{max-width:260px;font-size:11px;color:var(--text-tertiary);vertical-align:middle}
+.reviews-table .col-comment-inner{display:block;max-width:260px;white-space:normal;line-height:1.5;text-align:justify;text-justify:inter-word;cursor:default}
 .reviews-table .col-submitted{white-space:nowrap;font-size:11px;vertical-align:middle}
 .reviews-table .col-status{vertical-align:middle}
 .reviews-table .col-progress{vertical-align:middle}
@@ -587,7 +584,7 @@
    Keep desktop-like table layout and allow horizontal scroll.
    ══════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) and (orientation: landscape) {
-  .reviews-page .table-wrap { overflow-x: auto; }
+  .reviews-page .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
   .reviews-table { min-width: 800px; }
 
   /* Token-driven table rhythm */
@@ -807,71 +804,68 @@
     border-radius: 20px;
   }
 
-  /* ── Score grid ── */
-  .rmc-score-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+  /* ── Criterion bars ── */
+  .rmc-crit-bars {
+    display: flex;
+    flex-direction: column;
     gap: 5px;
   }
 
-  .rmc-score-cell {
-    background: var(--surface-1); /* nested-panel-ok */
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 7px 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
+  .rmc-crit-bar-row {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr) 44px;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
   }
 
-  .rmc-score-cell--empty {
-    opacity: 0.4;
-  }
-
-  .rmc-score-cell--span {
-    grid-column: 1 / -1;
-  }
-
-  .rmc-cell-label {
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    color: var(--text-tertiary);
-  }
-
-  .rmc-cell-score-row {
-    display: flex;
-    align-items: baseline;
-    gap: 1px;
-  }
-
-  .rmc-cell-value {
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--text-primary);
-    font-family: var(--mono);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .rmc-cell-max {
-    font-size: 9px;
-    color: var(--text-tertiary);
-    font-family: var(--mono);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .rmc-cell-bar-track {
-    height: 3px;
-    background: var(--border);
-    border-radius: 99px;
+  .rmc-crit-bar-label {
+    font-size: 11px;
+    color: var(--text-secondary);
     overflow: hidden;
-    margin-top: 2px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
   }
 
-  .rmc-cell-bar-fill {
+  .rmc-bar-track {
+    height: 5px;
+    min-height: 5px;
+    border-radius: 99px;
+    background: var(--surface-2);
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .rmc-bar-fill {
+    display: block;
     height: 100%;
     border-radius: 99px;
+    transition: width 0.3s ease;
+  }
+
+  .rmc-crit-bar-score {
+    text-align: right;
+    font-size: 11px;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rmc-crit-score-val {
+    font-weight: 600;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rmc-crit-score-max {
+    color: var(--text-tertiary);
+    font-weight: 400;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rmc-crit-score-empty {
+    color: var(--text-tertiary);
   }
 
   /* ── Footer ── */

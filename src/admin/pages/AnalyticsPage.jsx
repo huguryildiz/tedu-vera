@@ -367,6 +367,7 @@ export default function AnalyticsPage() {
         trendSemesterIds: trendSemesterIds || [],
         activeOutcomes: criteria,
         outcomeLookup: outcomeConfig || [],
+        threshold,
       };
 
       if (format === "pdf") {
@@ -414,6 +415,7 @@ export default function AnalyticsPage() {
       trendSemesterIds: trendSemesterIds || [],
       activeOutcomes: criteria,
       outcomeLookup: outcomeConfig || [],
+      threshold,
     };
 
     if (fmt === "pdf") {
@@ -563,7 +565,7 @@ export default function AnalyticsPage() {
                 <strong>{metCount} of {totalCount}</strong> outcomes met —
                 {metCount < totalCount
                   ? " outcomes below target require curriculum-level action items per the accreditation framework's periodic monitoring requirements."
-                  : " all mapped outcomes meet the 70% attainment threshold."}
+                  : ` all mapped outcomes meet the ${threshold}% attainment threshold.`}
               </div>
             </div>
           )}
@@ -584,19 +586,19 @@ export default function AnalyticsPage() {
           <div className="chart-header">
             <div>
               <div className="chart-title">Outcome Attainment Rate</div>
-              <div className="chart-subtitle">% of evaluations scoring ≥70% per programme outcome</div>
+              <div className="chart-subtitle">{`% of evaluations scoring ≥${threshold}% per programme outcome`}</div>
             </div>
           </div>
           <div className="chart-body" id="pdf-chart-attainment-rate">
             <AttainmentRateChart submittedData={submittedData} criteria={criteria} threshold={threshold} />
           </div>
           <div className="chart-legend">
-            <div className="legend-item"><div className="legend-dot" style={{ background: "var(--success)" }} />Met (≥70%)</div>
+            <div className="legend-item"><div className="legend-dot" style={{ background: "var(--success)" }} />{`Met (≥${threshold}%)`}</div>
             <div className="legend-item"><div className="legend-dot" style={{ background: "var(--warning)" }} />Borderline (60–69%)</div>
             <div className="legend-item"><div className="legend-dot" style={{ background: "var(--danger)" }} />Not met (&lt;60%)</div>
             <div className="legend-item">
               <div className="legend-line" style={{ background: "var(--text-tertiary)", borderTop: "2px dashed var(--text-tertiary)", height: 0, width: 16 }} />
-              Target (70%)
+              {`Target (${threshold}%)`}
             </div>
           </div>
         </div>
@@ -605,7 +607,7 @@ export default function AnalyticsPage() {
           <div className="chart-header">
             <div>
               <div className="chart-title">Threshold Gap Analysis</div>
-              <div className="chart-subtitle">Deviation from 70% competency threshold per outcome</div>
+              <div className="chart-subtitle">{`Deviation from ${threshold}% competency threshold per outcome`}</div>
             </div>
           </div>
           <div className="chart-body" id="pdf-chart-threshold-gap">
@@ -636,7 +638,7 @@ export default function AnalyticsPage() {
         <div className="chart-header">
           <div>
             <div className="chart-title">Outcome Achievement by Group</div>
-            <div className="chart-subtitle">Normalized score (0–100%) per criterion per project group — 70% threshold reference</div>
+            <div className="chart-subtitle">{`Normalized score (0–100%) per criterion per project group — ${threshold}% threshold reference`}</div>
           </div>
         </div>
         <div className="chart-body" id="pdf-chart-outcome-by-group">
@@ -651,7 +653,7 @@ export default function AnalyticsPage() {
           ))}
           <div className="legend-item">
             <div className="legend-line" style={{ background: "var(--text-tertiary)", borderTop: "2px dashed var(--text-tertiary)", height: 0, width: 16 }} />
-            70% threshold
+            {`${threshold}% threshold`}
           </div>
         </div>
       </div>
@@ -693,7 +695,7 @@ export default function AnalyticsPage() {
           <div className="chart-header">
             <div>
               <div className="chart-title">Programme-Level Outcome Averages</div>
-              <div className="chart-subtitle">Grand mean (%) ± 1σ per criterion with 70% threshold reference</div>
+              <div className="chart-subtitle">{`Grand mean (%) ± 1σ per criterion with ${threshold}% threshold reference`}</div>
             </div>
           </div>
           <div className="chart-body" id="pdf-chart-programme-averages">
@@ -768,7 +770,7 @@ export default function AnalyticsPage() {
         <div className="chart-header">
           <div>
             <div className="chart-title">Group Attainment Heatmap</div>
-            <div className="chart-subtitle">Normalized score (%) per outcome per project group — cells below 70% threshold are flagged</div>
+            <div className="chart-subtitle">{`Normalized score (%) per outcome per project group — cells below ${threshold}% threshold are flagged`}</div>
           </div>
         </div>
         <div className="chart-body" id="pdf-chart-group-heatmap">
@@ -776,7 +778,7 @@ export default function AnalyticsPage() {
         </div>
         <div className="chart-legend">
           <div className="legend-item"><div className="legend-dot ga-cell-high" style={{ borderRadius: 2, width: 10, height: 10 }} />High (≥80%)</div>
-          <div className="legend-item"><div className="legend-dot ga-cell-met" style={{ borderRadius: 2, width: 10, height: 10 }} />Met (≥70%)</div>
+          <div className="legend-item"><div className="legend-dot ga-cell-met" style={{ borderRadius: 2, width: 10, height: 10 }} />{`Met (≥${threshold}%)`}</div>
           <div className="legend-item"><div className="legend-dot ga-cell-borderline" style={{ borderRadius: 2, width: 10, height: 10 }} />Borderline (60–69%)</div>
           <div className="legend-item"><div className="legend-dot ga-cell-not-met" style={{ borderRadius: 2, width: 10, height: 10 }} />Not Met (&lt;60%)</div>
         </div>

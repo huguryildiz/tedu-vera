@@ -20,7 +20,7 @@ import {
   UniversityIcon,
 } from "@/shared/ui/Icons";
 import AlertCard from "@/shared/ui/AlertCard";
-import Tooltip from "@/shared/ui/Tooltip";
+import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import { isStrongPassword, PASSWORD_POLICY_ERROR_TEXT } from "@/shared/passwordPolicy";
@@ -413,18 +413,18 @@ export default function ManageOrganizationsPanel({
                 </div>
               </div>
               <div className="mop-org-card__actions">
-                <Tooltip text="Edit organization">
+                <PremiumTooltiptext="Edit organization">
                   <IconBtn aria-label={`Edit ${org.shortLabel}`} onClick={() => openEdit(org)}>
                     <PencilIcon />
                     <span>Edit</span>
                   </IconBtn>
-                </Tooltip>
-                <Tooltip text="Review admins">
+                </PremiumTooltip>
+                <PremiumTooltiptext="Review admins">
                   <IconBtn aria-label={`Review admins for ${org.shortLabel}`} onClick={() => setAdminsDialogOrg(org)}>
                     <UserStarIcon />
                     <span>Admins</span>
                   </IconBtn>
-                </Tooltip>
+                </PremiumTooltip>
               </div>
             </div>
           ))}
@@ -591,7 +591,7 @@ export default function ManageOrganizationsPanel({
                           Approved
                         </span>
                         <div className="mop-admin-btn-row">
-                          <Tooltip text="Edit admin">
+                          <PremiumTooltiptext="Edit admin">
                             <IconBtn
                               aria-label={`Edit admin ${admin.name || admin.email}`}
                               onClick={() => openAdminEdit(adminsDialogOrg.id, admin)}
@@ -599,8 +599,8 @@ export default function ManageOrganizationsPanel({
                             >
                               <PencilIcon />
                             </IconBtn>
-                          </Tooltip>
-                          <Tooltip text="Delete admin">
+                          </PremiumTooltip>
+                          <PremiumTooltiptext="Delete admin">
                             <IconBtn
                               danger
                               aria-label={`Delete admin ${admin.name || admin.email}`}
@@ -614,7 +614,7 @@ export default function ManageOrganizationsPanel({
                             >
                               <TrashIcon />
                             </IconBtn>
-                          </Tooltip>
+                          </PremiumTooltip>
                         </div>
                       </div>
                     </div>

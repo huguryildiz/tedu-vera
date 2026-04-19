@@ -21,7 +21,7 @@
 
 
 /* ─── Desktop: override layout.css max-content so table fits viewport ── */
-@media (min-width: 769px) {
+@media (min-width: 769px) and (orientation: portrait), (min-width: 901px) {
   #page-projects .table-wrap {
     overflow-x: hidden !important;
   }
@@ -331,20 +331,20 @@
    Shared cell spacing lives in mobile.css.
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 900px) and (orientation: landscape) {
-  #page-projects .table-wrap { overflow-x: auto; }
+  #page-projects .table-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+  }
   #projects-main-table { min-width: 700px; }
 
   /* Title — tighten text slightly */
-  #projects-main-table td:nth-child(2) > div:first-child { font-size: 12px; }
+  #projects-main-table td:nth-child(2) > div:first-child { font-size: var(--table-dense-body-size); }
+  #projects-main-table .proj-title-text { font-size: var(--table-dense-body-size); }
 }
 
-/* Project title — justified for multi-line balance. */
-.proj-title-text {
-  font-weight: 600;
-  line-height: 1.35;
-  text-align: justify;
-  text-justify: inter-word;
-}
+/* .proj-title-text — defined globally in table-system.css */
 
 /* Advisor block — two-line compact: eyebrow + JurorBadge row. */
 .proj-advisors {

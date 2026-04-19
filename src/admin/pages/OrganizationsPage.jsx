@@ -36,6 +36,7 @@ import {
   Mail,
   MoreVertical,
   Pencil,
+  Search,
   Settings,
   Trash2,
   TriangleAlert,
@@ -1348,13 +1349,16 @@ export default function OrganizationsPage() {
               </div>
             </div>
             <div className="organizations-toolbar" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-              <input
-                className="form-input organizations-toolbar-search"
-                style={{ width: 180, height: 30, fontSize: 12, flex: "1 1 180px", minWidth: 160 }}
-                placeholder="Search organizations…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+              <div style={{ position: "relative", flex: "1 1 180px", minWidth: 160 }}>
+                <Search size={13} strokeWidth={2} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", color: "var(--text-tertiary)", pointerEvents: "none" }} />
+                <input
+                  className="form-input organizations-toolbar-search"
+                  style={{ width: "100%", height: 30, fontSize: 12, paddingLeft: 28, boxSizing: "border-box" }}
+                  placeholder="Search organizations…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
               <FilterButton
                 activeCount={orgActiveFilterCount}
                 isOpen={orgFilterOpen}

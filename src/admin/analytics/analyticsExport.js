@@ -56,7 +56,7 @@ export function addTableSheet(wb, name, title, headers, rows, extraSections = []
   XLSX.utils.book_append_sheet(wb, ws, name);
 }
 
-function buildDatasets({ dashboardStats, submittedData, trendData, semesterOptions, trendSemesterIds, activeOutcomes, outcomeLookup }) {
+function buildDatasets({ dashboardStats, submittedData, trendData, semesterOptions, trendSemesterIds, activeOutcomes, outcomeLookup, threshold = 70 }) {
   return [
     buildOutcomeByGroupDataset(dashboardStats, activeOutcomes),
     buildProgrammeAveragesDataset(submittedData, activeOutcomes),
@@ -116,7 +116,7 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
 
   const {
     dashboardStats, submittedData, trendData, semesterOptions,
-    trendSemesterIds, activeOutcomes, outcomeLookup,
+    trendSemesterIds, activeOutcomes, outcomeLookup, threshold = 70,
   } = params;
 
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
@@ -160,17 +160,17 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
   // Each section: chart image + its own matching data table.
   // UI order matches AnalyticsPage.jsx sections 02–08.
   const sections = [
-    { title: "Outcome Attainment Rate",        note: "% of evaluations scoring ≥70% per programme outcome",                                                  chartId: "pdf-chart-attainment-rate",    ds: progAvg    },
-    { title: "Threshold Gap Analysis",          note: "Deviation from 70% competency threshold per outcome",                                                  chartId: "pdf-chart-threshold-gap",      ds: null       },
-    { title: "Outcome Achievement by Group",    note: "Normalized score (0–100%) per criterion per project group — 70% threshold reference",                  chartId: "pdf-chart-outcome-by-group",   ds: outByGroup },
-    { title: "Rubric Achievement Distribution", note: "Performance band breakdown per criterion — continuous improvement evidence",                            chartId: "pdf-chart-rubric",             ds: rubric     },
-    { title: "Programme-Level Averages",        note: "Grand mean (%) ± 1σ per criterion with 70% threshold reference",                                      chartId: "pdf-chart-programme-averages", ds: progAvg    },
+    { title: "Outcome Attainment Rate",        note: `% of evaluations scoring ≥${threshold}% per programme outcome`,                                                  chartId: "pdf-chart-attainment-rate",    ds: progAvg    },
+    { title: "Threshold Gap Analysis",          note: `Deviation from ${threshold}% competency threshold per outcome`,                                                  chartId: "pdf-chart-threshold-gap",      ds: null       },
+    { title: "Outcome Achievement by Group",    note: `Normalized score (0–100%) per criterion per project group — ${threshold}% threshold reference`,                  chartId: "pdf-chart-outcome-by-group",   ds: outByGroup },
+    { title: "Rubric Achievement Distribution", note: "Performance band breakdown per criterion — continuous improvement evidence",                                      chartId: "pdf-chart-rubric",             ds: rubric     },
+    { title: "Programme-Level Averages",        note: `Grand mean (%) ± 1σ per criterion with ${threshold}% threshold reference`,                                      chartId: "pdf-chart-programme-averages", ds: progAvg    },
     ...(trend.rows.length >= 2
       ? [{ title: "Attainment Trend", note: "Attainment rate (solid) and average score % (dashed) per programme outcome across evaluation periods", chartId: "pdf-chart-trend", ds: trend }]
       : []),
-    { title: "Group Attainment Heatmap",        note: "Normalized score (%) per outcome per project group — cells below 70% threshold are flagged",          chartId: "pdf-chart-group-heatmap",      ds: null       },
-    { title: "Inter-Rater Consistency Heatmap", note: "Coefficient of variation (CV = σ/μ × 100%) per project group — CV >25% indicates poor agreement",     chartId: "pdf-chart-juror-cv",           ds: jurorCV    },
-    { title: "Coverage Matrix",                 note: "Which programme outcomes are directly assessed by evaluation criteria",                                 chartId: "pdf-chart-coverage",           ds: outcomes   },
+    { title: "Group Attainment Heatmap",        note: `Normalized score (%) per outcome per project group — cells below ${threshold}% threshold are flagged`,          chartId: "pdf-chart-group-heatmap",      ds: null       },
+    { title: "Inter-Rater Consistency Heatmap", note: "Coefficient of variation (CV = σ/μ × 100%) per project group — CV >25% indicates poor agreement",               chartId: "pdf-chart-juror-cv",           ds: jurorCV    },
+    { title: "Coverage Matrix",                 note: "Which programme outcomes are directly assessed by evaluation criteria",                                           chartId: "pdf-chart-coverage",           ds: outcomes   },
   ];
 
   // Render sections — first section starts directly on page 1

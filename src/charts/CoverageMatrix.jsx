@@ -34,15 +34,12 @@ export function CoverageMatrix({ criteria = [], outcomes = [] }) {
 
   const rows = activeOutcomes.map((outcome) => {
     const coverages = activeCriteria.map((c) => getCoverageType(outcome.code, c));
-    const overall = coverages.includes("direct")
-      ? "direct"
-      : coverages.includes("indirect")
-      ? "indirect"
-      : "none";
-    if (overall === "direct") directCount++;
-    else if (overall === "indirect") indirectCount++;
-    else unmappedCount++;
-    return { outcome, coverages, overall };
+    const hasAnyDirect = coverages.includes("direct");
+    const hasAnyIndirect = coverages.includes("indirect");
+    if (hasAnyDirect) directCount++;
+    if (hasAnyIndirect) indirectCount++;
+    if (!hasAnyDirect && !hasAnyIndirect) unmappedCount++;
+    return { outcome, coverages };
   });
 
   return (
@@ -50,22 +47,22 @@ export function CoverageMatrix({ criteria = [], outcomes = [] }) {
       <table className="coverage-matrix table-dense table-pill-balance">
         <thead>
           <tr>
-            <th>Outcome</th>
+            <th>OUTCOME</th>
             {activeCriteria.map((c) => <th key={c.id}>{c.label}</th>)}
-            <th>Coverage</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map(({ outcome, coverages, overall }) => (
+          {rows.map(({ outcome, coverages }) => (
             <tr key={outcome.code}>
               <td>
-                <span className="cm-code">{outcome.code}</span>{" "}
-                {outcome.desc_en || outcome.label || ""}
+                <div className="cm-cell">
+                  <span className="cm-code">{outcome.code}</span>
+                  <span className="cm-desc">{outcome.desc_en || outcome.label || ""}</span>
+                </div>
               </td>
               {coverages.map((type, i) => (
                 <td key={i}><CoverageChip type={type} /></td>
               ))}
-              <td><CoverageChip type={overall} /></td>
             </tr>
           ))}
         </tbody>

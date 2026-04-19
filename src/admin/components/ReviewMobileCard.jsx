@@ -6,13 +6,6 @@ import { formatTs } from "../utils/adminUtils";
 import ScoreStatusPill from "./ScoreStatusPill";
 import JurorStatusPill from "./JurorStatusPill";
 
-const CELL_COLORS = [
-  "var(--accent)",
-  "var(--success)",
-  "var(--warning)",
-  "var(--purple, #a78bfa)",
-];
-
 function scoreBandColor(total, totalMax) {
   if (total == null || !Number.isFinite(Number(total))) return "var(--text-tertiary)";
   const pct = (Number(total) / (totalMax || 100)) * 100;
@@ -43,38 +36,31 @@ function RingDonut({ total, totalMax }) {
   );
 }
 
-function ScoreCell({ criterion, value, colorIndex, isLastOdd }) {
+function CritBar({ criterion, value }) {
   const missing = value === null || value === undefined;
-  const pct = missing ? 0 : Math.max(0, Math.min(1, value / criterion.max));
-  const barColor = CELL_COLORS[colorIndex % CELL_COLORS.length];
-  const displayLabel =
-    criterion.shortLabel && criterion.shortLabel.length <= 9
-      ? criterion.shortLabel
-      : criterion.label;
+  const pct = missing ? 0 : Math.max(0, Math.min(100, (value / criterion.max) * 100));
+  const color = criterion.color || "var(--accent)";
+  const label = criterion.shortLabel || criterion.label;
 
   return (
-    <div
-      className={[
-        "rmc-score-cell",
-        missing ? "rmc-score-cell--empty" : "",
-        isLastOdd ? "rmc-score-cell--span" : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      <div className="rmc-cell-label">{displayLabel.toUpperCase()}</div>
-      {!missing && (
-        <div className="rmc-cell-score-row">
-          <span className="rmc-cell-value">{value}</span>
-          <span className="rmc-cell-max">/{criterion.max}</span>
-        </div>
-      )}
-      <div className="rmc-cell-bar-track">
+    <div className="rmc-crit-bar-row">
+      <div className="rmc-crit-bar-label">{label}</div>
+      <div className="rmc-bar-track">
         {!missing && (
           <div
-            className="rmc-cell-bar-fill"
-            style={{ width: `${pct * 100}%`, background: barColor }}
+            className="rmc-bar-fill"
+            style={{ width: `${pct}%`, backgroundColor: color }}
           />
+        )}
+      </div>
+      <div className="rmc-crit-bar-score">
+        {!missing ? (
+          <>
+            <span className="rmc-crit-score-val" style={{ color }}>{value}</span>
+            <span className="rmc-crit-score-max">/{criterion.max}</span>
+          </>
+        ) : (
+          <span className="rmc-crit-score-empty">—</span>
         )}
       </div>
     </div>
@@ -94,7 +80,6 @@ function MemberChips({ students }) {
 export default function ReviewMobileCard({ row, criteria }) {
   const totalMax = criteria.reduce((s, c) => s + (Number(c.max) || 0), 0);
   const isPartial = row.effectiveStatus === "partial";
-  const isOdd = criteria.length % 2 !== 0;
   const [commentOpen, setCommentOpen] = useState(false);
   const submittedTs = formatTs(row.finalSubmittedAt || row.updatedAt);
   const hasSubmittedTs = submittedTs && submittedTs !== "—";
@@ -138,17 +123,14 @@ export default function ReviewMobileCard({ row, criteria }) {
       </div>
 
       {criteria.length > 0 && (
-        <div className="rmc-score-grid">
+        <div className="rmc-crit-bars">
           {criteria.map((criterion, idx) => {
             const value = row[criterion.id] ?? row[criterion.key] ?? null;
-            const isLastOdd = isOdd && idx === criteria.length - 1;
             return (
-              <ScoreCell
+              <CritBar
                 key={criterion.id || criterion.key || idx}
                 criterion={criterion}
                 value={value !== undefined ? value : null}
-                colorIndex={idx}
-                isLastOdd={isLastOdd}
               />
             );
           })}

@@ -1,5 +1,5 @@
 import { TrashIcon } from "@/shared/ui/Icons";
-import Tooltip from "@/shared/ui/Tooltip";
+import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 
 export default function DangerIconButton({
   ariaLabel,
@@ -32,7 +32,7 @@ export default function DangerIconButton({
   );
 
   if (title && !showLabel) {
-    return <Tooltip text={title}>{button}</Tooltip>;
+    return <PremiumTooltip text={title}>{button}</PremiumTooltip>;
   }
 
   return button;

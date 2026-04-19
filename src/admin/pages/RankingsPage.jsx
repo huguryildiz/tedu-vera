@@ -8,13 +8,14 @@ import { logExportInitiated } from "@/shared/api";
 import { useToast } from "@/shared/hooks/useToast";
 import { useAuth } from "@/auth";
 import SendReportModal from "@/admin/modals/SendReportModal";
-import { GitCompare, Filter, Icon, XCircle } from "lucide-react";
+import { GitCompare, Filter, Icon, XCircle, Search } from "lucide-react";
 import CompareProjectsModal from "@/admin/modals/CompareProjectsModal";
 import { StudentNames } from "@/shared/ui/EntityMeta";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import { FilterButton } from "../../shared/ui/FilterButton.jsx";
 import Pagination from "@/shared/ui/Pagination";
 import useCardSelection from "@/shared/hooks/useCardSelection";
+import AvgDonut from "./AvgDonut";
 
 // ── Competition ranking ──────────────────────────────────────────
 // Tied scores share the same rank; next rank skips (1,1,3,4,…).
@@ -77,13 +78,9 @@ function HeatCell({ value, max, color, label }) {
       </td>
     );
   }
-  const pct = Math.round((value / max) * 100);
   return (
     <td className="heat-cell">
       <span className="heat-val" style={{ color }}>{value.toFixed(1)}</span>
-      <span className="heat-tip">
-        {label}: {value.toFixed(1)} / {max} ({pct}%)
-      </span>
     </td>
   );
 }
@@ -104,50 +101,26 @@ function ConsensusBadge({ consensus }) {
   );
 }
 
+const RANK_GRADIENTS = {
+  1: "linear-gradient(135deg, #92400e, #f59e0b)",
+  2: "linear-gradient(135deg, #334155, #94a3b8)",
+  3: "linear-gradient(135deg, #7c3f1a, #cd7c5a)",
+};
+
+const RANK_HONORABLE = { background: "var(--accent)", color: "#fff", border: "none" };
+
 function MedalCell({ rank }) {
-  if (rank === 1)
-    return (
-      <div className="ranking-medal-cell">
-        <span
-          className="ranking-medal"
-          role="img"
-          aria-label="1st place"
-          alt="1st place"
-          title="1st Place"
-        >
-          🥇
-        </span>
-      </div>
-    );
-  if (rank === 2)
-    return (
-      <div className="ranking-medal-cell">
-        <span
-          className="ranking-medal"
-          role="img"
-          aria-label="2nd place"
-          alt="2nd place"
-          title="2nd Place"
-        >
-          🥈
-        </span>
-      </div>
-    );
-  if (rank === 3)
-    return (
-      <div className="ranking-medal-cell">
-        <span
-          className="ranking-medal"
-          role="img"
-          aria-label="3rd place"
-          alt="3rd place"
-          title="3rd Place"
-        >
-          🥉
-        </span>
-      </div>
-    );
-  return <span className="ranking-num">{rank}</span>;
+  const gradient = RANK_GRADIENTS[rank];
+  const honorable = !gradient && rank <= 5 ? RANK_HONORABLE : undefined;
+  return (
+    <span
+      className="ranking-num"
+      style={gradient ? { background: gradient, color: "#fff", border: "none" } : honorable}
+      aria-label={`Rank ${rank}`}
+    >
+      {rank}
+    </span>
+  );
 }
 
 // ── Icons ────────────────────────────────────────────────────────
@@ -213,7 +186,6 @@ export default function RankingsPage() {
   const consensusPopoverRef = useRef(null);
 
   const activeFilterCount =
-    (searchText ? 1 : 0) +
     (consensusFilter !== "all" ? 1 : 0) +
     (minAvg !== "" || maxAvg !== "" ? 1 : 0) +
     (criterionFilter !== "all" ? 1 : 0);
@@ -511,6 +483,22 @@ export default function RankingsPage() {
             <div className="page-desc">Project rankings by weighted average score.</div>
           </div>
           <div className="scores-header-actions">
+            <div className="rankings-search-wrap">
+              <Search size={13} className="rankings-search-icon" />
+              <input
+                className="rankings-search-input"
+                type="text"
+                placeholder="Search project or member…"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+              {searchText && (
+                <button className="rankings-search-clear" onClick={() => setSearchText("")}>
+                  <XCircle size={13} />
+                </button>
+              )}
+            </div>
+            <div className="scores-action-sep" />
             {summaryData.length >= 2 && (
               <>
                 <button
@@ -584,15 +572,6 @@ export default function RankingsPage() {
             </button>
           </div>
           <div className="filter-row">
-            <div className="filter-group">
-              <label>Search</label>
-              <input
-                type="text"
-                placeholder="Search groups..."
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-              />
-            </div>
             <div className="filter-group">
               <label>Consensus</label>
               <CustomSelect
@@ -809,7 +788,7 @@ export default function RankingsPage() {
           <div className="table-wrap table-wrap--split">
             <table className="ranking-table table-standard table-pill-balance">
               <colgroup>
-                <col style={{ width: 42 }} />
+                <col style={{ width: "1px" }} />
                 <col style={{ width: "24%" }} />
                 <col style={{ width: "14%" }} />
                 {criteriaConfig.map((c) => (
@@ -866,12 +845,28 @@ export default function RankingsPage() {
                     const members = proj.members || proj.students || "";
 
                     return (
-                      <tr key={proj.id} data-card-selectable="" className={`mcard${rank <= 3 ? " ranking-highlight" : ""}`}>
+                      <tr
+                        key={proj.id}
+                        data-card-selectable=""
+                        className={[
+                          "mcard",
+                          rank <= 3 ? "ranking-highlight" : "",
+                          rank <= 3 ? `ranking-top-${rank}` : "",
+                        ].filter(Boolean).join(" ")}
+                      >
                         <td className="col-rank" data-label="Rank">
                           <MedalCell rank={rank} />
                         </td>
-                        <td className="col-project" data-label="Project Title">{title}</td>
-                        <td className="col-students" data-label="Team Members"><StudentNames names={members} /></td>
+                        <td className="col-project" data-label="Project Title">
+                          {proj.group_no != null && (
+                            <span className="ranking-proj-no">PROJECT · P{proj.group_no}</span>
+                          )}
+                          {title}
+                        </td>
+                        <td className="col-students" data-label="Team Members">
+                          <span className="rk-mem-label">Team Members</span>
+                          <StudentNames names={members} />
+                        </td>
                         {criteriaConfig.map((c) => (
                           <HeatCell
                             key={c.id}
@@ -881,17 +876,82 @@ export default function RankingsPage() {
                             label={c.shortLabel || c.label}
                           />
                         ))}
-                        <td
-                          className="col-avg"
-                          data-label="Average"
-                          style={rank === 1 ? { color: "var(--accent)" } : undefined}
-                        >
-                          {proj.totalAvg.toFixed(1)}
+                        <td className="col-avg" data-label="Average">
+                          <span
+                            className="rk-avg-num"
+                            style={rank === 1 ? { color: "var(--accent)" } : undefined}
+                          >
+                            {proj.totalAvg.toFixed(1)}
+                          </span>
+                          <AvgDonut value={proj.totalAvg} max={100} />
                         </td>
                         <td className="text-center consensus-cell" data-label="Consensus">
                           <ConsensusBadge consensus={consensus} />
                         </td>
                         <td className="col-jurors" data-label="Jurors">{proj.count ?? "—"}</td>
+
+                        {/* ── Mobile portrait only ── */}
+                        <td className="rk-mobile-only rk-criteria-cell" aria-hidden="true">
+                          <span className="rk-crit-label">Criteria Scores</span>
+                          <div className="rk-criteria">
+                            {criteriaConfig.map((c) => {
+                              const val = proj.avg?.[c.id];
+                              return (
+                                <div key={c.id} className="rk-criterion">
+                                  <div className="rk-crit-name">{c.shortLabel || c.label}</div>
+                                  <div className="rk-crit-bar">
+                                    {val != null && (
+                                      <div
+                                        className="rk-crit-fill"
+                                        style={{
+                                          width: c.max > 0 ? `${Math.min(100, (val / c.max) * 100)}%` : "0%",
+                                          backgroundColor: c.color || "var(--accent)",
+                                        }}
+                                      />
+                                    )}
+                                  </div>
+                                  <div className="rk-crit-val">
+                                    {val != null ? (
+                                      <>
+                                        <span className="rk-crit-val-num" style={{ color: c.color || "var(--accent)" }}>
+                                          {val.toFixed(0)}
+                                        </span>
+                                        <span className="rk-crit-val-max">/{c.max}</span>
+                                      </>
+                                    ) : (
+                                      <span className="rk-crit-val-empty">—</span>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </td>
+
+                        <td className="rk-mobile-only rk-footer-cell" aria-hidden="true">
+                          <span className="rk-foot-label">Evaluation Summary</span>
+                          <div className="rk-footer">
+                            {consensus ? (
+                              <span className={`rk-consensus rk-cons-${consensus.level}`}>
+                                {consensus.level === "high"
+                                  ? "High"
+                                  : consensus.level === "moderate"
+                                  ? "Moderate"
+                                  : "Disputed"}
+                              </span>
+                            ) : (
+                              <span className="rk-consensus rk-cons-none">—</span>
+                            )}
+                            <div className="rk-meta">
+                              {consensus && (
+                                <span className="rk-sigma">
+                                  σ {consensus.sigma} · {consensus.min}–{consensus.max}
+                                </span>
+                              )}
+                              <span className="rk-jurors">{proj.count ?? "—"} jurors</span>
+                            </div>
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}

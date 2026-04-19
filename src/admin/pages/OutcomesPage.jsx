@@ -3,7 +3,7 @@
 // Matches vera-premium-prototype.html mockup.
 
 import { useState, useRef, useEffect } from "react";
-import { Pencil, Trash2, Copy, MoreVertical, BadgeCheck, Network, AlertCircle, XCircle, CheckCircle, AlertTriangle, Circle, Info, Lock, LockKeyhole, PencilLine, Download, Filter } from "lucide-react";
+import { Pencil, Trash2, Copy, MoreVertical, BadgeCheck, Network, AlertCircle, XCircle, CheckCircle, AlertTriangle, Circle, Info, Lock, LockKeyhole, PencilLine, Download, Filter, Search } from "lucide-react";
 import { FilterButton } from "@/shared/ui/FilterButton";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import { updateFramework, cloneFramework, assignFrameworkToPeriod, unassignPeriodFramework, listFrameworks } from "@/shared/api";
@@ -245,6 +245,7 @@ export default function OutcomesPage() {
   const isLocked = !!selectedPeriod?.is_locked;
   const frameworkId = selectedPeriod?.framework_id || null;
   const savedFrameworkName = frameworks.find((f) => f.id === frameworkId)?.name || "";
+  const savedFrameworkThreshold = frameworks.find((f) => f.id === frameworkId)?.default_threshold ?? 70;
   // Only show accreditation frameworks (MÜDEK/ABET) in the "no framework" picker —
   // VERA Standard belongs to the Criteria page, not here.
   const isAccreditationFramework = (fw) => /MÜDEK|ABET/i.test(fw.name);
@@ -290,6 +291,7 @@ export default function OutcomesPage() {
   const [pageSize, setPageSize] = useState(15);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
   const [coverageFilter, setCoverageFilter] = useState("all"); // all | direct | indirect | none
   const [criterionFilter, setCriterionFilter] = useState("all"); // all | <criterionId>
   const activeFilterCount =
@@ -298,7 +300,7 @@ export default function OutcomesPage() {
   // Reset page on filter change
   useEffect(() => {
     setCurrentPage(1);
-  }, [coverageFilter, criterionFilter]);
+  }, [coverageFilter, criterionFilter, searchText]);
 
   // Drawers
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
@@ -368,6 +370,12 @@ export default function OutcomesPage() {
   const [fwRenameSaving, setFwRenameSaving] = useState(false);
   const fwRenameInputRef = useRef(null);
 
+  // Inline threshold edit
+  const [thresholdEditing, setThresholdEditing] = useState(false);
+  const [thresholdVal, setThresholdVal] = useState("");
+  const [thresholdSaving, setThresholdSaving] = useState(false);
+  const thresholdInputRef = useRef(null);
+
   // ── Derived data ──────────────────────────────────────────
 
   const sortedOutcomes = [...fw.outcomes].sort((a, b) => {
@@ -376,6 +384,14 @@ export default function OutcomesPage() {
   });
 
   const filteredOutcomes = sortedOutcomes.filter((o) => {
+    if (searchText.trim()) {
+      const q = searchText.toLowerCase();
+      const match =
+        (o.code || "").toLowerCase().includes(q) ||
+        (o.label || "").toLowerCase().includes(q) ||
+        (o.description || "").toLowerCase().includes(q);
+      if (!match) return false;
+    }
     const cov = fw.getCoverage(o.id);
     if (coverageFilter !== "all" && cov !== coverageFilter) return false;
     if (criterionFilter !== "all") {
@@ -533,6 +549,37 @@ export default function OutcomesPage() {
     if (e.key === "Escape") { e.preventDefault(); cancelFwRename(); }
   };
 
+  // ── Threshold edit handlers ───────────────────────────────
+
+  const startThresholdEdit = () => {
+    setThresholdVal(String(savedFrameworkThreshold));
+    setThresholdEditing(true);
+    setTimeout(() => { thresholdInputRef.current?.focus(); thresholdInputRef.current?.select(); }, 0);
+  };
+
+  const saveThreshold = async () => {
+    const num = parseInt(thresholdVal, 10);
+    if (isNaN(num) || num < 0 || num > 100 || num === savedFrameworkThreshold || !frameworkId) {
+      setThresholdEditing(false);
+      return;
+    }
+    setThresholdSaving(true);
+    try {
+      await updateFramework(frameworkId, { default_threshold: num });
+      onFrameworksChange?.();
+    } catch {
+      toast.error("Failed to update attainment threshold");
+    } finally {
+      setThresholdSaving(false);
+      setThresholdEditing(false);
+    }
+  };
+
+  const handleThresholdKeyDown = (e) => {
+    if (e.key === "Enter") { e.preventDefault(); saveThreshold(); }
+    if (e.key === "Escape") { e.preventDefault(); setThresholdEditing(false); }
+  };
+
   // ── Draft save/discard ────────────────────────────────────
 
   // Core commit flow — runs the queued draft (import + diffs + rename) against
@@ -643,6 +690,21 @@ export default function OutcomesPage() {
         </div>
         {!noFramework && (
           <div className="sem-header-actions mobile-toolbar-stack">
+            <div className="rankings-search-wrap">
+              <Search size={13} className="rankings-search-icon" />
+              <input
+                className="rankings-search-input"
+                type="text"
+                placeholder="Search outcomes…"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+              {searchText && (
+                <button className="rankings-search-clear" onClick={() => setSearchText("")}>
+                  <XCircle size={13} />
+                </button>
+              )}
+            </div>
             <FilterButton
               className="mobile-toolbar-filter"
               activeCount={activeFilterCount}
@@ -1071,7 +1133,37 @@ export default function OutcomesPage() {
                   )}
                 </div>
                 <div className="acc-card-subtitle">
-                  {totalOutcomes} outcome{totalOutcomes !== 1 ? "s" : ""} · {directCount} direct
+                  <span>{totalOutcomes} outcome{totalOutcomes !== 1 ? "s" : ""} · {directCount} direct</span>
+                  {frameworkId && (
+                    thresholdEditing ? (
+                      <span className="acc-threshold-edit-wrap">
+                        <input
+                          ref={thresholdInputRef}
+                          type="number"
+                          min={0}
+                          max={100}
+                          className="acc-threshold-input"
+                          value={thresholdVal}
+                          onChange={(e) => setThresholdVal(e.target.value)}
+                          onBlur={saveThreshold}
+                          onKeyDown={handleThresholdKeyDown}
+                          disabled={thresholdSaving}
+                        />
+                        <span className="acc-threshold-unit">% attainment threshold</span>
+                      </span>
+                    ) : (
+                      <span
+                        className={`acc-threshold-pill${isLocked ? "" : " editable"}`}
+                        onClick={isLocked ? undefined : startThresholdEdit}
+                        role={isLocked ? undefined : "button"}
+                        tabIndex={isLocked ? undefined : 0}
+                        onKeyDown={isLocked ? undefined : (e) => { if (e.key === "Enter" || e.key === " ") startThresholdEdit(); }}
+                      >
+                        {savedFrameworkThreshold}% threshold
+                        {!isLocked && <Pencil size={10} strokeWidth={2} className="acc-threshold-edit-icon" />}
+                      </span>
+                    )
+                  )}
                 </div>
               </div>
             </div>

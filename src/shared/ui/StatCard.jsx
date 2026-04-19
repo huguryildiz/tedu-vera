@@ -1,7 +1,7 @@
 // src/shared/StatCard.jsx
 
 import { useId } from "react";
-import Tooltip from "./Tooltip";
+import PremiumTooltip from "./PremiumTooltip";
 
 /**
  * Generic stat card for admin dashboards.
@@ -33,13 +33,13 @@ export default function StatCard({ value, label, kicker, sub, meta, metaLines, r
         <div className="stat-card-label">
           {label}
           {tooltip && (
-            <Tooltip text={tooltip} id={tooltipId}>
+            <PremiumTooltip text={tooltip} id={tooltipId}>
               <span
                 className="stat-card-tooltip-icon"
                 tabIndex={0}
                 aria-label="More information"
               >ⓘ</span>
-            </Tooltip>
+            </PremiumTooltip>
           )}
         </div>
         {sub && <div className="stat-card-sub">{sub}</div>}

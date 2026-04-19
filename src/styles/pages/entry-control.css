@@ -264,7 +264,7 @@
    Keep desktop-like table with all columns; allow horizontal scroll.
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: landscape) {
-  .entry-control-page .table-wrap { overflow-x: auto; }
+  .entry-control-page .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
   .entry-history-table { min-width: 940px; }
 
   .entry-history-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }

@@ -22,7 +22,9 @@ function getCvCellClass(cv) {
  * @param {object[]} props.submittedData  — score rows with projectId
  */
 export function JurorConsistencyHeatmap({ dashboardStats = [], submittedData = [], criteria = [] }) {
-  const groups = (dashboardStats || []).filter((s) => s.count > 0);
+  const groups = (dashboardStats || [])
+    .filter((s) => s.count > 0)
+    .sort((a, b) => (a.group_no ?? Infinity) - (b.group_no ?? Infinity));
   const rows = submittedData || [];
 
   if (!groups.length) return null;

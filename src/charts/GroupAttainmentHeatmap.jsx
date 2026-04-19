@@ -22,7 +22,9 @@ function getCellClass(pct, threshold) {
  * @param {object[]} props.submittedData  — score rows
  */
 export function GroupAttainmentHeatmap({ dashboardStats = [], submittedData = [], criteria = [], threshold = 70 }) {
-  const groups = (dashboardStats || []).filter((s) => s.count > 0);
+  const groups = (dashboardStats || [])
+    .filter((s) => s.count > 0)
+    .sort((a, b) => (a.group_no ?? Infinity) - (b.group_no ?? Infinity));
   if (!groups.length) return null;
 
   return (

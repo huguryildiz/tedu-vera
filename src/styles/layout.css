@@ -1814,7 +1814,6 @@ body:not(.dark-mode) .admin-sidebar .sb-account-item.danger:focus-visible{
     padding: 12px 14px;
     border-radius: 12px;
     border-color: rgba(148,163,184,0.18);
-    background: linear-gradient(180deg, rgba(15,23,42,0.03), rgba(15,23,42,0.01));
   }
   #page-jurors #jurors-main-table td:nth-child(1) .j-row { gap: 11px; }
   #page-jurors #jurors-main-table td:nth-child(1) .j-av {
@@ -2191,6 +2190,16 @@ body:not(.dark-mode) .admin-sidebar .sb-account-item.danger:focus-visible{
   .reviews-actions .reviews-search {
     width: 100% !important;
     min-width: 0;
+  }
+
+  .scores-header-actions .rankings-search-wrap {
+    width: 100%;
+    min-width: 0;
+  }
+  .scores-header-actions .rankings-search-input {
+    width: 100% !important;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
   .jurors-toolbar .btn,

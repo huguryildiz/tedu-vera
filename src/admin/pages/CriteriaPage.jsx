@@ -24,6 +24,7 @@ import {
   Download,
   Filter,
   XCircle,
+  Search,
 } from "lucide-react";
 import { useAdminContext } from "../hooks/useAdminContext";
 import { useToast } from "@/shared/hooks/useToast";
@@ -140,6 +141,7 @@ export default function CriteriaPage() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
   const [mappingFilter, setMappingFilter] = useState("all");   // all | mapped | unmapped
   const [rubricFilter, setRubricFilter] = useState("all");     // all | defined | none
   const activeFilterCount =
@@ -178,7 +180,7 @@ export default function CriteriaPage() {
   // ── Reset page to 1 when filters change ────────────────────
   useEffect(() => {
     setCurrentPage(1);
-  }, [mappingFilter, rubricFilter]);
+  }, [mappingFilter, rubricFilter, searchText]);
 
   // ── Derived data ──────────────────────────────────────────────
 
@@ -223,6 +225,14 @@ export default function CriteriaPage() {
     : null;
 
   const filteredCriteria = draftCriteria.filter((c) => {
+    if (searchText.trim()) {
+      const q = searchText.toLowerCase();
+      const match =
+        (c.label || "").toLowerCase().includes(q) ||
+        (c.shortLabel || "").toLowerCase().includes(q) ||
+        (c.blurb || "").toLowerCase().includes(q);
+      if (!match) return false;
+    }
     const hasMapping = Array.isArray(c.outcomes) && c.outcomes.length > 0;
     const hasRubric = Array.isArray(c.rubric) && c.rubric.length > 0;
     if (mappingFilter === "mapped" && !hasMapping) return false;
@@ -487,6 +497,21 @@ export default function CriteriaPage() {
         </div>
         {periods.viewPeriodId && (draftCriteria.length > 0 || scratchMode) && !pendingCriteriaPreview && (
           <div className="crt-header-actions mobile-toolbar-stack">
+            <div className="rankings-search-wrap">
+              <Search size={13} className="rankings-search-icon" />
+              <input
+                className="rankings-search-input"
+                type="text"
+                placeholder="Search criteria…"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+              {searchText && (
+                <button className="rankings-search-clear" onClick={() => setSearchText("")}>
+                  <XCircle size={13} />
+                </button>
+              )}
+            </div>
             <FilterButton
               className="mobile-toolbar-filter"
               activeCount={activeFilterCount}

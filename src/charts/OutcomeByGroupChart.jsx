@@ -65,7 +65,9 @@ function makeXAxisTick(nameMap) {
  * @param {object[]} props.dashboardStats — array of { id, name, count, avg: { technical, design, delivery, teamwork } }
  */
 export function OutcomeByGroupChart({ dashboardStats = [], criteria = [], threshold = 70 }) {
-  const groups = (dashboardStats || []).filter((s) => s.count > 0);
+  const groups = (dashboardStats || [])
+    .filter((s) => s.count > 0)
+    .sort((a, b) => (a.group_no ?? Infinity) - (b.group_no ?? Infinity));
 
   const nameMap = {};
   const data = groups.map((g) => {
