@@ -16,6 +16,14 @@ function random() {
 }
 function randInt(min, max) { return Math.floor(random() * (max - min + 1)) + min; }
 function pick(arr) { return arr[Math.floor(random() * arr.length)]; }
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 function uuid(seedStr) {
   const hash = crypto.createHash('md5').update(seedStr).digest('hex');
@@ -187,12 +195,12 @@ out.push('');
 // ═══════════════════════════════════════════════════════════════
 
 const orgs = [
-  { p: 1, name: 'Electrical-Electronics Engineering', institution: 'TED University', code: 'TEDU-EE', type: 'academic', evalDays: 1, lang: 'tr', descLang: 'en', commentLang: 'en' },
-  { p: 2, name: 'Computer Science', institution: 'Carnegie Mellon University', code: 'CMU-CS', type: 'academic', evalDays: 1, lang: 'en', descLang: 'en' },
-  { p: 3, name: 'TEKNOFEST', institution: 'Türkiye Technology Team Foundation', code: 'TEKNOFEST', type: 'competition', evalDays: 3, lang: 'tr', descLang: 'tr' },
-  { p: 4, name: 'TÜBİTAK 2204-A', institution: 'Scientific and Technological Research Council of Türkiye', code: 'TUBITAK-2204A', type: 'competition', evalDays: 2, lang: 'tr', descLang: 'tr' },
-  { p: 5, name: 'AP-S Student Design Contest', institution: 'IEEE Antennas and Propagation Society', code: 'IEEE-APSSDC', type: 'competition', evalDays: 2, lang: 'en', descLang: 'en' },
-  { p: 6, name: 'CanSat Competition', institution: 'American Astronautical Society', code: 'CANSAT', type: 'competition', evalDays: 3, lang: 'en', descLang: 'en' }
+  { p: 1, name: 'TED University — Electrical-Electronics Engineering', code: 'TEDU-EE', type: 'academic', evalDays: 1, lang: 'tr', descLang: 'en', commentLang: 'en' },
+  { p: 2, name: 'Carnegie Mellon University — Computer Science', code: 'CMU-CS', type: 'academic', evalDays: 1, lang: 'en', descLang: 'en' },
+  { p: 3, name: 'TEKNOFEST', code: 'TEKNOFEST', type: 'competition', evalDays: 3, lang: 'tr', descLang: 'tr' },
+  { p: 4, name: 'TÜBİTAK 2204-A', code: 'TUBITAK-2204A', type: 'competition', evalDays: 2, lang: 'tr', descLang: 'tr' },
+  { p: 5, name: 'IEEE APS — AP-S Student Design Contest', code: 'IEEE-APSSDC', type: 'competition', evalDays: 2, lang: 'en', descLang: 'en' },
+  { p: 6, name: 'AAS CanSat Competition', code: 'CANSAT', type: 'competition', evalDays: 3, lang: 'en', descLang: 'en' }
 ];
 
 const orgCreatedDates = {
@@ -224,7 +232,7 @@ orgs.forEach(o => {
   const ts = sqlTs(orgCreatedDates[o.code]);
   const settings = orgSettings[o.code] || '{}';
   const contactEmail = orgContactEmails[o.code] || '';
-  out.push(`INSERT INTO organizations (id, institution, name, code, status, settings, contact_email, setup_completed_at, updated_at) VALUES ('${o.id}', '${escapeSql(o.institution)}', '${escapeSql(o.name)}', '${o.code}', 'active', '${settings}', '${contactEmail}', ${ts}, ${ts}) ON CONFLICT DO NOTHING;`);
+  out.push(`INSERT INTO organizations (id, name, code, status, settings, contact_email, setup_completed_at, updated_at) VALUES ('${o.id}', '${escapeSql(o.name)}', '${o.code}', 'active', '${settings}', '${contactEmail}', ${ts}, ${ts}) ON CONFLICT DO NOTHING;`);
 });
 out.push('');
 
@@ -2010,7 +2018,7 @@ out.push('');
 
 out.push(`SELECT pg_sleep(5);`);
 out.push(`-- Scoring`);
-const ssBatcher  = makeBatcher('score_sheets',      'id, period_id, project_id, juror_id, status, comment, started_at, last_activity_at');
+const ssBatcher  = makeBatcher('score_sheets',      'id, period_id, project_id, juror_id, status, comment, started_at, last_activity_at, updated_at');
 const ssiBatcher = makeBatcher('score_sheet_items', 'id, score_sheet_id, period_criterion_id, score_value');
 
 // Includes 2 extreme biases: harsh (0.88) and lenient (1.12) for JurorConsistencyHeatmap
@@ -2052,7 +2060,7 @@ const defaultCommentsTr = ['Genel olarak makul bir çalışma.','İyi bir çaba.
 authList.forEach(auth => {
   // Locked jurors get partial scores (scored before lockout), Blocked/NotStarted skip entirely
   if (['Blocked','NotStarted'].includes(auth.semanticState)) return;
-  const myProjs = projList.filter(p => p.pId === auth.pId);
+  const myProjs = shuffle(projList.filter(p => p.pId === auth.pId));
   if (myProjs.length === 0) return;
   const periodCrits = periodCriteriaMap[auth.pId] || [];
   if (periodCrits.length === 0) return;
@@ -2104,7 +2112,7 @@ authList.forEach(auth => {
       ssComment = `'${escapeSql(pick(pools[proj.arch] || defs))}'`;
     }
 
-    ssBatcher.push(`('${ssId}', '${auth.pId}', '${proj.id}', '${auth.jId}', '${ssStatus}', ${ssComment}, ${sst} - interval '${durationMin} minutes', ${sst})`);
+    ssBatcher.push(`('${ssId}', '${auth.pId}', '${proj.id}', '${auth.jId}', '${ssStatus}', ${ssComment}, ${sst} - interval '${durationMin} minutes', ${sst}, ${sst})`);
 
     let scoredItems = 0;
     periodCrits.forEach(c => {
