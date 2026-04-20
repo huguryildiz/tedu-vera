@@ -563,6 +563,7 @@ DECLARE
   v_user_id UUID := auth.uid();
   v_org_id  UUID;
   v_code    TEXT;
+  v_existing UUID;
 BEGIN
   IF v_user_id IS NULL THEN
     RETURN jsonb_build_object('ok', false, 'error_code', 'not_authenticated')::JSON;
@@ -572,12 +573,27 @@ BEGIN
     RETURN jsonb_build_object('ok', false, 'error_code', 'org_name_required')::JSON;
   END IF;
 
+  -- Ensure profile row exists and lock it to serialize concurrent signups for the same user
+  INSERT INTO public.profiles(id) VALUES (v_user_id) ON CONFLICT (id) DO NOTHING;
+  SELECT id FROM public.profiles WHERE id = v_user_id FOR UPDATE;
+
+  -- Idempotent short-circuit: if caller already has an active org_admin membership,
+  -- return that org instead of raising or duplicating.
+  SELECT organization_id INTO v_existing
+    FROM public.memberships
+   WHERE user_id = v_user_id
+     AND role = 'org_admin'
+     AND status = 'active'
+     AND organization_id IS NOT NULL
+   LIMIT 1;
+
+  IF v_existing IS NOT NULL THEN
+    RETURN jsonb_build_object('ok', true, 'organization_id', v_existing, 'idempotent', true)::JSON;
+  END IF;
+
   -- Generate a unique short code from org name prefix + random hex suffix
   v_code := upper(regexp_replace(left(p_org_name, 4), '[^A-Z0-9]', '', 'g'))
             || upper(substring(replace(gen_random_uuid()::text, '-', ''), 1, 4));
-
-  -- Ensure profile row exists (Google OAuth trigger may not have run yet)
-  INSERT INTO public.profiles(id) VALUES (v_user_id) ON CONFLICT (id) DO NOTHING;
 
   -- Create organization
   INSERT INTO public.organizations(code, name, status)
@@ -602,7 +618,7 @@ BEGIN
     jsonb_build_object('before', null, 'after', jsonb_build_object('status', 'active', 'role', 'org_admin'))
   );
 
-  RETURN jsonb_build_object('ok', true, 'organization_id', v_org_id)::JSON;
+  RETURN jsonb_build_object('ok', true, 'organization_id', v_org_id, 'idempotent', false)::JSON;
 EXCEPTION WHEN unique_violation THEN
   RETURN jsonb_build_object('ok', false, 'error_code', 'org_name_taken')::JSON;
 END;
