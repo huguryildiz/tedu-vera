@@ -147,4 +147,6 @@ export {
   recordBackupDownload,
   getBackupSchedule,
   updateBackupSchedule,
+  sendEmailVerification,
+  confirmEmailVerification,
 } from "./admin/index";

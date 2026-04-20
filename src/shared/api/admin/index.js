@@ -148,3 +148,5 @@ export {
 } from "./backups";
 
 export { applyStandardFramework } from "./wizardHelpers";
+
+export { sendEmailVerification, confirmEmailVerification } from "./emailVerification";
