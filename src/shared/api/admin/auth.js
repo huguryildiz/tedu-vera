@@ -71,6 +71,7 @@ export async function listOrganizationsPublic() {
 
 /**
  * Submit a tenant admin application.
+ * @deprecated New signups do not submit applications. Retained for legacy pending review rendering only.
  */
 export async function submitApplication(payload) {
   const { data, error } = await supabase

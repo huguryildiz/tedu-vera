@@ -3,7 +3,7 @@
 // and contextual hints per state (pending / rejected / empty).
 
 import { useEffect, useState } from "react";
-import { Clock, Check, MoreVertical, LogIn, X, FileText, Plus, CircleAlert, Info, Building2 } from "lucide-react";
+import { Clock, Check, MoreVertical, LogIn, X, CircleAlert, Info, Building2 } from "lucide-react";
 import { getMyApplications, getMyJoinRequests } from "@/shared/api";
 import { formatDate } from "@/shared/lib/dateUtils";
 
@@ -191,20 +191,16 @@ export default function PendingReviewScreen({ user, onSignOut, onBack }) {
                 </div>
               )}
 
-              {/* Empty state */}
+              {/* Empty state (deprecated: legacy pending review only) */}
               {!hasAny && (
                 <div className="prv-empty">
                   <div className="prv-empty-icon">
-                    <FileText size={22} strokeWidth={1.5} />
+                    <Clock size={22} strokeWidth={1.5} />
                   </div>
-                  <div className="prv-empty-title">No Applications Yet</div>
+                  <div className="prv-empty-title">No Pending Activity</div>
                   <div className="prv-empty-desc">
-                    Submit an application to request admin access for your department.
+                    New signups are self-serve. Contact your administrator if you need assistance.
                   </div>
-                  <button type="button" className="prv-btn-apply" onClick={onBack}>
-                    <Plus size={14} strokeWidth={2.5} />
-                    Apply for Access
-                  </button>
                 </div>
               )}
             </>
