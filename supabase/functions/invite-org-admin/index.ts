@@ -227,16 +227,12 @@ Deno.serve(async (req: Request) => {
     const callerId = userData?.user?.id;
     if (userErr || !callerId) return json(401, { error: "Unauthorized" });
 
-    const { data: callerMembership, error: memberErr } = await service
-      .from("memberships")
-      .select("id")
-      .eq("user_id", callerId)
-      .eq("organization_id", org_id)
-      .eq("status", "active")
-      .maybeSingle();
-    console.log("membership check:", JSON.stringify({ callerId, org_id, found: !!callerMembership, err: memberErr?.message }));
-    if (memberErr) return json(500, { error: `membership check: ${memberErr.message}` });
-    if (!callerMembership) return json(403, { error: "unauthorized" });
+    // Gate invite via _assert_can_invite helper (owner OR delegated admin OR super-admin).
+    const { error: assertErr } = await caller.rpc("_assert_can_invite", { p_org_id: org_id });
+    if (assertErr) {
+      console.log("can_invite check failed:", JSON.stringify({ callerId, org_id, err: assertErr.message }));
+      return json(403, { error: "unauthorized" });
+    }
 
     // ── 2. Resolve organization + program names ─────────────────────────────
     // In VERA: organizations.institution → "Organization" label (e.g. "TED University")
