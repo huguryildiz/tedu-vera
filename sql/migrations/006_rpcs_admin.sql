@@ -275,6 +275,39 @@ $$;
 GRANT EXECUTE ON FUNCTION _assert_org_admin(UUID) TO authenticated;
 
 -- =============================================================================
+-- _assert_tenant_owner
+-- =============================================================================
+-- Raises 'unauthorized' if caller is not the owner of p_org_id.
+-- Super-admins bypass.
+
+CREATE OR REPLACE FUNCTION public._assert_tenant_owner(p_org_id UUID)
+RETURNS VOID
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM memberships
+    WHERE user_id = auth.uid() AND role = 'super_admin'
+  ) THEN
+    RETURN;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM memberships
+    WHERE user_id = auth.uid()
+      AND organization_id = p_org_id
+      AND status = 'active'
+      AND is_owner = true
+  ) THEN
+    RAISE EXCEPTION 'unauthorized';
+  END IF;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public._assert_tenant_owner(UUID) TO authenticated;
+
+-- =============================================================================
 -- rpc_admin_find_user_by_email
 -- =============================================================================
 -- Used by the invite-org-admin Edge Function to check if a Supabase Auth user
