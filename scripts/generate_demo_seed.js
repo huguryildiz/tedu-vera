@@ -183,8 +183,8 @@ out.push(`TRUNCATE TABLE
   profiles
 CASCADE;
 `);
-out.push(`DELETE FROM auth.identities WHERE user_id IN (SELECT id FROM auth.users WHERE email LIKE '%@vera-eval.app');`);
-out.push(`DELETE FROM auth.users WHERE email LIKE '%@vera-eval.app';`);
+out.push(`DELETE FROM auth.identities WHERE user_id IN (SELECT id FROM auth.users WHERE email != 'demo.admin@vera-eval.app');`);
+out.push(`DELETE FROM auth.users WHERE email != 'demo.admin@vera-eval.app';`);
 
 // Security policy: demo-specific settings (bmax=3, lockout=5m, qrTtl=24h)
 out.push(`UPDATE security_policy SET policy = policy
