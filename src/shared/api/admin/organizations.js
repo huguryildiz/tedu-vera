@@ -188,6 +188,40 @@ export async function cancelOrgAdminInvite(membershipId) {
   return data;
 }
 
+/**
+ * Owner-only: transfer ownership to another active admin in the same org.
+ */
+export async function transferOwnership(targetMembershipId) {
+  const { data, error } = await supabase.rpc("rpc_org_admin_transfer_ownership", {
+    p_target_membership_id: targetMembershipId,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Owner-only: remove another admin (active or invited).
+ */
+export async function removeOrgAdmin(membershipId) {
+  const { data, error } = await supabase.rpc("rpc_org_admin_remove_member", {
+    p_membership_id: membershipId,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Owner-only: toggle the "admins can invite" delegation flag for an org.
+ */
+export async function setAdminsCanInvite(orgId, enabled) {
+  const { data, error } = await supabase.rpc("rpc_org_admin_set_admins_can_invite", {
+    p_org_id: orgId,
+    p_enabled: Boolean(enabled),
+  });
+  if (error) throw error;
+  return data;
+}
+
 // ── Join Request API ─────────────────────────────────────────
 
 /**
@@ -250,8 +284,15 @@ export async function deleteMemberHard(payload) {
   return true;
 }
 
+/**
+ * Returns { members: Array, adminsCanInvite: boolean }.
+ * Members include per-row is_owner / is_you fields.
+ */
 export async function listOrgAdminMembers() {
   const { data, error } = await supabase.rpc("rpc_org_admin_list_members");
   if (error) throw error;
-  return data || [];
+  return {
+    members: Array.isArray(data?.members) ? data.members : [],
+    adminsCanInvite: Boolean(data?.admins_can_invite),
+  };
 }
