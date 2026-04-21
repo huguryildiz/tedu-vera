@@ -85,11 +85,14 @@ export default function RegisterScreen({ onSwitchToLogin, onReturnHome, error: e
   // Returning authenticated users (e.g. super-admin after Google OAuth) land here
   // because redirectTo is set to /register for all OAuth flows. Redirect them to
   // the admin panel instead of showing the signup form.
+  // Skip in demo mode: the demo admin is always auto-logged-in so this would
+  // immediately redirect away from /demo/register on every visit.
+  const isDemo = location.pathname.startsWith("/demo");
   useEffect(() => {
-    if (!auth?.loading && auth?.user && !auth?.profileIncomplete && auth?.organizations?.length > 0) {
+    if (!isDemo && !auth?.loading && auth?.user && !auth?.profileIncomplete && auth?.organizations?.length > 0) {
       navigate(`${base}/admin/overview`, { replace: true });
     }
-  }, [auth?.loading, auth?.user, auth?.profileIncomplete, auth?.organizations?.length, navigate, base]);
+  }, [isDemo, auth?.loading, auth?.user, auth?.profileIncomplete, auth?.organizations?.length, navigate, base]);
 
   const isEmailFormatValid = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
   const markTouched = (field) => setTouched((prev) => ({ ...prev, [field]: true }));

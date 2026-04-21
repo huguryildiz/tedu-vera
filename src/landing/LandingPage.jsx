@@ -332,7 +332,7 @@ export function LandingPage() {
                     <div style={{ padding: "5px 7px", borderRadius: "5px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", fontSize: "8.5px", color: "#475569" }}>jury@example.com</div>
                   </div>
                   <div style={{ width: "100%", padding: "8px", borderRadius: "7px", background: "linear-gradient(180deg,#4b8ef2,#2563eb)", textAlign: "center", fontSize: "9.5px", color: "#fff", fontWeight: 600, boxShadow: "0 3px 10px rgba(37,99,235,0.35)" }}>Start Evaluation →</div>
-                  <div style={{ marginTop: "7px", fontSize: "7.5px", color: "#475569" }}>← Return Home</div>
+                  <div style={{ marginTop: "7px", fontSize: "7.5px", color: "#475569" }}>&larr; Return Home</div>
                 </div>
               </div>
             </div>

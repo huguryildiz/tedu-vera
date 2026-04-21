@@ -63,7 +63,8 @@ const juryFlowRoute = {
     </ErrorBoundary>
   ),
   children: [
-    { index: true, element: <Navigate to="identity" replace /> },
+    { index: true, element: <Navigate to="arrival" replace /> },
+    { path: "arrival",    element: null },
     { path: "identity",   element: null },
     { path: "period",     element: null },
     { path: "pin",        element: null },

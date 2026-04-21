@@ -32,7 +32,7 @@ export default function EmailVerifyBanner() {
     return () => clearInterval(id);
   }, [auth?.graceEndsAt]);
 
-  if (!auth?.user || auth.emailVerified) return null;
+  if (!auth?.user || auth.emailVerified || auth.isSuper) return null;
 
   async function onResend() {
     setState("sending");

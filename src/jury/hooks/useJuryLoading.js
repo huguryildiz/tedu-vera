@@ -36,6 +36,7 @@ import { listProjects, listPeriodsPublic as listPeriods, verifyEntryToken } from
 import { getJuryAccess, KEYS } from "../../shared/storage";
 import { DEMO_MODE } from "@/shared/lib/demoMode";
 import { buildTokenPeriod, pickDemoPeriod, pickDefaultPeriod } from "../utils/periodSelection";
+import { consumeJuryPreload } from "../juryPreloadCache";
 
 const DEMO_ENTRY_TOKEN = import.meta.env.VITE_DEMO_ENTRY_TOKEN || "";
 
@@ -67,6 +68,20 @@ export function useJuryLoading() {
     const ctrl = new AbortController();
     const run = async () => {
       try {
+        // Preload cache (populated by JuryGatePage during the verify window).
+        // If fresh data is available for the granted period, consume it and
+        // skip the duplicate listPeriods + listProjects round-trip.
+        const grantedForPreload = getJuryAccess();
+        if (grantedForPreload) {
+          const preload = consumeJuryPreload(grantedForPreload);
+          if (preload?.periodInfo) {
+            if (!alive) return;
+            setCurrentPeriodInfo(preload.periodInfo);
+            if (preload.projectCount != null) setActiveProjectCount(preload.projectCount);
+            return;
+          }
+        }
+
         // Demo mode: do NOT clear the persisted session here.
         // clearPersistedSession() removes the localStorage auth key, which fires
         // a cross-tab `storage` event — Supabase SDK in the admin tab detects it

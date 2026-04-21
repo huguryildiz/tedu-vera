@@ -257,8 +257,10 @@ export default function AdminRouteLayout() {
   // organizations.setup_completed_at — never off period count. Period
   // deletion or empty-period transients no longer re-trigger the wizard,
   // and a completed wizard stays completed across tabs/devices.
+  // Super admins never get pushed into the wizard — they inspect tenants,
+  // they don't onboard them.
   const setupIncomplete =
-    !!activeOrganization && activeOrganization.setupCompletedAt == null;
+    !!activeOrganization && activeOrganization.setupCompletedAt == null && !isSuper;
 
   // Pages the wizard explicitly links to — accessible during setup without bouncing back.
   // The user arrives here from a wizard "escape" link; a banner provides return navigation.

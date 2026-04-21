@@ -137,7 +137,7 @@ function fmtTokenPrefix(prefix) {
   if (!prefix) return null;
   const clean = String(prefix).replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
   if (!clean) return null;
-  if (clean.length >= 6) return `${clean.slice(0, 3)}-${clean.slice(3, 6)}`;
+  if (clean.length >= 8) return `${clean.slice(0, 4)}-${clean.slice(4, 8)}`;
   if (clean.length >= 4) {
     const mid = Math.ceil(clean.length / 2);
     return `${clean.slice(0, mid)}-${clean.slice(mid)}`;

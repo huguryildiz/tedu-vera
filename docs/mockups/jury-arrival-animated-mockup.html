@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VERA — Jury Arrival · Animated Brand Moments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --font-body:    'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-display: 'Instrument Serif', 'DM Sans', serif;
+    --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+
+    --ink-900: #0b1a36;
+    --ink-800: #162a52;
+    --ink-700: #233a6a;
+    --ink-600: #3a4b72;
+    --ink-500: #64748b;
+    --ink-400: #94a3b8;
+    --ink-300: #cbd5e1;
+    --ink-200: #e2e8f0;
+    --ink-100: #f1f5f9;
+    --ink-50:  #f8fafc;
+
+    --accent:      #2563eb;
+    --accent-lite: #3b82f6;
+    --accent-deep: #1d4ed8;
+    --accent-glow: rgba(59,130,246,0.28);
+
+    --violet:  #8b5cf6;
+    --emerald: #10b981;
+
+    --page-bg: #0a0f1f;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background:
+      radial-gradient(1200px 800px at 20% -10%, rgba(59,130,246,0.06), transparent 60%),
+      radial-gradient(1000px 700px at 80% 110%, rgba(139,92,246,0.05), transparent 60%),
+      var(--page-bg);
+    color: #dbe4f1;
+    min-height: 100vh;
+    padding: 56px 24px 96px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ─── Page head ─── */
+  .page-head { max-width: 1240px; margin: 0 auto 48px; text-align: center; }
+  .page-kicker {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 600; letter-spacing: .18em;
+    text-transform: uppercase; color: #64748b;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.02);
+    border-radius: 99px; padding: 6px 14px; margin-bottom: 18px;
+  }
+  .page-kicker .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent-lite); box-shadow: 0 0 8px var(--accent-glow);
+  }
+  .page-title {
+    font-family: var(--font-display); font-size: 38px; font-weight: 400;
+    color: #e6eefd; letter-spacing: -.01em; line-height: 1.1;
+  }
+  .page-title em {
+    font-style: italic;
+    background: linear-gradient(135deg, #93c5fd, #c4b5fd);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .page-sub {
+    margin: 10px auto 0; font-size: 13px; color: #6f7f99;
+    max-width: 640px; line-height: 1.6;
+  }
+  .replay-hint {
+    margin-top: 14px;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 11px;
+    color: #6b7a98;
+    padding: 5px 10px;
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: 6px;
+  }
+  .replay-hint svg { color: #93c5fd; }
+
+  /* ─── Concept layout ─── */
+  .concepts {
+    max-width: 1240px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 40px 32px;
+  }
+  .concept { display: flex; flex-direction: column; }
+  .concept-head {
+    display: flex; align-items: baseline; gap: 10px;
+    margin-bottom: 14px; padding-left: 4px;
+  }
+  .concept-num {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+    color: #4a5878; letter-spacing: .1em;
+  }
+  .concept-name {
+    font-size: 15px; font-weight: 600; color: #d7e1f2; letter-spacing: -.01em;
+  }
+  .concept-tag {
+    margin-left: auto; font-size: 10px; font-weight: 600; letter-spacing: .12em;
+    text-transform: uppercase; color: #7b8aa6;
+    padding: 3px 8px; border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 4px; background: rgba(255,255,255,0.02);
+  }
+
+  /* ─── Screen base ─── */
+  .screen {
+    position: relative; height: 680px;
+    border-radius: 24px; overflow: hidden;
+    background:
+      radial-gradient(900px 700px at 50% 40%, #f4f7fc 0%, transparent 65%),
+      linear-gradient(180deg, #e8edf6 0%, #d7dff0 100%);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.04),
+      0 30px 80px -20px rgba(0,0,0,0.55),
+      0 12px 30px -10px rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px; font-family: var(--font-body); color: var(--ink-800);
+  }
+  .screen::before {
+    content: '';
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 440px; height: 440px; border-radius: 50%;
+    background:
+      radial-gradient(circle, rgba(59,130,246,0.1) 0%, rgba(139,92,246,0.03) 45%, transparent 70%);
+    filter: blur(10px);
+    pointer-events: none;
+  }
+
+  /* ─── Shared stack (brand moment body) ─── */
+  .stack {
+    position: relative; z-index: 2;
+    text-align: center; width: 100%; max-width: 460px;
+  }
+  .stamp {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px 6px 8px;
+    font-family: var(--font-mono); font-size: 10.5px; font-weight: 500;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--ink-700);
+    background: rgba(255,255,255,0.75);
+    border: 1px solid rgba(15,23,42,0.05);
+    border-radius: 99px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset;
+  }
+  .stamp .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #22c55e;
+    box-shadow: 0 0 8px rgba(34,197,94,0.6);
+  }
+  .h-hero {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: 40px; line-height: 1.02; letter-spacing: -.02em;
+    color: var(--ink-900);
+  }
+  .h-hero em {
+    font-style: italic;
+    background: linear-gradient(135deg, #2563eb, #8b5cf6);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .org-line {
+    font-size: 13.5px; font-weight: 500; color: var(--ink-700);
+    line-height: 1.5; max-width: 380px; margin: 0 auto;
+  }
+  .rule {
+    width: 50px; height: 1px;
+    background: linear-gradient(90deg, transparent, #94a3b8, transparent);
+    margin: 0 auto;
+  }
+  .numline {
+    display: inline-flex; align-items: baseline; gap: 12px;
+  }
+  .num {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: 64px; line-height: 1; color: var(--ink-900); letter-spacing: -.04em;
+  }
+  .num em { font-style: italic; color: var(--accent); }
+  .numtxt { text-align: left; display: flex; flex-direction: column; gap: 2px; }
+  .numtxt strong { font-size: 13px; font-weight: 600; color: var(--ink-900); }
+  .numtxt small { font-size: 11.5px; color: var(--ink-500); font-weight: 400; }
+
+  .cta-row { display: inline-flex; align-items: center; gap: 10px; }
+  .cta {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 12px 20px 12px 22px;
+    border: none; border-radius: 99px;
+    background: linear-gradient(180deg, #0b1a36 0%, #0a1630 100%);
+    color: #fff; font-family: var(--font-body); font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.08) inset,
+      0 14px 30px -10px rgba(11,26,54,0.5);
+    transition: transform .15s;
+  }
+  .cta:hover { transform: translateY(-1px); }
+  .cta .arrow {
+    display: inline-flex; width: 20px; height: 20px;
+    border-radius: 50%; background: rgba(255,255,255,0.1);
+    align-items: center; justify-content: center;
+    transition: transform .25s;
+  }
+  .cta:hover .arrow { transform: translateX(3px); }
+  .back {
+    font-size: 12.5px; font-weight: 500; color: var(--ink-500);
+    background: transparent; border: none; cursor: pointer; padding: 12px 10px;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     SHARED: cycle helpers
+     Each concept runs an 8s cycle that re-triggers its entrance
+     animation via a wrapping `.cycle` element with animation-delay.
+     ═══════════════════════════════════════════════════════════════ */
+  .cycle { animation: cycle 8s infinite; }
+  @keyframes cycle {
+    0%, 99% { opacity: 1; }
+    99.01%  { opacity: 0; animation-timing-function: step-end; }
+    100%    { opacity: 1; }
+  }
+  .reveal-group > * { opacity: 0; animation: reveal-up .7s ease both; }
+  @keyframes reveal-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     CONCEPT 05 — QR LOCK-IN
+     ═══════════════════════════════════════════════════════════════ */
+  .c5-screen::before { display: none; }
+  .c5-screen {
+    background:
+      radial-gradient(800px 600px at 50% 50%, #f4f7fc 0%, transparent 60%),
+      linear-gradient(180deg, #eaf0fa 0%, #d6dff0 100%);
+  }
+
+  .c5-qr-wrap {
+    position: relative;
+    width: 172px; height: 172px;
+    margin: 0 auto 26px;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.9) inset,
+      0 20px 50px -12px rgba(30,58,138,0.22),
+      0 0 0 6px rgba(59,130,246,0.06);
+    padding: 16px;
+    display: grid; place-items: center;
+  }
+
+  /* corner brackets */
+  .c5-bracket {
+    position: absolute; width: 22px; height: 22px;
+    border: 2.5px solid var(--accent);
+    opacity: 0;
+  }
+  .c5-bracket.tl { top: -6px; left: -6px; border-right: none; border-bottom: none; border-radius: 6px 0 0 0; animation: c5-bracket 8s infinite; animation-delay: .1s; }
+  .c5-bracket.tr { top: -6px; right: -6px; border-left: none; border-bottom: none; border-radius: 0 6px 0 0; animation: c5-bracket 8s infinite; animation-delay: .15s; }
+  .c5-bracket.bl { bottom: -6px; left: -6px; border-right: none; border-top: none; border-radius: 0 0 0 6px; animation: c5-bracket 8s infinite; animation-delay: .2s; }
+  .c5-bracket.br { bottom: -6px; right: -6px; border-left: none; border-top: none; border-radius: 0 0 6px 0; animation: c5-bracket 8s infinite; animation-delay: .25s; }
+  @keyframes c5-bracket {
+    0%   { opacity: 0; transform: scale(0.6); }
+    6%   { opacity: 1; transform: scale(1); }
+    70%  { opacity: 1; transform: scale(1); }
+    80%  { opacity: 0.3; }
+    100% { opacity: 0; }
+  }
+
+  /* QR grid */
+  .c5-grid {
+    position: relative;
+    width: 100%; height: 100%;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    gap: 3px;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .c5-cell { background: var(--ink-900); border-radius: 2px; opacity: 0; animation: c5-cell 8s infinite; }
+  .c5-cell.blank { background: transparent !important; animation: none; opacity: 1; }
+  @keyframes c5-cell {
+    0%, 8%   { opacity: 0; transform: scale(0.4); }
+    18%      { opacity: 1; transform: scale(1); }
+    65%      { opacity: 1; }
+    75%      { opacity: 0.25; }
+    100%     { opacity: 0; }
+  }
+
+  /* finder patterns */
+  .c5-finder {
+    position: absolute; width: 42%; height: 42%;
+    border: 4px solid var(--ink-900);
+    border-radius: 6px;
+    background: #fff;
+    display: grid; place-items: center;
+    opacity: 0; animation: c5-finder 8s infinite;
+  }
+  .c5-finder::after {
+    content: ''; width: 42%; height: 42%;
+    background: var(--ink-900); border-radius: 2px;
+  }
+  .c5-finder.tl { top: 5%; left: 5%; animation-delay: .3s; }
+  .c5-finder.tr { top: 5%; right: 5%; animation-delay: .35s; }
+  .c5-finder.bl { bottom: 5%; left: 5%; animation-delay: .4s; }
+  @keyframes c5-finder {
+    0%, 8% { opacity: 0; transform: scale(0.5); }
+    20%    { opacity: 1; transform: scale(1); }
+    65%    { opacity: 1; }
+    75%    { opacity: 0; }
+    100%   { opacity: 0; }
+  }
+
+  /* laser scan line */
+  .c5-laser {
+    position: absolute; left: 0; right: 0; top: 0; height: 4px;
+    background: linear-gradient(90deg, transparent, var(--accent-lite), transparent);
+    box-shadow: 0 0 16px 3px var(--accent-glow);
+    opacity: 0;
+    animation: c5-laser 8s infinite;
+  }
+  @keyframes c5-laser {
+    0%  { top: 0;    opacity: 0; }
+    5%  { opacity: 1; }
+    40% { top: calc(100% - 4px); opacity: 1; }
+    50% { top: calc(100% - 4px); opacity: 0; }
+    65% { opacity: 0; }
+    100%{ opacity: 0; }
+  }
+
+  /* check overlay that appears after scan */
+  .c5-check {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    opacity: 0; animation: c5-check 8s infinite;
+  }
+  .c5-check-disc {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: linear-gradient(180deg, #10b981, #059669);
+    display: grid; place-items: center;
+    box-shadow: 0 10px 30px -6px rgba(16,185,129,0.55);
+  }
+  .c5-check-disc svg { color: #fff; width: 28px; height: 28px; }
+  @keyframes c5-check {
+    0%, 55% { opacity: 0; transform: scale(0.4); }
+    62%     { opacity: 1; transform: scale(1.08); }
+    68%     { transform: scale(1); }
+    85%     { opacity: 1; }
+    95%     { opacity: 0; }
+    100%    { opacity: 0; }
+  }
+
+  /* success ring burst */
+  .c5-burst {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 60px; height: 60px; border-radius: 50%;
+    border: 2px solid var(--emerald);
+    opacity: 0; animation: c5-burst 8s infinite;
+  }
+  @keyframes c5-burst {
+    0%, 60% { opacity: 0; transform: translate(-50%,-50%) scale(1); }
+    65%     { opacity: 0.7; }
+    80%     { opacity: 0; transform: translate(-50%,-50%) scale(2.8); }
+    100%    { opacity: 0; }
+  }
+
+  /* content reveal after scan completes */
+  .c5-content { animation-delay: 2.3s; }
+  .c5-content > * { animation-delay: calc(2.3s + var(--d, 0s)); }
+
+  /* ═══════════════════════════════════════════════════════════════
+     CONCEPT 06 — VAULT UNLOCK
+     ═══════════════════════════════════════════════════════════════ */
+  .c6-screen {
+    background:
+      radial-gradient(800px 600px at 50% 45%, #f4f7fc 0%, transparent 60%),
+      linear-gradient(180deg, #eef2fa 0%, #d9e1f2 100%);
+  }
+  .c6-vault {
+    position: relative; width: 140px; height: 140px;
+    margin: 0 auto 28px;
+    display: grid; place-items: center;
+  }
+  .c6-vault-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(160deg, rgba(255,255,255,0.85), rgba(255,255,255,0.45));
+    border: 1px solid rgba(255,255,255,0.85);
+    border-radius: 28px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.95) inset,
+      0 20px 50px -10px rgba(30,58,138,0.22);
+  }
+
+  /* shield svg paths */
+  .c6-shield {
+    position: relative; z-index: 2;
+    width: 74px; height: 74px;
+    color: var(--accent);
+  }
+  .c6-shield svg { width: 100%; height: 100%; overflow: visible; }
+  .c6-shield .shield-path {
+    fill: none; stroke: currentColor;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 120; stroke-dashoffset: 120;
+    animation: c6-draw-shield 8s infinite;
+  }
+  .c6-shield .shield-fill {
+    fill: rgba(59,130,246,0.12);
+    opacity: 0;
+    animation: c6-fill 8s infinite;
+  }
+  .c6-shield .check-path {
+    fill: none; stroke: var(--emerald);
+    stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 22; stroke-dashoffset: 22;
+    animation: c6-draw-check 8s infinite;
+  }
+  @keyframes c6-draw-shield {
+    0%   { stroke-dashoffset: 120; }
+    12%  { stroke-dashoffset: 0; }
+    75%  { stroke-dashoffset: 0; opacity: 1; }
+    90%  { opacity: 0; }
+    100% { stroke-dashoffset: 120; opacity: 0; }
+  }
+  @keyframes c6-fill {
+    0%, 12%  { opacity: 0; }
+    20%      { opacity: 1; }
+    75%      { opacity: 1; }
+    90%      { opacity: 0; }
+    100%     { opacity: 0; }
+  }
+  @keyframes c6-draw-check {
+    0%, 20% { stroke-dashoffset: 22; }
+    30%     { stroke-dashoffset: 0; }
+    75%     { stroke-dashoffset: 0; opacity: 1; }
+    90%     { opacity: 0; }
+    100%    { stroke-dashoffset: 22; opacity: 0; }
+  }
+
+  /* energy rings */
+  .c6-ring {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 90px; height: 90px;
+    border: 2px solid var(--accent-lite);
+    border-radius: 50%;
+    opacity: 0;
+    animation: c6-ring 8s infinite;
+  }
+  .c6-ring.r2 { animation-delay: .5s; border-color: var(--violet); }
+  .c6-ring.r3 { animation-delay: 1s; border-color: var(--emerald); }
+  @keyframes c6-ring {
+    0%, 30% { opacity: 0; transform: translate(-50%,-50%) scale(0.7); }
+    35%     { opacity: 0.7; }
+    55%     { opacity: 0; transform: translate(-50%,-50%) scale(2.2); }
+    100%    { opacity: 0; }
+  }
+
+  /* subtle glow behind vault */
+  .c6-glow {
+    position: absolute; inset: -20px; border-radius: 36px;
+    background: radial-gradient(circle, rgba(59,130,246,0.25), transparent 65%);
+    filter: blur(16px);
+    opacity: 0;
+    animation: c6-glow 8s infinite;
+  }
+  @keyframes c6-glow {
+    0%, 12% { opacity: 0; }
+    25%     { opacity: 1; }
+    75%     { opacity: 1; }
+    100%    { opacity: 0; }
+  }
+
+  .c6-content { animation-delay: 1.6s; }
+  .c6-content > * { animation-delay: calc(1.6s + var(--d, 0s)); }
+
+  /* ═══════════════════════════════════════════════════════════════
+     CONCEPT 07 — CONSTELLATION / NETWORK PING
+     ═══════════════════════════════════════════════════════════════ */
+  .c7-screen {
+    background:
+      radial-gradient(800px 600px at 50% 45%, #f3f6fc 0%, transparent 60%),
+      linear-gradient(180deg, #ebf0fa 0%, #d5deef 100%);
+  }
+  .c7-canvas {
+    position: relative; width: 200px; height: 140px;
+    margin: 0 auto 22px;
+  }
+
+  /* radar rings pulsing from center */
+  .c7-ping {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 20px; height: 20px;
+    border: 1.5px solid var(--accent);
+    border-radius: 50%;
+    opacity: 0;
+    animation: c7-ping 8s infinite;
+  }
+  .c7-ping.p2 { animation-delay: .3s; border-color: var(--violet); }
+  .c7-ping.p3 { animation-delay: .6s; border-color: var(--emerald); }
+  .c7-ping.p4 { animation-delay: .9s; border-color: var(--accent); }
+  @keyframes c7-ping {
+    0%, 8%  { opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
+    14%     { opacity: 0.7; }
+    35%     { opacity: 0; transform: translate(-50%,-50%) scale(8); }
+    100%    { opacity: 0; }
+  }
+
+  /* constellation nodes */
+  .c7-node {
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+    opacity: 0;
+    animation: c7-node 8s infinite;
+  }
+  .c7-node.n1 { top: 15%;  left: 30%; animation-delay: .4s; background: var(--accent-lite); }
+  .c7-node.n2 { top: 20%;  left: 70%; animation-delay: .55s; background: var(--violet); }
+  .c7-node.n3 { top: 55%;  left: 15%; animation-delay: .7s; }
+  .c7-node.n4 { top: 55%;  left: 85%; animation-delay: .85s; background: var(--violet); }
+  .c7-node.n5 { top: 88%;  left: 50%; animation-delay: 1s;  background: var(--emerald); }
+  .c7-node.center {
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 14px; height: 14px; background: var(--ink-900);
+    animation-delay: 1.2s;
+    box-shadow: 0 0 20px rgba(11,26,54,0.4);
+  }
+  @keyframes c7-node {
+    0%, 25% { opacity: 0; transform: scale(0.4); }
+    30%     { opacity: 1; transform: scale(1.3); }
+    35%     { transform: scale(1); }
+    75%     { opacity: 1; }
+    90%     { opacity: 0; }
+    100%    { opacity: 0; }
+  }
+
+  /* connection lines (SVG overlay) */
+  .c7-lines {
+    position: absolute; inset: 0; pointer-events: none;
+  }
+  .c7-lines svg { width: 100%; height: 100%; }
+  .c7-lines path {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1;
+    stroke-dasharray: 200; stroke-dashoffset: 200;
+    opacity: 0.35;
+    animation: c7-line 8s infinite;
+  }
+  .c7-lines path.l1 { animation-delay: 1.4s; }
+  .c7-lines path.l2 { animation-delay: 1.5s; stroke: var(--violet); }
+  .c7-lines path.l3 { animation-delay: 1.6s; }
+  .c7-lines path.l4 { animation-delay: 1.7s; stroke: var(--violet); }
+  .c7-lines path.l5 { animation-delay: 1.8s; stroke: var(--emerald); }
+  @keyframes c7-line {
+    0%, 17% { stroke-dashoffset: 200; opacity: 0; }
+    25%     { opacity: 0.5; }
+    30%     { stroke-dashoffset: 0; opacity: 0.5; }
+    75%     { stroke-dashoffset: 0; opacity: 0.5; }
+    90%     { opacity: 0; }
+    100%    { stroke-dashoffset: 200; opacity: 0; }
+  }
+
+  /* network status label above */
+  .c7-status {
+    font-family: var(--font-mono); font-size: 10.5px;
+    font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-500);
+    display: inline-flex; align-items: center; gap: 7px;
+    margin-bottom: 10px;
+  }
+  .c7-status .blip {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--emerald);
+    animation: c7-blip 1.2s ease-in-out infinite;
+  }
+  @keyframes c7-blip {
+    50% { opacity: 0.3; transform: scale(0.75); }
+  }
+
+  .c7-content { animation-delay: 2.4s; }
+  .c7-content > * { animation-delay: calc(2.4s + var(--d, 0s)); }
+
+  /* ═══════════════════════════════════════════════════════════════
+     CONCEPT 08 — CIPHER DECRYPT
+     ═══════════════════════════════════════════════════════════════ */
+  .c8-screen {
+    background:
+      radial-gradient(800px 600px at 50% 45%, #f4f7fc 0%, transparent 60%),
+      linear-gradient(180deg, #eef1f9 0%, #d4dcee 100%);
+  }
+  .c8-seal {
+    width: 64px; height: 64px; border-radius: 18px; margin: 0 auto 22px;
+    background: linear-gradient(160deg, rgba(255,255,255,0.9), rgba(255,255,255,0.55));
+    border: 1px solid rgba(255,255,255,0.85);
+    display: grid; place-items: center;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.95) inset,
+      0 14px 30px -10px rgba(30,58,138,0.25);
+    position: relative;
+  }
+  .c8-seal svg { width: 32px; height: 32px; }
+  .c8-seal::after {
+    content: ''; position: absolute; inset: -6px;
+    border-radius: 24px;
+    background: conic-gradient(from 180deg, transparent 0%, rgba(59,130,246,0.35) 25%, transparent 40%, transparent 100%);
+    animation: c8-halo 4s linear infinite;
+    filter: blur(5px);
+    z-index: -1;
+  }
+  @keyframes c8-halo { to { transform: rotate(360deg); } }
+
+  .c8-decrypt-kicker {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--ink-500); letter-spacing: .14em; text-transform: uppercase;
+    margin-bottom: 10px;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .c8-decrypt-kicker .cursor {
+    display: inline-block; width: 7px; height: 10px;
+    background: var(--accent);
+    animation: c8-cursor 1s step-end infinite;
+  }
+  @keyframes c8-cursor { 50% { opacity: 0; } }
+
+  /* line 1 — org name cipher */
+  .c8-line {
+    font-family: var(--font-mono); font-size: 16px;
+    color: var(--ink-900); font-weight: 500; letter-spacing: .08em;
+    text-align: center;
+    margin-bottom: 4px;
+    min-height: 22px;
+  }
+  .c8-line span {
+    display: inline-block;
+    position: relative;
+    width: 13px; text-align: center;
+  }
+  .c8-line span::before {
+    content: attr(data-scramble);
+    color: var(--ink-400);
+    animation: c8-scramble 8s infinite steps(1);
+  }
+  .c8-line span::after {
+    content: attr(data-final);
+    position: absolute; left: 0; right: 0;
+    opacity: 0;
+    animation: c8-reveal 8s infinite;
+    color: var(--ink-900);
+  }
+  /* staggered reveal */
+  .c8-line span:nth-child(1)  { animation-delay: 0s; }
+  .c8-line span:nth-child(1)::after { animation-delay: 0.0s; }
+  .c8-line span:nth-child(2)::after { animation-delay: 0.05s; }
+  .c8-line span:nth-child(3)::after { animation-delay: 0.10s; }
+  .c8-line span:nth-child(4)::after { animation-delay: 0.15s; }
+  .c8-line span:nth-child(5)::after { animation-delay: 0.20s; }
+  .c8-line span:nth-child(6)::after { animation-delay: 0.25s; }
+  .c8-line span:nth-child(7)::after { animation-delay: 0.30s; }
+  .c8-line span:nth-child(8)::after { animation-delay: 0.35s; }
+  .c8-line span:nth-child(9)::after { animation-delay: 0.40s; }
+  .c8-line span:nth-child(10)::after{ animation-delay: 0.45s; }
+  .c8-line span:nth-child(11)::after{ animation-delay: 0.50s; }
+  .c8-line span:nth-child(12)::after{ animation-delay: 0.55s; }
+  .c8-line span:nth-child(13)::after{ animation-delay: 0.60s; }
+  .c8-line span:nth-child(14)::after{ animation-delay: 0.65s; }
+  @keyframes c8-scramble {
+    0%, 5%  { opacity: 1; }
+    8%      { opacity: 0; }
+    75%     { opacity: 0; }
+    88%     { opacity: 1; }
+    100%    { opacity: 1; }
+  }
+  @keyframes c8-reveal {
+    0%, 8%  { opacity: 0; }
+    15%     { opacity: 1; }
+    75%     { opacity: 1; }
+    88%     { opacity: 0; }
+    100%    { opacity: 0; }
+  }
+
+  .c8-sub {
+    font-family: var(--font-mono); font-size: 11.5px;
+    color: var(--ink-500); margin-bottom: 24px; margin-top: 4px;
+    letter-spacing: .06em;
+  }
+  .c8-sub em { font-style: normal; color: var(--ink-800); font-weight: 500; }
+
+  /* the display-serif hero that reveals after decrypt */
+  .c8-hero-wrap { opacity: 0; animation: c8-hero 8s infinite; }
+  @keyframes c8-hero {
+    0%, 20% { opacity: 0; filter: blur(10px); transform: translateY(10px); }
+    30%     { opacity: 1; filter: blur(0); transform: none; }
+    82%     { opacity: 1; }
+    90%     { opacity: 0; }
+    100%    { opacity: 0; }
+  }
+
+  .c8-content { animation-delay: 1.8s; }
+  .c8-content > * { animation-delay: calc(1.8s + var(--d, 0s)); }
+
+  /* ─── Concept notes ─── */
+  .concept-notes {
+    max-width: 1240px; margin: 64px auto 0;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px 32px;
+  }
+  .note {
+    padding: 22px 24px;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+  }
+  .note-h {
+    font-size: 13px; font-weight: 600; color: #e6eefd;
+    letter-spacing: -.005em; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .note-h span.num {
+    font-family: var(--font-mono); font-size: 11px; color: #93c5fd;
+    background: rgba(59,130,246,0.1); padding: 2px 6px; border-radius: 4px;
+  }
+  .note-h span.verdict {
+    margin-left: auto; font-size: 10px; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase; color: #64748b;
+    padding: 3px 8px; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px;
+  }
+  .note-h span.verdict.recommend {
+    color: #86efac; border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.08);
+  }
+  .note-body {
+    font-size: 12.5px; color: #9ba9c2; line-height: 1.65; margin-bottom: 10px;
+    text-align: justify; text-justify: inter-word;
+  }
+  .note-motion {
+    font-size: 11px; color: #6b7a98; padding-top: 10px;
+    border-top: 1px dashed rgba(255,255,255,0.06); line-height: 1.55;
+  }
+  .note-motion b { color: #c4b5fd; font-weight: 600; margin-right: 6px; }
+
+  .footer-verdict {
+    max-width: 1240px; margin: 40px auto 0;
+    padding: 22px 26px; border-radius: 16px;
+    background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(139,92,246,0.08));
+    border: 1px solid rgba(147,197,253,0.15);
+    font-size: 13px; color: #d7e1f2; line-height: 1.7;
+    text-align: justify; text-justify: inter-word;
+  }
+  .footer-verdict b { color: #93c5fd; font-weight: 600; }
+
+  @media (max-width: 1080px) {
+    .concepts, .concept-notes { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── Page Header ─── -->
+<div class="page-head">
+  <div class="page-kicker">
+    <span class="dot"></span>
+    VERA · Animated Brand Moments
+  </div>
+  <h1 class="page-title">Four animated <em>arrival</em> moments.</h1>
+  <p class="page-sub">
+    Continuing the editorial brand-moment direction of Concept 04 — but now centered on the one-time choreography that plays as the juror lands on the screen.
+    Each cycle runs on an 8-second loop so you can see the moment re-trigger live.
+  </p>
+  <div class="replay-hint">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.2-8.55"/><path d="M21 4v5h-5"/></svg>
+    Animations loop every 8s · in production they play once on arrival
+  </div>
+</div>
+
+<!-- ─── 4 Concepts ─── -->
+<div class="concepts">
+
+  <!-- ═══════════ 05 · QR LOCK-IN ═══════════ -->
+  <div class="concept">
+    <div class="concept-head">
+      <span class="concept-num">05</span>
+      <span class="concept-name">QR Lock-In</span>
+      <span class="concept-tag">Literal · Scan moment</span>
+    </div>
+
+    <div class="screen c5-screen">
+      <div class="stack">
+
+        <div class="c5-qr-wrap">
+          <span class="c5-bracket tl"></span>
+          <span class="c5-bracket tr"></span>
+          <span class="c5-bracket bl"></span>
+          <span class="c5-bracket br"></span>
+
+          <div class="c5-grid">
+            <!-- pattern: true = filled, false = blank -->
+            <!-- row 1 -->
+            <span class="c5-cell blank"></span><span class="c5-cell"></span><span class="c5-cell blank"></span><span class="c5-cell"></span><span class="c5-cell"></span><span class="c5-cell blank"></span><span class="c5-cell blank"></span>
+            <!-- row 2 -->
+            <span class="c5-cell"></span><span class="c5-cell blank"></span><span class="c5-cell"></span><span class="c5-cell blank"></span><span class="c5-cell blank"></span><span class="c5-cell"></span><span class="c5-cell"></span>
+            <!-- row 3 -->
+            <span class="c5-cell blank"></span><span class="c5-cell"></span><span class="c5-cell"></span><span class="c5-cell"></span><span class="c5-cell blank"></span><span class="c5-cell"></span><span class="c5-cell blank"></span>
+            <!-- row 4 -->
+            <span class="c5-cell"></span><span class="c5-cell blank"></span><span class="c5-cell blank"></span><span class="c5-cell"></span><span class="c5-cell"></span><span class="c5-cell blank"></span><span class="c5-cell"></span>
+            <!-- row 5 -->
+            <span class="c5-cell blank"></span><span class="c5-cell"></span><span class="c5-cell blank"></span><span class="c5-cell blank"></span><span class="c5-cell"></span><span class="c5-cell"></span><span class="c5-cell blank"></span>
+            <!-- row 6 -->
+            <span class="c5-cell"></span><span class="c5-cell blank"></span><span class="c5-cell"></span><span class="c5-cell"></span><span class="c5-cell blank"></span><span class="c5-cell blank"></span><span class="c5-cell"></span>
+            <!-- row 7 -->
+            <span class="c5-cell blank"></span><span class="c5-cell"></span><span class="c5-cell blank"></span><span class="c5-cell"></span><span class="c5-cell blank"></span><span class="c5-cell"></span><span class="c5-cell blank"></span>
+          </div>
+
+          <div class="c5-finder tl"></div>
+          <div class="c5-finder tr"></div>
+          <div class="c5-finder bl"></div>
+
+          <div class="c5-laser"></div>
+          <div class="c5-check">
+            <div class="c5-check-disc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+          </div>
+          <div class="c5-burst"></div>
+        </div>
+
+        <div class="reveal-group c5-content" style="display: flex; flex-direction: column; gap: 14px; align-items: center;">
+          <div class="stamp" style="--d: 0s">
+            <span class="dot"></span>
+            Spring 2026 · Jury Session
+          </div>
+          <h1 class="h-hero" style="--d: .15s">You're <em>in.</em></h1>
+          <p class="org-line" style="--d: .3s">TED University — Electrical-Electronics Engineering. 5 capstone projects await your evaluation.</p>
+          <div class="cta-row" style="--d: .45s; margin-top: 6px">
+            <button class="cta">
+              Begin jury session
+              <span class="arrow">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 06 · VAULT UNLOCK ═══════════ -->
+  <div class="concept">
+    <div class="concept-head">
+      <span class="concept-num">06</span>
+      <span class="concept-name">Vault Unlock</span>
+      <span class="concept-tag">Security · Trust</span>
+    </div>
+
+    <div class="screen c6-screen">
+      <div class="stack">
+
+        <div class="c6-vault">
+          <div class="c6-glow"></div>
+          <div class="c6-vault-bg"></div>
+          <div class="c6-ring"></div>
+          <div class="c6-ring r2"></div>
+          <div class="c6-ring r3"></div>
+          <div class="c6-shield">
+            <svg viewBox="0 0 32 32">
+              <path class="shield-fill" d="M16 2 L28 6 V15 C28 22 22 28 16 30 C10 28 4 22 4 15 V6 Z"/>
+              <path class="shield-path" d="M16 2 L28 6 V15 C28 22 22 28 16 30 C10 28 4 22 4 15 V6 Z"/>
+              <path class="check-path" d="M11 16 l4 4 l7 -7"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="reveal-group c6-content" style="display: flex; flex-direction: column; gap: 14px; align-items: center;">
+          <div class="stamp" style="--d: 0s">
+            <span class="dot"></span>
+            Access · Verified
+          </div>
+          <h1 class="h-hero" style="--d: .15s">Session <em>unlocked.</em></h1>
+          <p class="org-line" style="--d: .3s">TED University — Electrical-Electronics Engineering · Spring 2026 capstone jury.</p>
+
+          <div class="rule" style="--d: .4s; margin: 4px auto"></div>
+
+          <div class="numline" style="--d: .5s">
+            <div class="num"><em>5</em></div>
+            <div class="numtxt">
+              <strong>projects</strong>
+              <small>ready for review</small>
+            </div>
+          </div>
+
+          <div class="cta-row" style="--d: .65s; margin-top: 8px">
+            <button class="cta">
+              Begin jury session
+              <span class="arrow">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </span>
+            </button>
+            <button class="back">← Home</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 07 · CONSTELLATION / NETWORK ═══════════ -->
+  <div class="concept">
+    <div class="concept-head">
+      <span class="concept-num">07</span>
+      <span class="concept-name">Constellation Verify</span>
+      <span class="concept-tag">Systems · Networked</span>
+    </div>
+
+    <div class="screen c7-screen">
+      <div class="stack">
+
+        <div class="c7-status">
+          <span class="blip"></span>
+          Network · Synchronizing
+        </div>
+
+        <div class="c7-canvas">
+          <div class="c7-ping"></div>
+          <div class="c7-ping p2"></div>
+          <div class="c7-ping p3"></div>
+          <div class="c7-ping p4"></div>
+
+          <div class="c7-lines">
+            <svg viewBox="0 0 200 140" preserveAspectRatio="none">
+              <!-- center at ~100,70 -->
+              <path class="l1" d="M100 70 L60 21"/>
+              <path class="l2" d="M100 70 L140 28"/>
+              <path class="l3" d="M100 70 L30 77"/>
+              <path class="l4" d="M100 70 L170 77"/>
+              <path class="l5" d="M100 70 L100 123"/>
+            </svg>
+          </div>
+
+          <div class="c7-node n1"></div>
+          <div class="c7-node n2"></div>
+          <div class="c7-node n3"></div>
+          <div class="c7-node n4"></div>
+          <div class="c7-node n5"></div>
+          <div class="c7-node center"></div>
+        </div>
+
+        <div class="reveal-group c7-content" style="display: flex; flex-direction: column; gap: 14px; align-items: center;">
+          <h1 class="h-hero" style="--d: 0s">All nodes <em>online.</em></h1>
+          <p class="org-line" style="--d: .15s">You're connected to the Spring 2026 capstone jury at TED University — Electrical-Electronics Engineering.</p>
+
+          <div class="rule" style="--d: .25s; margin: 4px auto"></div>
+
+          <div class="numline" style="--d: .35s">
+            <div class="num"><em>5</em></div>
+            <div class="numtxt">
+              <strong>projects</strong>
+              <small>broadcasting · ready</small>
+            </div>
+          </div>
+
+          <div class="cta-row" style="--d: .5s; margin-top: 8px">
+            <button class="cta">
+              Join jury session
+              <span class="arrow">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </span>
+            </button>
+            <button class="back">← Home</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 08 · CIPHER DECRYPT ═══════════ -->
+  <div class="concept">
+    <div class="concept-head">
+      <span class="concept-num">08</span>
+      <span class="concept-name">Cipher Decrypt</span>
+      <span class="concept-tag">Cryptographic · Editorial</span>
+    </div>
+
+    <div class="screen c8-screen">
+      <div class="stack">
+
+        <div class="c8-seal">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="vm8" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#60a5fa"/>
+                <stop offset="1" stop-color="#1e3a8a"/>
+              </linearGradient>
+            </defs>
+            <path d="M4 6 L16 28 L28 6 L22 6 L16 18 L10 6 Z" fill="url(#vm8)"/>
+          </svg>
+        </div>
+
+        <div class="c8-decrypt-kicker">
+          Decrypting entry token<span class="cursor"></span>
+        </div>
+
+        <!-- TED UNIVERSITY  (14 chars incl. space) -->
+        <div class="c8-line">
+          <span data-scramble="T" data-final="T"></span>
+          <span data-scramble="X" data-final="E"></span>
+          <span data-scramble="#" data-final="D"></span>
+          <span data-scramble="&nbsp;" data-final="&nbsp;"></span>
+          <span data-scramble="7" data-final="U"></span>
+          <span data-scramble="Q" data-final="N"></span>
+          <span data-scramble="k" data-final="I"></span>
+          <span data-scramble="2" data-final="V"></span>
+          <span data-scramble="@" data-final="E"></span>
+          <span data-scramble="ß" data-final="R"></span>
+          <span data-scramble="9" data-final="S"></span>
+          <span data-scramble="%" data-final="I"></span>
+          <span data-scramble="Z" data-final="T"></span>
+          <span data-scramble="§" data-final="Y"></span>
+        </div>
+        <div class="c8-sub">
+          <em>EEE · SPR26</em> · 5 GROUPS · TOKEN OK
+        </div>
+
+        <div class="c8-hero-wrap">
+          <h1 class="h-hero" style="font-size: 38px; line-height: 1.02">Welcome,<br/><em>juror.</em></h1>
+        </div>
+
+        <div class="reveal-group c8-content" style="display: flex; flex-direction: column; gap: 14px; align-items: center; margin-top: 18px;">
+          <div class="numline" style="--d: 0s">
+            <div class="num"><em>5</em></div>
+            <div class="numtxt">
+              <strong>projects await</strong>
+              <small>your evaluation</small>
+            </div>
+          </div>
+          <div class="cta-row" style="--d: .2s; margin-top: 4px">
+            <button class="cta">
+              Begin jury session
+              <span class="arrow">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </span>
+            </button>
+            <button class="back">← Home</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─── Concept Notes ─── -->
+<div class="concept-notes">
+
+  <div class="note">
+    <div class="note-h">
+      <span class="num">05</span>
+      QR Lock-In
+      <span class="verdict recommend">Most intuitive</span>
+    </div>
+    <p class="note-body">
+      The literal continuation of the physical moment the juror just lived through. A stylized QR renders pixel-by-pixel, the three finder brackets snap into place, a laser scan sweeps top-to-bottom, and the whole surface resolves into a green success disc with an outward ring-burst. Instantly legible — "yes, the scan worked, you're in."
+    </p>
+    <div class="note-motion"><b>Motion</b>~2.3s choreography: brackets pop → grid fills → laser sweep → finders snap → check disc + ring burst. Content cascades in after the burst.</div>
+  </div>
+
+  <div class="note">
+    <div class="note-h">
+      <span class="num">06</span>
+      Vault Unlock
+      <span class="verdict recommend">Most premium</span>
+    </div>
+    <p class="note-body">
+      Cryptographic ceremony. A shield stroke draws itself, fills with soft blue, then an emerald checkmark strokes in on top. Three concentric energy rings expand outward at staggered offsets. Reads as "session key verified" — rigor without being clinical. Pairs naturally with the editorial type below.
+    </p>
+    <div class="note-motion"><b>Motion</b>Shield path draws 0→1s, fill fades in 1.6s, check draws 1.6–2s, rings pulse 1.5–3s. Content reveals after 1.6s.</div>
+  </div>
+
+  <div class="note">
+    <div class="note-h">
+      <span class="num">07</span>
+      Constellation Verify
+      <span class="verdict">Distinctive</span>
+    </div>
+    <p class="note-body">
+      Network-grade identity. A center node radiates radar pings, outer constellation nodes fade in from the edges, then hairline connection lines stroke-draw between them. Ends on "All nodes online." The metaphor fits the multi-tenant architecture cleanly — this is the variant to use if VERA's story becomes "the network for academic juries."
+    </p>
+    <div class="note-motion"><b>Motion</b>Pings 0–1.5s, nodes fade in 0.4–1.2s staggered, lines stroke-draw 1.4–2.1s. Content reveals after 2.4s.</div>
+  </div>
+
+  <div class="note">
+    <div class="note-h">
+      <span class="num">08</span>
+      Cipher Decrypt
+      <span class="verdict">Most memorable</span>
+    </div>
+    <p class="note-body">
+      Text decrypts from scrambled monospace characters into "TED UNIVERSITY" letter-by-letter, then the editorial serif headline materializes out of blur above it. Conveys the invisible handshake (entry-token verify, tenant resolution) as a visible spectacle without feeling theatrical. The most "wow first-impression" option.
+    </p>
+    <div class="note-motion"><b>Motion</b>Cursor blink + cipher scramble 0–0.7s, letter-by-letter reveal 0–1.2s, serif hero blur-in 2–3s, CTA cascade after.</div>
+  </div>
+
+</div>
+
+<div class="footer-verdict">
+  <b>Which one to ship →</b>
+  <b>Concept 05 (QR Lock-In)</b> is the strongest default — it closes the loop on the physical QR scan the juror just performed, and the success burst makes the moment feel earned rather than decorative.
+  <b>Concept 06 (Vault Unlock)</b> is the premium fallback if the QR pixel grid feels too busy against the rest of the app; the shield-draw carries the same trust signal with more restraint.
+  <b>Concept 08 (Cipher Decrypt)</b> is the one to use in demo / marketing screenshots — it photographs beautifully and reads as distinctive tech craft.
+  <b>Concept 07 (Constellation)</b> is a long-bet option — save it for the moment you want to reframe VERA as a platform story rather than a tool story.
+</div>
+
+</body>
+</html>

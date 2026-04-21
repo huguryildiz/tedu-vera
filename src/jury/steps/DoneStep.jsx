@@ -281,7 +281,7 @@ export default function DoneStep({ state, onBack }) {
         {/* ═══ LAYER 4: Return Home ═══ */}
         <div className="login-footer" style={{ marginTop: "20px" }}>
           <button type="button" className="form-link" onClick={handleReturnHome}>
-            ← Return Home
+            &larr; Return Home
           </button>
         </div>
 

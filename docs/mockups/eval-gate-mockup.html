@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VERA — /eval Gate · All States Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --font-display: 'Syne', system-ui, sans-serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-mono:    'DM Mono', ui-monospace, monospace;
+
+  --navy-950: #03070f;
+  --navy-900: #050d1c;
+  --navy-800: #091428;
+  --navy-700: #0e1e3a;
+  --navy-600: #162648;
+  --navy-500: #1e3158;
+
+  --slate-700: #1e2d45;
+  --slate-400: #5f7a9e;
+  --slate-300: #8ba4c5;
+  --slate-200: #b8cfe8;
+  --slate-100: #dde8f5;
+
+  --accent:      #3b82f6;
+  --accent-glow: rgba(59,130,246,0.25);
+  --accent-dim:  rgba(59,130,246,0.12);
+
+  --indigo:      #6366f1;
+  --indigo-glow: rgba(99,102,241,0.2);
+
+  --danger:      #f43f5e;
+  --danger-glow: rgba(244,63,94,0.22);
+  --danger-dim:  rgba(244,63,94,0.1);
+
+  --success:     #10b981;
+  --success-glow:rgba(16,185,129,0.22);
+  --success-dim: rgba(16,185,129,0.1);
+
+  --card-bg:  rgba(255,255,255,0.032);
+  --card-border: rgba(255,255,255,0.075);
+  --card-glow: rgba(59,130,246,0.06);
+}
+
+/* ─── Document ─────────────────────────────────────── */
+body {
+  font-family: var(--font-body);
+  background: var(--navy-900);
+  color: var(--slate-200);
+  min-height: 100vh;
+  padding: 56px 24px 80px;
+}
+
+/* ─── Mockup header ─────────────────────────────────── */
+.mockup-header {
+  text-align: center;
+  margin-bottom: 52px;
+}
+.mockup-kicker {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--slate-400);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 20px;
+  padding: 4px 14px;
+  margin-bottom: 14px;
+}
+.mockup-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--slate-100);
+  letter-spacing: -.02em;
+}
+.mockup-subtitle {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--slate-400);
+}
+
+/* ─── State column labels ───────────────────────────── */
+.states-row {
+  display: grid;
+  grid-template-columns: repeat(3, 380px);
+  gap: 32px;
+  justify-content: center;
+}
+
+.state-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.state-col-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--slate-400);
+}
+.state-col-label .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+.dot-idle    { background: var(--slate-400); }
+.dot-loading { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.dot-denied  { background: var(--danger);  box-shadow: 0 0 6px var(--danger); }
+
+/* ─── Screen wrapper ─────────────────────────────────── */
+.screen-wrap {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  padding: 52px 24px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 0%, rgba(59,130,246,0.08) 0%, transparent 65%),
+    linear-gradient(170deg, #050e20 0%, #07111f 40%, #060c1a 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.045),
+    0 32px 80px rgba(0,0,0,0.7);
+  min-height: 540px;
+}
+
+/* Fine grid texture */
+.screen-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+}
+
+/* Top ambient glow orb */
+.screen-wrap::after {
+  content: '';
+  position: absolute;
+  top: -60px; left: 50%;
+  transform: translateX(-50%);
+  width: 280px; height: 200px;
+  background: radial-gradient(ellipse, rgba(59,130,246,0.13) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.screen-wrap.denied-bg::after {
+  background: radial-gradient(ellipse, rgba(244,63,94,0.1) 0%, transparent 70%);
+}
+
+/* ─── VERA logo mark ─────────────────────────────────── */
+.vera-logomark {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+.vera-mark {
+  width: 40px;
+  height: 40px;
+  position: relative;
+}
+/* Outer ring */
+.vera-mark::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(59,130,246,0.18), rgba(99,102,241,0.12));
+  border: 1px solid rgba(59,130,246,0.22);
+  box-shadow:
+    0 4px 16px rgba(59,130,246,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.vera-mark-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* V chevron */
+.vera-v {
+  width: 18px; height: 14px;
+  position: relative;
+}
+.vera-v::before,
+.vera-v::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 11px; height: 2.5px;
+  background: linear-gradient(90deg, #60a5fa, #818cf8);
+  border-radius: 2px;
+}
+.vera-v::before {
+  left: 0;
+  transform-origin: left bottom;
+  transform: rotate(-35deg);
+}
+.vera-v::after {
+  right: 0;
+  transform-origin: right bottom;
+  transform: rotate(35deg);
+}
+
+.vera-wordmark {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--slate-300);
+}
+
+/* ─── Card ─────────────────────────────────────────── */
+.gate-card {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  background: var(--card-bg);
+  backdrop-filter: blur(32px) saturate(1.4);
+  -webkit-backdrop-filter: blur(32px) saturate(1.4);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 32px 28px 28px;
+  box-shadow:
+    0 16px 56px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 0 0 1px rgba(255,255,255,0.02);
+}
+
+/* Scan-line animation on loading card */
+@keyframes scan {
+  0%   { top: -2px; opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { top: calc(100% + 2px); opacity: 0; }
+}
+.gate-card.scanning::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: -2px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  border-radius: 2px;
+  animation: scan 2s cubic-bezier(.4,0,.6,1) infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ─── Card header section ─────────────────────────── */
+.card-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.card-icon-wrap {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  margin: 0 auto 18px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, rgba(59,130,246,0.18), rgba(99,102,241,0.14));
+  border: 1px solid rgba(59,130,246,0.22);
+  box-shadow:
+    0 4px 18px rgba(59,130,246,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+  color: #93c5fd;
+  position: relative;
+  overflow: hidden;
+}
+.card-icon-wrap.loading-icon {
+  background: linear-gradient(145deg, rgba(59,130,246,0.12), rgba(99,102,241,0.1));
+}
+.card-icon-wrap.denied-icon {
+  background: linear-gradient(145deg, rgba(244,63,94,0.16), rgba(239,68,68,0.12));
+  border-color: rgba(244,63,94,0.24);
+  box-shadow: 0 4px 18px rgba(244,63,94,0.18), inset 0 1px 0 rgba(255,255,255,0.07);
+  color: #fda4af;
+}
+
+/* Pulse ring on icon */
+@keyframes ring-pulse {
+  0%   { transform: scale(1); opacity: .6; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+.icon-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  border: 1px solid rgba(59,130,246,0.4);
+  animation: ring-pulse 2s ease-out infinite;
+}
+.denied-ring {
+  border-color: rgba(244,63,94,0.4);
+}
+
+/* Spinner */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner-ring {
+  width: 22px; height: 22px;
+  border: 2.5px solid rgba(147,197,253,0.15);
+  border-top-color: #60a5fa;
+  border-right-color: rgba(147,197,253,0.4);
+  border-radius: 50%;
+  animation: spin .9s linear infinite;
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  color: #e8f0fc;
+  margin-bottom: 6px;
+  background: linear-gradient(160deg, #f0f6ff 0%, #93c5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.card-title.denied-title {
+  background: linear-gradient(160deg, #f0f6ff 0%, #fda4af 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.card-title.loading-title {
+  background: linear-gradient(160deg, #dbe8f8 0%, #93c5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.card-sub {
+  font-size: 13px;
+  color: var(--slate-400);
+  line-height: 1.6;
+}
+
+/* ─── Divider ───────────────────────────────────────── */
+.card-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+  margin: 20px 0;
+}
+
+/* ─── Form ──────────────────────────────────────────── */
+.gate-form { display: flex; flex-direction: column; gap: 10px; }
+
+.input-wrap {
+  position: relative;
+}
+.input-icon {
+  position: absolute;
+  left: 13px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--slate-400);
+  pointer-events: none;
+}
+.gate-input {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 11px;
+  padding: 12px 14px 12px 38px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--slate-100);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.gate-input::placeholder { color: rgba(100,130,170,0.55); }
+.gate-input:focus {
+  border-color: rgba(59,130,246,0.45);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.gate-input.has-value {
+  border-color: rgba(59,130,246,0.3);
+  color: #bdd6f8;
+}
+
+/* Token format hint below input */
+.input-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--slate-400);
+  padding: 0 2px;
+}
+.hint-mono {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 5px;
+  padding: 1px 6px;
+  color: var(--slate-300);
+}
+
+/* ─── Verify button ──────────────────────────────────── */
+.btn-verify {
+  width: 100%;
+  border: none;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  padding: 13px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: box-shadow .2s, transform .1s;
+  box-shadow: 0 4px 20px rgba(37,99,235,0.35), inset 0 1px 0 rgba(255,255,255,0.1);
+  position: relative;
+  overflow: hidden;
+}
+.btn-verify::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  transform: skewX(-20deg);
+  transition: left .5s;
+}
+.btn-verify:hover::before { left: 140%; }
+.btn-verify:hover {
+  box-shadow: 0 6px 28px rgba(37,99,235,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+  transform: translateY(-1px);
+}
+.btn-verify:active { transform: translateY(0); }
+.btn-verify.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ─── Gate note ──────────────────────────────────────── */
+.gate-note {
+  margin-top: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(255,255,255,0.026);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 10px 13px;
+}
+.gate-note-icon { color: var(--slate-400); flex-shrink: 0; margin-top: 1px; }
+.gate-note p {
+  font-size: 12px;
+  color: var(--slate-400);
+  line-height: 1.6;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/* ─── Return home link ───────────────────────────────── */
+.return-home {
+  margin-top: 20px;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+.return-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: var(--slate-400);
+  text-decoration: none;
+  transition: color .15s;
+}
+.return-link:hover { color: var(--slate-200); }
+
+/* ─── Loading state additions ────────────────────────── */
+.loading-dots {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin: 16px 0;
+}
+@keyframes dot-wave {
+  0%, 60%, 100% { transform: translateY(0); opacity: .35; }
+  30%           { transform: translateY(-5px); opacity: 1; }
+}
+.loading-dots span {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #60a5fa;
+  animation: dot-wave 1.3s ease-in-out infinite;
+  display: block;
+}
+.loading-dots span:nth-child(2) { animation-delay: .15s; }
+.loading-dots span:nth-child(3) { animation-delay: .30s; }
+
+.verifying-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(59,130,246,0.16);
+  border-radius: 10px;
+  padding: 11px 14px;
+  margin-bottom: 12px;
+}
+.verifying-row p {
+  font-size: 12.5px;
+  color: #93c5fd;
+  font-family: var(--font-mono);
+  line-height: 1.5;
+}
+.verifying-row .check-steps {
+  flex: 1;
+}
+.check-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--slate-400);
+  margin-bottom: 4px;
+}
+.check-step:last-child { margin-bottom: 0; }
+.check-step.done  { color: #4ade80; }
+.check-step.active { color: #93c5fd; }
+.step-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.check-step.active .step-dot {
+  animation: dot-wave 1s ease-in-out infinite;
+}
+
+/* ─── Token chip (loading state) ─────────────────────── */
+.token-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 10px 13px;
+  margin-bottom: 14px;
+}
+.token-chip-icon { color: var(--slate-400); flex-shrink: 0; }
+.token-val {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--slate-300);
+  letter-spacing: .06em;
+}
+
+/* ─── Denied state additions ─────────────────────────── */
+.deny-alert {
+  background: var(--danger-dim);
+  border: 1px solid rgba(244,63,94,0.22);
+  border-radius: 10px;
+  padding: 13px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.deny-alert-icon { color: #fb7185; flex-shrink: 0; margin-top: 2px; }
+.deny-alert-body { flex: 1; }
+.deny-alert-title {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #fda4af;
+  margin-bottom: 3px;
+}
+.deny-alert-msg {
+  font-size: 12px;
+  color: rgba(253,164,175,0.75);
+  line-height: 1.55;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.code-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(244,63,94,0.08);
+  border: 1px solid rgba(244,63,94,0.16);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: #fca5a5;
+  margin-left: 4px;
+}
+
+.retry-form { display: flex; flex-direction: column; gap: 8px; }
+
+.btn-retry {
+  width: 100%;
+  border: none;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #be123c 0%, #9f1239 100%);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(190,18,60,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+  transition: box-shadow .2s;
+}
+.btn-retry:hover { box-shadow: 0 6px 28px rgba(190,18,60,0.45); }
+
+.btn-ghost-small {
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 11px;
+  color: var(--slate-400);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: border-color .15s, color .15s;
+}
+.btn-ghost-small:hover { border-color: rgba(255,255,255,0.14); color: var(--slate-200); }
+
+/* SVG utility */
+svg { display: block; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- ──── Mockup header ──────────────────────────────── -->
+<div class="mockup-header">
+  <div class="mockup-kicker">UI Mockup · /eval Access Gate</div>
+  <div class="mockup-title">Jury Entry — All States</div>
+  <div class="mockup-subtitle">Idle · Auto-verify (URL token) · Denied</div>
+</div>
+
+<!-- ──── Three-state grid ───────────────────────────── -->
+<div class="states-row">
+
+  <!-- ════════════════ STATE 1: IDLE ════════════════ -->
+  <div class="state-col">
+    <div class="state-col-label">
+      <span class="dot dot-idle"></span>
+      State 1 — Idle / Manual entry
+    </div>
+
+    <div class="screen-wrap">
+      <!-- VERA logomark -->
+      <div class="vera-logomark">
+        <div class="vera-mark">
+          <div class="vera-mark-inner"><div class="vera-v"></div></div>
+        </div>
+        <span class="vera-wordmark">VERA</span>
+      </div>
+
+      <!-- Card -->
+      <div class="gate-card">
+        <div class="card-header">
+          <div class="card-icon-wrap">
+            <div class="icon-ring"></div>
+            <!-- key icon -->
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="7.5" cy="15.5" r="5.5"/>
+              <path d="M21 2L11.5 11.5"/>
+              <path d="M15.5 7.5l2 2"/>
+              <path d="M18 5l2 2"/>
+            </svg>
+          </div>
+          <div class="card-title">Enter Your Access Code</div>
+          <div class="card-sub">Paste the link from your invitation email, or type your access code below.</div>
+        </div>
+
+        <div class="card-divider"></div>
+
+        <form class="gate-form">
+          <div class="input-wrap">
+            <svg class="input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="7.5" cy="15.5" r="5.5"/>
+              <path d="M21 2L11.5 11.5"/>
+              <path d="M15.5 7.5l2 2"/>
+            </svg>
+            <input class="gate-input" type="text" placeholder="Paste your access link or code…" spellcheck="false" autocomplete="off" />
+          </div>
+          <div class="input-hint">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Accepts full URL or short code&nbsp;
+            <span class="hint-mono">XXXX-XXXX</span>
+          </div>
+          <button type="button" class="btn-verify disabled">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            Verify Access
+          </button>
+        </form>
+
+        <div class="gate-note">
+          <svg class="gate-note-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <p>If you are a walk-in juror, please contact the registration desk for assistance.</p>
+        </div>
+      </div>
+
+      <div class="return-home">
+        <a href="#" class="return-link">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5m7-7-7 7 7 7"/>
+          </svg>
+          Return Home
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ STATE 2: LOADING ════════════════ -->
+  <div class="state-col">
+    <div class="state-col-label">
+      <span class="dot dot-loading"></span>
+      State 2 — Auto-verifying URL token
+    </div>
+
+    <div class="screen-wrap">
+      <div class="vera-logomark">
+        <div class="vera-mark">
+          <div class="vera-mark-inner"><div class="vera-v"></div></div>
+        </div>
+        <span class="vera-wordmark">VERA</span>
+      </div>
+
+      <div class="gate-card scanning">
+        <div class="card-header">
+          <div class="card-icon-wrap loading-icon">
+            <div class="spinner-ring"></div>
+          </div>
+          <div class="card-title loading-title">Verifying Access…</div>
+          <div class="card-sub">Please wait while we validate your credentials.</div>
+        </div>
+
+        <div class="loading-dots">
+          <span></span><span></span><span></span>
+        </div>
+
+        <!-- Token being verified -->
+        <div class="token-chip">
+          <svg class="token-chip-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="7.5" cy="15.5" r="5.5"/>
+            <path d="M21 2L11.5 11.5"/>
+            <path d="M15.5 7.5l2 2"/>
+          </svg>
+          <span class="token-val">vera-eval.app/eval?t=eyJhbGci…</span>
+        </div>
+
+        <!-- Check steps -->
+        <div class="verifying-row">
+          <div class="check-steps">
+            <div class="check-step done">
+              <span class="step-dot"></span>Token format valid
+            </div>
+            <div class="check-step active">
+              <span class="step-dot"></span>Validating against database…
+            </div>
+            <div class="check-step">
+              <span class="step-dot"></span>Resolving evaluation period
+            </div>
+          </div>
+        </div>
+
+        <div class="gate-note">
+          <svg class="gate-note-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <p>This is a secure verification channel. Your credentials are validated server-side and never stored locally.</p>
+        </div>
+      </div>
+
+      <div class="return-home">
+        <a href="#" class="return-link">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5m7-7-7 7 7 7"/>
+          </svg>
+          Cancel
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ STATE 3: DENIED ════════════════ -->
+  <div class="state-col">
+    <div class="state-col-label">
+      <span class="dot dot-denied"></span>
+      State 3 — Access denied / Error
+    </div>
+
+    <div class="screen-wrap denied-bg">
+      <div class="vera-logomark">
+        <div class="vera-mark">
+          <div class="vera-mark-inner"><div class="vera-v"></div></div>
+        </div>
+        <span class="vera-wordmark">VERA</span>
+      </div>
+
+      <div class="gate-card">
+        <div class="card-header">
+          <div class="card-icon-wrap denied-icon">
+            <div class="icon-ring denied-ring"></div>
+            <!-- shield-off icon -->
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19.7 14a6.9 6.9 0 0 0 .3-2V5l-8-3-3.2 1.2"/>
+              <path d="m2 2 20 20"/>
+              <path d="M4.7 4.7 4 5v7c0 6 8 10 8 10a7.7 7.7 0 0 0 5.2-2.1"/>
+            </svg>
+          </div>
+          <div class="card-title denied-title">Access Denied</div>
+          <div class="card-sub">We couldn't validate this access code.</div>
+        </div>
+
+        <div class="card-divider"></div>
+
+        <!-- Error detail -->
+        <div class="deny-alert">
+          <svg class="deny-alert-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <div class="deny-alert-body">
+            <div class="deny-alert-title">
+              Token expired
+              <span class="code-chip">token_expired</span>
+            </div>
+            <div class="deny-alert-msg">This access code has expired. Entry tokens are valid for 24 hours from issue. Please request a new token from your coordinator.</div>
+          </div>
+        </div>
+
+        <!-- Retry with a different code -->
+        <div class="retry-form">
+          <div class="input-wrap">
+            <svg class="input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="7.5" cy="15.5" r="5.5"/>
+              <path d="M21 2L11.5 11.5"/>
+              <path d="M15.5 7.5l2 2"/>
+            </svg>
+            <input class="gate-input has-value" type="text" value="vera-eval.app/eval?t=eyJ…" spellcheck="false" autocomplete="off" />
+          </div>
+          <button type="button" class="btn-retry">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6"/>
+              <path d="M2.5 22v-6h6"/>
+              <path d="M22 13A10 10 0 0 1 4.5 19.5"/>
+              <path d="M2 11A10 10 0 0 1 19.5 4.5"/>
+            </svg>
+            Try a Different Code
+          </button>
+          <button type="button" class="btn-ghost-small">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Return Home
+          </button>
+        </div>
+      </div>
+
+      <div class="return-home" style="opacity:0; pointer-events:none">
+        <a href="#" class="return-link">placeholder</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -311,7 +311,7 @@ export default function LoginScreen({
         </div>
         <div className="login-footer" style={{ marginTop: "8px" }}>
           <button type="button" onClick={goHome} className="form-link">
-            ← Return Home
+            &larr; Return Home
           </button>
         </div>
       </div>

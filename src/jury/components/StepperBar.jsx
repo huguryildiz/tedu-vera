@@ -14,8 +14,8 @@ const STEPS = [
 
 // Map hook step names → stepper index
 const STEP_INDEX = {
+  arrival: 0,
   identity: 0,
-  qr_showcase: 0,
   period: 0,
   semester: 0,
   pin: 1,

@@ -1,5 +1,3 @@
-/* Auth screens — Phase 12 */
-
 /* ── From vera.css 579-651: Auth screen light mode overrides ── */
 /* ═══════════════════════════════════════════════════
    LIGHT MODE — Landing, Login, Jury, Demo Jury
@@ -858,5 +856,197 @@ body:not(.dark-mode) .gls-btn-signout:hover{background:#f1f5f9;color:#374151}
 
 @media (max-width:480px){
   .gls-card{padding:28px 24px 24px}
+}
+
+/* ═══════════════════════════════════════════════════
+   VERIFY EMAIL SCREEN — Premium SaaS
+   ═══════════════════════════════════════════════════ */
+
+/* ── Card override ── */
+.vef-card{text-align:center}
+
+/* ── Logo ── */
+.vef-logo{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  margin-bottom:26px;
+}
+.vef-logo-diamond{
+  width:18px;height:18px;flex-shrink:0;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);
+}
+.vef-logo-text{
+  font-size:15px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;
+  background:linear-gradient(135deg,#ffffff 0%,#c4b5fd 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+
+/* ── Spin animation ── */
+@keyframes vef-spin{to{transform:rotate(360deg)}}
+.vef-spin{animation:vef-spin 0.8s linear infinite;display:block}
+
+/* ── Pending: dot pulse ── */
+.vef-dots{
+  display:flex;align-items:center;justify-content:center;gap:7px;margin:18px 0;
+}
+.vef-dots span{
+  width:7px;height:7px;border-radius:50%;
+  background:rgba(99,102,241,0.4);
+  animation:vef-dot-pulse 1.4s ease-in-out infinite;
+}
+.vef-dots span:nth-child(2){animation-delay:0.22s}
+.vef-dots span:nth-child(3){animation-delay:0.44s}
+@keyframes vef-dot-pulse{
+  0%,80%,100%{transform:scale(0.7);opacity:0.5}
+  40%{transform:scale(1.15);opacity:1;background:rgba(99,102,241,0.9)}
+}
+
+/* ── Info hint (pending state) ── */
+.vef-info-hint{
+  display:flex;align-items:flex-start;gap:9px;padding:12px 14px;
+  background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.12);
+  border-radius:10px;text-align:left;
+}
+.vef-info-hint svg{flex-shrink:0;color:#60a5fa;margin-top:1px}
+.vef-info-hint p{
+  font-size:12px;color:#94a3b8;line-height:1.55;margin:0;
+  text-align:justify;text-justify:inter-word;
+}
+.vef-info-hint strong{color:#e2e8f0;font-weight:600}
+
+/* ── Icon box variants ── */
+.apply-icon-wrap.vef-icon-success{
+  background:linear-gradient(135deg,rgba(34,197,94,0.18),rgba(16,185,129,0.14));
+  border-color:rgba(34,197,94,0.25);color:#4ade80;
+  box-shadow:0 4px 20px rgba(34,197,94,0.18),inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.apply-icon-wrap.vef-icon-error{
+  background:linear-gradient(135deg,rgba(239,68,68,0.18),rgba(220,38,38,0.12));
+  border-color:rgba(239,68,68,0.25);color:#f87171;
+  box-shadow:0 4px 20px rgba(239,68,68,0.16),inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* ── Title variants ── */
+.apply-title.vef-title-success{
+  background:linear-gradient(135deg,#ffffff 0%,#86efac 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.apply-title.vef-title-error{
+  background:linear-gradient(135deg,#ffffff 0%,#fca5a5 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+
+/* ── Checkmark SVG animation ── */
+.vef-check-svg{display:block}
+.vef-check-path{
+  stroke-dasharray:24;stroke-dashoffset:24;
+  animation:vef-draw 0.5s 0.2s ease forwards;
+}
+@keyframes vef-draw{to{stroke-dashoffset:0}}
+
+/* ── Email row (success state) ── */
+.vef-email-row{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 14px;border-radius:20px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);
+  font-size:12.5px;color:#94a3b8;font-weight:500;
+  margin:0 auto 18px;
+}
+.vef-email-row svg{color:#64748b;flex-shrink:0}
+
+/* ── Redirect hint ── */
+.vef-redirect-hint{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:12px;color:#64748b;font-style:italic;padding-top:4px;
+}
+.vef-redirect-dot{
+  width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0;
+  animation:vef-redirect-pulse 1.2s ease-in-out infinite;
+}
+@keyframes vef-redirect-pulse{
+  0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,0.45)}
+  50%{opacity:0.75;box-shadow:0 0 0 5px rgba(34,197,94,0)}
+}
+
+/* ── Danger alert ── */
+.vef-danger-alert{
+  display:flex;align-items:flex-start;gap:9px;padding:12px 14px;
+  background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.18);
+  border-radius:10px;text-align:left;margin-bottom:14px;
+}
+.vef-danger-alert svg{flex-shrink:0;color:#f87171;margin-top:1px}
+.vef-danger-alert p{
+  font-size:12.5px;color:#fca5a5;line-height:1.5;margin:0;
+  text-align:justify;text-justify:inter-word;
+}
+.vef-danger-alert--sm{padding:10px 12px;margin-bottom:10px}
+.vef-danger-alert--sm p{font-size:12px}
+
+/* ── Sent confirmation ── */
+.vef-sent-msg{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  font-size:12.5px;color:#4ade80;font-weight:500;
+  padding:10px 0;margin-bottom:8px;
+}
+.vef-sent-msg svg{flex-shrink:0}
+
+/* ── Resend button ── */
+.vef-resend-btn{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  margin-bottom:10px;
+}
+.vef-resend-btn:disabled{opacity:0.65;cursor:not-allowed}
+
+/* ── Ghost "Back to dashboard" button ── */
+.vef-btn-ghost{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.09);
+  background:rgba(255,255,255,0.04);
+  color:#64748b;font-size:13px;font-weight:500;font-family:var(--font);
+  cursor:pointer;transition:background .15s,color .15s,border-color .15s;
+}
+.vef-btn-ghost:hover{background:rgba(255,255,255,0.08);color:#94a3b8;border-color:rgba(255,255,255,0.14)}
+
+/* ── Light mode overrides ── */
+body:not(.dark-mode) .vef-logo-text{
+  background:linear-gradient(135deg,#0f172a 0%,#4f46e5 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+body:not(.dark-mode) .vef-logo-diamond{background:linear-gradient(135deg,#4f46e5,#7c3aed)}
+body:not(.dark-mode) .vef-dots span{background:rgba(99,102,241,0.25)}
+body:not(.dark-mode) .vef-info-hint{background:rgba(59,130,246,0.05);border-color:rgba(59,130,246,0.14)}
+body:not(.dark-mode) .vef-info-hint svg{color:#3b82f6}
+body:not(.dark-mode) .vef-info-hint p{color:#64748b}
+body:not(.dark-mode) .vef-info-hint strong{color:#1e293b}
+body:not(.dark-mode) .apply-icon-wrap.vef-icon-success{
+  background:linear-gradient(135deg,#f0fdf4,#dcfce7);
+  border-color:rgba(34,197,94,0.20);color:#16a34a;
+  box-shadow:0 4px 20px rgba(34,197,94,0.10),inset 0 1px 0 rgba(255,255,255,0.8);
+}
+body:not(.dark-mode) .apply-icon-wrap.vef-icon-error{
+  background:linear-gradient(135deg,#fef2f2,#fee2e2);
+  border-color:rgba(239,68,68,0.18);color:#dc2626;
+  box-shadow:0 4px 20px rgba(239,68,68,0.09),inset 0 1px 0 rgba(255,255,255,0.8);
+}
+body:not(.dark-mode) .apply-title.vef-title-success{
+  background:linear-gradient(135deg,#0f172a 0%,#16a34a 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+body:not(.dark-mode) .apply-title.vef-title-error{
+  background:linear-gradient(135deg,#0f172a 0%,#dc2626 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+body:not(.dark-mode) .vef-email-row{background:#f8fafc;border-color:#e2e8f0;color:#64748b}
+body:not(.dark-mode) .vef-email-row svg{color:#94a3b8}
+body:not(.dark-mode) .vef-redirect-hint{color:#94a3b8}
+body:not(.dark-mode) .vef-danger-alert{background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.14)}
+body:not(.dark-mode) .vef-danger-alert svg{color:#dc2626}
+body:not(.dark-mode) .vef-danger-alert p{color:#be123c}
+body:not(.dark-mode) .vef-sent-msg{color:#16a34a}
+body:not(.dark-mode) .vef-btn-ghost{background:#f8fafc;border-color:#e2e8f0;color:#64748b}
+body:not(.dark-mode) .vef-btn-ghost:hover{background:#f1f5f9;color:#475569;border-color:#cbd5e1}
+
+@media(max-width:480px){
+  .vef-card{padding:28px 20px 24px}
 }
 

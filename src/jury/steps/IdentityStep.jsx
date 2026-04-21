@@ -87,9 +87,9 @@ export default function IdentityStep({ state, onBack }) {
     <div className="jury-step">
       <div className="jury-card dj-glass-card">
         {/* Logo */}
-        <div className="jg-logo" style={{ marginBottom: 16 }}>
-          <img src={veraLogoDark} alt="VERA" className="jg-logo-dark" />
-          <img src={veraLogoWhite} alt="VERA" className="jg-logo-light" />
+        <div className="jg-logomark" style={{ marginBottom: 16 }}>
+          <img src={veraLogoDark} alt="VERA" className="jg-logo-img dark" />
+          <img src={veraLogoWhite} alt="VERA" className="jg-logo-img light" />
         </div>
 
         <div className="jury-title">Jury Information</div>
