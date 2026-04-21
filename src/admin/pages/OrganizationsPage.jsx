@@ -180,7 +180,7 @@ function getOrgHue(name) {
 export default function OrganizationsPage() {
   const { organizationId } = useAdminContext();
   const { user, isSuper, activeOrganization, refreshMemberships, isEmailVerified, graceEndsAt } = useAuth();
-  const isGraceLocked    = !!(graceEndsAt && !isEmailVerified);
+  const isGraceLocked    = !!(graceEndsAt && !isEmailVerified && new Date(graceEndsAt) < new Date());
   const graceLockTooltip = isGraceLocked
     ? (new Date(graceEndsAt) < new Date() ? LOCK_TOOLTIP_EXPIRED : LOCK_TOOLTIP_GRACE)
     : null;

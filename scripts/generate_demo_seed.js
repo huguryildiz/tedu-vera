@@ -159,6 +159,8 @@ out.push(`SELECT setseed(0.20260402);`);
 out.push(`BEGIN;\n`);
 
 out.push(`-- Pre-seed Cleanup`);
+out.push(`DELETE FROM auth.identities WHERE user_id IN (SELECT id FROM auth.users WHERE email LIKE '%@vera-eval.app');`);
+out.push(`DELETE FROM auth.users WHERE email LIKE '%@vera-eval.app';`);
 out.push(`TRUNCATE TABLE
   jury_feedback,
   audit_logs,

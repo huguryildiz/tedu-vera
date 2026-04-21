@@ -75,7 +75,7 @@ export default function SendReportModal({
   const inputRef = useRef(null);
   const _toast = useToast();
   const { profile, activeOrganization, isEmailVerified, graceEndsAt } = useAuth();
-  const isGraceLocked = !!(graceEndsAt && !isEmailVerified);
+  const isGraceLocked = !!(graceEndsAt && !isEmailVerified && new Date(graceEndsAt) < new Date());
   const graceLockTooltip = isGraceLocked
     ? (new Date(graceEndsAt) < new Date() ? LOCK_TOOLTIP_EXPIRED : LOCK_TOOLTIP_GRACE)
     : null;

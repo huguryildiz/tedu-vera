@@ -630,8 +630,12 @@ function StepFramework({ periodId, frameworks = [], onContinue, onBack }) {
 // ============================================================
 function StepCriteria({ periodId, onContinue, onBack, loading }) {
   const toast = useToast();
-  const { fetchData, navigateTo, setSelectedPeriodId, reloadCriteriaAndOutcomes, criteriaConfig, criteriaLoading } = useAdminContext();
+  const { fetchData, navigateTo, setSelectedPeriodId, reloadCriteriaAndOutcomes, criteriaConfig, criteriaLoading, sortedPeriods } = useAdminContext();
   const hasCriteria = !criteriaLoading && Array.isArray(criteriaConfig) && criteriaConfig.length > 0;
+  const criteriaName = sortedPeriods?.find((p) => p.id === periodId)?.criteria_name ?? null;
+  const [nameInput, setNameInput] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [savingName, setSavingName] = useState(false);
   const [templateCriteria, setTemplateCriteria] = useState(null);
   const [loadingTemplate, setLoadingTemplate] = useState(true);
 
@@ -757,9 +761,44 @@ function StepCriteria({ periodId, onContinue, onBack, loading }) {
             );
           })}
         </div>
+        {!criteriaName && (
+          <div className="sw-form-group" style={{ marginBottom: 16 }}>
+            <label className="sw-form-label">Criteria set name</label>
+            <input
+              className={`sw-form-input${nameError ? " error" : ""}`}
+              type="text"
+              placeholder="e.g. VERA Standard"
+              value={nameInput}
+              onChange={(e) => { setNameInput(e.target.value); if (nameError) setNameError(""); }}
+            />
+            {nameError && (
+              <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />{nameError}</p>
+            )}
+          </div>
+        )}
         <div className="sw-actions">
-          <button className="sw-btn sw-btn-primary" onClick={onContinue}>
-            Continue <ArrowRight size={16} />
+          <button
+            className="sw-btn sw-btn-primary"
+            disabled={savingName}
+            onClick={async () => {
+              if (!criteriaName) {
+                const trimmed = nameInput.trim();
+                if (!trimmed) { setNameError("Please enter a name for this criteria set."); return; }
+                setSavingName(true);
+                try {
+                  await setPeriodCriteriaName(periodId, trimmed);
+                  await fetchData();
+                } catch (err) {
+                  toast.error("Could not save name: " + err.message);
+                  setSavingName(false);
+                  return;
+                }
+                setSavingName(false);
+              }
+              onContinue();
+            }}
+          >
+            {savingName ? "Saving…" : <>Continue <ArrowRight size={16} /></>}
           </button>
         </div>
         <div className="sw-footer sw-footer-stack">
@@ -2033,7 +2072,13 @@ export default function SetupWizardPage() {
         periodId={periodId}
         organizationId={activeOrganization?.id}
         isDemoMode={isDemoMode}
-        onDashboard={async () => { await refreshMemberships?.(); navigateTo("overview"); }}
+        onDashboard={async () => {
+          if (activeOrganization?.id && !activeOrganization?.setupCompletedAt) {
+            try { await markSetupComplete(activeOrganization.id); } catch {}
+          }
+          await refreshMemberships?.();
+          navigateTo("overview");
+        }}
         onPublished={() => fetchData()}
         onMarkSetupComplete={handleMarkSetupComplete}
         onNavigateStep={(step) => {

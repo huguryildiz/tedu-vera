@@ -2879,15 +2879,14 @@ BEGIN
     RETURN;
   END IF;
 
-  -- Unverified, grace window still open.
+  -- Unverified but grace window still open → allow through (banner shown on client).
   IF v_grace_ends_at >= now() THEN
-    RAISE EXCEPTION 'email_verification_required'
-      USING HINT = 'Verify your email to perform this action.';
+    RETURN;
   END IF;
 
-  -- Unverified, grace window has closed.
+  -- Unverified, grace window has closed → block.
   RAISE EXCEPTION 'email_verification_grace_expired'
-    USING HINT = 'Your email verification grace period has expired.';
+    USING HINT = 'Your email verification grace period has expired. Please verify your email to continue.';
 END;
 $$;
 
