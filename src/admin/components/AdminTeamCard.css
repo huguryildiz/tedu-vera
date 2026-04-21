@@ -458,3 +458,111 @@
 .dark-mode .admin-team-skeleton-cell {
   background: rgba(51, 65, 85, 0.3);
 }
+
+/* ── Owner pill ── */
+.admin-team-owner-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.18), rgba(234, 179, 8, 0.08));
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  color: #b45309;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.dark-mode .admin-team-owner-pill {
+  background: rgba(234, 179, 8, 0.12);
+  color: #fbbf24;
+  border-color: rgba(234, 179, 8, 0.35);
+}
+
+/* ── Delegation toggle ── */
+.admin-team-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
+  cursor: pointer;
+  margin-bottom: 14px;
+}
+.admin-team-toggle input[type="checkbox"] {
+  margin-top: 2px;
+  cursor: pointer;
+}
+.admin-team-toggle-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.admin-team-toggle-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.admin-team-toggle-helper {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/* ── Info note ── */
+.admin-team-info-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin: -6px 0 12px;
+}
+
+/* ── Kebab menu ── */
+.admin-team-kebab-wrap {
+  position: relative;
+}
+.admin-team-kebab-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 180px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-popover, 0 8px 24px rgba(0, 0, 0, 0.12));
+  padding: 4px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+}
+.admin-team-kebab-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs, 4px);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+.admin-team-kebab-item:hover {
+  background: var(--surface-1);
+}
+.admin-team-kebab-item-danger {
+  color: var(--danger);
+}
+.admin-team-kebab-item-danger:hover {
+  background: var(--danger-soft);
+}

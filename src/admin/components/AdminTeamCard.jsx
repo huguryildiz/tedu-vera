@@ -1,4 +1,5 @@
-import { UserPlus, MoreVertical, MailOpen, X, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { UserPlus, MoreVertical, MailOpen, X, AlertCircle, Crown, ArrowRightLeft, UserMinus, Info } from "lucide-react";
 import FbAlert from "../../shared/ui/FbAlert.jsx";
 import "./AdminTeamCard.css";
 
@@ -57,8 +58,17 @@ export default function AdminTeamCard({
   sendInvite,
   resendInvite,
   cancelInvite,
+  transferOwnership,
+  removeMember,
+  setAdminsCanInvite,
+  adminsCanInvite,
+  canInvite,
+  isOwnerViewer,
   currentUserId,
 }) {
+  // inline confirm state per row: { id: string, kind: 'transfer'|'remove'|'cancel' } | null
+  const [rowConfirm, setRowConfirm] = useState(null);
+
   const active = members.filter((m) => m.status === "active");
   const pending = members.filter((m) => m.status === "invited");
 
@@ -74,13 +84,34 @@ export default function AdminTeamCard({
             </span>
           )}
         </div>
-        {!inviteForm?.open && (
+        {!inviteForm?.open && canInvite && (
           <button type="button" className="btn-invite-admin" onClick={openInviteForm}>
             <UserPlus size={14} strokeWidth={2} />
             Invite Admin
           </button>
         )}
       </div>
+
+      {!loading && !canInvite && !isOwnerViewer && (
+        <p className="admin-team-info-note">
+          <Info size={12} strokeWidth={2} />
+          Only the owner can invite new admins.
+        </p>
+      )}
+
+      {isOwnerViewer && (
+        <label className="admin-team-toggle">
+          <input
+            type="checkbox"
+            checked={!!adminsCanInvite}
+            onChange={(e) => setAdminsCanInvite(e.target.checked)}
+          />
+          <span className="admin-team-toggle-body">
+            <span className="admin-team-toggle-label">Allow admins to invite other admins</span>
+            <span className="admin-team-toggle-helper">When on, other admins can invite new admins. You always can.</span>
+          </span>
+        </label>
+      )}
 
       {inviteForm?.open && (
         <div className="admin-team-invite-form">
@@ -137,46 +168,84 @@ export default function AdminTeamCard({
                       Active ({active.length})
                     </td>
                   </tr>
-                  {active.map((m) => (
-                    <tr key={m.id}>
-                      <td>
-                        <div className="admin-team-member-cell">
-                          <div
-                            className="admin-team-avatar"
-                            style={{ background: avatarColor(m.email) }}
-                          >
-                            {initials(m)}
-                          </div>
-                          <div>
-                            <div className="admin-team-name">
-                              {m.displayName || m.email}
-                            </div>
-                            {m.displayName && (
-                              <div className="admin-team-email">{m.email}</div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="badge-active">● Active</span>
-                      </td>
-                      <td className="admin-team-actions">
-                        <div className="admin-team-actions-wrap">
-                          {m.userId === currentUserId ? (
-                            <span className="admin-team-you-badge">You</span>
-                          ) : (
-                            <button
-                              type="button"
-                              className="btn-kebab"
-                              title="More actions"
+                  {active.map((m) => {
+                    const isSelf = m.userId === currentUserId;
+                    const showKebab = isOwnerViewer && !isSelf;
+                    const openConfirm = rowConfirm?.id === m.id ? rowConfirm.kind : null;
+
+                    return (
+                      <tr key={m.id}>
+                        <td>
+                          <div className="admin-team-member-cell">
+                            <div
+                              className="admin-team-avatar"
+                              style={{ background: avatarColor(m.email) }}
                             >
-                              <MoreVertical size={14} strokeWidth={2} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                              {initials(m)}
+                            </div>
+                            <div>
+                              <div className="admin-team-name">
+                                {m.displayName || m.email}
+                                {m.isOwner && (
+                                  <span className="admin-team-owner-pill" title="Owner">
+                                    <Crown size={10} strokeWidth={2.2} /> Owner
+                                  </span>
+                                )}
+                                {isSelf && <span className="admin-team-you-badge">You</span>}
+                              </div>
+                              {m.displayName && (
+                                <div className="admin-team-email">{m.email}</div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="badge-active">● Active</span>
+                        </td>
+                        <td className="admin-team-actions">
+                          <div className="admin-team-actions-wrap">
+                            {openConfirm === "transfer" || openConfirm === "remove" ? (
+                              <div className="fs-confirm-panel">
+                                <span className="fs-confirm-msg">
+                                  {openConfirm === "transfer"
+                                    ? `Transfer ownership to ${m.displayName || m.email}? You'll become a regular admin.`
+                                    : `Remove ${m.displayName || m.email} from the admin team? They'll lose access immediately.`}
+                                </span>
+                                <span className="fs-confirm-btns">
+                                  <button
+                                    type="button"
+                                    className="fs-confirm-cancel"
+                                    onClick={() => setRowConfirm(null)}
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="fs-confirm-action"
+                                    onClick={async () => {
+                                      if (openConfirm === "transfer") {
+                                        await transferOwnership(m.id);
+                                      } else {
+                                        await removeMember(m.id);
+                                      }
+                                      setRowConfirm(null);
+                                    }}
+                                  >
+                                    {openConfirm === "transfer" ? "Transfer" : "Remove"}
+                                  </button>
+                                </span>
+                              </div>
+                            ) : showKebab ? (
+                              <RowKebab
+                                onTransfer={() => setRowConfirm({ id: m.id, kind: "transfer" })}
+                                onRemove={() => setRowConfirm({ id: m.id, kind: "remove" })}
+                              />
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </>
               )}
 
@@ -190,49 +259,75 @@ export default function AdminTeamCard({
                       Pending ({pending.length})
                     </td>
                   </tr>
-                  {pending.map((m) => (
-                    <tr key={m.id}>
-                      <td>
-                        <div className="admin-team-member-cell">
-                          <div className="admin-team-avatar admin-team-avatar-pending">
-                            ?
-                          </div>
-                          <div>
-                            <div className="admin-team-name admin-team-name-pending">
-                              {m.email}
+                  {pending.map((m) => {
+                    const showActions = canInvite;
+                    const openConfirm = rowConfirm?.id === m.id ? rowConfirm.kind : null;
+
+                    return (
+                      <tr key={m.id}>
+                        <td>
+                          <div className="admin-team-member-cell">
+                            <div className="admin-team-avatar admin-team-avatar-pending">?</div>
+                            <div>
+                              <div className="admin-team-name admin-team-name-pending">{m.email}</div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="badge-pending">⏳ Pending</span>
-                      </td>
-                      <td className="admin-team-actions">
-                        {m.userId !== currentUserId && (
-                          <>
-                            <button
-                              type="button"
-                              className="btn-resend"
-                              onClick={() => resendInvite(m.id, m.email)}
-                              title="Resend invite"
-                            >
-                              <MailOpen size={12} strokeWidth={2} />
-                              Resend
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-cancel-invite"
-                              onClick={() => cancelInvite(m.id)}
-                              title="Cancel invite"
-                            >
-                              <X size={12} strokeWidth={2} />
-                              Cancel
-                            </button>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td>
+                          <span className="badge-pending">⏳ Pending</span>
+                        </td>
+                        <td className="admin-team-actions">
+                          <div className="admin-team-actions-wrap">
+                            {openConfirm === "cancel" ? (
+                              <div className="fs-confirm-panel">
+                                <span className="fs-confirm-msg">Cancel invite for {m.email}?</span>
+                                <span className="fs-confirm-btns">
+                                  <button
+                                    type="button"
+                                    className="fs-confirm-cancel"
+                                    onClick={() => setRowConfirm(null)}
+                                  >
+                                    Keep
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="fs-confirm-action"
+                                    onClick={async () => {
+                                      await cancelInvite(m.id);
+                                      setRowConfirm(null);
+                                    }}
+                                  >
+                                    Cancel invite
+                                  </button>
+                                </span>
+                              </div>
+                            ) : showActions ? (
+                              <>
+                                <button
+                                  type="button"
+                                  className="btn-resend"
+                                  onClick={() => resendInvite(m.id, m.email)}
+                                  title="Resend invite"
+                                >
+                                  <MailOpen size={12} strokeWidth={2} />
+                                  Resend
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-cancel-invite"
+                                  onClick={() => setRowConfirm({ id: m.id, kind: "cancel" })}
+                                  title="Cancel invite"
+                                >
+                                  <X size={12} strokeWidth={2} />
+                                  Cancel
+                                </button>
+                              </>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </>
               )}
 
@@ -247,6 +342,42 @@ export default function AdminTeamCard({
           )}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function RowKebab({ onTransfer, onRemove }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="admin-team-kebab-wrap">
+      <button
+        type="button"
+        className="btn-kebab"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="More actions"
+      >
+        <MoreVertical size={14} strokeWidth={2} />
+      </button>
+      {open && (
+        <div className="admin-team-kebab-menu" onMouseLeave={() => setOpen(false)}>
+          <button
+            type="button"
+            className="admin-team-kebab-item"
+            onClick={() => { setOpen(false); onTransfer(); }}
+          >
+            <ArrowRightLeft size={12} strokeWidth={2} />
+            Transfer ownership
+          </button>
+          <button
+            type="button"
+            className="admin-team-kebab-item admin-team-kebab-item-danger"
+            onClick={() => { setOpen(false); onRemove(); }}
+          >
+            <UserMinus size={12} strokeWidth={2} />
+            Remove from team
+          </button>
+        </div>
+      )}
     </div>
   );
 }
