@@ -3101,3 +3101,83 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.rpc_org_admin_list_members() TO authenticated;
 
+-- =============================================================================
+-- rpc_org_admin_transfer_ownership
+-- =============================================================================
+-- Owner-only. Transfers ownership to another active org_admin in the same org.
+-- After transfer, caller remains on the team as a regular org_admin.
+
+CREATE OR REPLACE FUNCTION public.rpc_org_admin_transfer_ownership(
+  p_target_membership_id UUID
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_org_id       UUID;
+  v_target_user  UUID;
+  v_target_status TEXT;
+  v_target_role  TEXT;
+  v_target_owner boolean;
+  v_caller_membership UUID;
+BEGIN
+  -- Load target row and its org.
+  SELECT organization_id, user_id, status, role, is_owner
+    INTO v_org_id, v_target_user, v_target_status, v_target_role, v_target_owner
+  FROM memberships
+  WHERE id = p_target_membership_id;
+
+  IF v_org_id IS NULL THEN
+    RAISE EXCEPTION 'target_not_found';
+  END IF;
+
+  -- Caller must be owner of this org (or super-admin).
+  PERFORM public._assert_tenant_owner(v_org_id);
+
+  IF v_target_status <> 'active' OR v_target_role <> 'org_admin' OR v_target_owner THEN
+    RAISE EXCEPTION 'invalid_target';
+  END IF;
+
+  IF v_target_user = auth.uid() THEN
+    RAISE EXCEPTION 'cannot_transfer_to_self';
+  END IF;
+
+  -- Find caller's membership in this org.
+  SELECT id INTO v_caller_membership
+  FROM memberships
+  WHERE organization_id = v_org_id
+    AND user_id = auth.uid()
+    AND status = 'active'
+  LIMIT 1;
+
+  -- Two-step update in a single transaction. Unique index allows the
+  -- intermediate state (zero owners) momentarily; constraint is enforced at
+  -- statement boundary, not row boundary.
+  UPDATE memberships SET is_owner = false WHERE id = v_caller_membership;
+  UPDATE memberships SET is_owner = true  WHERE id = p_target_membership_id;
+
+  -- Audit
+  PERFORM public._audit_write(
+    v_org_id,
+    'org.ownership.transfer',
+    'membership',
+    p_target_membership_id,
+    'security'::audit_category,
+    'high'::audit_severity,
+    jsonb_build_object(
+      'from_user_id', auth.uid(),
+      'to_user_id',   v_target_user
+    )
+  );
+
+  RETURN jsonb_build_object(
+    'ok', true,
+    'new_owner_user_id', v_target_user
+  );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.rpc_org_admin_transfer_ownership(UUID) TO authenticated;
+
