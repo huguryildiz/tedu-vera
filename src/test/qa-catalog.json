@@ -5000,5 +5000,38 @@
   {
     "id": "settings.team.hook.04",
     "description": "useAdminTeam: cancelInvite calls cancelOrgAdminInvite and refetches"
+  },
+  {
+    "id": "settings.team.hook.owner-viewer",
+    "module": "Admin / Settings / Team",
+    "area": "Admin Team — Ownership",
+    "story": "Owner Delegation Derivation",
+    "scenario": "owner viewer always has canInvite=true regardless of delegation flag",
+    "whyItMatters": "The organization owner must always be able to invite new admins; delegation flag only affects non-owners.",
+    "risk": "If canInvite doesn't include owner status, an owner could lose access to the invite UI and manage admins.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "settings.team.hook.non-owner-delegated",
+    "module": "Admin / Settings / Team",
+    "area": "Admin Team — Ownership",
+    "story": "Delegated Invite",
+    "scenario": "non-owner canInvite follows the delegation flag when set",
+    "whyItMatters": "Owners can delegate invite rights via a toggle; the hook must surface this to the UI so admins see the button.",
+    "risk": "If the flag is ignored, delegated admins cannot invite even when the owner authorized them.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "settings.team.hook.non-owner-no-delegation",
+    "module": "Admin / Settings / Team",
+    "area": "Admin Team — Ownership",
+    "story": "Delegated Invite",
+    "scenario": "non-owner canInvite is false when delegation flag is off",
+    "whyItMatters": "By default only the owner invites; non-owners must not see the Invite button.",
+    "risk": "If canInvite defaults true, any admin could add admins without owner approval.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
   }
 ]
