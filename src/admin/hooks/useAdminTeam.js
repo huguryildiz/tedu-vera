@@ -3,6 +3,9 @@ import {
   listOrgAdminMembers,
   inviteOrgAdmin,
   cancelOrgAdminInvite,
+  transferOwnership as apiTransferOwnership,
+  removeOrgAdmin as apiRemoveOrgAdmin,
+  setAdminsCanInvite as apiSetAdminsCanInvite,
 } from "../../shared/api";
 import { useToast } from "@/shared/hooks/useToast";
 
@@ -16,6 +19,8 @@ function mapMembers(raw) {
     status: m.status === "active" ? "active" : "invited",
     joinedAt: m.status === "active" ? m.created_at || null : null,
     invitedAt: m.status === "invited" ? m.created_at || null : null,
+    isOwner: Boolean(m.is_owner),
+    isYou: Boolean(m.is_you),
   }));
 }
 
@@ -27,14 +32,16 @@ export function useAdminTeam(orgId) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [inviteForm, setInviteForm] = useState(INITIAL_INVITE_FORM);
+  const [adminsCanInvite, setAdminsCanInviteState] = useState(false);
 
   const refetch = useCallback(async () => {
     if (!orgId) return;
     setLoading(true);
     setError(null);
     try {
-      const raw = await listOrgAdminMembers();
+      const { members: raw, adminsCanInvite: flag } = await listOrgAdminMembers();
       setMembers(mapMembers(raw));
+      setAdminsCanInviteState(flag);
     } catch (e) {
       setError(e.message || "Failed to load team");
     } finally {
@@ -111,6 +118,51 @@ export function useAdminTeam(orgId) {
     [toast, refetch]
   );
 
+  const isOwnerViewer = members.some((m) => m.isYou && m.isOwner);
+  const canInvite = isOwnerViewer || adminsCanInvite;
+
+  const transferOwnership = useCallback(
+    async (targetMembershipId) => {
+      try {
+        await apiTransferOwnership(targetMembershipId);
+        toast.success("Ownership transferred");
+        await refetch();
+      } catch (e) {
+        toast.error(e.message || "Failed to transfer ownership");
+      }
+    },
+    [toast, refetch]
+  );
+
+  const removeMember = useCallback(
+    async (membershipId) => {
+      try {
+        await apiRemoveOrgAdmin(membershipId);
+        toast.success("Admin removed");
+        await refetch();
+      } catch (e) {
+        toast.error(e.message || "Failed to remove admin");
+      }
+    },
+    [toast, refetch]
+  );
+
+  const setAdminsCanInviteFlag = useCallback(
+    async (enabled) => {
+      if (!orgId) return;
+      const prev = adminsCanInvite;
+      setAdminsCanInviteState(enabled); // optimistic
+      try {
+        await apiSetAdminsCanInvite(orgId, enabled);
+        toast.success(enabled ? "Admins can now invite" : "Only owner can invite now");
+      } catch (e) {
+        setAdminsCanInviteState(prev); // revert
+        toast.error(e.message || "Failed to update setting");
+      }
+    },
+    [orgId, adminsCanInvite, toast]
+  );
+
   return {
     members,
     loading,
@@ -122,5 +174,11 @@ export function useAdminTeam(orgId) {
     sendInvite,
     resendInvite,
     cancelInvite,
+    adminsCanInvite,
+    canInvite,
+    isOwnerViewer,
+    transferOwnership,
+    removeMember,
+    setAdminsCanInvite: setAdminsCanInviteFlag,
   };
 }
