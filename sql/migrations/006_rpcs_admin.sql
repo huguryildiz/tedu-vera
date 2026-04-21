@@ -3233,3 +3233,46 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.rpc_org_admin_remove_member(UUID) TO authenticated;
 
+-- =============================================================================
+-- rpc_org_admin_set_admins_can_invite
+-- =============================================================================
+-- Owner-only. Toggles organizations.settings.admins_can_invite for p_org_id.
+
+CREATE OR REPLACE FUNCTION public.rpc_org_admin_set_admins_can_invite(
+  p_org_id  UUID,
+  p_enabled boolean
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  PERFORM public._assert_tenant_owner(p_org_id);
+
+  UPDATE organizations
+  SET settings = jsonb_set(
+        COALESCE(settings, '{}'::jsonb),
+        '{admins_can_invite}',
+        to_jsonb(p_enabled),
+        true
+      ),
+      updated_at = now()
+  WHERE id = p_org_id;
+
+  PERFORM public._audit_write(
+    p_org_id,
+    'org.settings.admins_can_invite',
+    'organization',
+    p_org_id,
+    'config'::audit_category,
+    'medium'::audit_severity,
+    jsonb_build_object('enabled', p_enabled)
+  );
+
+  RETURN jsonb_build_object('ok', true, 'enabled', p_enabled);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.rpc_org_admin_set_admins_can_invite(UUID, boolean) TO authenticated;
+
