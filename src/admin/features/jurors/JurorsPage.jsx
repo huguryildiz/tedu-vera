@@ -5,7 +5,7 @@ import { useAdminContext } from "@/admin/hooks/useAdminContext";
 import { useToast } from "@/shared/hooks/useToast";
 import { useAuth } from "@/auth";
 import { useManagePeriods } from "@/admin/features/periods/useManagePeriods";
-import { useManageProjects } from "@/admin/hooks/useManageProjects";
+import { useManageProjects } from "@/admin/features/projects/useManageProjects";
 import { useManageJurors } from "./useManageJurors";
 import { useAdminResponsiveTableMode } from "@/admin/hooks/useAdminResponsiveTableMode";
 import useCardSelection from "@/shared/hooks/useCardSelection";

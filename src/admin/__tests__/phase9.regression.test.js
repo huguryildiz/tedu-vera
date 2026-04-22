@@ -59,7 +59,7 @@ vi.mock("../../shared/api", () => ({
 import { supabase } from "@/shared/lib/supabaseClient";
 import * as api from "../../shared/api";
 import { getJurorEditState, upsertScore } from "../../shared/api/juryApi";
-import { useManageProjects } from "../../admin/hooks/useManageProjects";
+import { useManageProjects } from "@/admin/features/projects/useManageProjects";
 import { useManageJurors } from "@/admin/features/jurors/useManageJurors";
 import { useManagePeriods } from "@/admin/features/periods/useManagePeriods";
 

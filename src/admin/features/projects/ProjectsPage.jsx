@@ -2,24 +2,24 @@
 // Projects management page. Structure from prototype lines 14001–14241.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Pagination from "@/shared/ui/Pagination";
-import { useAdminContext } from "../hooks/useAdminContext";
+import { useAdminContext } from "@/admin/hooks/useAdminContext";
 import { ClipboardList, Filter, UserRound, MoreVertical, Pencil, Copy, Trash2, Icon, FolderOpen, Upload, Plus, Info, LockKeyhole, Lock, Download, Search, XCircle } from "lucide-react";
 import { useToast } from "@/shared/hooks/useToast";
 import { useAuth } from "@/auth";
 import FbAlert from "@/shared/ui/FbAlert";
-import DeleteProjectModal from "../modals/DeleteProjectModal";
+import DeleteProjectModal from "./DeleteProjectModal";
 import { FilterButton } from "@/shared/ui/FilterButton";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import { getPeriodMaxScore, logExportInitiated } from "@/shared/api";
 import { useManagePeriods } from "@/admin/features/periods/useManagePeriods";
-import { useManageProjects } from "../hooks/useManageProjects";
-import ImportCsvModal from "../modals/ImportCsvModal";
-import { parseProjectsCsv } from "../utils/csvParser";
-import ExportPanel from "../components/ExportPanel";
-import EditProjectDrawer from "../drawers/EditProjectDrawer";
-import AddProjectDrawer from "../drawers/AddProjectDrawer";
-import ProjectScoresDrawer from "../drawers/ProjectScoresDrawer";
-import { downloadTable, generateTableBlob } from "../utils/downloadTable";
+import { useManageProjects } from "./useManageProjects";
+import ImportCsvModal from "@/admin/modals/ImportCsvModal";
+import { parseProjectsCsv } from "@/admin/utils/csvParser";
+import ExportPanel from "@/admin/components/ExportPanel";
+import EditProjectDrawer from "./EditProjectDrawer";
+import AddProjectDrawer from "./AddProjectDrawer";
+import ProjectScoresDrawer from "./ProjectScoresDrawer";
+import { downloadTable, generateTableBlob } from "@/admin/utils/downloadTable";
 import { StudentNames } from "@/shared/ui/EntityMeta";
 import { avatarGradient, initials } from "@/shared/ui/avatarColor";
 import JurorBadge from "@/admin/shared/JurorBadge";
@@ -27,7 +27,7 @@ import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import FloatingMenu from "@/shared/ui/FloatingMenu";
 import useCardSelection from "@/shared/hooks/useCardSelection";
 import { formatDateTime as formatFull } from "@/shared/lib/dateUtils";
-import "../../styles/pages/projects.css";
+import "./ProjectsPage.css";
 
 // ── Column config — single source of truth for table headers and export ──
 const COLUMNS = [

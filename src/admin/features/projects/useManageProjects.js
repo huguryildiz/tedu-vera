@@ -12,8 +12,8 @@ import {
   createProject,
   upsertProject,
   deleteProject,
-} from "../../shared/api";
-import { normalizeStudentNames } from "../utils/auditUtils";
+} from "@/shared/api";
+import { normalizeStudentNames } from "@/admin/utils/auditUtils";
 
 // Convert member input (string or string[]) to JSONB array format {name, order}
 function membersToJsonb(value) {

@@ -40,7 +40,7 @@ const AnalyticsPage = lazy(() => import("@/admin/pages/AnalyticsPage"));
 const HeatmapPage = lazy(() => import("@/admin/pages/HeatmapPage"));
 const ReviewsPage = lazy(() => import("@/admin/pages/ReviewsPage"));
 const JurorsPage = lazy(() => import("@/admin/features/jurors/JurorsPage"));
-const ProjectsPage = lazy(() => import("@/admin/pages/ProjectsPage"));
+const ProjectsPage = lazy(() => import("@/admin/features/projects/ProjectsPage"));
 const PeriodsPage = lazy(() => import("@/admin/features/periods/PeriodsPage"));
 const CriteriaPage = lazy(() => import("@/admin/pages/CriteriaPage"));
 const OutcomesPage = lazy(() => import("@/admin/pages/OutcomesPage"));
