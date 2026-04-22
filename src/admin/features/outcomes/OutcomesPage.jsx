@@ -8,23 +8,23 @@ import { Pencil, Trash2, Copy, MoreVertical, BadgeCheck, Network, Route, AlertCi
 import { FilterButton } from "@/shared/ui/FilterButton";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import { updateFramework, cloneFramework, assignFrameworkToPeriod, unassignPeriodFramework, listFrameworks } from "@/shared/api";
-import { useAdminContext } from "../hooks/useAdminContext";
+import { useAdminContext } from "@/admin/hooks/useAdminContext";
 import { usePeriodOutcomes } from "@/admin/shared/usePeriodOutcomes";
 import { useToast } from "@/shared/hooks/useToast";
 import FloatingMenu from "@/shared/ui/FloatingMenu";
 import useCardSelection from "@/shared/hooks/useCardSelection";
-import AddOutcomeDrawer from "../drawers/AddOutcomeDrawer";
-import OutcomeDetailDrawer from "../drawers/OutcomeDetailDrawer";
+import AddOutcomeDrawer from "./AddOutcomeDrawer";
+import OutcomeDetailDrawer from "./OutcomeDetailDrawer";
 import Modal from "@/shared/ui/Modal";
 import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import Pagination from "@/shared/ui/Pagination";
 import SaveBar from "@/admin/features/criteria/SaveBar";
-import "../../styles/pages/outcomes.css";
-import "../../styles/pages/setup-wizard.css";
+import "./OutcomesPage.css";
+import "../../../styles/pages/setup-wizard.css";
 import { useAuth } from "@/auth";
-import ExportPanel from "../components/ExportPanel";
-import { useOutcomesExport } from "../hooks/useOutcomesExport";
+import ExportPanel from "@/admin/components/ExportPanel";
+import { useOutcomesExport } from "@/admin/hooks/useOutcomesExport";
 
 // ── Coverage helpers ─────────────────────────────────────────
 
