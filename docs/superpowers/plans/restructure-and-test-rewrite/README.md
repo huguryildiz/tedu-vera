@@ -161,9 +161,9 @@ e2e/                           (mevcut — genişletilecek)
 | ✅ | **2** | A0 + A1 kick-off — iskelet + shared/ui'den 5-8 component CSS co-locate (FbAlert, CustomSelect, ConfirmDialog, PremiumTooltip, Modal, Drawer, Button, Card) | ~10 dosya + components.css düzenleme | 3 saat | %80 | A1 pattern validated (3/29 done); ConfirmDialog/Modal/Drawer skip (CSS zaten global file'da) |
 | ✅ | **3** | A1 tamamla — kalan 26 shared/ui component araştırıldı; AsyncButtonContent + FilterButton + Pagination co-located; FloatingMenu/btn-loading-content global kaldı (65+ direct className kullanımı); 15 component CSS'siz (inline style veya global dosyada) | 6 yeni CSS dosyası + components.css düzenleme | 3 saat | ~%75 | A1 tamamlandı: 6/29 co-located, kalan 23 actionable değil; A2'ye geçiş |
 | ✅ | **4** | A2.1-A2.3 — overview + organizations + jurors | ~25 dosya + 3 page CSS | 4 saat | %80 | 3 feature taşındı; 4 cross-feature bileşen admin/shared/'a çıkarıldı; build yeşil |
-| ⬜ | **5** | A2.4-A2.6 — periods + projects + **criteria** (criteria.css 2480 satır — ağır) | ~22 dosya + 3 page CSS | 4 saat | %75 | Criteria en büyük riski geçti |
-| ⬜ | **6** | A2.7-A2.9 — **outcomes** (2056 satır CSS) + reviews + rankings | ~15 dosya + 3 page CSS | 3-4 saat | %70 | 9 admin feature tamam |
-| ⬜ | **7** | A2.10-A2.13 — analytics + heatmap + audit + entry-control | ~16 dosya + 4 page CSS | 3 saat | %65 | 13 admin feature tamam |
+| ✅ | **5** | A2.4-A2.9 — periods + projects + **criteria** + outcomes + reviews + rankings (plandan fazla: A2.7-A2.9 de tamamlandı) | ~40 dosya + 6 page CSS | 5 saat | %85 | 9 admin feature tamam; 2 cross-feature (usePeriodOutcomes, OutcomeEditor) admin/shared/'a çıkarıldı |
+| ✅ | **6** | A2.10-A2.13 — analytics + heatmap + audit + entry-control | ~16 dosya + 4 page CSS | 3 saat | %65 | 13 admin feature tamam |
+| ⬜ | **7** | A2.14-A2.17 — pin-blocking + settings + **setup-wizard** (2377 satır CSS) + export | ~20 dosya + 4 page CSS | 4 saat | %75 | **Tüm 17 admin feature tamam** |
 | ⬜ | **8** | A2.14-A2.17 — pin-blocking + settings + **setup-wizard** (2377 satır CSS) + export | ~20 dosya + 4 page CSS | 4 saat | %75 | **Tüm 17 admin feature tamam** |
 | ⬜ | **9** | A3 — jury restructure (9 feature + jury/shared, jury.css 4021 satır split) | ~25 dosya + jury.css + jury-arrival.css | 4 saat | %75 | Jury bitti |
 | ⬜ | **10** | A4 — auth restructure (9 feature + auth/shared, auth.css 1178 satır) | ~12 dosya + auth.css | 2-3 saat | %60 | **Aşama A source taşıma bitti** |
@@ -1395,16 +1395,16 @@ purgecss --content "src/**/*.{js,jsx,css}" --css "src/styles/**/*.css" --output 
 | overview | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-04](implementation_reports/session-04-A2-admin-1-3.md) |
 | organizations | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-04](implementation_reports/session-04-A2-admin-1-3.md) |
 | jurors | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-04](implementation_reports/session-04-A2-admin-1-3.md) |
-| periods | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| projects | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| criteria | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| outcomes | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| reviews | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| rankings | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| analytics | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| heatmap | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| audit | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| entry-control | ⬜ | ⬜ | ⬜ | Bekliyor | — |
+| periods | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-05](implementation_reports/session-05-A2-admin-4-9.md) |
+| projects | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-05](implementation_reports/session-05-A2-admin-4-9.md) |
+| criteria | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-05](implementation_reports/session-05-A2-admin-4-9.md) |
+| outcomes | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-05](implementation_reports/session-05-A2-admin-4-9.md) |
+| reviews | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-05](implementation_reports/session-05-A2-admin-4-9.md) |
+| rankings | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-05](implementation_reports/session-05-A2-admin-4-9.md) |
+| analytics | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-06](implementation_reports/session-06-A2-admin-10-13.md) |
+| heatmap | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-06](implementation_reports/session-06-A2-admin-10-13.md) |
+| audit | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-06](implementation_reports/session-06-A2-admin-10-13.md) |
+| entry-control | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-06](implementation_reports/session-06-A2-admin-10-13.md) |
 | pin-blocking | ⬜ | ⬜ | ⬜ | Bekliyor | — |
 | settings | ⬜ | ⬜ | ⬜ | Bekliyor | — |
 | setup-wizard | ⬜ | ⬜ | ⬜ | Bekliyor | — |
@@ -1468,7 +1468,7 @@ purgecss --content "src/**/*.{js,jsx,css}" --css "src/styles/**/*.css" --output 
 
 ### Toplam ilerleme
 
-**3 / 35 feature taşındı** · **3 / 35 feature CSS co-located** · **0 / 40 modül test edildi** · **0 / 11 altyapı task tamam**
+**13 / 35 feature taşındı** · **13 / 35 feature CSS co-located** · **0 / 40 modül test edildi** · **0 / 11 altyapı task tamam**
 
 > Her oturum sonunda ilgili satırlar güncellenir ve Report sütununa `[session-NN-konu.md](implementation_reports/session-NN-konu.md)` linki eklenir.
 
@@ -1482,6 +1482,8 @@ purgecss --content "src/**/*.{js,jsx,css}" --css "src/styles/**/*.css" --output 
 | 2026-04-22 | 2 | A0 iskelet (38 .gitkeep), A1: FbAlert + CustomSelect + PremiumTooltip CSS co-located (3/29); ConfirmDialog/Modal/Drawer skip (global dosyalarda) | Session 3: kalan 26 shared/ui component |
 | 2026-04-22 | 3 | A1 tamamlandı: AsyncButtonContent + FilterButton + Pagination CSS co-located (6/29 toplam); FloatingMenu global kalacak (65+ direct className kullanımı); 15 component CSS'siz veya başka global dosyada; tüm 29 component incelendi | Session 4: A2.1–A2.3 admin feature taşıma (overview + organizations + jurors) |
 | 2026-04-22 | 4 | A2.1–A2.3 tamamlandı: overview + organizations + jurors features taşındı (5 commit); 4 cross-feature bileşen `admin/shared/`'a çıkarıldı (AdminTeamCard, ManageBackupsDrawer, ViewSessionsDrawer; JurorBadge, JurorStatusPill, ImportJurorsModal, JurorHeatmapCard); 14 consumer güncellendi; build yeşil; 63 pre-existing test fail, yeni kırıklık yok | Session 5: A2.4–A2.6 (periods + projects + criteria) |
+| 2026-04-22 | 5 | A2.4–A2.9 tamamlandı: periods + projects + criteria + outcomes + reviews + rankings features taşındı (9 commit); 2 cross-feature bileşen `admin/shared/`'a çıkarıldı (usePeriodOutcomes, OutcomeEditor); `PremiumTooltiptext` JSX syntax bug düzeltildi (OutcomeEditor 2x + CriterionEditor 1x); `periodsMobileRing.test.js` + `criteriaFormHelpers.test.js` import yolları güncellendi; 23 fail (hepsi pre-existing), 57 pass | Session 6: A2.10–A2.13 (analytics + heatmap + audit + entry-control) |
+| 2026-04-22 | 6 | A2.10–A2.13 tamamlandı: analytics + heatmap + audit + entry-control features taşındı (4 commit); `mobileSort.js` heatmap-only olduğu tespit edildi, heatmap ile co-located; dynamic import path bug (`../../shared/api`) build'de yakalandı; `smoke.test.jsx` + `mobileSort.test.js` import yolları güncellendi; build yeşil; 13/17 admin feature tamam | Session 7: A2.14–A2.17 (pin-blocking + settings + setup-wizard + export) |
 
 ---
 
