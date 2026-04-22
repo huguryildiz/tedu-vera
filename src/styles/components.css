@@ -511,9 +511,6 @@ body:not(.dark-mode) .consensus-sub-disputed .consensus-sub-sigma{color:#e11d48}
 /* Apply to any element displaying a numeric project score. */
 .proj-score-value{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent)}
 
-/* ── Reusable inline spinner for action buttons ── */
-@keyframes fs-btn-spin{to{transform:rotate(360deg)}}
-.fs-btn-spinner{animation:fs-btn-spin .8s linear infinite}
 .btn-loading-content{display:inline-flex;align-items:center;justify-content:center;gap:6px}
 
 /* ── Demo jury screen — PIN-screen atmospheric bloom ── */

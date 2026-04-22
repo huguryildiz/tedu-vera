@@ -1,0 +1,2 @@
+@keyframes fs-btn-spin{to{transform:rotate(360deg)}}
+.fs-btn-spinner{animation:fs-btn-spin .8s linear infinite}

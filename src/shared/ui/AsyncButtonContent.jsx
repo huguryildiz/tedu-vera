@@ -1,4 +1,5 @@
 import { Loader2 } from "lucide-react";
+import "./AsyncButtonContent.css";
 
 export default function AsyncButtonContent({
   loading,
