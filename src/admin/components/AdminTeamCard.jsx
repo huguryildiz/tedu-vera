@@ -77,10 +77,12 @@ export default function AdminTeamCard({
       <div className="admin-team-header">
         <div>
           <span className="admin-team-title">Admin Team</span>
-          {!loading && (
+          {!loading && (active.length > 0 || pending.length > 0) && (
             <span className="admin-team-meta">
-              {active.length > 0 && ` · ${active.length} active`}
-              {pending.length > 0 && ` · ${pending.length} pending`}
+              {[
+                active.length > 0 && `${active.length} active`,
+                pending.length > 0 && `${pending.length} pending`,
+              ].filter(Boolean).join(" · ")}
             </span>
           )}
         </div>
@@ -186,7 +188,7 @@ export default function AdminTeamCard({
                             <div>
                               <div className="admin-team-name">
                                 {m.displayName || m.email}
-                                {isSelf && <span className="admin-team-you-badge">You</span>}
+                                {isSelf && <span className="admin-team-you-badge admin-team-you-inline">You</span>}
                               </div>
                               {m.displayName && (
                                 <div className="admin-team-email">{m.email}</div>
@@ -200,7 +202,10 @@ export default function AdminTeamCard({
                           </div>
                         </td>
                         <td>
-                          <span className="badge-active"><CheckCircle2 size={11} strokeWidth={2.5} /> Active</span>
+                          <div className="admin-team-status-stack">
+                            {isSelf && <span className="admin-team-you-badge admin-team-you-stacked">You</span>}
+                            <span className="badge-active"><CheckCircle2 size={11} strokeWidth={2.5} /> Active</span>
+                          </div>
                         </td>
                         <td className="admin-team-actions">
                           <div className="admin-team-actions-wrap">

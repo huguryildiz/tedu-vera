@@ -1,7 +1,7 @@
 // src/admin/pages/SetupWizardPage.jsx — Setup wizard for first-time organization admin
 // ============================================================
-// 7-step wizard guiding admins through initial evaluation setup.
-// Steps: Welcome → Period → Criteria → Outcome → Jurors → Projects → Review & Launch
+// 5-step wizard guiding admins through initial evaluation setup.
+// Steps: Welcome → Period → Criteria (+Framework) → Projects → Jurors (+Launch)
 
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useAdminContext } from "../hooks/useAdminContext";
@@ -17,7 +17,6 @@ import {
   savePeriodCriteria,
   createJuror,
   createProject,
-  getPeriodCounts,
   generateEntryToken,
   listPeriodOutcomes,
   listPeriodCriteriaForMapping,
@@ -115,20 +114,16 @@ const STEP_LABELS = [
   "Welcome",
   "Period",
   "Criteria",
-  "Framework",
   "Projects",
   "Jurors",
-  "Review",
 ];
 
 const STEP_ICONS = {
   1: Diamond,
   2: CalendarRange,
   3: ClipboardCheck,
-  4: BookOpen,
-  5: Layers,
-  6: Users,
-  7: Zap,
+  4: Layers,
+  5: Users,
 };
 
 // ============================================================
@@ -213,12 +208,11 @@ function WizardStepper({ currentStep, completedSteps, onStepClick }) {
 // ============================================================
 function StepWelcome({ onContinue, onSkip }) {
   const previewIcons = [
-    { icon: CalendarRange,  label: "Create Period",  color: "#3b82f6" },
-    { icon: ClipboardCheck, label: "Set Criteria",   color: "#8b5cf6" },
-    { icon: BookOpen,       label: "Set Framework",  color: "#06b6d4" },
-    { icon: Layers,         label: "Add Projects",   color: "#f59e0b" },
-    { icon: Users,          label: "Add Jurors",     color: "#10b981" },
-    { icon: Zap,            label: "Launch",         color: "#f43f5e" },
+    { icon: CalendarRange,  label: "Create Period",        color: "#3b82f6" },
+    { icon: ClipboardCheck, label: "Criteria",             color: "#8b5cf6" },
+    { icon: Layers,         label: "Add Projects",         color: "#f59e0b" },
+    { icon: Users,          label: "Add Jurors",           color: "#10b981" },
+    { icon: Zap,            label: "Launch",               color: "#f43f5e" },
   ];
 
   return (
@@ -470,7 +464,133 @@ function StepCreatePeriod({ onContinue, onBack, onCreateNew, existingPeriods = [
 }
 
 // ============================================================
-// Step 3: Set Framework
+// Step 3: Criteria + Framework (merged)
+// ============================================================
+// Phase 1 = criteria setup, Phase 2 = (optional) framework selection.
+// After criteria are saved the wizard automatically transitions to the framework
+// phase. Framework is optional — skipping it advances to step 4 (Projects).
+function StepCriteriaAndFramework({ periodId, frameworks, onContinue, onBack }) {
+  const { criteriaConfig, sortedPeriods } = useAdminContext();
+
+  const currentPeriod = (sortedPeriods || []).find((p) => p.id === periodId) ?? null;
+  const assignedFramework = currentPeriod?.framework_id
+    ? (frameworks || []).find((fw) => fw.id === currentPeriod.framework_id) ?? null
+    : null;
+
+  // Scope hasCriteria to the CURRENT period via criteria_name — criteriaConfig may
+  // transiently hold stale data from a previous period before fetchData completes
+  // (e.g. after "Create a new period instead"). criteria_name is set atomically when
+  // criteria are saved, so it reliably reflects this period's state.
+  const hasCriteria = !!currentPeriod?.criteria_name
+    && Array.isArray(criteriaConfig) && criteriaConfig.length > 0;
+
+  const [phase, setPhase] = useState(hasCriteria ? "framework" : "criteria");
+
+  // Reset phase whenever the period changes so a new period always starts at "criteria".
+  useEffect(() => {
+    setPhase(hasCriteria ? "framework" : "criteria");
+  // periodId is the only dependency we need — hasCriteria intentionally excluded
+  // so that data-loading after period creation doesn't re-trigger.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodId]);
+
+  // When criteria are saved in the criteria phase, advance automatically.
+  useEffect(() => {
+    if (hasCriteria && phase === "criteria") setPhase("framework");
+  }, [hasCriteria, phase]);
+
+  // Combined done state: both criteria and framework are set — show unified summary.
+  if (hasCriteria && assignedFramework) {
+    const total = criteriaConfig.reduce((sum, c) => sum + (c.max || 0), 0);
+    const maxPct = total > 0
+      ? Math.max(...criteriaConfig.map((c) => ((c.max || 0) / total) * 100))
+      : 100;
+    return (
+      <div className="sw-card sw-fade-in">
+        <div className="sw-status-chip">
+          <CheckCircle2 size={12} /> Configured
+        </div>
+        <div className="sw-card-icon">
+          <ClipboardCheck size={24} />
+        </div>
+        <h2 className="sw-card-title">Criteria & Framework</h2>
+        <p className="sw-card-desc">
+          Your evaluation criteria and accreditation framework are configured for this period.
+        </p>
+
+        <div className="sw-done-summary">
+          <div className="sw-done-summary-icon"><Check size={16} strokeWidth={2.5} /></div>
+          <div className="sw-done-summary-body">
+            <div className="sw-done-summary-meta">Criteria set</div>
+            <div className="sw-done-summary-title">
+              {criteriaConfig.length} criteria · {total} points total
+            </div>
+          </div>
+        </div>
+        <div className="sw-criteria-preview" style={{ marginBottom: 16 }}>
+          {criteriaConfig.map((c) => {
+            const fillPct = total > 0 ? ((c.max || 0) / total) * 100 : 0;
+            return (
+              <div key={c.key ?? c.id} className="sw-criteria-row">
+                <div className="sw-criteria-dot" style={{ backgroundColor: c.color }} />
+                <div className="sw-criteria-name">{c.label}</div>
+                <div className="sw-criteria-pts">{c.max} pts</div>
+                <div className="sw-criteria-bar">
+                  <div className="sw-criteria-bar-fill" style={{
+                    backgroundColor: c.color,
+                    width: `${(fillPct / maxPct) * 100}%`,
+                  }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="sw-done-summary">
+          <div className="sw-done-summary-icon"><Check size={16} strokeWidth={2.5} /></div>
+          <div className="sw-done-summary-body">
+            <div className="sw-done-summary-meta">Framework assigned</div>
+            <div className="sw-done-summary-title">{assignedFramework.name}</div>
+            {assignedFramework.description && (
+              <div className="sw-done-summary-sub">{assignedFramework.description}</div>
+            )}
+          </div>
+        </div>
+
+        <div className="sw-actions">
+          <button className="sw-btn sw-btn-primary" onClick={() => onContinue(assignedFramework.id)}>
+            Continue <ArrowRight size={16} />
+          </button>
+        </div>
+        <div className="sw-footer sw-footer-stack">
+          <button className="sw-btn-link" onClick={onBack}>← Back</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === "criteria") {
+    return (
+      <StepCriteria
+        periodId={periodId}
+        onContinue={() => setPhase("framework")}
+        onBack={onBack}
+      />
+    );
+  }
+
+  return (
+    <StepFramework
+      periodId={periodId}
+      frameworks={frameworks}
+      onContinue={onContinue}
+      onBack={() => setPhase("criteria")}
+    />
+  );
+}
+
+// ============================================================
+// Step 3a: Set Framework (internal — used by StepCriteriaAndFramework)
 // ============================================================
 function StepFramework({ periodId, frameworks = [], onContinue, onBack }) {
   const toast = useToast();
@@ -629,7 +749,7 @@ function StepFramework({ periodId, frameworks = [], onContinue, onBack }) {
 }
 
 // ============================================================
-// Step 4: Evaluation Criteria
+// Step 3b: Evaluation Criteria (internal — used by StepCriteriaAndFramework)
 // ============================================================
 function StepCriteria({ periodId, onContinue, onBack, loading }) {
   const toast = useToast();
@@ -909,7 +1029,7 @@ function StepCriteria({ periodId, onContinue, onBack, loading }) {
 // ============================================================
 // Step 5: Add Jurors
 // ============================================================
-function StepJurors({ periodId, onContinue, onBack, onSkip, loading }) {
+function StepJurors({ periodId, onContinue, onBack, onSkip, onLaunch, loading }) {
   const toast = useToast();
   const { activeOrganization, fetchData, allJurors, navigateTo, setSelectedPeriodId } = useAdminContext();
   // allJurors is already scoped to selectedPeriodId by listJurorsSummary —
@@ -1026,8 +1146,8 @@ function StepJurors({ periodId, onContinue, onBack, onSkip, loading }) {
           })}
         </div>
         <div className="sw-actions">
-          <button className="sw-btn sw-btn-primary" onClick={onContinue}>
-            Continue <ArrowRight size={16} />
+          <button className="sw-btn sw-btn-success" onClick={onLaunch}>
+            <Zap size={16} /> Generate Entry Token
           </button>
         </div>
         <div className="sw-footer sw-footer-stack">
@@ -1121,8 +1241,8 @@ function StepJurors({ periodId, onContinue, onBack, onSkip, loading }) {
       </div>
 
       <div className="sw-footer sw-footer-stack">
-        <button className="sw-btn-link" onClick={onSkip}>
-          Skip for now →
+        <button className="sw-btn-link" onClick={onLaunch}>
+          Skip jurors &amp; launch →
         </button>
         <button className="sw-btn-link sw-btn-link-sub" onClick={onBack}>
           ← Back
@@ -1475,159 +1595,15 @@ function StepProjects({ periodId, onContinue, onBack, loading }) {
 }
 
 // ============================================================
-// Step 7: Review & Launch
-// ============================================================
-function StepReview({ periodId, frameworks = [], onComplete, onBack, loading }) {
-  const {
-    sortedPeriods,
-    criteriaConfig,
-    allJurors,
-    summaryData,
-  } = useAdminContext();
-  const [periodCounts, setPeriodCounts] = useState({ project_count: 0, juror_count: 0 });
-
-  useEffect(() => {
-    if (!periodId) return;
-    getPeriodCounts(periodId).then(setPeriodCounts).catch(() => {});
-  }, [periodId]);
-
-  const periodInfo = sortedPeriods?.find((p) => p.id === periodId) || {};
-  const criteriaCount = periodInfo.criteria_count || 0;
-  const totalPoints = periodInfo.criteria_total_pts || 0;
-  const assignedFramework = periodInfo.framework_id
-    ? frameworks.find((fw) => fw.id === periodInfo.framework_id) ?? null
-    : null;
-  const jurorCount = periodCounts.juror_count;
-  const projectCount = periodCounts.project_count;
-
-  const fmtDate = (d) => {
-    if (!d) return null;
-    try { return new Date(d).toLocaleDateString(); } catch { return d; }
-  };
-
-  const criteriaLabels = Array.isArray(criteriaConfig) && criteriaConfig.length > 0
-    ? criteriaConfig.map((c) => c.label).join(" · ")
-    : null;
-
-  return (
-    <>
-      <div className="sw-card sw-review-card-wide sw-fade-in">
-        <div className="sw-card-icon">
-          <Zap size={24} />
-        </div>
-        <h2 className="sw-card-title">Review &amp; Launch</h2>
-        <p className="sw-card-desc">
-          Everything looks good. Review the summary and generate your entry token to go live.
-        </p>
-
-        <div className="sw-summary-card">
-
-          {/* Period */}
-          <div className="sw-srow">
-            <div className="sw-srow-icon sw-srow-icon--blue">
-              <CalendarRange size={15} />
-            </div>
-            <div className="sw-srow-body">
-              <div className="sw-srow-label">Period</div>
-              <div className="sw-srow-value">{periodInfo.name || "—"}</div>
-              {(periodInfo.start_date || periodInfo.end_date) && (
-                <div className="sw-srow-meta">
-                  {fmtDate(periodInfo.start_date) || "—"} → {fmtDate(periodInfo.end_date) || "—"}
-                </div>
-              )}
-            </div>
-            <CheckCircle2 size={16} className="sw-srow-check" />
-          </div>
-
-          {/* Criteria */}
-          <div className="sw-srow">
-            <div className="sw-srow-icon sw-srow-icon--green">
-              <ClipboardCheck size={15} />
-            </div>
-            <div className="sw-srow-body">
-              <div className="sw-srow-label">Criteria</div>
-              <div className="sw-srow-value">
-                {criteriaCount} criteria · {totalPoints} pts
-                {periodInfo.criteria_name ? ` · ${periodInfo.criteria_name}` : ""}
-              </div>
-              {criteriaLabels && (
-                <div className="sw-srow-meta">{criteriaLabels}</div>
-              )}
-            </div>
-            <CheckCircle2 size={16} className="sw-srow-check" />
-          </div>
-
-          {/* Framework */}
-          {assignedFramework && (
-            <div className="sw-srow">
-              <div className="sw-srow-icon sw-srow-icon--purple">
-                <BookOpen size={15} />
-              </div>
-              <div className="sw-srow-body">
-                <div className="sw-srow-label">Framework</div>
-                <div className="sw-srow-value">{assignedFramework.name}</div>
-              </div>
-              <CheckCircle2 size={16} className="sw-srow-check" />
-            </div>
-          )}
-
-          {/* Projects */}
-          <div className="sw-srow">
-            <div className="sw-srow-icon sw-srow-icon--amber">
-              <Layers size={15} />
-            </div>
-            <div className="sw-srow-body">
-              <div className="sw-srow-label">Projects</div>
-              <div className="sw-srow-value">{projectCount} {projectCount === 1 ? "project" : "projects"}</div>
-            </div>
-            {projectCount > 0 && <CheckCircle2 size={16} className="sw-srow-check" />}
-          </div>
-
-          {/* Jurors */}
-          <div className="sw-srow">
-            <div className="sw-srow-icon sw-srow-icon--indigo">
-              <Users size={15} />
-            </div>
-            <div className="sw-srow-body">
-              <div className="sw-srow-label">Jurors</div>
-              <div className="sw-srow-value">
-                {jurorCount > 0 ? `${jurorCount} ${jurorCount === 1 ? "juror" : "jurors"}` : <span className="sw-srow-empty">None added yet — optional</span>}
-              </div>
-            </div>
-            {jurorCount > 0 && <CheckCircle2 size={16} className="sw-srow-check" />}
-          </div>
-
-          <div className="sw-review-cta">
-            <button
-              className="sw-btn sw-btn-success"
-              onClick={onComplete}
-              disabled={loading}
-            >
-              <Zap size={16} /> Generate Entry Token
-            </button>
-            <p className="sw-review-cta-note">
-              Publishing the period will lock settings and activate juror access.
-            </p>
-            <button className="sw-btn-link sw-review-back" onClick={onBack}>
-              ← Back
-            </button>
-          </div>
-
-        </div>
-      </div>
-    </>
-  );
-}
-
 // Map a readiness check key from rpc_admin_check_period_readiness to the
 // wizard step that owns that data. Used by CompletionScreen to render
 // "Fix now" shortcuts that jump straight back to the offending step.
 function readinessCheckToStep(check) {
   if (!check) return null;
   if (check.startsWith("criteria") || check === "weights") return 3;
-  if (check === "no_framework" || check.startsWith("outcome")) return 4;
-  if (check === "no_projects") return 5;
-  if (check === "no_jurors") return 6;
+  if (check === "no_framework" || check.startsWith("outcome")) return 3;
+  if (check === "no_projects") return 4;
+  if (check === "no_jurors") return 5;
   return null;
 }
 
@@ -1639,6 +1615,7 @@ const QR_TTL_LABELS = { "12h": "12 hours", "24h": "24 hours", "48h": "48 hours",
 function CompletionScreen({ periodId, organizationId, isDemoMode, onDashboard, onPublished, onMarkSetupComplete, onNavigateStep }) {
   const confettiRef = useConfetti();
   const toast = useToast();
+  const { isSuper } = useAuth();
   const [entryToken, setEntryToken] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -1671,8 +1648,8 @@ function CompletionScreen({ periodId, organizationId, isDemoMode, onDashboard, o
 
   useEffect(() => {
     qrInstance.current = new QRCodeStyling({
-      width: 140,
-      height: 140,
+      width: 200,
+      height: 200,
       type: "svg",
       dotsOptions: { type: "extra-rounded", color: "#1e3a5f" },
       cornersSquareOptions: { type: "extra-rounded", color: "#1e3a5f" },
@@ -1702,8 +1679,19 @@ function CompletionScreen({ periodId, organizationId, isDemoMode, onDashboard, o
   }, [isSuper]);
 
   const handleDownloadQr = () => {
-    if (!qrInstance.current) return;
-    qrInstance.current.download({ name: "vera-entry-token", extension: "png" });
+    if (!entryUrl) return;
+    const hiRes = new QRCodeStyling({
+      width: 800,
+      height: 800,
+      data: entryUrl,
+      image: veraLogo,
+      dotsOptions: { type: "extra-rounded", color: "#1e3a5f" },
+      cornersSquareOptions: { type: "extra-rounded", color: "#1e3a5f" },
+      cornersDotOptions: { type: "dot", color: "#2563eb" },
+      backgroundOptions: { color: "#ffffff" },
+      imageOptions: { crossOrigin: "anonymous", margin: 4, imageSize: 0.46 },
+    });
+    hiRes.download({ name: "vera-entry-token", extension: "png" });
   };
 
   const handleCopy = async () => {
@@ -2043,7 +2031,7 @@ export default function SetupWizardPage() {
     [setWizardData, fetchData]
   );
 
-  // Step 3: Framework — save selected frameworkId (or mark skipped)
+  // Step 3: Criteria+Framework — save frameworkId if chosen, then advance to Projects
   const handleStep3Continue = useCallback(
     (frameworkId) => {
       if (frameworkId) setWizardData({ frameworkId });
@@ -2053,14 +2041,6 @@ export default function SetupWizardPage() {
   );
 
   const handleStep4Continue = useCallback(() => {
-    nextStep();
-  }, [nextStep]);
-
-  const handleStep5Continue = useCallback(() => {
-    nextStep();
-  }, [nextStep]);
-
-  const handleStep6Continue = useCallback(() => {
     nextStep();
   }, [nextStep]);
 
@@ -2146,16 +2126,7 @@ export default function SetupWizardPage() {
       )}
 
       {currentStep === 3 && (
-        <StepCriteria
-          periodId={periodId}
-          onContinue={handleStep4Continue}
-          onBack={prevStep}
-          loading={loading}
-        />
-      )}
-
-      {currentStep === 4 && (
-        <StepFramework
+        <StepCriteriaAndFramework
           periodId={periodId}
           frameworks={frameworks || []}
           onContinue={handleStep3Continue}
@@ -2163,31 +2134,21 @@ export default function SetupWizardPage() {
         />
       )}
 
-      {currentStep === 5 && (
+      {currentStep === 4 && (
         <StepProjects
           periodId={periodId}
-          onContinue={handleStep5Continue}
+          onContinue={handleStep4Continue}
           onBack={prevStep}
           loading={loading}
         />
       )}
 
-      {currentStep === 6 && (
+      {currentStep === 5 && (
         <StepJurors
           periodId={periodId}
-          onContinue={handleStep6Continue}
+          onContinue={() => fetchData()}
           onBack={prevStep}
-          onSkip={nextStep}
-          loading={loading}
-        />
-      )}
-
-      {currentStep === 7 && (
-        <StepReview
-          periodId={periodId}
-          frameworks={frameworks || []}
-          onComplete={handleCompletion}
-          onBack={prevStep}
+          onLaunch={handleCompletion}
           loading={loading}
         />
       )}

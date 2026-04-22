@@ -7,12 +7,12 @@ function formatDeadline(graceEndsAt) {
   if (!graceEndsAt) return null;
   const d = new Date(graceEndsAt);
   if (isNaN(d)) return null;
-  return d.toLocaleString("en-GB", {
+  // Cron runs daily at 03:00 UTC — deletion happens the day after grace expires
+  const deletionDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1));
+  return deletionDay.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 }
 

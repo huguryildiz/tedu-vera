@@ -185,6 +185,18 @@
     overflow: hidden;
   }
 
+  .overview-top-projects-table tbody tr.es-row {
+    display: block !important;
+    border: none !important;
+    background: none !important;
+    margin-bottom: 0;
+    overflow: visible;
+  }
+  .overview-top-projects-table tbody tr.es-row td {
+    display: block;
+    width: 100%;
+  }
+
   .overview-top-projects-table tbody tr {
     display: grid !important;
     grid-template-columns: 40px 1fr 52px;

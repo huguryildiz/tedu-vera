@@ -604,10 +604,21 @@ export default function EntryControlPage() {
   }
 
   async function handleDownload() {
-    if (!qrInstance.current) return;
+    if (!entryUrl) return;
     const fileName = `jury-qr-${periodName || periodId || "access"}`;
     try {
-      const raw = await qrInstance.current.getRawData("png");
+      const hiRes = new QRCodeStyling({
+        width: 800,
+        height: 800,
+        data: entryUrl,
+        image: veraLogo,
+        dotsOptions: { type: "extra-rounded", color: "#1e3a5f" },
+        cornersSquareOptions: { type: "extra-rounded", color: "#1e3a5f" },
+        cornersDotOptions: { type: "dot", color: "#2563eb" },
+        backgroundOptions: { color: "#ffffff" },
+        imageOptions: { crossOrigin: "anonymous", margin: 4, imageSize: 0.46 },
+      });
+      const raw = await hiRes.getRawData("png");
       if (!raw) throw new Error("QR data unavailable.");
       const blob = raw instanceof Blob ? raw : new Blob([raw], { type: "image/png" });
       const url = URL.createObjectURL(blob);

@@ -196,6 +196,18 @@ body:not(.dark-mode) .rk-range-track-bg {
   /* layout.css sets display:flex on tbody — override */
   .ranking-table tbody { display: block !important; width: 100%; max-width: 100%; overflow: hidden; }
 
+  .ranking-table tbody tr.es-row {
+    display: block !important;
+    border: none !important;
+    background: none !important;
+    margin-bottom: 0;
+    overflow: visible;
+  }
+  .ranking-table tbody tr.es-row td {
+    display: block;
+    width: 100%;
+  }
+
   /* ── Card grid ── */
   .ranking-table tbody tr {
     display: grid !important;

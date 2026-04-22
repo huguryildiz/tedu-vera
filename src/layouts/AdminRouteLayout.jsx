@@ -23,6 +23,8 @@ import { useAdminData } from "@/admin/hooks/useAdminData";
 import { useGlobalTableSort } from "@/admin/hooks/useGlobalTableSort";
 import AdminSidebar from "@/admin/layout/AdminSidebar";
 import AdminHeader from "@/admin/layout/AdminHeader";
+import SpotlightTour from "@/shared/ui/SpotlightTour";
+import { ADMIN_TOUR_STEPS } from "@/admin/adminTourSteps";
 import SetupProgressBanner from "@/admin/layout/SetupProgressBanner";
 import EmailVerifyBanner from "@/auth/components/EmailVerifyBanner";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
@@ -104,6 +106,17 @@ export default function AdminRouteLayout() {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [selectedPeriodId, setSelectedPeriodId] = useState(null);
+  const [tourKey, setTourKey] = useState(0);
+  const [tourDone, setTourDone] = useState(() => {
+    try { return !!localStorage.getItem(KEYS.ADMIN_TOUR_DONE); } catch { return false; }
+  });
+
+  const handleStartTour = useCallback(() => {
+    try { localStorage.removeItem(KEYS.ADMIN_TOUR_DONE); } catch {}
+    setTourDone(false);
+    setTourKey((k) => k + 1);
+    if (window.innerWidth <= 768) setMobileOpen(true);
+  }, []);
 
   const {
     user,
@@ -303,12 +316,11 @@ export default function AdminRouteLayout() {
 
   // Setup wizard progress steps — used by SetupProgressBanner
   const setupSteps = useMemo(() => [
-    { id: "period",    label: "Period",    done: sortedPeriods.length > 0 },
-    { id: "criteria",  label: "Criteria",  done: criteriaConfig.length > 0 },
-    { id: "framework", label: "Framework", done: !!selectedPeriod?.framework_id },
-    { id: "projects",  label: "Projects",  done: (summaryData || []).length > 0 },
-    { id: "jurors",    label: "Jurors",    done: (allJurors || []).length > 0 },
-  ], [sortedPeriods, criteriaConfig, selectedPeriod, summaryData, allJurors]);
+    { id: "period",   label: "Period",   done: sortedPeriods.length > 0 },
+    { id: "criteria", label: "Criteria", done: criteriaConfig.length > 0 },
+    { id: "projects", label: "Projects", done: (summaryData || []).length > 0 },
+    { id: "jurors",   label: "Jurors",   done: (allJurors || []).length > 0 },
+  ], [sortedPeriods, criteriaConfig, summaryData, allJurors]);
 
   // Groups derived from project summaries
   const groups = useMemo(
@@ -386,6 +398,7 @@ export default function AdminRouteLayout() {
     isDemo,
     isDemoMode,
     scoresView,
+    onStartTour: handleStartTour,
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [
     rawScores, summaryData, allJurors, sortedPeriods,
@@ -394,7 +407,7 @@ export default function AdminRouteLayout() {
     criteriaConfig, criteriaLoading, outcomeConfig, frameworks, reloadFrameworks, reloadCriteriaAndOutcomes,
     frameworkThreshold, groups, matrixJurors, activeOrganization,
     onDirtyChange, onCurrentSemesterChange, navigateTo,
-    basePath, isDemo, isDemoMode, scoresView,
+    basePath, isDemo, isDemoMode, scoresView, handleStartTour,
   ]);
 
   // ── Auth gate ─────────────────────────────────────────────
@@ -523,6 +536,7 @@ export default function AdminRouteLayout() {
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
         setupIncomplete={setupIncomplete && !skipped}
+        onStartTour={tourDone ? undefined : handleStartTour}
       />
       <div className={`admin-main${isDemoMode ? " has-demo-banner" : ""}${maintenanceActive && isSuper ? " has-maintenance-banner" : ""}${setupIncomplete && currentPage !== "setup" ? " has-setup-banner" : ""}${user && !isEmailVerified && !isSuper ? " has-evb-banner" : ""}`}>
         {maintenanceActive && isSuper && (
@@ -568,6 +582,17 @@ export default function AdminRouteLayout() {
           <Outlet context={adminContext} />
         </div>
       </div>
+      {!(setupIncomplete && !skipped) && (
+        <SpotlightTour
+          key={tourKey}
+          steps={ADMIN_TOUR_STEPS}
+          sessionKey={KEYS.ADMIN_TOUR_DONE}
+          storageType="local"
+          delay={800}
+          onDone={() => { setTourDone(true); setMobileOpen(false); }}
+          onStart={() => { if (window.innerWidth <= 768) setMobileOpen(true); }}
+        />
+      )}
     </div>
   );
 }

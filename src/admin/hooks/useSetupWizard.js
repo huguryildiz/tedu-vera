@@ -8,7 +8,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react";
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 5;
 
 /**
  * Derive the furthest step the wizard should start at based on
@@ -16,32 +16,22 @@ const TOTAL_STEPS = 7;
  * the user can continue from where they left off.
  *
  * Step map:
- *  1 Welcome  2 Period  3 Criteria  4 Framework
- *  5 Projects  6 Jurors  7 Review
+ *  1 Welcome  2 Period  3 Criteria (+Framework)  4 Projects  5 Jurors (+Launch)
  */
 function deriveResumeStep({ periods, jurors, projects, criteriaConfig = [] }) {
-  // Step order: 1 Welcome → 2 Period → 3 Criteria → 4 Outcome → 5 Jurors → 6 Projects → 7 Review
-  //
-  // Step 3 (Criteria) requires BOTH criteria_name set on the period AND actual
-  // criterion rows in criteriaConfig. The name alone is insufficient — it's
-  // possible to have criteria_name without rows (e.g. saved metadata but criteria
-  // rows later cleared), which would let the wizard skip to Review and fail the
-  // backend readiness check ("Add at least one criterion") at publish time.
-  // criteriaConfig is scoped to the admin's selectedPeriodId which is kept in
-  // sync with the wizard's period by SetupWizardPage's reconcile effect, so
-  // consulting it here reflects the wizard period's actual state.
-  //
-  // Step 4 (Outcome/Framework) completion is measured by whether the wizard's
-  // own period has a framework assigned — NOT by the org-wide frameworks list
-  // (which always contains the global VERA Standard and would never be empty).
+  // Step 3 (Criteria+Framework) requires:
+  //   • criteria_name set on the period AND criterion rows in criteriaConfig
+  //   • framework_id set on the period (or manually skipped via nextStep/goToStep)
+  // The reactive effect uses Math.max, so explicit manual advancement (Skip / select)
+  // always wins over this derivation. Derivation only auto-advances when data is complete.
   const period = periods[0];
   const criteriaDone = !!period?.criteria_name && criteriaConfig.length > 0;
+  const frameworkDone = criteriaDone && !!period?.framework_id;
   if (!periods.length) return 1;                 // nothing done yet → Welcome
   if (!criteriaDone) return 3;                   // period done, no criteria → Criteria
-  if (!period?.framework_id) return 4;           // criteria done, no framework on period → Framework
-  if (!projects.length) return 5;                // framework done, no projects → Projects
-  if (!jurors.length) return 6;                  // projects done, no jurors → Jurors
-  return 7;                                      // jurors done → Review
+  if (!frameworkDone) return 3;                  // criteria done, no framework → Framework phase
+  if (!projects.length) return 4;                // framework done, no projects → Projects
+  return 5;                                      // projects done → Jurors+Launch
 }
 
 /**
@@ -180,20 +170,20 @@ export function useSetupWizard({
       ? periods.find((p) => p.id === wizardPeriodId)
       : null;
     if (wizPeriod) s.add(2);
-    // Step 3 is only complete if the period's criteria name is set AND at least
-    // one criterion row exists. Matches deriveResumeStep — prevents the stepper
-    // from showing step 3 as green while the backend readiness check would fail.
-    if (wizPeriod?.criteria_name && criteriaConfig.length > 0) s.add(3);
-    if (wizPeriod?.framework_id) s.add(4);
+    // Step 3 is complete when criteria name is set, criterion rows exist, AND
+    // framework_id is assigned. Matches deriveResumeStep so the stepper tick
+    // stays in sync with auto-advance logic. When user skips framework manually
+    // (nextStep/goToStep), the loop above (i < currentStep) marks step 3 done.
+    if (wizPeriod?.criteria_name && criteriaConfig.length > 0 && !!wizPeriod?.framework_id) s.add(3);
     // jurors/projects from useAdminData are already scoped to selectedPeriodId
     // and items carry no period_id field, so trust the list length directly.
-    if (wizardPeriodId && projects.length > 0) s.add(5);
-    if (wizardPeriodId && jurors.length > 0) s.add(6);
+    if (wizardPeriodId && projects.length > 0) s.add(4);
+    if (wizardPeriodId && jurors.length > 0) s.add(5);
     return s;
   }, [currentStep, wizardPeriodId, periods, jurors, projects, criteriaConfig]);
 
   const goToStep = useCallback((step) => {
-    const s = Math.max(1, Math.min(TOTAL_STEPS, step));
+    const s = Math.max(1, Math.min(TOTAL_STEPS, Number(step)));
     setCurrentStep(s);
     persistStep(s);
   }, [persistStep]);

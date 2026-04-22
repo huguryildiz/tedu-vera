@@ -2135,7 +2135,9 @@ let tokenList = [];
 periodData.forEach(pd => {
   for (let i = 0; i < TOKENS_PER_PERIOD; i++) {
     const tokenId = uuid(`tok-${pd.id}-${i}`);
-    const tokenPlain = uuid(`token-plain-${pd.id}-${i}`);
+    const tokenPlain = (pd.org === 'TEDU-EE' && pd.isCur && i === 0)
+      ? 'demo-tedu-ee'
+      : uuid(`token-plain-${pd.id}-${i}`);
     const tokenHash = sha256(tokenPlain);
     const isRevoked = (i === 2);
     const isExpired = (i === 3); // naturally expired (TTL ran out)

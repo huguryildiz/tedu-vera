@@ -1034,7 +1034,7 @@ export default function RankingsPage() {
                     );
                   })}
                 {!loading && filteredRows.length === 0 && (
-                  <tr>
+                  <tr className="es-row">
                     <td colSpan={3 + criteriaConfig.length + 3} style={{ padding: 0 }}>
                       {totalProjects === 0 ? (
                         <div className="vera-es-no-data">

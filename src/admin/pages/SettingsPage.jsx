@@ -3,7 +3,8 @@
 // Organization management moved to OrganizationsPage.jsx.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import { HelpCircle } from "lucide-react";
 import { useAuth } from "@/auth";
 import { useUpdatePolicy } from "@/auth/SecurityPolicyContext";
 import { useToast } from "@/shared/hooks/useToast";
@@ -17,12 +18,13 @@ import { computeSecuritySignal } from "../utils/computeSecuritySignal.js";
 import Avatar from "@/shared/ui/Avatar";
 import { useAdminTeam } from "../hooks/useAdminTeam.js";
 import AdminTeamCard from "../components/AdminTeamCard.jsx";
-import { upsertProfile, getSecurityPolicy, setSecurityPolicy, getPinPolicy, setPinPolicy, listAdminSessions, deleteAdminSession } from "@/shared/api";
+import { upsertProfile, getSecurityPolicy, setSecurityPolicy, getPinPolicy, setPinPolicy, listAdminSessions, deleteAdminSession, updateOrganization } from "@/shared/api";
 import { getAdminDeviceId, getAuthMethodLabelFromSession } from "@/shared/lib/adminSession";
 import { supabase } from "@/shared/lib/supabaseClient";
 import { formatDate } from "@/shared/lib/dateUtils";
 
-import { Icon, Lock } from "lucide-react";
+import { Icon, Lock, Pencil, Check, X } from "lucide-react";
+import FbAlert from "@/shared/ui/FbAlert";
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -92,11 +94,13 @@ export default function SettingsPage() {
     clearPendingEmail,
     updatePassword,
     reauthenticateWithPassword,
+    refreshMemberships,
     loading,
   } = useAuth();
   const updatePolicy = useUpdatePolicy();
   const _toast = useToast();
   const navigate = useNavigate();
+  const { onStartTour } = useOutletContext() || {};
   const adminTeam = useAdminTeam(!isSuper ? activeOrganization?.id : null);
 
   const initials = getInitials(displayName, user?.email);
@@ -124,6 +128,10 @@ export default function SettingsPage() {
   const [pinPolicyError, setPinPolicyError] = useState(null);
   const [adminSessions, setAdminSessions] = useState([]);
   const [adminSessionsLoading, setAdminSessionsLoading] = useState(false);
+  const [editingOrgName, setEditingOrgName] = useState(false);
+  const [orgNameDraft, setOrgNameDraft] = useState("");
+  const [orgNameError, setOrgNameError] = useState(null);
+  const [orgNameSaving, setOrgNameSaving] = useState(false);
   const knownSessionCount = adminSessions.length > 0 ? adminSessions.length : (session ? 1 : 0);
   const sessionCount = `${knownSessionCount} Active`;
   const securitySignal = useMemo(
@@ -273,6 +281,26 @@ export default function SettingsPage() {
     }
   }, [reauthenticateWithPassword, updatePassword, _toast]);
 
+  const handleOrgNameSave = useCallback(async () => {
+    const trimmed = orgNameDraft.trim();
+    if (!trimmed) return;
+    if (trimmed === (activeOrganization?.name || "")) {
+      setEditingOrgName(false);
+      return;
+    }
+    setOrgNameSaving(true);
+    setOrgNameError(null);
+    try {
+      await updateOrganization({ organizationId: activeOrganization.id, name: trimmed });
+      await refreshMemberships();
+      setEditingOrgName(false);
+    } catch (err) {
+      setOrgNameError(err?.message || "Failed to update organization name.");
+    } finally {
+      setOrgNameSaving(false);
+    }
+  }, [orgNameDraft, activeOrganization, refreshMemberships]);
+
   return (
     <>
       <EditProfileDrawer
@@ -320,7 +348,7 @@ export default function SettingsPage() {
         onSave={handleSavePinPolicy}
         error={pinPolicyError}
       />
-      <div className="page">
+      <div className="page" id="page-settings">
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <div>
@@ -339,7 +367,7 @@ export default function SettingsPage() {
 
         <div className="grid-2" style={{ gap: 10 }}>
           {/* ── Left column: Profile + Security ────────────────────── */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="settings-col-left" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {/* Profile card */}
             <div className="card settings-role-card" style={{ padding: 14 }}>
               <div className="card-header" style={{ marginBottom: 8 }}>
@@ -429,6 +457,24 @@ export default function SettingsPage() {
                 <button className="btn btn-outline btn-sm" onClick={handleOpenPinPolicy}>Edit Access Policy</button>
               </div>
             )}
+
+            {/* Help & Onboarding card */}
+            <div className="card settings-role-card" style={{ padding: 14 }}>
+              <div className="card-header" style={{ marginBottom: 8 }}>
+                <div className="card-title">Help &amp; Onboarding</div>
+              </div>
+              <p style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 10, textAlign: "justify", textJustify: "inter-word" }}>
+                Take a guided walkthrough of the admin panel. The tour highlights each section of the sidebar and explains what it does.
+              </p>
+              <button
+                className="btn btn-outline btn-sm"
+                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                onClick={onStartTour}
+              >
+                <HelpCircle size={13} strokeWidth={2} />
+                Restart Guided Tour
+              </button>
+            </div>
           </div>
 
           {/* ── Right column ──────────────────────────────────────── */}
@@ -452,84 +498,97 @@ export default function SettingsPage() {
               <div className="card settings-role-card" style={{ padding: 14 }}>
                 <div className="card-header" style={{ marginBottom: 8 }}>
                   <div className="card-title">Organization Access</div>
-                  <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
-                    <span className="badge badge-neutral">Read Only</span>
-                    <span className="badge badge-neutral"><Lock size={10} strokeWidth={2.5} />Managed by Super Admin</span>
-                  </div>
+                  <span className="badge badge-neutral"><Lock size={10} strokeWidth={2.5} />Code &amp; status managed by Super Admin</span>
                 </div>
                 <div style={{ border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", overflow: "hidden", fontSize: 12 }}>
-                  {[
-                    { label: "Organization", value: activeOrganization?.name || "—" },
-                    { label: "Short label", value: <span className="mono">{activeOrganization?.code || "—"}</span> },
-                    { label: "Membership status", value: <span className="badge badge-success"><Icon
-                      iconNode={[]}
-                      className="badge-ico"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></Icon>Active</span> },
-                  ].map(({ label, value }, i) => (
-                    <div
-                      key={label}
-                      style={{ display: "grid", gridTemplateColumns: "140px 1fr", padding: "7px 10px", background: i % 2 === 0 ? "var(--surface-1)" : undefined, borderBottom: i < 2 ? "1px solid var(--border)" : undefined }}
-                    >
-                      <div className="text-xs text-muted">{label}</div>
-                      <div style={{ fontWeight: label === "Organization" ? 600 : undefined }}>{value}</div>
+
+                  {/* Organization name row — inline editable */}
+                  <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", alignItems: "center", padding: "7px 10px", background: "var(--surface-1)", borderBottom: "1px solid var(--border)" }}>
+                    <div className="text-xs text-muted">Organization</div>
+                    {editingOrgName ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <input
+                          autoFocus
+                          value={orgNameDraft}
+                          onChange={(e) => setOrgNameDraft(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") { e.preventDefault(); handleOrgNameSave(); }
+                            if (e.key === "Escape") { setEditingOrgName(false); setOrgNameError(null); }
+                          }}
+                          style={{ flex: 1, fontWeight: 600, fontSize: 12, padding: "2px 6px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--text-primary)", minWidth: 0 }}
+                          disabled={orgNameSaving}
+                        />
+                        <button
+                          onClick={handleOrgNameSave}
+                          disabled={orgNameSaving || !orgNameDraft.trim()}
+                          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: "var(--radius-sm)", border: "none", background: "var(--success-soft)", color: "var(--success)", cursor: "pointer", flexShrink: 0 }}
+                          title="Save"
+                        >
+                          <Check size={12} strokeWidth={2.5} />
+                        </button>
+                        <button
+                          onClick={() => { setEditingOrgName(false); setOrgNameError(null); }}
+                          disabled={orgNameSaving}
+                          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: "var(--radius-sm)", border: "none", background: "var(--surface-3)", color: "var(--text-muted)", cursor: "pointer", flexShrink: 0 }}
+                          title="Cancel"
+                        >
+                          <X size={12} strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontWeight: 600, flex: 1 }}>{activeOrganization?.name || "—"}</span>
+                        <button
+                          onClick={() => { setOrgNameDraft(activeOrganization?.name || ""); setEditingOrgName(true); setOrgNameError(null); }}
+                          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: "var(--radius-sm)", border: "none", background: "transparent", color: "var(--text-muted)", cursor: "pointer", flexShrink: 0, transition: "color 0.15s" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+                          title="Edit name"
+                        >
+                          <Pencil size={13} strokeWidth={2} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {orgNameError && (
+                    <div style={{ padding: "0 10px 8px" }}>
+                      <FbAlert variant="danger" style={{ marginTop: 6 }}>{orgNameError}</FbAlert>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Code row — read only */}
+                  <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", alignItems: "center", padding: "7px 10px", borderBottom: "1px solid var(--border)" }}>
+                    <div className="text-xs text-muted">Code</div>
+                    <span className="mono">{activeOrganization?.code || "—"}</span>
+                  </div>
+
+                  {/* Membership status row — read only */}
+                  <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", alignItems: "flex-start", padding: "7px 10px", background: "var(--surface-1)" }}>
+                    <div className="text-xs text-muted">Membership status</div>
+                    <span className="badge badge-success" style={{ justifySelf: "start" }}>
+                      <Check size={12} strokeWidth={2.5} className="badge-ico" />Active
+                    </span>
+                  </div>
                 </div>
+
                 <div className="text-xs text-muted" style={{ marginTop: 8 }}>
-                  Organization identity fields are locked. Name, code, ownership, and metadata can only be edited by Super Admin.
+                  Organization name can be edited by org admins. Code, ownership, and status are managed by Super Admin.
                 </div>
               </div>
             )}
 
-            {/* Permissions Summary — org admin only */}
+            {/* Admin Team — org admin only */}
             {!isSuper && (
-              <div className="card settings-role-card" style={{ padding: 14 }}>
-                <div className="card-header" style={{ marginBottom: 6 }}>
-                  <div className="card-title">Permissions Summary</div>
-                  <span className="badge badge-neutral" style={{ fontSize: 9 }}>Scope Clarification</span>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  {[
-                    { allowed: true, text: "Manage evaluation periods, jurors, projects, and scoring templates" },
-                    { allowed: true, text: "View and export scores and analytics" },
-                    { allowed: true, text: "Control jury entry tokens for own organization" },
-                    { allowed: true, text: "Configure PIN lockout policy and QR code validity for jurors" },
-                    { allowed: true, text: "Invite and manage organization admin team members" },
-                    { allowed: false, text: "Edit organization identity (name, short label, code, ownership)" },
-                    { allowed: false, text: "Approve admin applications platform-wide" },
-                    { allowed: false, text: "Access or manage other organizations" },
-                  ].map(({ allowed, text }) => (
-                    <div
-                      key={text}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 7, padding: "6px 8px",
-                        border: allowed ? "1px solid rgba(22,163,74,0.14)" : "1px solid rgba(225,29,72,0.12)",
-                        borderRadius: "var(--radius-sm)",
-                        background: allowed ? "var(--success-soft)" : "var(--danger-soft)",
-                      }}
-                    >
-                      <span style={{ color: allowed ? "var(--success)" : "var(--danger)", fontSize: 11, flexShrink: 0 }}>
-                        {allowed ? "✓" : "✕"}
-                      </span>
-                      <div style={{ fontSize: 11.5, color: allowed ? "var(--text-secondary)" : "var(--text-tertiary)" }}>{text}</div>
-                    </div>
-                  ))}
-                </div>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                <AdminTeamCard
+                  {...adminTeam}
+                  currentUserId={user?.id}
+                  style={{ flex: 1 }}
+                />
               </div>
             )}
           </div>
         </div>
-        {!isSuper && (
-          <AdminTeamCard
-            {...adminTeam}
-            currentUserId={user?.id}
-          />
-        )}
       </div>
     </>
   );

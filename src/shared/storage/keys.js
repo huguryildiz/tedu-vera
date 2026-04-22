@@ -17,6 +17,7 @@ export const KEYS = {
   JURY_RAW_TOKEN_PREFIX: "jury_raw_token_",
 
   // ── Admin panel ────────────────────────────────────────────
+  ADMIN_TOUR_DONE: "vera.admin_tour_done",
   SETUP_SKIP_PREFIX: "vera.setup_skipped_",
   CRITERIA_SCRATCH_PREFIX: "vera.criteria_scratch_",
   OUTCOMES_SCRATCH_PREFIX: "vera.outcomes_scratch_",

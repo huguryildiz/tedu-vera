@@ -800,7 +800,7 @@ export default function OverviewPage() {
             </thead>
             <tbody ref={topProjectsScopeRef}>
               {topProjects.length === 0 && !loading ? (
-                <tr>
+                <tr className="es-row">
                   <td colSpan={5} style={{ padding: 0 }}>
                     <div className="vera-es-no-data">
                       <div className="vera-es-ghost-rows" aria-hidden="true">

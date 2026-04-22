@@ -156,6 +156,14 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
   .pin-policy-grid { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 768px) and (orientation: portrait) {
+  .pin-lock-page .card:has(.pin-policy-grid) .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
+
 /* ─── Desktop defaults: hide mobile-only elements ──────────── */
 .pin-lock-table .fails-mobile,
 .pin-lock-table .lock-mobile { display: none; }
