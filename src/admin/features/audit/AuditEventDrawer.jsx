@@ -12,7 +12,7 @@ import {
   formatDiffChips,
   CATEGORY_META,
   SEVERITY_META,
-} from "../utils/auditUtils";
+} from "@/admin/utils/auditUtils";
 
 // Trigger-based CRUD events — narrative sentence is awkward for these
 const TRIGGER_CRUD = /^\w+\.(insert|update|delete)$/;

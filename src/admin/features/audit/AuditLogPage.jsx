@@ -3,22 +3,23 @@
 // Hook connections: useAuditLogFilters, usePageRealtime
 
 import { useMemo, useState } from "react";
-import { useAdminContext } from "../hooks/useAdminContext";
+import { useAdminContext } from "@/admin/hooks/useAdminContext";
 import { Search, Download, X, Clock, AlertTriangle, Filter, Lock, Shield, UserCheck, Activity, Key, Package, Calendar, LogIn, FileText, ShieldCheck, XCircle } from "lucide-react";
 import { useToast } from "@/shared/hooks/useToast";
 import { verifyAuditChain } from "@/shared/api";
 import { useAuth } from "@/auth";
 import FbAlert from "@/shared/ui/FbAlert";
 import { FilterButton } from "@/shared/ui/FilterButton";
-import { useAuditLogFilters } from "../hooks/useAuditLogFilters";
-import { usePageRealtime } from "../hooks/usePageRealtime";
-import ExportPanel from "../components/ExportPanel";
+import { useAuditLogFilters } from "./useAuditLogFilters";
+import { usePageRealtime } from "@/admin/hooks/usePageRealtime";
+import ExportPanel from "@/admin/components/ExportPanel";
 import CustomSelect from "@/shared/ui/CustomSelect";
-import { getActorInfo, formatActionLabel, formatActionDetail, formatSentence, formatDiffChips, detectAnomalies, CATEGORY_META, SEVERITY_META, groupBulkEvents, formatEventMeta, addDaySeparators } from "../utils/auditUtils";
-import { AUDIT_TABLE_COLUMNS } from "../utils/auditColumns";
-import AuditEventDrawer from "../components/AuditEventDrawer";
+import { getActorInfo, formatActionLabel, formatActionDetail, formatSentence, formatDiffChips, detectAnomalies, CATEGORY_META, SEVERITY_META, groupBulkEvents, formatEventMeta, addDaySeparators } from "@/admin/utils/auditUtils";
+import { AUDIT_TABLE_COLUMNS } from "@/admin/utils/auditColumns";
+import AuditEventDrawer from "./AuditEventDrawer";
 import useCardSelection from "@/shared/hooks/useCardSelection";
 import Pagination from "@/shared/ui/Pagination";
+import "./AuditLogPage.css";
 
 // ── Chip helpers ──────────────────────────────────────────────
 const CHIP_MAP = {

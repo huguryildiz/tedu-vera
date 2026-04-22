@@ -5,15 +5,15 @@
 // ============================================================
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { listAuditLogs, logExportInitiated } from "../../shared/api";
+import { listAuditLogs, logExportInitiated } from "@/shared/api";
 import {
   AUDIT_PAGE_SIZE,
   formatAuditTimestamp,
   getAuditDateRangeError,
   buildAuditParams,
-} from "../utils/auditUtils";
-import { AUDIT_TABLE_COLUMNS } from "../utils/auditColumns";
-import { downloadTable } from "../utils/downloadTable";
+} from "@/admin/utils/auditUtils";
+import { AUDIT_TABLE_COLUMNS } from "@/admin/utils/auditColumns";
+import { downloadTable } from "@/admin/utils/downloadTable";
 import { useAuth } from "@/auth";
 
 const defaultAuditFilters = {

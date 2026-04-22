@@ -11,7 +11,6 @@
 /* Page styles */
 @import './pages/entry-control.css';
 @import './pages/pin-lock.css';
-@import './pages/audit-log.css';
 @import './pages/settings.css';
 @import './pages/export.css';
 
