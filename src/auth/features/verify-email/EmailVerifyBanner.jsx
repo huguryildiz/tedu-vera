@@ -2,6 +2,7 @@ import { useContext, useState } from "react";
 import { MailWarning } from "lucide-react";
 import { AuthContext } from "@/auth/shared/AuthProvider";
 import { sendEmailVerification } from "@/shared/api";
+import "./EmailVerifyBanner.css";
 
 function formatDeadline(graceEndsAt) {
   if (!graceEndsAt) return null;
