@@ -1,3 +1,4 @@
+import "./VerifyEmailScreen.css";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { MailCheck, MailWarning, Loader2, Mail, Info, RefreshCw, LogIn } from "lucide-react";
