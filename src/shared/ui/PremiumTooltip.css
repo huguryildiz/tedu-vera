@@ -1,0 +1,55 @@
+/* ── PremiumTooltip — global glass tooltip ─────────────────────── */
+.premium-tooltip-wrap{position:relative;display:inline-flex;align-items:center}
+.premium-tooltip-box{
+  position:fixed;z-index:var(--z-tooltip);pointer-events:none;
+  background:rgba(12,18,32,0.82);
+  backdrop-filter:blur(24px) saturate(1.2);
+  -webkit-backdrop-filter:blur(24px) saturate(1.2);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:var(--radius,10px);
+  padding:8px 13px;
+  white-space:nowrap;
+  box-shadow:0 12px 36px rgba(0,0,0,0.40),inset 0 1px 0 rgba(255,255,255,0.04);
+  font-size:11.5px;font-weight:500;color:rgba(255,255,255,0.88);
+  letter-spacing:0.15px;
+  opacity:0;
+}
+.premium-tooltip-box.tip-top  {animation:tooltip-rise  .15s ease-out forwards}
+.premium-tooltip-box.tip-bottom{animation:tooltip-drop  .15s ease-out forwards}
+@keyframes tooltip-rise  {from{opacity:0;transform:translateY( 5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tooltip-drop  {from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.premium-tooltip-box.is-visible{opacity:1;transform:translateY(0)}
+.premium-tooltip-box::after{
+  content:'';position:absolute;left:50%;
+  width:7px;height:7px;border-radius:1px;
+  background:rgba(12,18,32,0.82);
+}
+.premium-tooltip-box.tip-top::after{
+  bottom:-4px;transform:translateX(-50%) rotate(45deg);
+  border-right:1px solid rgba(255,255,255,0.08);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.premium-tooltip-box.tip-bottom::after{
+  top:-4px;transform:translateX(-50%) rotate(45deg);
+  border-left:1px solid rgba(255,255,255,0.08);
+  border-top:1px solid rgba(255,255,255,0.08);
+}
+body:not(.dark-mode) .premium-tooltip-box{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,251,255,0.96) 100%);
+  border-color:rgba(148,163,184,0.34);
+  color:#0f172a;
+  box-shadow:
+    0 14px 34px rgba(15,23,42,0.14),
+    0 3px 10px rgba(15,23,42,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.90);
+  backdrop-filter:blur(10px) saturate(1.06);
+  -webkit-backdrop-filter:blur(10px) saturate(1.06);
+  font-weight:600;
+  letter-spacing:0.1px;
+}
+body:not(.dark-mode) .premium-tooltip-box::after{
+  background:linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,251,255,0.96) 100%);
+}
+body:not(.dark-mode) .premium-tooltip-box.tip-top::after{border-color:rgba(148,163,184,0.34)}
+body:not(.dark-mode) .premium-tooltip-box.tip-bottom::after{border-color:rgba(148,163,184,0.34)}

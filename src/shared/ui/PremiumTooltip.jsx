@@ -2,6 +2,7 @@
 // Global premium glass tooltip — mirrors the Consensus badge hover style.
 // Usage: <PremiumTooltip text="..."><YourElement /></PremiumTooltip>
 
+import "./PremiumTooltip.css";
 import { useState, useRef, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 
