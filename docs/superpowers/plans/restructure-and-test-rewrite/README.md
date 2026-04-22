@@ -158,7 +158,7 @@ e2e/                           (mevcut — genişletilecek)
 | Durum | Oturum | Kapsam | Dosyalar | Süre | Beklenen context | Handoff durumu |
 |---|---|---|---|---|---|---|
 | ✅ | **1** (şu an) | Plan yazıldı | Bu dosya | 0.5 gün | %75 | Faz A0'a hazır |
-| ⏳ | **2** | A0 + A1 kick-off — iskelet + shared/ui'den 5-8 component CSS co-locate (FbAlert, CustomSelect, ConfirmDialog, PremiumTooltip, Modal, Drawer, Button, Card) | ~10 dosya + components.css düzenleme | 3 saat | %70 | A1 pattern validated, sonraki oturum aynısını kalanına uygular |
+| ✅ | **2** | A0 + A1 kick-off — iskelet + shared/ui'den 5-8 component CSS co-locate (FbAlert, CustomSelect, ConfirmDialog, PremiumTooltip, Modal, Drawer, Button, Card) | ~10 dosya + components.css düzenleme | 3 saat | %80 | A1 pattern validated (3/29 done); ConfirmDialog/Modal/Drawer skip (CSS zaten global file'da) |
 | ⬜ | **3** | A1 tamamla — kalan ~21 shared/ui component (Table, Tabs, Tooltip, Toggle, Badge, Pill, Tag, Toast, EmptyState, vb.) | ~21 dosya + components.css | 3-4 saat | %70 | shared/ui bitti, A2'ye geçiş |
 | ⬜ | **4** | A2.1-A2.3 — overview + organizations + jurors | ~25 dosya + 3 page CSS | 3-4 saat | %70 | 3 feature taşındı, build yeşil |
 | ⬜ | **5** | A2.4-A2.6 — periods + projects + **criteria** (criteria.css 2480 satır — ağır) | ~22 dosya + 3 page CSS | 4 saat | %75 | Criteria en büyük riski geçti |
@@ -1444,7 +1444,7 @@ purgecss --content "src/**/*.{js,jsx,css}" --css "src/styles/**/*.css" --output 
 
 | Katman | Source | CSS | Tests | Durum | Report |
 |---|---|---|---|---|---|
-| shared/ui (29 component) | N/A | ⬜ | ⬜ | Bekliyor | — |
+| shared/ui (29 component) | N/A | 🔄 3/29 | ⬜ | Devam ediyor | [session-02](implementation_reports/session-02-A0-A1-kickoff.md) |
 | shared/api (27 dosya) | N/A | N/A | ⬜ | Bekliyor | — |
 | shared/hooks (8 dosya) | N/A | N/A | ⬜ | Bekliyor | — |
 | shared/storage (4 dosya) | N/A | N/A | ⬜ | Bekliyor | — |
@@ -1479,7 +1479,7 @@ purgecss --content "src/**/*.{js,jsx,css}" --css "src/styles/**/*.css" --output 
 | Tarih | Oturum | Tamamlanan | Sonraki |
 |---|---|---|---|
 | 2026-04-22 | 1 | Plan yazıldı — feature-based restructure + test rewrite + CSS co-location + parity tracker | Faz A0 (iskelet) |
-| | | | |
+| 2026-04-22 | 2 | A0 iskelet (38 .gitkeep), A1: FbAlert + CustomSelect + PremiumTooltip CSS co-located (3/29); ConfirmDialog/Modal/Drawer skip (global dosyalarda) | Session 3: kalan 26 shared/ui component |
 
 ---
 
