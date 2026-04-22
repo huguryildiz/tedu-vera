@@ -1,14 +1,15 @@
 // src/admin/OverviewPage.jsx — Phase 2
 // Prototype source: #page-overview (docs/concepts/vera-premium-prototype.html ~lines 11758–11982)
 // Single-file overview page: KPIs, juror table, right stack, live feed, completion, charts, top projects.
+import "./OverviewPage.css";
 import { useMemo, useState, useRef, useEffect } from "react";
-import { useAdminContext } from "../hooks/useAdminContext";
+import { useAdminContext } from "@/admin/hooks/useAdminContext";
 import useCardSelection from "@/shared/hooks/useCardSelection";
-import JurorBadge from "../components/JurorBadge";
-import JurorStatusPill from "../components/JurorStatusPill";
+import JurorBadge from "@/admin/components/JurorBadge";
+import JurorStatusPill from "@/admin/components/JurorStatusPill";
 import { SubmissionTimelineChart } from "@/charts/SubmissionTimelineChart";
 import { ScoreDistributionChart } from "@/charts/ScoreDistributionChart";
-import { getProjectHighlight } from "../utils/scoreHelpers";
+import { getProjectHighlight } from "@/admin/utils/scoreHelpers";
 import {
   UsersLucideIcon,
   TriangleAlertIcon,
@@ -30,7 +31,7 @@ import {
 } from "@/shared/ui/Icons";
 import { Users, Trophy, Activity, CheckCircle2, ShieldCheck } from "lucide-react";
 import { StudentNames } from "@/shared/ui/EntityMeta";
-import AvgDonut from "./AvgDonut";
+import AvgDonut from "@/admin/pages/AvgDonut";
 
 // ── Helpers ───────────────────────────────────────────────────
 

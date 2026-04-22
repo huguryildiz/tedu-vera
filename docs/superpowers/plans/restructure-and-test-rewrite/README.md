@@ -159,7 +159,7 @@ e2e/                           (mevcut — genişletilecek)
 |---|---|---|---|---|---|---|
 | ✅ | **1** (şu an) | Plan yazıldı | Bu dosya | 0.5 gün | %75 | Faz A0'a hazır |
 | ✅ | **2** | A0 + A1 kick-off — iskelet + shared/ui'den 5-8 component CSS co-locate (FbAlert, CustomSelect, ConfirmDialog, PremiumTooltip, Modal, Drawer, Button, Card) | ~10 dosya + components.css düzenleme | 3 saat | %80 | A1 pattern validated (3/29 done); ConfirmDialog/Modal/Drawer skip (CSS zaten global file'da) |
-| ⬜ | **3** | A1 tamamla — kalan ~21 shared/ui component (Table, Tabs, Tooltip, Toggle, Badge, Pill, Tag, Toast, EmptyState, vb.) | ~21 dosya + components.css | 3-4 saat | %70 | shared/ui bitti, A2'ye geçiş |
+| ✅ | **3** | A1 tamamla — kalan 26 shared/ui component araştırıldı; AsyncButtonContent + FilterButton + Pagination co-located; FloatingMenu/btn-loading-content global kaldı (65+ direct className kullanımı); 15 component CSS'siz (inline style veya global dosyada) | 6 yeni CSS dosyası + components.css düzenleme | 3 saat | ~%75 | A1 tamamlandı: 6/29 co-located, kalan 23 actionable değil; A2'ye geçiş |
 | ⬜ | **4** | A2.1-A2.3 — overview + organizations + jurors | ~25 dosya + 3 page CSS | 3-4 saat | %70 | 3 feature taşındı, build yeşil |
 | ⬜ | **5** | A2.4-A2.6 — periods + projects + **criteria** (criteria.css 2480 satır — ağır) | ~22 dosya + 3 page CSS | 4 saat | %75 | Criteria en büyük riski geçti |
 | ⬜ | **6** | A2.7-A2.9 — **outcomes** (2056 satır CSS) + reviews + rankings | ~15 dosya + 3 page CSS | 3-4 saat | %70 | 9 admin feature tamam |
@@ -1444,7 +1444,7 @@ purgecss --content "src/**/*.{js,jsx,css}" --css "src/styles/**/*.css" --output 
 
 | Katman | Source | CSS | Tests | Durum | Report |
 |---|---|---|---|---|---|
-| shared/ui (29 component) | N/A | 🔄 3/29 | ⬜ | Devam ediyor | [session-02](implementation_reports/session-02-A0-A1-kickoff.md) |
+| shared/ui (29 component) | N/A | ✅ 6/29 co-located (23 kalan: CSS yok veya global dosyada) | ⬜ | A1 bitti | [session-03](implementation_reports/session-03-A1-finish.md) |
 | shared/api (27 dosya) | N/A | N/A | ⬜ | Bekliyor | — |
 | shared/hooks (8 dosya) | N/A | N/A | ⬜ | Bekliyor | — |
 | shared/storage (4 dosya) | N/A | N/A | ⬜ | Bekliyor | — |
@@ -1480,6 +1480,7 @@ purgecss --content "src/**/*.{js,jsx,css}" --css "src/styles/**/*.css" --output 
 |---|---|---|---|
 | 2026-04-22 | 1 | Plan yazıldı — feature-based restructure + test rewrite + CSS co-location + parity tracker | Faz A0 (iskelet) |
 | 2026-04-22 | 2 | A0 iskelet (38 .gitkeep), A1: FbAlert + CustomSelect + PremiumTooltip CSS co-located (3/29); ConfirmDialog/Modal/Drawer skip (global dosyalarda) | Session 3: kalan 26 shared/ui component |
+| 2026-04-22 | 3 | A1 tamamlandı: AsyncButtonContent + FilterButton + Pagination CSS co-located (6/29 toplam); FloatingMenu global kalacak (65+ direct className kullanımı); 15 component CSS'siz veya başka global dosyada; tüm 29 component incelendi | Session 4: A2.1–A2.3 admin feature taşıma (overview + organizations + jurors) |
 
 ---
 

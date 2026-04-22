@@ -33,7 +33,7 @@ const VerifyEmailScreen = lazy(() => import("@/auth/screens/VerifyEmailScreen"))
 const InviteAcceptScreen = lazy(() => import("@/auth/screens/InviteAcceptScreen"));
 
 // Admin pages
-const OverviewPage = lazy(() => import("@/admin/pages/OverviewPage"));
+const OverviewPage = lazy(() => import("@/admin/features/overview/OverviewPage"));
 const SetupWizardPage = lazy(() => import("@/admin/pages/SetupWizardPage"));
 const RankingsPage = lazy(() => import("@/admin/pages/RankingsPage"));
 const AnalyticsPage = lazy(() => import("@/admin/pages/AnalyticsPage"));

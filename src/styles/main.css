@@ -9,7 +9,6 @@
 @import './status-pills.css';
 
 /* Page styles */
-@import './pages/overview.css';
 @import './pages/rankings.css';
 @import './pages/analytics.css';
 @import './pages/heatmap.css';
