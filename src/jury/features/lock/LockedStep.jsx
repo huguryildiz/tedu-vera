@@ -1,20 +1,8 @@
-// src/jury/steps/LockedStep.jsx
-// ============================================================
-// Dedicated locked recovery screen — shown when a juror exceeds
-// the maximum PIN attempts and gets temporarily locked out.
-//
-// Features:
-//   - Combined status badge + live countdown timer card
-//   - Email request form to tenant admin for PIN reset
-//     (shows org name, no individual emails for privacy)
-//   - Success confirmation after sending
-//   - "Start Over" back to identity step
-// ============================================================
+// src/jury/features/lock/LockedStep.jsx
 
 import { useState, useEffect, useCallback } from "react";
 import { Lock, Mail, Send, Check, Loader2, Building2 } from "lucide-react";
 import { requestPinReset } from "@/shared/api/juryApi";
-import "../../styles/jury.css";
 
 function formatRemaining(ms) {
   if (ms <= 0) return "00:00";
