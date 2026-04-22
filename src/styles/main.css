@@ -12,7 +12,7 @@
 @import '../jury/shared/jury-base.css';
 @import './landing.css';
 @import './maintenance.css';
-@import './auth.css';
+@import '../auth/shared/auth-base.css';
 @import './drawers.css';
 @import './modals.css';
 @import './charts.css';

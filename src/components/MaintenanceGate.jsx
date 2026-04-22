@@ -18,7 +18,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
-import { useAuth } from "@/auth/useAuth";
+import { useAuth } from "@/auth/shared/useAuth";
 import { supabase } from "@/shared/lib/supabaseClient";
 import { getMaintenanceStatus } from "@/shared/api/admin/maintenance";
 import MaintenancePage from "./MaintenancePage";

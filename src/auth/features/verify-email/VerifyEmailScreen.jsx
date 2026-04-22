@@ -3,7 +3,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { MailCheck, MailWarning, Loader2, Mail, Info, RefreshCw, LogIn } from "lucide-react";
 import { confirmEmailVerification, sendEmailVerification } from "@/shared/api";
-import { AuthContext } from "@/auth/AuthProvider";
+import { AuthContext } from "@/auth/shared/AuthProvider";
 import FbAlert from "@/shared/ui/FbAlert";
 
 export default function VerifyEmailScreen() {

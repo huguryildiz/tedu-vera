@@ -21,7 +21,7 @@ import { useAuth } from "@/auth";
 import { sendExportReport } from "@/shared/api/admin/notifications";
 import { arrayBufferToBase64 } from "@/admin/utils/downloadTable";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
-import { LOCK_TOOLTIP_GRACE, LOCK_TOOLTIP_EXPIRED } from "@/auth/lockedActions";
+import { LOCK_TOOLTIP_GRACE, LOCK_TOOLTIP_EXPIRED } from "@/auth/shared/lockedActions";
 
 import { Icon } from "lucide-react";
 

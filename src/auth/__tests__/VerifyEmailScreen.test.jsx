@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { expect } from "vitest";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import VerifyEmailScreen from "@/auth/features/verify-email/VerifyEmailScreen";
-import { AuthContext } from "@/auth/AuthProvider";
+import { AuthContext } from "@/auth/shared/AuthProvider";
 import { qaTest } from "@/test/qaTest.js";
 import { vi } from "vitest";
 

@@ -7,7 +7,7 @@ import { useContext, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@/shared/theme/ThemeProvider";
 import { AuthProvider } from "@/auth";
-import { AuthContext } from "@/auth/AuthProvider";
+import { AuthContext } from "@/auth/shared/AuthProvider";
 import ToastContainer from "@/shared/ui/ToastContainer";
 import ErrorBoundary from "@/shared/ui/ErrorBoundary";
 import DraggableThemeToggle from "@/jury/shared/DraggableThemeToggle";

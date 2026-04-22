@@ -1,4 +1,4 @@
-// src/guards/AuthGuard.jsx
+// src/auth/shared/AuthGuard.jsx
 // Protects admin routes — redirects to /login if no user session.
 // On /demo/admin/*, redirect to /demo so DemoAdminLoader can auto-login again.
 

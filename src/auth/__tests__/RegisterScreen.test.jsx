@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { expect } from "vitest";
 import { MemoryRouter } from "react-router-dom";
-import { AuthContext } from "@/auth/AuthProvider";
+import { AuthContext } from "@/auth/shared/AuthProvider";
 import RegisterScreen from "@/auth/screens/RegisterScreen";
 import { qaTest } from "@/test/qaTest.js";
 import { vi } from "vitest";

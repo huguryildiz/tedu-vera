@@ -50,7 +50,7 @@ import {
 import { FilterButton } from "@/shared/ui/FilterButton";
 import Pagination from "@/shared/ui/Pagination";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
-import { LOCK_TOOLTIP_GRACE, LOCK_TOOLTIP_EXPIRED } from "@/auth/lockedActions";
+import { LOCK_TOOLTIP_GRACE, LOCK_TOOLTIP_EXPIRED } from "@/auth/shared/lockedActions";
 import "./OrganizationsPage.css";
 
 // ── Helpers ───────────────────────────────────────────────────

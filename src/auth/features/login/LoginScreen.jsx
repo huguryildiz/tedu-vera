@@ -7,8 +7,8 @@ import { CircleX, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import FbAlert from "@/shared/ui/FbAlert";
 import { KEYS } from "@/shared/storage/keys";
-import { AuthContext } from "@/auth/AuthProvider";
-import { useSecurityPolicy } from "@/auth/SecurityPolicyContext";
+import { AuthContext } from "@/auth/shared/AuthProvider";
+import { useSecurityPolicy } from "@/auth/shared/SecurityPolicyContext";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
 
 const GOOGLE_ICON = (

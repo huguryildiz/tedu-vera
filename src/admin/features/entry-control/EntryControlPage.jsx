@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAdminContext } from "@/admin/hooks/useAdminContext";
 import { useAuth } from "@/auth";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
-import { LOCK_TOOLTIP_GRACE, LOCK_TOOLTIP_EXPIRED } from "@/auth/lockedActions";
+import { LOCK_TOOLTIP_GRACE, LOCK_TOOLTIP_EXPIRED } from "@/auth/shared/lockedActions";
 import QRCodeStyling from "qr-code-styling";
 import veraLogo from "@/assets/vera_logo.png";
 import FbAlert from "@/shared/ui/FbAlert";

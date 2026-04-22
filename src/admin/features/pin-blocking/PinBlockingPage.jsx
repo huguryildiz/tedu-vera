@@ -12,7 +12,7 @@ import "./PinBlockingPage.css";
 import { useAdminContext } from "@/admin/hooks/useAdminContext";
 import { usePinBlocking } from "./usePinBlocking";
 import useCardSelection from "@/shared/hooks/useCardSelection";
-import { useSecurityPolicy } from "@/auth/SecurityPolicyContext";
+import { useSecurityPolicy } from "@/auth/shared/SecurityPolicyContext";
 import { formatTs } from "@/admin/utils/adminUtils";
 import FbAlert from "@/shared/ui/FbAlert";
 import JurorBadge from "@/admin/shared/JurorBadge";

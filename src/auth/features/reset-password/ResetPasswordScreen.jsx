@@ -6,7 +6,7 @@ import { useContext, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, AlertCircle, CheckCircle2, Icon } from "lucide-react";
 import FbAlert from "@/shared/ui/FbAlert";
-import { AuthContext } from "@/auth/AuthProvider";
+import { AuthContext } from "@/auth/shared/AuthProvider";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
 import {
   evaluatePassword,

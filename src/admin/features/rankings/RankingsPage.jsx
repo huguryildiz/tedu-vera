@@ -10,7 +10,7 @@ import { useAuth } from "@/auth";
 import SendReportModal from "@/admin/modals/SendReportModal";
 import { GitCompare, Filter, Icon, XCircle, Search, Trophy } from "lucide-react";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
-import { LOCK_TOOLTIP_GRACE, LOCK_TOOLTIP_EXPIRED } from "@/auth/lockedActions";
+import { LOCK_TOOLTIP_GRACE, LOCK_TOOLTIP_EXPIRED } from "@/auth/shared/lockedActions";
 import CompareProjectsModal from "@/admin/features/projects/CompareProjectsModal";
 import { StudentNames } from "@/shared/ui/EntityMeta";
 import JurorBadge from "@/admin/shared/JurorBadge";

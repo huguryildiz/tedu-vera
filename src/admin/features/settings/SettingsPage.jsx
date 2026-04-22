@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { HelpCircle } from "lucide-react";
 import { useAuth } from "@/auth";
-import { useUpdatePolicy } from "@/auth/SecurityPolicyContext";
+import { useUpdatePolicy } from "@/auth/shared/SecurityPolicyContext";
 import { useToast } from "@/shared/hooks/useToast";
 import "./SettingsPage.css";
 import SecurityPolicyDrawer from "./SecurityPolicyDrawer";
