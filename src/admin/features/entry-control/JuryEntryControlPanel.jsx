@@ -15,16 +15,16 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import QRCodeStyling from "qr-code-styling";
-import veraLogo from "../../assets/vera_logo.png";
+import veraLogo from "@/assets/vera_logo.png";
 import {
   generateEntryToken,
   publishPeriod,
   revokeEntryToken,
   getEntryTokenStatus,
-} from "../../shared/api";
+} from "@/shared/api";
 import { isDemoEnvironment } from "@/shared/lib/environment";
 import { useToast } from "@/shared/hooks/useToast";
-import JuryRevokeConfirmDialog from "./JuryRevokeConfirmDialog";
+import JuryRevokeConfirmDialog from "@/admin/settings/JuryRevokeConfirmDialog";
 import {
   QrCodeIcon,
   RefreshCcwIcon,
@@ -40,7 +40,7 @@ import {
   getRawToken as storageGetRawToken,
   setRawToken as storageSetRawToken,
   clearRawToken as storageClearRawToken,
-} from "../../shared/storage";
+} from "@/shared/storage";
 import { formatDateTime as fmtDate } from "@/shared/lib/dateUtils";
 
 // ── Status badge ──────────────────────────────────────────────

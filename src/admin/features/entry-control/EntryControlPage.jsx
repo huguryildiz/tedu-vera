@@ -3,7 +3,7 @@
 // Prototype: vera-premium-prototype.html lines 14797–15047
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAdminContext } from "../hooks/useAdminContext";
+import { useAdminContext } from "@/admin/hooks/useAdminContext";
 import { useAuth } from "@/auth";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import { LOCK_TOOLTIP_GRACE, LOCK_TOOLTIP_EXPIRED } from "@/auth/lockedActions";
@@ -27,7 +27,7 @@ import {
   setRawToken as storageSetRawToken,
   clearRawToken as storageClearRawToken,
 } from "@/shared/storage/adminStorage";
-import JuryRevokeConfirmDialog from "../settings/JuryRevokeConfirmDialog";
+import JuryRevokeConfirmDialog from "@/admin/settings/JuryRevokeConfirmDialog";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import InlineError from "@/shared/ui/InlineError";
 import {
@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { formatDateTime as fmtDate, formatDate } from "@/shared/lib/dateUtils";
 import useCardSelection from "@/shared/hooks/useCardSelection";
+import "./EntryControlPage.css";
 
 
 function fmtExpiry(ts) {
