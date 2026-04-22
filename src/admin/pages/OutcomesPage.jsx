@@ -19,7 +19,7 @@ import Modal from "@/shared/ui/Modal";
 import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import Pagination from "@/shared/ui/Pagination";
-import SaveBar from "@/admin/criteria/SaveBar";
+import SaveBar from "@/admin/features/criteria/SaveBar";
 import "../../styles/pages/outcomes.css";
 import "../../styles/pages/setup-wizard.css";
 import { useAuth } from "@/auth";

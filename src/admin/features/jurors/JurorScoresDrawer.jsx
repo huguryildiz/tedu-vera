@@ -5,7 +5,7 @@ import Drawer from "@/shared/ui/Drawer";
 import JurorStatusPill from "@/admin/shared/JurorStatusPill";
 import ScoreStatusPill from "@/admin/components/ScoreStatusPill";
 import { listPeriodCriteria } from "@/shared/api";
-import { CRITERION_COLORS } from "@/admin/criteria/criteriaFormHelpers";
+import { CRITERION_COLORS } from "@/admin/features/criteria/criteriaFormHelpers";
 
 function bandFor(pct) {
   if (pct >= 85) return { key: "excel", label: "Excellent" };

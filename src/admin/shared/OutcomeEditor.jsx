@@ -202,7 +202,7 @@ function getMudekDisplayName(row, index) {
 function OutcomeLanguageFlag({ language, label }) {
   const symbol = language === "tr" ? "🇹🇷" : "🇬🇧";
   return (
-    <PremiumTooltiptext={label}>
+    <PremiumTooltip text={label}>
       <span className="outcome-editor-row-flag" role="img" aria-label={label}>
         {symbol}
       </span>

@@ -26,7 +26,7 @@ import {
   XCircle,
   Search,
 } from "lucide-react";
-import { useAdminContext } from "../hooks/useAdminContext";
+import { useAdminContext } from "@/admin/hooks/useAdminContext";
 import { useToast } from "@/shared/hooks/useToast";
 import { useManagePeriods } from "@/admin/features/periods/useManagePeriods";
 import { usePeriodOutcomes } from "@/admin/shared/usePeriodOutcomes";
@@ -35,22 +35,22 @@ import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import FbAlert from "@/shared/ui/FbAlert";
 import FloatingMenu from "@/shared/ui/FloatingMenu";
 import useCardSelection from "@/shared/hooks/useCardSelection";
-import EditSingleCriterionDrawer from "@/admin/drawers/EditSingleCriterionDrawer";
-import StarterCriteriaDrawer, { STARTER_CRITERIA } from "@/admin/drawers/StarterCriteriaDrawer";
-import WeightBudgetBar from "@/admin/criteria/WeightBudgetBar";
-import SaveBar from "@/admin/criteria/SaveBar";
-import InlineWeightEdit from "@/admin/criteria/InlineWeightEdit";
+import EditSingleCriterionDrawer from "./EditSingleCriterionDrawer";
+import StarterCriteriaDrawer, { STARTER_CRITERIA } from "./StarterCriteriaDrawer";
+import WeightBudgetBar from "./WeightBudgetBar";
+import SaveBar from "./SaveBar";
+import InlineWeightEdit from "./InlineWeightEdit";
 import Pagination from "@/shared/ui/Pagination";
 import {
   rescaleRubricBandsByWeight,
   defaultRubricBands,
   nextCriterionColor,
   CRITERION_COLORS,
-} from "@/admin/criteria/criteriaFormHelpers";
-import "../../styles/pages/criteria.css";
+} from "./criteriaFormHelpers";
+import "./CriteriaPage.css";
 import { useAuth } from "@/auth";
-import ExportPanel from "../components/ExportPanel";
-import { useCriteriaExport } from "../hooks/useCriteriaExport";
+import ExportPanel from "@/admin/components/ExportPanel";
+import { useCriteriaExport } from "./useCriteriaExport";
 import { FilterButton } from "@/shared/ui/FilterButton";
 import CustomSelect from "@/shared/ui/CustomSelect";
 

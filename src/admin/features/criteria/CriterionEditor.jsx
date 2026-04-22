@@ -9,7 +9,7 @@ import {
   ChevronRightIcon,
   LockIcon,
 } from "@/shared/ui/Icons";
-import { RUBRIC_EDITOR_TEXT } from "../../shared/constants";
+import { RUBRIC_EDITOR_TEXT } from "@/shared/constants";
 import {
   getCriterionDisplayName,
   getBandRangeLabel,
@@ -59,7 +59,7 @@ export default function CriterionEditor({
             {row.max !== "" ? `${row.max} pts` : "—"}
           </span>
 
-          <PremiumTooltiptext={row._expanded ? "Collapse" : "Expand"}>
+          <PremiumTooltip text={row._expanded ? "Collapse" : "Expand"}>
             <button
               type="button"
               className={`crt-card-toggle${row._expanded ? " open" : ""}`}

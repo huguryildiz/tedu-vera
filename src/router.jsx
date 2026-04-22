@@ -42,7 +42,7 @@ const ReviewsPage = lazy(() => import("@/admin/pages/ReviewsPage"));
 const JurorsPage = lazy(() => import("@/admin/features/jurors/JurorsPage"));
 const ProjectsPage = lazy(() => import("@/admin/features/projects/ProjectsPage"));
 const PeriodsPage = lazy(() => import("@/admin/features/periods/PeriodsPage"));
-const CriteriaPage = lazy(() => import("@/admin/pages/CriteriaPage"));
+const CriteriaPage = lazy(() => import("@/admin/features/criteria/CriteriaPage"));
 const OutcomesPage = lazy(() => import("@/admin/pages/OutcomesPage"));
 const EntryControlPage = lazy(() => import("@/admin/pages/EntryControlPage"));
 const PinBlockingPage = lazy(() => import("@/admin/pages/PinBlockingPage"));

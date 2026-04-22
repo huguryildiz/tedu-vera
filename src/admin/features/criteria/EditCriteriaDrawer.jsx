@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Check, AlertCircle, Icon } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
-import CriteriaManager from "@/admin/criteria/CriteriaManager";
+import CriteriaManager from "./CriteriaManager";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
 
 export default function EditCriteriaDrawer({

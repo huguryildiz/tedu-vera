@@ -8,7 +8,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { qaTest } from "../../test/qaTest.js";
 import StarterCriteriaDrawer, {
   STARTER_CRITERIA,
-} from "../drawers/StarterCriteriaDrawer.jsx";
+} from "../features/criteria/StarterCriteriaDrawer.jsx";
 
 // ── Mock Drawer so tests don't need the full UI shell ──────
 

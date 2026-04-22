@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import CustomSelect from "@/shared/ui/CustomSelect";
-import { STARTER_CRITERIA } from "@/admin/drawers/StarterCriteriaDrawer";
-import { CRITERION_COLORS } from "@/admin/criteria/criteriaFormHelpers";
+import { STARTER_CRITERIA } from "@/admin/features/criteria/StarterCriteriaDrawer";
+import { CRITERION_COLORS } from "@/admin/features/criteria/criteriaFormHelpers";
 
 export default function PeriodCriteriaDrawer({
   open,

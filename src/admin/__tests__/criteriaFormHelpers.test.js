@@ -5,7 +5,7 @@
 
 import { describe, expect } from "vitest";
 import { qaTest } from "../../test/qaTest.js";
-import { rescaleRubricBandsByWeight } from "../criteria/criteriaFormHelpers.js";
+import { rescaleRubricBandsByWeight } from "../features/criteria/criteriaFormHelpers.js";
 
 // ── Test fixtures ────────────────────────────────────────────
 

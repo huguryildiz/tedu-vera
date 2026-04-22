@@ -8,9 +8,9 @@ import AutoTextarea from "@/shared/ui/AutoTextarea";
 import Drawer from "@/shared/ui/Drawer";
 import AlertCard from "@/shared/ui/AlertCard";
 import InlineError from "@/shared/ui/InlineError";
-import { RUBRIC_EDITOR_TEXT } from "../../shared/constants";
-import { validateCriterion } from "../../shared/criteriaValidation";
-import { criterionToConfig } from "../../shared/criteria/criteriaHelpers";
+import { RUBRIC_EDITOR_TEXT } from "@/shared/constants";
+import { validateCriterion } from "@/shared/criteriaValidation";
+import { criterionToConfig } from "@/shared/criteria/criteriaHelpers";
 import {
   templateToRow,
   emptyRow,

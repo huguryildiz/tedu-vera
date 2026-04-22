@@ -20,7 +20,7 @@ import { TeamMembersInline } from "@/shared/ui/EntityMeta";
 import JurorBadge from "@/admin/shared/JurorBadge";
 import JurorStatusPill from "@/admin/shared/JurorStatusPill";
 import { listPeriodCriteria } from "@/shared/api";
-import { CRITERION_COLORS } from "@/admin/criteria/criteriaFormHelpers";
+import { CRITERION_COLORS } from "@/admin/features/criteria/criteriaFormHelpers";
 import { jurorInitials, jurorAvatarBg, jurorAvatarFg } from "@/admin/utils/jurorIdentity";
 
 function bandFor(pct) {

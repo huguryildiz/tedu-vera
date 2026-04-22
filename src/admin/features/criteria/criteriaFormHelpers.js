@@ -1,8 +1,8 @@
 // src/admin/criteria/criteriaFormHelpers.js
 // Pure helper functions for the criteria editor — NO React, NO JSX.
 
-import { RUBRIC_DEFAULT_LEVELS } from "../../shared/constants";
-import { normalizeCriterion } from "../../shared/criteria/criteriaHelpers";
+import { RUBRIC_DEFAULT_LEVELS } from "@/shared/constants";
+import { normalizeCriterion } from "@/shared/criteria/criteriaHelpers";
 
 // ── Auto-color palette for new criteria ──────────────────────
 export const CRITERION_COLORS = [

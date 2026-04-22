@@ -1,1 +1,1 @@
-export { default } from "../criteria/CriteriaManager";
+export { default } from "../features/criteria/CriteriaManager";

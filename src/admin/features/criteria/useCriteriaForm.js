@@ -8,8 +8,8 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { validatePeriodCriteria, isDisposableEmptyDraftCriterion } from "../../shared/criteriaValidation";
-import { criterionToConfig } from "../../shared/criteria/criteriaHelpers";
+import { validatePeriodCriteria, isDisposableEmptyDraftCriterion } from "@/shared/criteriaValidation";
+import { criterionToConfig } from "@/shared/criteria/criteriaHelpers";
 import {
   templateToRow,
   emptyRow,
