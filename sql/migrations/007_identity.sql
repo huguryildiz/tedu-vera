@@ -77,8 +77,9 @@ SET search_path = public
 AS $$
 DECLARE
   v_org_id UUID;
+  v_user_id UUID;
 BEGIN
-  SELECT organization_id INTO v_org_id
+  SELECT organization_id, user_id INTO v_org_id, v_user_id
   FROM memberships
   WHERE id = p_membership_id AND status = 'invited';
 
@@ -90,6 +91,13 @@ BEGIN
 
   DELETE FROM memberships
   WHERE id = p_membership_id AND status = 'invited';
+
+  -- Remove orphaned auth user (never confirmed, no remaining memberships)
+  IF v_user_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM memberships WHERE user_id = v_user_id
+  ) THEN
+    DELETE FROM auth.users WHERE id = v_user_id;
+  END IF;
 
   RETURN jsonb_build_object('ok', true, 'membership_id', p_membership_id);
 END;
