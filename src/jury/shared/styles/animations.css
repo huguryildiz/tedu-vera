@@ -1,0 +1,320 @@
+/* ── From vera.css 5813-6152: Animations (stepper bar, CTA loading, done step confetti, score micro-animations, spotlight) ── */
+/* ════════════════════════════════════════════════
+   DEMO FLOW IMPROVEMENTS — Premium SaaS Upgrades
+   ════════════════════════════════════════════════ */
+
+/* ── 1. Animated Stepper Bar ── */
+.dj-stepper-bar{position:sticky;top:0;z-index:40;display:flex;align-items:center;padding:10px 14px 10px 20px;background:rgba(10,15,26,0.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(148,163,184,0.06)}
+.dj-stepper-inner{display:flex;align-items:center;gap:0;flex:1;min-width:0}
+
+/* ── Floating draggable theme toggle ── */
+.dj-float-toggle{all:unset;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:200;width:40px;height:40px;border-radius:50%;border:1px solid rgba(148,163,184,0.15);background:rgba(15,23,42,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#94a3b8;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:none;box-shadow:0 4px 20px rgba(0,0,0,0.35),0 1px 6px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.04);transition:color .2s,background .2s,border-color .2s,box-shadow .2s;user-select:none;-webkit-user-select:none}
+.dj-float-toggle:hover{cursor:grab;color:#e2e8f0;background:rgba(30,41,59,0.9);border-color:rgba(148,163,184,0.25);box-shadow:0 6px 24px rgba(0,0,0,0.4),0 2px 8px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.06)}
+.dj-float-toggle:active{cursor:grabbing;color:#e2e8f0;background:rgba(30,41,59,0.9);border-color:rgba(148,163,184,0.25);box-shadow:0 6px 24px rgba(0,0,0,0.4),0 2px 8px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.06)}
+body:not(.dark-mode) .dj-float-toggle{background:rgba(255,255,255,0.88);border-color:rgba(0,0,0,0.1);color:#64748b;box-shadow:0 4px 20px rgba(0,0,0,0.1),0 1px 6px rgba(0,0,0,0.07),inset 0 1px 0 rgba(255,255,255,0.8)}
+body:not(.dark-mode) .dj-float-toggle:hover{background:rgba(255,255,255,0.97);border-color:rgba(59,130,246,0.2);color:#3b82f6}
+@keyframes dj-float-hint{0%{transform:scale(1) rotate(0)}15%{transform:scale(1.18) rotate(-12deg)}35%{transform:scale(1.12) rotate(10deg)}55%{transform:scale(1.06) rotate(-5deg)}75%{transform:scale(1.02) rotate(2deg)}100%{transform:scale(1) rotate(0)}}
+.dj-float-toggle--hint{animation:dj-float-hint .65s cubic-bezier(.36,.07,.19,.97) 1.2s 1 both}
+.dj-float-toggle--jury{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+.dj-float-toggle--above-overlay{z-index:100000}
+/* Portrait: stepper fills width, no overflow */
+@media (max-width:900px) and (orientation:portrait){
+  .dj-stepper-bar{
+    padding:8px 10px 10px 12px;
+  }
+  .dj-stepper-inner{
+    overflow:visible;
+    padding:2px 0;
+  }
+}
+.dj-stepper-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;position:relative;cursor:default}
+.dj-stepper-dot{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(100,116,139,0.25);background:rgba(30,41,59,0.5);display:grid;place-items:center;position:relative;z-index:2;transition:border-color .35s,background .35s,box-shadow .35s}
+.dj-stepper-dot svg{width:10px;height:10px;display:none;color:#fff}
+.dj-stepper-dot .dj-step-num{font-size:9px;font-weight:700;color:#475569;transition:color .3s}
+.dj-stepper-step.active .dj-stepper-dot{border-color:#3b82f6;background:rgba(59,130,246,0.15);box-shadow:0 0 0 5px rgba(59,130,246,0.08)}
+.dj-stepper-step.active .dj-stepper-dot .dj-step-num{color:#93c5fd}
+.dj-stepper-step.done .dj-stepper-dot{border-color:#22c55e;background:#22c55e;box-shadow:none}
+.dj-stepper-step.done .dj-stepper-dot svg{display:block}
+.dj-stepper-step.done .dj-stepper-dot .dj-step-num{display:none}
+.dj-stepper-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#334155;transition:color .35s;white-space:nowrap}
+.dj-stepper-step.active .dj-stepper-label{color:#60a5fa}
+.dj-stepper-step.done .dj-stepper-label{color:#4ade80}
+.dj-stepper-connector{flex:1;height:1px;background:rgba(100,116,139,0.15);max-width:60px;min-width:16px;position:relative;overflow:hidden;transition:background .4s}
+.dj-stepper-connector.filled{background:rgba(34,197,94,0.35)}
+.dj-stepper-step.active .dj-stepper-dot::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:1px solid rgba(59,130,246,0.3);animation:dj-pulse-ring 1.6s ease-out infinite}
+@media (max-width:900px) and (orientation:portrait){
+  .dj-stepper-step{
+    flex:1;
+    gap:3px;
+  }
+  .dj-stepper-dot{
+    width:20px;
+    height:20px;
+  }
+  .dj-stepper-dot svg{width:9px;height:9px}
+  .dj-stepper-dot .dj-step-num{font-size:8px}
+  .dj-stepper-label{
+    font-size:7px;
+    letter-spacing:.3px;
+    white-space:normal;
+    text-align:center;
+    line-height:1.15;
+    max-width:100%;
+  }
+  .dj-stepper-connector{
+    flex:1;
+    min-width:6px;
+    max-width:36px;
+  }
+}
+@keyframes dj-pulse-ring{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.7)}}
+
+/* ── 3. CTA Button Loading State ── */
+@keyframes dj-spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.btn-landing-primary.dj-loading{pointer-events:none;opacity:.8}
+.btn-landing-primary .dj-normal-content{transition:opacity .2s}
+.btn-landing-primary.dj-loading .dj-normal-content{opacity:0}
+.dj-btn-spinner{display:none;width:16px;height:16px;border:2px solid rgba(255,255,255,0.22);border-top-color:#fff;border-radius:50%;animation:dj-spin .7s linear infinite;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.btn-landing-primary.dj-loading .dj-btn-spinner{display:block}
+
+/* ── Success button variant (green) ── */
+.btn-landing-primary.btn-success {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+  color: #fff !important;
+}
+.btn-landing-primary.btn-success:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6ee7b7 0%, #34d399 50%, #10b981 100%) !important;
+  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255,255,255,0.2) !important;
+  transform: translateY(-1px);
+}
+
+/* ── Demo Admin Transition ── */
+.demo-admin-overlay{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s ease}
+.demo-admin-overlay.active{opacity:1;pointer-events:all}
+.demo-admin-overlay::before{content:'';position:absolute;inset:0;background:var(--bg-page);z-index:0}
+.demo-admin-overlay::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 40%,rgba(59,130,246,0.08) 0%,transparent 70%);z-index:0}
+.dao-content{
+  position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:18px;
+  text-align:center;max-width:420px;width:min(420px,92vw);
+  padding:28px 24px 22px;border-radius:18px;
+  background:rgba(15,23,42,0.72);
+  border:1px solid rgba(148,163,184,0.12);
+  box-shadow:0 20px 56px rgba(2,6,23,0.36),0 0 0 1px rgba(255,255,255,0.03) inset;
+  backdrop-filter:blur(20px) saturate(1.15);
+  -webkit-backdrop-filter:blur(20px) saturate(1.15);
+}
+.dao-logo{
+  width:52px;height:52px;border-radius:16px;display:grid;place-items:center;position:relative;overflow:hidden;
+  background:linear-gradient(180deg,var(--identity-icon-surface-start) 0%,var(--identity-icon-surface-end) 100%);
+  border:1px solid var(--identity-icon-border);
+  box-shadow:var(--identity-icon-shadow);
+  color:var(--identity-icon-color);
+}
+.dao-logo::after{
+  content:'';position:absolute;inset:1px 1px auto 1px;height:48%;
+  border-radius:15px;
+  background:linear-gradient(180deg,var(--identity-icon-highlight) 0%,rgba(255,255,255,0) 100%);
+  pointer-events:none;
+}
+.dao-logo svg{
+  width:24px;height:24px;
+  stroke:currentColor;
+  position:relative;z-index:1;
+}
+.dao-logo-gear{
+  animation:dao-spin 2s linear infinite;
+  transform-origin:center;
+}
+@keyframes dao-spin{
+  from{transform:rotate(0deg)}
+  to{transform:rotate(360deg)}
+}
+.dao-title{font-size:18px;font-weight:800;color:var(--text-primary);letter-spacing:-0.3px}
+.dao-steps{display:flex;flex-direction:column;gap:10px;width:100%}
+.dao-step{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:10px;background:var(--surface-1);border:1px solid var(--border);opacity:0.35;transition:all .4s ease;transform:translateY(6px)}
+.dao-step.active{opacity:1;transform:translateY(0);border-color:rgba(59,130,246,0.2);background:rgba(59,130,246,0.04)}
+.dao-step.done{
+  opacity:1;
+  transform:translateY(0);
+  border-color:rgba(34,197,94,0.28);
+  background:rgba(34,197,94,0.09);
+  box-shadow:0 0 0 1px rgba(34,197,94,0.10) inset;
+}
+.dao-step.done .dao-step-icon{
+  background:linear-gradient(180deg,#1d4f3a 0%,#123528 100%);
+  border-color:rgba(74,222,128,0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 0 0 1px rgba(74,222,128,0.20),
+    0 6px 16px rgba(6,78,59,0.34);
+}
+.dao-step.done .dao-step-icon svg{stroke:#86efac}
+body:not(.dark-mode) .dao-step.done{
+  border-color:rgba(34,197,94,0.30);
+  background:rgba(34,197,94,0.12);
+  box-shadow:0 0 0 1px rgba(34,197,94,0.12) inset;
+}
+.dao-step-icon{
+  width:32px;
+  height:32px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(180deg,#1c2b52 0%,#111d3a 100%);
+  border:1px solid rgba(110,145,255,0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.055),
+    0 0 0 1px rgba(110,145,255,0.16),
+    0 4px 14px rgba(0,0,0,0.38),
+    0 1px 3px rgba(0,0,0,0.28);
+  flex-shrink:0;
+  transition:all .3s ease;
+}
+.dao-step-icon::before{
+  content:'';
+  position:absolute;
+  inset:1px 1px auto 1px;
+  height:48%;
+  border-radius:7px;
+  background:linear-gradient(180deg,rgba(255,255,255,0.055) 0%,rgba(255,255,255,0) 100%);
+  opacity:.78;
+  pointer-events:none;
+}
+.dao-step-icon svg{
+  width:15px;
+  height:15px;
+  stroke:#93b4ff;
+  position:relative;
+  z-index:1;
+  transition:stroke .3s ease;
+}
+.dao-step-text{text-align:left}
+.dao-step-label{font-size:12.5px;font-weight:650;color:var(--text-primary);display:flex;align-items:center;gap:3px}
+.dao-step.done .dao-step-label{color:#4ade80}
+body:not(.dark-mode) .dao-step.done .dao-step-label{color:#16a34a}
+.dao-step-desc{font-size:11px;color:var(--text-tertiary);margin-top:1px}
+.dao-dots{display:none;align-items:center;gap:2px;margin-left:1px}
+.dao-step.active .dao-dots{display:inline-flex}
+.dao-dots span{display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;opacity:0;animation:dao-dot-pulse 1.2s ease-in-out infinite}
+.dao-dots span:nth-child(2){animation-delay:.2s}
+.dao-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dao-dot-pulse{0%,80%,100%{opacity:0;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
+.dao-progress{width:100%;height:3px;border-radius:2px;background:var(--surface-2);overflow:hidden;margin-top:4px}
+.dao-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#3b82f6);border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+body:not(.dark-mode) .dao-content{
+  background:rgba(255,255,255,0.78);
+  border-color:rgba(148,163,184,0.28);
+  box-shadow:0 22px 56px rgba(15,23,42,0.14),0 0 0 1px rgba(255,255,255,0.55) inset;
+}
+body:not(.dark-mode) .dao-logo{color:#1d4ed8}
+body:not(.dark-mode) .dao-step-icon{
+  background:linear-gradient(180deg,#f8fbff 0%,#eaf2ff 100%);
+  border-color:rgba(96,165,250,0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.88),
+    0 0 0 1px rgba(96,165,250,0.22),
+    0 6px 14px rgba(59,130,246,0.16);
+}
+body:not(.dark-mode) .dao-step-icon::before{
+  background:linear-gradient(180deg,rgba(255,255,255,0.72) 0%,rgba(255,255,255,0) 100%);
+}
+body:not(.dark-mode) .dao-step-icon svg{stroke:#2563eb}
+body:not(.dark-mode) .dao-step.done .dao-step-icon{
+  background:linear-gradient(180deg,#ecfdf5 0%,#d9fbe8 100%);
+  border-color:rgba(34,197,94,0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.86),
+    0 0 0 1px rgba(34,197,94,0.20),
+    0 6px 14px rgba(16,185,129,0.16);
+}
+body:not(.dark-mode) .dao-step.done .dao-step-icon svg{stroke:#16a34a}
+
+/* ── 4. Score Micro-animations ── */
+.dj-score-bar-fill{transition:width .45s cubic-bezier(0.34,1.56,0.64,1)!important}
+.dj-crit{transition:border-color .25s ease,box-shadow .2s ease,background .2s ease!important}
+.dj-score-input{transition:box-shadow .15s,border-color .15s!important}
+.dj-score-input:focus{box-shadow:0 0 0 3px rgba(var(--dj-criterion-color-rgb),0.15),0 0 12px rgba(var(--dj-criterion-color-rgb),0.08)!important}
+.dj-total-value{transition:color .3s}
+.dj-total-value.flip{animation:dj-num-flip .28s ease}
+@keyframes dj-num-flip{0%{opacity:0;transform:translateY(-5px)}60%{opacity:1}100%{transform:translateY(0)}}
+
+/* ── 5. Done Step Confetti & Stagger ── */
+#dj-confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;display:none}
+.dj-done-icon.celebrate{animation:dj-icon-pop .5s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes dj-icon-pop{0%{transform:scale(0.5);opacity:0}100%{transform:scale(1);opacity:1}}
+.dj-score-item{opacity:0;transform:translateX(-10px)}
+.dj-score-item.dj-visible{opacity:1;transform:translateX(0);transition:opacity .35s ease,transform .35s ease}
+.dj-done-total-reveal{overflow:hidden}
+.dj-done-total-num{font-family:var(--mono);font-size:36px;font-weight:800;color:#22c55e;display:block;text-align:center;line-height:1;animation:dj-counter-reveal .8s cubic-bezier(0.34,1.56,0.64,1) .3s both}
+@keyframes dj-counter-reveal{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+.dj-done-total-label{font-size:11px;color:#64748b;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+/* ── 10. Cinematic Step Transitions ── */
+.dj-step-out{animation:dj-cin-out .22s ease forwards!important}
+.dj-step-in{animation:dj-cin-in .3s cubic-bezier(0.22,1,0.36,1) forwards!important}
+@keyframes dj-cin-out{to{opacity:0;transform:translateY(-14px) scale(.98)}}
+@keyframes dj-cin-in{from{opacity:0;transform:translateY(16px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* ── 2. Spotlight Guided Tour ── */
+#dj-spotlight{position:fixed;inset:0;z-index:500;pointer-events:none;opacity:0;transition:opacity .3s}
+#dj-spotlight.active{opacity:1;pointer-events:auto}
+.dj-spotlight-mask{position:absolute;inset:0;background:rgba(0,0,0,0.6);pointer-events:auto}
+.dj-spotlight-hole{position:absolute;border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,0.6);pointer-events:none;transition:all .35s cubic-bezier(0.22,1,0.36,1)}
+.dj-spotlight-mask-hole{box-shadow:0 0 0 9999px rgba(0,0,0,0.55)}
+.dj-spotlight-tooltip-box{position:absolute;background:rgba(15,23,42,0.85);backdrop-filter:blur(24px) saturate(1.2);-webkit-backdrop-filter:blur(24px) saturate(1.2);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px;width:240px;box-shadow:0 12px 40px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.04);transition:all .35s cubic-bezier(0.22,1,0.36,1)}
+.dj-spotlight-progress{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#3b82f6;margin-bottom:6px}
+.dj-spotlight-title{font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:4px}
+.dj-spotlight-body{font-size:11.5px;color:#94a3b8;line-height:1.55;margin-bottom:12px;text-align:justify}
+.dj-spotlight-actions{display:flex;align-items:center;justify-content:space-between}
+.dj-spotlight-skip-btn{background:none;border:none;color:#475569;font-family:var(--font);font-size:11px;cursor:pointer;padding:4px 0;transition:color .15s}
+.dj-spotlight-skip-btn:hover{color:#94a3b8}
+.dj-spotlight-next-btn{padding:6px 16px;border-radius:8px;border:none;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;transition:transform .15s}
+.dj-spotlight-next-btn:hover{transform:translateY(-1px)}
+.dj-spotlight-pointer{position:absolute;width:0;height:0}
+
+/* ── 7. Progress Mini Sidebar ── */
+#dj-prog-sidebar{position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:60;display:none;flex-direction:column;gap:6px}
+#dj-step-eval.active ~ #dj-prog-sidebar,
+.dj-prog-sidebar-visible{display:flex!important}
+.dj-prog-wrap{background:rgba(10,15,26,0.9);backdrop-filter:blur(12px);border:1px solid rgba(148,163,184,0.07);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:4px;min-width:40px;transition:min-width .25s}
+.dj-prog-wrap.expanded{min-width:156px}
+.dj-prog-header{display:none;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#334155;margin-bottom:4px;padding:0 2px}
+.dj-prog-wrap.expanded .dj-prog-header{display:block}
+.dj-prog-dots{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;transition:grid-template-columns .25s}
+.dj-prog-wrap.expanded .dj-prog-dots{grid-template-columns:repeat(2,1fr)}
+.dj-prog-dot{width:10px;height:10px;border-radius:3px;background:rgba(100,116,139,0.15);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.dj-prog-dot.scored{background:rgba(34,197,94,0.35)}
+.dj-prog-dot.current{background:rgba(59,130,246,0.5);box-shadow:0 0 0 2px rgba(59,130,246,0.25)}
+.dj-prog-wrap.expanded .dj-prog-dot{width:100%;height:22px;border-radius:6px;font-size:9px;font-weight:600;color:#475569}
+.dj-prog-wrap.expanded .dj-prog-dot.scored{color:#4ade80;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.18)}
+.dj-prog-wrap.expanded .dj-prog-dot.current{color:#93c5fd;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.25)}
+.dj-prog-toggle-btn{background:none;border:none;color:#334155;cursor:pointer;padding:2px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:color .2s;align-self:center}
+.dj-prog-toggle-btn:hover{color:#64748b}
+.dj-prog-toggle-btn svg{width:12px;height:12px;transition:transform .2s}
+.dj-prog-wrap.expanded .dj-prog-toggle-btn svg{transform:rotate(180deg)}
+
+/* ── 9. Smart Demo — Group narrative ── */
+.dj-narrative{font-size:11px;color:#64748b;line-height:1.55;font-style:italic;margin-top:8px;padding:8px 12px;background:rgba(30,41,59,0.4);border-radius:8px;border-left:2px solid rgba(59,130,246,0.2);display:none}
+.dj-group-details.open .dj-narrative{display:block}
+.dj-peer-avg{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:#60a5fa;margin-top:6px;padding:3px 10px;background:rgba(59,130,246,0.07);border-radius:8px;border:1px solid rgba(59,130,246,0.12);max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.dj-peer-avg svg{width:12px;height:12px}
+
+/* ── 13. Persistent State Banner ── */
+.dj-continue-banner{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:400;background:#1e293b;border:1px solid rgba(148,163,184,0.15);border-radius:14px;padding:14px 18px;box-shadow:0 8px 40px rgba(0,0,0,0.45);display:flex;align-items:center;gap:12px;max-width:340px;width:calc(100% - 32px);animation:dj-banner-slide .35s cubic-bezier(0.22,1,0.36,1)}
+@keyframes dj-banner-slide{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.dj-cb-text{font-size:12px;color:#cbd5e1;flex:1;line-height:1.4}
+.dj-cb-text strong{color:#f1f5f9;display:block;font-size:12.5px;margin-bottom:1px}
+.dj-cb-yes{padding:7px 14px;border-radius:8px;border:1px solid rgba(59,130,246,0.25);background:rgba(59,130,246,0.15);color:#93c5fd;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+.dj-cb-no{padding:7px 10px;border-radius:8px;border:none;background:none;color:#475569;font-family:var(--font);font-size:11px;cursor:pointer}
+/* Continue banner — light mode */
+body:not(.dark-mode) .dj-continue-banner{background:#ffffff !important;border-color:#e2e8f0 !important;box-shadow:0 8px 40px rgba(0,0,0,0.1),0 0 0 1px rgba(0,0,0,0.04) !important}
+body:not(.dark-mode) .dj-cb-text{color:#475569 !important}
+body:not(.dark-mode) .dj-cb-text strong{color:#0f172a !important}
+body:not(.dark-mode) .dj-cb-yes{background:rgba(59,130,246,0.08) !important;border-color:rgba(59,130,246,0.2) !important;color:#2563eb !important}
+body:not(.dark-mode) .dj-cb-yes:hover{background:rgba(59,130,246,0.15) !important}
+body:not(.dark-mode) .dj-cb-no{color:#94a3b8 !important}
+body:not(.dark-mode) .dj-cb-no:hover{color:#64748b !important}

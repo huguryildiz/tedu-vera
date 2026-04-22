@@ -1,0 +1,12 @@
+/* Periods feature — barrel CSS
+   Split from PeriodsPage.css (1334 lines) in S14 Sprint 3.
+   Parts:
+     page.css       — desktop page layout, lifecycle bar, table card, columns, badges, pills, landscape compact
+     cards.css      — mobile portrait cards (hero-ring + sections) + touch pointer fixes
+     inspector.css  — criteria-set / framework cells, not-set row, readiness badge + inspector popup
+     lifecycle.css  — lifecycle guide collapsible block (desktop + portrait responsive)
+*/
+@import "./page.css";
+@import "./cards.css";
+@import "./inspector.css";
+@import "./lifecycle.css";

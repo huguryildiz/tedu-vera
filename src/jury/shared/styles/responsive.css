@@ -1,0 +1,610 @@
+/* Responsive */
+@media (max-width: 768px) {
+  .dj-glass-card {
+    padding: 24px 18px;
+    width: 100%;
+  }
+
+  .dj-glass-wide {
+    width: 100%;
+  }
+
+  .dj-eval-workspace {
+    padding: 12px 10px;
+  }
+
+  .dj-sticky-bottom {
+    padding: 12px;
+    gap: 6px;
+  }
+
+  /* Done step: tighter side padding on tablet */
+  .jury-step#dj-step-done {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .dj-done-rank-title {
+    font-size: 11.5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dj-step {
+    min-height: auto;
+    padding: 16px 10px;
+  }
+
+  .dj-glass-card {
+    padding: 20px 14px;
+    width: 100%;
+  }
+
+  .dj-h1 {
+    font-size: 18px;
+  }
+
+  .dj-sub {
+    font-size: 11px;
+    margin-bottom: 16px;
+  }
+
+  .dj-crit {
+    padding: 12px 12px 12px 24px;
+  }
+
+  .dj-score-row {
+    gap: 8px;
+  }
+
+  .dj-score-input {
+    width: 56px;
+    font-size: 14px;
+    padding: 6px;
+  }
+
+  .dj-sticky-bottom {
+    padding: 10px 8px;
+  }
+
+  .dj-btn-row {
+    flex-direction: column;
+  }
+
+  .dj-btn-primary,
+  .dj-btn-secondary {
+    width: 100%;
+  }
+
+  /* Done step mobile */
+  .jury-step#dj-step-done {
+    padding: 12px 10px 32px;
+  }
+
+  .dj-done-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    margin-bottom: 12px;
+  }
+
+  .dj-done-status-pill {
+    font-size: 9px;
+    padding: 3px 11px;
+    margin-bottom: 10px;
+  }
+
+  .dj-done-divider {
+    margin: 16px auto;
+  }
+
+  .dj-feedback-card {
+    padding: 16px 14px;
+  }
+
+  .dj-star {
+    width: 32px;
+    height: 32px;
+  }
+
+  .dj-done-rankings {
+    padding: 14px 0 12px;
+  }
+
+  .dj-done-rank-title {
+    font-size: 11px;
+  }
+
+  .dj-done-rank-score {
+    font-size: 10px;
+    width: 30px;
+  }
+
+  .dj-done-utility-links {
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .dj-done-utility-link {
+    font-size: 11.5px;
+  }
+
+  .dj-done-home-link {
+    margin-top: 14px;
+    padding-top: 12px;
+    font-size: 11.5px;
+  }
+}
+
+@media (max-width: 480px) and (orientation: landscape) {
+  .dj-step {
+    min-height: auto;
+    padding: 12px 10px;
+  }
+
+  .dj-glass-card {
+    padding: 16px 12px;
+  }
+
+  .dj-h1 {
+    font-size: 16px;
+    margin-bottom: 2px;
+  }
+
+  .dj-sub {
+    margin-bottom: 12px;
+    font-size: 11px;
+  }
+
+  .dj-icon-box {
+    width: 36px;
+    height: 36px;
+    margin: 0 auto 8px;
+  }
+
+  .dj-icon-box svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+
+
+/* ── Mobile Portrait (≤600px) — card fills screen with small gutters ── */
+@media (max-width: 600px) and (orientation: portrait) {
+  .jury-step {
+    padding: 16px 12px 24px;
+    padding-top: 16px;
+    justify-content: flex-start;
+  }
+  .jury-card {
+    padding: 24px 20px;
+    max-width: 100%;
+    border-radius: 14px;
+  }
+  .jury-icon-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 15px;
+    margin-bottom: 12px;
+  }
+  .jury-title {
+    font-size: 17px;
+    margin-bottom: 4px;
+  }
+  .jury-sub {
+    font-size: 12px;
+    margin-bottom: 20px;
+  }
+  .jury-card .form-group {
+    margin-bottom: 12px;
+  }
+  .jury-card .form-input {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  .jury-card .form-label {
+    font-size: 12px;
+    margin-bottom: 5px;
+  }
+  .jury-card .btn-primary,
+  .jury-card .btn-landing-primary {
+    padding: 12px;
+    font-size: 14px;
+  }
+  .dj-stepper-bar {
+    padding: 6px 8px 8px !important;
+  }
+}
+
+/* ── Short-Viewport Portrait (max-height: 700px) ── */
+@media (max-height: 700px) and (orientation: portrait) {
+  .jury-icon-box {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 10px;
+    border-radius: 13px;
+  }
+  .jury-sub {
+    display: none;
+  }
+  .jury-card .form-group {
+    margin-bottom: 8px;
+  }
+  .dj-stepper-bar {
+    padding: 5px 8px 7px !important;
+  }
+}
+
+/* ── Mobile Landscape — compact horizontal layout ── */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+  .jury-step {
+    padding: 8px 16px 16px;
+    padding-top: 8px;
+    justify-content: flex-start;
+  }
+  .jury-card {
+    padding: 20px 24px;
+    max-width: 520px;
+    border-radius: 14px;
+  }
+  .jury-icon-box {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+  }
+  .jury-title {
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  .jury-sub {
+    display: none;
+  }
+  .jury-brand-mark {
+    margin-bottom: 10px;
+  }
+  .jury-card .form-group {
+    margin-bottom: 10px;
+  }
+  .jury-card .form-input {
+    padding: 8px 12px;
+    font-size: 13.5px;
+  }
+  .jury-card .form-label {
+    font-size: 11.5px;
+    margin-bottom: 4px;
+  }
+  .jury-card .btn-primary,
+  .jury-card .btn-landing-primary {
+    padding: 10px;
+    font-size: 13.5px;
+  }
+  .dj-stepper-bar {
+    padding: 4px 8px 6px !important;
+  }
+}
+
+/* ── EvalStep Portrait Refinement (375–430px, orientation:portrait) ── */
+@media (max-width: 430px) and (orientation: portrait) {
+  /* Outer container */
+  #dj-step-eval {
+    padding: 6px 10px 66px !important;
+  }
+
+  /* Workspace card */
+  .dj-eval-workspace {
+    padding: 10px 12px;
+    border-radius: 18px;
+  }
+
+  /* Juror header — compact */
+  .dj-eval-workspace .dj-fh-header {
+    padding: 0 0 8px;
+    margin-bottom: 8px;
+  }
+  .dj-fh-header-name {
+    font-size: 11.5px;
+    gap: 4px;
+  }
+  .dj-fh-header-name svg {
+    width: 12px;
+    height: 12px;
+  }
+  .dj-fh-header-dept {
+    font-size: 9.5px;
+  }
+  .dj-fh-header-right {
+    gap: 5px;
+  }
+
+  /* Save pill — refined */
+  .dj-save-pill {
+    padding: 2px 6px;
+    font-size: 9.5px;
+    gap: 3px;
+  }
+  .dj-save-pill svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  /* Live badge — compact pill */
+  .dj-badge {
+    padding: 2px 6px !important;
+    font-size: 7.5px !important;
+    gap: 4px !important;
+  }
+  .dj-badge::before {
+    width: 4px !important;
+    height: 4px !important;
+  }
+
+  /* Icon buttons */
+  .dj-home-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+  .dj-home-btn svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  /* Group bar — wrap title, align nav to top */
+  .dj-eval-workspace .dj-group-bar {
+    padding: 8px 10px;
+    gap: 6px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .dj-group-bar-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    font-size: 12.5px;
+    line-height: 1.3;
+  }
+  .dj-group-bar-sub {
+    margin-top: 3px;
+  }
+  .dj-nav-btn {
+    height: 28px !important;
+    padding: 0 7px !important;
+    border-radius: 6px !important;
+  }
+  .dj-group-bar-num {
+    font-size: 10.5px;
+  }
+
+  /* Progress bar row */
+  .dj-eval-workspace .dj-fh-progress {
+    padding: 0 0 8px;
+    margin-bottom: 8px;
+  }
+
+  /* Segmented bar — portrait */
+  .dj-seg{height:4px;border-radius:2px}
+  .dj-seg.active{height:6px}
+  .dj-seg-legend-item{font-size:7.5px}
+
+  /* Drawer — portrait */
+  .dj-drawer-item{padding:8px}
+  .dj-drawer-item-name{font-size:10.5px}
+  .dj-drawer-p-badge{font-size:10px}
+
+  /* Info banner — subtle + compact */
+  #dj-step-eval .dj-info.amber {
+    padding: 6px 10px !important;
+    font-size: 10px !important;
+    border-radius: 8px;
+    gap: 6px;
+    margin-bottom: 8px !important;
+    line-height: 1.4;
+  }
+  #dj-step-eval .dj-info.amber svg {
+    width: 10px !important;
+    height: 10px !important;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  /* Criterion cards — compact + premium */
+  .dj-crit {
+    padding: 10px 11px 10px 25px;
+    margin-bottom: 6px;
+    border-radius: 12px;
+  }
+  .dj-crit::before {
+    left: 10px !important;
+    top: 10px !important;
+    bottom: 10px !important;
+  }
+  .dj-crit-top {
+    margin-bottom: 5px;
+    gap: 6px;
+  }
+  .dj-crit-name {
+    font-size: 12.5px;
+    gap: 5px;
+  }
+  .dj-crit-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  /* Rubric button — secondary refinement */
+  .dj-rubric-btn {
+    padding: 3px 8px;
+    font-size: 9.5px;
+    border-radius: 7px;
+    gap: 3px;
+  }
+  .dj-rubric-btn svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  /* Score row */
+  .dj-score-row {
+    gap: 8px;
+  }
+  .dj-score-input {
+    width: 52px;
+    height: 40px;
+    font-size: 16px;
+    border-radius: 9px;
+  }
+  .dj-score-frac {
+    font-size: 10.5px;
+    min-width: 36px;
+  }
+
+  /* Comment box */
+  .dj-comment-box {
+    margin-top: 8px;
+    padding: 11px 12px;
+    border-radius: 12px;
+  }
+  .dj-textarea {
+    min-height: 48px;
+    font-size: 11.5px;
+    padding: 8px 10px;
+  }
+
+  /* Sticky bottom — premium refinement */
+  .dj-sticky-bottom {
+    height: 52px;
+    padding: 0 14px;
+  }
+  .dj-bottom-total {
+    font-size: 17px;
+  }
+  .dj-bottom-status {
+    font-size: 9.5px;
+  }
+  .dj-bottom-submit {
+    padding: 8px 16px;
+    font-size: 11.5px;
+    border-radius: 9px;
+  }
+}
+
+/* ── DoneStep Portrait Refinement (375–430px, orientation:portrait) ── */
+@media (max-width: 430px) and (orientation: portrait) {
+  /* Outer step container */
+  #dj-step-done {
+    padding-top: 10px !important;
+    padding-bottom: 20px !important;
+  }
+
+  /* Glass card — full-width, compact padding */
+  #dj-step-done .dj-glass.dj-glass-card {
+    padding: 16px 12px !important;
+    border-radius: 18px;
+  }
+
+  /* Celebration icon — slightly smaller */
+  .dj-done-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    margin: 0 auto 10px;
+  }
+  .dj-done-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Status pill — tighter */
+  .dj-done-status-pill {
+    margin-bottom: 10px;
+    padding: 3px 10px;
+    font-size: 9.5px;
+  }
+
+  /* Title + subtitle */
+  #dj-step-done .dj-h1 {
+    font-size: 18px !important;
+    margin-bottom: 4px !important;
+  }
+  #dj-step-done .dj-sub {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  /* Feedback card — compact on mobile */
+  .dj-feedback-card {
+    padding: 12px 10px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+  .dj-feedback-title {
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
+  .dj-star {
+    width: 28px;
+    height: 28px;
+  }
+  .dj-feedback-textarea {
+    font-size: 12px;
+  }
+
+  /* Rankings snippet — compact */
+  .dj-done-rankings {
+    padding: 14px 0 12px;
+    margin-bottom: 2px;
+  }
+  .dj-done-rankings-header {
+    font-size: 8px;
+    margin-bottom: 8px;
+  }
+  .dj-done-rank-row {
+    gap: 6px;
+    padding: 4px 0;
+  }
+  .dj-done-rank-num {
+    font-size: 10px;
+    width: 20px;
+  }
+  .dj-done-rank-title {
+    font-size: 11px;
+  }
+  .dj-done-rank-badge {
+    font-size: 9px;
+    width: 24px;
+  }
+  .dj-done-rank-score {
+    font-size: 10px;
+    width: 30px;
+  }
+
+  /* Utility links — compact */
+  .dj-done-utility-links {
+    gap: 8px;
+    margin: 10px 0 4px;
+  }
+  .dj-done-utility-link {
+    font-size: 11px;
+    gap: 4px;
+  }
+  .dj-done-utility-link svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* Return home link — compact */
+  .dj-done-home-link {
+    font-size: 11px;
+    gap: 4px;
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+  .dj-done-home-link svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+

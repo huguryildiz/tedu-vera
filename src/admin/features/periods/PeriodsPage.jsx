@@ -72,7 +72,7 @@ import {
   clearRawToken as storageClearRawToken,
   getRawToken as storageGetRawToken,
 } from "@/shared/storage/adminStorage";
-import "./PeriodsPage.css";
+import "./styles/index.css";
 import "@/admin/features/setup-wizard/SetupWizardPage.css";
 
 function formatRelative(ts) {

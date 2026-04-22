@@ -18,7 +18,15 @@
 @import './status-pills.css';
 
 /* Domain styles */
-@import '../jury/shared/jury-base.css';
+@import '../jury/shared/styles/gate.css';
+@import '../jury/shared/styles/demo-core.css';
+@import '../jury/shared/styles/progress.css';
+@import '../jury/shared/styles/locked.css';
+@import '../jury/shared/styles/light-mode.css';
+@import '../jury/shared/styles/pin-step.css';
+@import '../jury/shared/styles/demo-mirror.css';
+@import '../jury/shared/styles/animations.css';
+@import '../jury/shared/styles/responsive.css';
 @import './landing.css';
 @import './maintenance.css';
 @import '../auth/shared/auth-base.css';
