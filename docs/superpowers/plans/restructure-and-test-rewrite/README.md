@@ -164,8 +164,8 @@ e2e/                           (mevcut — genişletilecek)
 | ✅ | **5** | A2.4-A2.9 — periods + projects + **criteria** + outcomes + reviews + rankings (plandan fazla: A2.7-A2.9 de tamamlandı) | ~40 dosya + 6 page CSS | 5 saat | %85 | 9 admin feature tamam; 2 cross-feature (usePeriodOutcomes, OutcomeEditor) admin/shared/'a çıkarıldı |
 | ✅ | **6** | A2.10-A2.13 — analytics + heatmap + audit + entry-control | ~16 dosya + 4 page CSS | 3 saat | %65 | 13 admin feature tamam |
 | ✅ | **7** | A2.14-A2.17 — pin-blocking + settings + **setup-wizard** (2377 satır CSS) + export | ~20 dosya + 4 page CSS | 4 saat | %75 | **Tüm 17 admin feature tamam** · [session-07](implementation_reports/session-07-A2-admin-14-17.md) |
-| ⬜ | **8** | A3 — jury restructure (9 feature + jury/shared, jury.css 4021 satır split) | ~25 dosya + jury.css + jury-arrival.css | 4 saat | %75 | Jury bitti |
-| ⬜ | **9** | A4 — auth restructure (9 feature + auth/shared, auth.css 1178 satır) | ~12 dosya + auth.css | 2-3 saat | %60 | **Aşama A source taşıma bitti** |
+| ✅ | **8** | A3 — jury restructure (9 feature + jury/shared, jury.css 4021 satır split) | ~25 dosya + jury.css + jury-arrival.css | 4 saat | %75 | **Faz A3 tamam** · [session-08](implementation_reports/session-08-A3-jury.md) |
+| ✅ | **9** | A4 — auth restructure (9 feature + auth/shared, auth.css 1178 satır) | ~12 dosya + auth.css | 2-3 saat | %60 | **Faz A4 tamam** · [session-09](implementation_reports/session-09-A4-auth.md) |
 | ⬜ | **10** | A5 — components.css (5664 → ~1500 satır) split + main.jsx import yeniden düzenleme | components.css + 8 yeni dosya + main.jsx | 3-4 saat | %70 | Kalan components.css global |
 | ⬜ | **11** | A6 + A7 — import cleanup + eski dizin sil + src/styles/ finalize + tam smoke test | Grep + cleanup + 17 admin page + jury + demo gezerek visual check | 3 saat | %60 | **Aşama A bitti**, tüm sayfalar görsel OK |
 | ⬜ | **12** | B0 + B1 part 1 — test arşiv + iskelet + test kit (fixtures, factories, helpers) + shared/lib tests (environment, supabaseClient, utils, dateUtils, demoMode, randomUUID) | ~15 dosya | 3-4 saat | %70 | Shared/lib %100 test edildi |
@@ -1413,16 +1413,16 @@ purgecss --content "src/**/*.{js,jsx,css}" --css "src/styles/**/*.css" --output 
 
 | Feature | Source | CSS | Tests | Durum | Report |
 |---|---|---|---|---|---|
-| arrival | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| identity | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| period-select | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| pin | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| pin-reveal | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| progress | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| evaluation | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| complete | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| lock | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| jury/shared | ⬜ | ⬜ | ⬜ | Bekliyor | — |
+| arrival | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-08](implementation_reports/session-08-A3-jury.md) |
+| identity | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-08](implementation_reports/session-08-A3-jury.md) |
+| period-select | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-08](implementation_reports/session-08-A3-jury.md) |
+| pin | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-08](implementation_reports/session-08-A3-jury.md) |
+| pin-reveal | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-08](implementation_reports/session-08-A3-jury.md) |
+| progress | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-08](implementation_reports/session-08-A3-jury.md) |
+| evaluation | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-08](implementation_reports/session-08-A3-jury.md) |
+| complete | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-08](implementation_reports/session-08-A3-jury.md) |
+| lock | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-08](implementation_reports/session-08-A3-jury.md) |
+| jury/shared | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-08](implementation_reports/session-08-A3-jury.md) |
 
 ### Auth (9 feature)
 
@@ -1467,7 +1467,7 @@ purgecss --content "src/**/*.{js,jsx,css}" --css "src/styles/**/*.css" --output 
 
 ### Toplam ilerleme
 
-**17 / 35 feature taşındı** · **17 / 35 feature CSS co-located** · **0 / 40 modül test edildi** · **0 / 11 altyapı task tamam**
+**27 / 37 feature taşındı** · **27 / 37 feature CSS co-located** · **0 / 40 modül test edildi** · **0 / 11 altyapı task tamam**
 
 > Her oturum sonunda ilgili satırlar güncellenir ve Report sütununa `[session-NN-konu.md](implementation_reports/session-NN-konu.md)` linki eklenir.
 
@@ -1484,6 +1484,8 @@ purgecss --content "src/**/*.{js,jsx,css}" --css "src/styles/**/*.css" --output 
 | 2026-04-22 | 5 | A2.4–A2.9 tamamlandı: periods + projects + criteria + outcomes + reviews + rankings features taşındı (9 commit); 2 cross-feature bileşen `admin/shared/`'a çıkarıldı (usePeriodOutcomes, OutcomeEditor); `PremiumTooltiptext` JSX syntax bug düzeltildi (OutcomeEditor 2x + CriterionEditor 1x); `periodsMobileRing.test.js` + `criteriaFormHelpers.test.js` import yolları güncellendi; 23 fail (hepsi pre-existing), 57 pass | Session 6: A2.10–A2.13 (analytics + heatmap + audit + entry-control) |
 | 2026-04-22 | 6 | A2.10–A2.13 tamamlandı: analytics + heatmap + audit + entry-control features taşındı (4 commit); `mobileSort.js` heatmap-only olduğu tespit edildi, heatmap ile co-located; dynamic import path bug (`../../shared/api`) build'de yakalandı; `smoke.test.jsx` + `mobileSort.test.js` import yolları güncellendi; build yeşil; 13/17 admin feature tamam | Session 7: A2.14–A2.17 (pin-blocking + settings + setup-wizard + export) |
 | 2026-04-22 | 7 | A2.14–A2.17 tamamlandı: pin-blocking + settings + setup-wizard + export features taşındı (4 commit); GovernanceDrawers → `features/organizations/` (tek consumer OrganizationsPage); `setup-wizard.css` 3 sayfadan doğrudan import ediliyordu (OutcomesPage + PeriodsPage güncellendi); dynamic import path bug `import("../../shared/api")` ExportPage'de yakalandı; `ManageOrganizationsPanel.test.jsx` import yolu güncellendi; build yeşil; **17/17 admin feature tamam** | Session 8: A3 jury restructure (9 feature + jury/shared, jury.css 4021 satır) |
+| 2026-04-22 | 8 | A3.1–A3.10 tamamlandı: 9 jury step feature co-located + jury/shared katmanı oluşturuldu (11 commit); `jury.css` 4021 satır → `jury/shared/jury-base.css`; `jury-arrival.css` → `arrival/ArrivalStep.css`; 12 hook + 4 util + 4 shared component + JuryGuard + juryPreloadCache taşındı; SpotlightTour bulk fix (6 dosya); 2 admin consumer (useManagePeriods + useAdminData) güncellendi; eski `jury/steps/`, `hooks/`, `components/`, `utils/` silindi; pre-existing test failure'lar (useJuryState.writeGroup) doğrulandı; build yeşil; **Faz A3 tamam** | Session 9: A4 auth restructure (9 feature + auth/shared) |
+| 2026-04-22 | 9 | A4.1–A4.10 tamamlandı: 9 auth screen feature co-located + auth/shared katmanı oluşturuldu (10 commit); `auth.css` 1178 satır → 4 feature CSS + `auth/shared/auth-base.css` (210 satır); AuthProvider + useAuth + SecurityPolicyContext + lockedActions + AuthGuard → `auth/shared/`'a taşındı; AuthGuard `guards/` → `auth/shared/`; eski `auth/screens/`, `auth/components/`, `guards/` silindi; 19 consumer güncellendi (router, AdminRouteLayout, RootLayout, MaintenanceGate, 6 feature, 6 admin page, 1 modal, 3 test); `auth/index.js` barrel güncellendi; build yeşil; **Faz A4 tamam** | Session 10: A5 components.css split |
 
 ---
 
