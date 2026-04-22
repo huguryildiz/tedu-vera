@@ -28,7 +28,7 @@ import { ADMIN_TOUR_STEPS } from "@/admin/adminTourSteps";
 import SetupProgressBanner from "@/admin/layout/SetupProgressBanner";
 import EmailVerifyBanner from "@/auth/components/EmailVerifyBanner";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
-import DraggableThemeToggle from "@/jury/components/DraggableThemeToggle";
+import DraggableThemeToggle from "@/jury/shared/DraggableThemeToggle";
 const LazyLoginForm            = lazy(() => import("@/auth/screens/LoginScreen"));
 const LazyRegisterForm         = lazy(() => import("@/auth/screens/RegisterScreen"));
 const LazyForgotPasswordForm   = lazy(() => import("@/auth/screens/ForgotPasswordScreen"));

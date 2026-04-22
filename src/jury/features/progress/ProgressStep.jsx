@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Loader2, Play, Rocket, LayoutGrid, Clock, ChevronDown } from "lucide-react";
-import SpotlightTour from "../../components/SpotlightTour";
+import SpotlightTour from "../../shared/SpotlightTour";
 import { formatDate } from "@/shared/lib/dateUtils";
 
 const PROGRESS_TOUR_STEPS = [

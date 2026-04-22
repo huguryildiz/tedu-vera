@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import IdentityStep from "../steps/IdentityStep";
+import IdentityStep from "../features/identity/IdentityStep";
 
 function makeState(overrides = {}) {
   return {

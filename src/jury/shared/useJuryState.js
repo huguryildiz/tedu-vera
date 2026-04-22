@@ -43,20 +43,20 @@ import { useEffect, useRef } from "react";
 import { useToast } from "@/shared/hooks/useToast";
 import { DEMO_MODE as _DEMO_MODE } from "@/shared/lib/demoMode";
 import { KEYS, saveJurySession, clearJurySession } from "@/shared/storage";
-import { isAllFilled } from "./utils/scoreState";
-import { deriveEffectiveCriteria } from "./hooks/juryHandlerUtils";
-import { useJurorIdentity } from "./hooks/useJurorIdentity";
-import { useJurorSession } from "./hooks/useJurorSession";
-import { useJuryScoring } from "./hooks/useJuryScoring";
-import { useJuryLoading } from "./hooks/useJuryLoading";
-import { useJuryEditState } from "./hooks/useJuryEditState";
-import { useJuryWorkflow } from "./hooks/useJuryWorkflow";
-import { useJuryAutosave } from "./hooks/useJuryAutosave";
-import { useJuryHandlers } from "./hooks/useJuryHandlers";
+import { isAllFilled } from "./scoreState";
+import { deriveEffectiveCriteria } from "./juryHandlerUtils";
+import { useJurorIdentity } from "./useJurorIdentity";
+import { useJurorSession } from "./useJurorSession";
+import { useJuryScoring } from "./useJuryScoring";
+import { useJuryLoading } from "./useJuryLoading";
+import { useJuryEditState } from "./useJuryEditState";
+import { useJuryWorkflow } from "./useJuryWorkflow";
+import { useJuryAutosave } from "./useJuryAutosave";
+import { useJuryHandlers } from "./useJuryHandlers";
 
 // Re-export pure helpers so existing imports in EvalStep.jsx and test files
 // continue to resolve from this module without any changes.
-export { isScoreFilled, normalizeScoreValue, countFilled } from "./utils/scoreState";
+export { isScoreFilled, normalizeScoreValue, countFilled } from "./scoreState";
 
 // ─────────────────────────────────────────────────────────────
 // Hook

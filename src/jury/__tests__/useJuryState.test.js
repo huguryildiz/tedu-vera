@@ -36,8 +36,8 @@ vi.mock("../../shared/api", () => {
 // ── Imports (after vi.mock declarations) ──────────────────────────────────
 
 import * as api from "../../shared/api";
-import { isScoreFilled, normalizeScoreValue } from "../useJuryState";
-import useJuryState from "../useJuryState";
+import { isScoreFilled, normalizeScoreValue } from "../shared/useJuryState";
+import useJuryState from "../shared/useJuryState";
 
 // ── Helper: advance hook to eval step ─────────────────────────────────────
 

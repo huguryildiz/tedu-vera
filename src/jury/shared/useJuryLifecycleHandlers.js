@@ -25,8 +25,8 @@ import {
   isAllFilled,
   isAllComplete,
   makeAllTouched,
-} from "../utils/scoreState";
-import { buildScoreSnapshot, isPeriodLockedError, isSessionExpiredError } from "../utils/scoreSnapshot";
+} from "./scoreState";
+import { buildScoreSnapshot, isPeriodLockedError, isSessionExpiredError } from "./scoreSnapshot";
 import { clearJurySession } from "../../shared/storage";
 
 export function useJuryLifecycleHandlers({ identity, session, scoring, loading, workflow, editState, autosave, stateRef, effectiveCriteria, setSubmitError }) {

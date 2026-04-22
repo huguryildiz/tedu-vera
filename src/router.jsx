@@ -12,7 +12,7 @@ import RootLayout from "./layouts/RootLayout";
 import AdminRouteLayout from "./layouts/AdminRouteLayout";
 import DemoLayout from "./layouts/DemoLayout";
 import AuthRouteLayout from "./layouts/AuthRouteLayout";
-import JuryGuard from "./guards/JuryGuard";
+import JuryGuard from "@/jury/shared/JuryGuard";
 import ErrorBoundary from "@/shared/ui/ErrorBoundary";
 
 // ── Lazy-loaded page components ───────────────────────────────

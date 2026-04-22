@@ -26,7 +26,7 @@ import {
 } from "@/shared/api";
 import { getActiveCriteria } from "@/shared/criteria/criteriaHelpers";
 import { sortPeriodsByStartDateDesc } from "@/shared/periodSort";
-import { pickDefaultPeriod } from "@/jury/utils/periodSelection";
+import { pickDefaultPeriod } from "@/jury/shared/periodSelection";
 import {
   APP_DATE_MIN_DATE,
   APP_DATE_MAX_DATE,

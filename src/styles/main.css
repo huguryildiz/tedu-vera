@@ -9,7 +9,7 @@
 @import './status-pills.css';
 
 /* Domain styles */
-@import './jury.css';
+@import '../jury/shared/jury-base.css';
 @import './landing.css';
 @import './maintenance.css';
 @import './auth.css';

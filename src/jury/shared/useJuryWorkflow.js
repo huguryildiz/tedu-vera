@@ -31,7 +31,7 @@
 // ============================================================
 
 import { useState, useRef } from "react";
-import { isAllFilled, countFilled } from "../utils/scoreState";
+import { isAllFilled, countFilled } from "./scoreState";
 
 // Parameters (from orchestrator):
 //   scores      — current scoring state (for derived allComplete / progressPct)

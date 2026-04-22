@@ -27,7 +27,7 @@ import {
   isEvaluablePeriod,
   listEvaluablePeriods,
   pickDemoPeriod,
-} from "../utils/periodSelection";
+} from "./periodSelection";
 
 import {
   listProjects,
@@ -42,9 +42,9 @@ import {
 import {
   isAllFilled,
   makeEmptyTouched,
-} from "../utils/scoreState";
-import { buildScoreSnapshot } from "../utils/scoreSnapshot";
-import { buildProgressCheck } from "../utils/progress";
+} from "./scoreState";
+import { buildScoreSnapshot } from "./scoreSnapshot";
+import { buildProgressCheck } from "./progress";
 
 const listPeriods = publicApi.listPeriodsPublic || publicApi.listPeriods;
 

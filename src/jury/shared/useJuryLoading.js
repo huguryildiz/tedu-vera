@@ -35,8 +35,8 @@ import { useState, useEffect, useRef } from "react";
 import { listProjects, listPeriodsPublic as listPeriods, verifyEntryToken } from "../../shared/api";
 import { getJuryAccess, KEYS } from "../../shared/storage";
 import { DEMO_MODE } from "@/shared/lib/demoMode";
-import { buildTokenPeriod, pickDemoPeriod, pickDefaultPeriod } from "../utils/periodSelection";
-import { consumeJuryPreload } from "../juryPreloadCache";
+import { buildTokenPeriod, pickDemoPeriod, pickDefaultPeriod } from "./periodSelection";
+import { consumeJuryPreload } from "./juryPreloadCache";
 
 const DEMO_ENTRY_TOKEN = import.meta.env.VITE_DEMO_ENTRY_TOKEN || "";
 

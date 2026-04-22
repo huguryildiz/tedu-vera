@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { jurorInitials } from "@/admin/utils/jurorIdentity";
 import FbAlert from "@/shared/ui/FbAlert";
-import SpotlightTour from "../../components/SpotlightTour";
+import SpotlightTour from "../../shared/SpotlightTour";
 import veraLogoDark from "../../../assets/vera_logo_dark.png";
 import veraLogoWhite from "../../../assets/vera_logo_white.png";
 

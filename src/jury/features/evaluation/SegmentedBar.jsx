@@ -1,6 +1,6 @@
 // src/jury/components/SegmentedBar.jsx
 // Segmented progress bar — one segment per project, color-coded by status.
-import { getProjectStatus } from "../../utils/scoreState";
+import { getProjectStatus } from "../../shared/scoreState";
 
 export default function SegmentedBar({ projects, scores, criteria, current, onNavigate }) {
   if (!projects.length) return null;

@@ -52,8 +52,8 @@ import {
   isFinalSubmittedError,
   isPeriodLockedError,
   isSessionExpiredError,
-} from "../utils/scoreSnapshot";
-import { isAllFilled } from "../utils/scoreState";
+} from "./scoreSnapshot";
+import { isAllFilled } from "./scoreState";
 
 export function useJuryAutosave({
   stateRef,

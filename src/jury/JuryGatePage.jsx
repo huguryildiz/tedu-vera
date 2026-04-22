@@ -10,9 +10,8 @@ import veraLogoDark from "../assets/vera_logo_dark.png";
 import veraLogoWhite from "../assets/vera_logo_white.png";
 import { listPeriods, listPeriodsPublic, listProjects, verifyEntryReference, verifyEntryToken } from "../shared/api";
 import { setJuryAccess } from "../shared/storage";
-import { setJuryPreload } from "./juryPreloadCache";
+import { setJuryPreload } from "./shared/juryPreloadCache";
 import FbAlert from "../shared/ui/FbAlert";
-import "../styles/jury.css";
 
 /** Extract token from a pasted URL or raw code string. */
 function extractToken(input) {

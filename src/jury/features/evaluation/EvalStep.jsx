@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import FbAlert from "@/shared/ui/FbAlert";
 import RubricSheet from "./RubricSheet";
-import SpotlightTour from "../../components/SpotlightTour";
+import SpotlightTour from "../../shared/SpotlightTour";
 import SegmentedBar from "./SegmentedBar";
 import ProjectDrawer from "./ProjectDrawer";
 import { StudentNames } from "@/shared/ui/EntityMeta";

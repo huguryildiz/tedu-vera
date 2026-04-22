@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import useJuryState from "./useJuryState";
+import useJuryState from "./shared/useJuryState";
 import ArrivalStep from "./features/arrival/ArrivalStep";
 import IdentityStep from "./features/identity/IdentityStep";
 import SemesterStep from "./features/period-select/SemesterStep";
@@ -17,7 +17,7 @@ import ProgressStep from "./features/progress/ProgressStep";
 import EvalStep from "./features/evaluation/EvalStep";
 import DoneStep from "./features/complete/DoneStep";
 import MinimalLoaderOverlay from "@/shared/ui/MinimalLoaderOverlay";
-import StepperBar from "./components/StepperBar";
+import StepperBar from "./shared/StepperBar";
 
 // Step name → URL path segment
 const STEP_TO_PATH = {

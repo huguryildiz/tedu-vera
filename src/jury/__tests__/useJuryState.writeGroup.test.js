@@ -37,7 +37,7 @@ vi.mock("../../shared/api", () => {
 // ── Imports (after vi.mock declarations) ──────────────────────────────────
 
 import * as api from "../../shared/api";
-import useJuryState from "../useJuryState";
+import useJuryState from "../shared/useJuryState";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────
 

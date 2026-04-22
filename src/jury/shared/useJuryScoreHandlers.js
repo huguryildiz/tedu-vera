@@ -10,7 +10,7 @@
 // ============================================================
 
 import { useCallback } from "react";
-import { isAllFilled } from "../utils/scoreState";
+import { isAllFilled } from "./scoreState";
 
 export function useJuryScoreHandlers({ scoring, editState, autosave, effectiveCriteria }) {
   const handleScore = useCallback(

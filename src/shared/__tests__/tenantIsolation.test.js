@@ -53,11 +53,11 @@ describe("Tenant Isolation — Auth context state", () => {
     // This is a static analysis test — we check that no jury module
     // imports tenant-related modules
     const juryFiles = [
-      "../../jury/useJuryState",
-      "../../jury/hooks/useJuryHandlers",
-      "../../jury/hooks/useJurySessionHandlers",
-      "../../jury/hooks/useJuryLifecycleHandlers",
-      "../../jury/hooks/useJuryScoreHandlers",
+      "../../jury/shared/useJuryState",
+      "../../jury/shared/useJuryHandlers",
+      "../../jury/shared/useJurySessionHandlers",
+      "../../jury/shared/useJuryLifecycleHandlers",
+      "../../jury/shared/useJuryScoreHandlers",
     ];
 
     // These module paths should NOT contain "tenant" or "useAuth"

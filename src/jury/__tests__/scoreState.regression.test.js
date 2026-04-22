@@ -13,7 +13,7 @@ import {
   makeEmptyScores,
   getProjectStatus,
   countFilledForProject,
-} from "../utils/scoreState";
+} from "../shared/scoreState";
 
 // ── Fixtures ──────────────────────────────────────────────────
 

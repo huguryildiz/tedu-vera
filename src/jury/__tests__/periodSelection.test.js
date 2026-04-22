@@ -5,7 +5,7 @@ import {
   listEvaluablePeriods,
   pickDemoPeriod,
   pickDefaultPeriod,
-} from "./periodSelection";
+} from "../shared/periodSelection";
 
 describe("periodSelection", () => {
   it("buildTokenPeriod maps entry-token payload to period shape", () => {

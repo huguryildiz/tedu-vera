@@ -22,7 +22,7 @@ import {
   getProjectSummary,
 } from "../../shared/api";
 import { sortPeriodsByStartDateDesc } from "../../shared/periodSort";
-import { pickDefaultPeriod } from "../../jury/utils/periodSelection";
+import { pickDefaultPeriod } from "../../jury/shared/periodSelection";
 import { useAdminRealtime } from "./useAdminRealtime";
 
 // Routes that display score data. The score-cluster Realtime channel is only
