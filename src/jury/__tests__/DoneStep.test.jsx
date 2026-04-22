@@ -22,7 +22,7 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
 }));
 
 // We need to import after mocks
-const { default: DoneStep } = await import("../steps/DoneStep.jsx");
+const { default: DoneStep } = await import("../features/complete/DoneStep.jsx");
 
 function makeState(overrides = {}) {
   return {
