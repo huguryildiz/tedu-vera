@@ -1,4 +1,3 @@
-import "../../styles/jury.css";
 import { formatDate } from "@/shared/lib/dateUtils";
 
 export default function SemesterStep({ state, onBack }) {

@@ -9,7 +9,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import useJuryState from "./useJuryState";
 import ArrivalStep from "./features/arrival/ArrivalStep";
 import IdentityStep from "./features/identity/IdentityStep";
-import SemesterStep from "./steps/SemesterStep";
+import SemesterStep from "./features/period-select/SemesterStep";
 import PinStep from "./steps/PinStep";
 import PinRevealStep from "./steps/PinRevealStep";
 import LockedStep from "./steps/LockedStep";
