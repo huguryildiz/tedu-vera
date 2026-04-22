@@ -1,0 +1,8 @@
+/* Reviews feature — barrel CSS
+   Split from ReviewsPage.css (975 lines) in S14 Sprint 3.
+   Parts:
+     page.css   — desktop layout (page, table, pagination, header, summary, status guide, legend)
+     mobile.css — portrait card layout (.rmc-*) + portrait header responsive fixes
+*/
+@import "./page.css";
+@import "./mobile.css";

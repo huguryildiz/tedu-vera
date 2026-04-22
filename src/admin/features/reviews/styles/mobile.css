@@ -1,0 +1,382 @@
+
+/* ── Mobile portrait header responsive fixes ────────────────────── */
+@media (max-width: 768px) and (orientation: portrait) {
+  .reviews-header { flex-direction: column; align-items: stretch; gap: 10px; }
+  .reviews-actions { flex-wrap: wrap; gap: 6px; }
+  .reviews-actions > div:first-child { width: 100%; min-width: 0; }
+  .reviews-search { width: 100% !important; box-sizing: border-box; }
+
+  .reviews-page {
+    overflow: hidden;
+    max-width: 100%;
+  }
+}
+
+/* ── Mobile portrait cards (new) ───────────────────────────────── */
+@media (max-width: 768px) and (orientation: portrait) {
+  .reviews-mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ── Card shell ── */
+  .rmc-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .rmc-card--partial {
+    border-left: 3px solid var(--warning);
+  }
+
+  /* ── Header: juror + ring ── */
+  .rmc-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .rmc-juror {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .rmc-juror-av {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .rmc-juror-info {
+    min-width: 0;
+  }
+
+  .rmc-juror-name {
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+  }
+
+  .rmc-juror-affil {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── Conic-gradient donut ring ── */
+  .rmc-ring-wrap {
+    flex-shrink: 0;
+  }
+
+  .rmc-ring-fill {
+    position: relative;
+    display: block;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: conic-gradient(var(--ring, var(--text-tertiary)) var(--pct, 0deg), var(--border) 0);
+  }
+
+  .rmc-ring-fill::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    background: var(--bg-card);
+    border-radius: 50%;
+  }
+
+  .rmc-ring-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    z-index: 1;
+  }
+
+  .rmc-ring-score {
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rmc-ring-denom {
+    font-size: 8px;
+    color: var(--text-tertiary);
+    line-height: 1;
+    margin-top: 1px;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Project + team block ── */
+  .rmc-project-block {
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .rmc-project-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+  }
+
+  .rmc-project-badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+    letter-spacing: 0.3px;
+  }
+
+  .rmc-project-title {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ── Team row ── */
+  .rmc-team-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .rmc-team-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    padding-top: 3px;
+    flex-shrink: 0;
+  }
+
+  .rmc-team-row .team-members-inline {
+    display: flex;
+    flex-wrap: wrap;
+    flex: 1;
+    gap: 5px 8px;
+    align-items: center;
+  }
+
+  .rmc-member-chip--overflow {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+
+  /* ── Criterion bars ── */
+  .rmc-crit-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .rmc-crit-bar-row {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr) 44px;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .rmc-crit-bar-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .rmc-bar-track {
+    height: 5px;
+    min-height: 5px;
+    border-radius: 99px;
+    background: var(--surface-2);
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .rmc-bar-fill {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.3s ease;
+  }
+
+  .rmc-crit-bar-score {
+    text-align: right;
+    font-size: 11px;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rmc-crit-score-val {
+    font-weight: 600;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rmc-crit-score-max {
+    color: var(--text-tertiary);
+    font-weight: 400;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rmc-crit-score-empty {
+    color: var(--text-tertiary);
+  }
+
+  /* ── Footer ── */
+  .rmc-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 9px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .rmc-footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .rmc-footer-col--right {
+    align-items: flex-end;
+  }
+
+  .rmc-footer-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .rmc-footer-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .rmc-comment-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    color: var(--text-tertiary);
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+    flex-shrink: 0;
+  }
+  .rmc-comment-btn:active,
+  .rmc-comment-btn--active {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  .rmc-comment-panel {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .rmc-comment-panel-icon {
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .rmc-comment-panel-text {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    text-align: left;
+  }
+
+  /* ── Submitted At row ── */
+  .rmc-submitted {
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .rmc-submitted-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .rmc-submitted-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+}

@@ -39,7 +39,7 @@ import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import { StudentNames } from "@/shared/ui/EntityMeta";
 import { computeCoverage, computePending, computeSpread } from "@/admin/utils/reviewsKpiHelpers";
-import "./ReviewsPage.css";
+import "./styles/index.css";
 
 
 // ── Mobile portrait detection ────────────────────────────────
