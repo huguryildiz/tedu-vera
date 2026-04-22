@@ -160,7 +160,7 @@ e2e/                           (mevcut — genişletilecek)
 | ✅ | **1** (şu an) | Plan yazıldı | Bu dosya | 0.5 gün | %75 | Faz A0'a hazır |
 | ✅ | **2** | A0 + A1 kick-off — iskelet + shared/ui'den 5-8 component CSS co-locate (FbAlert, CustomSelect, ConfirmDialog, PremiumTooltip, Modal, Drawer, Button, Card) | ~10 dosya + components.css düzenleme | 3 saat | %80 | A1 pattern validated (3/29 done); ConfirmDialog/Modal/Drawer skip (CSS zaten global file'da) |
 | ✅ | **3** | A1 tamamla — kalan 26 shared/ui component araştırıldı; AsyncButtonContent + FilterButton + Pagination co-located; FloatingMenu/btn-loading-content global kaldı (65+ direct className kullanımı); 15 component CSS'siz (inline style veya global dosyada) | 6 yeni CSS dosyası + components.css düzenleme | 3 saat | ~%75 | A1 tamamlandı: 6/29 co-located, kalan 23 actionable değil; A2'ye geçiş |
-| ⬜ | **4** | A2.1-A2.3 — overview + organizations + jurors | ~25 dosya + 3 page CSS | 3-4 saat | %70 | 3 feature taşındı, build yeşil |
+| ✅ | **4** | A2.1-A2.3 — overview + organizations + jurors | ~25 dosya + 3 page CSS | 4 saat | %80 | 3 feature taşındı; 4 cross-feature bileşen admin/shared/'a çıkarıldı; build yeşil |
 | ⬜ | **5** | A2.4-A2.6 — periods + projects + **criteria** (criteria.css 2480 satır — ağır) | ~22 dosya + 3 page CSS | 4 saat | %75 | Criteria en büyük riski geçti |
 | ⬜ | **6** | A2.7-A2.9 — **outcomes** (2056 satır CSS) + reviews + rankings | ~15 dosya + 3 page CSS | 3-4 saat | %70 | 9 admin feature tamam |
 | ⬜ | **7** | A2.10-A2.13 — analytics + heatmap + audit + entry-control | ~16 dosya + 4 page CSS | 3 saat | %65 | 13 admin feature tamam |
@@ -229,7 +229,7 @@ e2e/                           (mevcut — genişletilecek)
 - Create: `src/jury/features/{arrival,identity,period-select,pin,pin-reveal,progress,evaluation,complete,lock}/.gitkeep`
 - Create: `src/jury/shared/.gitkeep`
 
-- [ ] **Step 1: Mevcut build sağlam mı?**
+- [x] **Step 1: Mevcut build sağlam mı?**
 
 ```bash
 npm run build
@@ -237,7 +237,7 @@ npm run build
 
 Expected: Build başarılı. (Fail ederse önce build fix.)
 
-- [ ] **Step 2: Mevcut testler nasıl?**
+- [x] **Step 2: Mevcut testler nasıl?**
 
 ```bash
 npm test -- --run 2>&1 | tail -30
@@ -245,7 +245,7 @@ npm test -- --run 2>&1 | tail -30
 
 Expected: Baseline — 412 pass, 64 fail (2026-04-22 itibariyle).
 
-- [ ] **Step 3: Feature iskeletini oluştur**
+- [x] **Step 3: Feature iskeletini oluştur**
 
 ```bash
 cd /Users/huguryildiz/Documents/GitHub/VERA
@@ -259,7 +259,7 @@ mkdir -p src/jury/shared
 find src/admin/features src/admin/shared src/auth/features src/auth/shared src/jury/features src/jury/shared -type d -empty -exec touch {}/.gitkeep \;
 ```
 
-- [ ] **Step 4: Commit (boş iskelet)**
+- [x] **Step 4: Commit (boş iskelet)**
 
 ```bash
 git add -A
@@ -340,14 +340,14 @@ Her feature için **tek bir büyük task** — içinde kaynak + CSS + import gü
 - Modify: Router (`src/router.jsx`) — import yolu güncelle
 - Modify: OverviewPage.jsx — `import "./OverviewPage.css"` ekle
 
-- [ ] **Step 1: Dosyaları taşı**
+- [x] **Step 1: Dosyaları taşı**
 
 ```bash
 git mv src/admin/pages/OverviewPage.jsx src/admin/features/overview/OverviewPage.jsx
 git mv src/styles/pages/overview.css src/admin/features/overview/OverviewPage.css
 ```
 
-- [ ] **Step 2: OverviewPage.jsx'te CSS import'u ekle**
+- [x] **Step 2: OverviewPage.jsx'te CSS import'u ekle**
 
 Read OverviewPage.jsx. En üstteki import blokuna ekle:
 
@@ -355,7 +355,7 @@ Read OverviewPage.jsx. En üstteki import blokuna ekle:
 import "./OverviewPage.css";
 ```
 
-- [ ] **Step 3: OverviewPage.jsx'teki göreceli import'ları düzelt**
+- [x] **Step 3: OverviewPage.jsx'teki göreceli import'ları düzelt**
 
 Eski: `import { X } from "../hooks/foo"` (admin/pages/ → admin/hooks/)
 Yeni: `import { X } from "../../hooks/foo"` (admin/features/overview/ → admin/hooks/)
@@ -366,7 +366,7 @@ Grep ile tüm göreceli import'ları bul ve güncelle:
 grep -n "^import.*from \"\\.\\.\\/\"" src/admin/features/overview/OverviewPage.jsx
 ```
 
-- [ ] **Step 4: Router'da import yolu güncelle**
+- [x] **Step 4: Router'da import yolu güncelle**
 
 `src/router.jsx`:
 
@@ -375,13 +375,13 @@ grep -n "^import.*from \"\\.\\.\\/\"" src/admin/features/overview/OverviewPage.j
 + const OverviewPage = lazy(() => import("./admin/features/overview/OverviewPage"));
 ```
 
-- [ ] **Step 5: `src/main.jsx`'ten global overview.css import'unu kaldır**
+- [x] **Step 5: `src/main.jsx`'ten global overview.css import'unu kaldır**
 
 ```diff
 - import "./styles/pages/overview.css";
 ```
 
-- [ ] **Step 6: Diğer yerlerden OverviewPage import'u var mı?**
+- [x] **Step 6: Diğer yerlerden OverviewPage import'u var mı?**
 
 ```bash
 grep -rn "admin/pages/OverviewPage" src/
@@ -389,7 +389,7 @@ grep -rn "admin/pages/OverviewPage" src/
 
 Expected: Yalnızca `src/router.jsx`. Başka yer varsa güncelle.
 
-- [ ] **Step 7: Build + dev doğrulama**
+- [x] **Step 7: Build + dev doğrulama**
 
 ```bash
 npm run build
@@ -400,7 +400,7 @@ npm run dev
 # /admin/overview sayfasını aç, görsel kontrol
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add -A
@@ -422,7 +422,7 @@ git commit -m "refactor(admin): move overview to features/overview"
 - Move: `src/admin/components/AdminTeamCard.css` → `features/organizations/`
 - **Not:** `CreateOrganizationDrawer`'ı organizations içinde tutuyoruz; `ManageBackupsDrawer` gerçekten organizations'a mı ait yoksa settings/governance'a mı? → Bu feature'da tut, cross-feature ise sonradan `admin/shared/`'a al.
 
-- [ ] **Step 1: Tüm dosyaları feature klasörüne taşı**
+- [x] **Step 1: Tüm dosyaları feature klasörüne taşı**
 
 ```bash
 git mv src/admin/pages/OrganizationsPage.jsx src/admin/features/organizations/
@@ -435,7 +435,7 @@ git mv src/admin/components/AdminTeamCard.jsx src/admin/features/organizations/
 git mv src/admin/components/AdminTeamCard.css src/admin/features/organizations/
 ```
 
-- [ ] **Step 2: components.css'ten organizations'a özgü stilleri çıkart**
+- [x] **Step 2: components.css'ten organizations'a özgü stilleri çıkart**
 
 ```bash
 grep -n "organization\|tenant-switcher\|admin-team" src/styles/components.css
@@ -443,11 +443,11 @@ grep -n "organization\|tenant-switcher\|admin-team" src/styles/components.css
 
 İlgili bölümleri (muhtemelen 100-300 satır) yeni `src/admin/features/organizations/OrganizationsPage.css`'e taşı.
 
-- [ ] **Step 3: CSS import'ları ekle**
+- [x] **Step 3: CSS import'ları ekle**
 
 Her JSX dosyasının başına kendi component CSS'ini import et.
 
-- [ ] **Step 4: Göreceli import'ları düzelt**
+- [x] **Step 4: Göreceli import'ları düzelt**
 
 Her taşınan dosyada `from "../hooks/"`, `from "../drawers/"` gibi yolları **yeni seviyeye** göre düzelt:
 - `admin/features/organizations/OrganizationsPage.jsx` içinde artık aynı dizinde olan drawer/hook'lar için `from "./CreateOrganizationDrawer"` kullan.
@@ -465,14 +465,14 @@ done
 
 Her import'u elle gözden geçir ve düzelt.
 
-- [ ] **Step 5: Router güncelle**
+- [x] **Step 5: Router güncelle**
 
 ```diff
 - const OrganizationsPage = lazy(() => import("./admin/pages/OrganizationsPage"));
 + const OrganizationsPage = lazy(() => import("./admin/features/organizations/OrganizationsPage"));
 ```
 
-- [ ] **Step 6: Diğer yerlerde import var mı kontrol**
+- [x] **Step 6: Diğer yerlerde import var mı kontrol**
 
 ```bash
 grep -rn "admin/drawers/CreateOrganizationDrawer\|admin/drawers/ManageBackupsDrawer\|admin/drawers/ViewSessionsDrawer\|admin/components/TenantSwitcher\|admin/components/AdminTeamCard\|admin/hooks/useManageOrganizations" src/
@@ -480,7 +480,7 @@ grep -rn "admin/drawers/CreateOrganizationDrawer\|admin/drawers/ManageBackupsDra
 
 Her bulunan yeri yeni yola güncelle.
 
-- [ ] **Step 7: Build + dev test**
+- [x] **Step 7: Build + dev test**
 
 ```bash
 npm run build && npm run dev
@@ -488,7 +488,7 @@ npm run build && npm run dev
 
 `/admin/organizations` + `/admin/settings` (team card kullanıyor olabilir) + TenantSwitcher (topbar) kontrol.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add -A
@@ -511,7 +511,7 @@ git commit -m "refactor(admin): move organizations feature + co-locate CSS"
 
 (Step'ler A2.2 organizations pattern'iyle aynı: move → CSS taşı → import ekle → göreceli düzelt → router → diğer yerleri grep → build/dev → commit.)
 
-- [ ] **Step 1-8: A2.2 pattern'ını uygula**
+- [x] **Step 1-8: A2.2 pattern'ını uygula**
 
 ---
 
@@ -1392,9 +1392,9 @@ purgecss --content "src/**/*.{js,jsx,css}" --css "src/styles/**/*.css" --output 
 
 | Feature | Source | CSS | Tests | Durum | Report |
 |---|---|---|---|---|---|
-| overview | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| organizations | ⬜ | ⬜ | ⬜ | Bekliyor | — |
-| jurors | ⬜ | ⬜ | ⬜ | Bekliyor | — |
+| overview | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-04](implementation_reports/session-04-A2-admin-1-3.md) |
+| organizations | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-04](implementation_reports/session-04-A2-admin-1-3.md) |
+| jurors | ✅ | ✅ | ⬜ | Source+CSS bitti | [session-04](implementation_reports/session-04-A2-admin-1-3.md) |
 | periods | ⬜ | ⬜ | ⬜ | Bekliyor | — |
 | projects | ⬜ | ⬜ | ⬜ | Bekliyor | — |
 | criteria | ⬜ | ⬜ | ⬜ | Bekliyor | — |
@@ -1468,7 +1468,7 @@ purgecss --content "src/**/*.{js,jsx,css}" --css "src/styles/**/*.css" --output 
 
 ### Toplam ilerleme
 
-**0 / 35 feature taşındı** · **0 / 35 feature CSS co-located** · **0 / 40 modül test edildi** · **0 / 11 altyapı task tamam**
+**3 / 35 feature taşındı** · **3 / 35 feature CSS co-located** · **0 / 40 modül test edildi** · **0 / 11 altyapı task tamam**
 
 > Her oturum sonunda ilgili satırlar güncellenir ve Report sütununa `[session-NN-konu.md](implementation_reports/session-NN-konu.md)` linki eklenir.
 
@@ -1481,6 +1481,7 @@ purgecss --content "src/**/*.{js,jsx,css}" --css "src/styles/**/*.css" --output 
 | 2026-04-22 | 1 | Plan yazıldı — feature-based restructure + test rewrite + CSS co-location + parity tracker | Faz A0 (iskelet) |
 | 2026-04-22 | 2 | A0 iskelet (38 .gitkeep), A1: FbAlert + CustomSelect + PremiumTooltip CSS co-located (3/29); ConfirmDialog/Modal/Drawer skip (global dosyalarda) | Session 3: kalan 26 shared/ui component |
 | 2026-04-22 | 3 | A1 tamamlandı: AsyncButtonContent + FilterButton + Pagination CSS co-located (6/29 toplam); FloatingMenu global kalacak (65+ direct className kullanımı); 15 component CSS'siz veya başka global dosyada; tüm 29 component incelendi | Session 4: A2.1–A2.3 admin feature taşıma (overview + organizations + jurors) |
+| 2026-04-22 | 4 | A2.1–A2.3 tamamlandı: overview + organizations + jurors features taşındı (5 commit); 4 cross-feature bileşen `admin/shared/`'a çıkarıldı (AdminTeamCard, ManageBackupsDrawer, ViewSessionsDrawer; JurorBadge, JurorStatusPill, ImportJurorsModal, JurorHeatmapCard); 14 consumer güncellendi; build yeşil; 63 pre-existing test fail, yeni kırıklık yok | Session 5: A2.4–A2.6 (periods + projects + criteria) |
 
 ---
 
