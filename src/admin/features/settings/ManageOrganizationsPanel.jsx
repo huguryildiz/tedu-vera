@@ -20,7 +20,7 @@ import AlertCard from "@/shared/ui/AlertCard";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import CustomSelect from "@/shared/ui/CustomSelect";
-import LastActivity from "../components/LastActivity";
+import LastActivity from "@/admin/components/LastActivity";
 
 // ── Status badge ─────────────────────────────────────────────
 

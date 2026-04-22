@@ -24,7 +24,7 @@ import {
 } from "@/shared/api";
 import { isDemoEnvironment } from "@/shared/lib/environment";
 import { useToast } from "@/shared/hooks/useToast";
-import JuryRevokeConfirmDialog from "@/admin/settings/JuryRevokeConfirmDialog";
+import JuryRevokeConfirmDialog from "@/admin/shared/JuryRevokeConfirmDialog";
 import {
   QrCodeIcon,
   RefreshCcwIcon,

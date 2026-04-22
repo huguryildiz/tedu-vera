@@ -7,7 +7,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/auth";
 import { useToast } from "@/shared/hooks/useToast";
-import { upsertProfile } from "../../shared/api";
+import { upsertProfile } from "@/shared/api";
 import { supabase } from "@/shared/lib/supabaseClient";
 import { isStrongPassword, PASSWORD_POLICY_ERROR_TEXT } from "@/shared/passwordPolicy";
 

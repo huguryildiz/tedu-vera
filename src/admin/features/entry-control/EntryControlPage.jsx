@@ -27,7 +27,7 @@ import {
   setRawToken as storageSetRawToken,
   clearRawToken as storageClearRawToken,
 } from "@/shared/storage/adminStorage";
-import JuryRevokeConfirmDialog from "@/admin/settings/JuryRevokeConfirmDialog";
+import JuryRevokeConfirmDialog from "@/admin/shared/JuryRevokeConfirmDialog";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import InlineError from "@/shared/ui/InlineError";
 import {

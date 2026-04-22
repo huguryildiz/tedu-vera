@@ -48,7 +48,7 @@ const EntryControlPage = lazy(() => import("@/admin/features/entry-control/Entry
 const PinBlockingPage = lazy(() => import("@/admin/features/pin-blocking/PinBlockingPage"));
 const AuditLogPage = lazy(() => import("@/admin/features/audit/AuditLogPage"));
 const OrganizationsPage = lazy(() => import("@/admin/features/organizations/OrganizationsPage"));
-const SettingsPage = lazy(() => import("@/admin/pages/SettingsPage"));
+const SettingsPage = lazy(() => import("@/admin/features/settings/SettingsPage"));
 
 // ── Suspense wrapper ──────────────────────────────────────────
 function SuspenseWrap({ children }) {

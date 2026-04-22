@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import ManageOrganizationsPanel from "../settings/ManageOrganizationsPanel";
+import ManageOrganizationsPanel from "../features/settings/ManageOrganizationsPanel";
 
 vi.mock("../LastActivity", () => ({
   default: () => <span>Last activity</span>,

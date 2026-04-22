@@ -23,7 +23,7 @@ import { AlertCircle, Icon } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import CustomSelect from "@/shared/ui/CustomSelect";
-import DisableAuthMethodModal from "../modals/DisableAuthMethodModal";
+import DisableAuthMethodModal from "./DisableAuthMethodModal";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
 
 const DEFAULT_POLICY = {

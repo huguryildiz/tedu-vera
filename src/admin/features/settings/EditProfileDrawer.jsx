@@ -25,7 +25,7 @@ import Drawer from "@/shared/ui/Drawer";
 import Avatar from "@/shared/ui/Avatar";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
-import AvatarUploadModal from "@/admin/modals/AvatarUploadModal";
+import AvatarUploadModal from "./AvatarUploadModal";
 
 export default function EditProfileDrawer({ open, onClose, profile, onSave, onCancelEmailChange, pendingEmail, error, initials, avatarBg, isSuper }) {
   const [displayName, setDisplayName] = useState("");

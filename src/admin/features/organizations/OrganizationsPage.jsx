@@ -23,7 +23,7 @@ import {
   ExportBackupDrawer,
   MaintenanceDrawer,
   SystemHealthDrawer,
-} from "@/admin/drawers/GovernanceDrawers";
+} from "./GovernanceDrawers";
 import { jurorInitials, jurorAvatarBg, jurorAvatarFg } from "@/admin/utils/jurorIdentity";
 import {
   AlertCircle,
