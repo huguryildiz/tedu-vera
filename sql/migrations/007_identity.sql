@@ -96,6 +96,7 @@ BEGIN
   IF v_user_id IS NOT NULL AND NOT EXISTS (
     SELECT 1 FROM memberships WHERE user_id = v_user_id
   ) THEN
+    DELETE FROM public.profiles WHERE id = v_user_id;
     DELETE FROM auth.users WHERE id = v_user_id;
   END IF;
 

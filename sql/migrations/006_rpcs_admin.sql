@@ -2998,6 +2998,7 @@ BEGIN
 
   -- Remove orphaned auth user (no remaining memberships in any org)
   IF NOT EXISTS (SELECT 1 FROM memberships WHERE user_id = p_user_id) THEN
+    DELETE FROM public.profiles WHERE id = p_user_id;
     DELETE FROM auth.users WHERE id = p_user_id;
   END IF;
 
@@ -3282,6 +3283,7 @@ BEGIN
 
   -- Remove orphaned auth user (no remaining memberships in any org)
   IF NOT EXISTS (SELECT 1 FROM memberships WHERE user_id = v_target_user) THEN
+    DELETE FROM public.profiles WHERE id = v_target_user;
     DELETE FROM auth.users WHERE id = v_target_user;
   END IF;
 
