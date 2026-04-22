@@ -71,6 +71,7 @@ const normalizeAdminInviteError = (raw) => {
   const lower = msg.toLowerCase();
   if (!lower) return "Could not send invite.";
   if (lower.includes("already_member")) return "This email is already a member of this organization.";
+  if (lower.includes("already_exists_in_auth")) return "This email is already registered in VERA. The user must sign in and request access.";
   if (lower.includes("invalid_email")) return "Please enter a valid email address.";
   if (lower.includes("rate_limit_exceeded")) return "Too many invites sent recently. Please try again later.";
   if (lower.includes("organization_not_found")) return "Organization not found.";

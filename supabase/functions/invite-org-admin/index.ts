@@ -267,8 +267,15 @@ Deno.serve(async (req: Request) => {
     const fromAddr = Deno.env.get("NOTIFICATION_FROM") || "VERA <noreply@vera-eval.app>";
     const logoUrl = (Deno.env.get("NOTIFICATION_LOGO_URL") || "").trim();
 
-    // ── 5a. Existing confirmed user → add as active (no invite email) ───────
+    // ── 5a. Existing confirmed user ─────────────────────────────────────────
+    // For manual invites: block with a clear error — the admin expects an
+    // invite email to be sent, but this user already has credentials.
+    // For approval_flow (internal): add directly as active (no email needed).
     if (existingUser?.id && existingUser.email_confirmed_at) {
+      if (!approval_flow) {
+        return json(409, { error: "already_exists_in_auth" });
+      }
+
       const userId = existingUser.id;
       await ensureProfile(service, userId);
 

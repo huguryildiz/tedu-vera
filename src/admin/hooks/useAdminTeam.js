@@ -87,6 +87,8 @@ export function useAdminTeam(orgId) {
       const raw = e.message || "";
       const error = raw.includes("already_member")
         ? "This email is already a member of this organization."
+        : raw.includes("already_exists_in_auth")
+        ? "This email is already registered in VERA. The user must sign in and request access."
         : raw || "Failed to send invite";
       setInviteForm((f) => ({ ...f, submitting: false, error }));
     }
