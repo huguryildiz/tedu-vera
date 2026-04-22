@@ -1,4 +1,4 @@
-// src/jury/steps/ArrivalStep.jsx
+// src/jury/features/arrival/ArrivalStep.jsx
 // ============================================================
 // Jury flow arrival screen — shown once between the /eval QR
 // entry-token verification and the Jury Information (identity)
@@ -7,9 +7,9 @@
 // ============================================================
 
 import { ArrowRight, Check } from "lucide-react";
-import veraLogoDark from "../../assets/vera_logo_dark.png";
-import veraLogoWhite from "../../assets/vera_logo_white.png";
-import "../../styles/jury-arrival.css";
+import veraLogoDark from "../../../assets/vera_logo_dark.png";
+import veraLogoWhite from "../../../assets/vera_logo_white.png";
+import "./ArrivalStep.css";
 
 // 7×7 QR-like pattern. true = filled pixel, false = blank.
 // Three corners are replaced with finder-pattern blocks.
