@@ -10,7 +10,7 @@ import useJuryState from "./useJuryState";
 import ArrivalStep from "./features/arrival/ArrivalStep";
 import IdentityStep from "./features/identity/IdentityStep";
 import SemesterStep from "./features/period-select/SemesterStep";
-import PinStep from "./steps/PinStep";
+import PinStep from "./features/pin/PinStep";
 import PinRevealStep from "./steps/PinRevealStep";
 import LockedStep from "./steps/LockedStep";
 import ProgressStep from "./steps/ProgressStep";

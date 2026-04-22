@@ -1,9 +1,8 @@
-// src/jury/steps/PinStep.jsx
+// src/jury/features/pin/PinStep.jsx
 import { useRef, useEffect, useState } from "react";
 import { Loader2, Lock } from "lucide-react";
-import FbAlert from "../../shared/ui/FbAlert";
-import SpotlightTour from "../components/SpotlightTour";
-import "../../styles/jury.css";
+import FbAlert from "@/shared/ui/FbAlert";
+import SpotlightTour from "../../components/SpotlightTour";
 
 const PIN_STEP_TOUR_STEPS = [
   {
