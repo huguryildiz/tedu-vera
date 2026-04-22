@@ -1,0 +1,190 @@
+/* ── Mobile portrait: title → Add → toolbar (match Jurors/Projects pattern) ── */
+@media (max-width: 768px) and (orientation: portrait) {
+  #page-criteria {
+    display: flex;
+    flex-direction: column;
+  }
+  #page-criteria > .crt-header { display: contents; }
+  #page-criteria > * { order: 20; }
+  #page-criteria > .crt-header > .crt-header-left { order: -4; }
+  #page-criteria > .mobile-primary-below-kpi { order: -1; }
+  /* .crt-header-actions (Filter + Export toolbar) stays at order 0 — below Add button */
+  #page-criteria > .crt-header > .crt-header-actions { order: 0; margin-bottom: 12px; }
+  #page-criteria > .filter-panel { order: 1; }
+  #page-criteria > .export-panel { order: 2; }
+  #page-criteria > .lock-notice { order: 3; }
+}
+
+/* ── Page action row: portrait ─────────────────────────────────── */
+@media (max-width: 768px) and (orientation: portrait) {
+  #page-criteria .crt-chips-row {
+    flex: 1;
+    justify-content: space-between;
+  }
+}
+
+/* ─── Landscape compact (≤ 768px landscape) ──────────────────
+   Keep desktop-like table with all columns; allow horizontal scroll.
+   ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) and (orientation: landscape) {
+  .criteria-page .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
+  .crt-table { min-width: 700px; }
+
+  .crt-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }
+  .crt-table tbody td { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-body-size); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PHASE 6: RESPONSIVE CSS — Tablet, Mobile, Small Phone
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Breakpoint 1: Tablet (≤ 1024px) ──────────────────────────── */
+@media (max-width: 1024px) {
+  /* Budget bar: stack vertically */
+  .crt-budget-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .crt-budget-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  /* Drawer: wider */
+  #drawer-edit-single-criterion .fs-drawer-panel {
+    width: 92vw;
+  }
+}
+
+/* ── Breakpoint 1b: Mobile card list (≤ 768px) — table hidden, card list shown ── */
+/* Note: display rules live in the main portrait @media block below.
+   Nothing here — the mobile card list handles all small-screen layout. */
+
+/* ── Breakpoint 2: Mobile (≤ 640px) ───────────────────────────── */
+@media (max-width: 640px) {
+  #page-criteria {
+    padding: 12px;
+  }
+
+  .crt-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .crt-add-btn {
+    justify-content: center;
+    width: 100%;
+    min-height: 36px;
+    order: 0 !important;
+  }
+
+  .mobile-toolbar-stack .crt-lock-badge {
+    width: 100%;
+    justify-content: center;
+    min-height: 36px;
+    order: 0 !important;
+  }
+
+  .crt-clone-header-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .crt-budget-card {
+    padding: 12px 14px;
+  }
+
+  .crt-budget-actions {
+    gap: 6px;
+  }
+
+  .crt-budget-pill {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+  }
+
+
+  .crt-rubric-bands {
+    gap: 3px;
+  }
+
+  .crt-band-pill {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+
+  .crt-mapping-pill {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+
+  /* Drawer: full width */
+  #drawer-edit-single-criterion .fs-drawer-panel {
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+  .crt-drawer-tabs {
+    padding: 0 14px;
+    overflow-x: auto;
+  }
+
+  .crt-drawer-tab {
+    padding: 10px 12px 8px;
+    white-space: nowrap;
+  }
+
+  .crt-band-fields {
+    grid-template-columns: 1fr;
+  }
+
+  /* Save bar: stack */
+  .crt-save-bar {
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .crt-save-bar-left {
+    width: 100%;
+  }
+
+  .crt-save-bar-actions {
+    width: 100%;
+  }
+
+  .crt-save-bar-actions button {
+    flex: 1;
+  }
+
+  /* Clone card */
+  .crt-clone-card {
+    min-width: auto;
+    width: 100%;
+  }
+
+  /* Empty state */
+  .crt-empty-state {
+    padding: 32px 16px;
+  }
+}
+
+/* ── Breakpoint 3: Small phone (≤ 380px) ──────────────────────── */
+@media (max-width: 380px) {
+  .page-title {
+    font-size: 17px;
+  }
+
+  .page-desc {
+    display: none;
+  }
+
+  .crt-inline-weight-badge {
+    padding: 3px 8px;
+    font-size: 11.5px;
+  }
+}
+

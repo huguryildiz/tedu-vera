@@ -1,0 +1,517 @@
+/* Criteria page */
+
+/* ── Page header ─────────────────────────────────────────────── */
+
+#page-criteria .crt-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+#page-criteria .crt-header-left {
+  flex: 1;
+}
+
+/* ── Add button ──────────────────────────────────────────────── */
+
+.crt-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: var(--accent);
+  color: #fff;
+  transition: all .18s;
+  white-space: nowrap;
+  letter-spacing: -0.05px;
+  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.18);
+}
+
+.crt-add-btn:hover {
+  background: var(--accent-dark);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+  transform: translateY(-1px);
+}
+
+.crt-add-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.15);
+}
+
+.crt-add-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.crt-add-btn svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2.2;
+}
+
+/* ── Table card ──────────────────────────────────────────────── */
+
+.crt-table-card {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  overflow-x: hidden;
+  min-width: 0;
+  margin-bottom: 16px;
+}
+
+.crt-table-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--surface-1);
+}
+
+.crt-table-card-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+/* ── Card title group (editable title + subtitle) ─────────── */
+
+.crt-card-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.crt-title-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.crt-card-editable-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 1px 2px;
+  margin: -1px -2px;
+  transition: background 0.15s;
+  width: fit-content;
+}
+
+.crt-card-editable-title:hover {
+  background: var(--surface-1);
+}
+
+.crt-card-editable-title:hover .crt-title-edit-icon {
+  opacity: 0.6;
+}
+
+.crt-card-editable-title.no-rename {
+  cursor: default;
+}
+
+.crt-card-editable-title.no-rename:hover {
+  background: transparent;
+}
+
+.crt-title-edit-icon {
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+  color: var(--text-tertiary);
+}
+
+.crt-card-subtitle {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* ── Header actions (right side) ─────────────────────────── */
+
+.crt-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ── Inline kebab (next to title, no border/bg) ──────────── */
+
+.crt-kebab-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.crt-kebab-inline:hover {
+  background: var(--surface-1);
+  color: var(--text-primary);
+}
+
+/* ── Kebab button (standalone, with border) ───────────────── */
+
+.crt-kebab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.crt-kebab-btn:hover {
+  background: var(--surface-1);
+  border-color: var(--border-strong, var(--border));
+  color: var(--text-primary);
+}
+
+.crt-kebab-btn:active {
+  background: var(--surface-2, var(--surface-1));
+}
+
+/* ── Title rename input ───────────────────────────────────── */
+
+.crt-title-rename-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.crt-title-rename-input {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  padding: 2px 8px;
+  background: var(--surface-0, var(--background));
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  min-width: 160px;
+  max-width: 280px;
+}
+
+.dark-mode .crt-title-rename-input {
+  background: var(--surface-1);
+  color: var(--text-primary);
+}
+
+/* ── Chip row ────────────────────────────────────────────────── */
+
+.crt-chips-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.crt-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.crt-chip svg {
+  width: 11px;
+  height: 11px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.crt-chip.neutral {
+  background: var(--surface-1);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+.crt-chip.success {
+  background: rgba(22, 163, 74, 0.06);
+  border-color: rgba(22, 163, 74, 0.15);
+  color: var(--success);
+}
+
+.crt-chip.warning {
+  background: rgba(217, 119, 6, 0.06);
+  border-color: rgba(217, 119, 6, 0.15);
+  color: var(--warning);
+}
+
+.crt-period-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.3;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.06));
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.crt-period-badge:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(139, 92, 246, 0.10));
+  border-color: rgba(59, 130, 246, 0.30);
+}
+
+.crt-period-badge svg {
+  width: 11px;
+  height: 11px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.dark-mode .crt-chip.success {
+  background: rgba(74, 222, 128, 0.10);
+  border-color: rgba(74, 222, 128, 0.20);
+}
+
+.dark-mode .crt-chip.warning {
+  background: rgba(251, 191, 36, 0.10);
+  border-color: rgba(251, 191, 36, 0.20);
+}
+
+.dark-mode .crt-period-badge {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.08));
+  border-color: rgba(96, 165, 250, 0.28);
+}
+
+/* ── Criteria page period selector chip ──────────────────── */
+.crt-period-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 13px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%);
+  border: 1.5px solid rgba(99, 102, 241, 0.28);
+  color: rgb(79, 70, 229);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.crt-period-chip:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.19) 0%, rgba(139, 92, 246, 0.14) 100%);
+  border-color: rgba(99, 102, 241, 0.44);
+  color: rgb(67, 56, 202);
+}
+
+.crt-period-chip svg {
+  opacity: 0.72;
+  flex-shrink: 0;
+}
+
+.crt-period-chip:hover svg {
+  opacity: 0.9;
+}
+
+.dark-mode .crt-period-chip {
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.15) 0%, rgba(167, 139, 250, 0.10) 100%);
+  border-color: rgba(129, 140, 248, 0.32);
+  color: rgb(165, 180, 252);
+}
+
+.dark-mode .crt-period-chip:hover {
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.23) 0%, rgba(167, 139, 250, 0.16) 100%);
+  border-color: rgba(129, 140, 248, 0.48);
+  color: rgb(199, 210, 254);
+}
+
+/* ── Clear-all button (icon-only, danger ghost) ────────────── */
+
+.crt-clear-all-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(225, 29, 72, 0.22);
+  background: rgba(225, 29, 72, 0.06);
+  color: var(--danger);
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s;
+  flex-shrink: 0;
+}
+
+.crt-clear-all-btn:hover {
+  background: rgba(225, 29, 72, 0.14);
+  border-color: rgba(225, 29, 72, 0.42);
+}
+
+.crt-clear-all-btn:active {
+  background: rgba(225, 29, 72, 0.22);
+}
+
+.dark-mode .crt-clear-all-btn {
+  border-color: rgba(251, 113, 133, 0.28);
+  background: rgba(251, 113, 133, 0.08);
+  color: rgb(251, 113, 133);
+}
+
+.dark-mode .crt-clear-all-btn:hover {
+  background: rgba(251, 113, 133, 0.16);
+  border-color: rgba(251, 113, 133, 0.46);
+}
+
+/* ── Inline weight edit ── */
+.crt-inline-weight { display: flex; flex-direction: column; align-items: center; }
+.crt-inline-weight-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 3px 10px; border-radius: var(--radius-sm, 6px);
+  font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
+  user-select: none; border: 1px solid transparent;
+}
+.crt-inline-weight-badge:hover {
+  border-color: rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.crt-inline-weight-input {
+  width: 56px; height: 32px; text-align: center;
+  border: 2px solid var(--accent); border-radius: var(--radius-sm, 6px);
+  font-size: 13px; font-weight: 700; color: var(--accent-dark, #1e40af);
+  outline: none; box-shadow: 0 0 0 3px var(--accent-ring, rgba(59,130,246,0.1));
+  font-family: inherit;
+}
+.crt-inline-weight-hint {
+  font-size: 9.5px; font-weight: 500; margin-top: 3px;
+}
+
+/* ── Mapping pills in table ── */
+.crt-mapping-pills {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: flex-start;
+}
+.crt-mapping-pill {
+  padding: 2px 7px; border-radius: 5px;
+  font-size: 10px; font-weight: 700;
+  background: var(--success-soft); color: var(--success);
+  border: 1px solid rgba(22,163,74,0.15);
+  cursor: pointer; transition: all 0.12s;
+  font-family: var(--mono, monospace);
+  white-space: nowrap;
+}
+.crt-mapping-pill:hover {
+  background: rgba(22,163,74,0.14);
+  border-color: rgba(22,163,74,0.28);
+}
+.crt-mapping-pill.indirect {
+  background: var(--warning-soft, rgba(217,119,6,0.08));
+  color: var(--warning);
+  border-color: rgba(217,119,6,0.20);
+}
+.crt-mapping-pill.indirect:hover {
+  background: rgba(217,119,6,0.16);
+  border-color: rgba(217,119,6,0.34);
+}
+.dark-mode .crt-mapping-pill {
+  background: rgba(34,197,94,0.14); color: #4ade80;
+  border-color: rgba(34,197,94,0.32);
+}
+.dark-mode .crt-mapping-pill:hover {
+  background: rgba(34,197,94,0.20);
+}
+.dark-mode .crt-mapping-pill.indirect {
+  background: rgba(251,191,36,0.14); color: #fbbf24;
+  border-color: rgba(251,191,36,0.32);
+}
+.dark-mode .crt-mapping-pill.indirect:hover {
+  background: rgba(251,191,36,0.20);
+}
+.crt-mapping-pill.disabled {
+  cursor: default;
+  pointer-events: none;
+}
+.crt-mapping-add {
+  padding: 2px 6px; border-radius: 999px;
+  font-size: 9px; font-weight: 600;
+  color: var(--text-tertiary);
+  border: 1px dashed rgba(15,23,42,0.10);
+  cursor: pointer; transition: all 0.12s; background: transparent;
+  line-height: 1.2;
+}
+.crt-mapping-add:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(59,130,246,0.06);
+}
+
+/* ── Coverage bar ── */
+.crt-coverage { margin-top: 8px; padding: 10px 14px; border-radius: var(--radius-sm, 6px); border: 1px solid; }
+.crt-coverage.valid { background: var(--success-bg, #f0fdf4); border-color: var(--success-border, #bbf7d0); }
+.crt-coverage.invalid { background: var(--danger-bg, #fff1f2); border-color: #fecdd3; }
+.crt-coverage-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.crt-coverage-label { font-size: 10.5px; font-weight: 600; }
+.crt-coverage-status { font-size: 10.5px; font-weight: 500; }
+.crt-coverage.valid .crt-coverage-label, .crt-coverage.valid .crt-coverage-status { color: var(--success); }
+.crt-coverage.invalid .crt-coverage-label, .crt-coverage.invalid .crt-coverage-status { color: var(--danger); }
+.crt-coverage-track { height: 6px; border-radius: 99px; overflow: hidden; background: var(--border, #e5e7eb); }
+.crt-coverage-ticks { position: relative; height: 14px; margin-top: 4px; }
+.crt-coverage-tick { position: absolute; transform: translateX(-50%); font-size: 9px; font-weight: 500; color: var(--text-tertiary); white-space: nowrap; }
+.crt-coverage.valid .crt-coverage-tick { color: var(--success); }
+.crt-coverage.invalid .crt-coverage-tick { color: var(--danger); }
+.dark-mode .crt-coverage.valid { background: rgba(34,197,94,0.06); border-color: rgba(34,197,94,0.18); }
+.dark-mode .crt-coverage.invalid { background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.18); }
+.dark-mode .crt-coverage-track { background: rgba(255,255,255,0.08); }
+
+/* Scrollbar */
+.fs-drawer-body::-webkit-scrollbar,.fs-modal-body::-webkit-scrollbar{width:4px}
+.fs-drawer-body::-webkit-scrollbar-track,.fs-modal-body::-webkit-scrollbar-track{background:transparent}
+.fs-drawer-body::-webkit-scrollbar-thumb,.fs-modal-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}

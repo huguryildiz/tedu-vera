@@ -47,7 +47,7 @@ import {
   nextCriterionColor,
   CRITERION_COLORS,
 } from "./criteriaFormHelpers";
-import "./CriteriaPage.css";
+import "./styles/index.css";
 import { useAuth } from "@/auth";
 import ExportPanel from "@/admin/shared/ExportPanel";
 import { useCriteriaExport } from "./useCriteriaExport";

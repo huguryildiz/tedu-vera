@@ -1,0 +1,16 @@
+/* Criteria feature — barrel CSS
+   Split from CriteriaPage.css (2480 lines) in S14 Sprint 3.
+   Parts:
+     page.css          — page layout, header, add button, table card, title group, kebab, rename input, chip row, period selector, clear-all, inline weight edit, mapping pills, coverage bar
+     table.css         — criteria table, cell elements, rubric band pills, row action buttons, empty state, collapsed band cards
+     drawers.css       — Starter Criteria Drawer + Edit Criteria Drawer (tabs, weight budget, save bar, clone flow, footer responsive) + Single Criterion Drawer
+     period-drawer.css — PeriodCriteriaDrawer (pcd-*) — active cards, card actions, template list, copy-from-period, inline confirm
+     responsive.css    — portrait page order, landscape compact, responsive breakpoints (1024 / 640 / 380)
+     mobile-cards.css  — mobile card layout + new mobile cards (header, section label, rubric rows, outcome pills, lock badge, blurb)
+*/
+@import "./page.css";
+@import "./table.css";
+@import "./drawers.css";
+@import "./period-drawer.css";
+@import "./responsive.css";
+@import "./mobile-cards.css";
