@@ -15,7 +15,7 @@ import {
 } from "@/shared/api";
 import { exportXLSX, buildExportFilename } from "../utils/exportXLSX";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
-import ManageBackupsDrawer from "../drawers/ManageBackupsDrawer";
+import ManageBackupsDrawer from "@/admin/shared/ManageBackupsDrawer";
 
 
 export default function ExportPage() {

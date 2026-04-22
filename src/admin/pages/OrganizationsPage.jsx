@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { useAdminContext } from "../hooks/useAdminContext";
+import { useAdminContext } from "@/admin/hooks/useAdminContext";
 import { useAuth } from "@/auth";
 import { useToast } from "@/shared/hooks/useToast";
 import FbAlert from "@/shared/ui/FbAlert";
@@ -12,7 +12,7 @@ import FloatingMenu from "@/shared/ui/FloatingMenu";
 import useCardSelection from "@/shared/hooks/useCardSelection";
 import Drawer from "@/shared/ui/Drawer";
 import Modal from "@/shared/ui/Modal";
-import { useManageOrganizations } from "../hooks/useManageOrganizations";
+import { useManageOrganizations } from "@/admin/shared/useManageOrganizations";
 import Avatar from "@/shared/ui/Avatar";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import CustomSelect from "@/shared/ui/CustomSelect";
@@ -24,7 +24,7 @@ import {
   MaintenanceDrawer,
   SystemHealthDrawer,
 } from "../drawers/GovernanceDrawers";
-import { jurorInitials, jurorAvatarBg, jurorAvatarFg } from "../utils/jurorIdentity";
+import { jurorInitials, jurorAvatarBg, jurorAvatarFg } from "@/admin/utils/jurorIdentity";
 import {
   AlertCircle,
   Archive,

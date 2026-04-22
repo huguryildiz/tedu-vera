@@ -1,7 +1,7 @@
 import { describe, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { qaTest } from "../../test/qaTest.js";
-import AdminTeamCard from "../components/AdminTeamCard.jsx";
+import AdminTeamCard from "@/admin/shared/AdminTeamCard.jsx";
 
 vi.mock("../../shared/lib/supabaseClient", () => ({ supabase: {} }));
 

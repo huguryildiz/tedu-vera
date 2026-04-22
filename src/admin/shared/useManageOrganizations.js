@@ -9,7 +9,7 @@
 // ============================================================
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "../../shared/lib/supabaseClient";
+import { supabase } from "@/shared/lib/supabaseClient";
 import {
   listOrganizations,
   createOrganization,

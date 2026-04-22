@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { UserPlus, MoreVertical, MailOpen, X, AlertCircle, Crown, ArrowRightLeft, UserMinus, Info, CheckCircle2, Clock } from "lucide-react";
-import FbAlert from "../../shared/ui/FbAlert.jsx";
+import FbAlert from "@/shared/ui/FbAlert.jsx";
 import "./AdminTeamCard.css";
 
 // Deterministic avatar color from string hash

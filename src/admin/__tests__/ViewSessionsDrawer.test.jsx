@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import ViewSessionsDrawer from "../drawers/ViewSessionsDrawer";
+import ViewSessionsDrawer from "@/admin/shared/ViewSessionsDrawer";
 
 vi.mock("../../shared/lib/supabaseClient", () => ({ supabase: {} }));
 

@@ -34,7 +34,7 @@ import { useAdminContext } from "../hooks/useAdminContext";
 import { useAuth } from "@/auth";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import CustomSelect from "@/shared/ui/CustomSelect";
-import ManageBackupsDrawer from "./ManageBackupsDrawer";
+import ManageBackupsDrawer from "@/admin/shared/ManageBackupsDrawer";
 import { formatDate, formatTime } from "@/shared/lib/dateUtils";
 import { KEYS } from "@/shared/storage/keys";
 

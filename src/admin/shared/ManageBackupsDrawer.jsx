@@ -19,9 +19,9 @@ import {
 import Drawer from "@/shared/ui/Drawer";
 import FbAlert from "@/shared/ui/FbAlert";
 import CustomSelect from "@/shared/ui/CustomSelect";
-import DeleteBackupModal from "../modals/DeleteBackupModal";
+import DeleteBackupModal from "@/admin/modals/DeleteBackupModal";
 import { useToast } from "@/shared/hooks/useToast";
-import { useBackups } from "../hooks/useBackups";
+import { useBackups } from "@/admin/hooks/useBackups";
 import { formatDateTime as formatDate, formatDate as fmtDateOnly } from "@/shared/lib/dateUtils";
 
 const STORAGE_QUOTA_BYTES = 500 * 1024 * 1024; // 500 MB

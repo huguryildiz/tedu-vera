@@ -12,7 +12,7 @@ vi.mock("@/shared/hooks/useToast", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }));
 
-import ManageBackupsDrawer from "../drawers/ManageBackupsDrawer.jsx";
+import ManageBackupsDrawer from "@/admin/shared/ManageBackupsDrawer.jsx";
 
 const SAMPLE = [
   {
