@@ -23,7 +23,7 @@ import {
   ExportBackupDrawer,
   MaintenanceDrawer,
   SystemHealthDrawer,
-} from "../drawers/GovernanceDrawers";
+} from "@/admin/drawers/GovernanceDrawers";
 import { jurorInitials, jurorAvatarBg, jurorAvatarFg } from "@/admin/utils/jurorIdentity";
 import {
   AlertCircle,
@@ -51,6 +51,7 @@ import { FilterButton } from "@/shared/ui/FilterButton";
 import Pagination from "@/shared/ui/Pagination";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import { LOCK_TOOLTIP_GRACE, LOCK_TOOLTIP_EXPIRED } from "@/auth/lockedActions";
+import "./OrganizationsPage.css";
 
 // ── Helpers ───────────────────────────────────────────────────
 

@@ -47,7 +47,7 @@ const OutcomesPage = lazy(() => import("@/admin/pages/OutcomesPage"));
 const EntryControlPage = lazy(() => import("@/admin/pages/EntryControlPage"));
 const PinBlockingPage = lazy(() => import("@/admin/pages/PinBlockingPage"));
 const AuditLogPage = lazy(() => import("@/admin/pages/AuditLogPage"));
-const OrganizationsPage = lazy(() => import("@/admin/pages/OrganizationsPage"));
+const OrganizationsPage = lazy(() => import("@/admin/features/organizations/OrganizationsPage"));
 const SettingsPage = lazy(() => import("@/admin/pages/SettingsPage"));
 
 // ── Suspense wrapper ──────────────────────────────────────────
