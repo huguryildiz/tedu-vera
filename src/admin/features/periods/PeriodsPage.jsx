@@ -73,7 +73,7 @@ import {
   getRawToken as storageGetRawToken,
 } from "@/shared/storage/adminStorage";
 import "./PeriodsPage.css";
-import "@/styles/pages/setup-wizard.css";
+import "@/admin/features/setup-wizard/SetupWizardPage.css";
 
 function formatRelative(ts) {
   if (!ts) return "—";

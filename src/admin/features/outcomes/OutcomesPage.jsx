@@ -21,7 +21,7 @@ import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import Pagination from "@/shared/ui/Pagination";
 import SaveBar from "@/admin/features/criteria/SaveBar";
 import "./OutcomesPage.css";
-import "../../../styles/pages/setup-wizard.css";
+import "@/admin/features/setup-wizard/SetupWizardPage.css";
 import { useAuth } from "@/auth";
 import ExportPanel from "@/admin/components/ExportPanel";
 import { useOutcomesExport } from "@/admin/hooks/useOutcomesExport";

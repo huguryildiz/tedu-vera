@@ -4,13 +4,13 @@
 // Steps: Welcome → Period → Criteria (+Framework) → Projects → Jurors (+Launch)
 
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { useAdminContext } from "../hooks/useAdminContext";
-import { useSetupWizard } from "../hooks/useSetupWizard";
+import { useAdminContext } from "@/admin/hooks/useAdminContext";
+import { useSetupWizard } from "./useSetupWizard";
 import { useToast } from "@/shared/hooks/useToast";
 import ImportJurorsModal from "@/admin/shared/ImportJurorsModal";
-import ImportCsvModal from "../modals/ImportCsvModal";
-import { parseJurorsCsv, parseProjectsCsv } from "../utils/csvParser";
-import { normalizeStudentNames } from "../utils/auditUtils";
+import ImportCsvModal from "@/admin/modals/ImportCsvModal";
+import { parseJurorsCsv, parseProjectsCsv } from "@/admin/utils/csvParser";
+import { normalizeStudentNames } from "@/admin/utils/auditUtils";
 import { avatarGradient, initials } from "@/shared/ui/avatarColor";
 import {
   createPeriod,
@@ -57,7 +57,7 @@ import {
   Download,
 } from "lucide-react";
 import FbAlert from "@/shared/ui/FbAlert";
-import "../../styles/pages/setup-wizard.css";
+import "./SetupWizardPage.css";
 
 // Celebratory confetti burst for the completion screen — mirrors jury DoneStep.
 function useConfetti() {
