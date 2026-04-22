@@ -3,6 +3,7 @@
 // Usage: <FbAlert variant="danger">Error message</FbAlert>
 //        <FbAlert variant="info" title="Note">Detail text</FbAlert>
 
+import "./FbAlert.css";
 import { AlertCircle, AlertTriangle, Info, CheckCircle } from "lucide-react";
 
 const ICONS = {
