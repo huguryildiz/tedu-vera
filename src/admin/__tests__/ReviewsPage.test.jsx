@@ -7,7 +7,7 @@ vi.mock("@/auth", () => ({
 
 vi.mock("../hooks/useAdminContext");
 import { useAdminContext } from "../hooks/useAdminContext";
-import ReviewsPage from "../pages/ReviewsPage";
+import ReviewsPage from "../features/reviews/ReviewsPage";
 import { qaTest } from "../../test/qaTest.js";
 
 const MOCK_CRITERIA = [

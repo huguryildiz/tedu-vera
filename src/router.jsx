@@ -38,7 +38,7 @@ const SetupWizardPage = lazy(() => import("@/admin/pages/SetupWizardPage"));
 const RankingsPage = lazy(() => import("@/admin/pages/RankingsPage"));
 const AnalyticsPage = lazy(() => import("@/admin/pages/AnalyticsPage"));
 const HeatmapPage = lazy(() => import("@/admin/pages/HeatmapPage"));
-const ReviewsPage = lazy(() => import("@/admin/pages/ReviewsPage"));
+const ReviewsPage = lazy(() => import("@/admin/features/reviews/ReviewsPage"));
 const JurorsPage = lazy(() => import("@/admin/features/jurors/JurorsPage"));
 const ProjectsPage = lazy(() => import("@/admin/features/projects/ProjectsPage"));
 const PeriodsPage = lazy(() => import("@/admin/features/periods/PeriodsPage"));

@@ -10,7 +10,7 @@ vi.mock("@/auth", () => ({
   useAuth: () => ({ activeOrganization: null }),
 }));
 
-import ReviewsPage from "../pages/ReviewsPage";
+import ReviewsPage from "../features/reviews/ReviewsPage";
 import { qaTest } from "../../test/qaTest.js";
 
 const MOCK_CRITERIA = [

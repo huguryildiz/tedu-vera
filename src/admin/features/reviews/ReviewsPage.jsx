@@ -9,12 +9,12 @@
 // ============================================================
 
 import { useMemo, useState, useEffect } from "react";
-import { useAdminContext } from "../hooks/useAdminContext";
+import { useAdminContext } from "@/admin/hooks/useAdminContext";
 import { Check, CheckCircle2, ChevronDown, ChevronUp, Circle, CircleCheck, CircleDotDashed, CircleSlash, Clock, Download, Filter, Icon, Info, MessageSquare, PencilLine, Search, Send, X, XCircle } from "lucide-react";
 import JurorStatusPill from "@/admin/shared/JurorStatusPill";
 import ScoreStatusPill from "@/admin/components/ScoreStatusPill";
-import ReviewMobileCard from "../components/ReviewMobileCard";
-import { useReviewsFilters } from "../hooks/useReviewsFilters";
+import ReviewMobileCard from "@/admin/components/ReviewMobileCard";
+import { useReviewsFilters } from "@/admin/hooks/useReviewsFilters";
 import { logExportInitiated } from "@/shared/api";
 import { useToast } from "@/shared/hooks/useToast";
 import { useAuth } from "@/auth";
@@ -31,15 +31,15 @@ import {
   applyFilters,
   sortRows,
   computeActiveFilterCount,
-} from "../selectors/filterPipeline";
-import { formatTs } from "../utils/adminUtils";
-import { downloadTable, generateTableBlob } from "../utils/downloadTable";
+} from "@/admin/selectors/filterPipeline";
+import { formatTs } from "@/admin/utils/adminUtils";
+import { downloadTable, generateTableBlob } from "@/admin/utils/downloadTable";
 import JurorBadge from "@/admin/shared/JurorBadge";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import { StudentNames } from "@/shared/ui/EntityMeta";
-import { computeCoverage, computePending, computeSpread } from "../utils/reviewsKpiHelpers";
-import "../../styles/pages/reviews.css";
+import { computeCoverage, computePending, computeSpread } from "@/admin/utils/reviewsKpiHelpers";
+import "./ReviewsPage.css";
 
 
 // ── Mobile portrait detection ────────────────────────────────
