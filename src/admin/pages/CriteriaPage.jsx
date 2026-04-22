@@ -29,7 +29,7 @@ import {
 import { useAdminContext } from "../hooks/useAdminContext";
 import { useToast } from "@/shared/hooks/useToast";
 import { useManagePeriods } from "../hooks/useManagePeriods";
-import { usePeriodOutcomes } from "../hooks/usePeriodOutcomes";
+import { usePeriodOutcomes } from "@/admin/shared/usePeriodOutcomes";
 import Modal from "@/shared/ui/Modal";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import FbAlert from "@/shared/ui/FbAlert";

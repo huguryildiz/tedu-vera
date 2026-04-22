@@ -9,7 +9,7 @@ import { FilterButton } from "@/shared/ui/FilterButton";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import { updateFramework, cloneFramework, assignFrameworkToPeriod, unassignPeriodFramework, listFrameworks } from "@/shared/api";
 import { useAdminContext } from "../hooks/useAdminContext";
-import { usePeriodOutcomes } from "../hooks/usePeriodOutcomes";
+import { usePeriodOutcomes } from "@/admin/shared/usePeriodOutcomes";
 import { useToast } from "@/shared/hooks/useToast";
 import FloatingMenu from "@/shared/ui/FloatingMenu";
 import useCardSelection from "@/shared/hooks/useCardSelection";
