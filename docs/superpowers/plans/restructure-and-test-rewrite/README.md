@@ -164,25 +164,24 @@ e2e/                           (mevcut — genişletilecek)
 | ✅ | **5** | A2.4-A2.9 — periods + projects + **criteria** + outcomes + reviews + rankings (plandan fazla: A2.7-A2.9 de tamamlandı) | ~40 dosya + 6 page CSS | 5 saat | %85 | 9 admin feature tamam; 2 cross-feature (usePeriodOutcomes, OutcomeEditor) admin/shared/'a çıkarıldı |
 | ✅ | **6** | A2.10-A2.13 — analytics + heatmap + audit + entry-control | ~16 dosya + 4 page CSS | 3 saat | %65 | 13 admin feature tamam |
 | ⬜ | **7** | A2.14-A2.17 — pin-blocking + settings + **setup-wizard** (2377 satır CSS) + export | ~20 dosya + 4 page CSS | 4 saat | %75 | **Tüm 17 admin feature tamam** |
-| ⬜ | **8** | A2.14-A2.17 — pin-blocking + settings + **setup-wizard** (2377 satır CSS) + export | ~20 dosya + 4 page CSS | 4 saat | %75 | **Tüm 17 admin feature tamam** |
-| ⬜ | **9** | A3 — jury restructure (9 feature + jury/shared, jury.css 4021 satır split) | ~25 dosya + jury.css + jury-arrival.css | 4 saat | %75 | Jury bitti |
-| ⬜ | **10** | A4 — auth restructure (9 feature + auth/shared, auth.css 1178 satır) | ~12 dosya + auth.css | 2-3 saat | %60 | **Aşama A source taşıma bitti** |
-| ⬜ | **11** | A5 — components.css (5664 → ~1500 satır) split + main.jsx import yeniden düzenleme | components.css + 8 yeni dosya + main.jsx | 3-4 saat | %70 | Kalan components.css global |
-| ⬜ | **12** | A6 + A7 — import cleanup + eski dizin sil + src/styles/ finalize + tam smoke test | Grep + cleanup + 17 admin page + jury + demo gezerek visual check | 3 saat | %60 | **Aşama A bitti**, tüm sayfalar görsel OK |
-| ⬜ | **13** | B0 + B1 part 1 — test arşiv + iskelet + test kit (fixtures, factories, helpers) + shared/lib tests (environment, supabaseClient, utils, dateUtils, demoMode, randomUUID) | ~15 dosya | 3-4 saat | %70 | Shared/lib %100 test edildi |
-| ⬜ | **14** | B1 part 2 — shared/api + shared/storage tests (fieldMapping, invokeEdgeFunction, juryApi, admin/*, keys, juryStorage, adminStorage) | ~30 test dosyası | 4 saat | %75 | Shared/api + storage bitti |
-| ⬜ | **15** | B1 part 3 — shared/ui + shared/hooks tests (kritik 10 UI component ayrıntılı + diğer 19 smoke + 8 shared hook) | ~25 test dosyası | 3-4 saat | %70 | **Shared katman bitti, en büyük bağımlılık sağlam** |
-| ⬜ | **16** | B2 — auth tests (9 feature × 3 test + AuthProvider + AuthGuard + useAuth) | ~30 test dosyası | 3-4 saat | %70 | Auth testleri bitti |
-| ⬜ | **17** | B3 — jury tests (useJuryState step machine detaylı + 9 step component + writeGroup + lock + autosave) | ~15 test dosyası | 4 saat | %75 | Jury testleri bitti |
-| ⬜ | **18** | B4 part 1 — admin critical (jurors + periods + projects + organizations) full kapsam | ~20 test dosyası | 4 saat | %75 | 4 kritik admin feature test edildi |
-| ⬜ | **19** | B4 part 2 — admin analytics (reviews + rankings + analytics + heatmap) + admin utility (overview + audit + entry-control + pin-blocking + export) | ~25 test dosyası | 4 saat | %75 | 13 admin feature test edildi |
-| ⬜ | **20** | B4 part 3 — admin large (criteria + outcomes + settings + setup-wizard) | ~15 test dosyası | 3-4 saat | %70 | **Tüm admin feature testleri bitti** |
-| ⬜ | **21** | B5 — pgTAP setup (extension) + 8 RLS isolation + 20 kritik RPC davranışı | ~28 SQL test | 3 saat | %65 | DB katmanı test edildi |
-| ⬜ | **22** | B6 — Edge function testleri (5 kritik: rpc-proxy, admin-session-touch, platform-metrics, invite-org-admin, email-verification-confirm) | ~5 Deno test | 2-3 saat | %55 | Edge testleri bitti |
-| ⬜ | **23** | B7 — E2E genişletme (13 yeni spec + page objects) | ~15 spec + helpers | 4 saat | %75 | **Test yazımı bitti (Aşama B)** |
-| ⬜ | **24** | C1-C3 — coverage thresholds + dark mode tokenize + dead CSS scan + final smoke | vitest config + variables.css + purgecss | 2-3 saat | %55 | **Hepsi bitti, CI yeşil** |
+| ⬜ | **8** | A3 — jury restructure (9 feature + jury/shared, jury.css 4021 satır split) | ~25 dosya + jury.css + jury-arrival.css | 4 saat | %75 | Jury bitti |
+| ⬜ | **9** | A4 — auth restructure (9 feature + auth/shared, auth.css 1178 satır) | ~12 dosya + auth.css | 2-3 saat | %60 | **Aşama A source taşıma bitti** |
+| ⬜ | **10** | A5 — components.css (5664 → ~1500 satır) split + main.jsx import yeniden düzenleme | components.css + 8 yeni dosya + main.jsx | 3-4 saat | %70 | Kalan components.css global |
+| ⬜ | **11** | A6 + A7 — import cleanup + eski dizin sil + src/styles/ finalize + tam smoke test | Grep + cleanup + 17 admin page + jury + demo gezerek visual check | 3 saat | %60 | **Aşama A bitti**, tüm sayfalar görsel OK |
+| ⬜ | **12** | B0 + B1 part 1 — test arşiv + iskelet + test kit (fixtures, factories, helpers) + shared/lib tests (environment, supabaseClient, utils, dateUtils, demoMode, randomUUID) | ~15 dosya | 3-4 saat | %70 | Shared/lib %100 test edildi |
+| ⬜ | **13** | B1 part 2 — shared/api + shared/storage tests (fieldMapping, invokeEdgeFunction, juryApi, admin/*, keys, juryStorage, adminStorage) | ~30 test dosyası | 4 saat | %75 | Shared/api + storage bitti |
+| ⬜ | **14** | B1 part 3 — shared/ui + shared/hooks tests (kritik 10 UI component ayrıntılı + diğer 19 smoke + 8 shared hook) | ~25 test dosyası | 3-4 saat | %70 | **Shared katman bitti, en büyük bağımlılık sağlam** |
+| ⬜ | **15** | B2 — auth tests (9 feature × 3 test + AuthProvider + AuthGuard + useAuth) | ~30 test dosyası | 3-4 saat | %70 | Auth testleri bitti |
+| ⬜ | **16** | B3 — jury tests (useJuryState step machine detaylı + 9 step component + writeGroup + lock + autosave) | ~15 test dosyası | 4 saat | %75 | Jury testleri bitti |
+| ⬜ | **17** | B4 part 1 — admin critical (jurors + periods + projects + organizations) full kapsam | ~20 test dosyası | 4 saat | %75 | 4 kritik admin feature test edildi |
+| ⬜ | **18** | B4 part 2 — admin analytics (reviews + rankings + analytics + heatmap) + admin utility (overview + audit + entry-control + pin-blocking + export) | ~25 test dosyası | 4 saat | %75 | 13 admin feature test edildi |
+| ⬜ | **19** | B4 part 3 — admin large (criteria + outcomes + settings + setup-wizard) | ~15 test dosyası | 3-4 saat | %70 | **Tüm admin feature testleri bitti** |
+| ⬜ | **20** | B5 — pgTAP setup (extension) + 8 RLS isolation + 20 kritik RPC davranışı | ~28 SQL test | 3 saat | %65 | DB katmanı test edildi |
+| ⬜ | **21** | B6 — Edge function testleri (5 kritik: rpc-proxy, admin-session-touch, platform-metrics, invite-org-admin, email-verification-confirm) | ~5 Deno test | 2-3 saat | %55 | Edge testleri bitti |
+| ⬜ | **22** | B7 — E2E genişletme (13 yeni spec + page objects) | ~15 spec + helpers | 4 saat | %75 | **Test yazımı bitti (Aşama B)** |
+| ⬜ | **23** | C1-C3 — coverage thresholds + dark mode tokenize + dead CSS scan + final smoke | vitest config + variables.css + purgecss | 2-3 saat | %55 | **Hepsi bitti, CI yeşil** |
 
-**Toplam: 24 oturum (1 plan + 23 çalışma) ≈ 60-75 saat ≈ 12-15 iş günü.**
+**Toplam: 23 oturum (1 plan + 22 çalışma) ≈ 57-72 saat ≈ 11-14 iş günü.**
 
 ### Oturum yönetimi kuralları (Sonnet High için)
 
