@@ -1,0 +1,197 @@
+
+@media (max-width: 768px) and (orientation: portrait) {
+  .acc-legend-strip {
+    flex-direction: column;
+  }
+
+  .acc-legend-item {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 14px;
+  }
+
+  .acc-legend-item:last-child {
+    border-bottom: none;
+  }
+
+  /* KPI grid: 2x2 on mobile */
+  .acc-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .acc-kpi-card {
+    padding: 12px;
+  }
+
+  .acc-kpi-icon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 8px;
+  }
+
+  .acc-kpi-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .acc-kpi-value {
+    font-size: 22px;
+  }
+
+  /* Coverage bar legend stacks */
+  .acc-coverage-bar-legend {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* ── Table → premium card layout ──────────────────────────── */
+
+  #page-accreditation .table-wrap {
+    overflow: hidden;
+    border: none;
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .acc-table {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .acc-table thead { display: none !important; }
+  .acc-table tbody {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Card: flex-wrap — top row: Code | Coverage | ⋮ ; then Outcome ; then Criteria */
+  .acc-table tbody tr.acc-row {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    box-shadow: var(--shadow-sm);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+  }
+
+  .acc-table tbody tr.acc-row:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-ring);
+  }
+
+  /* Cell resets */
+  .acc-table td {
+    display: block !important;
+    border-bottom: none !important;
+    padding: 0 !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+  }
+
+  /* ── Top row: Code | [spacer] | Coverage badge | ⋮ ──────── */
+
+  /* Code: auto width, left */
+  .acc-table td[data-label="Code"] {
+    order: 1;
+    flex: 0 0 auto;
+    margin-bottom: 10px;
+  }
+
+  /* Coverage: grows and can shrink — pushes content to the right */
+  .acc-table td[data-label="Coverage"] {
+    order: 2;
+    flex: 1 1 auto;
+    display: flex !important;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 10px;
+    margin-right: 6px;
+  }
+
+  /* Actions: ⋮ button sits after Coverage on top row */
+  .acc-table td.col-acc-actions {
+    order: 3;
+    flex: 0 0 auto;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
+  /* ── Outcome & Criteria: full-width rows ────────────────── */
+
+  .acc-table td[data-label="Outcome"] {
+    order: 4;
+    flex: 0 0 100%;
+    min-width: 0;
+    margin-bottom: 10px;
+  }
+
+  /* Text overflow protection */
+  .acc-outcome-label,
+  .acc-outcome-desc {
+    display: block;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+  }
+
+  .acc-outcome-desc {
+    max-width: none;
+  }
+
+  .acc-table td[data-label="Criteria"] {
+    order: 5;
+    flex: 0 0 100%;
+    margin-bottom: 0;
+  }
+
+  /* Mobile action bar (bottom inline buttons) — hidden; use ⋮ FloatingMenu instead */
+  .acc-m-card-actions {
+    display: none !important;
+  }
+}
+
+/* ─── Landscape compact (≤ 768px landscape) ──────────────────
+   Keep desktop-like table with all columns; allow horizontal scroll.
+   ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) and (orientation: landscape) {
+  #page-accreditation .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
+  .acc-table { min-width: 700px; }
+
+  .acc-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }
+  .acc-table tbody td { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-body-size); }
+}
+/* ── Mobile portrait: title → KPI → Add → toolbar (match Jurors/Projects pattern) ── */
+@media (max-width: 768px) and (orientation: portrait) {
+  #page-accreditation {
+    display: flex;
+    flex-direction: column;
+  }
+  #page-accreditation > .sem-header { display: contents; }
+  #page-accreditation > * { order: 20; }
+  #page-accreditation > .sem-header > .sem-header-left { order: -4; }
+  #page-accreditation > .scores-kpi-strip { order: -2; }
+  #page-accreditation > .mobile-primary-below-kpi { order: -1; }
+  /* .sem-header-actions (Filter + Export toolbar) stays at order 0 — below Add button */
+  #page-accreditation > .sem-header > .sem-header-actions { order: 0; margin-bottom: 12px; }
+  #page-accreditation > .filter-panel { order: 1; }
+  #page-accreditation > .export-panel { order: 2; }
+  #page-accreditation > .lock-notice { order: 3; }
+  #page-accreditation > .acc-coverage-progress { order: 4; }
+}

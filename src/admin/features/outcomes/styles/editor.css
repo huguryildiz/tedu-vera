@@ -1,0 +1,491 @@
+/* ── Inline outcome description ─────────────────────────────── */
+
+.acc-outcome-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.acc-outcome-desc {
+  font-size: var(--table-header-size);
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  max-width: 420px;
+  text-align: justify;
+  text-justify: inter-word;
+  text-align-last: left;
+}
+
+/* ── Floating menu item description ─────────────────────────── */
+
+.floating-menu-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.floating-menu-item-desc {
+  font-size: 10px;
+  font-weight: 450;
+  color: var(--text-quaternary);
+}
+
+.floating-menu-item.danger .floating-menu-item-desc {
+  color: rgba(225,29,72,0.5);
+}
+
+.dark-mode .floating-menu-item-desc {
+  color: rgba(241,245,249,0.4);
+}
+
+.dark-mode .floating-menu-item.danger .floating-menu-item-desc {
+  color: rgba(251,113,133,0.5);
+}
+
+/* ── Coverage Type Selector (drawer) ────────────────────────── */
+
+.acc-coverage-type-selector {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.acc-coverage-type-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--bg-card);
+}
+
+.acc-coverage-type-option:hover {
+  background: var(--surface-2);
+}
+
+.acc-coverage-type-option.selected.cov-direct {
+  background: var(--success-soft);
+  border-color: rgba(22,163,74,0.25);
+}
+
+.acc-coverage-type-option.selected.cov-indirect {
+  background: var(--warning-soft);
+  border-color: rgba(217,119,6,0.25);
+}
+
+.acc-cov-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.acc-coverage-type-option.selected.cov-direct .acc-cov-radio {
+  border-width: 5px;
+  border-color: var(--success);
+}
+
+.acc-coverage-type-option.selected.cov-indirect .acc-cov-radio {
+  border-width: 5px;
+  border-color: var(--warning);
+}
+
+.acc-cov-type-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.acc-cov-type-desc {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.acc-coverage-type-option.selected.cov-direct .acc-cov-type-label { color: var(--success); }
+.acc-coverage-type-option.selected.cov-indirect .acc-cov-type-label { color: var(--warning); }
+
+.dark-mode .acc-coverage-type-option.selected.cov-direct {
+  background: rgba(22,163,74,0.10);
+  border-color: rgba(22,163,74,0.30);
+}
+
+.dark-mode .acc-coverage-type-option.selected.cov-indirect {
+  background: rgba(217,119,6,0.10);
+  border-color: rgba(217,119,6,0.30);
+}
+
+/* ── Coverage Legend Strip ──────────────────────────────────── */
+
+.acc-legend-strip {
+  display: flex;
+  border-top: 1px solid var(--border);
+  background: var(--surface-1);
+}
+
+.acc-legend-item {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border-right: 1px solid var(--border);
+}
+
+.acc-legend-item:last-child {
+  border-right: none;
+}
+
+.acc-legend-icon-wrap {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.acc-legend-icon-wrap.direct {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.acc-legend-icon-wrap.indirect {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.acc-legend-icon-wrap.unmapped {
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--text-tertiary);
+}
+
+.dark-mode .acc-legend-icon-wrap.direct {
+  background: rgba(34, 197, 94, 0.14);
+  color: #4ade80;
+}
+
+.dark-mode .acc-legend-icon-wrap.indirect {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+}
+
+.acc-legend-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.acc-legend-label.direct { color: var(--success); }
+.acc-legend-label.indirect { color: var(--warning); }
+.acc-legend-label.unmapped { color: var(--text-tertiary); }
+
+.dark-mode .acc-legend-label.direct { color: #4ade80; }
+.dark-mode .acc-legend-label.indirect { color: #fbbf24; }
+
+.acc-legend-desc {
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  line-height: 1.45;
+  text-align: justify;
+  text-justify: inter-word;
+}
+/* ── Outcomes card title group (editable title + subtitle) ── */
+
+.acc-card-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.acc-card-editable-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 1px 2px;
+  margin: -1px -2px;
+  transition: background 0.15s;
+  width: fit-content;
+}
+
+.acc-card-editable-title:hover {
+  background: var(--surface-1);
+}
+
+.acc-card-editable-title:hover .acc-title-edit-icon {
+  opacity: 0.6;
+}
+
+.acc-card-editable-title.no-rename {
+  cursor: default;
+}
+
+.acc-card-editable-title.no-rename:hover {
+  background: transparent;
+}
+
+.acc-title-edit-icon {
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+  color: var(--text-tertiary);
+}
+
+.acc-card-subtitle {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Threshold pill + inline edit ───────────────────────── */
+
+.acc-threshold-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  border-radius: 20px;
+  padding: 2px 9px 2px 8px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.acc-threshold-pill.editable {
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.acc-threshold-pill.editable:hover {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.acc-threshold-edit-icon {
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.acc-threshold-pill.editable:hover .acc-threshold-edit-icon {
+  opacity: 0.7;
+}
+
+.acc-threshold-edit-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.acc-threshold-input {
+  width: 44px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg-primary));
+  border: 1.5px solid var(--accent);
+  border-radius: 6px;
+  padding: 1px 5px;
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.acc-threshold-input::-webkit-outer-spin-button,
+.acc-threshold-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.acc-threshold-unit {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ── Outcomes title rename input ─────────────────────────── */
+
+.acc-title-rename-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.acc-title-rename-input {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  padding: 2px 8px;
+  background: var(--surface-0, var(--background));
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  min-width: 160px;
+  max-width: 320px;
+}
+
+.dark-mode .acc-title-rename-input {
+  background: var(--surface-1);
+  color: var(--text-primary);
+}
+
+/* ── Outcomes page framework selector chip ────────────────── */
+.outcomes-fw-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.10) 0%, rgba(59, 130, 246, 0.07) 100%);
+  border: 1.5px solid rgba(14, 165, 233, 0.28);
+  color: rgb(2, 132, 199);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.outcomes-fw-chip:hover {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.17) 0%, rgba(59, 130, 246, 0.13) 100%);
+  border-color: rgba(14, 165, 233, 0.44);
+  color: rgb(7, 89, 133);
+}
+
+.outcomes-fw-chip svg {
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+
+.outcomes-fw-chip:hover svg {
+  opacity: 0.9;
+}
+
+.dark-mode .outcomes-fw-chip {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(96, 165, 250, 0.09) 100%);
+  border-color: rgba(56, 189, 248, 0.30);
+  color: rgb(125, 211, 252);
+}
+
+.dark-mode .outcomes-fw-chip:hover {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.20) 0%, rgba(96, 165, 250, 0.15) 100%);
+  border-color: rgba(56, 189, 248, 0.46);
+  color: rgb(186, 230, 253);
+}
+
+/* ── Unassign framework button (icon-only, danger ghost) ────── */
+
+.acc-unassign-fw-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(225, 29, 72, 0.22);
+  background: rgba(225, 29, 72, 0.06);
+  color: var(--danger);
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s;
+  flex-shrink: 0;
+}
+
+.acc-unassign-fw-btn:hover {
+  background: rgba(225, 29, 72, 0.14);
+  border-color: rgba(225, 29, 72, 0.42);
+}
+
+.acc-unassign-fw-btn:active {
+  background: rgba(225, 29, 72, 0.22);
+}
+
+.dark-mode .acc-unassign-fw-btn {
+  border-color: rgba(251, 113, 133, 0.28);
+  background: rgba(251, 113, 133, 0.08);
+  color: rgb(251, 113, 133);
+}
+
+.dark-mode .acc-unassign-fw-btn:hover {
+  background: rgba(251, 113, 133, 0.16);
+  border-color: rgba(251, 113, 133, 0.46);
+}
+
+/* ── Framework pill inline rename ─────────────────────────── */
+
+.fw-chip-rename-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1.5px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  height: 28px;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.fw-chip-rename-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  width: 140px;
+  padding: 0;
+  font-family: inherit;
+  letter-spacing: inherit;
+}
+
+.dark-mode .fw-chip-rename-input {
+  color: var(--accent-light, #93c5fd);
+}
+
+/* ── Clickable KPI strip (coverage filter drilldown) ──────── */
+#page-accreditation .scores-kpi-item {
+  cursor: pointer;
+  transition: background-color .12s, border-color .12s, box-shadow .12s;
+  outline: none;
+}
+#page-accreditation .scores-kpi-item:hover {
+  background: var(--surface-1);
+}
+#page-accreditation .scores-kpi-item:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-soft, rgba(79, 70, 229, 0.25));
+}
+#page-accreditation .scores-kpi-item--active {
+  border-color: var(--accent);
+  box-shadow: inset 0 2px 0 var(--accent);
+  background: var(--surface-1);
+}
+

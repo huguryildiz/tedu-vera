@@ -1,0 +1,337 @@
+/* ── Default template cards (FrameworkPickerDrawer) ─────────────── */
+
+.fpd-template-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fpd-template-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  cursor: default;
+  transition: border-color .15s, background .15s;
+}
+
+.fpd-template-card:hover {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.03);
+}
+
+.fpd-template-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fpd-template-card-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fpd-template-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-ring);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.fpd-template-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.fpd-template-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .15s;
+  align-self: flex-start;
+}
+
+.fpd-template-card:hover .fpd-template-action {
+  opacity: 1;
+}
+
+.fpd-template-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Framework quick-pick chips (AddEditPeriodDrawer) ────────────── */
+
+.fw-quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.fw-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+  white-space: nowrap;
+}
+
+.fw-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.05);
+}
+
+.fw-chip.active {
+  background: rgba(99, 102, 241, 0.09);
+  border-color: rgba(99, 102, 241, 0.22);
+  color: rgb(79, 70, 229);
+}
+
+.dark-mode .fw-chip.active {
+  background: rgba(129, 140, 248, 0.12);
+  border-color: rgba(129, 140, 248, 0.28);
+  color: rgb(165, 180, 252);
+}
+
+/* ── Framework template card (shared: AddEditPeriodDrawer, FrameworkPickerDrawer, FrameworkPickerModal) ── */
+
+.fw-template-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.fw-template-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.13s, border-color 0.13s, transform 0.1s;
+}
+
+.fw-template-card:hover {
+  background: var(--surface-2);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.fw-template-card:active {
+  transform: translateY(0);
+}
+
+.fw-template-card:disabled,
+.fw-template-card[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.fw-template-card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.fw-template-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.fw-template-card-name {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.fw-template-card-desc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* ── Framework locked-state display row (edit mode) ─────────────── */
+
+.fw-display-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.fw-display-name {
+  flex: 1;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.fw-advanced-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  background: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+
+.fw-advanced-btn:hover {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.05);
+}
+
+/* ── Framework picker modal template cards (fpm-*) ───────────────── */
+
+.fpm-template-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fpm-template-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  text-align: left;
+  width: 100%;
+}
+
+.fpm-template-card:hover {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.03);
+}
+
+.fpm-template-card.selected {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.06);
+}
+
+.fpm-template-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fpm-template-card-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text-primary);
+}
+
+.fpm-template-card.selected .fpm-template-card-name {
+  color: var(--accent);
+}
+
+.fpm-template-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-ring);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.fpm-template-card-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/* Trigger chip — the fw-chip becomes clickable */
+.fw-chip-trigger {
+  cursor: pointer !important;
+}
+
+.fw-chip-trigger:hover {
+  background: rgba(99, 102, 241, 0.16) !important;
+  border-color: rgba(99, 102, 241, 0.40) !important;
+  color: rgb(67, 56, 202) !important;
+}
+
+.dark-mode .fw-chip-trigger:hover {
+  background: rgba(129, 140, 248, 0.20) !important;
+  border-color: rgba(129, 140, 248, 0.45) !important;
+  color: rgb(199, 210, 254) !important;
+}
+
+

@@ -1,0 +1,488 @@
+
+/* ── Framework Picker Drawer (fpd-*) ────────────────────────────── */
+
+.fpd-section {
+  margin-bottom: 24px;
+}
+
+.fpd-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-tertiary);
+  margin-bottom: 10px;
+}
+
+.fpd-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+}
+
+/* Active framework card */
+.fpd-active-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.fpd-active-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.fpd-active-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--text-primary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fpd-active-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-ring);
+  flex-shrink: 0;
+}
+
+.fpd-meta-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 14px 12px;
+}
+
+.fpd-meta-pill {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 99px;
+  background: var(--surface-0);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border);
+}
+
+.fpd-meta-pill.direct {
+  background: var(--success-soft);
+  color: var(--success);
+  border-color: rgba(22, 163, 74, 0.15);
+}
+
+.fpd-meta-pill.indirect {
+  background: var(--warning-soft);
+  color: var(--warning);
+  border-color: rgba(217, 119, 6, 0.15);
+}
+
+.fpd-meta-pill.unmapped {
+  background: var(--surface-1);
+  color: var(--text-tertiary);
+  border-color: var(--border);
+}
+
+.dark-mode .fpd-meta-pill.direct {
+  background: rgba(34, 197, 94, 0.14);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.32);
+}
+
+.dark-mode .fpd-meta-pill.indirect {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.30);
+}
+
+.fpd-active-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-0, var(--bg));
+}
+
+.fpd-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.fpd-action-btn:hover {
+  background: var(--surface-1);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.fpd-action-btn.danger {
+  color: var(--danger);
+  border-color: rgba(225, 29, 72, 0.2);
+}
+
+.fpd-action-btn.danger:hover {
+  background: rgba(225, 29, 72, 0.05);
+  border-color: rgba(225, 29, 72, 0.35);
+}
+
+/* Inline forms inside active card or create section */
+.fpd-inline-form {
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--surface-0);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* When the inline form appears inside the active card (no card padding), blend it flush */
+.fpd-active-card > .fpd-inline-form {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  border-top: 1px solid var(--border);
+}
+
+/* Framework list rows (Previous Periods + Platform Defaults) */
+.fpd-fw-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fpd-fw-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.fpd-fw-row:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-1);
+}
+
+.fpd-fw-row.platform {
+  background: var(--surface-1);
+}
+
+.fpd-fw-row-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.fpd-fw-row-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fpd-fw-row-desc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.fpd-clone-use-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  height: var(--field-h, 36px);
+  border-radius: 7px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.fpd-clone-use-btn:hover:not(:disabled) {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+.fpd-clone-use-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Picker dropdown ── */
+.fpd-picker-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.fpd-picker-select-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.fpd-picker-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: var(--field-h, 36px);
+  padding: 0 10px 0 12px;
+  border: 1px solid var(--field-border, var(--border));
+  border-radius: var(--field-radius, 7px);
+  background: var(--field-bg, var(--bg-card));
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.fpd-picker-trigger:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.fpd-picker-trigger.open {
+  border-color: var(--accent);
+  box-shadow: var(--field-focus-ring);
+}
+
+.fpd-picker-trigger-label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  color: var(--text-primary);
+}
+
+.fpd-picker-trigger-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.fpd-picker-trigger-label.placeholder {
+  color: var(--text-tertiary);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fpd-picker-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fpd-picker-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: var(--z-modal-dropdown, 400);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+  overflow: hidden;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.fpd-picker-group-label {
+  padding: 8px 12px 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.fpd-picker-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.fpd-picker-option-name {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.fpd-picker-period-tag {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.fpd-picker-period-tag.unassigned {
+  color: var(--text-quaternary);
+  background: transparent;
+  border-color: transparent;
+  font-weight: 400;
+}
+
+.fpd-picker-delete-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.1s, color 0.1s;
+  margin-left: auto;
+}
+
+.fpd-picker-option:hover .fpd-picker-delete-btn {
+  opacity: 1;
+}
+
+.fpd-picker-delete-btn:hover {
+  background: var(--danger-soft, #fff0f0);
+  color: var(--danger, #e53935);
+}
+
+.fpd-picker-option:hover {
+  background: var(--surface-1);
+}
+
+.fpd-picker-option.selected {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.fpd-picker-option-desc {
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+/* Create blank button — matches pcd-template-row--blank */
+.fpd-create-blank-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 11px;
+  border: 1px dashed var(--border);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.13s, border-color 0.13s, transform 0.1s;
+}
+
+.fpd-create-blank-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.fpd-create-blank-btn:active {
+  transform: translateY(0);
+}
+
+.fpd-create-blank-btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.fpd-create-blank-btn-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.fpd-create-blank-btn-name {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.fpd-create-blank-btn-desc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+
+/* Footer disclaimer */
+.fpd-footer-disclaimer {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-right: auto;
+}
+

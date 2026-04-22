@@ -1,0 +1,14 @@
+/* Outcomes feature — barrel CSS
+   Split from OutcomesPage.css (2056 lines) in S14 Sprint 3.
+   Parts:
+     page.css             — core page, lock banner, row states, detail row, coverage help, empty, KPI cards, coverage progress, code badge
+     editor.css           — inline outcome desc, menu item desc, coverage type selector, legend strip, title group, threshold pill, rename input, framework selector chip, KPI filter
+     framework-picker.css — Framework Picker Drawer (fpd-*) + picker dropdown
+     framework-cards.css  — default template cards + quick-pick chips + shared template card + locked-state row + picker modal cards (fpm-*)
+     responsive.css       — mobile portrait cards + landscape compact + portrait page order
+*/
+@import "./page.css";
+@import "./editor.css";
+@import "./framework-picker.css";
+@import "./framework-cards.css";
+@import "./responsive.css";
