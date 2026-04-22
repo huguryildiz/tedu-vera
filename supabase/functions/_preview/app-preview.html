@@ -1,0 +1,1639 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VERA — App Screens Preview</title>
+<style>
+/* ═══════════════ DESIGN TOKENS ═══════════════ */
+/* Default = dark mode */
+:root{
+  --bg-page:#080d1a;
+  --bg-card:var(--input-bg-hover);
+  --text-primary:#f1f5f9;
+  --text-secondary:#cbd5e1;
+  --text-tertiary:#94a3b8;
+  --text-quaternary:#64748b;
+  --accent:#60a5fa;
+  --accent-2:#818cf8;
+  --success:#4ade80;
+  --warning:#fbbf24;
+  --danger:#f87171;
+  --border:var(--card-border);
+  --border-strong:rgba(255,255,255,0.14);
+
+  --fb-danger-text:#fca5a5;
+  --fb-warning-text:#fcd34d;
+  --fb-info-text:#93c5fd;
+  --fb-success-text:#86efac;
+
+  --field-error-ring:0 0 0 1px #f87171, 0 0 0 4px rgba(225,29,72,0.18);
+
+  /* surface tokens (theme-aware) */
+  --auth-gradient:linear-gradient(155deg,#050912 0%,#0c1528 30%,#111e38 50%,#0a1020 75%,#050912 100%);
+  --auth-glow-1:rgba(99,102,241,0.18);
+  --auth-glow-2:rgba(59,130,246,0.14);
+  --jury-gradient:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);
+  --jury-glow-1:rgba(59,130,246,0.14);
+  --jury-glow-2:rgba(99,102,241,0.10);
+
+  --card-bg:var(--input-bg-hover);
+  --card-border:var(--card-border);
+  --card-shadow:0 12px 48px rgba(0,0,0,0.40),inset 0 1px 0 rgba(255,255,255,0.14);
+  --jury-card-bg:rgba(15,23,42,0.75);
+  --jury-card-shadow:0 16px 50px rgba(0,0,0,0.40),inset 0 1px 0 rgba(255,255,255,0.12);
+
+  --input-bg:var(--input-bg);
+  --input-bg-hover:var(--hairline);
+  --input-border:var(--card-border);
+  --hairline:var(--hairline);
+
+  --title-gradient:linear-gradient(135deg,#ffffff 0%,#93c5fd 100%);
+  --hero-gradient:linear-gradient(135deg,#ffffff,#93c5fd);
+
+  --qr-fg:#e2e8f0;
+}
+
+/* ─── Light mode overrides ─── */
+body.light-mode{
+  --bg-page:#eef2f8;
+  --text-primary:#0f172a;
+  --text-secondary:#1e293b;
+  --text-tertiary:#475569;
+  --text-quaternary:#64748b;
+  --accent:#2563eb;
+  --accent-2:#6366f1;
+  --success:#16a34a;
+  --warning:#d97706;
+  --danger:#dc2626;
+  --border:rgba(15,23,42,0.10);
+  --border-strong:rgba(15,23,42,0.18);
+
+  --fb-danger-text:#b91c1c;
+  --fb-warning-text:#b45309;
+  --fb-info-text:#1d4ed8;
+  --fb-success-text:#15803d;
+
+  --field-error-ring:0 0 0 1px #dc2626, 0 0 0 4px rgba(220,38,38,0.15);
+
+  --auth-gradient:linear-gradient(155deg,#f8fafc 0%,#eef2ff 30%,#e0e7ff 50%,#f1f5f9 75%,#f8fafc 100%);
+  --auth-glow-1:rgba(99,102,241,0.18);
+  --auth-glow-2:rgba(59,130,246,0.12);
+  --jury-gradient:linear-gradient(135deg,#f1f5f9 0%,#e2e8f0 50%,#f1f5f9 100%);
+  --jury-glow-1:rgba(59,130,246,0.10);
+  --jury-glow-2:rgba(99,102,241,0.08);
+
+  --card-bg:rgba(255,255,255,0.85);
+  --card-border:rgba(15,23,42,0.08);
+  --card-shadow:0 12px 40px rgba(15,23,42,0.10),inset 0 1px 0 rgba(255,255,255,0.90);
+  --jury-card-bg:rgba(255,255,255,0.88);
+  --jury-card-shadow:0 16px 44px rgba(15,23,42,0.12),inset 0 1px 0 rgba(255,255,255,0.90);
+
+  --input-bg:rgba(255,255,255,0.65);
+  --input-bg-hover:rgba(255,255,255,0.85);
+  --input-border:rgba(15,23,42,0.12);
+  --hairline:rgba(15,23,42,0.08);
+
+  --title-gradient:linear-gradient(135deg,#0f172a 0%,#2563eb 100%);
+  --hero-gradient:linear-gradient(135deg,#0f172a,#2563eb);
+
+  --qr-fg:#0f172a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg-page);color:var(--text-primary);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;text-size-adjust:100%;-webkit-text-size-adjust:100%;transition:background .25s}
+button{font-family:inherit;cursor:pointer}
+input,textarea{font-family:inherit}
+
+/* ═══════════════ SCREEN HOST ═══════════════ */
+.screens{position:relative;width:100%;min-height:100vh}
+.screen{display:none;width:100%;min-height:100vh}
+.screen.active{display:block}
+
+/* ═══════════════ AUTH BASE ═══════════════ */
+.login-screen,.apply-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:40px 20px;
+  background:var(--auth-gradient);
+  position:relative;overflow:hidden;
+}
+.login-screen::before,.apply-screen::before{
+  content:"";position:absolute;inset:0;background-image:
+    radial-gradient(circle at 20% 30%,var(--auth-glow-1) 0%,transparent 45%),
+    radial-gradient(circle at 80% 70%,var(--auth-glow-2) 0%,transparent 50%);
+  pointer-events:none;
+}
+.login-card,.apply-card{
+  position:relative;width:400px;max-width:92vw;
+  background:var(--card-bg);
+  backdrop-filter:blur(28px) saturate(1.3);
+  -webkit-backdrop-filter:blur(28px) saturate(1.3);
+  border:1px solid var(--card-border);
+  border-radius:20px;
+  padding:36px 32px 32px;
+  box-shadow:var(--card-shadow);
+}
+.apply-card{width:440px;padding:32px 30px 28px}
+.login-header,.apply-header{text-align:center;margin-bottom:22px}
+.login-icon-wrap{
+  width:52px;height:52px;border-radius:14px;margin:0 auto 14px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,rgba(99,102,241,0.25),rgba(124,58,237,0.30));
+  border:1px solid rgba(124,58,237,0.25);
+  color:#c4b5fd;
+  box-shadow:0 6px 20px rgba(99,102,241,0.22);
+}
+.login-title,.apply-title{
+  font-size:22px;font-weight:700;letter-spacing:-0.01em;margin:0 0 6px;
+  background:var(--title-gradient);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.login-sub,.apply-sub{font-size:13px;color:var(--text-tertiary);margin:0;line-height:1.55}
+
+.form-group{margin-bottom:14px;position:relative}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;letter-spacing:.02em}
+.form-required{color:var(--danger);margin-left:2px}
+.form-input{
+  width:100%;height:42px;padding:0 14px;
+  background:var(--input-bg);
+  border:1px solid var(--input-border);
+  border-radius:10px;color:var(--text-primary);font-size:14px;
+  transition:border-color .15s,box-shadow .15s,background .15s;
+}
+.form-input::placeholder{color:var(--text-quaternary)}
+.form-input:focus{outline:none;border-color:rgba(99,102,241,0.55);box-shadow:0 0 0 3px rgba(99,102,241,0.14);background:var(--input-bg-hover)}
+.form-input.error{border-color:var(--danger) !important;box-shadow:var(--field-error-ring) !important}
+textarea.form-input{height:auto;min-height:80px;padding:10px 14px;resize:vertical;line-height:1.5}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:10px;padding:0 18px;height:42px;font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap}
+.btn-primary{
+  background:linear-gradient(135deg,#3b82f6 0%,#2563eb 50%,#4f46e5 100%);
+  color:#fff;
+  box-shadow:0 4px 20px rgba(59,130,246,0.35),inset 0 1px 0 rgba(255,255,255,0.18);
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(59,130,246,0.45),inset 0 1px 0 rgba(255,255,255,0.22)}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+.btn-google{
+  width:100%;height:42px;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--input-bg);border:1px solid var(--input-border);
+  border-radius:10px;color:var(--text-primary);font-size:13.5px;font-weight:600;
+}
+.btn-google:hover{background:var(--input-bg-hover);border-color:var(--border-strong)}
+
+.form-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--text-quaternary);font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+.form-divider::before,.form-divider::after{content:"";flex:1;height:1px;background:var(--hairline)}
+
+.form-check{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-tertiary);margin:4px 0 16px;user-select:none;cursor:pointer}
+.form-check input{appearance:none;width:16px;height:16px;border:1.5px solid var(--border-strong);border-radius:4px;background:var(--input-bg);cursor:pointer;display:grid;place-items:center;margin:0}
+.form-check input:checked{background:var(--accent);border-color:var(--accent)}
+.form-check input:checked::after{content:"";width:8px;height:4px;border-left:2px solid #0b1220;border-bottom:2px solid #0b1220;transform:rotate(-45deg) translate(1px,-1px)}
+
+.form-link{background:none;border:none;color:var(--accent);font-size:13px;font-weight:500;cursor:pointer;padding:0;text-decoration:none}
+.form-link:hover{text-decoration:underline}
+
+.login-footer{text-align:center;margin-top:18px;font-size:13px;color:var(--text-tertiary)}
+.login-footer .form-link{display:inline-block;margin-top:6px}
+
+.forgot-inline{position:absolute;top:0;right:0;font-size:12px}
+
+/* password eye */
+.pwd-eye{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;padding:0;cursor:pointer;color:var(--text-tertiary);display:flex;align-items:center;
+}
+
+/* password strength */
+.pwd-strength{display:flex;align-items:center;gap:10px;margin-top:10px}
+.pwd-strength-bar{flex:1;height:5px;background:var(--hairline);border-radius:999px;overflow:hidden}
+.pwd-strength-fill{height:100%;transition:width .2s,background .2s;border-radius:999px}
+.pwd-strength-label{font-size:11px;font-weight:700;letter-spacing:.04em}
+.pwd-checklist{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:8px}
+.pwd-check{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-quaternary)}
+.pwd-check.pass{color:var(--success)}
+.pwd-check-icon{width:13px;height:13px;flex-shrink:0;color:currentColor}
+
+/* ═══════════════ FbAlert ═══════════════ */
+.fb-alert{
+  display:flex;gap:10px;align-items:flex-start;
+  padding:11px 13px;border-radius:10px;font-size:13px;line-height:1.55;
+  text-align:justify;text-justify:inter-word;
+  margin-bottom:14px;
+}
+.fb-alert-icon{flex-shrink:0;display:flex;align-items:center;color:currentColor;margin-top:1px}
+.fb-alert-body{flex:1;min-width:0}
+.fb-alert-title{font-weight:700;margin:0 0 2px;font-size:13px;letter-spacing:-0.005em}
+.fb-alert.danger{background:rgba(239,68,68,0.10);border:1px solid rgba(239,68,68,0.22);color:var(--fb-danger-text)}
+.fb-alert.warning{background:rgba(251,191,36,0.10);border:1px solid rgba(251,191,36,0.22);color:var(--fb-warning-text)}
+.fb-alert.info{background:rgba(96,165,250,0.10);border:1px solid rgba(96,165,250,0.22);color:var(--fb-info-text)}
+.fb-alert.success{background:rgba(74,222,128,0.10);border:1px solid rgba(74,222,128,0.22);color:var(--fb-success-text)}
+
+/* auth state (sent / done) */
+.auth-state{text-align:center;padding:18px 0 6px}
+.auth-state-icon{
+  width:52px;height:52px;border-radius:50%;margin:0 auto 14px;
+  display:grid;place-items:center;
+  background:rgba(22,163,74,0.12);color:#4ade80;
+  box-shadow:0 6px 24px rgba(22,163,74,0.18);
+}
+.auth-state-icon.danger{background:rgba(239,68,68,0.12);color:var(--danger);box-shadow:0 6px 24px rgba(239,68,68,0.18)}
+.auth-state-title{font-size:18px;font-weight:700;margin:0 0 6px;color:var(--text-primary)}
+.auth-state-desc{font-size:13px;color:var(--text-tertiary);line-height:1.55;margin:0 0 16px;padding:0 6px}
+.auth-state-desc strong{color:var(--text-secondary);font-weight:600}
+
+/* ═══════════════ REGISTER ═══════════════ */
+.apply-progress{display:flex;gap:5px;margin:0 0 18px}
+.apply-progress-seg{flex:1;height:4px;background:var(--hairline);border-radius:2px;overflow:hidden;position:relative}
+.apply-progress-seg.done::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:2px}
+.apply-valid-check{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--success);display:flex;align-items:center}
+.apply-field-error{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:11px;color:var(--danger)}
+.apply-helper-text{font-size:11.5px;color:var(--text-quaternary);margin-top:5px;line-height:1.4}
+.apply-helper-note{
+  margin:14px 0 8px;padding:11px 13px;border-radius:10px;font-size:12px;color:var(--text-tertiary);
+  background:var(--input-bg);border:1px solid var(--hairline);line-height:1.5;
+  text-align:justify;text-justify:inter-word;
+}
+
+/* ═══════════════ PENDING REVIEW ═══════════════ */
+.prv-wrap{width:460px;max-width:94vw}
+.prv-card{
+  background:var(--card-bg);backdrop-filter:blur(28px) saturate(1.3);
+  border:1px solid var(--card-border);border-radius:20px;padding:32px 28px;
+  box-shadow:var(--card-shadow);
+}
+.prv-header{text-align:center;margin-bottom:18px}
+.prv-icon{
+  width:54px;height:54px;border-radius:15px;margin:0 auto 12px;display:grid;place-items:center;
+  background:linear-gradient(135deg,rgba(251,191,36,0.22),rgba(245,158,11,0.18));
+  border:1px solid rgba(251,191,36,0.26);color:#fde68a;
+}
+.prv-title{font-size:21px;font-weight:700;letter-spacing:-0.01em;margin-bottom:5px;background:linear-gradient(135deg,#ffffff 0%,#fde68a 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.prv-sub{font-size:13px;color:var(--text-tertiary);line-height:1.55}
+.prv-sub strong{color:var(--text-secondary);font-weight:600}
+
+.prv-stepper{display:flex;align-items:center;gap:4px;padding:14px 8px;margin:6px 0 0}
+.prv-step{display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto}
+.prv-step-dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700}
+.prv-dot-done{background:rgba(74,222,128,0.18);color:var(--success);border:1px solid rgba(74,222,128,0.35)}
+.prv-dot-active{background:linear-gradient(135deg,#3b82f6,#6366f1);box-shadow:0 4px 14px rgba(59,130,246,0.35);animation:prv-pulse 2s infinite}
+.prv-dot-pending{background:var(--hairline);border:1px dashed rgba(255,255,255,0.18);color:var(--text-quaternary)}
+.prv-step-line{flex:1;height:2px;background:var(--hairline);border-radius:1px}
+.prv-line-active{background:linear-gradient(90deg,var(--success),var(--accent))}
+.prv-step-label{font-size:11px;color:var(--text-quaternary);font-weight:600;letter-spacing:.02em;white-space:nowrap}
+.prv-label-done{color:var(--success)}
+.prv-label-active{color:var(--accent)}
+@keyframes prv-pulse{0%,100%{box-shadow:0 4px 14px rgba(59,130,246,0.35)}50%{box-shadow:0 6px 22px rgba(59,130,246,0.55)}}
+
+.prv-divider{height:1px;background:var(--hairline);margin:16px 0}
+.prv-section-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--text-quaternary);margin-bottom:8px}
+.prv-app-list{display:flex;flex-direction:column;gap:8px}
+.prv-app-card{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:12px;background:var(--input-bg);border:1px solid var(--hairline)}
+.prv-app-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex-shrink:0}
+.prv-app-icon-pending{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.22)}
+.prv-app-body{flex:1;min-width:0}
+.prv-app-name{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prv-app-date{font-size:11.5px;color:var(--text-quaternary)}
+.prv-app-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.prv-badge-pending{background:rgba(251,191,36,0.14);color:#fde68a;border:1px solid rgba(251,191,36,0.25)}
+.prv-pulse-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:prv-dot-pulse 1.6s infinite}
+@keyframes prv-dot-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.prv-hint{display:flex;align-items:flex-start;gap:8px;margin-top:12px;padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.5;text-align:justify;text-justify:inter-word}
+.prv-hint-info{background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.18);color:var(--fb-info-text)}
+.prv-hint p{margin:0}
+
+.prv-empty{text-align:center;padding:10px 0 4px}
+.prv-empty-icon{width:44px;height:44px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;background:var(--input-bg);color:var(--text-quaternary)}
+.prv-empty-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.prv-empty-desc{font-size:12.5px;color:var(--text-tertiary);line-height:1.5;padding:0 10px;text-align:justify;text-justify:inter-word}
+
+.prv-footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding:0 2px}
+.prv-link-home{background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer}
+.prv-btn-signout{background:rgba(239,68,68,0.10);border:1px solid rgba(239,68,68,0.22);color:var(--fb-danger-text);padding:7px 14px;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer}
+.prv-btn-signout:hover{background:rgba(239,68,68,0.18)}
+
+/* ═══════════════ JURY BASE ═══════════════ */
+.jury-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 16px;
+  background:var(--jury-gradient);position:relative;overflow:hidden;
+}
+.jury-screen::before{
+  content:"";position:absolute;inset:0;background-image:
+    radial-gradient(circle at 25% 25%,var(--jury-glow-1) 0%,transparent 50%),
+    radial-gradient(circle at 75% 75%,var(--jury-glow-2) 0%,transparent 55%);
+  pointer-events:none;
+}
+.jury-step{position:relative;width:100%;max-width:460px}
+.jury-card.dj-glass-card{
+  background:var(--jury-card-bg);backdrop-filter:blur(24px) saturate(1.3);
+  -webkit-backdrop-filter:blur(24px) saturate(1.3);
+  border:1px solid var(--card-border);border-radius:18px;
+  padding:28px 26px 26px;
+  box-shadow:var(--jury-card-shadow);
+}
+.jg-logomark{display:flex;justify-content:center}
+.jg-logo-img{height:36px}
+.jg-logo-img.light{display:none}
+.jury-title{font-size:20px;font-weight:700;text-align:center;letter-spacing:-0.01em;margin:4px 0 4px;background:var(--hero-gradient);-webkit-background-clip:text;background-clip:text;color:transparent}
+.jury-sub{font-size:13px;text-align:center;color:var(--text-tertiary);margin-bottom:16px}
+
+.jury-meta-wrapper{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.jury-meta-cell{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--input-bg);border:1px solid var(--hairline);border-radius:12px}
+.jury-meta-cell--wide{padding:12px 13px}
+.jury-meta-icon{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex-shrink:0}
+.jury-meta-icon--violet{background:rgba(139,92,246,0.18);color:#c4b5fd}
+.jury-meta-icon--amber{background:rgba(251,191,36,0.18);color:#fde68a}
+.jury-meta-icon--green{background:rgba(74,222,128,0.18);color:#86efac}
+.jury-meta-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.jury-meta-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-quaternary);font-weight:700}
+.jury-meta-value{font-size:13.5px;color:var(--text-primary);font-weight:600}
+.jury-meta-grid--2col{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.form-input-with-avatar{position:relative}
+.jury-avatar-preview{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;letter-spacing:.02em}
+
+.btn-landing-primary{
+  width:100%;height:44px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;
+  background:linear-gradient(135deg,#3b82f6 0%,#2563eb 50%,#4f46e5 100%);
+  color:#fff;
+  box-shadow:0 6px 24px rgba(59,130,246,0.35),inset 0 1px 0 rgba(255,255,255,0.18);
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .2s;
+}
+.btn-landing-primary:hover{transform:translateY(-1px);box-shadow:0 10px 32px rgba(59,130,246,0.45)}
+.btn-landing-primary:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+/* ═══════════════ JURY GATE ═══════════════ */
+.jg-icon-box{width:64px;height:64px;border-radius:18px;margin:0 auto 14px;display:grid;place-items:center;position:relative;background:linear-gradient(135deg,rgba(59,130,246,0.22),rgba(99,102,241,0.22));border:1px solid rgba(99,102,241,0.28);color:#93c5fd}
+.jg-icon-box.loading{background:linear-gradient(135deg,rgba(59,130,246,0.18),rgba(99,102,241,0.18));color:#93c5fd}
+.jg-icon-box.denied{background:linear-gradient(135deg,rgba(239,68,68,0.22),rgba(220,38,38,0.22));border-color:rgba(239,68,68,0.32);color:#fca5a5}
+.jg-icon-ring{position:absolute;inset:-6px;border-radius:22px;border:1px dashed rgba(99,102,241,0.30)}
+.jg-icon-ring.denied{border-color:rgba(239,68,68,0.32)}
+.jg-spinner-ring{position:absolute;inset:-6px;border-radius:22px;border:2px solid transparent;border-top-color:#60a5fa;border-right-color:#818cf8;animation:jg-spin 1.1s linear infinite}
+@keyframes jg-spin{to{transform:rotate(360deg)}}
+.jg-spin{animation:jg-spin 1s linear infinite}
+
+.jg-loading-dots{display:inline-flex;gap:5px;justify-content:center;margin:6px 0 14px}
+.jg-loading-dots span{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:jg-bounce 1.2s infinite}
+.jg-loading-dots span:nth-child(2){animation-delay:.2s}
+.jg-loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes jg-bounce{0%,80%,100%{transform:scale(.4);opacity:.35}40%{transform:scale(1);opacity:1}}
+
+.jg-token-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--input-bg);border:1px solid var(--input-border);border-radius:999px;font-family:ui-monospace,monospace;font-size:12px;color:var(--text-secondary);margin:0 auto 14px}
+.jg-check-steps{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.jg-check-step{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--text-quaternary)}
+.jg-check-step .dot{width:16px;height:16px;border-radius:50%;background:var(--hairline);flex-shrink:0;display:grid;place-items:center}
+.jg-check-step.done{color:var(--success)}
+.jg-check-step.done .dot{background:rgba(74,222,128,0.18);color:var(--success)}
+.jg-check-step.active{color:var(--accent)}
+.jg-check-step.active .dot{background:rgba(59,130,246,0.18);color:var(--accent);animation:jg-step-pulse 1.2s infinite}
+@keyframes jg-step-pulse{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,.35)}50%{box-shadow:0 0 0 6px rgba(59,130,246,0)}}
+
+.jg-divider{height:1px;background:var(--hairline);margin:14px 0 16px}
+.jg-form{display:flex;flex-direction:column;gap:10px}
+.jg-input-wrap{position:relative}
+.jg-token-input{
+  width:100%;height:54px;padding:0 14px;text-align:center;letter-spacing:.12em;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:18px;font-weight:700;
+  background:var(--input-bg);border:1px solid var(--input-border);border-radius:12px;color:var(--text-primary);text-transform:uppercase;
+}
+.jg-token-input:focus{outline:none;border-color:rgba(99,102,241,0.55);box-shadow:0 0 0 3px rgba(99,102,241,0.14)}
+.jg-input-hint{font-size:11.5px;color:var(--text-quaternary);text-align:center;margin-top:2px}
+
+.jg-error-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;background:rgba(239,68,68,0.14);border:1px solid rgba(239,68,68,0.25);border-radius:6px;font-family:ui-monospace,monospace;font-size:11px;color:#fca5a5;letter-spacing:.04em}
+
+/* ═══════════════ ARRIVAL ═══════════════ */
+.ja-step{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;background:var(--jury-gradient)}
+.ja-stack{display:flex;flex-direction:column;align-items:center;gap:26px;max-width:420px;width:100%}
+.ja-qr-wrap{position:relative;width:220px;height:220px;padding:18px;background:var(--input-bg);border:1px solid var(--card-border);border-radius:18px}
+.ja-bracket{position:absolute;width:24px;height:24px;border:2px solid var(--accent)}
+.ja-bracket.tl{top:6px;left:6px;border-right:none;border-bottom:none;border-top-left-radius:6px}
+.ja-bracket.tr{top:6px;right:6px;border-left:none;border-bottom:none;border-top-right-radius:6px}
+.ja-bracket.bl{bottom:6px;left:6px;border-right:none;border-top:none;border-bottom-left-radius:6px}
+.ja-bracket.br{bottom:6px;right:6px;border-left:none;border-top:none;border-bottom-right-radius:6px}
+.ja-qr-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(7,1fr);gap:3px;width:100%;height:100%}
+.ja-qr-cell{background:var(--qr-fg,#e2e8f0);border-radius:2px}
+.ja-qr-cell.blank{background:transparent}
+.ja-finder{position:absolute;width:50px;height:50px;background:transparent;border:6px solid var(--qr-fg,#f1f5f9);border-radius:4px}
+.ja-finder::after{content:"";position:absolute;inset:8px;background:var(--qr-fg,#f1f5f9);border-radius:2px}
+.ja-finder.tl{top:22px;left:22px}
+.ja-finder.tr{top:22px;right:22px}
+.ja-finder.bl{bottom:22px;left:22px}
+.ja-laser{position:absolute;left:18px;right:18px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);top:50%;animation:ja-laser 2s linear infinite;box-shadow:0 0 18px rgba(96,165,250,.8)}
+@keyframes ja-laser{0%{top:18px}50%{top:calc(100% - 20px)}100%{top:18px}}
+
+.ja-check{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.ja-check-disc{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#4ade80,#22c55e);color:#052e16;display:grid;place-items:center;box-shadow:0 10px 30px rgba(74,222,128,.45)}
+
+.ja-content{text-align:center;width:100%}
+.ja-logo{height:28px;margin-bottom:14px;opacity:.9}
+.ja-stamp{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:rgba(74,222,128,0.10);border:1px solid rgba(74,222,128,0.25);color:var(--success);font-size:12px;font-weight:600;margin-bottom:14px}
+.ja-dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:ja-pulse 1.6s infinite}
+@keyframes ja-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.4}}
+.ja-hero{font-size:40px;font-weight:800;line-height:1.1;margin:0 0 8px;letter-spacing:-0.02em;background:linear-gradient(135deg,#ffffff,#93c5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ja-hero em{font-style:italic;color:#93c5fd;-webkit-text-fill-color:#93c5fd}
+.ja-actions{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:16px}
+.ja-cta{display:inline-flex;align-items:center;gap:10px;padding:12px 22px;background:linear-gradient(135deg,#3b82f6,#2563eb 50%,#4f46e5);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 6px 22px rgba(59,130,246,.35)}
+.ja-back{background:none;border:none;color:var(--text-tertiary);font-size:13px;cursor:pointer}
+
+/* ═══════════════ PIN ═══════════════ */
+.jury-icon-box{width:56px;height:56px;border-radius:16px;margin:0 auto 12px;display:grid;place-items:center;background:var(--input-bg-hover);border:1px solid var(--card-border)}
+.jury-icon-box.primary{background:linear-gradient(135deg,rgba(59,130,246,0.22),rgba(99,102,241,0.22));border-color:rgba(99,102,241,0.28);color:#93c5fd}
+.jury-icon-box.success{background:linear-gradient(135deg,rgba(74,222,128,0.20),rgba(34,197,94,0.20));border-color:rgba(74,222,128,0.30);color:#86efac}
+.jury-icon-box.warn{background:linear-gradient(135deg,rgba(251,191,36,0.20),rgba(245,158,11,0.18));border-color:rgba(251,191,36,0.30);color:#fde68a}
+
+.dj-pin-display{display:flex;justify-content:center;gap:10px;margin:14px 0}
+.dj-pin-display--lg{gap:14px;margin:18px 0}
+.dj-pin-input{
+  width:52px;height:60px;text-align:center;font-size:22px;font-weight:700;
+  background:var(--input-bg-hover);border:1px solid var(--input-border);border-radius:12px;color:var(--text-primary);
+  font-family:ui-monospace,monospace;letter-spacing:0;
+}
+.dj-pin-input--lg{width:58px;height:68px;font-size:26px}
+.dj-pin-input:focus{outline:none;border-color:rgba(99,102,241,0.55);box-shadow:0 0 0 3px rgba(99,102,241,0.14);background:var(--hairline)}
+
+.dj-pin-digit{width:58px;height:68px;border-radius:12px;background:var(--input-bg-hover);border:1px solid var(--input-border);display:grid;place-items:center;font-size:28px;font-weight:800;font-family:ui-monospace,monospace;color:var(--text-primary)}
+.dj-pin-digit--reveal{background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(59,130,246,0.12));border-color:rgba(99,102,241,0.28);color:var(--reveal-color,#c4b5fd);box-shadow:inset 0 1px 0 rgba(255,255,255,0.12)}
+body.light-mode{--reveal-color:#4338ca}
+
+.pin-dot-indicator{display:flex;justify-content:center;gap:8px;margin-top:6px}
+.pin-dot{width:8px;height:8px;border-radius:50%;background:var(--border-strong);transition:background .2s}
+.pin-dot.filled{background:var(--accent);box-shadow:0 0 8px rgba(96,165,250,.6)}
+
+.pin-shield{padding:14px;display:flex;justify-content:center;border-radius:14px;background:rgba(99,102,241,0.05);border:1px dashed rgba(99,102,241,0.20)}
+
+.dj-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:7px;width:100%;height:40px;background:var(--input-bg-hover);border:1px solid var(--border-strong);border-radius:11px;color:var(--text-secondary);font-size:13px;font-weight:600;cursor:pointer;margin-top:10px}
+.dj-btn-secondary:hover{background:var(--hairline)}
+
+.jury-info-line{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;margin-top:12px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.16);border-radius:10px;font-size:12.5px;color:var(--fb-info-text);line-height:1.55;text-align:justify;text-justify:inter-word}
+.jury-info-dot{width:6px;height:6px;border-radius:50%;background:currentColor;margin-top:7px;flex-shrink:0}
+
+/* ═══════════════ LOCKED ═══════════════ */
+.locked-timer-card{padding:14px 16px;border-radius:14px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.20);text-align:center;margin:6px 0 14px}
+.locked-timer-card.expired{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.24)}
+.locked-status-label{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fde68a;margin-bottom:4px}
+.locked-timer-card.expired .locked-status-label{color:#fca5a5}
+.locked-status-dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:prv-dot-pulse 1.6s infinite}
+.locked-timer{font-size:30px;font-weight:800;font-family:ui-monospace,monospace;color:var(--text-primary);letter-spacing:.02em}
+.locked-hint{font-size:12px;color:var(--text-tertiary);margin-top:4px}
+.locked-divider{display:flex;align-items:center;gap:10px;color:var(--text-quaternary);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin:14px 0}
+.locked-divider::before,.locked-divider::after{content:"";flex:1;height:1px;background:var(--hairline)}
+.locked-help-card{padding:16px;border-radius:14px;background:var(--input-bg);border:1px solid var(--hairline);display:flex;flex-direction:column;gap:10px}
+.locked-help-head{display:flex;align-items:center;gap:9px}
+.locked-help-icon{width:30px;height:30px;border-radius:9px;background:rgba(96,165,250,0.15);color:var(--accent);display:grid;place-items:center}
+.locked-help-title{font-size:14px;font-weight:700;color:var(--text-primary)}
+.locked-help-desc{font-size:12.5px;color:var(--text-tertiary);line-height:1.55;text-align:justify;text-justify:inter-word}
+.locked-recipient-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--input-bg);border:1px solid var(--hairline);border-radius:10px}
+.locked-recipient-row .avatar{width:30px;height:30px;border-radius:8px;background:rgba(139,92,246,0.18);color:#c4b5fd;display:grid;place-items:center}
+.locked-recipient-row .who{flex:1;font-size:12.5px}
+.locked-recipient-row .who b{display:block;color:var(--text-primary);font-weight:600}
+.locked-recipient-row .who span{color:var(--text-quaternary);font-size:11px}
+.locked-recipient-row .to-tag{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-quaternary);font-weight:700}
+.locked-sent-state{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px}
+.locked-sent-icon{width:46px;height:46px;border-radius:50%;background:rgba(74,222,128,0.18);color:var(--success);display:grid;place-items:center}
+
+/* ═══════════════ PROGRESS ═══════════════ */
+.ps-meta-row{display:flex;gap:8px;justify-content:center;margin:4px 0 14px;flex-wrap:wrap}
+.ps-meta-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;background:var(--input-bg-hover);border:1px solid var(--card-border);font-size:12px;color:var(--text-secondary)}
+.ps-meta-pill svg{color:var(--accent)}
+.progress-stats-card{background:var(--input-bg);border:1px solid var(--hairline);border-radius:14px;padding:14px;margin:6px 0 14px}
+.progress-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.progress-stat{display:flex;flex-direction:column;gap:2px;padding:10px 12px;background:var(--input-bg);border:1px solid var(--hairline);border-radius:10px}
+.progress-stat-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-quaternary);font-weight:700}
+.progress-stat-value{font-size:18px;font-weight:700;color:var(--text-primary)}
+.jury-progress-bar{height:8px;background:var(--hairline);border-radius:999px;overflow:hidden;margin:8px 0 4px}
+.jury-progress-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#6366f1);border-radius:999px;box-shadow:0 0 10px rgba(59,130,246,.4)}
+.progress-pct{font-size:12px;color:var(--text-tertiary);text-align:right;font-weight:600}
+.criteria-list{display:flex;flex-direction:column;gap:6px;margin:8px 0 12px}
+.criteria-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--input-bg);border:1px solid var(--hairline);border-radius:10px;font-size:12.5px;color:var(--text-secondary)}
+.criteria-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.criteria-label{flex:1}
+.criteria-points{font-size:11px;color:var(--text-quaternary);font-weight:700}
+
+/* ═══════════════ DONE ═══════════════ */
+.dj-done-icon{width:72px;height:72px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:linear-gradient(135deg,#4ade80,#22c55e);color:#052e16;box-shadow:0 10px 30px rgba(74,222,128,.38);animation:dj-celebrate 2s ease infinite}
+@keyframes dj-celebrate{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.dj-done-status-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.24);color:var(--success);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:0 auto 10px}
+.dj-h1{font-size:22px;font-weight:800;text-align:center;margin:0 0 4px;background:linear-gradient(135deg,#ffffff,#93c5fd);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-0.01em}
+.dj-sub{text-align:center;font-size:13px;color:var(--text-tertiary)}
+.dj-done-divider{height:1px;background:var(--hairline);margin:16px 0}
+
+.dj-feedback-card{padding:14px;border-radius:14px;background:var(--input-bg);border:1px solid var(--hairline)}
+.dj-feedback-title{font-size:13px;font-weight:700;text-align:center;margin-bottom:8px;color:var(--text-secondary)}
+.dj-stars{display:flex;justify-content:center;gap:6px;margin:6px 0 4px}
+.dj-star-btn{background:none;border:none;color:var(--border-strong);cursor:pointer;padding:3px}
+.dj-star-btn.active{color:#fbbf24}
+.dj-star-label{text-align:center;font-size:11.5px;color:var(--text-tertiary);margin-bottom:8px;min-height:14px}
+
+.dj-done-rankings{margin-top:14px;border-radius:14px;background:var(--input-bg);border:1px solid var(--hairline);overflow:hidden}
+.dj-done-rankings-header{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--hairline)}
+.dj-done-rankings-header svg{color:var(--accent)}
+.dj-done-rankings-title{flex:1;font-size:13px;font-weight:700;color:var(--text-primary)}
+.dj-live-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;background:rgba(239,68,68,0.14);color:#fca5a5;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.dj-live-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:prv-dot-pulse 1.2s infinite}
+.dj-rank-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid var(--input-bg-hover);font-size:13px}
+.dj-rank-row:first-of-type{border-top:none}
+.dj-rank-num{width:22px;height:22px;border-radius:50%;background:var(--hairline);color:var(--text-tertiary);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.dj-rank-num.gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#3a2805;box-shadow:0 3px 10px rgba(251,191,36,.35)}
+.dj-rank-name{flex:1;color:var(--text-primary);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dj-rank-bar{flex:0 0 60px;height:5px;background:var(--hairline);border-radius:999px;overflow:hidden}
+.dj-rank-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:999px}
+.dj-rank-score{font-family:ui-monospace,monospace;font-weight:700;color:var(--text-secondary);font-size:12px;min-width:38px;text-align:right}
+
+.dj-done-edit-req-btn{display:inline-flex;align-items:center;gap:7px;width:100%;justify-content:center;height:38px;background:transparent;border:1px solid var(--card-border);border-radius:10px;color:var(--text-tertiary);font-size:12.5px;font-weight:600;cursor:pointer;margin-top:12px}
+
+/* ═══════════════ EVAL (simplified preview) ═══════════════ */
+.eval-workspace{max-width:980px;margin:0 auto;padding:26px 20px}
+.eval-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.eval-juror{display:flex;align-items:center;gap:10px}
+.eval-juror-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;display:grid;place-items:center;font-weight:700}
+.eval-juror-name{font-size:14px;font-weight:600;color:var(--text-primary)}
+.eval-juror-meta{font-size:11.5px;color:var(--text-quaternary)}
+.eval-save-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:rgba(74,222,128,0.10);border:1px solid rgba(74,222,128,0.22);color:var(--success);font-size:11.5px;font-weight:600}
+.eval-project-tabs{display:flex;gap:6px;padding:6px;margin-bottom:14px;background:var(--input-bg);border:1px solid var(--hairline);border-radius:12px;overflow-x:auto}
+.eval-project-tab{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:8px;background:transparent;border:1px solid transparent;color:var(--text-tertiary);font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer}
+.eval-project-tab.active{background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.24);color:var(--accent)}
+.eval-project-tab .chk{color:var(--success)}
+.eval-criterion{background:var(--input-bg);border:1px solid var(--hairline);border-radius:14px;padding:16px;margin-bottom:12px}
+.eval-criterion-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.eval-crit-dot{width:10px;height:10px;border-radius:50%}
+.eval-crit-label{flex:1;font-size:14px;font-weight:700;color:var(--text-primary)}
+.eval-crit-points{font-size:12px;color:var(--text-tertiary);font-family:ui-monospace,monospace}
+.eval-score-bar{display:flex;gap:4px;margin:8px 0}
+.eval-score-cell{flex:1;height:36px;border-radius:8px;background:var(--input-bg);border:1px solid var(--hairline);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--text-tertiary);cursor:pointer}
+.eval-score-cell.selected{background:linear-gradient(135deg,rgba(59,130,246,0.22),rgba(99,102,241,0.22));border-color:rgba(99,102,241,0.45);color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.25)}
+.eval-crit-band{font-size:12px;color:var(--text-tertiary);line-height:1.55;padding:9px 11px;border-radius:9px;background:var(--input-bg);border:1px solid var(--input-bg-hover);text-align:justify;text-justify:inter-word}
+
+/* ═══════════════ SCREEN NAVIGATOR ═══════════════ */
+#nav{
+  position:fixed;top:20px;right:20px;z-index:99999;
+  width:280px;max-height:calc(100vh - 40px);overflow:hidden;
+  background:var(--nav-bg,rgba(8,13,26,0.92));backdrop-filter:blur(20px);
+  border:1px solid var(--border-strong);border-radius:14px;
+  box-shadow:var(--nav-shadow,0 20px 60px rgba(0,0,0,0.5));
+  display:flex;flex-direction:column;
+  font-size:12px;color:var(--text-primary);
+}
+#nav-header{
+  display:flex;align-items:center;gap:8px;padding:10px 12px;
+  border-bottom:1px solid var(--card-border);
+  cursor:grab;user-select:none;
+  background:var(--input-bg);
+}
+body.light-mode #nav{--nav-bg:rgba(255,255,255,0.96);--nav-shadow:0 20px 50px rgba(15,23,42,0.15)}
+#nav-header:active{cursor:grabbing}
+#nav-title{flex:1;font-size:12px;font-weight:700;color:var(--text-primary);letter-spacing:.02em}
+#nav-collapse{background:none;border:none;color:var(--text-tertiary);cursor:pointer;padding:3px;display:flex;align-items:center}
+#nav-body{overflow-y:auto;padding:8px 10px;max-height:calc(100vh - 100px)}
+#nav.collapsed #nav-body{display:none}
+.nav-section{margin-bottom:10px}
+.nav-section-label{font-size:10px;text-transform:uppercase;letter-spacing:.10em;color:var(--text-quaternary);font-weight:700;padding:4px 6px;margin-bottom:4px}
+.nav-btn{
+  display:flex;align-items:center;gap:8px;width:100%;
+  padding:7px 9px;margin-bottom:3px;background:transparent;border:1px solid transparent;
+  border-radius:7px;color:var(--text-secondary);font-size:12px;cursor:pointer;text-align:left;
+}
+.nav-btn:hover{background:var(--input-bg-hover);color:var(--text-primary)}
+.nav-btn.active{background:rgba(59,130,246,0.14);border-color:rgba(59,130,246,0.28);color:var(--accent)}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.5;flex-shrink:0}
+.nav-btn.active .nav-dot{opacity:1}
+
+/* scrollbar */
+#nav-body::-webkit-scrollbar{width:6px}
+#nav-body::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ SCREEN NAVIGATOR ═══════════════ -->
+<div id="nav">
+  <div id="nav-header">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span id="nav-title">VERA — Screens</span>
+    <button id="nav-theme" title="Toggle theme" style="background:none;border:none;color:var(--text-tertiary);cursor:pointer;padding:3px;display:flex;align-items:center">
+      <svg id="theme-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button id="nav-collapse" title="Toggle">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+    </button>
+  </div>
+  <div id="nav-body">
+    <div class="nav-section">
+      <div class="nav-section-label">Auth</div>
+      <button class="nav-btn" data-target="login"><span class="nav-dot"></span>Login</button>
+      <button class="nav-btn" data-target="register"><span class="nav-dot"></span>Register</button>
+      <button class="nav-btn" data-target="forgot"><span class="nav-dot"></span>Forgot Password</button>
+      <button class="nav-btn" data-target="forgot-sent"><span class="nav-dot"></span>Forgot — Sent</button>
+      <button class="nav-btn" data-target="reset"><span class="nav-dot"></span>Reset Password</button>
+      <button class="nav-btn" data-target="reset-done"><span class="nav-dot"></span>Reset — Done</button>
+      <button class="nav-btn" data-target="reset-invalid"><span class="nav-dot"></span>Reset — Invalid</button>
+      <button class="nav-btn" data-target="invite"><span class="nav-dot"></span>Invite Accept</button>
+      <button class="nav-btn" data-target="pending"><span class="nav-dot"></span>Pending Review</button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Jury Flow</div>
+      <button class="nav-btn" data-target="gate-idle"><span class="nav-dot"></span>Gate — Idle</button>
+      <button class="nav-btn" data-target="gate-loading"><span class="nav-dot"></span>Gate — Verifying</button>
+      <button class="nav-btn" data-target="gate-denied"><span class="nav-dot"></span>Gate — Denied</button>
+      <button class="nav-btn" data-target="arrival"><span class="nav-dot"></span>Arrival</button>
+      <button class="nav-btn" data-target="identity"><span class="nav-dot"></span>Identity</button>
+      <button class="nav-btn" data-target="pin-reveal"><span class="nav-dot"></span>PIN Reveal</button>
+      <button class="nav-btn" data-target="pin-entry"><span class="nav-dot"></span>PIN Entry</button>
+      <button class="nav-btn" data-target="locked"><span class="nav-dot"></span>Locked</button>
+      <button class="nav-btn" data-target="locked-sent"><span class="nav-dot"></span>Locked — Sent</button>
+      <button class="nav-btn" data-target="progress-fresh"><span class="nav-dot"></span>Progress — Fresh</button>
+      <button class="nav-btn" data-target="progress-resume"><span class="nav-dot"></span>Progress — Resume</button>
+      <button class="nav-btn" data-target="eval"><span class="nav-dot"></span>Evaluation</button>
+      <button class="nav-btn" data-target="done"><span class="nav-dot"></span>Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="screens">
+
+<!-- ═══════════════ LOGIN ═══════════════ -->
+<div class="screen active" id="login">
+  <div class="login-screen">
+    <div style="width:400px;max-width:92vw;position:relative">
+      <div class="login-card">
+        <div class="login-header">
+          <div class="login-icon-wrap">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          </div>
+          <div class="login-title">Welcome Back</div>
+          <div class="login-sub">Access your evaluation workspace.</div>
+        </div>
+        <form onsubmit="event.preventDefault()">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" type="email" placeholder="you@example.com" value="admin@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password
+              <button type="button" class="form-link forgot-inline">Forgot password?</button>
+            </label>
+            <div style="position:relative">
+              <input class="form-input" type="password" placeholder="••••••••" value="secretpass" style="padding-right:40px">
+              <button type="button" class="pwd-eye" aria-label="Show password">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <label class="form-check">
+            <input type="checkbox" checked>
+            <span>Remember me for 30 days</span>
+          </label>
+          <button type="submit" class="btn btn-primary" style="width:100%">Sign in</button>
+          <div class="form-divider">or</div>
+          <button type="button" class="btn-google">
+            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+            Continue with Google
+          </button>
+        </form>
+      </div>
+      <div class="login-footer">
+        Don't have an account?
+        <button class="form-link">Apply for access</button>
+        <br><button class="form-link" style="margin-top:8px">← Return Home</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ REGISTER ═══════════════ -->
+<div class="screen" id="register">
+  <div class="apply-screen">
+    <div class="apply-card">
+      <div class="apply-header">
+        <div class="login-icon-wrap">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        </div>
+        <div class="apply-title">Create Your Account</div>
+        <div class="apply-sub">Set up your organization workspace in under a minute.</div>
+      </div>
+      <div class="apply-progress">
+        <div class="apply-progress-seg done"></div>
+        <div class="apply-progress-seg done"></div>
+        <div class="apply-progress-seg done"></div>
+        <div class="apply-progress-seg"></div>
+        <div class="apply-progress-seg"></div>
+      </div>
+      <form onsubmit="event.preventDefault()">
+        <div class="form-group">
+          <label class="form-label">Full Name <span class="form-required">*</span></label>
+          <input class="form-input" type="text" value="Jane Doe">
+          <span class="apply-valid-check" style="bottom:10px;top:auto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email <span class="form-required">*</span></label>
+          <input class="form-input" type="email" value="jane@acme.edu">
+          <span class="apply-valid-check" style="bottom:10px;top:auto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Organization <span class="form-required">*</span></label>
+          <input class="form-input" type="text" value="Acme University">
+          <span class="apply-valid-check" style="bottom:10px;top:auto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password <span class="form-required">*</span></label>
+          <div style="position:relative">
+            <input class="form-input" type="password" value="MyStrongPass1!" style="padding-right:40px">
+            <button type="button" class="pwd-eye"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div class="pwd-strength">
+            <div class="pwd-strength-bar"><div class="pwd-strength-fill" style="width:85%;background:#4ade80"></div></div>
+            <span class="pwd-strength-label" style="color:#4ade80">Strong</span>
+          </div>
+          <div class="pwd-checklist">
+            <div class="pwd-check pass"><svg class="pwd-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>At least 8 characters</div>
+            <div class="pwd-check pass"><svg class="pwd-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Uppercase letter</div>
+            <div class="pwd-check pass"><svg class="pwd-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Lowercase letter</div>
+            <div class="pwd-check pass"><svg class="pwd-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Number</div>
+            <div class="pwd-check pass"><svg class="pwd-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Special character</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password <span class="form-required">*</span></label>
+          <input class="form-input" type="password" value="MyStrongPass1!">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Create Account</button>
+        <div class="apply-helper-note">Joining an existing organization? Ask your admin for an invite link — do not create a new account here.</div>
+      </form>
+      <div class="login-footer">
+        Already have an account? <button class="form-link">Sign in</button>
+        <br><button class="form-link" style="margin-top:6px">← Return Home</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ FORGOT — FORM ═══════════════ -->
+<div class="screen" id="forgot">
+  <div class="login-screen">
+    <div style="width:400px;max-width:92vw">
+      <div class="login-card">
+        <div class="login-header">
+          <div class="login-icon-wrap">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+          </div>
+          <div class="login-title">Forgot Password?</div>
+          <div class="login-sub">Enter your email and we'll send you a reset link.</div>
+        </div>
+        <form onsubmit="event.preventDefault()">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" type="email" placeholder="you@example.com">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%">Send Reset Link</button>
+        </form>
+      </div>
+      <div class="login-footer"><button class="form-link">← Back to Sign In</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ FORGOT — SENT ═══════════════ -->
+<div class="screen" id="forgot-sent">
+  <div class="login-screen">
+    <div style="width:400px;max-width:92vw">
+      <div class="login-card">
+        <div class="auth-state">
+          <div class="auth-state-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </div>
+          <div class="auth-state-title">Check your inbox</div>
+          <div class="auth-state-desc">We sent a reset link to <strong>jane@acme.edu</strong>. The link expires in 15 minutes.</div>
+          <button class="btn btn-primary" style="margin-top:4px">Back to Sign In</button>
+        </div>
+      </div>
+      <div class="login-footer"><button class="form-link">Didn't get the email? Try again</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ RESET — FORM ═══════════════ -->
+<div class="screen" id="reset">
+  <div class="login-screen">
+    <div style="width:400px;max-width:92vw">
+      <div class="login-card">
+        <div class="login-header">
+          <div class="login-icon-wrap">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          </div>
+          <div class="login-title">Create New Password</div>
+          <div class="login-sub">Set a new password for your admin account.</div>
+        </div>
+        <form onsubmit="event.preventDefault()">
+          <div class="form-group">
+            <label class="form-label">New Password</label>
+            <div style="position:relative">
+              <input class="form-input" type="password" value="NewSecure!1" style="padding-right:40px">
+              <button type="button" class="pwd-eye"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+            <div class="pwd-strength">
+              <div class="pwd-strength-bar"><div class="pwd-strength-fill" style="width:75%;background:#4ade80"></div></div>
+              <span class="pwd-strength-label" style="color:#4ade80">Strong</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <input class="form-input" type="password" value="NewSecure!1">
+            <div style="display:flex;align-items:center;gap:5px;margin-top:5px;font-size:11px;color:var(--success)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Passwords match
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%">Update Password</button>
+        </form>
+      </div>
+      <div class="login-footer"><button class="form-link">← Back to Sign In</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ RESET — DONE ═══════════════ -->
+<div class="screen" id="reset-done">
+  <div class="login-screen">
+    <div style="width:400px;max-width:92vw">
+      <div class="login-card">
+        <div class="auth-state">
+          <div class="auth-state-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="auth-state-title">Password Updated</div>
+          <div class="auth-state-desc">Your password has been updated. You can now sign in.</div>
+          <button class="btn btn-primary">Back to Sign In</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ RESET — INVALID ═══════════════ -->
+<div class="screen" id="reset-invalid">
+  <div class="login-screen">
+    <div style="width:400px;max-width:92vw">
+      <div class="login-card">
+        <div class="login-header">
+          <div class="login-icon-wrap" style="background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.24);color:var(--danger)">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div class="login-title">Invalid Reset Link</div>
+          <div class="login-sub">This password reset link is invalid or has already expired.</div>
+        </div>
+        <div class="fb-alert warning" style="margin-bottom:18px">
+          <div class="fb-alert-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="fb-alert-body">Reset links expire after a short period and can only be used once. Request a new one to continue.</div>
+        </div>
+        <button class="btn btn-primary" style="width:100%">Request a New Reset Link</button>
+      </div>
+      <div class="login-footer"><button class="form-link">← Back to Sign In</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ INVITE ACCEPT ═══════════════ -->
+<div class="screen" id="invite">
+  <div class="login-screen">
+    <div style="width:400px;max-width:92vw">
+      <div class="login-card">
+        <div class="login-header">
+          <div class="login-icon-wrap" style="background:linear-gradient(135deg,rgba(74,222,128,0.20),rgba(34,197,94,0.20));border-color:rgba(74,222,128,0.30);color:#86efac">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div class="login-title">Accept Invitation</div>
+          <div class="login-sub">You've been invited to <strong style="color:var(--text-secondary)">Acme University</strong>. Set a password to activate your account.</div>
+        </div>
+        <form onsubmit="event.preventDefault()">
+          <div class="form-group">
+            <label class="form-label">Full Name <span class="form-required">*</span></label>
+            <input class="form-input" type="text" placeholder="Your name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Create Password <span class="form-required">*</span></label>
+            <div style="position:relative">
+              <input class="form-input" type="password" style="padding-right:40px">
+              <button type="button" class="pwd-eye"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%">Accept & Sign In</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PENDING REVIEW ═══════════════ -->
+<div class="screen" id="pending">
+  <div class="login-screen">
+    <div class="prv-wrap">
+      <div class="prv-card">
+        <div class="prv-header">
+          <div class="prv-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="prv-title">Join Request Pending</div>
+          <div class="prv-sub">Your account <strong>jane@acme.edu</strong> is not yet approved for admin access.</div>
+        </div>
+        <div class="prv-stepper">
+          <div class="prv-step">
+            <div class="prv-step-dot prv-dot-done"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="prv-step-label prv-label-done">Requested</div>
+          </div>
+          <div class="prv-step-line prv-line-active"></div>
+          <div class="prv-step">
+            <div class="prv-step-dot prv-dot-active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></div>
+            <div class="prv-step-label prv-label-active">In Review</div>
+          </div>
+          <div class="prv-step-line"></div>
+          <div class="prv-step">
+            <div class="prv-step-dot prv-dot-pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg></div>
+            <div class="prv-step-label">Access</div>
+          </div>
+        </div>
+        <div class="prv-divider"></div>
+        <div>
+          <div class="prv-section-label">Join Requests</div>
+          <div class="prv-app-list">
+            <div class="prv-app-card">
+              <div class="prv-app-icon prv-app-icon-pending">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+              </div>
+              <div class="prv-app-body">
+                <div class="prv-app-name">Acme University</div>
+                <div class="prv-app-date">Requested Apr 20, 2026</div>
+              </div>
+              <div class="prv-app-badge prv-badge-pending"><span class="prv-pulse-dot"></span>Awaiting Approval</div>
+            </div>
+          </div>
+          <div class="prv-hint prv-hint-info">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <p>An administrator of the organization will review your request. You'll gain access once approved.</p>
+          </div>
+        </div>
+      </div>
+      <div class="prv-footer">
+        <button class="prv-link-home">← Return Home</button>
+        <button class="prv-btn-signout">Sign out</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ GATE — IDLE ═══════════════ -->
+<div class="screen" id="gate-idle">
+  <div class="jury-screen">
+    <div class="jury-step">
+      <div class="jury-card dj-glass-card">
+        <div style="text-align:center">
+          <div class="jg-icon-box">
+            <div class="jg-icon-ring"></div>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          </div>
+          <div class="jury-title">Enter Your Access Code</div>
+          <div class="jury-sub">Use the code provided by your organizer to begin.</div>
+        </div>
+        <div class="jg-divider"></div>
+        <form class="jg-form" onsubmit="event.preventDefault()">
+          <div class="jg-input-wrap">
+            <input class="jg-token-input" placeholder="XXXX-XXXX" maxlength="9" value="CS26-A9K2">
+          </div>
+          <div class="jg-input-hint">Your code typically looks like <b>ABCD-EFGH</b></div>
+          <button class="btn-landing-primary">Verify Access</button>
+        </form>
+        <div style="margin-top:14px" class="fb-alert info">
+          <div class="fb-alert-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+          <div class="fb-alert-body">Walk-in juror? Ask the coordinator for today's code. It works for one evaluation period.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ GATE — LOADING ═══════════════ -->
+<div class="screen" id="gate-loading">
+  <div class="jury-screen">
+    <div class="jury-step">
+      <div class="jury-card dj-glass-card">
+        <div style="text-align:center">
+          <div class="jg-icon-box loading">
+            <div class="jg-spinner-ring"></div>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          </div>
+          <div class="jury-title">Verifying Access…</div>
+          <div class="jg-loading-dots"><span></span><span></span><span></span></div>
+          <div class="jg-token-chip">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5"/></svg>
+            CS26-A9K2
+          </div>
+        </div>
+        <div class="jg-check-steps">
+          <div class="jg-check-step done">
+            <div class="dot"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            Token format validated
+          </div>
+          <div class="jg-check-step active">
+            <div class="dot"></div>
+            Checking with server…
+          </div>
+          <div class="jg-check-step">
+            <div class="dot"></div>
+            Loading evaluation period
+          </div>
+        </div>
+        <div class="fb-alert info">
+          <div class="fb-alert-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+          <div class="fb-alert-body">This only takes a moment. Please keep this tab open.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ GATE — DENIED ═══════════════ -->
+<div class="screen" id="gate-denied">
+  <div class="jury-screen">
+    <div class="jury-step">
+      <div class="jury-card dj-glass-card">
+        <div style="text-align:center">
+          <div class="jg-icon-box denied">
+            <div class="jg-icon-ring denied"></div>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18"/><path d="M4.73 4.73 4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </div>
+          <div class="jury-title">Access Denied</div>
+          <div class="jury-sub">The code you entered is not recognized or has expired.</div>
+        </div>
+        <div class="fb-alert danger" style="margin-top:14px">
+          <div class="fb-alert-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="fb-alert-body">
+            <div class="fb-alert-title">Invalid or expired token</div>
+            Ask your coordinator for a fresh code.<br>
+            <span class="jg-error-chip" style="margin-top:6px;display:inline-flex">CODE: ERR_TOKEN_INVALID</span>
+          </div>
+        </div>
+        <form class="jg-form" style="margin-top:12px" onsubmit="event.preventDefault()">
+          <div class="jg-input-wrap">
+            <input class="jg-token-input" placeholder="XXXX-XXXX" maxlength="9">
+          </div>
+          <button class="btn-landing-primary">Try a Different Code</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ ARRIVAL ═══════════════ -->
+<div class="screen" id="arrival">
+  <div class="ja-step">
+    <div class="ja-stack">
+      <div class="ja-qr-wrap">
+        <div class="ja-bracket tl"></div><div class="ja-bracket tr"></div>
+        <div class="ja-bracket bl"></div><div class="ja-bracket br"></div>
+        <div class="ja-qr-grid" id="qr-grid"></div>
+        <div class="ja-finder tl"></div><div class="ja-finder tr"></div><div class="ja-finder bl"></div>
+        <div class="ja-laser"></div>
+        <div class="ja-check">
+          <div class="ja-check-disc">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="ja-content">
+        <div class="ja-stamp"><span class="ja-dot"></span>Spring 2026 · Capstone</div>
+        <div class="ja-hero">You're <em>in.</em></div>
+        <div class="ja-actions">
+          <button class="ja-cta">
+            Continue
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+          <button class="ja-back">← Return Home</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ IDENTITY ═══════════════ -->
+<div class="screen" id="identity">
+  <div class="jury-screen">
+    <div class="jury-step">
+      <div class="jury-card dj-glass-card">
+        <div class="jg-logomark" style="margin-bottom:16px">
+          <div style="font-size:22px;font-weight:800;letter-spacing:.04em;background:linear-gradient(135deg,#fff,#93c5fd);-webkit-background-clip:text;background-clip:text;color:transparent">VERA</div>
+        </div>
+        <div class="jury-title">Jury Information</div>
+        <div class="jury-sub">Enter your details to begin the evaluation.</div>
+        <div class="jury-meta-wrapper">
+          <div class="jury-meta-cell jury-meta-cell--wide">
+            <div class="jury-meta-icon jury-meta-icon--violet"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/></svg></div>
+            <div class="jury-meta-text"><span class="jury-meta-label">Organization</span><span class="jury-meta-value">Acme University</span></div>
+          </div>
+          <div class="jury-meta-grid jury-meta-grid--2col">
+            <div class="jury-meta-cell">
+              <div class="jury-meta-icon jury-meta-icon--amber"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+              <div class="jury-meta-text"><span class="jury-meta-label">Period</span><span class="jury-meta-value">Spring 2026</span></div>
+            </div>
+            <div class="jury-meta-cell">
+              <div class="jury-meta-icon jury-meta-icon--green"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div class="jury-meta-text"><span class="jury-meta-label">Groups</span><span class="jury-meta-value">12</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Full Name <span class="form-required">*</span></label>
+          <div class="form-input-with-avatar">
+            <input class="form-input" placeholder="e.g., Jane Smith" value="Jane Smith" style="padding-right:42px">
+            <div class="jury-avatar-preview">JS</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Affiliation <span class="form-required">*</span></label>
+          <input class="form-input" placeholder="e.g., TED University / EE" value="Acme Univ. / CS">
+        </div>
+        <div class="form-group">
+          <label class="form-label">E-mail <span style="font-weight:400;color:var(--text-quaternary)">(optional)</span></label>
+          <input class="form-input" placeholder="jury@example.com">
+        </div>
+        <button class="btn-landing-primary">Start Evaluation</button>
+        <div style="text-align:center;margin-top:12px"><a class="form-link">← Return Home</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PIN REVEAL ═══════════════ -->
+<div class="screen" id="pin-reveal">
+  <div class="jury-screen">
+    <div class="jury-step">
+      <div class="jury-card dj-glass-card">
+        <div style="text-align:center">
+          <div class="jury-icon-box primary">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+          </div>
+          <div class="jury-title">Your PIN</div>
+          <div class="jury-sub">Memorize or copy this PIN. You'll need it to continue.</div>
+        </div>
+        <div class="pin-shield" style="margin:10px 0">
+          <div class="dj-pin-display dj-pin-display--lg">
+            <div class="dj-pin-digit dj-pin-digit--reveal">4</div>
+            <div class="dj-pin-digit dj-pin-digit--reveal">7</div>
+            <div class="dj-pin-digit dj-pin-digit--reveal">2</div>
+            <div class="dj-pin-digit dj-pin-digit--reveal">9</div>
+          </div>
+        </div>
+        <button class="dj-btn-secondary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy PIN
+        </button>
+        <div class="jury-info-line">
+          <span class="jury-info-dot"></span>
+          <span>This PIN lets you return and continue your evaluation on this device if you leave the page. Keep it private.</span>
+        </div>
+        <button class="btn-landing-primary" style="margin-top:14px">
+          Begin Evaluation
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PIN ENTRY ═══════════════ -->
+<div class="screen" id="pin-entry">
+  <div class="jury-screen">
+    <div class="jury-step">
+      <div class="jury-card dj-glass-card">
+        <div style="text-align:center">
+          <div class="jury-icon-box primary">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div class="jury-title">Enter Your PIN</div>
+          <div class="jury-sub">We recognize this device. Enter your 4-digit PIN to resume.</div>
+        </div>
+        <div class="dj-pin-display dj-pin-display--lg">
+          <input class="dj-pin-input dj-pin-input--lg" maxlength="1" value="4">
+          <input class="dj-pin-input dj-pin-input--lg" maxlength="1" value="7">
+          <input class="dj-pin-input dj-pin-input--lg" maxlength="1" value="">
+          <input class="dj-pin-input dj-pin-input--lg" maxlength="1" value="">
+        </div>
+        <div class="pin-dot-indicator">
+          <div class="pin-dot filled"></div>
+          <div class="pin-dot filled"></div>
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+        </div>
+        <div class="fb-alert danger" style="margin-top:16px">
+          <div class="fb-alert-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="fb-alert-body">Incorrect PIN. <strong>2 attempts</strong> remaining before lockout.</div>
+        </div>
+        <button class="btn-landing-primary">Verify PIN</button>
+        <div style="text-align:center;margin-top:12px"><a class="form-link">← Back</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ LOCKED ═══════════════ -->
+<div class="screen" id="locked">
+  <div class="jury-screen">
+    <div class="jury-step">
+      <div class="jury-card dj-glass-card">
+        <div style="text-align:center">
+          <div class="jury-icon-box warn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div class="jury-title">Too Many Attempts</div>
+          <div class="jury-sub">You've been temporarily locked out for security.</div>
+        </div>
+        <div class="locked-timer-card">
+          <div class="locked-status-label"><span class="locked-status-dot"></span>Cooldown</div>
+          <div class="locked-timer">04:52</div>
+          <div class="locked-hint">Try again when the timer ends — or request a PIN reset below.</div>
+        </div>
+        <div class="locked-divider">or get help now</div>
+        <div class="locked-help-card">
+          <div class="locked-help-head">
+            <div class="locked-help-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></div>
+            <div class="locked-help-title">Request PIN Reset</div>
+          </div>
+          <div class="locked-help-desc">Send a message to the evaluation coordinators. They can verify your identity and issue a new PIN.</div>
+          <div class="locked-recipient-row">
+            <div class="avatar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/></svg></div>
+            <div class="who"><b>Acme University</b><span>Evaluation Coordinators</span></div>
+            <div class="to-tag">To</div>
+          </div>
+          <textarea class="form-input" rows="3" placeholder="Briefly describe your situation (optional)"></textarea>
+          <button class="btn-landing-primary">Request PIN Reset</button>
+        </div>
+        <div style="text-align:center;margin-top:12px"><a class="form-link">← Start Over</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ LOCKED — SENT ═══════════════ -->
+<div class="screen" id="locked-sent">
+  <div class="jury-screen">
+    <div class="jury-step">
+      <div class="jury-card dj-glass-card">
+        <div style="text-align:center">
+          <div class="jury-icon-box warn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div class="jury-title">Too Many Attempts</div>
+        </div>
+        <div class="locked-timer-card" style="margin-top:12px">
+          <div class="locked-status-label"><span class="locked-status-dot"></span>Cooldown</div>
+          <div class="locked-timer">04:21</div>
+        </div>
+        <div class="locked-sent-state">
+          <div class="locked-sent-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div style="font-size:15px;font-weight:700;color:var(--text-primary)">Request Sent Successfully</div>
+          <div style="font-size:12.5px;color:var(--text-tertiary);text-align:center;line-height:1.55;padding:0 6px">The coordinators have been notified. They'll reach out shortly to verify your identity.</div>
+        </div>
+        <div style="text-align:center;margin-top:6px"><a class="form-link">← Start Over</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PROGRESS — FRESH ═══════════════ -->
+<div class="screen" id="progress-fresh">
+  <div class="jury-screen">
+    <div class="jury-step">
+      <div class="jury-card dj-glass-card">
+        <div style="text-align:center">
+          <div class="jury-icon-box success">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+          </div>
+          <div class="jury-title">Ready to Begin</div>
+          <div class="jury-sub">12 groups await your evaluation.</div>
+        </div>
+        <div class="ps-meta-row">
+          <div class="ps-meta-pill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>12 Groups</div>
+          <div class="ps-meta-pill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~45 min</div>
+        </div>
+        <div class="progress-stats-card">
+          <div style="font-size:11.5px;color:var(--text-quaternary);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:8px">Evaluation Criteria</div>
+          <div class="criteria-list">
+            <div class="criteria-row"><span class="criteria-dot" style="background:#60a5fa"></span><span class="criteria-label">Technical Content</span><span class="criteria-points">30 pts</span></div>
+            <div class="criteria-row"><span class="criteria-dot" style="background:#4ade80"></span><span class="criteria-label">Written Report</span><span class="criteria-points">25 pts</span></div>
+            <div class="criteria-row"><span class="criteria-dot" style="background:#818cf8"></span><span class="criteria-label">Oral Presentation</span><span class="criteria-points">25 pts</span></div>
+            <div class="criteria-row"><span class="criteria-dot" style="background:#fbbf24"></span><span class="criteria-label">Innovation</span><span class="criteria-points">20 pts</span></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;padding-top:8px;border-top:1px solid var(--hairline)"><span style="color:var(--text-tertiary)">Total</span><span style="font-weight:700;color:var(--text-primary)">100 pts</span></div>
+        </div>
+        <button class="btn-landing-primary">
+          Begin Evaluation
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PROGRESS — RESUME ═══════════════ -->
+<div class="screen" id="progress-resume">
+  <div class="jury-screen">
+    <div class="jury-step">
+      <div class="jury-card dj-glass-card">
+        <div style="text-align:center">
+          <div class="jury-icon-box primary">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+          <div class="jury-title">Welcome Back</div>
+          <div class="jury-sub">Pick up right where you left off.</div>
+        </div>
+        <div class="progress-stats-card">
+          <div class="progress-stats-grid">
+            <div class="progress-stat">
+              <span class="progress-stat-label">Completed</span>
+              <span class="progress-stat-value">7 / 12</span>
+            </div>
+            <div class="progress-stat">
+              <span class="progress-stat-label">Last Active</span>
+              <span class="progress-stat-value" style="font-size:15px">12 min ago</span>
+            </div>
+          </div>
+          <div class="jury-progress-bar"><div class="jury-progress-fill" style="width:58%"></div></div>
+          <div class="progress-pct">58% complete</div>
+        </div>
+        <button class="btn-landing-primary">
+          Continue Evaluation
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ EVAL ═══════════════ -->
+<div class="screen" id="eval">
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%)">
+    <div class="eval-workspace">
+      <div class="eval-header">
+        <div class="eval-juror">
+          <div class="eval-juror-avatar">JS</div>
+          <div>
+            <div class="eval-juror-name">Jane Smith</div>
+            <div class="eval-juror-meta">Acme Univ. / CS · Spring 2026</div>
+          </div>
+        </div>
+        <div class="eval-save-pill">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          All changes saved
+        </div>
+      </div>
+      <div class="eval-project-tabs">
+        <button class="eval-project-tab"><span class="chk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>Group 1</button>
+        <button class="eval-project-tab"><span class="chk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>Group 2</button>
+        <button class="eval-project-tab active">Group 3 · Active</button>
+        <button class="eval-project-tab">Group 4</button>
+        <button class="eval-project-tab">Group 5</button>
+        <button class="eval-project-tab">Group 6</button>
+      </div>
+      <div class="eval-criterion">
+        <div class="eval-criterion-head">
+          <span class="eval-crit-dot" style="background:#60a5fa"></span>
+          <span class="eval-crit-label">Technical Content</span>
+          <span class="eval-crit-points">24 / 30 pts</span>
+        </div>
+        <div class="eval-score-bar">
+          <div class="eval-score-cell">1</div>
+          <div class="eval-score-cell">2</div>
+          <div class="eval-score-cell">3</div>
+          <div class="eval-score-cell selected">4</div>
+          <div class="eval-score-cell">5</div>
+        </div>
+        <div class="eval-crit-band">Demonstrates solid technical grasp with minor gaps. Methodology is sound and conclusions follow from the evidence presented.</div>
+      </div>
+      <div class="eval-criterion">
+        <div class="eval-criterion-head">
+          <span class="eval-crit-dot" style="background:#4ade80"></span>
+          <span class="eval-crit-label">Written Report</span>
+          <span class="eval-crit-points">22 / 25 pts</span>
+        </div>
+        <div class="eval-score-bar">
+          <div class="eval-score-cell">1</div>
+          <div class="eval-score-cell">2</div>
+          <div class="eval-score-cell">3</div>
+          <div class="eval-score-cell selected">4</div>
+          <div class="eval-score-cell">5</div>
+        </div>
+        <div class="eval-crit-band">Well-structured with clear sections. Prose is mostly precise; a few paragraphs could be tightened.</div>
+      </div>
+      <div class="eval-criterion">
+        <div class="eval-criterion-head">
+          <span class="eval-crit-dot" style="background:#818cf8"></span>
+          <span class="eval-crit-label">Oral Presentation</span>
+          <span class="eval-crit-points">20 / 25 pts</span>
+        </div>
+        <div class="eval-score-bar">
+          <div class="eval-score-cell">1</div>
+          <div class="eval-score-cell">2</div>
+          <div class="eval-score-cell selected">3</div>
+          <div class="eval-score-cell">4</div>
+          <div class="eval-score-cell">5</div>
+        </div>
+        <div class="eval-crit-band">Clear delivery with good pacing. Slides are readable; Q&A responses are generally accurate.</div>
+      </div>
+      <div class="eval-criterion">
+        <div class="eval-criterion-head">
+          <span class="eval-crit-dot" style="background:#fbbf24"></span>
+          <span class="eval-crit-label">Innovation</span>
+          <span class="eval-crit-points">— / 20 pts</span>
+        </div>
+        <div class="eval-score-bar">
+          <div class="eval-score-cell">1</div>
+          <div class="eval-score-cell">2</div>
+          <div class="eval-score-cell">3</div>
+          <div class="eval-score-cell">4</div>
+          <div class="eval-score-cell">5</div>
+        </div>
+        <div class="eval-crit-band" style="color:var(--text-quaternary)">Select a score to view the band description.</div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button class="btn" style="background:var(--input-bg-hover);border:1px solid var(--border-strong);color:var(--text-secondary);flex:0 0 auto">← Previous</button>
+        <button class="btn btn-primary" style="flex:1">Save & Next Group →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DONE ═══════════════ -->
+<div class="screen" id="done">
+  <div class="jury-screen">
+    <div class="jury-step">
+      <div class="jury-card dj-glass-card">
+        <div style="text-align:center">
+          <div class="dj-done-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="dj-done-status-pill">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            Evaluation Submitted
+          </div>
+          <div class="dj-h1">Thank you, Jane!</div>
+          <div class="dj-sub">You've evaluated all 12 groups.</div>
+        </div>
+        <div class="dj-done-divider"></div>
+        <div class="dj-feedback-card">
+          <div class="dj-feedback-title">How was your experience?</div>
+          <div class="dj-stars">
+            <button class="dj-star-btn active"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+            <button class="dj-star-btn active"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+            <button class="dj-star-btn active"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+            <button class="dj-star-btn active"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+            <button class="dj-star-btn"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+          </div>
+          <div class="dj-star-label">Great — thanks for the feedback!</div>
+          <textarea class="form-input" rows="3" placeholder="Anything we should improve?"></textarea>
+          <button class="dj-btn-secondary" style="margin-top:8px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Send feedback
+          </button>
+        </div>
+        <div class="dj-done-rankings">
+          <div class="dj-done-rankings-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+            <div class="dj-done-rankings-title">Live Rankings</div>
+            <span class="dj-live-badge"><span class="dj-live-dot"></span>Live</span>
+          </div>
+          <div class="dj-rank-row">
+            <div class="dj-rank-num gold">1</div>
+            <div class="dj-rank-name">Quantum Drone Swarm</div>
+            <div class="dj-rank-bar"><div class="dj-rank-bar-fill" style="width:96%"></div></div>
+            <div class="dj-rank-score">94.2</div>
+          </div>
+          <div class="dj-rank-row">
+            <div class="dj-rank-num">2</div>
+            <div class="dj-rank-name">AI Tutor for Kids</div>
+            <div class="dj-rank-bar"><div class="dj-rank-bar-fill" style="width:88%"></div></div>
+            <div class="dj-rank-score">88.7</div>
+          </div>
+          <div class="dj-rank-row">
+            <div class="dj-rank-num">3</div>
+            <div class="dj-rank-name">Solar Farm Optimizer</div>
+            <div class="dj-rank-bar"><div class="dj-rank-bar-fill" style="width:82%"></div></div>
+            <div class="dj-rank-score">82.5</div>
+          </div>
+          <div class="dj-rank-row">
+            <div class="dj-rank-num">4</div>
+            <div class="dj-rank-name">Braille Reader Glove</div>
+            <div class="dj-rank-bar"><div class="dj-rank-bar-fill" style="width:76%"></div></div>
+            <div class="dj-rank-score">76.3</div>
+          </div>
+        </div>
+        <button class="dj-done-edit-req-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+          Request edit access to revise scores
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ═══════════════ Navigator Logic ═══════════════
+const screens = document.querySelectorAll('.screen');
+const navBtns = document.querySelectorAll('.nav-btn');
+
+function showScreen(id){
+  screens.forEach(s => s.classList.toggle('active', s.id === id));
+  navBtns.forEach(b => b.classList.toggle('active', b.dataset.target === id));
+  window.scrollTo(0,0);
+  try { history.replaceState(null, '', '#' + id); } catch(e){}
+}
+navBtns.forEach(btn => btn.addEventListener('click', () => showScreen(btn.dataset.target)));
+
+// Deep link on load
+(function(){
+  const hash = location.hash.replace('#','');
+  if (hash && document.getElementById(hash)) showScreen(hash);
+  else {
+    const first = document.querySelector('.screen.active')?.id || 'login';
+    navBtns.forEach(b => b.classList.toggle('active', b.dataset.target === first));
+  }
+})();
+
+// ═══════════════ Drag navigator ═══════════════
+(function(){
+  const nav = document.getElementById('nav');
+  const header = document.getElementById('nav-header');
+  const collapse = document.getElementById('nav-collapse');
+  let dragging = false, startX=0, startY=0, startLeft=0, startTop=0;
+
+  header.addEventListener('mousedown', (e) => {
+    if (e.target.closest('#nav-collapse')) return;
+    dragging = true;
+    const r = nav.getBoundingClientRect();
+    startX = e.clientX; startY = e.clientY;
+    startLeft = r.left; startTop = r.top;
+    nav.style.right = 'auto';
+    document.body.style.userSelect = 'none';
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const nx = Math.max(0, Math.min(window.innerWidth - nav.offsetWidth, startLeft + (e.clientX - startX)));
+    const ny = Math.max(0, Math.min(window.innerHeight - 40, startTop + (e.clientY - startY)));
+    nav.style.left = nx + 'px';
+    nav.style.top = ny + 'px';
+  });
+  document.addEventListener('mouseup', () => {
+    dragging = false;
+    document.body.style.userSelect = '';
+  });
+
+  collapse.addEventListener('click', () => {
+    nav.classList.toggle('collapsed');
+    const icon = collapse.querySelector('svg');
+    icon.innerHTML = nav.classList.contains('collapsed')
+      ? '<polyline points="6 9 12 15 18 9"/>'
+      : '<polyline points="18 15 12 9 6 15"/>';
+  });
+
+  // Theme toggle
+  const themeBtn = document.getElementById('nav-theme');
+  const themeIcon = document.getElementById('theme-icon');
+  const MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  const SUN  = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+
+  function applyTheme(t){
+    const isLight = t === 'light';
+    document.body.classList.toggle('light-mode', isLight);
+    themeIcon.innerHTML = isLight ? SUN : MOON;
+    try { localStorage.setItem('vera-preview-theme', t); } catch(e){}
+  }
+  const saved = (()=>{ try { return localStorage.getItem('vera-preview-theme'); } catch(e){ return null; } })();
+  applyTheme(saved || 'dark');
+  themeBtn.addEventListener('click', () => {
+    applyTheme(document.body.classList.contains('light-mode') ? 'dark' : 'light');
+  });
+})();
+
+// ═══════════════ Arrival QR grid fill ═══════════════
+(function(){
+  const grid = document.getElementById('qr-grid');
+  if (!grid) return;
+  const pattern = [
+    1,1,1,0,1,1,1,
+    1,0,1,0,1,0,1,
+    1,0,1,1,0,1,1,
+    0,1,0,1,1,0,0,
+    1,0,1,0,1,1,1,
+    1,0,0,1,0,0,1,
+    1,1,1,0,1,0,1,
+  ];
+  pattern.forEach(bit => {
+    const c = document.createElement('div');
+    c.className = 'ja-qr-cell' + (bit ? '' : ' blank');
+    grid.appendChild(c);
+  });
+})();
+</script>
+
+</body>
+</html>
