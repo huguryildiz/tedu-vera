@@ -17,14 +17,22 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: './src/test/setup.js',
-    exclude: ['**/node_modules/**', '**/e2e/**', '**/__tests__.archive/**', '**/sql/__tests__.archive/**', '**/*.archive.*'],
-    watchExclude: ['**/e2e/**', '**/__tests__.archive/**'],
+    exclude: ['**/node_modules/**', '**/e2e/**', '**/__tests__.archive/**', '**/sql/__tests__.archive/**', '**/*.archive.*', '**/supabase/functions/**', '**/sql/tests/**'],
+    watchExclude: ['**/e2e/**', '**/__tests__.archive/**', '**/supabase/functions/**', '**/sql/tests/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
       include: ['src/**/*.{js,jsx,ts,tsx}'],
       exclude: ['src/test/**', 'src/**/__tests__.archive/**', 'src/main.jsx', 'src/router.jsx'],
-      thresholds: { lines: 0, functions: 0, branches: 0, statements: 0 },
+      thresholds: {
+        lines: 30,
+        functions: 20,
+        branches: 45,
+        statements: 30,
+        'src/shared/hooks/**': { lines: 70, functions: 50, branches: 70, statements: 70 },
+        'src/shared/storage/**': { lines: 80, functions: 65, branches: 50, statements: 80 },
+        'src/shared/lib/**': { lines: 55, functions: 70, branches: 75, statements: 55 },
+      },
     },
   },
   build: {
