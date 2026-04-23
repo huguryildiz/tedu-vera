@@ -2823,5 +2823,192 @@
     "risk": "A broken export page means semester data cannot be extracted after evaluation closes.",
     "coverageStrength": "Smoke",
     "severity": "normal"
+  },
+  {
+    "id": "admin.criteria.page.render",
+    "module": "Admin / Criteria",
+    "area": "CriteriaPage",
+    "story": "CriteriaPage renders without crash",
+    "scenario": "page renders with no criteria and no period selected",
+    "whyItMatters": "Criteria management is where admins configure evaluation weights and rubric bands.",
+    "risk": "A broken page prevents all criteria setup — evaluation cannot start.",
+    "coverageStrength": "Smoke",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.criteria.form.init",
+    "module": "Admin / Criteria",
+    "area": "useCriteriaForm",
+    "story": "useCriteriaForm initializes rows from template",
+    "scenario": "given a template with 2 criteria, rows are initialized with correct label and max values",
+    "whyItMatters": "Form initialization from template is the entry point for every criteria edit session.",
+    "risk": "Wrong initialization would corrupt existing criteria on first edit.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.criteria.form.empty",
+    "module": "Admin / Criteria",
+    "area": "useCriteriaForm",
+    "story": "useCriteriaForm seeds one empty row when template is empty",
+    "scenario": "given an empty template array, rows has length 1 with empty label",
+    "whyItMatters": "Empty template seeding ensures the UI always has a row to start editing.",
+    "risk": "Zero rows would cause a blank editor with no way to add the first criterion.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.criteria.drawer.single",
+    "module": "Admin / Criteria",
+    "area": "EditSingleCriterionDrawer",
+    "story": "EditSingleCriterionDrawer renders when open",
+    "scenario": "drawer renders with open=true and a criterion index",
+    "whyItMatters": "Single criterion editor is the main edit entry point for every criterion.",
+    "risk": "A broken drawer prevents all criterion detail edits.",
+    "coverageStrength": "Smoke",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.criteria.drawer.starter",
+    "module": "Admin / Criteria",
+    "area": "StarterCriteriaDrawer",
+    "story": "StarterCriteriaDrawer renders template and copy-from-period options",
+    "scenario": "drawer renders with open=true showing the starter options",
+    "whyItMatters": "Starter criteria drawer is the flow entry for new-period criteria setup.",
+    "risk": "A broken drawer forces admins to build all criteria from scratch manually.",
+    "coverageStrength": "Smoke",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.criteria.drawer.outcomes",
+    "module": "Admin / Criteria",
+    "area": "ProgrammeOutcomesManagerDrawer",
+    "story": "ProgrammeOutcomesManagerDrawer renders when open",
+    "scenario": "drawer renders with open=true and an outcomes list",
+    "whyItMatters": "Outcome mapping drawer is where criteria-to-outcome mappings are managed.",
+    "risk": "A broken drawer prevents accreditation outcome mapping — required for MÜDEK/ABET.",
+    "coverageStrength": "Smoke",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.outcomes.page.render",
+    "module": "Admin / Outcomes",
+    "area": "OutcomesPage",
+    "story": "OutcomesPage renders without crash",
+    "scenario": "page renders with no outcomes and no period selected",
+    "whyItMatters": "Outcomes page manages programme outcomes for accreditation framework coverage.",
+    "risk": "A broken page prevents all outcome management — accreditation tracking fails.",
+    "coverageStrength": "Smoke",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.outcomes.drawer.add",
+    "module": "Admin / Outcomes",
+    "area": "AddOutcomeDrawer",
+    "story": "AddOutcomeDrawer renders when open",
+    "scenario": "drawer renders with open=true and empty existing outcomes",
+    "whyItMatters": "Add outcome drawer is how admins create new programme outcomes.",
+    "risk": "A broken drawer means no new outcomes can be added.",
+    "coverageStrength": "Smoke",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.outcomes.drawer.detail",
+    "module": "Admin / Outcomes",
+    "area": "OutcomeDetailDrawer",
+    "story": "OutcomeDetailDrawer renders outcome data when open",
+    "scenario": "drawer renders with open=true and an outcome object showing code and description",
+    "whyItMatters": "Outcome detail drawer shows the full outcome record and allows editing.",
+    "risk": "A broken drawer prevents editing existing outcomes.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.settings.page.render",
+    "module": "Admin / Settings",
+    "area": "SettingsPage",
+    "story": "SettingsPage renders without crash",
+    "scenario": "page renders with mocked auth and shows Settings heading",
+    "whyItMatters": "Settings is where admins manage their profile, password, and security policy.",
+    "risk": "A broken settings page prevents all profile and security updates.",
+    "coverageStrength": "Smoke",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.settings.drawer.password",
+    "module": "Admin / Settings",
+    "area": "ChangePasswordDrawer",
+    "story": "ChangePasswordDrawer renders password fields when open",
+    "scenario": "drawer renders with open=true and shows current and new password inputs",
+    "whyItMatters": "Password change drawer is the security-critical password update flow.",
+    "risk": "A broken drawer prevents admins from changing their password.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.settings.drawer.profile",
+    "module": "Admin / Settings",
+    "area": "EditProfileDrawer",
+    "story": "EditProfileDrawer renders profile fields when open",
+    "scenario": "drawer renders with open=true and profile data showing the display name",
+    "whyItMatters": "Profile edit drawer manages display name and email updates.",
+    "risk": "A broken drawer prevents profile updates for all admins.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.settings.hook.profile",
+    "module": "Admin / Settings",
+    "area": "useProfileEdit",
+    "story": "useProfileEdit initializes form from auth user",
+    "scenario": "hook initializes displayName and email from auth user; isDirty starts false",
+    "whyItMatters": "Profile edit hook manages the form state for the profile editor.",
+    "risk": "Wrong initialization would overwrite user data on first save.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.setup.page.render",
+    "module": "Admin / Setup Wizard",
+    "area": "SetupWizardPage",
+    "story": "SetupWizardPage renders without crash",
+    "scenario": "page renders showing the first wizard step welcome card",
+    "whyItMatters": "Setup wizard is the critical first-run onboarding flow for new tenant admins.",
+    "risk": "A broken wizard means new tenants cannot complete initial configuration.",
+    "coverageStrength": "Smoke",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.setup.wizard.step.init",
+    "module": "Admin / Setup Wizard",
+    "area": "useSetupWizard",
+    "story": "useSetupWizard derives resume step from data",
+    "scenario": "with no periods, starts at step 1; with period but no criteria, starts at step 3",
+    "whyItMatters": "Correct resume-step derivation ensures the wizard doesn't regress or skip steps.",
+    "risk": "Wrong step derivation could skip required configuration or loop the user.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.setup.wizard.step.navigate",
+    "module": "Admin / Setup Wizard",
+    "area": "useSetupWizard",
+    "story": "useSetupWizard nextStep / prevStep / goToStep navigate correctly",
+    "scenario": "nextStep increments, prevStep decrements, goToStep jumps; all clamp to 1-5",
+    "whyItMatters": "Navigation is the core state machine of the wizard; wrong transitions break the flow.",
+    "risk": "A broken step machine could skip mandatory steps or allow going out of bounds.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.setup.wizard.step.completed",
+    "module": "Admin / Setup Wizard",
+    "area": "useSetupWizard",
+    "story": "useSetupWizard marks steps completed based on data presence",
+    "scenario": "when period, criteria, projects, jurors all present, completedSteps includes 2 3 4 5",
+    "whyItMatters": "Completion ticks in the stepper guide admins through the wizard flow.",
+    "risk": "Wrong completion state shows false ticks or hides progress, confusing admins.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
   }
 ]
