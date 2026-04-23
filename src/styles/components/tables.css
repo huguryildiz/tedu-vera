@@ -29,7 +29,6 @@ tbody tr{transition:background .1s}
 .tab{padding:9px 16px;font-size:12px;font-weight:500;color:var(--text-tertiary);cursor:pointer;border-bottom:2px solid transparent;transition:color .12s,border-color .12s}
 .tab:hover{color:var(--text-secondary)}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
-.sub-page{display:none}
 .sub-page.active{display:block}
 
 /* Non-portrait table contract: always keep wrappers horizontally scrollable. */
@@ -60,15 +59,9 @@ tbody tr{transition:background .1s}
 .score-missing{background:var(--surface-1);color:var(--text-tertiary)}
 
 /* ─── ACCREDITATION OUTCOMES ─── */
-.acc-summary{display:flex;gap:0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden}
-.acc-summary-item{flex:1;padding:14px 18px;border-right:1px solid var(--border);position:relative}
-.acc-summary-item:last-child{border-right:none}
-.acc-summary-value{font-family:var(--mono);font-size:22px;font-weight:800;letter-spacing:-0.5px;color:var(--text-primary);line-height:1}
-.acc-summary-label{font-size:9.5px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.7px;margin-top:4px}
 .acc-summary-item.direct .acc-summary-value{color:var(--success)}
 .acc-summary-item.indirect .acc-summary-value{color:var(--warning)}
 .acc-summary-item.unmapped .acc-summary-value{color:var(--text-tertiary)}
-.acc-summary-item .acc-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;vertical-align:middle;position:relative;top:-1px}
 .acc-summary-item.direct .acc-dot{background:var(--success)}
 .acc-summary-item.indirect .acc-dot{background:var(--warning)}
 .acc-summary-item.unmapped .acc-dot{background:var(--text-quaternary)}
@@ -121,19 +114,8 @@ tbody tr{transition:background .1s}
 .acc-detail-row.open{display:table-row}
 .acc-detail-row td{padding:0 14px 14px 14px;border-bottom:1px solid var(--border)}
 .acc-detail-inner{padding:14px 16px;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:10px}
-.acc-detail-lang{display:flex;gap:10px;align-items:flex-start;padding:7px 0;font-size:12px;line-height:1.55;color:var(--text-secondary)}
-.acc-detail-lang:first-child{padding-top:0}
-.acc-detail-lang + .acc-detail-lang{border-top:1px solid var(--border)}
-.acc-detail-flag{font-size:13px;flex-shrink:0;line-height:1.55}
-.acc-detail-text{flex:1;min-width:0}
 .acc-detail-section-label{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-tertiary);margin-bottom:6px;margin-top:14px}
 .acc-detail-section-label:first-child{margin-top:0}
-.acc-detail-indirect-note{display:flex;align-items:flex-start;gap:7px;padding:8px 10px;border-radius:var(--radius-sm);background:rgba(217,119,6,0.04);border:1px solid rgba(217,119,6,0.1);margin-top:10px;font-size:11px;color:var(--text-secondary);line-height:1.45}
-.acc-detail-indirect-note svg{width:14px;height:14px;flex-shrink:0;color:var(--warning);margin-top:1px}
-.acc-detail-mapped-crit{display:flex;align-items:center;gap:8px;padding:5px 0}
-.acc-detail-mapped-crit .acc-detail-crit-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.acc-detail-mapped-crit .acc-detail-crit-name{font-size:12px;font-weight:600;color:var(--text-primary)}
-.acc-detail-mapped-crit .acc-detail-crit-meta{font-size:11px;color:var(--text-tertiary)}
 
 /* Accreditation outcome drawer */
 .acc-drawer-outcome-code{font-family:var(--mono);font-size:13px;font-weight:700;padding:4px 10px;border-radius:6px;background:var(--accent-soft);color:var(--accent);display:inline-block;letter-spacing:0.3px}
@@ -142,8 +124,6 @@ tbody tr{transition:background .1s}
 .acc-drawer-field textarea{width:100%;min-height:64px;padding:9px 12px;border:1px solid var(--field-border);border-radius:var(--field-radius);background:var(--field-bg);font-family:var(--font);font-size:12.5px;line-height:1.5;color:var(--text-primary);resize:vertical;transition:border-color .15s,box-shadow .15s}
 .acc-drawer-field textarea:focus{outline:none;border-color:var(--accent);box-shadow:var(--field-focus-ring)}
 .acc-drawer-criteria-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.acc-drawer-crit-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;font-size:11.5px;font-weight:600;border:1px solid var(--border);background:var(--surface-1);color:var(--text-secondary);cursor:pointer;transition:all .15s;user-select:none}
-.acc-drawer-crit-chip:hover{border-color:var(--accent);background:var(--accent-soft)}
 .acc-drawer-crit-chip.selected{border-color:rgba(59,130,246,0.3);background:var(--accent-soft);color:var(--accent)}
 .acc-drawer-crit-chip.selected .acc-crit-check{display:inline-flex}
 .acc-drawer-crit-chip .acc-crit-check{display:none;width:14px;height:14px;align-items:center;justify-content:center}

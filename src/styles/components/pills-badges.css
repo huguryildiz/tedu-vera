@@ -37,12 +37,10 @@ body:not(.dark-mode) .consensus-sub-disputed .consensus-sub-sigma{color:#e11d48}
 .badge-warning{background:var(--warning-soft);color:var(--warning);border-color:rgba(217,119,6,0.12)}
 .badge-danger{background:var(--danger-soft);color:var(--danger);border-color:rgba(225,29,72,0.1)}
 .badge-neutral{background:var(--surface-1);color:var(--text-secondary);border-color:var(--border)}
-.badge-editing{background:rgba(139,92,246,0.08);color:#8b5cf6;border-color:rgba(139,92,246,0.15)}
 .dark-mode .badge-editing{background:rgba(139,92,246,0.1);color:#c4b5fd;border-color:rgba(167,139,250,0.22)}
 .status-dot{width:6px;height:6px;border-radius:50%;display:inline-block}
 .dot-success{background:var(--success)}
 .dot-warning{background:var(--warning)}
-.dot-danger{background:var(--danger)}
 
 /* ── Consensus badges ── */
 .consensus-cell{position:relative}
@@ -83,11 +81,6 @@ body:not(.dark-mode) .consensus-sub-disputed .consensus-sub-sigma{color:#e11d48}
 .consensus-disputed::before{background:#fb7185;box-shadow:0 0 4px rgba(251,113,133,0.55)}
 .consensus-cell:hover .consensus-disputed{box-shadow:0 2px 12px rgba(244,63,94,0.18)}
 /* Legacy alias */
-.consensus-low{
-  background:linear-gradient(135deg,rgba(244,63,94,0.12),rgba(225,29,72,0.06));
-  color:#fb7185;border:1px solid rgba(244,63,94,0.24);
-}
-.consensus-low::before{background:#fb7185}
 .consensus-sub{
   display:none;position:absolute;top:calc(100% + 8px);left:50%;
   transform:translateX(-50%) translateY(3px);

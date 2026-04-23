@@ -37,21 +37,9 @@
   }
 
   /* Inner parts (optional helpers, not required by all pages) */
-  .mcard-body { padding: 12px 14px 10px; }
-
-  .mcard-divider {
-    height: 1px;
-    background: var(--border);
-    opacity: 0.7;
-  }
   .dark-mode .mcard-divider {
     background: rgba(127, 153, 205, 0.20);
     opacity: 1;
-  }
-
-  .mcard-footer {
-    border-top: 1px solid var(--border);
-    background: var(--surface-1);
   }
   .dark-mode .mcard-footer {
     background: rgba(255, 255, 255, 0.03);
@@ -142,9 +130,7 @@
    ───────────────────────────────────────────────────────────── */
 .mcard,
 .hm-card,
-.rmc-card,
 .crt-mobile-card,
-.acc-m-card,
 .organizations-table tbody tr,
 .entry-history-table tbody tr,
 .pin-lock-table tbody tr,

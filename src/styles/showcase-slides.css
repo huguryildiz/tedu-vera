@@ -1,19 +1,4 @@
 /* ═══ Landing Sandbox Button ═══ */
-.landing-sandbox-btn{
-  display:inline-flex;align-items:center;gap:8px;
-  margin-top:20px;padding:10px 22px;border-radius:12px;border:none;
-  background:linear-gradient(135deg,#16a34a,#15803d);
-  color:#fff;font-family:var(--font);font-size:13px;font-weight:600;
-  cursor:pointer;transition:all 0.25s;
-  box-shadow:0 4px 14px rgba(22,163,74,0.25),inset 0 1px 0 rgba(255,255,255,0.15);
-  letter-spacing:-0.01em;
-}
-.landing-sandbox-btn:hover{
-  background:linear-gradient(135deg,#15803d,#166534);
-  box-shadow:0 6px 20px rgba(22,163,74,0.35),inset 0 1px 0 rgba(255,255,255,0.15);
-  transform:translateY(-1px);
-}
-.landing-sandbox-btn svg{opacity:0.85}
 body:not(.dark-mode) .landing-sandbox-btn{
   box-shadow:0 4px 14px rgba(22,163,74,0.2),0 0 0 1px rgba(22,163,74,0.15);
 }
@@ -46,65 +31,10 @@ body:not(.dark-mode) .landing-trust-sandbox{color:#94a3b8}
 .ps-feature-icon{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
 
 /* ── Jury Flow slide ── */
-.ps-steps-row{display:flex;align-items:center;gap:0;margin-bottom:14px;flex-wrap:wrap}
-.ps-step-chip{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:7px;font-size:10.5px;font-weight:500}
-.ps-step-done{color:#4ade80;background:rgba(34,197,94,0.08)}
-.ps-step-current{color:#93c5fd;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2)}
-.ps-step-upcoming{color:#475569}
-.ps-step-arrow{color:#334155;margin:0 3px;font-size:9px}
-.ps-scoring-card{background:rgba(255,255,255,0.02);border:1px solid rgba(148,163,184,0.05);border-radius:9px;padding:12px 14px}
-.ps-scoring-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
-.ps-scoring-project{font-size:12px;font-weight:600;color:#e2e8f0}
-.ps-scoring-badges{display:flex;gap:5px}
-.ps-criteria-rows{display:flex;flex-direction:column;gap:7px}
-.ps-criteria-row{display:flex;align-items:center;gap:9px}
-.ps-criteria-label{font-size:10.5px;font-weight:500;width:62px;flex-shrink:0}
-.ps-criteria-track{flex:1;height:5px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden}
-.ps-criteria-fill{height:100%;border-radius:3px}
-.ps-criteria-score{font-family:var(--mono);font-size:10.5px;font-weight:600;color:#cbd5e1;width:40px;text-align:right}
 
 /* ── Entry Control slide ── */
-.ps-entry-grid{display:grid;grid-template-columns:110px 1fr;gap:14px}
-.ps-qr-area{display:flex;flex-direction:column;align-items:center;gap:6px}
-.ps-qr-box{width:104px;height:104px;background:#fff;border-radius:8px;padding:6px;position:relative}
-.ps-qr-grid{width:100%;height:100%;display:grid;grid-template-columns:repeat(11,1fr);grid-template-rows:repeat(11,1fr);gap:1px}
-.ps-qr-cell-b{background:#111827;border-radius:1px}
-.ps-qr-cell-w{background:#fff;border-radius:1px}
-.ps-qr-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:7px;font-weight:800;color:#3b82f6;background:#fff;padding:1px 3px;border-radius:2px}
-.ps-qr-label{font-size:8.5px;color:#64748b;font-weight:500}
-.ps-sessions{width:100%}
-.ps-sessions-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.ps-sessions-title{font-size:10.5px;font-weight:600;color:#94a3b8}
-.ps-sessions-count{font-size:9.5px;color:#4ade80;font-weight:500}
-.ps-sessions-cols{display:grid;grid-template-columns:1fr 66px 52px;gap:6px;padding-bottom:5px;border-bottom:1px solid rgba(148,163,184,0.05);margin-bottom:4px}
-.ps-sessions-cols span{font-size:8.5px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.3px}
-.ps-session-row{display:grid;grid-template-columns:1fr 66px 52px;gap:6px;padding:4px 0;align-items:center}
-.ps-session-juror{display:flex;align-items:center;gap:6px}
-.ps-session-avatar{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0}
-.ps-session-name{font-size:10.5px;color:#cbd5e1;font-weight:500}
-.ps-session-time{font-family:var(--mono);font-size:9.5px;color:#64748b}
-.ps-token-row{display:flex;gap:6px;margin-top:8px}
-.ps-token-badge{font-size:9.5px;font-weight:500;padding:3px 9px;border-radius:6px;display:flex;align-items:center;gap:4px}
-.ps-token-active{color:#4ade80;background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.1)}
-.ps-token-expiry{color:#fbbf24;background:rgba(251,191,36,0.05);border:1px solid rgba(251,191,36,0.08)}
 
 /* ── Criteria & Outcomes slide ── */
-.ps-criteria-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.ps-crit-card{background:rgba(255,255,255,0.02);border:1px solid rgba(148,163,184,0.05);border-radius:7px;padding:10px;position:relative;overflow:hidden}
-.ps-crit-accent{position:absolute;top:0;left:0;width:3px;height:100%}
-.ps-crit-name{font-size:11px;font-weight:600;color:#e2e8f0;margin-bottom:3px}
-.ps-crit-range{font-family:var(--mono);font-size:9.5px;color:#64748b;margin-bottom:5px}
-.ps-crit-bands{display:flex;gap:2px}
-.ps-crit-band{flex:1;height:3.5px;border-radius:2px}
-.ps-mapping-box{background:rgba(255,255,255,0.02);border:1px solid rgba(148,163,184,0.05);border-radius:7px;padding:10px}
-.ps-mapping-title{font-size:9.5px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:7px}
-.ps-mapping-row{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:10.5px;flex-wrap:wrap}
-.ps-mapping-code{font-family:var(--mono);font-size:9.5px;font-weight:600;color:#93c5fd;background:rgba(59,130,246,0.07);padding:2px 6px;border-radius:3px}
-.ps-mapping-arrow{color:#334155;font-size:9px}
-.ps-mapping-pill{font-size:9.5px;font-weight:500;padding:2px 6px;border-radius:3px}
-.ps-mapping-type{font-size:8.5px;font-weight:600;padding:1px 5px;border-radius:3px;margin-left:auto}
-.ps-mapping-direct{color:#4ade80;background:rgba(34,197,94,0.07)}
-.ps-mapping-indirect{color:#fbbf24;background:rgba(251,191,36,0.07)}
 
 /* ── Management slide ── */
 .ps-mgmt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -200,9 +130,7 @@ body:not(.dark-mode) .ps-mini-bar-score{color:#0f172a}
     grid-template-columns:220px 1fr;gap:20px;min-height:280px;
   }
   .ps-kpi-strip{grid-template-columns:repeat(2,1fr)}
-  .ps-mgmt-grid,.ps-eval-grid,.ps-criteria-grid{grid-template-columns:1fr}
-  .ps-entry-grid{grid-template-columns:1fr}
-  .ps-qr-area{flex-direction:row;gap:12px}
+  .ps-mgmt-grid,.ps-eval-grid{grid-template-columns:1fr}
   .ps-card-features{gap:4px}
 }
 @media(max-width:700px){
@@ -210,12 +138,9 @@ body:not(.dark-mode) .ps-mini-bar-score{color:#0f172a}
     display:flex !important;flex-direction:column !important;
     grid-template-columns:unset;min-height:unset;
   }
-  .ps-criteria-grid{grid-template-columns:1fr}
 }
 @media(max-width:600px){
   .ps-kpi-strip{grid-template-columns:1fr 1fr}
-  .ps-steps-row{gap:2px}
-  .ps-step-chip{padding:4px 8px;font-size:9.5px}
   .ps-mini-bars{height:50px}
   .ps-mini-heatmap{font-size:7px;gap:2px}
   .ps-heatmap-corner{width:18px}
@@ -224,10 +149,6 @@ body:not(.dark-mode) .ps-mini-bar-score{color:#0f172a}
   .ps-review-score{font-size:9px}
   .ps-card-features{display:none}
   .ps-mgmt-grid{grid-template-columns:1fr}
-  .ps-session-name{font-size:9.5px}
-  .ps-sessions-cols{grid-template-columns:1fr 50px 44px}
-  .ps-session-row{grid-template-columns:1fr 50px 44px}
-  .ps-qr-box{width:80px;height:80px}
   .ps-kpi-value{font-size:15px}
 }
 @media(max-width:440px){
@@ -236,21 +157,6 @@ body:not(.dark-mode) .ps-mini-bar-score{color:#0f172a}
   .ps-kpi-card{padding:8px}
   .ps-kpi-value{font-size:14px}
   .ps-kpi-label{font-size:8.5px}
-  .ps-step-chip{padding:3px 6px;font-size:9px}
-  .ps-step-arrow{font-size:8px;margin:0 1px}
-  .ps-scoring-card{padding:10px}
-  .ps-criteria-label{width:50px;font-size:9.5px}
-  .ps-criteria-score{font-size:9.5px;width:36px}
-  .ps-entry-grid{gap:10px}
-  .ps-qr-box{width:70px;height:70px}
-  .ps-sessions-cols,.ps-session-row{grid-template-columns:1fr 44px 40px;gap:4px}
-  .ps-session-avatar{width:16px;height:16px;font-size:7px}
-  .ps-session-name{font-size:9px}
-  .ps-token-row{flex-wrap:wrap}
-  .ps-crit-card{padding:8px}
-  .ps-crit-name{font-size:10px}
-  .ps-mapping-row{gap:4px;font-size:9.5px}
-  .ps-mapping-code{font-size:8.5px;padding:1px 4px}
   .ps-juror-avatar{width:18px;height:18px;font-size:7px}
   .ps-juror-name{font-size:9.5px}
   .ps-project-code{font-size:8.5px}

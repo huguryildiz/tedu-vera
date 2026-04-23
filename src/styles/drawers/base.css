@@ -403,8 +403,6 @@ textarea.fs-input { height: auto; padding: 9px var(--field-px, 12px); }
 .fs-badge.neutral { background: var(--surface-1); color: var(--text-tertiary); border-color: var(--border); }
 
 /* ─── Profile card ─── */
-.fs-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--surface-1); }
-.fs-avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 14px; font-weight: 700; flex-shrink: 0; }
 .fs-profile-info .name { font-weight: 700; font-size: 13.5px; }
 .fs-profile-info .meta { font-size: 11.5px; color: var(--text-tertiary); display: flex; align-items: center; gap: 6px; }
 
@@ -442,9 +440,6 @@ textarea.fs-input { height: auto; padding: 9px var(--field-px, 12px); }
 .crt-weight-summary-value span { font-size: 12px; font-weight: 500; color: var(--text-tertiary); margin-left: 2px; }
 .crt-weight-summary-track { flex: 0 0 120px; height: 6px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
 .crt-weight-summary-fill { height: 100%; border-radius: 99px; transition: width .3s; }
-
-.crt-card { border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 8px; background: var(--bg-card); transition: all .15s; box-shadow: var(--shadow-sm); }
-.crt-card:hover { border-color: var(--border-strong); }
 .crt-card:not(.crt-expanded) > :not(.crt-card-header) { display: none; }
 .crt-card:not(.crt-expanded) { padding-bottom: 14px; }
 .crt-card:not(.crt-expanded) .crt-card-header { margin-bottom: 0; }
@@ -456,9 +451,6 @@ textarea.fs-input { height: auto; padding: 9px var(--field-px, 12px); }
 .crt-card-name { font-weight: 700; font-size: 13px; letter-spacing: -0.1px; color: var(--text-primary); }
 .crt-card-header-right { display: flex; align-items: center; gap: 8px; }
 .crt-card-pts { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text-tertiary); padding: 3px 10px; border-radius: 6px; background: var(--surface-1); border: 1px solid var(--border); letter-spacing: 0.2px; }
-.crt-card-toggle { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; color: var(--text-tertiary); cursor: pointer; flex-shrink: 0; transition: all .15s; }
-.crt-card-toggle:hover { background: var(--surface-1); color: var(--text-secondary); border-color: var(--border-strong); }
-.crt-card-toggle svg { width: 13px; height: 13px; transition: transform .2s cubic-bezier(.4, 0, .2, 1); }
 .crt-card-toggle.open svg { transform: rotate(90deg); }
 
 .crt-field-grid { display: grid; grid-template-columns: 1fr 80px 80px; gap: 10px; margin-bottom: 4px; }
@@ -474,11 +466,6 @@ textarea.fs-input { height: auto; padding: 9px var(--field-px, 12px); }
 .crt-field-input:focus { border-color: var(--accent); box-shadow: var(--field-focus-ring, 0 0 0 3px var(--accent-ring)); }
 .crt-field-input::placeholder { color: var(--text-quaternary); }
 textarea.crt-field-input { height: auto; padding: 8px 10px; }
-
-.crt-fw-tabs { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; margin-bottom: 10px; }
-.crt-fw-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 10px; font-size: 10px; font-weight: 600; color: var(--text-tertiary); background: var(--surface-1); border: none; border-right: 1px solid var(--border); cursor: pointer; transition: all .12s; font-family: var(--font); white-space: nowrap; }
-.crt-fw-tab:last-child { border-right: none; }
-.crt-fw-tab:hover { color: var(--text-secondary); background: var(--bg-card); }
 .crt-fw-tab.active { color: var(--accent); background: var(--accent-soft); font-weight: 700; }
 
 .crt-outcome-pills { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -494,35 +481,13 @@ textarea.crt-field-input { height: auto; padding: 8px 10px; }
 .crt-add-criterion-btn svg { width: 14px; height: 14px; }
 
 /* Framework type cards (add-framework drawer) */
-.fs-type-card { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--bg-card); cursor: pointer; transition: all .15s; }
-.fs-type-card:hover { border-color: var(--border-strong); background: var(--surface-1); }
 .fs-type-card.selected { border-color: var(--accent); background: var(--accent-soft); }
-.fs-type-card-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--surface-1); display: grid; place-items: center; flex-shrink: 0; }
 .fs-type-card.selected .fs-type-card-icon { background: rgba(59, 130, 246, 0.12); }
-.fs-type-card-icon svg { width: 16px; height: 16px; color: var(--text-tertiary); }
 .fs-type-card.selected .fs-type-card-icon svg { color: var(--accent); }
-.fs-type-card-info { flex: 1; min-width: 0; }
-.fs-type-card-name { font-size: 12.5px; font-weight: 700; color: var(--text-primary); }
-.fs-type-card-desc { font-size: 11px; color: var(--text-tertiary); margin-top: 1px; }
-.fs-type-card-radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: grid; place-items: center; }
 .fs-type-card.selected .fs-type-card-radio { border-color: var(--accent); }
 .fs-type-card.selected .fs-type-card-radio::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
 
 /* Session card — premium identity card */
-.fs-session-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--border);
-  background: var(--bg-card);
-  margin-bottom: 8px;
-  position: relative;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-.fs-session-card:hover { box-shadow: var(--shadow-card); }
 .fs-session-card.current { border-color: rgba(22,163,74,0.25); border-left-color: var(--success); background: rgba(22,163,74,0.02); }
 .fs-session-card-icon {
   width: 38px; height: 38px; border-radius: 9px;
@@ -567,17 +532,6 @@ textarea.crt-field-input { height: auto; padding: 8px 10px; }
 .dark-mode .fs-session-pill.warning { color: #fbbf24; }
 
 /* Toggle control (security policy drawer) */
-.fs-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--surface-1); }
-.fs-toggle-row:last-child { border-bottom: none; }
-.fs-toggle-info { flex: 1; min-width: 0; }
-.fs-toggle-label { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
-.fs-toggle-desc { font-size: 11.5px; color: var(--text-tertiary); line-height: 1.4; }
-.fs-toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
-.fs-toggle input { opacity: 0; width: 0; height: 0; }
-.fs-toggle-track { position: absolute; inset: 0; background: var(--surface-2); border-radius: 99px; cursor: pointer; transition: background .2s; border: 1px solid var(--border); }
-.fs-toggle input:checked + .fs-toggle-track { background: var(--accent); border-color: var(--accent); }
-.fs-toggle-track::before { content: ''; position: absolute; width: 14px; height: 14px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
-.fs-toggle input:checked + .fs-toggle-track::before { transform: translateX(16px); }
 
 /* Dark mode overrides */
 .dark-mode .fs-card.crt-expanded { border-color: rgba(96, 165, 250, 0.16); }

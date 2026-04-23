@@ -39,13 +39,6 @@
 .vera-es-hero--period::after {
   background: radial-gradient(circle, rgba(59,130,246,0.07) 0%, transparent 70%);
 }
-.vera-es-hero--criteria {
-  background: linear-gradient(145deg, #eff6ff 0%, #dbeafe 55%, #eff6ff 100%);
-  border-bottom: 1px solid rgba(59,130,246,0.09);
-}
-.vera-es-hero--criteria::after {
-  background: radial-gradient(circle, rgba(59,130,246,0.07) 0%, transparent 70%);
-}
 .vera-es-hero--fw {
   background: linear-gradient(145deg, #eff6ff 0%, #dbeafe 55%, #eff6ff 100%);
   border-bottom: 1px solid rgba(59,130,246,0.09);
@@ -85,9 +78,6 @@ body:not(.dark-mode) .vera-es-icon {
   box-shadow: var(--vera-light-icon-shadow);
 }
 /* Variant glyph colour overrides */
-.vera-es-icon--period   { color: #3b82f6; }
-.vera-es-icon--criteria { color: #3b82f6; }
-.vera-es-icon--fw       { color: #3b82f6; }
 
 /* Hero text */
 .vera-es-title {
@@ -136,15 +126,6 @@ body:not(.dark-mode) .vera-es-icon {
   border-color: rgba(59,130,246,0.13);
 }
 .vera-es-action--primary-period:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(59,130,246,0.09) 0%, rgba(99,102,241,0.05) 100%);
-  border-color: rgba(59,130,246,0.22);
-  box-shadow: 0 2px 8px rgba(59,130,246,0.07);
-}
-.vera-es-action--primary-criteria {
-  background: linear-gradient(135deg, rgba(59,130,246,0.05) 0%, rgba(99,102,241,0.025) 100%);
-  border-color: rgba(59,130,246,0.13);
-}
-.vera-es-action--primary-criteria:hover:not(:disabled) {
   background: linear-gradient(135deg, rgba(59,130,246,0.09) 0%, rgba(99,102,241,0.05) 100%);
   border-color: rgba(59,130,246,0.22);
   box-shadow: 0 2px 8px rgba(59,130,246,0.07);
@@ -510,61 +491,6 @@ body:not(.dark-mode) .vera-es-icon {
 }
 
 /* ── Pending framework selection preview ─────────────────────────────────── */
-
-.vera-es-pending-wrap {
-  padding: 16px 20px;
-  border-top: 1px solid rgba(59,130,246,0.12);
-  background: rgba(59,130,246,0.04);
-}
-
-.vera-es-pending-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.vera-es-pending-icon {
-  flex-shrink: 0;
-  color: #3b82f6;
-}
-
-.vera-es-pending-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.vera-es-pending-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.vera-es-pending-sub {
-  font-size: 11.5px;
-  color: #64748b;
-  margin-top: 2px;
-}
-
-.vera-es-pending-change {
-  flex-shrink: 0;
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(59,130,246,0.25);
-  background: transparent;
-  color: #3b82f6;
-  font-size: 11.5px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.vera-es-pending-change:hover {
-  background: rgba(59,130,246,0.08);
-  border-color: rgba(59,130,246,0.4);
-}
 
 body:not(.dark-mode) .vera-es-pending-wrap {
   background: rgba(59,130,246,0.03);

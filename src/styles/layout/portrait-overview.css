@@ -4,19 +4,8 @@
 
 @media (max-width: 768px) and (orientation: portrait) {
   /* ── FAB: clear of header, positioned above bottom edge ── */
-  .vera-theme-fab { top: auto !important; bottom: 72px; right: 16px; }
 
   /* ── Rankings compare modal: portrait-safe stacking ── */
-  .compare-overlay { padding: 14px; align-items: flex-start; }
-  .compare-modal {
-    width: 100%;
-    max-width: 100%;
-    max-height: calc(100dvh - 28px);
-    margin: 0 auto;
-    overflow-x: hidden;
-  }
-  .compare-header { padding: 16px 18px 14px; }
-  .compare-body { padding: 16px; }
   .compare-selectors {
     display: grid;
     grid-template-columns: 1fr;
@@ -94,7 +83,6 @@
   #overview-juror-table td:nth-child(4) { display: none; }
   #overview-juror-table td:nth-child(5) { display: none; }
   #overview-juror-table td:nth-child(1) .j-row { align-items: flex-start; gap: 10px; }
-  #overview-juror-table td:nth-child(1) .j-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   #overview-juror-table td:nth-child(1) .j-name { line-height: 1.35; }
   #overview-juror-table td:nth-child(1) .j-inst { white-space: normal; line-height: 1.45; }
 

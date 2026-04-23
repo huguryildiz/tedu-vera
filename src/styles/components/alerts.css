@@ -66,8 +66,6 @@
   font:inherit;
   line-height:inherit;
 }
-.fb-banner-dismiss{background:none;border:none;color:inherit;opacity:0.5;cursor:pointer;padding:2px;display:grid;place-items:center;border-radius:4px}
-.fb-banner-dismiss:hover{opacity:0.8;background:rgba(255,255,255,0.06)}
 .fb-banner.fbb-info{background:var(--fb-info-bg);border-color:var(--fb-info-border);color:var(--fb-info-text)}
 .fb-banner.fbb-warning{background:var(--fb-warning-bg);border-color:var(--fb-warning-border);color:var(--fb-warning-text)}
 .fb-banner.fbb-danger{background:var(--fb-danger-bg);border-color:var(--fb-danger-border);color:var(--fb-danger-text)}
@@ -78,21 +76,8 @@ body:not(.dark-mode) .fb-banner.fbb-editing strong{color:#4c1d95}
 body:not(.dark-mode) .fb-banner.fbb-editing svg{color:#6d28d9}
 
 /* ── Modal Inline Feedback ── */
-.fb-modal-alert{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;font-size:12px;margin-top:10px}
-.fb-modal-alert svg{flex-shrink:0;margin-top:1px;width:14px;height:14px}
-.fb-modal-alert.fma-danger{background:var(--fb-danger-bg);border:1px solid var(--fb-danger-border);color:var(--fb-danger-text)}
-.fb-modal-alert.fma-warning{background:var(--fb-warning-bg);border:1px solid var(--fb-warning-border);color:var(--fb-warning-text)}
-.fb-modal-alert.fma-success{background:var(--fb-success-bg);border:1px solid var(--fb-success-border);color:var(--fb-success-text)}
-.fb-modal-alert.fma-info{background:var(--fb-info-bg);border:1px solid var(--fb-info-border);color:var(--fb-info-text)}
-.fb-modal-alert.fma-danger{align-items:center}
-.fb-modal-alert.fma-danger svg{margin-top:0}
 
 /* ── Empty / Error Table States ── */
-.fb-empty{text-align:center;padding:48px 24px;border-radius:12px;border:1px solid var(--border);background:var(--bg-card)}
-.fb-empty-icon{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;margin:0 auto 14px}
-.fb-empty-icon svg{width:22px;height:22px}
-.fb-empty-title{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:4px}
-.fb-empty-desc{font-size:12px;color:var(--text-tertiary);line-height:1.5;max-width:320px;margin:0 auto}
 .fb-empty-cta{margin-top:16px;padding:8px 20px;border-radius:8px;border:none;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:inline-block}
 .fb-empty-cta.primary{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;box-shadow:0 2px 8px rgba(59,130,246,0.25)}
 .fb-empty-cta.secondary{background:transparent;border:1px solid var(--border);color:var(--text-secondary)}
@@ -105,10 +90,7 @@ body:not(.dark-mode) .fb-banner.fbb-editing svg{color:#6d28d9}
 .fb-empty.error .fb-empty-title{color:var(--fb-danger-text)}
 
 /* ── Jury Autosave Indicator ── */
-.fb-autosave{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 10px;border-radius:99px;font-weight:500;transition:all .2s}
-.fb-autosave svg{width:12px;height:12px}
 .fb-autosave.saving{color:var(--fb-info-text);background:var(--fb-info-bg);border:1px solid var(--fb-info-border)}
 .fb-autosave.saved{color:var(--fb-success-text);background:var(--fb-success-bg);border:1px solid var(--fb-success-border)}
-.fb-autosave.save-error{color:var(--fb-danger-text);background:var(--fb-danger-bg);border:1px solid var(--fb-danger-border)}
 @keyframes fb-spin{to{transform:rotate(360deg)}}
 .fb-autosave.saving svg{animation:fb-spin 0.8s linear infinite}
