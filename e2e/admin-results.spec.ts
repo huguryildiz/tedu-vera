@@ -3,33 +3,24 @@
 // admin.e2e.02 — Admin can navigate to Rankings tab and see ranking content.
 //
 // Required env vars:
+//   E2E_ADMIN_EMAIL      — admin email
 //   E2E_ADMIN_PASSWORD   — admin panel password
 // ============================================================
 
 import { test, expect } from "@playwright/test";
+import { LoginPage } from "./helpers/LoginPage";
 
+const ADMIN_EMAIL    = process.env.E2E_ADMIN_EMAIL    || "";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "";
 
 test.describe("Admin rankings view", () => {
-  test.skip(!ADMIN_PASSWORD, "Skipped: E2E_ADMIN_PASSWORD not set");
+  test.skip(!ADMIN_EMAIL || !ADMIN_PASSWORD, "Skipped: E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD not set");
 
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-
-    // Navigate to admin
-    await page.getByRole("button", { name: /admin|yönetici/i }).click();
-
-    // Enter password
-    const passwordInput = page
-      .getByPlaceholder(/password|şifre/i)
-      .or(page.locator('input[type="password"]'));
-    await passwordInput.fill(ADMIN_PASSWORD);
-    await page.keyboard.press("Enter");
-
-    // Wait for admin tabs to load
-    await expect(
-      page.getByRole("tab", { name: /overview/i })
-    ).toBeVisible({ timeout: 10_000 });
+    const login = new LoginPage(page);
+    await login.gotoLoginRoute();
+    await login.loginWithEmail(ADMIN_EMAIL, ADMIN_PASSWORD);
+    await login.expectAdminDashboard();
   });
 
   test("admin.e2e.02 rankings tab renders content", async ({ page }) => {

@@ -12,14 +12,15 @@
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
-const TEST_JUROR_NAME  = process.env.E2E_JUROR_NAME  || "";
-const TEST_JUROR_DEPT  = process.env.E2E_JUROR_DEPT  || "";
-const TEST_JUROR_PIN   = process.env.E2E_JUROR_PIN   || "";
-const SEMESTER_NAME    = process.env.E2E_SEMESTER_NAME || "";
-const ADMIN_PASSWORD   = process.env.E2E_ADMIN_PASSWORD || "";
-const SUPABASE_URL     = process.env.VITE_SUPABASE_URL || "";
+const TEST_JUROR_NAME   = process.env.E2E_JUROR_NAME  || "";
+const TEST_JUROR_DEPT   = process.env.E2E_JUROR_DEPT  || "";
+const TEST_JUROR_PIN    = process.env.E2E_JUROR_PIN   || "";
+const SEMESTER_NAME     = process.env.E2E_SEMESTER_NAME || "";
+const ADMIN_PASSWORD    = process.env.E2E_ADMIN_PASSWORD || "";
+const SUPABASE_URL      = process.env.VITE_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || "";
-const RPC_SECRET       = process.env.VITE_RPC_SECRET || "";
+const RPC_SECRET        = process.env.VITE_RPC_SECRET || "";
+const DEMO_ENTRY_TOKEN  = process.env.VITE_DEMO_ENTRY_TOKEN || "demo-tedu-ee";
 
 let runtimeJurorPin = TEST_JUROR_PIN;
 
@@ -66,9 +67,13 @@ async function ensureJuryPinReady() {
 
 test.describe("Jury identity form", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-    // Navigate to the jury form
-    await page.getByRole("button", { name: /start evaluation/i }).click();
+    await page.goto(`/eval?t=${DEMO_ENTRY_TOKEN}`);
+    await page.waitForURL(/\/jury\//, { timeout: 15_000 });
+    const beginBtn = page.getByRole("button", { name: /begin jury session/i });
+    if (await beginBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+      await beginBtn.click();
+      await page.waitForURL(/\/jury\/identity/, { timeout: 10_000 });
+    }
   });
 
   test("Start button is disabled when fields are empty", async ({ page }) => {
@@ -103,8 +108,8 @@ test.describe("Full jury evaluation flow", () => {
   });
 
   test("jury.e2e.01 juror reaches evaluation screen", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("button", { name: /start evaluation/i }).click();
+    await page.goto(`/eval?t=${DEMO_ENTRY_TOKEN}`);
+    await page.waitForURL(/\/jury\//, { timeout: 15_000 });
 
     // InfoStep
     await page.getByLabel(/full name/i).fill(TEST_JUROR_NAME);
@@ -169,8 +174,8 @@ test.describe("Jury PIN flow", () => {
   });
 
   test("Known juror reaches PIN step after identity submit", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("button", { name: /start evaluation/i }).click();
+    await page.goto(`/eval?t=${DEMO_ENTRY_TOKEN}`);
+    await page.waitForURL(/\/jury\//, { timeout: 15_000 });
 
     await page.getByLabel(/full name/i).fill(TEST_JUROR_NAME);
     await page.getByLabel(/institution \/ department/i).fill(TEST_JUROR_DEPT);

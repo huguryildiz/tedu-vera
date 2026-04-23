@@ -28,15 +28,19 @@ export default defineConfig({
     ["json", { outputFile: "test-results/playwright-results.json" }],
   ],
   use: {
-    baseURL: process.env.E2E_BASE_URL || "http://localhost:5173",
+    baseURL: process.env.E2E_BASE_URL || "http://localhost:5174",
     headless: true,
     screenshot: "only-on-failure",
     video: "retain-on-failure",
   },
   webServer: {
-    command: "npm run dev",
+    // Port 5174 keeps the E2E server isolated from the dev server (5173),
+    // so reuseExistingServer never accidentally picks up a dev server that
+    // was started with .env.local (prod Supabase) instead of .env.e2e.local.
+    // --force re-optimizes Vite deps to avoid 504 "Outdated Optimize Dep" on fresh starts.
+    command: "npm run dev -- --port 5174 --force",
     env: webServerEnv,
-    url: "http://localhost:5173",
+    url: process.env.E2E_BASE_URL || "http://localhost:5174",
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },

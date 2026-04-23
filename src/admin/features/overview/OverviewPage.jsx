@@ -416,8 +416,6 @@ export default function OverviewPage() {
                   const total = j.totalProjects || 0;
                   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
                   const dColor = donutColor(status);
-                  const circumference = 150.80;
-                  const dashOffset = circumference * (1 - pct / 100);
                   return (
                     <tr key={j.jurorId || j.juryName}>
                       <td>
@@ -437,25 +435,7 @@ export default function OverviewPage() {
                           <span className="mono text-xs">{done}/{total}</span>
                         </div>
                         <div className="oja-donut-col">
-                          <div className="oja-donut-wrap">
-                            <svg width="60" height="60" viewBox="0 0 60 60" style={{ display: "block" }}>
-                              <circle cx="30" cy="30" r="24" fill="none" stroke="var(--border)" strokeWidth="5.5" />
-                              <circle cx="30" cy="30" r="24" fill="none" stroke={dColor} strokeWidth="5.5"
-                                strokeDasharray={`${circumference} ${circumference}`}
-                                strokeDashoffset={dashOffset}
-                                strokeLinecap="round"
-                                transform="rotate(-90 30 30)" />
-                            </svg>
-                            <div className="oja-donut-inner">
-                              {avg != null ? (
-                                <>
-                                  <span className="oja-donut-avg" style={{ color: dColor }}>{avg}</span>
-                                </>
-                              ) : (
-                                <span className="oja-donut-avg oja-donut-avg--empty">—</span>
-                              )}
-                            </div>
-                          </div>
+                          <AvgDonut value={avg != null ? parseFloat(avg) : null} max={totalMax || 100} />
                           <div className="oja-prog-track">
                             <div className="oja-prog-fill" style={{ width: `${pct}%`, background: dColor }} />
                           </div>

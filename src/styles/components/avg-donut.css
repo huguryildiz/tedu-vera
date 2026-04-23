@@ -1,0 +1,49 @@
+/* ── AvgDonut — shared conic-gradient score ring (src/admin/shared/AvgDonut.jsx) ── */
+
+.avg-donut {
+  display: block;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+.avg-donut-fill {
+  position: relative;
+  display: block;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: conic-gradient(var(--ring, var(--text-tertiary)) var(--pct, 0deg), var(--border) 0);
+}
+.avg-donut-fill::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background: var(--bg-card);
+  border-radius: 50%;
+}
+.avg-donut-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  z-index: 1;
+}
+.avg-donut-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ring, var(--text-tertiary));
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
+  font-variant-numeric: tabular-nums;
+}
+.avg-donut-label {
+  font-size: 7px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 1px;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
+}

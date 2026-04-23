@@ -336,11 +336,9 @@
   .overview-top-projects-table td.col-avg .avg-donut { display: block; }
   .overview-top-projects-table td.col-avg .avg-donut,
   .overview-top-projects-table td.col-avg .avg-donut-fill {
-    width: 44px;
-    height: 44px;
+    width: 52px;
+    height: 52px;
   }
-  .overview-top-projects-table td.col-avg .avg-donut-value { font-size: 11px; }
-  .overview-top-projects-table td.col-avg .avg-donut-label { font-size: 6px; }
 
   /* ── TEAM MEMBERS ── */
   .overview-top-projects-table td.col-students {

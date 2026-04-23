@@ -3,31 +3,25 @@
 // admin.e2e.03 — Admin can export rankings to Excel (.xlsx).
 //
 // Required env vars:
+//   E2E_ADMIN_EMAIL      — admin email
 //   E2E_ADMIN_PASSWORD   — admin panel password
 // ============================================================
 
 import { test, expect } from "@playwright/test";
 import { stat } from "node:fs/promises";
+import { LoginPage } from "./helpers/LoginPage";
 
+const ADMIN_EMAIL    = process.env.E2E_ADMIN_EMAIL    || "";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "";
 
 test.describe("Admin export", () => {
-  test.skip(!ADMIN_PASSWORD, "Skipped: E2E_ADMIN_PASSWORD not set");
+  test.skip(!ADMIN_EMAIL || !ADMIN_PASSWORD, "Skipped: E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD not set");
 
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-
-    await page.getByRole("button", { name: /admin|yönetici/i }).click();
-
-    const passwordInput = page
-      .getByPlaceholder(/password|şifre/i)
-      .or(page.locator('input[type="password"]'));
-    await passwordInput.fill(ADMIN_PASSWORD);
-    await page.keyboard.press("Enter");
-
-    await expect(
-      page.getByRole("tab", { name: /overview/i })
-    ).toBeVisible({ timeout: 10_000 });
+    const login = new LoginPage(page);
+    await login.gotoLoginRoute();
+    await login.loginWithEmail(ADMIN_EMAIL, ADMIN_PASSWORD);
+    await login.expectAdminDashboard();
 
     // Navigate to Rankings (Scores is a dropdown button, not role="tab")
     await page.getByRole("button", { name: /scores/i }).click();

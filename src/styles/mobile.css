@@ -360,9 +360,7 @@ html {
   .fs-alert-title,
   .fs-alert-desc,
   .fs-alert-body,
-  .card p,
-  .card .kpi-label,
-  .card .kpi-sub {
+  .card p {
     text-align: justify;
   }
 }

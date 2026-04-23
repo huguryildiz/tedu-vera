@@ -14,10 +14,14 @@ export class JuryFlow {
   }
 
   async gotoEntry(): Promise<void> {
-    await this.page.goto("/");
-    await this.page
-      .getByRole("button", { name: /start evaluation|değerlendirme/i })
-      .click();
+    const demoToken = process.env.VITE_DEMO_ENTRY_TOKEN || "demo-tedu-ee";
+    await this.page.goto(`/eval?t=${demoToken}`);
+    await this.page.waitForURL(/\/jury\//, { timeout: 15_000 });
+    const beginBtn = this.page.getByRole("button", { name: /begin jury session/i });
+    if (await beginBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+      await beginBtn.click();
+      await this.page.waitForURL(/\/jury\/identity/, { timeout: 10_000 });
+    }
   }
 
   async enterToken(token: string): Promise<void> {

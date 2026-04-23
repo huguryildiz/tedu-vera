@@ -15,7 +15,7 @@ export class LoginPage {
 
   async goto(): Promise<void> {
     await this.page.goto("/");
-    await this.page.getByRole("button", { name: /admin|yönetici/i }).click();
+    await this.page.locator("button.nav-signin").click();
     await expect(this.emailInput()).toBeVisible({ timeout: 10_000 });
   }
 
@@ -51,8 +51,11 @@ export class LoginPage {
   }
 
   async expectAdminDashboard(): Promise<void> {
+    // Wait for the admin route first so failures show the actual URL
+    await this.page.waitForURL(/\/admin/, { timeout: 15_000 });
+    // Admin sidebar uses <button data-tour="overview">, not role="tab"
     await expect(
-      this.page.getByRole("tab", { name: /overview/i })
-    ).toBeVisible({ timeout: 15_000 });
+      this.page.locator('[data-tour="overview"]')
+    ).toBeVisible({ timeout: 10_000 });
   }
 }

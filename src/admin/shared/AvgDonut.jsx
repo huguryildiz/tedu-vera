@@ -1,12 +1,8 @@
 function bandColor(value, max) {
   if (value == null || max <= 0) return "var(--text-tertiary)";
-  const pct = (value / max) * 100;
-  if (pct >= 90) return "var(--score-excellent-text)";
-  if (pct >= 80) return "var(--score-high-text)";
-  if (pct >= 75) return "var(--score-good-text)";
-  if (pct >= 70) return "var(--score-adequate-text)";
-  if (pct >= 60) return "var(--score-low-text)";
-  return "var(--score-poor-text)";
+  const pct = Math.min(100, Math.max(0, (value / max) * 100));
+  const hue = Math.round(pct * 1.2); // 0 → red(0°), 100 → green(120°)
+  return `hsl(${hue} 68% 42%)`;
 }
 
 export default function AvgDonut({ value, max = 100 }) {

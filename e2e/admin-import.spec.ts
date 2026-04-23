@@ -3,6 +3,7 @@
 // admin.e2e.01 — Admin can import a groups CSV via the Projects panel.
 //
 // Required env vars:
+//   E2E_ADMIN_EMAIL      — admin email
 //   E2E_ADMIN_PASSWORD   — admin panel password
 //
 // The test uploads a minimal in-memory CSV buffer so no fixture file
@@ -10,34 +11,27 @@
 // ============================================================
 
 import { test, expect } from "@playwright/test";
+import { LoginPage } from "./helpers/LoginPage";
 
+const ADMIN_EMAIL    = process.env.E2E_ADMIN_EMAIL    || "";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "";
 
 // Minimal valid CSV — single group, will be skipped if group_no already exists
 const SAMPLE_CSV = `group_no,project_title,group_students\n999,E2E Test Project,Test Student\n`;
 
 test.describe("Admin CSV import", () => {
-  test.skip(!ADMIN_PASSWORD, "Skipped: E2E_ADMIN_PASSWORD not set");
+  test.skip(!ADMIN_EMAIL || !ADMIN_PASSWORD, "Skipped: E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD not set");
 
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-
-    await page.getByRole("button", { name: /admin|yönetici/i }).click();
-
-    const passwordInput = page
-      .getByPlaceholder(/password|şifre/i)
-      .or(page.locator('input[type="password"]'));
-    await passwordInput.fill(ADMIN_PASSWORD);
-    await page.keyboard.press("Enter");
-
-    await expect(
-      page.getByRole("tab", { name: /overview/i })
-    ).toBeVisible({ timeout: 10_000 });
+    const login = new LoginPage(page);
+    await login.gotoLoginRoute();
+    await login.loginWithEmail(ADMIN_EMAIL, ADMIN_PASSWORD);
+    await login.expectAdminDashboard();
   });
 
   test("admin.e2e.01 Import CSV dialog opens and accepts a file", async ({ page }) => {
-    // Navigate to Settings tab
-    await page.getByRole("tab", { name: /settings|ayarlar/i }).click();
+    // Navigate to Settings section via data-tour attribute
+    await page.locator('[data-tour="settings"]').click();
 
     // Click "Import CSV" button in Projects section
     const importBtn = page.getByRole("button", { name: /import csv/i }).first();

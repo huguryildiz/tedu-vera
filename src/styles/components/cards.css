@@ -122,6 +122,8 @@
 
 /* ─── KPI ─── */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+@media (max-width:768px) and (orientation:portrait){.kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}}
+@media (max-width:480px){.kpi-grid{gap:8px}}
 .kpi{padding:20px;background:var(--bg-card);border-radius:var(--radius);border:1px solid var(--border);position:relative;overflow:hidden;transition:border-color .25s ease,box-shadow .25s ease,transform .25s ease;text-align:center}
 .kpi:hover{border-color:rgba(59,130,246,0.25);box-shadow:0 8px 24px rgba(59,130,246,0.08),0 2px 8px rgba(0,0,0,0.04);transform:translateY(-2px)}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),rgba(99,102,241,0.5));opacity:0;transition:opacity .2s}
@@ -137,6 +139,9 @@
 .scores-kpi-strip{display:flex;gap:0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
 .scores-kpi-item{flex:1;padding:14px 20px;border-right:1px solid var(--border);text-align:center;position:relative;transition:background .2s,box-shadow .2s;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .scores-kpi-item:hover{background:rgba(59,130,246,0.04);box-shadow:inset 0 -2px 0 var(--accent)}
+.scores-kpi-item:active{background:rgba(59,130,246,0.07);box-shadow:inset 0 -3px 0 var(--accent)}
+.scores-kpi-item--active{background:rgba(59,130,246,0.05);box-shadow:inset 0 -3px 0 var(--accent)}
+.scores-kpi-item--active:hover{background:rgba(59,130,246,0.09)}
 .scores-kpi-item:last-child{border-right:none}
 .scores-kpi-item-value{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--text-primary);letter-spacing:-0.4px;line-height:1.2}
 .scores-kpi-item-label{font-size:9px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.6px;margin-top:3px}
@@ -158,6 +163,20 @@
 .scores-kpi-item-value.muted{color:var(--text-tertiary)}
 .dark-mode .scores-kpi-strip{background:rgba(10,15,28,0.80) !important;backdrop-filter:blur(20px) saturate(1.2) !important;-webkit-backdrop-filter:blur(20px) saturate(1.2) !important;border-color:rgba(255,255,255,0.08) !important;box-shadow:0 2px 8px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.04) !important}
 .dark-mode .scores-kpi-item{border-right-color:rgba(255,255,255,0.06) !important}
+
+/* Global mobile portrait: KPI strip = 2x2 grid with internal dividers.
+   Placed here so it wins over base .scores-kpi-strip flex declaration
+   regardless of other portrait stylesheet import order. */
+@media (max-width:768px) and (orientation:portrait){
+  .scores-kpi-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;flex-wrap:unset;overflow:visible;margin-bottom:16px;border-radius:var(--radius-sm)}
+  .scores-kpi-item{flex:unset;flex-shrink:unset;min-width:0;min-height:58px;padding:11px 12px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center}
+  .scores-kpi-item:nth-child(2n){border-right:none}
+  .scores-kpi-item:last-child,
+  .scores-kpi-item:nth-last-child(2):nth-child(odd){border-bottom:none}
+  .scores-kpi-item:last-child:nth-child(odd){grid-column:1 / -1;border-right:none}
+  .scores-kpi-item-value{font-size:15px;line-height:1.08}
+  .scores-kpi-item-label{font-size:9px;line-height:1.35;margin-top:0}
+}
 
 /* ─── FILTER PANEL + EXPORT PANEL (global — Rankings, Heatmap, …) ─── */
 :root{--lucide-x-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E")}

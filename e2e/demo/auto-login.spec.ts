@@ -31,7 +31,7 @@ test.describe("Demo · Auto-login", () => {
     await demo.waitForAutoLogin();
 
     await expect(
-      page.getByRole("tab", { name: /overview/i })
+      page.locator('[data-tour="overview"]')
     ).toBeVisible({ timeout: 10_000 });
   });
 
@@ -41,7 +41,7 @@ test.describe("Demo · Auto-login", () => {
     // Either the loading copy is visible briefly, or we already landed
     // on /demo/admin (auto-login was instant).
     const loadingHint = page.getByText(/loading|signing in|preparing/i).first();
-    const onAdmin = page.getByRole("tab", { name: /overview/i });
+    const onAdmin = page.locator('[data-tour="overview"]');
     await expect(loadingHint.or(onAdmin)).toBeVisible({ timeout: 15_000 });
   });
 });

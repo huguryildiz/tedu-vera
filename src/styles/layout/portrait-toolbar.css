@@ -4,48 +4,8 @@
    and primary Add action anchored at the bottom.
    ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) and (orientation: portrait) {
-  /* Global KPI strips: calm 2-column card grid with clear dividers */
-  .scores-kpi-strip {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0;
-    overflow: visible;
-    margin-bottom: 16px;
-    border-radius: var(--radius-sm);
-  }
-  .scores-kpi-item {
-    min-width: 0;
-    min-height: 58px;
-    padding: 11px 12px;
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    text-align: center;
-  }
-  .scores-kpi-item:nth-child(2n) {
-    border-right: none;
-  }
-  .scores-kpi-item:last-child,
-  .scores-kpi-item:nth-last-child(2):nth-child(odd) {
-    border-bottom: none;
-  }
-  .scores-kpi-item:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-    border-right: none;
-  }
-  .scores-kpi-item-value {
-    font-size: 15px;
-    line-height: 1.08;
-  }
-  .scores-kpi-item-label {
-    font-size: 9px;
-    line-height: 1.35;
-    margin-top: 0;
-  }
+  /* Global KPI strip (.scores-kpi-strip) 2x2 grid lives in components/cards.css
+     so it wins over the base flex declaration regardless of import order. */
 
   .jurors-toolbar,
   .reviews-actions,
@@ -61,7 +21,7 @@
   .jurors-toolbar { margin-bottom: 16px; }
   .jurors-toolbar-spacer { display: none !important; }
 
-  .jurors-toolbar .jurors-search-wrap,
+  .jurors-toolbar .admin-search-wrap,
   .jurors-toolbar .filter-dropdown,
   .reviews-actions .filter-dropdown,
   .analytics-actions .filter-dropdown,

@@ -5,27 +5,15 @@
     line-height: 1.45;
   }
 
-  /* KPI strip — 3×2 dense grid */
+  /* KPI strip: page-specific spacing only — layout (2x2 grid) comes from global rule in components/cards.css */
   #page-platform-control .scores-kpi-strip {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0;
     margin-bottom: 12px !important;
     border-radius: 12px;
-    overflow: hidden;
   }
   #page-platform-control .scores-kpi-item {
     min-height: 62px;
     padding: 10px 8px 11px;
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
     position: relative;
-  }
-  #page-platform-control .scores-kpi-item:nth-child(3n) {
-    border-right: 0;
-  }
-  #page-platform-control .scores-kpi-item:nth-child(n+4) {
-    border-bottom: 0;
   }
   #page-platform-control .scores-kpi-item-value {
     font-size: 17px;

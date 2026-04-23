@@ -86,13 +86,9 @@
   .dropdown-trigger { height: 36px; padding: 0 10px; font-size: 12px; border-radius: 8px; }
   #period-label { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
   .admin-content { padding: 14px; }
-  .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
   .kpi { padding: 14px; }
   .kpi-value { font-size: 22px; }
-  .scores-kpi-strip { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; }
-  .scores-kpi-item  { flex-shrink: 0; min-width: 80px; padding: 10px 14px; }
-  .grid-2 { grid-template-columns: 1fr; }
-  .grid-3 { grid-template-columns: 1fr; }
+  /* .scores-kpi-strip → 2x2 grid defined globally in components/cards.css */
   .settings-grid { grid-template-columns: 1fr; }
   .table-wrap table { min-width: 480px; }
   #settings-super .table-wrap table { min-width: unset; }
@@ -120,8 +116,7 @@
   .demo-banner { position: relative; top: auto; padding: 4px 12px; font-size: 11px; }
   .header-last-updated { display: none; }
   .admin-content { padding: 10px 16px; }
-  .grid-2 { grid-template-columns: 1fr 1fr; }
-  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  /* grid-2 / grid-3 responsive rules live in components/tables.css */
   .table-wrap table { min-width: 480px; }
   #settings-super .table-wrap table { min-width: unset; }
   .fs-drawer { width: min(360px, 78vw) !important; max-width: 78vw !important; }
@@ -152,7 +147,6 @@
 /* ── Very small portrait: max-width 480px ── */
 @media (max-width: 480px) {
   .admin-content { padding: 10px; }
-  .kpi-grid { gap: 8px; }
   .kpi-value { font-size: 20px; }
   .kpi-label { font-size: 9px; }
   .dropdown-trigger { height: 34px; font-size: 11px; padding: 0 8px; }

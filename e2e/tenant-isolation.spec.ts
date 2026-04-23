@@ -27,10 +27,8 @@ const OTHER_SEMESTER = process.env.E2E_OTHER_SEMESTER || "";
 
 // Helper: sign in via the admin login form
 async function adminSignIn(page: Page, email: string, password: string) {
-  await page.goto("/");
-  await page.getByRole("button", { name: /admin|yönetici/i }).click();
+  await page.goto("/login");
 
-  // Wait for auth to resolve and login form to appear
   const emailInput = page.getByPlaceholder(/email/i).or(
     page.locator('input[type="email"]')
   );
@@ -54,7 +52,7 @@ test.describe("Tenant-admin isolation", () => {
   test("Tenant-admin can sign in and see admin dashboard", async ({ page }) => {
     await adminSignIn(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await expect(
-      page.getByRole("tab", { name: /overview/i })
+      page.locator('[data-tour="overview"]')
     ).toBeVisible({ timeout: 15_000 });
   });
 
@@ -62,7 +60,7 @@ test.describe("Tenant-admin isolation", () => {
     test.skip(!OTHER_SEMESTER, "Skipped: E2E_OTHER_SEMESTER not set");
     await adminSignIn(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await expect(
-      page.getByRole("tab", { name: /overview/i })
+      page.locator('[data-tour="overview"]')
     ).toBeVisible({ timeout: 15_000 });
 
     // The other tenant's semester should NOT appear in any dropdown or list
@@ -73,7 +71,7 @@ test.describe("Tenant-admin isolation", () => {
   test("Tenant-admin cannot access another tenant's data via URL manipulation", async ({ page }) => {
     await adminSignIn(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await expect(
-      page.getByRole("tab", { name: /overview/i })
+      page.locator('[data-tour="overview"]')
     ).toBeVisible({ timeout: 15_000 });
 
     // Admin panel is SPA — no direct URL routes to other tenant data.
@@ -98,7 +96,7 @@ test.describe("Super-admin access", () => {
   test("Super-admin can sign in and sees tenant switcher", async ({ page }) => {
     await adminSignIn(page, SUPER_EMAIL, SUPER_PASSWORD);
     await expect(
-      page.getByRole("tab", { name: /overview/i })
+      page.locator('[data-tour="overview"]')
     ).toBeVisible({ timeout: 15_000 });
 
     // Super-admin should see the tenant switcher dropdown
@@ -109,7 +107,7 @@ test.describe("Super-admin access", () => {
   test("Super-admin can switch between tenants", async ({ page }) => {
     await adminSignIn(page, SUPER_EMAIL, SUPER_PASSWORD);
     await expect(
-      page.getByRole("tab", { name: /overview/i })
+      page.locator('[data-tour="overview"]')
     ).toBeVisible({ timeout: 15_000 });
 
     const select = page.locator(".tenant-switcher-select");
@@ -135,7 +133,7 @@ test.describe("Pending applicant blocking", () => {
     await expect(pendingText.or(pendingGate)).toBeVisible({ timeout: 15_000 });
 
     // Admin tabs should NOT be visible
-    const adminTab = page.getByRole("tab", { name: /overview/i });
+    const adminTab = page.locator('[data-tour="overview"]');
     await expect(adminTab).not.toBeVisible();
   });
 });
@@ -180,8 +178,7 @@ test.describe("Jury flow tenant isolation", () => {
 
 test.describe("Unauthenticated access denial", () => {
   test("Admin page shows login form when not authenticated", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("button", { name: /admin|yönetici/i }).click();
+    await page.goto("/login");
 
     // Should see login form with email input
     const emailInput = page.getByPlaceholder(/email/i).or(
@@ -196,7 +193,7 @@ test.describe("Unauthenticated access denial", () => {
 
     // Should NOT see admin tabs
     await expect(
-      page.getByRole("tab", { name: /overview/i })
+      page.locator('[data-tour="overview"]')
     ).not.toBeVisible();
   });
 });
@@ -211,11 +208,12 @@ test.describe("Cross-tenant data leakage prevention", () => {
   test("Scores tab only shows current tenant data", async ({ page }) => {
     await adminSignIn(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await expect(
-      page.getByRole("tab", { name: /overview/i })
+      page.locator('[data-tour="overview"]')
     ).toBeVisible({ timeout: 15_000 });
 
     // Click Scores tab
-    const scoresTab = page.getByRole("tab", { name: /scores/i });
+    // "scores" is a dropdown button in the sidebar, not a tab
+    const scoresTab = page.getByRole("button", { name: /scores/i });
     if (await scoresTab.isVisible()) {
       await scoresTab.click();
       // Wait for scores to load
@@ -232,11 +230,11 @@ test.describe("Cross-tenant data leakage prevention", () => {
   test("Settings tab only shows current tenant settings", async ({ page }) => {
     await adminSignIn(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await expect(
-      page.getByRole("tab", { name: /overview/i })
+      page.locator('[data-tour="overview"]')
     ).toBeVisible({ timeout: 15_000 });
 
     // Click Settings tab
-    const settingsTab = page.getByRole("tab", { name: /settings/i });
+    const settingsTab = page.locator('[data-tour="settings"]');
     if (await settingsTab.isVisible()) {
       await settingsTab.click();
       await page.waitForTimeout(2000);
@@ -260,7 +258,7 @@ test.describe("Multi-tenant seed consistency", () => {
   test("Super-admin sees multiple tenants in switcher", async ({ page }) => {
     await adminSignIn(page, SUPER_EMAIL, SUPER_PASSWORD);
     await expect(
-      page.getByRole("tab", { name: /overview/i })
+      page.locator('[data-tour="overview"]')
     ).toBeVisible({ timeout: 15_000 });
 
     const select = page.locator(".tenant-switcher-select");

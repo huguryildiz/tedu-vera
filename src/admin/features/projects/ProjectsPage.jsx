@@ -369,7 +369,7 @@ export default function ProjectsPage() {
           <div className="page-desc">Manage project records, student teams, and evaluation coverage for the active term.</div>
         </div>
         <div className="sem-header-actions mobile-toolbar-stack">
-          <div className="jurors-search-wrap mobile-toolbar-search">
+          <div className="admin-search-wrap mobile-toolbar-search">
             <Search size={14} strokeWidth={2} style={{ opacity: 0.45 }} />
             <input
               className="search-input"

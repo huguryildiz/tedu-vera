@@ -219,9 +219,6 @@ export default function RankingsPage() {
       { key: 'rank',      label: 'Rank',                  sortKey: 'rank',      thClass: 'col-rank',       getValue: r => rankMap.get(r.id) ?? '' },
       { key: 'title',     label: 'Project Title',         sortKey: 'project',                              getValue: r => r.title || r.name || '' },
       { key: 'members',   label: 'Team Members',                                                           getValue: r => fmtMembers(r.members || r.students) },
-      ...(filteredRows.some(r => r.advisor) ? [
-        { key: 'advisor', label: 'Advised By', getValue: r => fmtMembers(r.advisor) },
-      ] : []),
       ...criteriaConfig.map(c => ({
         key: c.id,
         label: `${c.shortLabel || c.label} (${c.max})`,
@@ -229,7 +226,7 @@ export default function RankingsPage() {
         thClass: 'col-criteria-th',
         getValue: r => Number.isFinite(r.avg?.[c.id]) ? Number(r.avg[c.id].toFixed(2)) : '',
       })),
-      { key: 'avg',       label: `Average (${totalMax})`, sortKey: 'avg',       thClass: 'text-right',  style: { paddingRight: 18 }, getValue: r => Number.isFinite(r.totalAvg) ? Number(r.totalAvg.toFixed(2)) : '' },
+      { key: 'avg',       label: `Average (${totalMax})`, sortKey: 'avg',       thClass: 'text-center', getValue: r => Number.isFinite(r.totalAvg) ? Number(r.totalAvg.toFixed(2)) : '' },
       { key: 'consensus', label: 'Consensus',             sortKey: 'consensus', thClass: 'text-center', getValue: r => {
           const c = consensusMap?.[r.id];
           if (!c) return '';
@@ -237,7 +234,7 @@ export default function RankingsPage() {
           return `${lvl} (σ=${c.sigma})`;
         },
       },
-      { key: 'count',     label: 'Jurors Evaluated',      sortKey: 'jurors',    thClass: 'text-right',  getValue: r => r.count ?? '' },
+      { key: 'count',     label: 'Jurors Evaluated',      sortKey: 'jurors',    thClass: 'text-center', getValue: r => r.count ?? '' },
     ];
   }, [filteredRows, criteriaConfig, totalMax, consensusMap]);
 
@@ -338,8 +335,8 @@ export default function RankingsPage() {
             <div className="page-title">Rankings</div>
             <div className="page-desc">Project rankings by weighted average score.</div>
           </div>
-          <div className="scores-header-actions">
-            <div className="jurors-search-wrap mobile-toolbar-search">
+          <div className="scores-header-actions mobile-toolbar-stack">
+            <div className="admin-search-wrap mobile-toolbar-search">
               <Search size={14} strokeWidth={2} style={{ opacity: 0.45 }} />
               <input
                 className="search-input"
@@ -353,7 +350,7 @@ export default function RankingsPage() {
             {summaryData.length >= 2 && (
               <>
                 <button
-                  className="btn btn-outline btn-sm"
+                  className="btn btn-outline btn-sm mobile-toolbar-secondary"
                   onClick={() => setCompareOpen(true)}
                 >
                   <GitCompare size={14} style={{ verticalAlign: "-1px" }} /> Compare
@@ -362,13 +359,14 @@ export default function RankingsPage() {
               </>
             )}
             <FilterButton
+              className="mobile-toolbar-filter"
               activeCount={activeFilterCount}
               isOpen={filterPanelOpen}
               onClick={() => setFilterPanelOpen((o) => !o)}
             />
             <div className="scores-action-sep" />
             <button
-              className={`btn btn-outline btn-sm${exportPanelOpen ? " active" : ""}`}
+              className={`btn btn-outline btn-sm mobile-toolbar-export${exportPanelOpen ? " active" : ""}`}
               onClick={() => setExportPanelOpen((o) => !o)}
             >
               <DownloadIcon style={{ verticalAlign: "-1px" }} /> Export

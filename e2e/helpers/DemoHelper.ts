@@ -21,8 +21,9 @@ export class DemoHelper {
   async waitForAutoLogin(): Promise<void> {
     // DemoAdminLoader signs in with demo creds and routes to /demo/admin.
     await this.page.waitForURL(/\/demo\/admin/, { timeout: 20_000 });
+    // Admin sidebar uses <button data-tour="..."> elements, not role="tab"
     await expect(
-      this.page.getByRole("tab", { name: /overview/i })
+      this.page.locator('[data-tour="overview"]')
     ).toBeVisible({ timeout: 15_000 });
   }
 

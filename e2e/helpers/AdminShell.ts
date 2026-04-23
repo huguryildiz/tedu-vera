@@ -31,50 +31,22 @@ export class AdminShell {
   }
 
   async waitForReady(): Promise<void> {
+    await this.page.waitForURL(/\/admin/, { timeout: 15_000 });
+    // Admin sidebar uses <button data-tour="..."> elements, not role="tab"
     await expect(
-      this.page.getByRole("tab", { name: /overview/i })
-    ).toBeVisible({ timeout: 15_000 });
+      this.page.locator('[data-tour="overview"]')
+    ).toBeVisible({ timeout: 10_000 });
   }
 
   async gotoSection(section: AdminSection): Promise<void> {
-    const labelMap: Record<AdminSection, RegExp> = {
-      overview: /^overview$/i,
-      rankings: /^rankings$/i,
-      analytics: /^analytics$/i,
-      heatmap: /^heatmap$/i,
-      reviews: /^reviews$/i,
-      jurors: /^jurors$/i,
-      projects: /^projects$/i,
-      periods: /^periods$/i,
-      criteria: /^criteria$/i,
-      outcomes: /^outcomes$/i,
-      "entry-control": /entry[-\s]?control/i,
-      "pin-blocking": /pin[-\s]?blocking/i,
-      "audit-log": /audit/i,
-      organizations: /organizations|tenants/i,
-      settings: /^settings$/i,
-    };
-
-    const re = labelMap[section];
-    const tab = this.page.getByRole("tab", { name: re });
-    if (await tab.isVisible({ timeout: 1_000 }).catch(() => false)) {
-      await tab.click();
+    // All sidebar items have data-tour="<section>" attributes
+    const btn = this.page.locator(`[data-tour="${section}"]`);
+    if (await btn.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      await btn.click();
       return;
     }
-
-    // Some sections (rankings/analytics/heatmap/reviews) live behind the Scores dropdown.
-    const scoresBtn = this.page.getByRole("button", { name: /^scores$/i });
-    if (await scoresBtn.isVisible({ timeout: 1_000 }).catch(() => false)) {
-      await scoresBtn.click();
-      const opt = this.page.getByRole("option", { name: re });
-      if (await opt.isVisible({ timeout: 1_000 }).catch(() => false)) {
-        await opt.click();
-        return;
-      }
-    }
-
-    // Fallback: any visible button matching the section name.
-    await this.page.getByRole("button", { name: re }).first().click();
+    // Fallback: text-based button match
+    await this.page.getByRole("button", { name: new RegExp(section.replace(/-/g, "[-\\s]?"), "i") }).first().click();
   }
 
   drawer(): Locator {

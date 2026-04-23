@@ -7,3 +7,36 @@
 .vld-field.state-success .vld-icon.success{display:block;color:var(--fb-success-text)}
 
 /* ── Modal inputs ── */
+
+/* ── Global toolbar search input (used by all admin pages) ── */
+.admin-search-wrap { position: relative; width: 220px; flex-shrink: 0 }
+.admin-search-wrap svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+.admin-search-wrap .search-input {
+  width: 100%;
+  padding: 7px 12px 7px 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 12px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.admin-search-wrap .search-input:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-card);
+}
+.admin-search-wrap .search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  background: var(--bg-card);
+}
+.admin-search-wrap .search-input::placeholder { color: var(--text-tertiary) }

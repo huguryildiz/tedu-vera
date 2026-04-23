@@ -13,6 +13,24 @@
   flex: 1 1 0;
   min-width: 0;
 }
+.rankings-page .rk-filter-row .filter-clear-btn {
+  align-self: flex-end;
+}
+
+/* ── Criterion score values ── */
+.heat-val {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: var(--table-body-size);
+}
+
+.heat-cell,
+.ranking-table td.col-avg,
+.ranking-table td.col-jurors,
+.ranking-table th.col-criteria-th {
+  text-align: center;
+}
 
 /* ── Avg Range label readout ── */
 .rk-range-readout {
@@ -193,6 +211,25 @@ body:not(.dark-mode) .rk-range-track-bg {
    Criteria heat-cells hidden; key columns shown as a card.
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: portrait) {
+  /* ── KPI above toolbar: unwrap scores-header into page flex flow ── */
+  .rankings-page {
+    display: flex;
+    flex-direction: column;
+  }
+  .rankings-page .scores-header {
+    display: contents;
+  }
+  .rankings-page .scores-header-left {
+    order: -2;
+  }
+  .rankings-page .scores-kpi-strip {
+    order: -1;
+  }
+  .rankings-page .scores-header-actions {
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+
   /* ── Table → card shell ── */
   .rankings-page .table-wrap {
     overflow: hidden;

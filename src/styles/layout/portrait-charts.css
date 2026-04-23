@@ -17,24 +17,7 @@
   .att-card-unit { font-size: 9px; }
   .att-card-trend { font-size: 9px; }
 
-  /* ── 3B. Scores KPI strip: compact + scroll ── */
-  .scores-kpi-strip {
-    gap: 4px; flex-wrap: nowrap;
-    overflow-x: auto; -webkit-overflow-scrolling: touch;
-    padding-bottom: 2px;
-  }
-  .scores-kpi-item {
-    flex-shrink: 0; min-width: 70px;
-    padding: 8px 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 52px;
-    gap: 4px;
-  }
-  .scores-kpi-item-value { font-size: 14px; line-height: 1.05; }
-  .scores-kpi-item-label { font-size: 9px; margin-top: 0; line-height: 1.35; }
+  /* 3B — Scores KPI strip 2x2 grid lives in components/cards.css (global). */
 
   /* ── 3C. Chart cards: compact ── */
   .chart-card-v2 .chart-header { padding: 10px 14px 8px; gap: 8px; }

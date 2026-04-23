@@ -2,32 +2,23 @@
 // ============================================================
 // Admin panel — login smoke test.
 //
-// Requires E2E_ADMIN_PASSWORD env var to be set.
-// Skipped automatically when the secret is not available.
+// Requires E2E_ADMIN_EMAIL + E2E_ADMIN_PASSWORD env vars.
+// Skipped automatically when either secret is not available.
 // ============================================================
 
 import { test, expect } from "@playwright/test";
+import { LoginPage } from "./helpers/LoginPage";
 
+const ADMIN_EMAIL    = process.env.E2E_ADMIN_EMAIL    || "";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "";
 
 test.describe("Admin panel login", () => {
-  test.skip(!ADMIN_PASSWORD, "Skipped: E2E_ADMIN_PASSWORD not set");
+  test.skip(!ADMIN_EMAIL || !ADMIN_PASSWORD, "Skipped: E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD not set");
 
   test("Admin can log in and see the dashboard", async ({ page }) => {
-    await page.goto("/");
-    // Navigate to admin
-    await page.getByRole("button", { name: /admin|yönetici/i }).click();
-
-    // Enter password
-    const passwordInput = page.getByPlaceholder(/password|şifre/i).or(
-      page.locator('input[type="password"]')
-    );
-    await passwordInput.fill(ADMIN_PASSWORD);
-    await page.keyboard.press("Enter");
-
-    // Admin tab bar should appear after successful login
-    await expect(
-      page.getByRole("tab", { name: /overview/i })
-    ).toBeVisible({ timeout: 10_000 });
+    const login = new LoginPage(page);
+    await login.goto();
+    await login.loginWithEmail(ADMIN_EMAIL, ADMIN_PASSWORD);
+    await login.expectAdminDashboard();
   });
 });

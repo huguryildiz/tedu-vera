@@ -8,9 +8,6 @@
 /* ─── Toolbar ─────────────────────────────────────────────── */
 .jurors-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap }
 .jurors-toolbar-spacer { flex: 1 }
-.jurors-search-wrap { position: relative; width: 220px; flex-shrink: 0 }
-.jurors-search-wrap svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-tertiary) }
-.jurors-search-wrap .search-input { padding-left: 28px }
 
 /* ─── Table — name & groups columns ──────────────────────── */
 .jurors-table-name { display: flex; flex-direction: column; gap: 1px; min-width: 0 }
@@ -98,24 +95,10 @@
 
 /* ─── Toolbar ─── */
 .jurors-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.jurors-toolbar .search-input,
-.sem-header-actions .jurors-search-wrap .search-input,
-.scores-header-actions .jurors-search-wrap .search-input,
-.crt-header-actions .jurors-search-wrap .search-input{width:100%;padding:7px 12px 7px 32px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;background:var(--surface-1);color:var(--text-primary);outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
-.jurors-toolbar .search-input:hover,
-.sem-header-actions .jurors-search-wrap .search-input:hover,
-.scores-header-actions .jurors-search-wrap .search-input:hover,
-.crt-header-actions .jurors-search-wrap .search-input:hover{border-color:var(--border-strong);background:var(--bg-card)}
-.jurors-toolbar .search-input:focus,
-.sem-header-actions .jurors-search-wrap .search-input:focus,
-.scores-header-actions .jurors-search-wrap .search-input:focus,
-.crt-header-actions .jurors-search-wrap .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:var(--bg-card)}
-.jurors-toolbar .search-input::placeholder,
-.sem-header-actions .jurors-search-wrap .search-input::placeholder,
-.scores-header-actions .jurors-search-wrap .search-input::placeholder,
-.crt-header-actions .jurors-search-wrap .search-input::placeholder{color:var(--text-tertiary)}
-.jurors-search-wrap{position:relative;width:220px;flex-shrink:0}
-.jurors-search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);pointer-events:none}
+.jurors-toolbar .search-input{width:100%;padding:7px 12px 7px 32px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;background:var(--surface-1);color:var(--text-primary);outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
+.jurors-toolbar .search-input:hover{border-color:var(--border-strong);background:var(--bg-card)}
+.jurors-toolbar .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:var(--bg-card)}
+.jurors-toolbar .search-input::placeholder{color:var(--text-tertiary)}
 .jurors-toolbar-spacer{flex:1}
 .jurors-toolbar .btn-reset{background:none;border:none;font-family:var(--font);font-size:11px;color:var(--text-secondary);cursor:pointer;padding:5px 10px;font-weight:500;border-radius:var(--radius-sm);transition:all .12s}
 .jurors-toolbar .btn-reset:hover{color:var(--text-primary);background:var(--surface-1)}
@@ -300,7 +283,7 @@
 /* ─── Both orientations ≤768px: toolbar ───────────────────── */
 @media (max-width: 768px) {
   /* Toolbar: let search shrink and buttons wrap */
-  .jurors-search-wrap { width: auto; flex: 1; flex-shrink: 1; min-width: 0; }
+  .admin-search-wrap { width: auto; flex: 1; flex-shrink: 1; min-width: 0; }
 }
 
 /* ─── Portrait ≤768px: title → KPI → Add → toolbar (match Projects page) ── */
