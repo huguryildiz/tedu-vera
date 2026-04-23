@@ -4,7 +4,7 @@
 /** The sequential steps in the jury evaluation workflow. */
 export type JuryStep =
   | "identity"
-  | "semester"
+  | "period"
   | "pin"
   | "pin_reveal"
   | "progress_check"

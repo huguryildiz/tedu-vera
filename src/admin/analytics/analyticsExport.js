@@ -112,7 +112,7 @@ export const ANALYTICS_SECTIONS = [
     key: "trend",
     title: "Outcome Attainment Trend",
     chartId: "pdf-chart-trend",
-    build: (p) => buildTrendDataset(p.trendData, p.semesterOptions, p.trendSemesterIds, p.activeOutcomes),
+    build: (p) => buildTrendDataset(p.trendData, p.periodOptions, p.trendPeriodIds, p.activeOutcomes),
     conditional: (ds) => ds.rows.length >= 2,
   },
   {
@@ -187,8 +187,8 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
   const { captureChartImage } = await import("./captureChartImage");
 
   const {
-    dashboardStats, submittedData, trendData, semesterOptions,
-    trendSemesterIds, activeOutcomes, outcomeLookup, threshold = 70,
+    dashboardStats, submittedData, trendData, periodOptions,
+    trendPeriodIds, activeOutcomes, outcomeLookup, threshold = 70,
     priorPeriodStats,
   } = params;
 
@@ -224,8 +224,8 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
 
   // Prepare params for section builders
   const pdfParams = {
-    dashboardStats, submittedData, trendData, semesterOptions,
-    trendSemesterIds, activeOutcomes, outcomeLookup,
+    dashboardStats, submittedData, trendData, periodOptions,
+    trendPeriodIds, activeOutcomes, outcomeLookup,
     threshold: threshold ?? 70,
     priorPeriodStats,
   };

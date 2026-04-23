@@ -1,3 +1,4 @@
+// size-ceiling-ok: retroactive violation — tracked for split in dedicated refactor session
 // src/admin/pages/CriteriaPage.jsx
 // Phase 8 — full rewrite from vera-premium-prototype.html lines 14519–14718
 
@@ -79,7 +80,7 @@ export default function CriteriaPage() {
     selectedPeriodId,
     isDemoMode = false,
     onDirtyChange,
-    onCurrentSemesterChange,
+    onCurrentPeriodChange,
     onNavigate,
     loading: adminLoading,
     sortedPeriods: contextPeriods = [],
@@ -107,7 +108,7 @@ export default function CriteriaPage() {
     setMessage,
     incLoading,
     decLoading,
-    onCurrentPeriodChange: onCurrentSemesterChange,
+    onCurrentPeriodChange: onCurrentPeriodChange,
     setPanelError,
     clearPanelError,
     bgRefresh,

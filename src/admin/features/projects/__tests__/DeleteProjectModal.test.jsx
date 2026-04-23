@@ -8,7 +8,7 @@ vi.mock("@/shared/ui/Modal", () => ({
 vi.mock("@/shared/ui/AsyncButtonContent", () => ({
   default: ({ children }) => <span>{children}</span>,
 }));
-vi.mock("@/shared/ui/EntityMeta", () => ({ StudentNames: () => null }));
+vi.mock("@/shared/ui/EntityMeta", () => ({ TeamMemberNames: () => null }));
 
 import DeleteProjectModal from "../DeleteProjectModal";
 

@@ -13,7 +13,7 @@ import {
   upsertProject,
   deleteProject,
 } from "@/shared/api";
-import { normalizeStudentNames } from "@/admin/utils/auditUtils";
+import { normalizeTeamMemberNames } from "@/admin/utils/auditUtils";
 
 // Convert member input (string or string[]) to JSONB array format {name, order}
 function membersToJsonb(value) {
@@ -21,7 +21,7 @@ function membersToJsonb(value) {
   if (Array.isArray(value)) {
     names = value.map((s) => (typeof s === "object" ? s?.name || "" : s).trim()).filter(Boolean);
   } else {
-    const normalized = normalizeStudentNames(value);
+    const normalized = normalizeTeamMemberNames(value);
     names = normalized ? normalized.split(";").map((s) => s.trim()).filter(Boolean) : [];
   }
   return names.map((name, i) => ({ name, order: i + 1 }));

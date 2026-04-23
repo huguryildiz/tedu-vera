@@ -7,7 +7,7 @@ vi.mock("@/admin/shared/useAdminContext", () => ({
     selectedPeriodId: null,
     isDemoMode: false,
     onDirtyChange: vi.fn(),
-    onCurrentSemesterChange: vi.fn(),
+    onCurrentPeriodChange: vi.fn(),
     onNavigate: vi.fn(),
     loading: false,
     sortedPeriods: [],

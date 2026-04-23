@@ -30,7 +30,7 @@ vi.mock("@/shared/api", () => {
 import * as api from "@/shared/api";
 import useJuryState, { isScoreFilled, normalizeScoreValue } from "../useJuryState";
 
-const SEMESTER = { id: "sem-1", name: "2024-2025 Spring", is_locked: true, closed_at: null };
+const PERIOD = { id: "sem-1", name: "2024-2025 Spring", is_locked: true, closed_at: null };
 
 const MOCK_CRITERIA_ROWS = [
   { key: "technical", label: "Technical", max_score: 25 },
@@ -72,7 +72,7 @@ const makeProject = (overrides = {}) => ({
 
 async function advanceToEval2(result, projectOverrides = []) {
   const projects = makeProjects2(projectOverrides);
-  api.listPeriods.mockResolvedValue([SEMESTER]);
+  api.listPeriods.mockResolvedValue([PERIOD]);
   api.authenticateJuror.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
   api.listProjects.mockResolvedValue(projects);
   api.getJurorEditState.mockResolvedValue({ edit_allowed: false, lock_active: false });
@@ -143,7 +143,7 @@ describe("PIN lockout effect", () => {
 
   qaTest("jury.state.03", async () => {
     const future = new Date(Date.now() + 600_000).toISOString();
-    api.listPeriods.mockResolvedValue([SEMESTER]);
+    api.listPeriods.mockResolvedValue([PERIOD]);
     api.authenticateJuror.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
     api.verifyJurorPin.mockResolvedValue({
       ok: false, error_code: "locked", failed_attempts: 3, locked_until: future,
@@ -238,7 +238,7 @@ describe("PIN lockout flow — useJuryState hook", () => {
   });
 
   qaTest("jury.pin.01", async () => {
-    api.listPeriods.mockResolvedValue([SEMESTER]);
+    api.listPeriods.mockResolvedValue([PERIOD]);
     api.authenticateJuror.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
     api.verifyJurorPin.mockResolvedValue({
       ok: false, error_code: "invalid", failed_attempts: 1,
@@ -259,7 +259,7 @@ describe("PIN lockout flow — useJuryState hook", () => {
 
   qaTest("jury.pin.02", async () => {
     const future = new Date(Date.now() + 600_000).toISOString();
-    api.listPeriods.mockResolvedValue([SEMESTER]);
+    api.listPeriods.mockResolvedValue([PERIOD]);
     api.authenticateJuror.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
     api.verifyJurorPin.mockResolvedValue({
       ok: false, error_code: "locked", failed_attempts: 3, locked_until: future,
@@ -280,7 +280,7 @@ describe("PIN lockout flow — useJuryState hook", () => {
   });
 
   qaTest("jury.pin.03", async () => {
-    api.listPeriods.mockResolvedValue([SEMESTER]);
+    api.listPeriods.mockResolvedValue([PERIOD]);
     api.authenticateJuror.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
     api.verifyJurorPin.mockResolvedValue({
       ok: false, error_code: "invalid", failed_attempts: 2,
@@ -344,7 +344,7 @@ describe("jury.flow — flow mechanics", () => {
     const fullScores = { technical: 20, design: 20, delivery: 20, teamwork: 20 };
     const submitted = new Date().toISOString();
 
-    api.listPeriods.mockResolvedValue([SEMESTER]);
+    api.listPeriods.mockResolvedValue([PERIOD]);
     api.authenticateJuror.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
     api.listProjects.mockResolvedValue([{
       project_id: "p-1", group_no: 1, project_title: "Alpha", group_students: "Alice",
@@ -404,7 +404,7 @@ describe("resume flow guard — no implicit submit modal", () => {
   });
 
   qaTest("jury.resume.01", async () => {
-    api.listPeriods.mockResolvedValue([SEMESTER]);
+    api.listPeriods.mockResolvedValue([PERIOD]);
     api.authenticateJuror.mockResolvedValue({ juror_id: "j-1", needs_pin: true });
     api.listProjects.mockResolvedValue([makeProject({
       scores: { technical: 20, design: 20, delivery: 20, teamwork: 20 },

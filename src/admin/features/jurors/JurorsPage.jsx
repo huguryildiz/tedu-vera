@@ -1,3 +1,4 @@
+// size-ceiling-ok: retroactive violation — tracked for split in dedicated refactor session
 // src/admin/pages/JurorsPage.jsx — Phase 7
 // Jurors management page. Structure from prototype lines 13492–13989.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -176,7 +177,7 @@ export default function JurorsPage() {
     selectedPeriodId,
     isDemoMode = false,
     onDirtyChange,
-    onCurrentSemesterChange,
+    onCurrentPeriodChange,
     onViewReviews,
     onNavigate,
     bgRefresh,
@@ -201,7 +202,7 @@ export default function JurorsPage() {
     setMessage,
     incLoading,
     decLoading,
-    onCurrentPeriodChange: onCurrentSemesterChange,
+    onCurrentPeriodChange: onCurrentPeriodChange,
     setPanelError,
     clearPanelError,
     bgRefresh,

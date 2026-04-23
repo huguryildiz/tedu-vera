@@ -59,7 +59,7 @@ vi.mock("@/shared/ui/Icons", () => ({
   ChevronDownIcon: () => null,
 }));
 
-vi.mock("@/shared/ui/EntityMeta", () => ({ StudentNames: () => null }));
+vi.mock("@/shared/ui/EntityMeta", () => ({ TeamMemberNames: () => null }));
 vi.mock("@/admin/shared/AvgDonut", () => ({ default: () => null }));
 vi.mock("@/admin/shared/JurorBadge", () => ({ default: () => null }));
 vi.mock("@/admin/shared/JurorStatusPill", () => ({ default: () => null }));

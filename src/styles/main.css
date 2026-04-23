@@ -61,16 +61,10 @@
 @import './landing/responsive-inline.css';
 @import './landing/sections.css';
 @import './landing/light-mode.css';
-@import './landing/legacy-shell.css';
-@import './landing/legacy-eyebrow.css';
-@import './landing/legacy-responsive.css';
-@import './landing/legacy-sections.css';
-@import './landing/legacy-light-mode.css';
 @import './landing/mobile.css';
 @import './maintenance.css';
 @import '../auth/shared/auth-base.css';
 @import './drawers/base.css';
-@import './drawers/crud-legacy.css';
 @import './drawers/backups.css';
 @import './drawers/inline-confirm.css';
 @import './drawers/project-scores.css';

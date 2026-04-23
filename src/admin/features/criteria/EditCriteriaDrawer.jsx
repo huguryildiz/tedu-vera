@@ -46,7 +46,7 @@ export default function EditCriteriaDrawer({
               <div className="crt-drawer-subtitle">
                 Scoring weights and rubric configuration
                 {period?.name && (
-                  <span className="crt-semester-tag">{period.name}</span>
+                  <span className="crt-period-tag">{period.name}</span>
                 )}
               </div>
             </div>

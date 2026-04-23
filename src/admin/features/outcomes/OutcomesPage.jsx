@@ -1,3 +1,4 @@
+// size-ceiling-ok: retroactive violation — tracked for split in dedicated refactor session
 // src/admin/pages/OutcomesPage.jsx
 // Outcomes & Mapping page — period-scoped outcome CRUD + criterion mapping.
 // Matches vera-premium-prototype.html mockup.
@@ -237,7 +238,7 @@ export default function OutcomesPage() {
     selectedPeriodId,
     selectedPeriod,
     frameworks = [],
-    semesterOptions: allPeriods = [],
+    periodOptions: allPeriods = [],
     onFrameworksChange,
     loading: adminLoading,
     fetchData,

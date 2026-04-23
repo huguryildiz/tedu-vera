@@ -17,7 +17,7 @@ import RubricSheet from "./RubricSheet";
 import SpotlightTour from "../../shared/SpotlightTour";
 import SegmentedBar from "./SegmentedBar";
 import ProjectDrawer from "./ProjectDrawer";
-import { StudentNames } from "@/shared/ui/EntityMeta";
+import { TeamMemberNames } from "@/shared/ui/EntityMeta";
 
 const RUBRIC_TOUR_STEPS = [
   {
@@ -123,7 +123,7 @@ export default function EvalStep({ state, onBack }) {
         <div className="dj-group-bar" onClick={() => setDrawerOpen(true)}>
           <div className="dj-group-bar-info">
             <div className="dj-group-bar-title">{state.project.title}</div>
-            <div className="dj-group-bar-sub"><StudentNames names={state.project.members} /></div>
+            <div className="dj-group-bar-sub"><TeamMemberNames names={state.project.members} /></div>
           </div>
           <div className="dj-group-bar-right">
             <span className="dj-group-bar-num">{projIdx + 1}/{total}</span>

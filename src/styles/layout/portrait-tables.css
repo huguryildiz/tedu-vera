@@ -166,7 +166,7 @@
     display: none;
   }
 
-  /* ── 1E. SEMESTERS TABLE → Card layout ── */
+  /* ── 1E. PERIODS TABLE → Card layout ── */
   .sem-table-wrap { overflow: visible !important; }
   .sem-table-wrap table { min-width: 0 !important; width: 100%; }
   .sem-table { display: block; width: 100%; }
@@ -262,7 +262,7 @@
   .sem-table .sem-stat-label { font-size: 9.5px; }
   #jurors-main-table .juror-action-menu,
   #projects-main-table .juror-action-menu,
-  #semesters-main-table .sem-action-menu {
+  #periods-main-table .sem-action-menu {
     min-width: min(86vw, 240px);
     max-width: calc(100vw - 22px);
   }

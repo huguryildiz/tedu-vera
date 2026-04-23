@@ -74,7 +74,7 @@ vi.mock("@/admin/utils/csvParser", () => ({
   parseJurorsCsv: vi.fn(),
   parseProjectsCsv: vi.fn(),
 }));
-vi.mock("@/admin/utils/auditUtils", () => ({ normalizeStudentNames: vi.fn((s) => s) }));
+vi.mock("@/admin/utils/auditUtils", () => ({ normalizeTeamMemberNames: vi.fn((s) => s) }));
 vi.mock("@/shared/ui/avatarColor", () => ({
   avatarGradient: vi.fn(() => "#6366f1"),
   initials: vi.fn(() => "DA"),

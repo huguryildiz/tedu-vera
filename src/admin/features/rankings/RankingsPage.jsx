@@ -1,3 +1,4 @@
+// size-ceiling-ok: retroactive violation — tracked for split in dedicated refactor session
 // src/admin/RankingsPage.jsx — Phase 3
 // Rankings page: KPI strip, filter panel, export panel, sortable table with heat cells + consensus badges.
 // Prototype reference: vera-premium-prototype.html lines 11985–12197.
@@ -12,7 +13,7 @@ import { GitCompare, Filter, Icon, XCircle, Search, Trophy } from "lucide-react"
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import { LOCK_TOOLTIP_GRACE, LOCK_TOOLTIP_EXPIRED } from "@/auth/shared/lockedActions";
 import CompareProjectsModal from "@/admin/features/projects/CompareProjectsModal";
-import { StudentNames } from "@/shared/ui/EntityMeta";
+import { TeamMemberNames } from "@/shared/ui/EntityMeta";
 import JurorBadge from "@/admin/shared/JurorBadge";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import { FilterButton } from "@/shared/ui/FilterButton.jsx";
@@ -921,7 +922,7 @@ export default function RankingsPage() {
                         <td className="col-students" data-label="Team Members">
                           <span className="rk-members-label">Team Members</span>
                           <div className="meta-chips-row">
-                            <StudentNames names={members} />
+                            <TeamMemberNames names={members} />
                           </div>
                           {proj.advisor && (() => {
                             const advisors = proj.advisor.split(",").map((s) => s.trim()).filter(Boolean);

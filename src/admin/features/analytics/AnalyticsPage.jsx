@@ -283,7 +283,7 @@ export default function AnalyticsPage() {
     error,
     periodName,
     selectedPeriodId,
-    semesterOptions,
+    periodOptions,
     criteriaConfig,
     outcomeConfig,
     threshold = 70,
@@ -297,12 +297,12 @@ export default function AnalyticsPage() {
     outcomeTrendData,
     outcomeTrendLoading,
     outcomeTrendError,
-    trendPeriodIds: trendSemesterIds,
+    trendPeriodIds,
     setTrendPeriodIds: onTrendSelectionChange,
   } = useAnalyticsData({
     organizationId,
-    periodList: semesterOptions || [],
-    sortedPeriods: semesterOptions || [],
+    periodList: periodOptions || [],
+    sortedPeriods: periodOptions || [],
     lastRefresh,
   });
   const criteria = criteriaConfig || [];
@@ -317,9 +317,9 @@ export default function AnalyticsPage() {
   // Fetch delta data: current period + immediately previous period, independently
   // of the trend chart selection so the badge is always accurate.
   useEffect(() => {
-    if (!selectedPeriodId || !semesterOptions?.length) { setDeltaRows([]); return; }
-    const currentIdx = semesterOptions.findIndex((p) => p.id === selectedPeriodId);
-    const prevPeriod = currentIdx >= 0 ? semesterOptions[currentIdx + 1] : null;
+    if (!selectedPeriodId || !periodOptions?.length) { setDeltaRows([]); return; }
+    const currentIdx = periodOptions.findIndex((p) => p.id === selectedPeriodId);
+    const prevPeriod = currentIdx >= 0 ? periodOptions[currentIdx + 1] : null;
     if (!prevPeriod) { setDeltaRows([]); return; }
     let cancelled = false;
     import("@/shared/api").then(({ getOutcomeTrends }) =>
@@ -330,7 +330,7 @@ export default function AnalyticsPage() {
       if (!cancelled) setDeltaRows([]);
     });
     return () => { cancelled = true; };
-  }, [selectedPeriodId, semesterOptions]);
+  }, [selectedPeriodId, periodOptions]);
 
   async function handleExport(format = "xlsx") {
     try {
@@ -356,7 +356,7 @@ export default function AnalyticsPage() {
           juror_count: jurorCount || null,
           filters: {
             selected_period_id: selectedPeriodId || null,
-            trend_period_ids: trendSemesterIds || [],
+            trend_period_ids: trendPeriodIds || [],
           },
         },
       });
@@ -365,8 +365,8 @@ export default function AnalyticsPage() {
         dashboardStats,
         submittedData,
         trendData: trendData || [],
-        semesterOptions: semesterOptions || [],
-        trendSemesterIds: trendSemesterIds || [],
+        periodOptions: periodOptions || [],
+        trendPeriodIds: trendPeriodIds || [],
         activeOutcomes: criteria,
         outcomeLookup: outcomeConfig || [],
         threshold,
@@ -395,8 +395,8 @@ export default function AnalyticsPage() {
       dashboardStats,
       submittedData,
       trendData: trendData || [],
-      semesterOptions: semesterOptions || [],
-      trendSemesterIds: trendSemesterIds || [],
+      periodOptions: periodOptions || [],
+      trendPeriodIds: trendPeriodIds || [],
       activeOutcomes: criteria,
       outcomeLookup: outcomeConfig || [],
       threshold,
@@ -423,8 +423,8 @@ export default function AnalyticsPage() {
   const attCards = buildAttainmentCards(submittedData, criteria, deltaRows, threshold, outcomeConfig);
   const { rows: outcomeTrendRows, outcomeMeta } = buildOutcomeAttainmentTrendDataset(
     outcomeTrendData,
-    semesterOptions,
-    trendSemesterIds
+    periodOptions,
+    trendPeriodIds
   );
   const metCount = attCards.filter((c) => c.statusClass === "status-met").length;
   const totalCount = attCards.filter((c) => c.attRate != null).length;

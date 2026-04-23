@@ -17,7 +17,6 @@ const STEP_INDEX = {
   arrival: 0,
   identity: 0,
   period: 0,
-  semester: 0,
   pin: 1,
   pin_reveal: 1,
   locked: 1,

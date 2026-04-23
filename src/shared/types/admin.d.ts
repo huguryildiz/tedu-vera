@@ -12,8 +12,8 @@ export interface ProjectShape {
   updated_at: string;
 }
 
-/** A semester record from Supabase. */
-export interface SemesterShape {
+/** A period record from Supabase. */
+export interface PeriodShape {
   id: string;
   semester_name: string;
   is_locked: boolean;

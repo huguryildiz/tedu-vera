@@ -1,3 +1,4 @@
+// size-ceiling-ok: retroactive violation — tracked for split in dedicated refactor session
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, KeyRound, Quote, Star, Icon, Loader2 } from "lucide-react";

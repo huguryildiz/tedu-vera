@@ -30,7 +30,7 @@ import {
 
 } from "@/shared/ui/Icons";
 import { Users, Trophy, Activity, CheckCircle2, ShieldCheck } from "lucide-react";
-import { StudentNames } from "@/shared/ui/EntityMeta";
+import { TeamMemberNames } from "@/shared/ui/EntityMeta";
 import AvgDonut from "@/admin/shared/AvgDonut";
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -846,7 +846,7 @@ export default function OverviewPage() {
                       <td className="col-students" data-label="Team Members">
                         <div className="meta-chips-row">
                           <span className="meta-chips-eyebrow">Team Members</span>
-                          <StudentNames names={p.members} />
+                          <TeamMemberNames names={p.members} />
                         </div>
                       </td>
                       {isPortraitMobile && p.advisor && (() => {

@@ -84,7 +84,7 @@
   .header-refresh-btn span { display: none; }
   .header-refresh-btn { padding: 6px 8px; }
   .dropdown-trigger { height: 36px; padding: 0 10px; font-size: 12px; border-radius: 8px; }
-  #semester-label { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+  #period-label { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
   .admin-content { padding: 14px; }
   .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
   .kpi { padding: 14px; }
@@ -156,6 +156,6 @@
   .kpi-value { font-size: 20px; }
   .kpi-label { font-size: 9px; }
   .dropdown-trigger { height: 34px; font-size: 11px; padding: 0 8px; }
-  #semester-label { max-width: 68px; }
+  #period-label { max-width: 68px; }
 }
 

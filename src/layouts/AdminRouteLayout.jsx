@@ -264,7 +264,7 @@ export default function AdminRouteLayout() {
   }, [selectedPeriodId, activeOrganization?.id, selectedPeriod]);
 
   const onDirtyChange = useCallback((dirty) => { settingsDirtyRef.current = dirty; }, []);
-  const onCurrentSemesterChange = useCallback((periodId) => {
+  const onCurrentPeriodChange = useCallback((periodId) => {
     setSelectedPeriodId(periodId);
     fetchData(periodId);
   }, [fetchData]);
@@ -392,7 +392,7 @@ export default function AdminRouteLayout() {
     activeOrganization,
     settingsDirtyRef,
     onDirtyChange,
-    onCurrentSemesterChange,
+    onCurrentPeriodChange,
     navigateTo,
     basePath,
     isDemo,
@@ -406,7 +406,7 @@ export default function AdminRouteLayout() {
     selectedPeriod, selectedPeriodId, setSelectedPeriodId,
     criteriaConfig, criteriaLoading, outcomeConfig, frameworks, reloadFrameworks, reloadCriteriaAndOutcomes,
     frameworkThreshold, groups, matrixJurors, activeOrganization,
-    onDirtyChange, onCurrentSemesterChange, navigateTo,
+    onDirtyChange, onCurrentPeriodChange, navigateTo,
     basePath, isDemo, isDemoMode, scoresView, handleStartTour,
   ]);
 

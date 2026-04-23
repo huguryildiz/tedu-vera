@@ -9,6 +9,8 @@
     "check:no-native-select": "node scripts/check-no-native-select.mjs",
     "check:no-nested-panels": "node scripts/check-no-nested-panels.mjs",
     "check:no-table-font-override": "node scripts/check-no-table-font-override.mjs",
+    "check:js-size": "node scripts/check-js-file-size.mjs",
+    "check:css-size": "node scripts/check-css-file-size.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",

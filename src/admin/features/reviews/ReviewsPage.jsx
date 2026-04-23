@@ -37,7 +37,7 @@ import { downloadTable, generateTableBlob } from "@/admin/utils/downloadTable";
 import JurorBadge from "@/admin/shared/JurorBadge";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import CustomSelect from "@/shared/ui/CustomSelect";
-import { StudentNames } from "@/shared/ui/EntityMeta";
+import { TeamMemberNames } from "@/shared/ui/EntityMeta";
 import { computeCoverage, computePending, computeSpread } from "@/admin/utils/reviewsKpiHelpers";
 import "./styles/index.css";
 
@@ -808,7 +808,7 @@ export default function ReviewsPage() {
                       </td>
                       <td className="col-project text-sm">{row.title || row.projectName || "—"}</td>
                       <td className="col-members text-xs text-muted">
-                        <StudentNames names={row.students} />
+                        <TeamMemberNames names={row.students} />
                         {!row.students ? "—" : null}
                       </td>
                       {scoreCols.filter((c) => c.key !== "total").map((col) => {

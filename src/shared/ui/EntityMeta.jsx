@@ -1,17 +1,17 @@
 // src/components/EntityMeta.jsx
 // ============================================================
-// Canonical rendering for Group, Project Title, and Students.
+// Canonical rendering for Group, Project Title, and Team Members.
 // Use these components EVERYWHERE these three entities appear.
 //
 // Hierarchy (visual dominance):
 //   1. GroupLabel   — FolderKanban icon + bold text
 //   2. ProjectTitle — Presentation icon + normal weight text
-//   3. StudentNames — avatar + initials + full names
+//   3. TeamMemberNames — avatar + initials + full names
 //
 // Usage:
 //   <GroupLabel text={`Group ${groupNo}`} />
 //   <ProjectTitle text={projectTitle} />
-//   <StudentNames names={studentNamesArray} />
+//   <TeamMemberNames names={teamMembersArray} />
 // ============================================================
 
 import { FolderKanbanIcon, FileTextIcon } from "./Icons";
@@ -72,6 +72,6 @@ export function TeamMembersInline({ names, className = "" }) {
   );
 }
 
-export function StudentNames({ names }) {
+export function TeamMemberNames({ names }) {
   return <TeamMembersInline names={names} className="entity-student-names" />;
 }

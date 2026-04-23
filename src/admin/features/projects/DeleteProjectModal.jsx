@@ -14,7 +14,7 @@ import { useState } from "react";
 import { AlertCircle, Icon } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
-import { StudentNames } from "@/shared/ui/EntityMeta";
+import { TeamMemberNames } from "@/shared/ui/EntityMeta";
 
 export default function DeleteProjectModal({ open, onClose, project, impact = {}, onDelete, periodName }) {
   const [deleting, setDeleting] = useState(false);
@@ -85,7 +85,7 @@ export default function DeleteProjectModal({ open, onClose, project, impact = {}
             </div>
 {project.members?.length > 0 && (
               <div style={{ marginTop: 8 }}>
-                <StudentNames names={project.members} />
+                <TeamMemberNames names={project.members} />
               </div>
             )}
           </div>

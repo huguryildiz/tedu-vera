@@ -26,16 +26,16 @@ const DB_KEY_MAP = {
 /**
  * @param {object} props
  * @param {object[]} props.trendData      — rows from getOutcomeTrends
- * @param {object[]} props.semesterOptions — period list [{ id, period_name }]
+ * @param {object[]} props.periodOptions — period list [{ id, period_name }]
  * @param {string[]} props.selectedIds     — selected period IDs
  * @param {object[]} props.criteria        — active criteria with max values
  */
-export function AttainmentTrendChart({ trendData = [], semesterOptions = [], selectedIds = [], criteria = [], threshold = 70 }) {
+export function AttainmentTrendChart({ trendData = [], periodOptions = [], selectedIds = [], criteria = [], threshold = 70 }) {
   const activeCriteria = criteria || [];
   const maxMap = Object.fromEntries(activeCriteria.map((c) => [c.id, c.max]));
   const dataMap = new Map((trendData || []).map((row) => [row.periodId, row]));
 
-  const ordered = (semesterOptions || [])
+  const ordered = (periodOptions || [])
     .filter((s) => (selectedIds || []).includes(s.id))
     .sort((a, b) => {
       // Sort ascending by start date if available, else by array order

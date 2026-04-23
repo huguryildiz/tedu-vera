@@ -9,7 +9,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import useJuryState from "./shared/useJuryState";
 import ArrivalStep from "./features/arrival/ArrivalStep";
 import IdentityStep from "./features/identity/IdentityStep";
-import SemesterStep from "./features/period-select/SemesterStep";
+import PeriodStep from "./features/period-select/PeriodStep";
 import PinStep from "./features/pin/PinStep";
 import PinRevealStep from "./features/pin-reveal/PinRevealStep";
 import LockedStep from "./features/lock/LockedStep";
@@ -52,12 +52,12 @@ export default function JuryFlow() {
 
   // Map step names to components
   // "arrival" is the QR-scan-success welcome screen (initial step for both prod + demo)
-  // "period" is the hook-internal name for semester selection
+  // "period" is the hook-internal step name for period selection
   const stepComponents = {
     arrival: ArrivalStep,
     identity: IdentityStep,
-    period: SemesterStep,      // hook sets "period", not "semester"
-    semester: SemesterStep,    // kept as alias
+    period: PeriodStep,
+    semester: PeriodStep,    // kept as alias
     pin: PinStep,
     pin_reveal: PinRevealStep,
     locked: LockedStep,

@@ -1,3 +1,4 @@
+// size-ceiling-ok: retroactive violation — tracked for split in dedicated refactor session
 // src/admin/pages/OrganizationsPage.jsx
 // Super-admin only: organization management, pending approvals, governance.
 // Extracted from SettingsPage.jsx as part of Settings restructure.

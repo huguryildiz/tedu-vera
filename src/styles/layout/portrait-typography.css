@@ -22,7 +22,7 @@
     font-size: 12px; line-height: 1.3;
   }
 
-  /* ── Semesters header: stack like other headers ── */
+  /* ── Periods header: stack like other headers ── */
   .sem-header {
     flex-direction: column; align-items: flex-start; gap: 8px;
   }
@@ -33,7 +33,7 @@
     flex: 1; min-width: 0; font-size: 11px; padding: 6px 10px;
   }
 
-  /* ── Semester card content: clean wrapping ── */
+  /* ── Period card content: clean wrapping ── */
   .sem-name { font-size: 13px; line-height: 1.35; }
   .sem-name-sub { font-size: 10px; line-height: 1.4; }
   .sem-stat { font-size: 13px; }

@@ -115,10 +115,6 @@
   flex-shrink: 0;
 }
 
-.mop-pending-count {
-  font-weight: 500;
-  color: #d97706;
-}
 
 .mop-empty-state {
   padding: 32px;
@@ -233,20 +229,5 @@
   gap: 2px;
 }
 
-.mop-pending-footer {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
 
-.mop-pending-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.mop-pending-count-warn {
-  font-weight: 500;
-  color: #d97706;
-}

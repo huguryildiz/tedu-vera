@@ -9,7 +9,7 @@ vi.mock("@/admin/shared/useAdminContext", () => ({
     selectedPeriodId: "period-001",
     selectedPeriod: null,
     frameworks: [],
-    semesterOptions: [],
+    periodOptions: [],
     onFrameworksChange: vi.fn(),
     loading: false,
     fetchData: vi.fn().mockResolvedValue(undefined),

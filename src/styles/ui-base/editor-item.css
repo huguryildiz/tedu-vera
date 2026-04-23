@@ -1,4 +1,3 @@
-
 /* ── Collapsible editor item ─────────────────────────────── */
 
 .collapsible-editor {
@@ -116,13 +115,4 @@
 
 /* ── Lock icon wrapper (absolute inset for locked fields) ── */
 
-.vera-lock-icon-wrap {
-  position: absolute;
-  inset-block: 0;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  pointer-events: none;
-  color: var(--text-secondary);
-}
 

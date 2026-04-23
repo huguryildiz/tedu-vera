@@ -9,22 +9,22 @@ import { KEYS } from "./keys";
 // The existing persist.js already handles try/catch and JSON serialization.
 export { readSection, writeSection } from "@/admin/utils/persist";
 
-/** Get raw token storage key for a semester. */
-export function tokenKey(semesterId) {
-  return KEYS.JURY_RAW_TOKEN_PREFIX + semesterId;
+/** Get raw token storage key for a period. */
+export function tokenKey(periodId) {
+  return KEYS.JURY_RAW_TOKEN_PREFIX + periodId;
 }
 
-/** Read raw token for a semester (checks sessionStorage first). */
-export function getRawToken(semesterId) {
-  const key = tokenKey(semesterId);
+/** Read raw token for a period (checks sessionStorage first). */
+export function getRawToken(periodId) {
+  const key = tokenKey(periodId);
   try {
     return sessionStorage.getItem(key) || localStorage.getItem(key) || null;
   } catch { return null; }
 }
 
 /** Store raw token in both sessionStorage and localStorage. */
-export function setRawToken(semesterId, token) {
-  const key = tokenKey(semesterId);
+export function setRawToken(periodId, token) {
+  const key = tokenKey(periodId);
   try {
     sessionStorage.setItem(key, token);
     localStorage.setItem(key, token);
@@ -32,8 +32,8 @@ export function setRawToken(semesterId, token) {
 }
 
 /** Remove raw token from both storages. */
-export function clearRawToken(semesterId) {
-  const key = tokenKey(semesterId);
+export function clearRawToken(periodId) {
+  const key = tokenKey(periodId);
   try {
     sessionStorage.removeItem(key);
     localStorage.removeItem(key);

@@ -3,20 +3,17 @@ import { renderHook } from "@testing-library/react";
 import { qaTest } from "@/test/qaTest";
 
 vi.mock("@/shared/api", () => ({
-  listSemesters: vi.fn().mockResolvedValue({ data: [], error: null }),
-  createSemester: vi.fn().mockResolvedValue({ data: {}, error: null }),
-  updateSemester: vi.fn().mockResolvedValue({ data: {}, error: null }),
-  deleteSemester: vi.fn().mockResolvedValue({ data: {}, error: null }),
+  listPeriods: vi.fn().mockResolvedValue({ data: [], error: null }),
+  createPeriod: vi.fn().mockResolvedValue({ data: {}, error: null }),
+  updatePeriod: vi.fn().mockResolvedValue({ data: {}, error: null }),
+  deletePeriod: vi.fn().mockResolvedValue({ data: {}, error: null }),
   setEvalLock: vi.fn().mockResolvedValue({ data: {}, error: null }),
   getCriteriaConfig: vi.fn().mockResolvedValue({ data: null, error: null }),
   getOutcomeConfig: vi.fn().mockResolvedValue({ data: null, error: null }),
-  getSemesterCriteriaSnapshot: vi.fn().mockResolvedValue({ data: null, error: null }),
+  getPeriodCriteriaSnapshot: vi.fn().mockResolvedValue({ data: null, error: null }),
   getPeriodCriteriaConfig: vi.fn().mockResolvedValue({ data: null, error: null }),
   getPeriodOutcomeConfig: vi.fn().mockResolvedValue({ data: null, error: null }),
   duplicatePeriod: vi.fn().mockResolvedValue({ data: { id: "new-001" }, error: null }),
-  createPeriod: vi.fn().mockResolvedValue({ data: { id: "new-001" }, error: null }),
-  updatePeriod: vi.fn().mockResolvedValue({ data: {}, error: null }),
-  deletePeriod: vi.fn().mockResolvedValue({ data: {}, error: null }),
 }));
 
 vi.mock("@/shared/lib/supabaseClient", () => ({

@@ -22,7 +22,7 @@ export interface Criterion {
   rubric: RubricBand[];
 }
 
-/** A criterion as stored in semester criteria_template JSONB. */
+/** A criterion as stored in period criteria_template JSONB. */
 export interface CriterionTemplate {
   key: string;
   label: string;
@@ -35,7 +35,7 @@ export interface CriterionTemplate {
   rubric: RubricBand[];
 }
 
-/** The full criteria template array stored per semester. */
+/** The full criteria template array stored per period. */
 export type CriteriaTemplate = CriterionTemplate[];
 
 /** An outcome definition. */

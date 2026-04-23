@@ -161,10 +161,10 @@ export function buildProgrammeAveragesDataset(submittedData, outcomes = []) {
   };
 }
 
-export function buildTrendDataset(trendData, semesterOptions, selectedIds, outcomes = []) {
+export function buildTrendDataset(trendData, periodOptions, selectedIds, outcomes = []) {
   const dataMap = new Map((trendData || []).map((row) => [row.periodId, row]));
-  const orderIndex = new Map((semesterOptions || []).map((s, i) => [s.id, i]));
-  const ordered = (semesterOptions || [])
+  const orderIndex = new Map((periodOptions || []).map((s, i) => [s.id, i]));
+  const ordered = (periodOptions || [])
     .filter((s) => (selectedIds || []).includes(s.id))
     .sort((a, b) => (orderIndex.get(b.id) ?? 0) - (orderIndex.get(a.id) ?? 0));
 
@@ -184,8 +184,8 @@ export function buildTrendDataset(trendData, semesterOptions, selectedIds, outco
   });
   return {
     sheet: "Attainment Trend",
-    title: CHART_COPY.semesterTrend.title,
-    note: CHART_COPY.semesterTrend.note,
+    title: CHART_COPY.periodTrend.title,
+    note: CHART_COPY.periodTrend.note,
     headers,
     rows,
   };
@@ -347,19 +347,19 @@ const OUTCOME_TREND_COLORS = [
  * Transforms getOutcomeAttainmentTrends() output into Recharts-compatible rows.
  *
  * @param {object[]} outcomeTrendData — output of getOutcomeAttainmentTrends()
- * @param {object[]} semesterOptions  — period list [{ id, period_name, startDate }]
+ * @param {object[]} periodOptions  — period list [{ id, period_name, startDate }]
  * @param {string[]} selectedIds      — selected period IDs
  * @returns {{ rows: object[], outcomeMeta: object[] }}
  *   rows: one entry per period with {period, "{code}_att", "{code}_avg"} keys (null for missing)
  *   outcomeMeta: [{ code, label, color, attKey, avgKey }]
  */
-export function buildOutcomeAttainmentTrendDataset(outcomeTrendData, semesterOptions, selectedIds) {
+export function buildOutcomeAttainmentTrendDataset(outcomeTrendData, periodOptions, selectedIds) {
   if (!outcomeTrendData?.length) return { rows: [], outcomeMeta: [] };
 
   const dataMap = new Map((outcomeTrendData || []).map((row) => [row.periodId, row]));
 
   // Sort periods chronologically
-  const ordered = (semesterOptions || [])
+  const ordered = (periodOptions || [])
     .filter((s) => (selectedIds || []).includes(s.id))
     .sort((a, b) => {
       const da = a.startDate ? new Date(a.startDate) : 0;

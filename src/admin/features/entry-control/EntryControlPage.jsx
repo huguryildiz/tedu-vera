@@ -1,3 +1,4 @@
+// size-ceiling-ok: retroactive violation — tracked for split in dedicated refactor session
 // src/admin/EntryControlPage.jsx — Phase 9
 // Entry Control page: QR access tokens, session monitoring, access history.
 // Prototype: vera-premium-prototype.html lines 14797–15047

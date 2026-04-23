@@ -116,7 +116,7 @@ vi.mock("@/shared/ui/PremiumTooltip", () => ({ default: () => null }));
 vi.mock("@/shared/ui/CustomSelect", () => ({ default: () => null }));
 vi.mock("@/shared/ui/FbAlert", () => ({ default: () => null }));
 vi.mock("@/shared/ui/FilterButton", () => ({ FilterButton: () => null }));
-vi.mock("@/shared/ui/EntityMeta", () => ({ StudentNames: () => null }));
+vi.mock("@/shared/ui/EntityMeta", () => ({ TeamMemberNames: () => null }));
 vi.mock("@/shared/hooks/useCardSelection", () => ({
   default: () => ({ selectedId: null, select: vi.fn(), clear: vi.fn() }),
 }));

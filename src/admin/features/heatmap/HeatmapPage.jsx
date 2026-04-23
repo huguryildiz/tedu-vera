@@ -18,6 +18,7 @@ import JurorBadge from "@/admin/shared/JurorBadge";
 import JurorStatusPill from "@/admin/shared/JurorStatusPill";
 import HeatmapMobileList from "./HeatmapMobileList.jsx";
 import "./HeatmapPage.css";
+import "./HeatmapPage.responsive.css";
 
 // ── Score color band ──────────────────────────────────────────
 // Returns a CSS variable name for the cell background color.

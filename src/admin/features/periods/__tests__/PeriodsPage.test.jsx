@@ -9,7 +9,7 @@ vi.mock("@/admin/shared/useAdminContext", () => ({
     selectedPeriodId: null,
     isDemoMode: false,
     onDirtyChange: vi.fn(),
-    onCurrentSemesterChange: vi.fn(),
+    onCurrentPeriodChange: vi.fn(),
     bgRefresh: { current: null },
     setMessage: vi.fn(),
     incLoading: vi.fn(),
@@ -87,7 +87,7 @@ vi.mock("@/shared/lib/dateUtils", () => ({ formatDateTime: () => "2026-01-01" })
 vi.mock("@/shared/api", () => ({
   logExportInitiated: vi.fn(),
   setEvalLock: vi.fn(),
-  getSemesterCriteriaSnapshot: vi.fn(),
+  getPeriodCriteriaSnapshot: vi.fn(),
   listPeriodStats: vi.fn().mockResolvedValue({ data: [] }),
 }));
 vi.mock("@/shared/criteria/criteriaHelpers", () => ({ getActiveCriteria: () => [] }));

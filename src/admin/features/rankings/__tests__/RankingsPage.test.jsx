@@ -52,7 +52,7 @@ vi.mock("@/shared/ui/Pagination", () => ({ default: () => null }));
 vi.mock("@/shared/hooks/useCardSelection", () => ({
   default: () => ({ selectedId: null, select: vi.fn(), clear: vi.fn() }),
 }));
-vi.mock("@/shared/ui/EntityMeta", () => ({ StudentNames: () => null }));
+vi.mock("@/shared/ui/EntityMeta", () => ({ TeamMemberNames: () => null }));
 vi.mock("@/auth/shared/lockedActions", () => ({
   LOCK_TOOLTIP_GRACE: "",
   LOCK_TOOLTIP_EXPIRED: "",

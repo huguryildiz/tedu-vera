@@ -75,7 +75,7 @@ vi.mock("@/shared/ui/PremiumTooltip", () => ({ default: () => null }));
 vi.mock("@/shared/ui/CustomSelect", () => ({ default: () => null }));
 vi.mock("@/shared/ui/FbAlert", () => ({ default: () => null }));
 vi.mock("@/shared/ui/FilterButton", () => ({ FilterButton: () => null }));
-vi.mock("@/shared/ui/EntityMeta", () => ({ StudentNames: () => null }));
+vi.mock("@/shared/ui/EntityMeta", () => ({ TeamMemberNames: () => null }));
 vi.mock("@/admin/shared/JurorBadge", () => ({ default: () => null }));
 vi.mock("@/admin/utils/csvParser", () => ({ parseProjectsCsv: vi.fn() }));
 vi.mock("@/admin/utils/downloadTable", () => ({

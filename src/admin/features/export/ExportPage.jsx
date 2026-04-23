@@ -33,8 +33,8 @@ export default function ExportPage() {
   const importFileRef = useRef(null);
 
   // ── Export helpers ────────────────────────────────────────────
-  const sortSemesters = (sems) =>
-    [...sems].sort((a, b) => {
+  const sortPeriods = (periods) =>
+    [...periods].sort((a, b) => {
       const aTs = a?.end_date ? Date.parse(a.end_date) : 0;
       const bTs = b?.end_date ? Date.parse(b.end_date) : 0;
       return bTs - aTs;
@@ -44,19 +44,19 @@ export default function ExportPage() {
     if (!organizationId) return;
     setScoresLoading(true);
     try {
-      const sems = (await listPeriods(organizationId)) || [];
-      if (!sems.length) { _toast.error("No evaluation periods found."); return; }
-      const orderedSemesters = sortSemesters(sems);
+      const periods = (await listPeriods(organizationId)) || [];
+      if (!periods.length) { _toast.error("No evaluation periods found."); return; }
+      const orderedPeriods = sortPeriods(periods);
       const results = await Promise.all(
-        orderedSemesters.map(async (sem) => {
+        orderedPeriods.map(async (period) => {
           const [rows, summary] = await Promise.all([
-            getScores(sem.id),
-            getProjectSummary(sem.id).catch(() => []),
+            getScores(period.id),
+            getProjectSummary(period.id).catch(() => []),
           ]);
           const summaryMap = new Map((summary || []).map((p) => [p.id, p]));
           const mappedRows = (rows || []).map((r) => ({
             ...r,
-            period: sem?.name || sem?.period_name || "",
+            period: period?.name || period?.period_name || "",
             students: summaryMap.get(r.projectId)?.students ?? "",
           }));
           return { rows: mappedRows, summary: summary || [] };
@@ -90,7 +90,7 @@ export default function ExportPage() {
         summaryData: allSummary,
         tenantCode,
       });
-      _toast.success(`Score report downloaded · ${orderedSemesters.length} period${orderedSemesters.length !== 1 ? "s" : ""} · Excel`);
+      _toast.success(`Score report downloaded · ${orderedPeriods.length} period${orderedPeriods.length !== 1 ? "s" : ""} · Excel`);
     } catch (e) {
       _toast.error(e?.message || "Score report export failed — please try again");
     } finally {
@@ -102,21 +102,21 @@ export default function ExportPage() {
     if (!organizationId) return;
     setProjectsLoading(true);
     try {
-      const sems = (await listPeriods(organizationId)) || [];
-      if (!sems.length) { _toast.error("No evaluation periods found."); return; }
-      const orderedSemesters = sortSemesters(sems);
-      const projectsBySemester = await Promise.all(
-        orderedSemesters.map(async (sem) => {
+      const periods = (await listPeriods(organizationId)) || [];
+      if (!periods.length) { _toast.error("No evaluation periods found."); return; }
+      const orderedPeriods = sortPeriods(periods);
+      const projectsByPeriod = await Promise.all(
+        orderedPeriods.map(async (period) => {
           const { adminListProjects } = await import("@/shared/api");
           return {
-            periodName: sem?.name || sem?.period_name || "",
-            rows: await adminListProjects(sem.id),
+            periodName: period?.name || period?.period_name || "",
+            rows: await adminListProjects(period.id),
           };
         }),
       );
       const XLSX = await import("xlsx-js-style");
       const headers = ["Period", "Project", "Title", "Team Members"];
-      const data = projectsBySemester.flatMap(({ periodName, rows }) =>
+      const data = projectsByPeriod.flatMap(({ periodName, rows }) =>
         (rows || []).map((p) => [
           periodName,
           p?.group_no ?? "",
@@ -158,9 +158,9 @@ export default function ExportPage() {
     try {
       const sems = (await listPeriods(organizationId)) || [];
       if (!sems.length) { _toast.error("No evaluation periods found."); return; }
-      const orderedSemesters = sortSemesters(sems);
-      const jurorsBySemester = await Promise.all(
-        orderedSemesters.map(async (sem) => ({
+      const orderedPeriods = sortPeriods(sems);
+      const jurorsByPeriod = await Promise.all(
+        orderedPeriods.map(async (sem) => ({
           periodName: sem?.name || sem?.period_name || "",
           rows: await listJurorsSummary(sem.id),
         })),
@@ -176,7 +176,7 @@ export default function ExportPage() {
       };
       const XLSX = await import("xlsx-js-style");
       const headers = ["Period", "Juror Name", "Affiliation"];
-      const data = jurorsBySemester.flatMap(({ periodName, rows }) => {
+      const data = jurorsByPeriod.flatMap(({ periodName, rows }) => {
         const hasAssignedFlag = (rows || []).some(
           (j) =>
             (j?.isAssigned !== undefined && j?.isAssigned !== null) ||

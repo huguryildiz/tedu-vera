@@ -23,8 +23,8 @@ export default function ScoresTab({
   lastRefresh,
   loading,
   error,
-  semesterOptions,
-  trendSemesterIds,
+  periodOptions,
+  trendPeriodIds,
   onTrendSelectionChange,
   trendData,
 
@@ -56,8 +56,8 @@ export default function ScoresTab({
           error={error}
           periodName={periodName}
           selectedPeriodId={selectedPeriodId}
-          semesterOptions={semesterOptions}
-          trendSemesterIds={trendSemesterIds}
+          periodOptions={periodOptions}
+          trendPeriodIds={trendPeriodIds}
           onTrendSelectionChange={onTrendSelectionChange}
           trendData={trendData}
           outcomeTrendData={outcomeTrendData}

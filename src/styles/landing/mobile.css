@@ -83,13 +83,6 @@
   .mobile-frame{width:200px;height:380px;border-radius:24px}
   .mobile-step-label{font-size:10px}
 
-  /* ── Use cases — single column ── */
-  .landing-usecases{padding:36px 16px}
-  .uc-grid{grid-template-columns:1fr;gap:12px}
-  .uc-card{padding:20px 16px;text-align:left;display:flex;flex-direction:column;gap:8px}
-  .uc-icon{margin-bottom:0}
-  .uc-tags{justify-content:flex-start}
-
   /* ── Comparison table — horizontal scroll ── */
   .landing-compare{padding:36px 16px}
   .landing-compare .compare-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -122,17 +115,6 @@
   .landing-faq{padding:36px 16px}
   .faq-q{padding:12px 14px;font-size:12.5px}
   .faq-a{padding:0 14px 12px;font-size:12px}
-
-  /* ── Admin gallery — single column ── */
-  .landing-admin-gallery{padding:36px 16px}
-  .admin-gallery-grid{grid-template-columns:1fr;gap:12px}
-
-  /* ── CTA reprise ── */
-  .landing-cta-reprise{padding:36px 16px}
-  .landing-cta-reprise-card{padding:28px 20px;border-radius:16px}
-  .landing-cta-reprise-buttons{flex-direction:column;gap:10px}
-  .landing-cta-reprise-buttons .btn-landing-primary,
-  .landing-cta-reprise-buttons .btn-landing-secondary{width:100%;justify-content:center}
 
   /* ── Footer — stack columns ── */
   .landing-footer{padding:32px 16px 0}

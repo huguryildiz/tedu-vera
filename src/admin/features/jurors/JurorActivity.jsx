@@ -6,7 +6,7 @@ import { readSection, writeSection } from "@/admin/utils/persist";
 import { StatusBadge } from "@/admin/shared/adminUtils";
 import { getCellState, getPartialTotal, jurorStatusMeta } from "@/admin/utils/scoreHelpers";
 import { ChevronDownIcon, HistoryIcon, LandmarkIcon, LoaderIcon, SearchIcon, UserCheckIcon, XIcon } from "@/shared/ui/Icons";
-import { GroupLabel, ProjectTitle, StudentNames } from "@/shared/ui/EntityMeta";
+import { GroupLabel, ProjectTitle, TeamMemberNames } from "@/shared/ui/EntityMeta";
 
 // jurorStats prop: { key, name, dept, jurorId, rows, latestRow, editEnabled }[]
 // groups prop: { id (uuid), groupNo, label }[]
@@ -313,7 +313,7 @@ export default function JurorActivity({ jurorStats = [], groups = [] }) {
                                 )}
                                 {row.students.length > 0 && (
                                   <div className="juror-eval-detail">
-                                    <StudentNames names={row.students} />
+                                    <TeamMemberNames names={row.students} />
                                   </div>
                                 )}
                               </div>

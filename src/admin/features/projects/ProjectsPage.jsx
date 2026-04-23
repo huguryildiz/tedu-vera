@@ -1,3 +1,4 @@
+// size-ceiling-ok: retroactive violation — tracked for split in dedicated refactor session
 // src/admin/pages/ProjectsPage.jsx — Phase 7
 // Projects management page. Structure from prototype lines 14001–14241.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -20,7 +21,7 @@ import EditProjectDrawer from "./EditProjectDrawer";
 import AddProjectDrawer from "./AddProjectDrawer";
 import ProjectScoresDrawer from "./ProjectScoresDrawer";
 import { downloadTable, generateTableBlob } from "@/admin/utils/downloadTable";
-import { StudentNames } from "@/shared/ui/EntityMeta";
+import { TeamMemberNames } from "@/shared/ui/EntityMeta";
 import { avatarGradient, initials } from "@/shared/ui/avatarColor";
 import JurorBadge from "@/admin/shared/JurorBadge";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
@@ -122,7 +123,7 @@ export default function ProjectsPage() {
     selectedPeriodId,
     isDemoMode = false,
     onDirtyChange,
-    onCurrentSemesterChange,
+    onCurrentPeriodChange,
     onNavigate,
     rawScores,
     summaryData,
@@ -147,7 +148,7 @@ export default function ProjectsPage() {
     setMessage,
     incLoading,
     decLoading,
-    onCurrentPeriodChange: onCurrentSemesterChange,
+    onCurrentPeriodChange: onCurrentPeriodChange,
     setPanelError,
     clearPanelError,
     bgRefresh,
@@ -883,7 +884,7 @@ export default function ProjectsPage() {
                   })()}
                 </td>
                 <td className="col-members" data-label="Team Members">
-                  <span className="members-text"><StudentNames names={project.members} /></span>
+                  <span className="members-text"><TeamMemberNames names={project.members} /></span>
                   <span className="members-chips-wrap">
                     <span className="members-chips-label">Team</span>
                     <MemberChips members={project.members} />

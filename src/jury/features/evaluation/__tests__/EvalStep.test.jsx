@@ -23,7 +23,7 @@ vi.mock("../ProjectDrawer", () => ({
 }));
 
 vi.mock("@/shared/ui/EntityMeta", () => ({
-  StudentNames: ({ names }) => <span>{(names || []).join(", ")}</span>,
+  TeamMemberNames: ({ names }) => <span>{(names || []).join(", ")}</span>,
 }));
 
 import EvalStep from "../EvalStep";

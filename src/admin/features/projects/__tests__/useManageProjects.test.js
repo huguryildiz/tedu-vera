@@ -17,7 +17,7 @@ vi.mock("@/shared/lib/supabaseClient", () => ({
 }));
 
 vi.mock("@/admin/utils/auditUtils", () => ({
-  normalizeStudentNames: (names) => names,
+  normalizeTeamMemberNames: (names) => names,
 }));
 
 import { useManageProjects } from "../useManageProjects";

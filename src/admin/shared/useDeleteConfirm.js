@@ -63,7 +63,7 @@ const buildDeleteToastMessage = (type, label) => {
 
 /**
  * Derives a typed-confirmation string for high-impact deletes.
- * Semesters require typing the exact period name.
+ * Periods require typing the exact period name.
  * Other entities use simple confirmation (null = no typed input).
  */
 const deriveTypedConfirmation = (target) => {
@@ -88,7 +88,7 @@ const deriveTypedConfirmation = (target) => {
  * @param {string}   opts.organizationId
  * @param {Function} opts.setMessage          Toast setter from SettingsPage.
  * @param {Function} opts.clearAllPanelErrors Clears all panel-level errors before delete.
- * @param {Function} opts.onSemesterDeleted   (id) → called after period delete.
+ * @param {Function} opts.onPeriodDeleted   (id) → called after period delete.
  * @param {Function} opts.onProjectDeleted    (id) → called after project delete.
  * @param {Function} opts.onJurorDeleted      (id) → called after juror delete.
  */
@@ -96,7 +96,7 @@ export function useDeleteConfirm({
   organizationId,
   setMessage,
   clearAllPanelErrors,
-  onSemesterDeleted,
+  onPeriodDeleted,
   onProjectDeleted,
   onJurorDeleted,
 }) {
@@ -138,7 +138,7 @@ export function useDeleteConfirm({
     clearAllPanelErrors?.();
     await deleteEntity({ targetType: type, targetId: id });
     if (type === "period") {
-      onSemesterDeleted?.(id);
+      onPeriodDeleted?.(id);
     } else if (type === "project") {
       onProjectDeleted?.(id);
     } else if (type === "juror") {

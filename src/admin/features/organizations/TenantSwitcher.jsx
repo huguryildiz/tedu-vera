@@ -1,7 +1,7 @@
 // src/admin/components/TenantSwitcher.jsx
 // ============================================================
 // Phase C.4: Tenant context switcher for super-admins.
-// Custom dropdown styled consistently with SemesterDropdown.
+// Custom dropdown styled consistently with PeriodDropdown.
 // ============================================================
 
 import { useEffect, useRef, useState } from "react";

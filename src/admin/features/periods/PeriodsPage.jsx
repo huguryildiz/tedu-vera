@@ -1,3 +1,4 @@
+// size-ceiling-ok: retroactive violation — tracked for split in dedicated refactor session
 // src/admin/pages/PeriodsPage.jsx — Phase 7
 // Evaluation Periods management page.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -496,7 +497,7 @@ export default function PeriodsPage() {
     frameworks = [],
     isDemoMode = false,
     onDirtyChange,
-    onCurrentSemesterChange,
+    onCurrentPeriodChange,
     onNavigate,
     bgRefresh,
   } = useAdminContext();
@@ -517,7 +518,7 @@ export default function PeriodsPage() {
     setMessage,
     incLoading,
     decLoading,
-    onCurrentPeriodChange: onCurrentSemesterChange,
+    onCurrentPeriodChange: onCurrentPeriodChange,
     setPanelError,
     clearPanelError,
     bgRefresh,
@@ -1440,7 +1441,7 @@ export default function PeriodsPage() {
                         <ReadinessPopover
                           readiness={periodReadiness[period.id]}
                           onFix={(target) => {
-                            onCurrentSemesterChange?.(period.id);
+                            onCurrentPeriodChange?.(period.id);
                             onNavigate?.(target);
                           }}
                         />
@@ -1502,7 +1503,7 @@ export default function PeriodsPage() {
                               <button
                                 className="periods-cset-badge row-inline-control"
                                 onClick={() => {
-                                  onCurrentSemesterChange?.(period.id);
+                                  onCurrentPeriodChange?.(period.id);
                                   onNavigate?.("criteria");
                                 }}
                               >
@@ -1517,7 +1518,7 @@ export default function PeriodsPage() {
                                 <button
                                   className="periods-notset-add-btn row-inline-control"
                                   onClick={() => {
-                                    onCurrentSemesterChange?.(period.id);
+                                    onCurrentPeriodChange?.(period.id);
                                     onNavigate?.("criteria");
                                   }}
                                 >
@@ -1542,7 +1543,7 @@ export default function PeriodsPage() {
                               <button
                                 className="periods-fw-badge clickable row-inline-control"
                                 onClick={() => {
-                                  onCurrentSemesterChange?.(period.id);
+                                  onCurrentPeriodChange?.(period.id);
                                   onNavigate?.("outcomes");
                                 }}
                               >
@@ -1556,7 +1557,7 @@ export default function PeriodsPage() {
                                 <button
                                   className="periods-notset-add-btn row-inline-control"
                                   onClick={() => {
-                                    onCurrentSemesterChange?.(period.id);
+                                    onCurrentPeriodChange?.(period.id);
                                     onNavigate?.("outcomes");
                                   }}
                                 >
@@ -1626,7 +1627,7 @@ export default function PeriodsPage() {
                             className="floating-menu-item"
                             onMouseDown={() => {
                               setOpenMenuId(null);
-                              onCurrentSemesterChange?.(period.id);
+                              onCurrentPeriodChange?.(period.id);
                               onNavigate?.("entry-control");
                             }}
                           >

@@ -230,14 +230,6 @@ table.outcome-attainment-table tbody td.outcome-attainment-label {
   gap: 6px;
 }
 
-.outcome-attainment-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  align-self: center;
-}
 
 .oat-code {
   font-family: var(--mono);

@@ -1,7 +1,7 @@
 // src/shared/useAnchoredPopover.js
 // ============================================================
 // Anchored popover positioning hook — shared by dropdowns
-// (SemesterDropdown, ScoresDropdown, UserAvatarMenu, etc.).
+// (PeriodDropdown, ScoresDropdown, UserAvatarMenu, etc.).
 // ============================================================
 
 import { useCallback, useLayoutEffect, useRef, useState } from "react";

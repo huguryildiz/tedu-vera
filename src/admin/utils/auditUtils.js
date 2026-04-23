@@ -1,7 +1,8 @@
+// size-ceiling-ok: retroactive violation — tracked for split in dedicated refactor session
 // src/admin/utils/auditUtils.js
 // ============================================================
 // Pure utility functions for audit log query construction,
-// date parsing, timestamp formatting, and student name
+// date parsing, timestamp formatting, and team member name
 // normalization. No React imports. No Supabase imports.
 // Safe to use in tests without mocking.
 // ============================================================
@@ -1132,11 +1133,11 @@ export function formatActionDetail(log) {
   return "";
 }
 
-// ── normalizeStudentNames ──────────────────────────────────────
+// ── normalizeTeamMemberNames ──────────────────────────────────────
 // Normalizes a free-text student name list (pasted from spreadsheet,
 // Word, or typed) into a consistent semicolon-separated string.
 
-export const normalizeStudentNames = (value) => {
+export const normalizeTeamMemberNames = (value) => {
   return String(value || "")
     .replace(/\r\n?/g, "\n")
     .replace(/\n+/g, ";")

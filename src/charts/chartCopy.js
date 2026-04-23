@@ -11,7 +11,7 @@ export const CHART_COPY = {
     title: "Programme-Level Outcome Averages",
     note: "Grand mean (%) ± 1σ per criterion. 70% attainment threshold shown as reference.",
   },
-  semesterTrend: {
+  periodTrend: {
     title: "Outcome Attainment Trend",
     note: "Percentage of evaluations meeting the 70% threshold across evaluation periods.",
   },

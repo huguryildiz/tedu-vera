@@ -144,7 +144,7 @@
 .fs-field { margin-bottom: 12px; }
 .fs-field:last-child { margin-bottom: 0; }
 .fs-field-label { display: flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
-.fs-label { display: flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); }
+
 .fs-field-req { color: var(--danger); font-size: 10px; line-height: 1; }
 .fs-field-opt { font-size: 10.5px; font-weight: 500; color: var(--text-quaternary); margin-left: 2px; }
 .fs-field-error { display: flex; align-items: center; gap: 4px; margin: 4px 0 0; font-size: 11.5px; color: var(--danger); font-weight: 500; }
@@ -189,9 +189,9 @@ textarea.fs-input { height: auto; padding: 9px var(--field-px, 12px); }
 .fs-field-helper.error { color: var(--danger); }
 .fs-field-helper.success { color: var(--success); }
 .fs-field-helper.warning { color: var(--warning); }
-.fs-field-helper-slot { min-height: 16px; }
+
 .fs-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.fs-field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
 
 /* ─── Buttons ─── */
 .fs-btn {
@@ -281,7 +281,7 @@ textarea.fs-input { height: auto; padding: 9px var(--field-px, 12px); }
 .fs-list-handle:hover { background: var(--surface-1); color: var(--text-tertiary); }
 .fs-list-handle svg { width: 13px; height: 13px; }
 .fs-list-row .fs-input { flex: 1; }
-.fs-list-num { width: 22px; font-size: 10px; font-weight: 600; color: var(--text-quaternary); text-align: center; flex-shrink: 0; font-family: var(--mono); }
+
 .fs-list-remove {
   width: 26px; height: 26px;
   border-radius: var(--radius-sm);
@@ -320,7 +320,7 @@ textarea.fs-input { height: auto; padding: 9px var(--field-px, 12px); }
 .fs-upload:hover { border-color: var(--accent); background: rgba(59, 130, 246, 0.02); }
 .fs-upload-icon { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 8px; background: var(--surface-1); color: var(--text-tertiary); }
 .fs-upload-icon svg { width: 18px; height: 18px; }
-.fs-upload-title { font-size: 12.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+
 .fs-upload-desc { font-size: 11px; color: var(--text-tertiary); line-height: 1.4; }
 .fs-upload-desc strong { color: var(--accent); font-weight: 600; cursor: pointer; }
 .fs-upload-file { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-1); margin-bottom: 12px; }
@@ -536,4 +536,14 @@ textarea.crt-field-input { height: auto; padding: 8px 10px; }
 /* Dark mode overrides */
 .dark-mode .fs-card.crt-expanded { border-color: rgba(96, 165, 250, 0.16); }
 .dark-mode .crt-card.crt-card-error { background: rgba(248, 113, 113, 0.02); }
+
+/* Error state for fs-input fields (legacy compound; new code should use input.error) */
+.fs-input.input-error,
+.fs-input.input-error:hover,
+.fs-input.input-error:focus,
+.fs-input.input-error:focus-visible,
+.fs-input.input-error:active {
+  border-color: #f43f5e !important;
+  box-shadow: 0 0 0 4px rgba(244,63,94,0.18) !important;
+}
 

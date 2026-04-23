@@ -1,12 +1,12 @@
 /* Jury period selection */
-.jury-semester-grid {
+.jury-period-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
   margin: 20px 0;
 }
 
-.jury-semester-card {
+.jury-period-card {
   background: rgba(30, 41, 59, 0.4);
   border: 2px solid rgba(148, 163, 184, 0.12);
   border-radius: 10px;
@@ -16,24 +16,24 @@
   text-align: center;
 }
 
-.jury-semester-card:hover {
+.jury-period-card:hover {
   border-color: rgba(59, 130, 246, 0.3);
   background: rgba(59, 130, 246, 0.05);
 }
 
-.jury-semester-card.selected {
+.jury-period-card.selected {
   border-color: rgba(59, 130, 246, 0.6);
   background: rgba(59, 130, 246, 0.1);
 }
 
-.jury-semester-name {
+.jury-period-name {
   font-size: 13px;
   font-weight: 600;
   color: #e2e8f0;
   margin-bottom: 4px;
 }
 
-.jury-semester-date {
+.jury-period-date {
   font-size: 11px;
   color: #94a3b8;
 }

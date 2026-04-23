@@ -51,12 +51,12 @@ tbody tr{transition:background .1s}
 .chart-card canvas{width:100%!important;max-height:280px}
 
 /* ─── SCORES GRID ─── */
-.score-grid-wrap{overflow-x:auto}
-.score-cell{font-family:var(--mono);font-size:12px;font-weight:500;padding:4px 8px;border-radius:4px;text-align:center;min-width:40px}
+
+
 .score-high{background:var(--score-excellent-bg);color:var(--score-excellent-text)}
 .score-mid{background:var(--score-good-bg);color:var(--score-good-text)}
 .score-low{background:var(--score-low-bg);color:var(--score-low-text)}
-.score-missing{background:var(--surface-1);color:var(--text-tertiary)}
+
 
 /* ─── ACCREDITATION OUTCOMES ─── */
 .acc-summary-item.direct .acc-summary-value{color:var(--success)}

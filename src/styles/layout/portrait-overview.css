@@ -93,14 +93,14 @@
   #needs-attention .btn { flex: 1; min-width: 0; font-size: 11px; padding: 5px 8px; }
 
   /* ── Period Snapshot: single-column description list ── */
-  #semester-snapshot { grid-template-columns: 1fr !important; gap: 2px !important; }
-  #semester-snapshot .text-muted { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
-  #semester-snapshot .text-muted:not(:first-child) { margin-top: 8px; }
+  #period-snapshot { grid-template-columns: 1fr !important; gap: 2px !important; }
+  #period-snapshot .text-muted { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+  #period-snapshot .text-muted:not(:first-child) { margin-top: 8px; }
 }
 
-/* ── Semester selector: lighter visual weight in landscape ── */
+/* ── Period selector: lighter visual weight in landscape ── */
 @media (orientation: landscape) {
-  #semester-dropdown .dropdown-trigger { height: 34px; padding: 0 10px; font-size: 12px; gap: 5px; border-radius: 8px; }
-  #semester-dropdown .dropdown-dot { width: 6px; height: 6px; }
+  #period-dropdown .dropdown-trigger { height: 34px; padding: 0 10px; font-size: 12px; gap: 5px; border-radius: 8px; }
+  #period-dropdown .dropdown-dot { width: 6px; height: 6px; }
 }
 

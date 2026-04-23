@@ -88,10 +88,7 @@ textarea.error:focus {
 }
 
 /* Rounded-lg variant (used in CriterionEditor) */
-.vera-field-input--lg-radius {
-  border-radius: 10px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
+
 
 /* ── Textarea / AutoGrow ─────────────────────────────────── */
 

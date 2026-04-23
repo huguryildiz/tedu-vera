@@ -156,7 +156,7 @@ export function buildTimestampSearchText(value) {
 // - "2025 Fall" / "Fall 2025"
 // - "2025-Fall" / "2025/Fall"
 // - "2025Fall"
-export function buildSemesterSearchText(value) {
+export function buildPeriodSearchText(value) {
   const raw = String(value ?? "").trim();
   if (!raw) return "";
   const compact = raw.replace(/\s+/g, " ").trim();

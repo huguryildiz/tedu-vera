@@ -1,3 +1,4 @@
+// size-ceiling-ok: retroactive violation — tracked for split in dedicated refactor session
 // src/admin/drawers/GovernanceDrawers.jsx
 // Six super-admin governance drawers:
 //   GlobalSettingsDrawer, AuditCenterDrawer, ExportBackupDrawer,
@@ -410,8 +411,8 @@ export function ExportBackupDrawer({ open, onClose }) {
   const [jurorsLoading, setJurorsLoading] = useState(false);
   const [backupsOpen, setBackupsOpen] = useState(false);
 
-  const sortSemesters = (sems) =>
-    [...sems].sort((a, b) => {
+  const sortPeriods = (periods) =>
+    [...periods].sort((a, b) => {
       const aTs = a?.end_date ? Date.parse(a.end_date) : 0;
       const bTs = b?.end_date ? Date.parse(b.end_date) : 0;
       return bTs - aTs;
@@ -421,20 +422,20 @@ export function ExportBackupDrawer({ open, onClose }) {
     if (!organizationId) return;
     setScoresLoading(true);
     try {
-      const sems = (await listPeriods(organizationId)) || [];
-      if (!sems.length) { toast.error("No evaluation periods found."); return; }
-      const ordered = sortSemesters(sems);
+      const periods = (await listPeriods(organizationId)) || [];
+      if (!periods.length) { toast.error("No evaluation periods found."); return; }
+      const ordered = sortPeriods(periods);
       const results = await Promise.all(
-        ordered.map(async (sem) => {
+        ordered.map(async (period) => {
           const [rows, summary] = await Promise.all([
-            getScores(sem.id),
-            getProjectSummary(sem.id).catch(() => []),
+            getScores(period.id),
+            getProjectSummary(period.id).catch(() => []),
           ]);
           const summaryMap = new Map((summary || []).map((p) => [p.id, p]));
           return {
             rows: (rows || []).map((r) => ({
               ...r,
-              period: sem?.name || sem?.period_name || "",
+              period: period?.name || period?.period_name || "",
               students: summaryMap.get(r.projectId)?.students ?? "",
             })),
             summary: summary || [],
@@ -480,18 +481,18 @@ export function ExportBackupDrawer({ open, onClose }) {
     if (!organizationId) return;
     setProjectsLoading(true);
     try {
-      const sems = (await listPeriods(organizationId)) || [];
-      if (!sems.length) { toast.error("No evaluation periods found."); return; }
-      const ordered = sortSemesters(sems);
-      const projectsBySemester = await Promise.all(
-        ordered.map(async (sem) => ({
-          periodName: sem?.name || sem?.period_name || "",
-          rows: await adminListProjects(sem.id),
+      const periods = (await listPeriods(organizationId)) || [];
+      if (!periods.length) { toast.error("No evaluation periods found."); return; }
+      const ordered = sortPeriods(periods);
+      const projectsByPeriod = await Promise.all(
+        ordered.map(async (period) => ({
+          periodName: period?.name || period?.period_name || "",
+          rows: await adminListProjects(period.id),
         })),
       );
       const XLSX = await import("xlsx-js-style");
       const headers = ["Period", "Project", "Title", "Team Members"];
-      const data = projectsBySemester.flatMap(({ periodName, rows }) =>
+      const data = projectsByPeriod.flatMap(({ periodName, rows }) =>
         (rows || []).map((p) => [periodName, p?.group_no ?? "", p?.title ?? "", p?.members || ""]),
       );
       const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
@@ -526,13 +527,13 @@ export function ExportBackupDrawer({ open, onClose }) {
     if (!organizationId) return;
     setJurorsLoading(true);
     try {
-      const sems = (await listPeriods(organizationId)) || [];
-      if (!sems.length) { toast.error("No evaluation periods found."); return; }
-      const ordered = sortSemesters(sems);
-      const jurorsBySemester = await Promise.all(
-        ordered.map(async (sem) => ({
-          periodName: sem?.name || sem?.period_name || "",
-          rows: await listJurorsSummary(sem.id),
+      const periods = (await listPeriods(organizationId)) || [];
+      if (!periods.length) { toast.error("No evaluation periods found."); return; }
+      const ordered = sortPeriods(periods);
+      const jurorsByPeriod = await Promise.all(
+        ordered.map(async (period) => ({
+          periodName: period?.name || period?.period_name || "",
+          rows: await listJurorsSummary(period.id),
         })),
       );
       const isAssigned = (j) => {
@@ -543,7 +544,7 @@ export function ExportBackupDrawer({ open, onClose }) {
       };
       const XLSX = await import("xlsx-js-style");
       const headers = ["Period", "Juror Name", "Affiliation"];
-      const data = jurorsBySemester.flatMap(({ periodName, rows }) => {
+      const data = jurorsByPeriod.flatMap(({ periodName, rows }) => {
         const hasFlag = (rows || []).some((j) =>
           (j?.isAssigned !== undefined && j?.isAssigned !== null) ||
           (j?.is_assigned !== undefined && j?.is_assigned !== null),
