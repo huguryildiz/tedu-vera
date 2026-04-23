@@ -2427,5 +2427,192 @@
     "risk": "Render failure for locked jurors causes silent access denial with no guidance.",
     "coverageStrength": "Smoke",
     "severity": "high"
+  },
+  {
+    "id": "admin.jurors.page.render",
+    "module": "Admin / Features",
+    "area": "JurorsPage",
+    "story": "page render smoke",
+    "scenario": "JurorsPage renders page title without crashing",
+    "whyItMatters": "A broken jurors page blocks admins from managing all jury assignments.",
+    "risk": "Render failure hides all juror management functionality.",
+    "coverageStrength": "Smoke",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.jurors.add.happy",
+    "module": "Admin / Features",
+    "area": "AddJurorDrawer",
+    "story": "add juror happy path",
+    "scenario": "Filling in name, affiliation, email and clicking Save calls onSave with correct data",
+    "whyItMatters": "Adding jurors is the primary way admins populate the jury panel.",
+    "risk": "Silent failure means no jurors are ever created.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.jurors.add.error",
+    "module": "Admin / Features",
+    "area": "AddJurorDrawer",
+    "story": "add juror error display",
+    "scenario": "When error prop is set the drawer shows the error message",
+    "whyItMatters": "Admins must see why a juror creation failed to take corrective action.",
+    "risk": "Silent errors leave admins unaware of failed operations.",
+    "coverageStrength": "Strong",
+    "severity": "high"
+  },
+  {
+    "id": "admin.jurors.edit.render",
+    "module": "Admin / Features",
+    "area": "EditJurorDrawer",
+    "story": "edit juror pre-population",
+    "scenario": "EditJurorDrawer pre-populates fields with the given juror data",
+    "whyItMatters": "Edit form must show existing data so admins can make targeted changes.",
+    "risk": "Empty form on edit forces admins to retype all juror details.",
+    "coverageStrength": "Strong",
+    "severity": "high"
+  },
+  {
+    "id": "admin.jurors.hook.load",
+    "module": "Admin / Features",
+    "area": "useManageJurors",
+    "story": "hook initialization",
+    "scenario": "useManageJurors initializes with empty jurors array before first load",
+    "whyItMatters": "Hook must expose a stable initial state so pages don't crash before data loads.",
+    "risk": "Undefined initial state causes TypeError on first render.",
+    "coverageStrength": "Smoke",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.periods.page.render",
+    "module": "Admin / Features",
+    "area": "PeriodsPage",
+    "story": "page render smoke",
+    "scenario": "PeriodsPage renders 'Evaluation Periods' title without crashing",
+    "whyItMatters": "A broken periods page prevents admins from creating or managing evaluation cycles.",
+    "risk": "Render failure blocks all period management.",
+    "coverageStrength": "Smoke",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.periods.add.happy",
+    "module": "Admin / Features",
+    "area": "AddEditPeriodDrawer",
+    "story": "add period happy path",
+    "scenario": "Entering a unique period name and clicking Save calls onSave with correct data",
+    "whyItMatters": "Creating periods is the entry point for every evaluation cycle.",
+    "risk": "Failed saves mean no evaluation periods can be set up.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.periods.add.error",
+    "module": "Admin / Features",
+    "area": "AddEditPeriodDrawer",
+    "story": "add period duplicate name validation",
+    "scenario": "Entering a period name that already exists shows a validation error",
+    "whyItMatters": "Duplicate period names cause confusion in reporting and juror assignment.",
+    "risk": "Duplicate names silently overwrite or collide with existing periods.",
+    "coverageStrength": "Strong",
+    "severity": "high"
+  },
+  {
+    "id": "admin.periods.close.confirm",
+    "module": "Admin / Features",
+    "area": "ClosePeriodModal",
+    "story": "close period typed confirmation",
+    "scenario": "Confirm button is disabled until the period name is typed correctly",
+    "whyItMatters": "Closing a period is irreversible; typed confirmation prevents accidental closure.",
+    "risk": "Missing guard allows accidental period closure during active evaluation.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.periods.hook.load",
+    "module": "Admin / Features",
+    "area": "useManagePeriods",
+    "story": "hook initialization",
+    "scenario": "useManagePeriods initializes with empty periodList before first load",
+    "whyItMatters": "Hook must expose a stable initial state so pages don't crash before data loads.",
+    "risk": "Undefined periodList causes TypeError on first render.",
+    "coverageStrength": "Smoke",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.projects.page.render",
+    "module": "Admin / Features",
+    "area": "ProjectsPage",
+    "story": "page render smoke",
+    "scenario": "ProjectsPage renders 'Projects' title without crashing",
+    "whyItMatters": "A broken projects page blocks admins from managing all student projects.",
+    "risk": "Render failure hides all project management functionality.",
+    "coverageStrength": "Smoke",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.projects.add.happy",
+    "module": "Admin / Features",
+    "area": "AddProjectDrawer",
+    "story": "add project happy path",
+    "scenario": "Filling in project title and clicking Save calls onSave with correct data",
+    "whyItMatters": "Adding projects is how admins populate the evaluation pool each period.",
+    "risk": "Silent failure means projects can never be created.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.projects.delete.confirm",
+    "module": "Admin / Features",
+    "area": "DeleteProjectModal",
+    "story": "delete project typed confirmation",
+    "scenario": "Delete button is disabled until the project title is typed correctly",
+    "whyItMatters": "Deleting a project removes all associated scores; typed confirmation prevents accidents.",
+    "risk": "Missing guard allows accidental deletion of scored projects.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.projects.hook.init",
+    "module": "Admin / Features",
+    "area": "useManageProjects",
+    "story": "hook initialization",
+    "scenario": "useManageProjects initializes with empty projects array before first load",
+    "whyItMatters": "Hook must expose a stable initial state so pages don't crash before data loads.",
+    "risk": "Undefined projects array causes TypeError on first render.",
+    "coverageStrength": "Smoke",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.orgs.page.render",
+    "module": "Admin / Features",
+    "area": "OrganizationsPage",
+    "story": "page render smoke",
+    "scenario": "OrganizationsPage renders 'Platform Control' title for super-admin",
+    "whyItMatters": "A broken organizations page blocks super-admins from managing tenants.",
+    "risk": "Render failure disables all multi-tenant management.",
+    "coverageStrength": "Smoke",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.orgs.hook.load",
+    "module": "Admin / Features",
+    "area": "useManageOrganizations",
+    "story": "hook initialization",
+    "scenario": "useManageOrganizations initializes with empty organizations list before first load",
+    "whyItMatters": "Hook must expose a stable initial state so OrganizationsPage doesn't crash.",
+    "risk": "Undefined organizations list causes TypeError on first render.",
+    "coverageStrength": "Smoke",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.orgs.create.happy",
+    "module": "Admin / Features",
+    "area": "useManageOrganizations",
+    "story": "create organization happy path",
+    "scenario": "createOrganization calls the API with correct payload and updates state",
+    "whyItMatters": "Creating organizations is the root action for onboarding new tenants.",
+    "risk": "Failed creation means new university tenants cannot be onboarded.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
   }
 ]
