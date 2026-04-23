@@ -46,7 +46,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
   const canSwitchTenants = isSuper && organizations.length > 1;
 
   return (
-    <aside className={`sidebar${mobileOpen ? " mobile-open" : ""}`} id="sidebar-nav">
+    <aside className={`sidebar${mobileOpen ? " mobile-open" : ""}`} id="sidebar-nav" data-testid="admin-shell-sidebar">
       {/* Logo */}
       <div className="sb-logo">
         <div className="sb-logo-icon">
@@ -113,6 +113,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <div className="sb-section">Setup</div>
             <button
               className={itemClass("setup")}
+              data-testid="admin-shell-nav-setup"
               onClick={() => navTo("setup")}
             >
               <Cog size={18} strokeWidth={1.8} />
@@ -125,6 +126,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <button
               className={itemClass("overview")}
               data-tour="overview"
+              data-testid="admin-shell-nav-overview"
               onClick={() => navTo("overview")}
             >
               <Icon
@@ -145,6 +147,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <button
               className={itemClass("rankings")}
               data-tour="rankings"
+              data-testid="admin-shell-nav-rankings"
               onClick={() => navTo("rankings")}
             >
               <Medal size={18} strokeWidth={1.8} />
@@ -153,6 +156,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <button
               className={itemClass("analytics")}
               data-tour="analytics"
+              data-testid="admin-shell-nav-analytics"
               onClick={() => navTo("analytics")}
             >
               <Icon
@@ -170,6 +174,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <button
               className={itemClass("heatmap")}
               data-tour="heatmap"
+              data-testid="admin-shell-nav-heatmap"
               onClick={() => navTo("heatmap")}
             >
               <Icon
@@ -196,6 +201,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <button
               className={itemClass("reviews")}
               data-tour="reviews"
+              data-testid="admin-shell-nav-reviews"
               onClick={() => navTo("reviews")}
             >
               <Icon
@@ -216,6 +222,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <button
               className={itemClass("jurors")}
               data-tour="jurors"
+              data-testid="admin-shell-nav-jurors"
               onClick={() => navTo("jurors")}
             >
               <Icon
@@ -234,6 +241,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <button
               className={itemClass("projects")}
               data-tour="projects"
+              data-testid="admin-shell-nav-projects"
               onClick={() => navTo("projects")}
             >
               <Layers size={18} strokeWidth={1.5} />
@@ -242,6 +250,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <button
               className={itemClass("periods")}
               data-tour="periods"
+              data-testid="admin-shell-nav-periods"
               onClick={() => navTo("periods")}
             >
               <Icon
@@ -262,6 +271,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <button
               className={itemClass("criteria")}
               data-tour="criteria"
+              data-testid="admin-shell-nav-criteria"
               onClick={() => navTo("criteria")}
             >
               <ClipboardList size={18} strokeWidth={1.8} />
@@ -270,6 +280,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <button
               className={itemClass("outcomes")}
               data-tour="outcomes"
+              data-testid="admin-shell-nav-outcomes"
               onClick={() => navTo("outcomes")}
             >
               <Route size={18} strokeWidth={1.8} />
@@ -280,6 +291,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <button
               className={itemClass("entry-control")}
               data-tour="entry-control"
+              data-testid="admin-shell-nav-entry-control"
               onClick={() => navTo("entry-control")}
             >
               <QrCode size={18} strokeWidth={1.8} />
@@ -288,6 +300,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <button
               className={itemClass("pin-blocking")}
               data-tour="pin-blocking"
+              data-testid="admin-shell-nav-pin-blocking"
               onClick={() => navTo("pin-blocking")}
             >
               <KeyRound size={18} strokeWidth={1.8} />
@@ -296,6 +309,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <button
               className={itemClass("audit-log")}
               data-tour="audit-log"
+              data-testid="admin-shell-nav-audit-log"
               onClick={() => navTo("audit-log")}
             >
               <ScrollText size={18} strokeWidth={1.8} />
@@ -307,6 +321,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
                 <button
                   className={itemClass("organizations")}
                   data-tour="organizations"
+                  data-testid="admin-shell-nav-organizations"
                   onClick={() => navTo("organizations")}
                 >
                   <Building size={18} strokeWidth={1.8} />
@@ -318,6 +333,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             <button
               className={itemClass("settings")}
               data-tour="settings"
+              data-testid="admin-shell-nav-settings"
               onClick={() => navTo("settings")}
             >
               <Icon
@@ -396,6 +412,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
           <button
             className="sb-signout-btn"
             type="button"
+            data-testid="admin-shell-signout"
             onClick={async () => { await signOut(); window.location.href = "/"; }}
             aria-label="Sign out"
             title="Sign Out"

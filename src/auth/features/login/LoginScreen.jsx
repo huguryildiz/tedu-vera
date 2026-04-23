@@ -199,7 +199,11 @@ export default function LoginScreen({
           </div>
 
           {displayError && (
-            <FbAlert variant="danger" style={{ marginBottom: "16px", padding: "12px 14px" }}>
+            <FbAlert
+              variant="danger"
+              style={{ marginBottom: "16px", padding: "12px 14px" }}
+              data-testid="admin-login-error"
+            >
               {displayError}
             </FbAlert>
           )}
@@ -210,6 +214,7 @@ export default function LoginScreen({
                 <label className="form-label" htmlFor="login-email">Email</label>
                 <input
                   id="login-email"
+                  data-testid="admin-login-email"
                   className="form-input"
                   type="email"
                   value={email}
@@ -231,6 +236,7 @@ export default function LoginScreen({
                 <div style={{ position: "relative" }}>
                   <input
                     id="login-password"
+                    data-testid="admin-login-password"
                     className="form-input"
                     type={showPass ? "text" : "password"}
                     value={password}
@@ -279,7 +285,7 @@ export default function LoginScreen({
                 </div>
               )}
 
-              <button ref={submitBtnRef} type="submit" className="btn btn-primary" disabled={isSubmitDisabled} style={{ width: "100%", opacity: loading ? 0.7 : 1 }}>
+              <button ref={submitBtnRef} type="submit" data-testid="admin-login-submit" className="btn btn-primary" disabled={isSubmitDisabled} style={{ width: "100%", opacity: loading ? 0.7 : 1 }}>
                 {loading ? "Signing in…" : "Sign in"}
               </button>
             </form>

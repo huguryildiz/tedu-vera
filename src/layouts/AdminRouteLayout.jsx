@@ -524,7 +524,7 @@ export default function AdminRouteLayout() {
   }
 
   return (
-    <div className="admin-shell">
+    <div className="admin-shell" data-testid="admin-shell-root">
       {/* Mobile overlay */}
       <div
         className={`mobile-overlay${mobileOpen ? " show" : ""}`}

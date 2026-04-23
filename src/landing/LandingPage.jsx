@@ -146,7 +146,7 @@ export function LandingPage() {
             <KeyRound size={13} strokeWidth={2} />
             Enter Code
           </button>
-          <button className="nav-signin" onClick={() => navigate("/login")}>
+          <button className="nav-signin" data-testid="admin-landing-signin" onClick={() => navigate("/login")}>
             Sign In{" "}
             <Icon
               iconNode={[]}

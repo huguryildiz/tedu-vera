@@ -13,10 +13,10 @@ const ICONS = {
   success: CheckCircle,
 };
 
-export default function FbAlert({ variant = "danger", title, children, style, className, iconSize = 15, iconStyle }) {
+export default function FbAlert({ variant = "danger", title, children, style, className, iconSize = 15, iconStyle, "data-testid": dataTestId }) {
   const Icon = ICONS[variant] || AlertCircle;
   return (
-    <div className={`fb-alert fba-${variant}${className ? ` ${className}` : ""}`} style={style}>
+    <div className={`fb-alert fba-${variant}${className ? ` ${className}` : ""}`} style={style} data-testid={dataTestId}>
       <div className="fb-alert-icon" style={iconStyle}>
         <Icon size={iconSize} strokeWidth={2} />
       </div>

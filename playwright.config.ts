@@ -18,6 +18,7 @@ const webServerEnv: Record<string, string> = Object.fromEntries(
 
 export default defineConfig({
   testDir: "./e2e",
+  testIgnore: ["**/legacy/**"],
   outputDir: "test-results/playwright-artifacts",
   timeout: 30_000,
   workers: process.env.CI ? 1 : undefined,

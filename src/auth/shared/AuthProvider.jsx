@@ -475,9 +475,11 @@ export default function AuthProvider({ children }) {
       }).catch(() => {});
       throw error;
     }
-    if (!rememberMe) clearPersistedSession();
-    // auth.admin.login.success is written server-side by the on-auth-event
-    // Database Webhook (auth.sessions INSERT) — no client-side write needed.
+    // Session persistence is handled by handleAuthChange (see clearPersistedSession
+    // call keyed off ADMIN_REMEMBER_ME). Clearing storage here races with
+    // supabase-js finishing its own session write and leaves the client's
+    // cached getSession() empty, so the first PostgREST query after sign-in
+    // goes out unauthenticated and RLS returns 0 rows.
     return data;
   }, [policy.emailPassword]);
 
