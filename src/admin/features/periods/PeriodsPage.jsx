@@ -1,15 +1,12 @@
-// size-ceiling-ok: retroactive violation — tracked for split in dedicated refactor session
-// src/admin/pages/PeriodsPage.jsx — Phase 7
+// src/admin/features/periods/PeriodsPage.jsx
 // Evaluation Periods management page.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
 import { useToast } from "@/shared/hooks/useToast";
 import { useAuth } from "@/auth";
 import { useManagePeriods } from "./useManagePeriods";
 import ExportPanel from "@/admin/shared/ExportPanel";
 import { downloadTable, generateTableBlob } from "@/admin/utils/downloadTable";
-import CustomSelect from "@/shared/ui/CustomSelect";
 import FbAlert from "@/shared/ui/FbAlert";
 import AddEditPeriodDrawer from "./AddEditPeriodDrawer";
 import { FilterButton } from "@/shared/ui/FilterButton.jsx";
@@ -28,44 +25,15 @@ import {
   logExportInitiated,
 } from "@/shared/api";
 import {
-  Lock,
-  LockOpen,
-  Trash2,
-  FileEdit,
-  Play,
-  CheckCircle2,
-  MoreVertical,
-  Pencil,
-  Eye,
-  CalendarRange,
-  Filter,
   Download,
   Plus,
-  BadgeCheck,
-  X,
-  Info,
-  ListChecks,
-  Copy,
-  AlertCircle,
-  ArrowRight,
-  Send,
-  Archive,
-  QrCode,
-  Link as LinkIcon,
-  ChevronDown,
-  ChevronUp,
-  Workflow,
-  XCircle,
   Search,
 } from "lucide-react";
-import PremiumTooltip from "@/shared/ui/PremiumTooltip";
-import { useFloating } from "@/shared/hooks/useFloating";
 import RevertToDraftModal from "./RevertToDraftModal";
 import RequestRevertModal from "./RequestRevertModal";
 import PublishPeriodModal from "./PublishPeriodModal";
 import ClosePeriodModal from "./ClosePeriodModal";
 import DeletePeriodModal from "./DeletePeriodModal";
-import FloatingMenu from "@/shared/ui/FloatingMenu";
 import Pagination from "@/shared/ui/Pagination";
 import { formatDateTime as formatFull } from "@/shared/lib/dateUtils";
 import {
@@ -73,422 +41,13 @@ import {
   clearRawToken as storageClearRawToken,
   getRawToken as storageGetRawToken,
 } from "@/shared/storage/adminStorage";
+import LifecycleBar from "./components/LifecycleBar";
+import LifecycleGuide from "./components/LifecycleGuide";
+import PeriodsTable from "./components/PeriodsTable";
+import PeriodsFilterPanel from "./components/PeriodsFilterPanel";
+import { getPeriodState } from "./components/periodHelpers";
 import "./styles/index.css";
 import "@/admin/features/setup-wizard/styles/index.css";
-
-function formatRelative(ts) {
-  if (!ts) return "—";
-  const diff = Date.now() - new Date(ts).getTime();
-  if (diff < 60_000) return "just now";
-  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
-  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
-  if (diff < 2_592_000_000) return `${Math.floor(diff / 86_400_000)}d ago`;
-  if (diff < 31_536_000_000) return `${Math.floor(diff / 2_592_000_000)}mo ago`;
-  const yrs = Math.round(diff / 31_536_000_000 * 10) / 10;
-  return `${yrs % 1 === 0 ? yrs : yrs.toFixed(1)}yr ago`;
-}
-
-
-// Five-state lifecycle derivation. Draft splits into "incomplete" / "ready" as
-// a UI nuance — the readiness check flips this flag automatically whenever
-// criteria or projects change. State transitions (Draft→Published→Live→Closed)
-// require deliberate admin actions; readiness does not.
-function getPeriodState(period, hasScores, readiness) {
-  if (period.closed_at) return "closed";
-  if (period.is_locked && hasScores) return "live";
-  if (period.is_locked) return "published";
-  return readiness?.ok ? "draft_ready" : "draft_incomplete";
-}
-
-// Fixed denominator for setup % — matches the required-severity check count
-// emitted by rpc_admin_check_period_readiness (criteria, weights, rubric
-// bands, projects, jurors, framework). Keep in sync with that RPC if checks
-// are added or removed.
-const SETUP_REQUIRED_TOTAL = 6;
-
-// Pure: derives setup completion % for a draft period from the readiness
-// payload. `readiness` may be undefined while the row's readiness check is
-// still in flight.
-export function computeSetupPercent(readiness) {
-  if (!readiness) return null;
-  if (readiness.ok) return 100;
-  const required = (readiness.issues || []).filter((i) => i.severity === "required");
-  const satisfied = Math.max(0, SETUP_REQUIRED_TOTAL - required.length);
-  return Math.round((satisfied / SETUP_REQUIRED_TOTAL) * 100);
-}
-
-// Pure: derives the mobile ring model { percent, label, stateClass } for a
-// given period + lifecycle state + stats/readiness snapshots. Returns null
-// percent when data is not yet loaded so the UI can render a skeleton ring.
-export function computeRingModel({ state, readiness, stats }) {
-  if (state === "closed") {
-    return { percent: 100, label: "DONE", stateClass: "ring-closed" };
-  }
-  if (state === "live") {
-    const pct = typeof stats?.progress === "number" ? stats.progress : null;
-    return { percent: pct, label: "EVAL", stateClass: "ring-live" };
-  }
-  if (state === "published") {
-    // Locked but no scores yet — treat like live at 0.
-    return { percent: 0, label: "EVAL", stateClass: "ring-live" };
-  }
-  // draft_ready | draft_incomplete
-  return {
-    percent: computeSetupPercent(readiness),
-    label: "SETUP",
-    stateClass: "ring-draft",
-  };
-}
-
-function StatusPill({ status }) {
-  if (status === "draft_incomplete" || status === "draft_ready" || status === "draft") {
-    return (
-      <span className="sem-status sem-status-draft">
-        <FileEdit size={12} />
-        Draft
-      </span>
-    );
-  }
-  if (status === "published") {
-    return (
-      <span className="sem-status sem-status-published">
-        <Send size={12} />
-        Published
-      </span>
-    );
-  }
-  if (status === "live") {
-    return (
-      <span className="sem-status sem-status-live">
-        <Play size={12} />
-        Live
-      </span>
-    );
-  }
-  if (status === "closed") {
-    return (
-      <span className="sem-status sem-status-closed">
-        <Archive size={12} />
-        Closed
-      </span>
-    );
-  }
-  // Legacy fallback — should not hit after rollout completes.
-  return (
-    <span className="sem-status sem-status-locked">
-      <Lock size={12} />
-      Locked
-    </span>
-  );
-}
-
-// ReadinessPopover: self-contained badge + portal inspector for Draft periods.
-// Uses useFloating so the panel is never clipped by ancestor overflow:hidden.
-function ReadinessPopover({ readiness, onFix }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const triggerRef = useRef(null);
-  const { floatingRef, floatingStyle } = useFloating({
-    triggerRef,
-    isOpen,
-    onClose: () => setIsOpen(false),
-    placement: 'bottom-start',
-    offset: 6,
-    zIndex: 'var(--z-dropdown)',
-  });
-
-  if (!readiness) return null;
-
-  const required = (readiness.issues || []).filter((i) => i.severity === "required");
-  const optional = (readiness.issues || []).filter((i) => i.severity === "optional");
-  const isReady = readiness.ok;
-
-  const fixTargetFor = (check) => {
-    if (["criteria_name_missing", "no_criteria", "weight_mismatch", "missing_rubric_bands"].includes(check)) return "criteria";
-    if (check === "no_projects") return "projects";
-    if (check === "no_framework" || check === "no_outcomes") return "outcomes";
-    if (check === "no_jurors") return "jurors";
-    return null;
-  };
-
-  return (
-    <>
-      <button
-        ref={triggerRef}
-        type="button"
-        className={`periods-readiness-badge${isReady ? " ready" : " blocked"}`}
-        onClick={() => setIsOpen((o) => !o)}
-      >
-        {isReady ? (
-          <>
-            <CheckCircle2 size={11} strokeWidth={2} />
-            Ready
-          </>
-        ) : (
-          <>
-            <AlertCircle size={11} strokeWidth={2} />
-            {required.length} issue{required.length === 1 ? "" : "s"}
-          </>
-        )}
-      </button>
-      {isOpen && createPortal(
-        <div
-          ref={floatingRef}
-          className="periods-readiness-inspector"
-          style={floatingStyle}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="periods-readiness-inspector-header">
-            <div>
-              <div className="periods-readiness-inspector-title">Publish readiness</div>
-              <div className="periods-readiness-inspector-sub">
-                {isReady
-                  ? "All required checks pass. You can publish this period."
-                  : `${required.length} required check${required.length === 1 ? "" : "s"} remaining.`}
-              </div>
-            </div>
-            <button className="periods-readiness-inspector-close" onClick={() => setIsOpen(false)} aria-label="Close">
-              <X size={13} strokeWidth={2} />
-            </button>
-          </div>
-          {required.length > 0 && (
-            <div className="periods-readiness-section">
-              <div className="periods-readiness-section-label required">Required</div>
-              {required.map((issue) => {
-                const target = fixTargetFor(issue.check);
-                return (
-                  <div key={issue.check} className="periods-readiness-row required">
-                    <AlertCircle size={12} strokeWidth={2} />
-                    <span className="periods-readiness-msg">{issue.msg}</span>
-                    {target && (
-                      <button className="periods-readiness-fix" onClick={() => { onFix?.(target); setIsOpen(false); }}>
-                        Fix <ArrowRight size={10} strokeWidth={2.2} />
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          {optional.length > 0 && (
-            <div className="periods-readiness-section">
-              <div className="periods-readiness-section-label optional">Optional</div>
-              {optional.map((issue) => {
-                const target = fixTargetFor(issue.check);
-                return (
-                  <div key={issue.check} className="periods-readiness-row optional">
-                    <Info size={12} strokeWidth={2} />
-                    <span className="periods-readiness-msg">{issue.msg}</span>
-                    {target && (
-                      <button className="periods-readiness-fix" onClick={() => { onFix?.(target); setIsOpen(false); }}>
-                        Fix <ArrowRight size={10} strokeWidth={2.2} />
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>,
-        document.body
-      )}
-    </>
-  );
-}
-
-function SortIcon({ colKey, sortKey, sortDir }) {
-  if (sortKey !== colKey) {
-    return <span className="sort-icon sort-icon-inactive">▲</span>;
-  }
-  return (
-    <span className="sort-icon sort-icon-active">
-      {sortDir === "asc" ? "▲" : "▼"}
-    </span>
-  );
-}
-
-function LifecycleBar({ draft, published, live, closed }) {
-  const total = draft + published + live + closed;
-  if (total === 0) return null;
-  const pct = (n) => `${(n / total) * 100}%`;
-
-  const parts = [];
-  if (draft > 0) parts.push(`${draft} draft`);
-  if (published > 0) parts.push(`${published} published`);
-  if (live > 0) parts.push(`${live} live`);
-  if (closed > 0) parts.push(`${closed} closed`);
-
-  return (
-    <div className="periods-lifecycle-bar">
-      <div className="periods-lifecycle-top">
-        <span className="periods-lifecycle-label">Period Lifecycle</span>
-        <span className="periods-lifecycle-summary">{parts.join(" · ")}</span>
-      </div>
-      <div className="periods-lifecycle-track">
-        {draft > 0 && <div className="periods-lifecycle-segment draft" style={{ width: pct(draft) }} />}
-        {published > 0 && <div className="periods-lifecycle-segment published" style={{ width: pct(published) }} />}
-        {live > 0 && <div className="periods-lifecycle-segment live" style={{ width: pct(live) }} />}
-        {closed > 0 && <div className="periods-lifecycle-segment closed" style={{ width: pct(closed) }} />}
-      </div>
-      <div className="periods-lifecycle-legend">
-        <span className="periods-lifecycle-legend-item"><span className="periods-legend-dot draft" /> Draft ({draft})</span>
-        <span className="periods-lifecycle-legend-item"><span className="periods-legend-dot published" /> Published ({published})</span>
-        <span className="periods-lifecycle-legend-item"><span className="periods-legend-dot live" /> Live ({live})</span>
-        <span className="periods-lifecycle-legend-item"><span className="periods-legend-dot closed" /> Closed ({closed})</span>
-      </div>
-    </div>
-  );
-}
-
-function ProgressCell({ period, stats }) {
-  const pstats = stats?.[period.id] || {};
-  const progress = pstats.progress;
-  const isDraft = !period.is_locked;
-  const isClosed = !!period.closed_at;
-
-  if (isDraft) {
-    return (
-      <div className="periods-progress-cell">
-        <span className="periods-progress-val muted">—</span>
-        <div className="periods-progress-bar"><div className="periods-progress-fill" style={{ width: "0%" }} /></div>
-      </div>
-    );
-  }
-
-  const pct = progress ?? (isClosed ? 100 : null);
-  if (pct === null) {
-    return (
-      <div className="periods-progress-cell">
-        <span className="periods-progress-val muted">—</span>
-        <div className="periods-progress-bar"><div className="periods-progress-fill" style={{ width: "0%" }} /></div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="periods-progress-cell">
-      <span className={`periods-progress-val${pct >= 100 ? " done" : ""}`}>{pct}%</span>
-      <div className="periods-progress-bar"><div className="periods-progress-fill" style={{ width: `${pct}%` }} /></div>
-    </div>
-  );
-}
-
-// LifecycleGuide: collapsible explanatory block shown between the KPI strip
-// and the LifecycleBar. Teaches admins what each stage means and what action
-// is required to advance. Collapse state is persisted to localStorage so
-// experienced admins can permanently dismiss it.
-const GUIDE_KEY = "vera_periods_lifecycle_guide_open";
-
-function LifecycleGuide() {
-  const [open, setOpen] = useState(() => {
-    try {
-      const stored = localStorage.getItem(GUIDE_KEY);
-      return stored === null ? true : stored === "true";
-    } catch {
-      return true;
-    }
-  });
-
-  function toggle() {
-    setOpen((prev) => {
-      const next = !prev;
-      try { localStorage.setItem(GUIDE_KEY, String(next)); } catch { /* noop */ }
-      return next;
-    });
-  }
-
-  const stages = [
-    {
-      key: "draft",
-      icon: <FileEdit size={12} strokeWidth={2.2} />,
-      label: "Draft",
-      desc: "Set up criteria, projects & jurors",
-      action: "Publish →",
-    },
-    {
-      key: "published",
-      icon: <Send size={12} strokeWidth={2.2} />,
-      label: "Published",
-      desc: "Jurors can join via QR or entry link",
-      action: "Scores arrive →",
-    },
-    {
-      key: "live",
-      icon: <Play size={12} strokeWidth={2.2} />,
-      label: "Live",
-      desc: "Evaluation in progress, scores incoming",
-      action: "Close →",
-    },
-    {
-      key: "closed",
-      icon: <Archive size={12} strokeWidth={2.2} />,
-      label: "Closed",
-      desc: "Rankings archived, period complete",
-      action: null,
-    },
-  ];
-
-  return (
-    <div className="periods-lifecycle-guide">
-      <div
-        className="periods-lifecycle-guide-header"
-        onClick={toggle}
-        role="button"
-        aria-expanded={open}
-        aria-controls="periods-lifecycle-guide-body"
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}
-      >
-        <div className="periods-lifecycle-guide-left">
-          <div className="periods-lifecycle-guide-icon">
-            <Workflow size={14} strokeWidth={2} />
-          </div>
-          <div>
-            <div className="periods-lifecycle-guide-title">Period Lifecycle</div>
-            <div className="periods-lifecycle-guide-sub">How a period progresses from setup to completion</div>
-          </div>
-        </div>
-        <button
-          type="button"
-          className="periods-lifecycle-guide-collapse-btn"
-          aria-label={open ? "Collapse lifecycle guide" : "Expand lifecycle guide"}
-          tabIndex={-1}
-          onClick={(e) => { e.stopPropagation(); toggle(); }}
-        >
-          {open ? <ChevronUp size={13} strokeWidth={2} /> : <ChevronDown size={13} strokeWidth={2} />}
-        </button>
-      </div>
-
-      {open && (
-        <div className="periods-lifecycle-guide-body" id="periods-lifecycle-guide-body">
-          <div className="periods-lifecycle-guide-flow">
-            {stages.map((stage, idx) => (
-              <div key={stage.key} className="periods-lifecycle-guide-step">
-                <div className="periods-lifecycle-guide-stage">
-                  <span className={`periods-lifecycle-guide-pill ${stage.key}`}>
-                    {stage.icon}
-                    {stage.label}
-                  </span>
-                  <span className="periods-lifecycle-guide-stage-desc">{stage.desc}</span>
-                  {stage.action && (
-                    <span className="periods-lifecycle-guide-action-label">{stage.action}</span>
-                  )}
-                </div>
-                {idx < stages.length - 1 && (
-                  <div className="periods-lifecycle-guide-arrow">
-                    <ArrowRight size={13} strokeWidth={1.8} />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          <FbAlert variant="info" style={{ marginTop: 12 }}>
-            Each transition requires an explicit admin action. Closed periods are permanent and cannot be re-opened.
-          </FbAlert>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function PeriodsPage() {
   const {
@@ -496,7 +55,6 @@ export default function PeriodsPage() {
     selectedPeriodId,
     frameworks = [],
     isDemoMode = false,
-    onDirtyChange,
     onCurrentPeriodChange,
     onNavigate,
     bgRefresh,
@@ -524,15 +82,12 @@ export default function PeriodsPage() {
     bgRefresh,
   });
 
-  // Period stats state
   const [periodStats, setPeriodStats] = useState({});
-
   // Readiness state — map of period_id → { ok, issues, counts } for Draft rows.
   // Populated after periodList loads; refreshed when stats reload (proxy for
   // underlying criteria/project changes). Locked periods don't need readiness.
   const [periodReadiness, setPeriodReadiness] = useState({});
 
-  // Filter/export panel state
   const [filterOpen, setFilterOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -545,7 +100,6 @@ export default function PeriodsPage() {
   const [sortKey, setSortKey] = useState("start_date");
   const [sortDir, setSortDir] = useState("desc");
 
-  // Active filter count
   const activeFilterCount = [statusFilter, dateRangeFilter, outcomeFilter, progressFilter, criteriaFilter, setupFilter].filter((v) => v !== "all").length;
 
   function clearAllFilters() {
@@ -557,29 +111,14 @@ export default function PeriodsPage() {
     setSetupFilter("all");
   }
 
-  // Delete period modal
   const [deletePeriodTarget, setDeletePeriodTarget] = useState(null);
-
-  // Revert-to-Draft modal (direct revert when no scores)
   const [revertTarget, setRevertTarget] = useState(null);
-
-  // Request-revert modal (org admin asks super admin to approve revert)
   const [requestRevertTarget, setRequestRevertTarget] = useState(null);
-
-  // Map of period_id → pending unlock_requests row (refreshed after actions)
   const [pendingRequests, setPendingRequests] = useState({});
-
-  // Publish period confirmation dialog (Draft → Published transition)
   const [publishTarget, setPublishTarget] = useState(null);
-
-  // Close period confirmation dialog (Published/Live → Closed terminal state)
   const [closeTarget, setCloseTarget] = useState(null);
-
-  // Add/edit period drawer
   const [periodDrawerOpen, setPeriodDrawerOpen] = useState(false);
   const [periodDrawerTarget, setPeriodDrawerTarget] = useState(null);
-
-  // Action menu open state
   const [openMenuId, setOpenMenuId] = useState(null);
 
   useEffect(() => {
@@ -592,7 +131,6 @@ export default function PeriodsPage() {
 
   const periodList = periods.periodList || [];
 
-  // Load period stats
   useEffect(() => {
     if (!organizationId) return;
     listPeriodStats(organizationId)
@@ -623,7 +161,6 @@ export default function PeriodsPage() {
     return () => { cancelled = true; };
   }, [periodList.map((p) => `${p.id}:${p.is_locked}:${p.closed_at ?? ""}`).sort().join(","), periodStats]);
 
-  // Load pending unlock requests (map by period_id for O(1) lookup)
   const reloadPendingRequests = useCallback(async () => {
     try {
       const rows = await listUnlockRequests("pending");
@@ -641,9 +178,7 @@ export default function PeriodsPage() {
     reloadPendingRequests();
   }, [reloadPendingRequests, periodList.length]);
 
-  // Derived stats
   const totalPeriods = periodList.length;
-  // Simplified state-based KPI tallies — derived from the new 5-state model.
   const draftPeriods = periodList.filter((p) => !p.is_locked).length;
   const publishedPeriods = periodList.filter((p) => p.is_locked && !p.closed_at && !(periodStats[p.id]?.hasScores)).length;
   const livePeriods = periodList.filter((p) => p.is_locked && !p.closed_at && periodStats[p.id]?.hasScores).length;
@@ -651,13 +186,12 @@ export default function PeriodsPage() {
 
   // Helper to pull the canonical state label for a period inside filter/sort
   // callbacks. Filter maps "draft" → both draft_ready and draft_incomplete.
-  const getState = (p) => getPeriodState(
+  const getState = useCallback((p) => getPeriodState(
     p,
     !!periodStats[p.id]?.hasScores,
     periodReadiness[p.id]
-  );
+  ), [periodStats, periodReadiness]);
 
-  // Filtered list
   const filteredList = useMemo(() => {
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -666,19 +200,16 @@ export default function PeriodsPage() {
       const state = getState(p);
       const stats = periodStats[p.id] || {};
 
-      // Search (name)
       if (q) {
         const name = String(p.name || "").toLowerCase();
         if (!name.includes(q)) return false;
       }
 
-      // Status
       if (statusFilter !== "all") {
         if (statusFilter === "draft" && state !== "draft_ready" && state !== "draft_incomplete") return false;
         if (statusFilter !== "draft" && state !== statusFilter) return false;
       }
 
-      // Date range
       if (dateRangeFilter !== "all") {
         const start = p.start_date ? new Date(p.start_date) : null;
         const end = p.end_date ? new Date(p.end_date) : null;
@@ -692,13 +223,11 @@ export default function PeriodsPage() {
         }
       }
 
-      // Framework
       if (outcomeFilter !== "all") {
         if (outcomeFilter === "not_set" && p.framework_id) return false;
         if (outcomeFilter !== "not_set" && p.framework_id !== outcomeFilter) return false;
       }
 
-      // Progress
       if (progressFilter !== "all") {
         const progress = stats.progress ?? null;
         const isClosed = !!p.closed_at;
@@ -707,14 +236,12 @@ export default function PeriodsPage() {
         if (progressFilter === "complete" && !isClosed && (progress === null || progress < 100)) return false;
       }
 
-      // Criteria set
       if (criteriaFilter !== "all") {
         const count = stats.criteriaCount ?? 0;
         if (criteriaFilter === "has" && count === 0) return false;
         if (criteriaFilter === "none" && count > 0) return false;
       }
 
-      // Setup
       if (setupFilter !== "all") {
         if (setupFilter === "no_projects" && (stats.projectCount ?? 0) > 0) return false;
         if (setupFilter === "no_jurors" && (stats.jurorCount ?? 0) > 0) return false;
@@ -722,7 +249,7 @@ export default function PeriodsPage() {
 
       return true;
     });
-  }, [periodList, search, statusFilter, dateRangeFilter, outcomeFilter, progressFilter, criteriaFilter, setupFilter, periodStats, periodReadiness]);
+  }, [periodList, search, statusFilter, dateRangeFilter, outcomeFilter, progressFilter, criteriaFilter, setupFilter, periodStats, periodReadiness, getState]);
 
   const sortedFilteredList = useMemo(() => {
     const statusRank = { draft_incomplete: 1, draft_ready: 2, published: 3, live: 4, closed: 5 };
@@ -753,9 +280,8 @@ export default function PeriodsPage() {
       return aName.localeCompare(bName, "tr", { sensitivity: "base", numeric: true });
     });
     return rows;
-  }, [filteredList, sortKey, sortDir]);
+  }, [filteredList, sortKey, sortDir, getState]);
 
-  // Pagination state
   const [pageSize, setPageSize] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
   useEffect(() => { setCurrentPage(1); }, [filteredList]);
@@ -805,7 +331,6 @@ export default function PeriodsPage() {
       is_locked: true,
       activated_at: result?.activated_at || new Date().toISOString(),
     });
-    // Refresh readiness so the badge clears.
     setPeriodReadiness((prev) => {
       const next = { ...prev };
       delete next[target.id];
@@ -821,8 +346,6 @@ export default function PeriodsPage() {
     // run and jurors will scan an invalid code.
     let tokenToastSuffix = "";
     if (!result?.already_published) {
-      // Clear any stale plaintext first — generateEntryToken revokes old
-      // tokens server-side, but the localStorage plaintext must not linger.
       storageClearRawToken(target.id);
       try {
         const freshToken = await generateEntryToken(target.id);
@@ -969,6 +492,40 @@ export default function PeriodsPage() {
     }
   }
 
+  const rowHandlers = useMemo(() => ({
+    onEdit: openEditDrawer,
+    onDuplicate: periods.handleDuplicatePeriod,
+    onCopyEntryLink: handleCopyEntryLink,
+    onClose: (period) => setCloseTarget(period),
+    onRevert: (period) => setRevertTarget(period),
+    onPublish: (period) => setPublishTarget(period),
+    onDelete: (period) => setDeletePeriodTarget(period),
+  }), [periods.handleDuplicatePeriod]);
+
+  function buildExportRows() {
+    return sortedFilteredList.map((p) => {
+      const st = periodStats[p.id] || {};
+      const fw = frameworks.find((f) => f.id === p.framework_id);
+      const isDraft = !p.is_locked;
+      const pct = isDraft ? null : (st.progress ?? (p.closed_at ? 100 : null));
+      const criteriaCount = st.criteriaCount ?? 0;
+      return [
+        p.name ?? "",
+        getState(p),
+        p.start_date && p.end_date ? `${p.start_date} – ${p.end_date}` : (p.start_date ?? p.end_date ?? "—"),
+        pct !== null ? `${pct}%` : "—",
+        st.projectCount ?? "",
+        st.jurorCount ?? "",
+        p.criteria_name || (criteriaCount > 0 ? `${criteriaCount} criteria` : "Not set"),
+        fw?.name ?? "Not set",
+        formatFull(p.updated_at),
+      ];
+    });
+  }
+
+  const exportHeader = ["Period", "Status", "Date Range", "Progress", "Projects", "Jurors", "Criteria Set", "Outcome Set", "Updated At"];
+  const exportColWidths = [24, 12, 22, 12, 10, 10, 16, 16, 16];
+
   return (
     <div className="periods-page">
       {/* Page header */}
@@ -1004,114 +561,24 @@ export default function PeriodsPage() {
           </button>
         </div>
       </div>
-      {/* Filter panel */}
       {filterOpen && (
-        <div className="filter-panel show">
-          <div className="filter-panel-header">
-            <div>
-              <h4>
-                <Filter size={14} strokeWidth={2} style={{ verticalAlign: "-1px", marginRight: "4px", opacity: 0.5, display: "inline" }} />
-                Filter Periods
-              </h4>
-              <div className="filter-panel-sub">Narrow evaluation periods by status, date, criteria set, outcome set, and setup state.</div>
-            </div>
-            <button className="filter-panel-close" onClick={() => setFilterOpen(false)}>&#215;</button>
-          </div>
-          <div className="filter-row">
-            <div className="filter-group">
-              <label>Status</label>
-              <CustomSelect
-                compact
-                value={statusFilter}
-                onChange={setStatusFilter}
-                options={[
-                  { value: "all", label: "All" },
-                  { value: "draft", label: "Draft" },
-                  { value: "published", label: "Published" },
-                  { value: "live", label: "Live" },
-                  { value: "closed", label: "Closed" },
-                ]}
-                ariaLabel="Status"
-              />
-            </div>
-            <div className="filter-group">
-              <label>Date Range</label>
-              <CustomSelect
-                compact
-                value={dateRangeFilter}
-                onChange={setDateRangeFilter}
-                options={[
-                  { value: "all", label: "All" },
-                  { value: "this_year", label: "This year" },
-                  { value: "past", label: "Past" },
-                  { value: "future", label: "Future" },
-                ]}
-                ariaLabel="Date Range"
-              />
-            </div>
-            <div className="filter-group">
-              <label>Progress</label>
-              <CustomSelect
-                compact
-                value={progressFilter}
-                onChange={setProgressFilter}
-                options={[
-                  { value: "all", label: "All" },
-                  { value: "not_started", label: "Not started" },
-                  { value: "in_progress", label: "In progress" },
-                  { value: "complete", label: "Complete" },
-                ]}
-                ariaLabel="Progress"
-              />
-            </div>
-            <div className="filter-group">
-              <label>Criteria Set</label>
-              <CustomSelect
-                compact
-                value={criteriaFilter}
-                onChange={setCriteriaFilter}
-                options={[
-                  { value: "all", label: "All" },
-                  { value: "has", label: "Has criteria" },
-                  { value: "none", label: "Not set" },
-                ]}
-                ariaLabel="Criteria Set"
-              />
-            </div>
-            <div className="filter-group">
-              <label>Outcome Set</label>
-              <CustomSelect
-                compact
-                value={outcomeFilter}
-                onChange={setOutcomeFilter}
-                options={[
-                  { value: "all", label: "All" },
-                  { value: "not_set", label: "Not set" },
-                  ...(frameworks || []).map((fw) => ({ value: fw.id, label: fw.name })),
-                ]}
-                ariaLabel="Outcome Set"
-              />
-            </div>
-            <div className="filter-group">
-              <label>Setup</label>
-              <div className="filter-toggle-group">
-                {[["all", "All"], ["no_projects", "No Projects"], ["no_jurors", "No Jurors"]].map(([val, lbl]) => (
-                  <button
-                    key={val}
-                    className={`filter-toggle-btn${setupFilter === val ? " filter-toggle-btn--active" : ""}`}
-                    onClick={() => setSetupFilter(val)}
-                  >
-                    {lbl}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <button className="btn btn-outline btn-sm filter-clear-btn" onClick={clearAllFilters}>
-              <XCircle size={12} strokeWidth={2} style={{ opacity: 0.5, verticalAlign: "-1px" }} />
-              {" "}Clear all
-            </button>
-          </div>
-        </div>
+        <PeriodsFilterPanel
+          onClose={() => setFilterOpen(false)}
+          frameworks={frameworks}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          dateRangeFilter={dateRangeFilter}
+          setDateRangeFilter={setDateRangeFilter}
+          progressFilter={progressFilter}
+          setProgressFilter={setProgressFilter}
+          criteriaFilter={criteriaFilter}
+          setCriteriaFilter={setCriteriaFilter}
+          outcomeFilter={outcomeFilter}
+          setOutcomeFilter={setOutcomeFilter}
+          setupFilter={setupFilter}
+          setSetupFilter={setSetupFilter}
+          onClearAll={clearAllFilters}
+        />
       )}
       {/* Export panel */}
       {exportOpen && (
@@ -1123,53 +590,16 @@ export default function PeriodsPage() {
           department=""
           onClose={() => setExportOpen(false)}
           generateFile={async (fmt) => {
-            const header = ["Period", "Status", "Date Range", "Progress", "Projects", "Jurors", "Criteria Set", "Outcome Set", "Updated At"];
-            const rows = sortedFilteredList.map((p) => {
-              const st = periodStats[p.id] || {};
-              const fw = frameworks.find((f) => f.id === p.framework_id);
-              const isDraft = !p.is_locked;
-              const pct = isDraft ? null : (st.progress ?? (p.closed_at ? 100 : null));
-              const criteriaCount = st.criteriaCount ?? 0;
-              return [
-                p.name ?? "",
-                getState(p),
-                p.start_date && p.end_date ? `${p.start_date} – ${p.end_date}` : (p.start_date ?? p.end_date ?? "—"),
-                pct !== null ? `${pct}%` : "—",
-                st.projectCount ?? "",
-                st.jurorCount ?? "",
-                p.criteria_name || (criteriaCount > 0 ? `${criteriaCount} criteria` : "Not set"),
-                fw?.name ?? "Not set",
-                formatFull(p.updated_at),
-              ];
-            });
             return generateTableBlob(fmt, {
               filenameType: "Periods", sheetName: "Evaluation Periods", periodName: "",
               tenantCode: activeOrganization?.code || "", organization: activeOrganization?.name || "",
               department: "", pdfTitle: "VERA — Evaluation Periods",
-              header, rows, colWidths: [24, 12, 22, 12, 10, 10, 16, 16, 16],
+              header: exportHeader, rows: buildExportRows(), colWidths: exportColWidths,
             });
           }}
           onExport={async (fmt) => {
             try {
-              const header = ["Period", "Status", "Date Range", "Progress", "Projects", "Jurors", "Criteria Set", "Outcome Set", "Updated At"];
-              const rows = sortedFilteredList.map((p) => {
-                const st = periodStats[p.id] || {};
-                const fw = frameworks.find((f) => f.id === p.framework_id);
-                const isDraft = !p.is_locked;
-                const pct = isDraft ? null : (st.progress ?? (p.closed_at ? 100 : null));
-                const criteriaCount = st.criteriaCount ?? 0;
-                return [
-                  p.name ?? "",
-                  getState(p),
-                  p.start_date && p.end_date ? `${p.start_date} – ${p.end_date}` : (p.start_date ?? p.end_date ?? "—"),
-                  pct !== null ? `${pct}%` : "—",
-                  st.projectCount ?? "",
-                  st.jurorCount ?? "",
-                  p.criteria_name || (criteriaCount > 0 ? `${criteriaCount} criteria` : "Not set"),
-                  fw?.name ?? "Not set",
-                  formatFull(p.updated_at),
-                ];
-              });
+              const rows = buildExportRows();
               await logExportInitiated({
                 action: "export.periods",
                 organizationId: activeOrganization?.id || null,
@@ -1195,7 +625,7 @@ export default function PeriodsPage() {
                 filenameType: "Periods", sheetName: "Evaluation Periods", periodName: "",
                 tenantCode: activeOrganization?.code || "", organization: activeOrganization?.name || "",
                 department: "", pdfTitle: "VERA — Evaluation Periods",
-                header, rows, colWidths: [24, 12, 22, 12, 10, 10, 16, 16, 16],
+                header: exportHeader, rows, colWidths: exportColWidths,
               });
               setExportOpen(false);
               const fmtLabel = fmt === "pdf" ? "PDF" : fmt === "csv" ? "CSV" : "Excel";
@@ -1233,16 +663,13 @@ export default function PeriodsPage() {
         <Plus size={13} strokeWidth={2.2} />
         Add Period
       </button>
-      {/* Lifecycle Guide — explanatory block */}
       <LifecycleGuide />
-      {/* Lifecycle Bar — distribution of current periods */}
       <LifecycleBar
         draft={draftPeriods}
         published={publishedPeriods}
         live={livePeriods}
         closed={closedPeriods}
       />
-      {/* Error */}
       {panelError && (
         <FbAlert variant="danger" style={{ marginBottom: "12px" }}>
           {panelError}
@@ -1253,461 +680,31 @@ export default function PeriodsPage() {
         <div className="periods-table-card-header">
           <div className="periods-table-card-title">All Evaluation Periods</div>
         </div>
-        <div className="periods-table-scroll">
-          <div className="sem-table-wrap">
-        <table className="sem-table table-standard table-pill-balance" style={{ tableLayout: "fixed", width: "100%" }}>
-          <colgroup>
-            <col />{/* Period — flexible, absorbs remaining space */}
-            <col style={{ width: 78 }} />{/* Status */}
-            <col style={{ width: 96 }} />{/* Date Range */}
-            <col style={{ width: 52 }} />{/* Progress */}
-            <col style={{ width: 44 }} />{/* Projects */}
-            <col style={{ width: 42 }} />{/* Jurors */}
-            <col style={{ width: 88 }} />{/* Criteria Set */}
-            <col style={{ width: 70 }} />{/* Outcome */}
-            <col style={{ width: 62 }} />{/* Updated At */}
-            <col style={{ width: 32 }} />{/* Actions */}
-          </colgroup>
-          <thead>
-            <tr>
-              <th className={`sortable${sortKey === "name" ? " sorted" : ""}`} onClick={() => handleSort("name")}>
-                Period <SortIcon colKey="name" sortKey={sortKey} sortDir={sortDir} />
-              </th>
-              <th className={`sortable${sortKey === "status" ? " sorted" : ""}`} onClick={() => handleSort("status")}>
-                Status <SortIcon colKey="status" sortKey={sortKey} sortDir={sortDir} />
-              </th>
-              <th className={`sortable${sortKey === "start_date" ? " sorted" : ""}`} onClick={() => handleSort("start_date")}>
-                Date Range <SortIcon colKey="start_date" sortKey={sortKey} sortDir={sortDir} />
-              </th>
-              <th style={{ textAlign: "center" }}>Progress</th>
-              <th className="col-projects" style={{ textAlign: "center" }}>Projects</th>
-              <th className="col-jurors" style={{ textAlign: "center" }}>Jurors</th>
-              <th>Criteria Set</th>
-              <th>Outcome Set</th>
-              <th className={`sortable${sortKey === "updated_at" ? " sorted" : ""}`} onClick={() => handleSort("updated_at")}>
-                Updated At <SortIcon colKey="updated_at" sortKey={sortKey} sortDir={sortDir} />
-              </th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody ref={rowsScopeRef}>
-            {loadingCount > 0 && filteredList.length === 0 ? (
-              <tr>
-                <td colSpan={10} style={{ textAlign: "center", color: "var(--text-tertiary)", padding: "32px" }}>
-                  Loading periods…
-                </td>
-              </tr>
-            ) : filteredList.length === 0 ? (
-              <tr className="es-row">
-                <td colSpan={10} style={{ textAlign: "center", padding: "48px 24px" }}>
-                  {activeFilterCount > 0 || search.trim() ? (
-                    <div className="vera-es-no-data">
-                      <div className="vera-es-icon">
-                        <Search size={20} strokeWidth={1.8} />
-                      </div>
-                      <div className="vera-es-no-data-title">No periods match your filters</div>
-                      <div className="vera-es-no-data-desc">
-                        {search.trim() && activeFilterCount === 0
-                          ? "No periods match your current search. Try a different keyword."
-                          : search.trim() && activeFilterCount > 0
-                            ? "Try adjusting your search or clearing active filters to see more periods."
-                            : "Try adjusting or clearing the active filters to see more periods."}
-                      </div>
-                      <div className="vera-es-no-data-actions">
-                        {search.trim() && (
-                          <button className="btn btn-outline btn-sm" onClick={() => setSearch("")}>
-                            <XCircle size={13} strokeWidth={2} /> Clear search
-                          </button>
-                        )}
-                        {activeFilterCount > 0 && (
-                          <button className="btn btn-outline btn-sm" onClick={() => {
-                            setStatusFilter("all");
-                            setDateRangeFilter("all");
-                            setFrameworkFilter("all");
-                            setProgressFilter("all");
-                            setReadinessFilter("all");
-                            setHasProjectsFilter("all");
-                            setHasJurorsFilter("all");
-                          }}>
-                            <XCircle size={13} strokeWidth={2} /> Clear filters
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ display: "flex", justifyContent: "center" }}>
-                      <div className="vera-es-card">
-                        <div className="vera-es-hero vera-es-hero--period">
-                          <div className="vera-es-icon">
-                            <CalendarRange size={24} strokeWidth={1.65} />
-                          </div>
-                          <div>
-                            <div className="vera-es-title">No evaluation periods yet</div>
-                            <div className="vera-es-desc">
-                              An evaluation period defines the timeframe, criteria, and scope for jury evaluations. It is the foundation of your setup.
-                            </div>
-                          </div>
-                        </div>
-                        <div className="vera-es-actions">
-                          <button
-                            className="vera-es-action vera-es-action--primary-period"
-                            onClick={() => onNavigate?.("setup")}
-                          >
-                            <div className="vera-es-num vera-es-num--period">1</div>
-                            <div className="vera-es-action-text">
-                              <div className="vera-es-action-label">Use Setup Wizard</div>
-                              <div className="vera-es-action-sub">Guided 7-step configuration from scratch</div>
-                            </div>
-                            <span className="vera-es-badge vera-es-badge--period">Step 1</span>
-                          </button>
-                          <div className="vera-es-divider">or</div>
-                          <button
-                            className="vera-es-action vera-es-action--secondary"
-                            onClick={openAddDrawer}
-                          >
-                            <div className="vera-es-num vera-es-num--secondary">2</div>
-                            <div className="vera-es-action-text">
-                              <div className="vera-es-action-label">Create manually</div>
-                              <div className="vera-es-action-sub">Set name, dates, and options yourself</div>
-                            </div>
-                            <span className="vera-es-badge vera-es-badge--secondary">Manual</span>
-                          </button>
-                        </div>
-                        <div className="vera-es-footer">
-                          <Info size={12} strokeWidth={2} />
-                          Required · Step 1 of 7 in minimum setup
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ) : pagedList.map((period) => {
-              const state = getState(period);
-              const isDraft = state === "draft_ready" || state === "draft_incomplete";
-              return (
-                <tr
-                  key={period.id}
-                  data-card-selectable=""
-                  className={[
-                    "mcard",
-                    "sem-row-" + (state === "draft_ready" || state === "draft_incomplete" ? "draft" : state),
-                  ].filter(Boolean).join(" ")}
-                >
-                  {/* Mobile ring (portrait only — hidden on desktop via CSS) */}
-                  <td className="periods-mobile-ring">
-                    {(() => {
-                      const ring = computeRingModel({
-                        state,
-                        readiness: periodReadiness[period.id],
-                        stats: periodStats[period.id],
-                      });
-                      const pct = ring.percent;
-                      const deg = pct == null ? 0 : Math.round((pct / 100) * 360);
-                      return (
-                        <div
-                          className={`periods-mring ${ring.stateClass}`}
-                          style={{ "--pct": `${deg}deg` }}
-                          aria-label={`${period.name} — ${pct == null ? "loading" : pct + "%"} ${ring.label.toLowerCase()}`}
-                        >
-                          <div className="periods-mring-fill">
-                            <div className="periods-mring-inner">
-                              <span className="periods-mring-num">{pct == null ? "—" : `${pct}%`}</span>
-                              <span className="periods-mring-lbl">{ring.label}</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </td>
-
-                  {/* Period name */}
-                  <td data-label="Evaluation Period">
-                    <div className="sem-name" style={period.is_locked ? { color: "var(--text-secondary)" } : undefined}>
-                      {period.name}
-                    </div>
-                    {(state === "live" || isDraft) && (
-                      <div className="sem-name-sub">
-                        {state === "live" ? "Evaluation in progress" : "Setup in progress"}
-                      </div>
-                    )}
-                  </td>
-
-                  {/* Status */}
-                  <td data-label="Status">
-                    <div className="periods-status-cell">
-                      <StatusPill status={state} />
-                      {isDraft && (
-                        <ReadinessPopover
-                          readiness={periodReadiness[period.id]}
-                          onFix={(target) => {
-                            onCurrentPeriodChange?.(period.id);
-                            onNavigate?.(target);
-                          }}
-                        />
-                      )}
-                    </div>
-                  </td>
-
-                  {/* Date Range */}
-                  <td data-label="Date Range">
-                    {period.start_date || period.end_date ? (
-                      <span className="periods-date-range">
-                        {period.start_date ? new Date(period.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
-                        <span className="periods-date-sep">→</span>
-                        {period.end_date ? new Date(period.end_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" }) : "—"}
-                      </span>
-                    ) : (
-                      <span style={{ color: "var(--text-quaternary)", fontSize: 11 }}>—</span>
-                    )}
-                  </td>
-
-                  {/* Progress */}
-                  <td data-label="Progress" style={{ textAlign: "center" }}>
-                    <ProgressCell period={period} stats={periodStats} />
-                  </td>
-
-                  {/* Projects */}
-                  <td data-label="Projects" className="col-projects" style={{ textAlign: "center" }}>
-                    <span className={`periods-stat-val${(periodStats[period.id]?.projectCount || 0) === 0 ? " zero" : ""}`}>
-                      {periodStats[period.id]?.projectCount ?? "—"}
-                    </span>
-                  </td>
-
-                  {/* Jurors */}
-                  <td data-label="Jurors" className="col-jurors" style={{ textAlign: "center" }}>
-                    <span className={`periods-stat-val${(periodStats[period.id]?.jurorCount || 0) === 0 ? " zero" : ""}`}>
-                      {periodStats[period.id]?.jurorCount ?? "—"}
-                    </span>
-                  </td>
-
-                  {/* Mobile footer (stats + updated) */}
-                  <td className="periods-mobile-footer">
-                    <div className="periods-mobile-footer-stats">
-                      <span className="periods-m-stat"><span className={`val${(periodStats[period.id]?.projectCount || 0) === 0 ? " zero" : ""}`}>{periodStats[period.id]?.projectCount ?? "—"}</span> projects</span>
-                      <span className="periods-m-stat"><span className={`val${(periodStats[period.id]?.jurorCount || 0) === 0 ? " zero" : ""}`}>{periodStats[period.id]?.jurorCount ?? "—"}</span> jurors</span>
-                    </div>
-                    <span className="periods-mobile-footer-updated">{formatRelative(period.updated_at)}</span>
-                  </td>
-
-                  {/* Criteria Set */}
-                  <td data-label="Criteria Set">
-                    {(() => {
-                      const count = periodStats[period.id]?.criteriaCount ?? 0;
-                      const cname = period.criteria_name;
-                      const hasData = count > 0 || !!cname;
-                      return (
-                        <div className="periods-cset-cell">
-                          {hasData ? (
-                            <PremiumTooltip text="Go to Criteria page">
-                              <button
-                                className="periods-cset-badge row-inline-control"
-                                onClick={() => {
-                                  onCurrentPeriodChange?.(period.id);
-                                  onNavigate?.("criteria");
-                                }}
-                              >
-                                <ListChecks size={12} strokeWidth={1.75} />
-                                {cname || `${count} criteria`}
-                              </button>
-                            </PremiumTooltip>
-                          ) : (
-                            <div className="periods-notset-row">
-                              <span className="periods-notset-label">Not set</span>
-                              <PremiumTooltip text="Configure criteria">
-                                <button
-                                  className="periods-notset-add-btn row-inline-control"
-                                  onClick={() => {
-                                    onCurrentPeriodChange?.(period.id);
-                                    onNavigate?.("criteria");
-                                  }}
-                                >
-                                  <Plus size={11} strokeWidth={2.5} />
-                                </button>
-                              </PremiumTooltip>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </td>
-
-                  {/* Outcome */}
-                  <td data-label="Outcome Set">
-                    {(() => {
-                      const fw = frameworks.find((f) => f.id === period.framework_id);
-                      return (
-                        <div className="periods-fw-cell">
-                          {fw ? (
-                            <PremiumTooltip text="Go to Outcomes page">
-                              <button
-                                className="periods-fw-badge clickable row-inline-control"
-                                onClick={() => {
-                                  onCurrentPeriodChange?.(period.id);
-                                  onNavigate?.("outcomes");
-                                }}
-                              >
-                                <BadgeCheck size={11} strokeWidth={2} /> {fw.name}
-                              </button>
-                            </PremiumTooltip>
-                          ) : (
-                            <div className="periods-notset-row">
-                              <span className="periods-notset-label">Not set</span>
-                              <PremiumTooltip text="Configure framework">
-                                <button
-                                  className="periods-notset-add-btn row-inline-control"
-                                  onClick={() => {
-                                    onCurrentPeriodChange?.(period.id);
-                                    onNavigate?.("outcomes");
-                                  }}
-                                >
-                                  <Plus size={11} strokeWidth={2.5} />
-                                </button>
-                              </PremiumTooltip>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </td>
-
-                  {/* Updated */}
-                  <td data-label="Last Updated">
-                    <PremiumTooltip text={formatFull(period.updated_at)}>
-                      <span className="vera-datetime-text">{formatRelative(period.updated_at)}</span>
-                    </PremiumTooltip>
-                  </td>
-
-                  {/* Actions */}
-                  <td className="col-actions">
-                    <FloatingMenu
-                      isOpen={openMenuId === period.id}
-                      onClose={() => setOpenMenuId(null)}
-                      placement="bottom-end"
-                      trigger={
-                        <button
-                          className="row-action-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenMenuId((prev) => (prev === period.id ? null : period.id));
-                          }}
-                          title="Actions"
-                        >
-                          <MoreVertical size={18} strokeWidth={2} />
-                        </button>
-                      }
-                    >
-                      {/* Edit */}
-                      <button className="floating-menu-item" onMouseDown={() => { setOpenMenuId(null); openEditDrawer(period); }}>
-                        <Pencil size={13} />
-                        Edit Period
-                      </button>
-
-                      {/* Duplicate */}
-                      <button
-                        className="floating-menu-item"
-                        onMouseDown={() => { setOpenMenuId(null); periods.handleDuplicatePeriod(period.id); }}
-                      >
-                        <Copy size={13} />
-                        Duplicate Period
-                      </button>
-
-                      {/* Entry access — only for Published/Live (locked, not closed) */}
-                      {period.is_locked && !period.closed_at && (
-                        <>
-                          <div className="floating-menu-divider" />
-                          <button
-                            className="floating-menu-item"
-                            onMouseDown={() => { setOpenMenuId(null); handleCopyEntryLink(period); }}
-                          >
-                            <LinkIcon size={13} />
-                            Copy Entry Link
-                          </button>
-                          <button
-                            className="floating-menu-item"
-                            onMouseDown={() => {
-                              setOpenMenuId(null);
-                              onCurrentPeriodChange?.(period.id);
-                              onNavigate?.("entry-control");
-                            }}
-                          >
-                            <QrCode size={13} />
-                            View QR Code
-                          </button>
-                        </>
-                      )}
-
-                      {/* Close Period — only for Published/Live (locked but not yet closed) */}
-                      {period.is_locked && !period.closed_at && (
-                        <button
-                          className="floating-menu-item"
-                          onMouseDown={() => { setOpenMenuId(null); setCloseTarget(period); }}
-                        >
-                          <Archive size={13} />
-                          Close Period
-                        </button>
-                      )}
-
-                      {/* Danger zone */}
-                      <div className="floating-menu-divider" />
-                      {period.is_locked && pendingRequests[period.id] ? (
-                        <button className="floating-menu-item" disabled>
-                          <LockOpen size={13} />
-                          Revert Requested — awaiting super admin
-                        </button>
-                      ) : period.is_locked ? (
-                        <button
-                          className="floating-menu-item"
-                          onMouseDown={() => { setOpenMenuId(null); setRevertTarget(period); }}
-                        >
-                          <LockOpen size={13} />
-                          Revert to Draft
-                        </button>
-                      ) : (
-                        (() => {
-                          const readiness = periodReadiness[period.id];
-                          const isReady = readiness?.ok === true;
-                          const blockerCount = (readiness?.issues || []).filter((i) => i.severity === "required").length;
-                          return (
-                            <button
-                              className={`floating-menu-item${isReady ? " publish-ready" : ""}`}
-                              disabled={!isReady}
-                              onMouseDown={() => {
-                                if (!isReady) return;
-                                setOpenMenuId(null);
-                                setPublishTarget(period);
-                              }}
-                              title={isReady ? undefined : `Fix ${blockerCount} issue${blockerCount === 1 ? "" : "s"} first`}
-                            >
-                              <Send size={13} />
-                              {isReady ? "Publish Period" : `Publish Period (${blockerCount} issue${blockerCount === 1 ? "" : "s"})`}
-                            </button>
-                          );
-                        })()
-                      )}
-                      {period.is_locked ? (
-                        <button className="floating-menu-item danger" disabled>
-                          <Trash2 size={13} />
-                          Delete Period
-                        </button>
-                      ) : (
-                        <button
-                          className="floating-menu-item danger"
-                          onMouseDown={() => { setOpenMenuId(null); setDeletePeriodTarget(period); }}
-                        >
-                          <Trash2 size={13} />
-                          Delete Period
-                        </button>
-                      )}
-                    </FloatingMenu>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-          </div>
-        </div>
+        <PeriodsTable
+          rows={filteredList}
+          pagedRows={pagedList}
+          loadingCount={loadingCount}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onSort={handleSort}
+          rowsScopeRef={rowsScopeRef}
+          activeFilterCount={activeFilterCount}
+          search={search}
+          onClearSearch={() => setSearch("")}
+          onClearFilters={clearAllFilters}
+          onAddPeriod={openAddDrawer}
+          onOpenSetup={() => onNavigate?.("setup")}
+          stats={periodStats}
+          readiness={periodReadiness}
+          frameworks={frameworks}
+          pendingRequests={pendingRequests}
+          openMenuId={openMenuId}
+          setOpenMenuId={setOpenMenuId}
+          getState={getState}
+          onCurrentPeriodChange={onCurrentPeriodChange}
+          onNavigate={onNavigate}
+          rowHandlers={rowHandlers}
+        />
         <Pagination
           currentPage={safePage}
           totalPages={totalPages}
@@ -1718,42 +715,36 @@ export default function PeriodsPage() {
           itemLabel="periods"
         />
       </div>
-      {/* Delete period modal */}
       <DeletePeriodModal
         open={!!deletePeriodTarget}
         onClose={() => setDeletePeriodTarget(null)}
         period={deletePeriodTarget}
         onDelete={handleDeletePeriodViaModal}
       />
-      {/* Revert-to-Draft modal */}
       <RevertToDraftModal
         open={!!revertTarget}
         onClose={() => setRevertTarget(null)}
         period={revertTarget}
         onRevert={handleRevertPeriod}
       />
-      {/* Publish period modal */}
       <PublishPeriodModal
         open={!!publishTarget}
         onClose={() => setPublishTarget(null)}
         period={publishTarget}
         onPublish={handlePublishPeriod}
       />
-      {/* Close period modal */}
       <ClosePeriodModal
         open={!!closeTarget}
         onClose={() => setCloseTarget(null)}
         period={closeTarget}
         onCloseAction={handleClosePeriodAction}
       />
-      {/* Request-revert modal (org admin → super admin approval) */}
       <RequestRevertModal
         open={!!requestRevertTarget}
         onClose={() => setRequestRevertTarget(null)}
         period={requestRevertTarget}
         onRequest={handleRequestRevert}
       />
-      {/* Add / Edit period drawer */}
       <AddEditPeriodDrawer
         open={periodDrawerOpen}
         onClose={() => setPeriodDrawerOpen(false)}
