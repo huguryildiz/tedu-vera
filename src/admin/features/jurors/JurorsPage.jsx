@@ -19,7 +19,7 @@ import EditJurorDrawer from "./EditJurorDrawer";
 import { sendJurorPinEmail, getActiveEntryTokenPlain, logExportInitiated } from "@/shared/api";
 import { parseJurorsCsv } from "@/admin/utils/csvParser";
 import ExportPanel from "@/admin/shared/ExportPanel";
-import { SquarePen, Filter, Download, Search, Plus, Upload, XCircle } from "lucide-react";
+import { SquarePen, Filter, Download, Search, Plus, Upload, XCircle, LockKeyhole, Lock, ClipboardList, Bell, KeyRound, RotateCcw } from "lucide-react";
 import { downloadTable, generateTableBlob } from "@/admin/utils/downloadTable";
 import { FilterButton } from "@/shared/ui/FilterButton";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
@@ -75,6 +75,9 @@ export default function JurorsPage() {
   });
 
   const isPeriodLocked = !!periods.periodList?.find((p) => p.id === periods.viewPeriodId)?.is_locked;
+  const periodLockedTooltip = isPeriodLocked
+    ? "Evaluation period is locked. Unlock the period to make changes."
+    : null;
 
   const projectsHook = useManageProjects({
     organizationId,
@@ -369,7 +372,8 @@ export default function JurorsPage() {
             style={{ color: "var(--fb-editing-text)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit" }}
             onClick={() => jurorsHook.handleForceCloseJurorEdit({ jurorId: j.jurorId || j.juror_id })}
           >
-            Disable editing →
+            <span className="fb-action-line">Disable</span>
+            <span className="fb-action-line">editing →</span>
           </button>
         </div>
       ))}
@@ -438,6 +442,33 @@ export default function JurorsPage() {
           Add Juror
         </button>
       </PremiumTooltip>
+      {/* Lock banner */}
+      {isPeriodLocked && periods.viewPeriodId && (
+        <div className="lock-notice">
+          <div className="lock-notice-left">
+            <div className="lock-notice-icon-wrap">
+              <LockKeyhole size={20} strokeWidth={1.8} />
+            </div>
+            <div className="lock-notice-badge">locked</div>
+          </div>
+          <div className="lock-notice-body">
+            <div className="lock-notice-title">Evaluation in progress — juror list locked</div>
+            <div className="lock-notice-desc">
+              Jurors can still be added or imported. Editing and removing existing jurors is disabled while scores exist for this period.
+            </div>
+            <div className="lock-notice-chips">
+              <span className="lock-notice-chip editable"><ClipboardList size={11} strokeWidth={2} /> View Scores</span>
+              <span className="lock-notice-chip editable"><KeyRound size={11} strokeWidth={2} /> Reset PIN</span>
+              <span className="lock-notice-chip editable"><Bell size={11} strokeWidth={2} /> Notify Juror</span>
+              <span className="lock-notice-chip editable"><RotateCcw size={11} strokeWidth={2} /> Reopen Evaluation</span>
+              <span className="lock-notice-chip editable"><Plus size={11} strokeWidth={2} /> Add Jurors</span>
+              <span className="lock-notice-chip editable"><Upload size={11} strokeWidth={2} /> Import CSV</span>
+              <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Edit Jurors</span>
+              <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Delete Jurors</span>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Filter panel */}
       {filterOpen && (
         <JurorsFilterPanel

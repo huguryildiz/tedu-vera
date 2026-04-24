@@ -218,25 +218,6 @@ function JurorRow({
             </FloatingMenu>
           </div>
 
-          <div className="jc-stats">
-            <div className="jc-stat">
-              <span className={`jcs-val${scored >= total && total > 0 ? " val-done" : scored > 0 ? " val-partial" : " val-zero"}`}>
-                {scored}
-              </span>
-              <span className="jcs-key">SCORED</span>
-            </div>
-            <div className="jc-stat">
-              <span className="jcs-val val-zero">{total}</span>
-              <span className="jcs-key">ASSIGNED</span>
-            </div>
-            <div className="jc-stat">
-              <span className={`jcs-val${total === 0 ? " val-zero" : scored >= total ? " val-done" : " val-amber"}`}>
-                {total === 0 ? "—" : `${Math.round((scored / total) * 100)}%`}
-              </span>
-              <span className="jcs-key">DONE</span>
-            </div>
-          </div>
-
           <div className="jc-prog-block">
             <div className="jc-prog-header">
               <span>Progress</span>
@@ -256,7 +237,13 @@ function JurorRow({
 
           <div className="jc-footer">
             <Clock size={11} strokeWidth={2} style={{ opacity: 0.7 }} />
-            <span>{lastActive ? formatRelative(lastActive) : "Never active"}</span>
+            <span className="jc-footer-label">Last active:</span>
+            <span className="jc-footer-time">{lastActive ? formatRelative(lastActive) : "Never"}</span>
+            {total > 0 && (
+              <span className={`jc-footer-pct${scored >= total ? " val-done" : " val-amber"}`}>
+                {pct}%
+              </span>
+            )}
           </div>
         </div>
       </td>

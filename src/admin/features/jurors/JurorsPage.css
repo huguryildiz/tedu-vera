@@ -413,49 +413,10 @@
 
   /* Kebab button uses global .row-action-btn (components.css). */
 
-  /* ── Stats strip ── */
-  .jc-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    margin: 0;
-  }
-
-  .jc-stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 9px 0;
-    gap: 2px;
-    border-right: 1px solid var(--border);
-  }
-  .jc-stat:last-child { border-right: none; }
-
-  .jcs-val {
-    font-size: 18px;
-    font-weight: 900;
-    font-family: var(--font-mono, ui-monospace, monospace);
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-  }
-  .jcs-val.val-done    { color: #22c55e; }
-  .jcs-val.val-partial { color: var(--accent-purple, #6c63ff); }
-  .jcs-val.val-zero    { color: var(--text-tertiary); }
-  .jcs-val.val-amber   { color: #f59e0b; }
-
-  .jcs-key {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    color: var(--text-tertiary);
-  }
-
   /* ── Progress block ── */
   .jc-prog-block {
     padding: 9px 12px 10px;
+    border-top: 1px solid var(--border);
   }
 
   .jc-prog-header {
@@ -500,10 +461,21 @@
     font-weight: 500;
     letter-spacing: 0.015em;
   }
-  .jc-footer span {
+  .jc-footer-label {
+    color: var(--text-tertiary);
+  }
+  .jc-footer-time {
     font-family: var(--font-mono, ui-monospace, monospace);
     letter-spacing: -0.01em;
   }
+  .jc-footer-pct {
+    margin-left: auto;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-weight: 700;
+    font-size: 11px;
+  }
+  .jc-footer-pct.val-done  { color: #22c55e; }
+  .jc-footer-pct.val-amber { color: #f59e0b; }
 
 
   /* ── Empty-state row override ──
@@ -539,3 +511,4 @@
   /* Tighten name text */
   #jurors-main-table .jt-name { font-size: 12px; }
 }
+
