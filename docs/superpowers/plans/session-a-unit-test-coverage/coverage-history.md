@@ -7,6 +7,7 @@
 | A2 — Admin Orchestration Hooks | 2026-04-24 | 160 | 581 | 43.42% | 57.21% | 33.19% | 43.42% | **see amendment note below** |
 | A3 — Stabilization + Env Mocking Fix | 2026-04-24 | 160 | 581 | 41.77% | 57.20% | 31.41% | 41.77% | See amendment. +1 test net (Analytics), 3 fixes, 1 OOM diagnosed; threshold-checker values. |
 | A4 — Zero-Coverage Large Files | 2026-04-24 | 171 | 618 | 45.55% | 57.30% | 33.56% | 45.55% | 149→133 zero-cov files; 16 eliminated; thresholds ratcheted lines/stmts 44, funcs 32. |
+| A5 — Medium Surfaces | 2026-04-24 | 199 | 671 | 49.12% | 57.26% | 34.69% | 49.12% | 133→104 zero-cov files; 29 eliminated; target ≤104 exactly met. |
 
 ## Amendment note (2026-04-24, post-A3 audit)
 

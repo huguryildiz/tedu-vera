@@ -375,7 +375,7 @@ body:not(.dark-mode) .dj-spotlight-skip-btn:hover{color:#64748b !important}
 body:not(.dark-mode) .dj-spotlight-next-btn{background:linear-gradient(135deg,#2563eb,#1d4ed8) !important;box-shadow:0 2px 8px rgba(37,99,235,0.3) !important}
 
 /* Light mode: Final Hybrid compact header */
-body:not(.dark-mode) .dj-fh-header-name{color:#334155 !important}
+body:not(.dark-mode) .dj-fh-header-name{color:#0f172a !important}
 body:not(.dark-mode) .dj-fh-header-dept{color:#64748b !important}
 /* Light mode: Final Hybrid group bar */
 body:not(.dark-mode) .dj-group-bar{background:rgba(248,250,252,0.9) !important;border-color:rgba(0,0,0,0.06) !important}
@@ -395,7 +395,7 @@ body:not(.dark-mode) .dj-drawer-item:hover{background:rgba(0,0,0,0.02) !importan
 body:not(.dark-mode) .dj-drawer-item.active{background:rgba(59,130,246,0.06) !important}
 body:not(.dark-mode) .dj-drawer-p-badge{color:var(--accent) !important}
 body:not(.dark-mode) .dj-drawer-item-name{color:#1e293b !important}
-body:not(.dark-mode) .dj-drawer-item-members .team-member-name{color:#64748b !important}
+body:not(.dark-mode) .dj-drawer-item-members .team-member-name{color:#0f172a !important}
 body:not(.dark-mode) .dj-drawer-score-val{color:#3b82f6 !important}
 body:not(.dark-mode) .dj-drawer-score-max{color:#94a3b8 !important}
 body:not(.dark-mode) .dj-drawer-status-line{color:#94a3b8 !important}
@@ -441,4 +441,3 @@ body:not(.dark-mode) .dj-grp-item-students{color:#64748b !important}
 body:not(.dark-mode) .dj-grp-item-num{color:#94a3b8 !important}
 body:not(.dark-mode) .dj-grp-item-status.complete{color:#16a34a !important}
 body:not(.dark-mode) .dj-grp-item-status.partial{color:#d97706 !important}
-

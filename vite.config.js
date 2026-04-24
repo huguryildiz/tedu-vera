@@ -26,10 +26,10 @@ export default defineConfig({
       include: ['src/**/*.{js,jsx,ts,tsx}'],
       exclude: ['src/test/**', 'src/**/__tests__.archive/**', 'src/main.jsx', 'src/router.jsx'],
       thresholds: {
-        lines: 41,
-        functions: 31,
+        lines: 47,
+        functions: 32,
         branches: 56,
-        statements: 41,
+        statements: 47,
         'src/shared/hooks/**': { lines: 70, functions: 50, branches: 70, statements: 70 },
         'src/shared/storage/**': { lines: 80, functions: 65, branches: 50, statements: 80 },
         'src/shared/lib/**': { lines: 55, functions: 70, branches: 75, statements: 55 },
