@@ -39,6 +39,8 @@ const makePeriods = () => [
 
 const makeScores = () => [{ projectId: "proj1", scores: [90] }];
 
+const EMPTY_PERIODS = Object.freeze([]);
+
 function makeWrapper(path = "/admin/overview") {
   return ({ children }) =>
     React.createElement(MemoryRouter, { initialEntries: [path] }, children);
@@ -85,7 +87,7 @@ describe("useAdminData", () => {
   });
 
   qaTest("admin.shared.adminData.03", async () => {
-    mockListPeriods.mockResolvedValue([]);
+    mockListPeriods.mockResolvedValue(EMPTY_PERIODS);
     const opts = makeOpts();
     const { result } = renderHook(() => useAdminData(opts), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.loading).toBe(false));

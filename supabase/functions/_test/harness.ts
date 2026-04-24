@@ -84,3 +84,19 @@ export async function readJson(res: Response): Promise<unknown> {
     return text;
   }
 }
+
+/**
+ * Replace globalThis.fetch with a test-provided handler. Returns a
+ * restore fn that must be called (typically via try/finally) to avoid
+ * bleeding mocks into other tests.
+ */
+export function stubFetch(
+  handler: (input: string | URL | Request, init?: RequestInit) => Promise<Response>,
+): () => void {
+  const original = globalThis.fetch;
+  // deno-lint-ignore no-explicit-any
+  globalThis.fetch = handler as any;
+  return () => {
+    globalThis.fetch = original;
+  };
+}

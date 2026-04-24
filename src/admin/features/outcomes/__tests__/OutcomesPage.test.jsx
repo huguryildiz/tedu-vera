@@ -52,12 +52,16 @@ vi.mock("@/shared/hooks/useCardSelection", () => ({
   default: () => ({ selectedId: null, select: vi.fn(), clear: vi.fn() }),
 }));
 
+const { EMPTY_FRAMEWORKS } = vi.hoisted(() => ({
+  EMPTY_FRAMEWORKS: Object.freeze([]),
+}));
+
 vi.mock("@/shared/api", () => ({
   updateFramework: vi.fn(),
   cloneFramework: vi.fn(),
   assignFrameworkToPeriod: vi.fn(),
   unassignPeriodFramework: vi.fn(),
-  listFrameworks: vi.fn().mockResolvedValue([]),
+  listFrameworks: vi.fn().mockResolvedValue(EMPTY_FRAMEWORKS),
 }));
 
 vi.mock("@/admin/features/outcomes/useOutcomesExport", () => ({

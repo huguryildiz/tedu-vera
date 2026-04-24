@@ -37,6 +37,21 @@ describe("ClearAllCriteriaModal", () => {
     );
     expect(screen.getByText("Delete All Criteria?")).toBeInTheDocument();
   });
+
+  qaTest("coverage.criteria-confirm-modals.clear-all-confirm-disabled", () => {
+    render(
+      <ClearAllCriteriaModal
+        open={true}
+        submitting={false}
+        confirmText="wrong text"
+        onConfirmTextChange={noop}
+        onClose={noop}
+        onConfirm={noop}
+        displayName="Spring 2025"
+      />
+    );
+    expect(screen.getByRole("button", { name: "Delete All Criteria" })).toBeDisabled();
+  });
 });
 
 describe("DeleteCriterionModal", () => {
@@ -54,6 +69,22 @@ describe("DeleteCriterionModal", () => {
       />
     );
     expect(screen.getByText("Remove Criterion?")).toBeInTheDocument();
+  });
+
+  qaTest("coverage.criteria-confirm-modals.delete-btn-candelete-false", () => {
+    render(
+      <DeleteCriterionModal
+        open={true}
+        submitting={false}
+        confirmText=""
+        onConfirmTextChange={noop}
+        onClose={noop}
+        onConfirm={noop}
+        deleteLabel="C1"
+        canDelete={false}
+      />
+    );
+    expect(screen.getByRole("button", { name: "Remove Criterion" })).toBeDisabled();
   });
 });
 

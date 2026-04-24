@@ -38,8 +38,8 @@ describe("useAdminTeam", () => {
   beforeEach(() => {
     mockListOrgAdminMembers.mockResolvedValue({ members: FAKE_MEMBERS, adminsCanInvite: false });
     mockInviteOrgAdmin.mockResolvedValue({ status: "sent" });
-    mockCancelOrgAdminInvite.mockResolvedValue({});
-    mockSetAdminsCanInvite.mockResolvedValue({});
+    mockCancelOrgAdminInvite.mockResolvedValue(null);
+    mockSetAdminsCanInvite.mockResolvedValue({ ok: true });
     mockInviteOrgAdmin.mockClear();
     mockCancelOrgAdminInvite.mockClear();
     mockToastSuccess.mockClear();

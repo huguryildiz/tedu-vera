@@ -49,7 +49,11 @@ vi.mock("@/shared/api/admin/maintenance", () => ({
   sendTestMaintenanceEmail: vi.fn(),
 }));
 vi.mock("@/shared/api/admin/platform", () => ({
-  getPlatformSettings: vi.fn().mockResolvedValue({}),
+  getPlatformSettings: vi.fn().mockResolvedValue({
+    platform_name: "VERA",
+    support_email: "support@vera.app",
+    auto_approve_new_orgs: false,
+  }),
   setPlatformSettings: vi.fn(),
 }));
 vi.mock("@/shared/api/admin/organizations", () => ({

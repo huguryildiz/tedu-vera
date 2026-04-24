@@ -33,7 +33,7 @@ Plan Rule 6 "≥1 behavior assertion = dosya elimine sayılır" kuralı metriği
 | Branch coverage | ~%57.3 | 2pp buffer yok |
 | Function coverage | ~%34.7 | Fonksiyonların %65'i hiç çağrılmıyor |
 | Zero‑cov dosya | 26 (A6 sonu) | 149'dan düştü — **nicelik metriği, nitelik değil** |
-| Edge Function test | 4/21 (%19) | Kritik boşluk |
+| Edge Function test | 8/21 real Deno (%38) | P3-Deno sonrası; kalan 13 long-tail |
 
 **"By Module" dağılımı** (All Tests sekmesinden): Shared API 79, Shared Lib 53, Shared UI 53, Admin Utils 47, Admin Analytics 22, Jury Shared 26. Admin Feature sayfaları tek tek 5–10 testle geçiyor; çoğu page‑level smoke.
 
@@ -210,6 +210,15 @@ A4–A6'dan tipik örnekler:
 13. **Audit log completeness.** Hangi admin aksiyonu hangi event üretir matrisi — her RPC wrapper'ı için `expect(auditLogSpy).toHaveBeenCalledWith(...)` doğrulaması.
 14. **A4–A6 SHALLOW testleri derinleştir veya sil.** Her dosya için ya meaningful assertion ekle, ya qa‑catalog'dan sil — zero‑cov sayacına geri dönmesine izin verme.
 15. **Mock realism lint rule.** `vi.mock` factory'leri `EMPTY_ARRAY_FROZEN`, `realisticRpcResponse(...)` gibi named helper'lar kullansın; inline boş literal yasak.
+
+### Known Gaps (P3-Deno sonrası)
+
+P2 Vitest kontrat spec'i + P3-Deno gerçek runner tamamlandıktan sonra kalan boşluklar:
+
+- **Edge Function real coverage gap — kısmen kapandı.** `src/shared/api/edge/__tests__/edgeFunctions.test.js` hâlâ 24 test barındırıyor (namespace `edge.contract.01–24`) ve paralel re-implementation üzerinde kontrat dokümantasyonu yapıyor — dosya başındaki `⚠️ QUALITY WARNING` bunu belirtiyor. **P3-Deno ile 4 kritik function için gerçek `supabase/functions/*/index.ts` testleri eklendi** (`edge.real.*` namespace; 42 test): `audit-anomaly-sweep` (11), `request-pin-reset` (10), `log-export-event` (11), `audit-log-sink` (10). Bunlar Deno runner üzerinde çalışıyor (`npm run test:edge`), gerçek handler'ı `Deno.serve` interception ile capture edip synthetic `Request` objeleriyle invoke ediyor. **Kalan 17 edge function long-tail:** `admin-session-touch`, `auto-backup`, `email-verification-confirm`, `email-verification-send`, `invite-org-admin`, `notify-juror`, `notify-maintenance`, `notify-unlock-request`, `on-auth-event`, `password-changed-notify`, `password-reset-email`, `platform-metrics` (pre-existing), `receive-email`, `request-score-edit`, `send-entry-token-email`, `send-export-report`, `send-juror-pin-email`. (Not: `admin-session-touch`, `email-verification-confirm`, `invite-org-admin`, `platform-metrics` önceki çalışmada zaten Deno runner üzerinde 40 test'e sahip; toplam Deno tarafı 82/21 function ≈ 8 function gerçek kapsamda, 13 hâlâ zero-cov.) `rpc-proxy` planda listelenmişti fakat repoda mevcut değil — `audit-log-sink` security-proxy analogu olarak ikame edildi.
+- **`mockResolvedValue(undefined)` 23 adet kaldı.** Hedef ≤ 10 idi fakat kalanların hepsi semantik olarak void olan fonksiyonlar (`loadPeriods`, `fetchData`, `onPublish`, `onSave`, `logExportInitiated`, `exportXLSX`, `downloadTable` vb.). Gerçek implementasyonlar değer döndürmüyor; `undefined` doğru kontrat. Literal sayısını azaltmak için realistic-olmayan değer üretmek kontrat yalanı olurdu — pragmatik kesim burada.
+- **Shallow-smoke temizliği devam ediyor.** `AnalyticsTab.test.jsx`, `ScoresTab.test.jsx`, `SettingsComponents.test.jsx` silindi (7 test). `CriteriaConfirmModals.test.jsx` ve `HeatmapMobileList.test.jsx` korundu — birincisi disabled-state behavior assertion'ları var, ikincisi empty-state metin kontrolü gerçek. Diğer sprintlerdeki shallow testlerin sistematik taraması yapılmadı.
+- **P2 audit log completeness yetersiz.** `auditLogCompleteness.test.js` 15 test üretti ama yalnızca 4 admin fonksiyonunu kapsıyor (writeAuditLog, writeAuthFailureEvent, revokeEntryToken, logExportInitiated, forceCloseJurorEditMode, listAuditLogs). "Hangi admin aksiyonu hangi event üretir" matrisi **henüz eksik** — 40+ admin RPC wrapper'ının audit çağrısı doğrulanmadı.
 
 ### Metrik değişikliği önerisi
 

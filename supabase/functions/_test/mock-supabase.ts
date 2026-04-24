@@ -13,6 +13,9 @@ export interface MockResult<T = unknown> {
 export interface TableMock {
   selectMaybeSingle?: MockResult;
   selectSingle?: MockResult;
+  // Result for a list-style select: `await client.from('t').select().eq(...)`
+  // resolves to { data: [], error: null } via the builder's thenable path.
+  selectList?: MockResult;
   upsert?: MockResult;
   insert?: MockResult;
   update?: MockResult;
@@ -25,8 +28,13 @@ export interface MockConfig {
     properties?: { action_link?: string };
     user?: { id?: string };
   }>;
+  // Map of user_id → getUserById response; unmatched ids return {user:null}.
+  adminGetUserById?: Record<string, MockResult<{ user: { id: string; email?: string } | null }>>;
+  adminListUsers?: MockResult<{ users: Array<{ id: string; email?: string }> }>;
   rpc?: Record<string, MockResult>;
   tables?: Record<string, TableMock>;
+  storageUpload?: { data: { path: string } | null; error: { message: string } | null };
+  storageRemove?: { data: unknown; error: { message: string } | null };
 }
 
 export interface CallRecord {
@@ -118,10 +126,37 @@ class QueryBuilder {
   lt(_col: string, _val: unknown) {
     return this;
   }
+  lte(_col: string, _val: unknown) {
+    return this;
+  }
+  gt(_col: string, _val: unknown) {
+    return this;
+  }
+  gte(_col: string, _val: unknown) {
+    return this;
+  }
+  neq(_col: string, _val: unknown) {
+    return this;
+  }
+  like(_col: string, _val: unknown) {
+    return this;
+  }
+  ilike(_col: string, _val: unknown) {
+    return this;
+  }
+  not(_col: string, _op: string, _val: unknown) {
+    return this;
+  }
+  or(_filters: string) {
+    return this;
+  }
   order(_col: string, _opts?: unknown) {
     return this;
   }
   limit(_n: number) {
+    return this;
+  }
+  range(_from: number, _to: number) {
     return this;
   }
 
@@ -157,7 +192,10 @@ class QueryBuilder {
         result = t.upsert ?? { data: null, error: null };
         break;
       default:
-        result = t.selectSingle ?? { data: null, error: null };
+        // Prefer selectList when provided (awaiting the builder directly
+        // without `.single()` is the list/array path); fall back to
+        // selectSingle for back-compat, then empty.
+        result = t.selectList ?? t.selectSingle ?? { data: [], error: null };
     }
     return Promise.resolve(result).then(onFulfilled ?? undefined, onRejected ?? undefined);
   }
@@ -177,7 +215,30 @@ export function createClient(_url: string, apiKey: string, _opts?: unknown) {
           calls.push({ clientKind, type: "auth.admin.generateLink", payload: opts });
           return config.adminGenerateLink ?? { data: null, error: { message: "generateLink not mocked" } };
         },
+        getUserById: async (userId: string) => {
+          calls.push({ clientKind, type: "auth.getUser", name: userId });
+          return (
+            config.adminGetUserById?.[userId] ?? {
+              data: { user: null },
+              error: { message: `getUserById ${userId} not mocked` },
+            }
+          );
+        },
+        listUsers: async (_opts?: unknown) => {
+          calls.push({ clientKind, type: "auth.getUser", name: "listUsers" });
+          return config.adminListUsers ?? { data: { users: [] }, error: null };
+        },
       },
+    },
+    storage: {
+      from: (_bucket: string) => ({
+        upload: async (_path: string, _data: unknown, _opts?: unknown) => {
+          return config.storageUpload ?? { data: { path: _path }, error: null };
+        },
+        remove: async (_paths: string[]) => {
+          return config.storageRemove ?? { data: null, error: null };
+        },
+      }),
     },
     rpc: async (name: string, args?: unknown) => {
       calls.push({ clientKind, type: "rpc", name, payload: args });

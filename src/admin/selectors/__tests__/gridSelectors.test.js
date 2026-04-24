@@ -131,6 +131,82 @@ describe("gridSelectors — computeGroupAverages", () => {
   });
 });
 
+describe("gridSelectors — computeGroupAverages (edge cases)", () => {
+  qaTest("grid.sel.07", () => {
+    const groups = [{ id: "g1" }, { id: "g2" }, { id: "g3" }];
+
+    // Juror j1: fully scored g1 and g2; Juror j2: completely absent from lookup
+    const jurors = [{ key: "j1" }, { key: "j2" }];
+    const lookup = {
+      j1: {
+        g1: { design: 40, delivery: 40, total: 80 },
+        g2: { design: 35, delivery: 35, total: 70 },
+        // g3 not present → entry = undefined → getCellState("empty") → excluded
+      },
+      // j2 not in lookup at all → lookup["j2"] is undefined → entry = undefined
+    };
+
+    const avgs = computeGroupAverages(jurors, groups, lookup, CRITERIA);
+    // g1: j1 scored(80), j2 absent(null) → only j1 → 80.00
+    expect(avgs[0]).toBe("80.00");
+    // g2: j1 scored(70), j2 absent(null) → only j1 → 70.00
+    expect(avgs[1]).toBe("70.00");
+    // g3: j1 absent(null), j2 absent(null) → no valid vals → null
+    expect(avgs[2]).toBeNull();
+
+    // Juror with partial scores → getCellState returns "partial" → excluded
+    const partialLookup = {
+      j1: {
+        g1: { design: 40, delivery: null, total: null }, // partial: only 1 of 2 criteria
+      },
+    };
+    // getCellState mock: filled=1, criteria.length=2 → "partial" → not "scored" → excluded
+    const partialAvgs = computeGroupAverages([{ key: "j1" }], [{ id: "g1" }], partialLookup, CRITERIA);
+    expect(partialAvgs[0]).toBeNull();
+
+    // Multiple jurors with mixed scored/partial/absent across two groups
+    const j3 = { key: "j3" };
+    const j4 = { key: "j4" };
+    const mixedLookup = {
+      j3: {
+        g1: { design: 40, delivery: 40, total: 80 }, // scored
+        g2: { design: 30, delivery: null, total: null }, // partial → excluded
+      },
+      j4: {
+        g1: { design: 30, delivery: 30, total: 60 }, // scored
+        // g2 absent → excluded
+      },
+    };
+    const mixedAvgs = computeGroupAverages([j3, j4], [{ id: "g1" }, { id: "g2" }], mixedLookup, CRITERIA);
+    // g1: j3(80) + j4(60) → 70.00
+    expect(mixedAvgs[0]).toBe("70.00");
+    // g2: j3 partial(excluded), j4 absent(excluded) → null
+    expect(mixedAvgs[1]).toBeNull();
+  });
+});
+
+describe("gridSelectors — buildExportRowsData (edge cases)", () => {
+  qaTest("grid.sel.08", () => {
+    const jurorFinalMap = new Map([["j1", true]]);
+    const jurorWorkflowMap = new Map([["j1", "completed"]]);
+
+    // Empty groups array → rows have empty scores object, no crash
+    const jurors = [{ key: "j1", name: "Alice", dept: "MIT" }];
+    const lookup = { j1: { g1: { design: 40, delivery: 40, total: 80 } } };
+    const rows = buildExportRowsData(jurors, [], lookup, jurorFinalMap, jurorWorkflowMap, CRITERIA);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].scores).toEqual({});
+
+    // Juror completely absent from lookup → all scores null, no crash
+    const groups = [{ id: "g1" }, { id: "g2" }];
+    const emptyLookup = {}; // j1 not present at all
+    const rows2 = buildExportRowsData(jurors, groups, emptyLookup, jurorFinalMap, jurorWorkflowMap, CRITERIA);
+    expect(rows2).toHaveLength(1);
+    expect(rows2[0].scores["g1"]).toBeNull();
+    expect(rows2[0].scores["g2"]).toBeNull();
+  });
+});
+
 describe("gridSelectors — buildExportRowsData", () => {
   qaTest("grid.sel.05", () => {
     const groups = [{ id: "g1" }, { id: "g2" }];

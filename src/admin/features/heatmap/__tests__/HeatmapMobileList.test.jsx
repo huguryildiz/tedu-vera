@@ -1,12 +1,12 @@
 import { describe, vi, expect } from "vitest";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { qaTest } from "@/test/qaTest";
 
 import HeatmapMobileList from "../HeatmapMobileList";
 
 describe("HeatmapMobileList", () => {
   qaTest("coverage.heatmap-mobile-list.empty-state", () => {
-    const { container } = render(
+    render(
       <HeatmapMobileList
         visibleJurors={[]}
         groups={[]}
@@ -22,6 +22,6 @@ describe("HeatmapMobileList", () => {
         getCellDisplay={vi.fn()}
       />
     );
-    expect(container.firstChild).toBeTruthy();
+    expect(screen.getByText("No Jurors to Display")).toBeInTheDocument();
   });
 });

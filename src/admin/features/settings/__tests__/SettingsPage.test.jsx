@@ -36,13 +36,33 @@ vi.mock("@/admin/features/settings/useAdminTeam", () => ({
   useAdminTeam: () => ({ team: [], loading: false, error: null }),
 }));
 
+const { EMPTY_SESSIONS } = vi.hoisted(() => ({
+  EMPTY_SESSIONS: Object.freeze([]),
+}));
+
 vi.mock("@/shared/api", () => ({
   upsertProfile: vi.fn(),
-  getSecurityPolicy: vi.fn().mockResolvedValue({}),
+  getSecurityPolicy: vi.fn().mockResolvedValue({
+    googleOAuth: true,
+    emailPassword: true,
+    rememberMe: true,
+    qrTtl: "24h",
+    maxPinAttempts: 5,
+    pinLockCooldown: "5m",
+    ccOnPinReset: false,
+    ccOnScoreEdit: false,
+    ccOnTenantApplication: false,
+    ccOnMaintenance: false,
+    ccOnPasswordChanged: false,
+  }),
   setSecurityPolicy: vi.fn(),
-  getPinPolicy: vi.fn().mockResolvedValue({}),
+  getPinPolicy: vi.fn().mockResolvedValue({
+    maxPinAttempts: 5,
+    pinLockCooldown: "5m",
+    qrTtl: "24h",
+  }),
   setPinPolicy: vi.fn(),
-  listAdminSessions: vi.fn().mockResolvedValue([]),
+  listAdminSessions: vi.fn().mockResolvedValue(EMPTY_SESSIONS),
   deleteAdminSession: vi.fn(),
   updateOrganization: vi.fn(),
 }));

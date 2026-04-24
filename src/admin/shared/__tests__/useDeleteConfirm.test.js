@@ -29,7 +29,7 @@ function makeOpts(overrides = {}) {
 describe("useDeleteConfirm", () => {
   beforeEach(() => {
     mockGetDeleteCounts.mockResolvedValue({ active_semesters: 0, juror_auths: 0, projects: 0, scores: 0 });
-    mockDeleteEntity.mockResolvedValue({});
+    mockDeleteEntity.mockResolvedValue(true);
   });
 
   qaTest("admin.shared.deleteConfirm.01", async () => {

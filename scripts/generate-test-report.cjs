@@ -202,7 +202,7 @@ const durationSec = totalDurationSec(report.testResults || []);
 const overallPass = report.success !== false && (report.numFailedTests || 0) === 0;
 
 const summaryRows = [
-  [cell("TEDU Capstone Portal — Test Report", {
+  [cell("VERA — Test Report", {
     font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } },
     fill: { fgColor: { rgb: "1F4E79" } },
   }), ""],

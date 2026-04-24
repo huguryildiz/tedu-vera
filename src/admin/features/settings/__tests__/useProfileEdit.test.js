@@ -1,6 +1,7 @@
 import { describe, vi, expect } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { qaTest } from "@/test/qaTest";
+import { mockSuccess } from "@/test/adminApiMocks";
 
 vi.mock("@/auth", () => ({
   useAuth: () => ({
@@ -29,7 +30,7 @@ vi.mock("@/shared/lib/supabaseClient", () => ({
       })),
     },
     from: vi.fn(() => ({
-      update: vi.fn(() => ({ eq: vi.fn().mockResolvedValue({}) })),
+      update: vi.fn(() => ({ eq: vi.fn().mockResolvedValue(mockSuccess(null)) })),
     })),
   },
 }));

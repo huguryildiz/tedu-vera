@@ -2,8 +2,9 @@ import { describe, vi, expect } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { qaTest } from "@/test/qaTest";
 
-const { mockCreateOrg } = vi.hoisted(() => ({
+const { mockCreateOrg, EMPTY_ORGS } = vi.hoisted(() => ({
   mockCreateOrg: vi.fn().mockResolvedValue({ data: { id: "org-new" }, error: null }),
+  EMPTY_ORGS: Object.freeze([]),
 }));
 
 vi.mock("@/shared/lib/supabaseClient", () => ({
@@ -21,7 +22,7 @@ vi.mock("@/shared/lib/supabaseClient", () => ({
 }));
 
 vi.mock("@/shared/api", () => ({
-  listOrganizations: vi.fn().mockResolvedValue([]),
+  listOrganizations: vi.fn().mockResolvedValue(EMPTY_ORGS),
   createOrganization: mockCreateOrg,
   updateOrganization: vi.fn().mockResolvedValue({ data: {}, error: null }),
   inviteOrgAdmin: vi.fn().mockResolvedValue({ data: {}, error: null }),

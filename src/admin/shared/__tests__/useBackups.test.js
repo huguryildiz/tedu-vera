@@ -32,8 +32,8 @@ const FAKE_BACKUPS = [
 describe("useBackups", () => {
   beforeEach(() => {
     mockListBackups.mockResolvedValue(FAKE_BACKUPS);
-    mockCreateBackup.mockResolvedValue({});
-    mockDeleteBackup.mockResolvedValue({});
+    mockCreateBackup.mockResolvedValue(null);
+    mockDeleteBackup.mockResolvedValue(null);
     mockGetBackupSchedule.mockResolvedValue({ cron_expr: "0 2 * * *" });
   });
 

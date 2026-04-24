@@ -50,22 +50,33 @@ vi.mock("../useSetupWizard", () => ({
   }),
 }));
 
+const { EMPTY_LIST } = vi.hoisted(() => ({
+  EMPTY_LIST: Object.freeze([]),
+}));
+
 vi.mock("@/shared/api", () => ({
   createPeriod: vi.fn(),
   savePeriodCriteria: vi.fn(),
   createJuror: vi.fn(),
   createProject: vi.fn(),
   generateEntryToken: vi.fn(),
-  listPeriodOutcomes: vi.fn().mockResolvedValue([]),
-  listPeriodCriteriaForMapping: vi.fn().mockResolvedValue([]),
+  listPeriodOutcomes: vi.fn().mockResolvedValue(EMPTY_LIST),
+  listPeriodCriteriaForMapping: vi.fn().mockResolvedValue(EMPTY_LIST),
   upsertPeriodCriterionOutcomeMap: vi.fn(),
   assignFrameworkToPeriod: vi.fn(),
-  getVeraStandardCriteria: vi.fn().mockResolvedValue([]),
+  getVeraStandardCriteria: vi.fn().mockResolvedValue(EMPTY_LIST),
   setPeriodCriteriaName: vi.fn(),
   checkPeriodReadiness: vi.fn(),
   publishPeriod: vi.fn(),
   markSetupComplete: vi.fn(),
-  getSecurityPolicy: vi.fn().mockResolvedValue({}),
+  getSecurityPolicy: vi.fn().mockResolvedValue({
+    googleOAuth: true,
+    emailPassword: true,
+    rememberMe: true,
+    qrTtl: "24h",
+    maxPinAttempts: 5,
+    pinLockCooldown: "5m",
+  }),
 }));
 
 vi.mock("@/admin/shared/ImportJurorsModal", () => ({ default: () => null }));

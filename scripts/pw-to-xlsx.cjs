@@ -149,7 +149,7 @@ const generatedAt = new Date().toISOString().replace("T", " ").slice(0, 19) + " 
 // ── Sheet 1: Summary ──────────────────────────────────────────────────────────
 
 const summarySheet = XLSX.utils.aoa_to_sheet([
-  [c("TEDU Capstone Portal — E2E Test Report", S.title), ""],
+  [c("VERA — E2E Test Report", S.title), ""],
   ["", ""],
   [c("Field", S.header),    c("Value", S.header)],
   [c("Report Generated",   S.key), c(generatedAt,                           S.val)],

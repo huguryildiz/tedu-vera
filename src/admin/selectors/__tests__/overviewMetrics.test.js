@@ -64,6 +64,60 @@ describe("overviewMetrics — computeNeedsAttention", () => {
   });
 });
 
+describe("overviewMetrics — computeNeedsAttention (boundary)", () => {
+  qaTest("overview.sel.03", () => {
+    // totalJurors = 0 → completed < 0 is always false → no incomplete projects
+    const groups = [
+      { id: "g1", completedEvals: 0 },
+      { id: "g2", completedEvals: 0 },
+    ];
+    const { incompleteProjects } = computeNeedsAttention([], groups, { totalJurors: 0 });
+    expect(incompleteProjects).toHaveLength(0);
+
+    // Juror with status="not_started" AND progress > 0 → OR condition → still stale
+    const jurors = [
+      { key: "j1", progress: 50, status: "not_started" }, // status flag overrides progress
+      { key: "j2", progress: 50, status: "in_progress" }, // not stale
+    ];
+    const { staleJurors } = computeNeedsAttention(jurors, [], { totalJurors: 0 });
+    expect(staleJurors).toHaveLength(1);
+    expect(staleJurors[0].key).toBe("j1");
+
+    // Empty arrays (not null) → empty results
+    const empty = computeNeedsAttention([], [], {});
+    expect(empty.staleJurors).toEqual([]);
+    expect(empty.incompleteProjects).toEqual([]);
+  });
+});
+
+describe("overviewMetrics — computeTopProjects (boundary)", () => {
+  qaTest("overview.sel.04", () => {
+    // Tie at 3rd position — stable sort preserves input order for equal totalAvg
+    const withTie = [
+      { id: "p1", totalAvg: 90 },
+      { id: "p2", totalAvg: 85 },
+      { id: "p3", totalAvg: 80 }, // first at 80 — wins rank 3
+      { id: "p4", totalAvg: 80 }, // second at 80 — pushed to rank 4
+      { id: "p5", totalAvg: 70 },
+    ];
+    const top = computeTopProjects(withTie);
+    expect(top).toHaveLength(3);
+    expect(top[2].id).toBe("p3"); // stable sort: p3 before p4 in input
+    expect(top[2].rank).toBe(3);
+    expect(top.find((p) => p.id === "p4")).toBeUndefined();
+
+    // All ≥5 projects have null totalAvg → filter removes all → []
+    const allNull = [
+      { id: "p1", totalAvg: null },
+      { id: "p2", totalAvg: null },
+      { id: "p3", totalAvg: null },
+      { id: "p4", totalAvg: null },
+      { id: "p5", totalAvg: null },
+    ];
+    expect(computeTopProjects(allNull)).toEqual([]);
+  });
+});
+
 describe("overviewMetrics — computeTopProjects", () => {
   qaTest("overview.sel.02", () => {
     // Fewer than 5 projects → always returns []
