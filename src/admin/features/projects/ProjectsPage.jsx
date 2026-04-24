@@ -450,7 +450,7 @@ export default function ProjectsPage() {
               Projects cannot be added, edited, or deleted while scores exist for this period.
             </div>
             <div className="lock-notice-chips">
-              <span className="lock-notice-chip active"><ClipboardList size={11} strokeWidth={2} /> View Scores</span>
+              <span className="lock-notice-chip editable"><ClipboardList size={11} strokeWidth={2} /> View Scores</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Add Projects</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Import CSV</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Edit Projects</span>

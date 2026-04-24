@@ -43,6 +43,15 @@
 
 .floating-menu-item.danger:hover { background: var(--danger-soft); }
 
+.floating-menu-item--highlight {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent) !important;
+  font-weight: 600;
+}
+.floating-menu-item--highlight:hover {
+  background: color-mix(in srgb, var(--accent) 18%, transparent) !important;
+}
+
 .floating-menu-divider { height: 1px; background: var(--border); margin: 4px 0; }
 
 @keyframes publish-ready-pulse {

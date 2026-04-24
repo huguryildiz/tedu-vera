@@ -65,12 +65,12 @@ export default function OutcomesTable({
           <div className="lock-notice-body">
             <div className="lock-notice-title">Evaluation in progress — structural fields locked</div>
             <div className="lock-notice-desc">
-              Criterion mappings, coverage types, labels, and descriptions cannot be changed while scores exist.
+              Criterion mappings and coverage types are locked while scores exist. Labels and descriptions can still be edited.
             </div>
             <div className="lock-notice-chips">
+              <span className="lock-notice-chip editable"><Pencil size={11} strokeWidth={2} /> Labels &amp; Descriptions</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Criterion Mappings</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Coverage Types</span>
-              <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Labels &amp; Descriptions</span>
             </div>
           </div>
         </div>

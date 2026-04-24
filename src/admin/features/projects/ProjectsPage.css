@@ -360,20 +360,3 @@
 }
 .filter-clear-link:hover { color: var(--danger); }
 
-/* ─── Floating menu: View Scores highlighted when locked ─── */
-.floating-menu-item--highlight {
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  color: var(--accent) !important;
-  font-weight: 600;
-}
-.floating-menu-item--highlight:hover {
-  background: color-mix(in srgb, var(--accent) 18%, transparent) !important;
-}
-
-/* ─── Lock notice: active (unlocked) chip ─────────────────── */
-.lock-notice-chip.active {
-  opacity: 1;
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-}

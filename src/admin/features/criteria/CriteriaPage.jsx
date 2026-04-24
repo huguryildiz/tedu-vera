@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Lock, LockKeyhole, Plus } from "lucide-react";
+import { Lock, LockKeyhole, Pencil, Plus } from "lucide-react";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
 import { useToast } from "@/shared/hooks/useToast";
 import { useManagePeriods } from "@/admin/features/periods/useManagePeriods";
@@ -452,13 +452,13 @@ export default function CriteriaPage() {
           <div className="lock-notice-body">
             <div className="lock-notice-title">Evaluation in progress — structural fields locked</div>
             <div className="lock-notice-desc">
-              Criteria weights, rubric bands, outcome mappings, labels, and descriptions cannot be changed while scores exist.
+              Criterion weights, rubric bands, and outcome mappings are locked while scores exist. Labels and descriptions can still be edited.
             </div>
             <div className="lock-notice-chips">
+              <span className="lock-notice-chip editable"><Pencil size={11} strokeWidth={2} /> Labels &amp; Descriptions</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Criterion Weights</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Rubric Bands</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Outcome Mappings</span>
-              <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Labels &amp; Descriptions</span>
             </div>
           </div>
         </div>

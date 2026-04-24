@@ -225,8 +225,7 @@ body:not(.dark-mode) .rk-range-track-bg {
  * the column header already carries the label. In portrait the eyebrow is
  * revealed via the mobile block below. */
 .ranking-table .col-students .meta-chips-eyebrow { display: none; }
-.ranking-table .col-students .rk-members-label { display: none; }
-.ranking-table .col-students .rk-advisor-block  { display: none; }
+.ranking-table .col-students .rk-advisor-section { display: none; }
 
 /* ── Desktop col-avg: show plain number, hide donut ──────────── */
 .ranking-table td.col-avg .avg-donut { display: none; }
@@ -400,42 +399,22 @@ body:not(.dark-mode) .rk-range-track-bg {
     color: inherit;
   }
 
-  .ranking-table .col-students .rk-members-label {
-    display: block;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    color: var(--text-tertiary);
-    margin-bottom: 8px;
-  }
-
-  .ranking-table .col-students .rk-advisor-block {
-    display: block;
-    margin-top: 10px;
-  }
-
-  .ranking-table .col-students .rk-advisor-block .meta-chips-row {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 12px;
-  }
-
-  .ranking-table .col-students .rk-advisor-block .meta-chips-eyebrow {
-    width: 100%;
-    margin-bottom: 4px;
-  }
-
-
-  /* Reveal eyebrow and switch to block layout (label above chips) */
-  .ranking-table td.col-students .meta-chips-eyebrow { display: inline-block; margin-bottom: 6px; }
-  .ranking-table td.col-students .meta-chips-row {
+  /* Reveal advisor section — mirror ReviewMobileCard rmc-meta-section pattern */
+  .ranking-table .col-students .rk-advisor-section {
+    display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0;
-    margin-top: 0;
+    gap: 5px;
+    margin-top: 8px;
   }
+
+  /* Advisor name weight matches team-member weight (global .jb-name is 600; card uses 400) */
+  .ranking-table .col-students .rk-advisor-section .jb-name { font-weight: 400 !important; }
+
+  /* Reveal eyebrow */
+  .ranking-table td.col-students .meta-chips-eyebrow { display: inline-block; }
+
+  /* meta-chips-row: keep global flex-row/wrap so chips flow horizontally (like Reviews) */
+  .ranking-table td.col-students .meta-chips-row { margin-top: 0; }
 
   .ranking-table td.col-students[data-label]::before { display: none; }
 

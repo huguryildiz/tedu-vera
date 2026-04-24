@@ -136,10 +136,24 @@ export default function RankingsTable({
                     })()}
                   </td>
                   <td className="col-students" data-label="Team Members">
-                    <span className="rk-members-label">Team Members</span>
+                    <span className="meta-chips-eyebrow">TEAM MEMBERS</span>
                     <div className="meta-chips-row">
                       <TeamMemberNames names={members} />
                     </div>
+                    {proj.advisor && (() => {
+                      const advisors = proj.advisor.split(",").map((s) => s.trim()).filter(Boolean);
+                      if (!advisors.length) return null;
+                      return (
+                        <div className="rk-advisor-section">
+                          <span className="meta-chips-eyebrow">ADVISED BY</span>
+                          <div className="meta-chips-row">
+                            {advisors.map((name, idx) => (
+                              <JurorBadge key={`${name}-${idx}`} name={name} size="sm" nameOnly />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </td>
                   {criteriaConfig.map((c) => (
                     <HeatCell

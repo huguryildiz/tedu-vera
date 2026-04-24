@@ -76,7 +76,9 @@ body:not(.dark-mode) .fb-banner.fbb-editing strong{color:#4c1d95}
 body:not(.dark-mode) .fb-banner.fbb-editing svg{color:#6d28d9}
 
 @media (max-width: 768px) and (orientation: portrait) {
-  .fb-banner-action{white-space:normal;text-align:right}
+  .fb-banner{gap:20px}
+  .fb-banner-action{white-space:normal;text-align:left}
+  .fb-action-line{display:block}
 }
 
 /* ── Modal Inline Feedback ── */
