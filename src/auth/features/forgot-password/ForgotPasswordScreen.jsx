@@ -77,6 +77,7 @@ export default function ForgotPasswordScreen({ onResetPassword, onBackToLogin })
                 <label className="form-label" htmlFor="forgot-email">Email</label>
                 <input
                   id="forgot-email"
+                  data-testid="forgot-email"
                   className="form-input"
                   type="email"
                   value={email}
@@ -87,12 +88,12 @@ export default function ForgotPasswordScreen({ onResetPassword, onBackToLogin })
                   disabled={loading}
                 />
               </div>
-              <button ref={submitBtnRef} type="submit" className="btn btn-primary" disabled={loading} style={{ width: "100%" }}>
+              <button ref={submitBtnRef} data-testid="forgot-submit" type="submit" className="btn btn-primary" disabled={loading} style={{ width: "100%" }}>
                 {loading ? "Sending…" : "Send Reset Link"}
               </button>
             </form>
           ) : (
-            <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div data-testid="forgot-success-banner" style={{ textAlign: "center", padding: "20px 0" }}>
               <div style={{
                 width: "48px", height: "48px", borderRadius: "50%",
                 background: "rgba(22,163,74,0.1)", display: "inline-grid",

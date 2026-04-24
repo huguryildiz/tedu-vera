@@ -221,6 +221,7 @@ export default function OutcomeDetailDrawer({ open, onClose, outcome, criteria =
         <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose} disabled={saving}>Cancel</button>
         <button
           ref={saveBtnRef}
+          data-testid="outcomes-detail-save"
           className="fs-btn fs-btn-primary"
           type="button"
           onClick={handleSave}

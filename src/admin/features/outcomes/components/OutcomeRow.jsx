@@ -30,6 +30,7 @@ export default function OutcomeRow({
 
   return (
     <tr
+      data-testid="outcome-row"
       data-card-selectable=""
       className="acc-row"
       onClick={() => onEdit(outcome)}

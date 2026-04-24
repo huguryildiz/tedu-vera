@@ -461,6 +461,7 @@ export default function OutcomesPage() {
               </span>
             ) : (
               <button
+                data-testid="outcomes-add-btn"
                 className="btn btn-primary btn-sm mobile-toolbar-primary"
                 onClick={() => setAddDrawerOpen(true)}
               >
@@ -624,6 +625,7 @@ export default function OutcomesPage() {
           </div>
           <PremiumTooltip text={isLocked ? "Evaluation period is locked. Unlock the period to make changes." : null} position="bottom">
             <button
+              data-testid="outcomes-add-btn-below"
               className="btn btn-primary btn-sm mobile-primary-below-kpi"
               onClick={() => !isLocked && setAddDrawerOpen(true)}
               disabled={isLocked}

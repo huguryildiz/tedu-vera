@@ -175,6 +175,7 @@ export default function AddOutcomeDrawer({
                 <div className="fs-field">
                   <label className="fs-field-label">Code <span className="fs-field-req">*</span></label>
                   <input
+                    data-testid="outcomes-drawer-code"
                     className="fs-input"
                     type="text"
                     placeholder="e.g., PO-5"
@@ -190,6 +191,7 @@ export default function AddOutcomeDrawer({
                 <div className="fs-field">
                   <label className="fs-field-label">Label <span className="fs-field-req">*</span></label>
                   <input
+                    data-testid="outcomes-drawer-label"
                     className="fs-input"
                     type="text"
                     placeholder="e.g., Engineering Knowledge"
@@ -260,6 +262,7 @@ export default function AddOutcomeDrawer({
         {!noFramework && (
           <button
             ref={saveBtnRef}
+            data-testid="outcomes-drawer-save"
             className="fs-btn fs-btn-primary"
             type="button"
             onClick={handleSave}

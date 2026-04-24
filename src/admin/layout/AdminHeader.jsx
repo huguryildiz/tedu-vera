@@ -60,6 +60,7 @@ function PeriodRow({ period, isPinned, onSelect }) {
 
   return (
     <div
+      data-testid={`period-popover-item-${period.id}`}
       className={`period-popover-item${isPinned ? " pinned" : ""}`}
       onMouseDown={(e) => {
         e.preventDefault();
@@ -216,6 +217,7 @@ export default function AdminHeader({
         <div className={`dropdown${dropdownOpen ? " open" : ""}`}>
           <button
             ref={triggerRef}
+            data-testid="period-selector-trigger"
             className={`dropdown-trigger${dropdownOpen ? " open" : ""}`}
             type="button"
             onClick={() => setDropdownOpen((v) => !v)}

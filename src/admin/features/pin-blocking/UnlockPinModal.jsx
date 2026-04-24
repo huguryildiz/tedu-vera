@@ -240,6 +240,7 @@ export default function UnlockPinModal({
       >
         <button
           type="button"
+          data-testid="pin-blocking-modal-close"
           className="fs-btn fs-btn-secondary"
           onClick={handleClose}
           style={{ flex: 1 }}

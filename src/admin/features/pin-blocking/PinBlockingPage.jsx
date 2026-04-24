@@ -276,6 +276,7 @@ export default function PinBlockingPage() {
                         </td>
                         <td className="col-actions text-right" data-label="Action">
                           <button
+                            data-testid={`pin-blocking-unlock-${j.jurorId}`}
                             className="btn btn-outline btn-sm"
                             onClick={() => handleUnlock(j.jurorId)}
                           >

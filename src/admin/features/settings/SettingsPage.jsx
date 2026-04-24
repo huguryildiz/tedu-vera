@@ -490,7 +490,7 @@ export default function SettingsPage() {
                 <div className="text-sm text-muted" style={{ marginBottom: 10 }}>
                   Password requirements, auth methods, and session policies that apply to all admin accounts.
                 </div>
-                <button className="btn btn-outline btn-sm" onClick={handleOpenSecurityPolicy}>Edit Security Policy</button>
+                <button data-testid="settings-security-policy-btn" className="btn btn-outline btn-sm" onClick={handleOpenSecurityPolicy}>Edit Security Policy</button>
               </div>
             )}
 
@@ -510,6 +510,7 @@ export default function SettingsPage() {
                       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                         <input
                           autoFocus
+                          data-testid="settings-org-name"
                           value={orgNameDraft}
                           onChange={(e) => setOrgNameDraft(e.target.value)}
                           onKeyDown={(e) => {
@@ -520,6 +521,7 @@ export default function SettingsPage() {
                           disabled={orgNameSaving}
                         />
                         <button
+                          data-testid="settings-save"
                           onClick={handleOrgNameSave}
                           disabled={orgNameSaving || !orgNameDraft.trim()}
                           style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: "var(--radius-sm)", border: "none", background: "var(--success-soft)", color: "var(--success)", cursor: "pointer", flexShrink: 0 }}
@@ -538,8 +540,9 @@ export default function SettingsPage() {
                       </div>
                     ) : (
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontWeight: 600, flex: 1 }}>{activeOrganization?.name || "—"}</span>
+                        <span data-testid="settings-org-name-display" style={{ fontWeight: 600, flex: 1 }}>{activeOrganization?.name || "—"}</span>
                         <button
+                          data-testid="settings-org-name-edit"
                           onClick={() => { setOrgNameDraft(activeOrganization?.name || ""); setEditingOrgName(true); setOrgNameError(null); }}
                           style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: "var(--radius-sm)", border: "none", background: "transparent", color: "var(--text-muted)", cursor: "pointer", flexShrink: 0, transition: "color 0.15s" }}
                           onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}

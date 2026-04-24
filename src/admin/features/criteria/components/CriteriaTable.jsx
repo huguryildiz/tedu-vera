@@ -162,7 +162,7 @@ export default function CriteriaTable({
             const menuKey = `crt-row-${i}`;
             const isMenuOpen = openMenuId === menuKey;
             return (
-              <tr key={criterion.key || i} data-card-selectable="" className="mcard" style={{ "--row-color": criterion.color || CRITERION_COLORS[i % CRITERION_COLORS.length] }}>
+              <tr key={criterion.key || i} data-testid="criteria-row" data-card-selectable="" className="mcard" style={{ "--row-color": criterion.color || CRITERION_COLORS[i % CRITERION_COLORS.length] }}>
                 <td data-label="#"><span className="crt-row-num">{i + 1}</span></td>
                 <td data-label="Criterion">
                   <div className="crt-name">

@@ -25,6 +25,7 @@ export default function Modal({ open, onClose, size = "md", centered = false, ch
 
   return (
     <div
+      data-testid="modal"
       className={`fs-modal-wrap${open ? " show" : ""}`}
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
     >

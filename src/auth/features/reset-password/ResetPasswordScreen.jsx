@@ -170,6 +170,7 @@ export default function ResetPasswordScreen({ onUpdatePassword, onBackToLogin })
                 <div style={{ position: "relative" }}>
                   <input
                     id="reset-pass"
+                    data-testid="reset-password"
                     className="form-input"
                     type={showPass ? "text" : "password"}
                     value={password}
@@ -201,6 +202,7 @@ export default function ResetPasswordScreen({ onUpdatePassword, onBackToLogin })
                 <div style={{ position: "relative" }}>
                   <input
                     id="reset-confirm"
+                    data-testid="reset-confirm"
                     className="form-input"
                     type={showConfirmPass ? "text" : "password"}
                     value={confirmPassword}
@@ -238,12 +240,12 @@ export default function ResetPasswordScreen({ onUpdatePassword, onBackToLogin })
                 )}
               </div>
 
-              <button ref={submitBtnRef} type="submit" className="btn btn-primary" disabled={loading} style={{ width: "100%" }}>
+              <button ref={submitBtnRef} data-testid="reset-submit" type="submit" className="btn btn-primary" disabled={loading} style={{ width: "100%" }}>
                 {loading ? "Updating…" : "Update Password"}
               </button>
             </form>
           ) : (
-            <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div data-testid="reset-success" style={{ textAlign: "center", padding: "20px 0" }}>
               <div style={{
                 width: "48px", height: "48px", borderRadius: "50%",
                 background: "rgba(22,163,74,0.1)", display: "inline-grid",

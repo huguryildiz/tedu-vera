@@ -40,4 +40,17 @@ export class AdminShellPom extends BasePom {
   async expectOrganizationsNavHidden(): Promise<void> {
     await expect(this.navOrganizations()).toHaveCount(0);
   }
+
+  periodSelectorTrigger(): Locator {
+    return this.byTestId("period-selector-trigger");
+  }
+
+  periodPopoverItem(periodId: string): Locator {
+    return this.byTestId(`period-popover-item-${periodId}`);
+  }
+
+  async selectPeriod(periodId: string): Promise<void> {
+    await this.periodSelectorTrigger().click();
+    await this.periodPopoverItem(periodId).click();
+  }
 }

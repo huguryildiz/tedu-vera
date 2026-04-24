@@ -34,6 +34,7 @@ export default function Drawer({ open, onClose, children, id, className }) {
       />
       <div
         id={id}
+        data-testid="drawer"
         className={`fs-drawer${open ? " show" : ""}${className ? ` ${className}` : ""}`}
         ref={containerRef}
         role="dialog"

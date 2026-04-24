@@ -26,10 +26,10 @@
 | B1 baseline (2026-04-24) | 14 / 57 (legacy) | ~23 | 20 | ~25% |
 | B5 final (2026-04-24) | **35 / 36** | 0 | 1 | ~43% (honest) |
 | B6 final (2026-04-24) | **51 / 52** | 0 | 1 | ~65% |
-| B7 target | ~62 / ~63 | 0 | ≤1 | ~80% |
+| B7 final (2026-04-24) | **67 / 68** | 0 | 1 | ~83% |
 | B8 target | ~70 / ~72 | 0 | ≤2 | ~95% |
 
-**B1–B6 closed.** B7–B8 planned. Known app-side blocker from B1 (`clearPersistedSession()` race) fixed in B2. Both realtime-race flakes fixed in B5. Jury evaluate/complete flow locked in B6.
+**B1–B7 closed.** B8 planned. Known app-side blocker from B1 (`clearPersistedSession()` race) fixed in B2. Both realtime-race flakes fixed in B5. Jury evaluate/complete flow locked in B6. Auth deadlock fix + governance drawer coverage in B7.
 
 ---
 
@@ -108,7 +108,13 @@ See `implementation_reports/B6-jury-evaluate-page-sweep.md`. Jury evaluate/compl
 
 ---
 
-### B7 — Auth akışları + governance drawers
+### B7 — CLOSED (2026-04-24)
+
+See `implementation_reports/B7-auth-governance.md`. Forgot-password flow (3 tests). Invite-accept flow (2 tests, required `AuthProvider` deadlock fix). Criteria/outcomes drawer CRUD (4+3 tests). Pin-blocking unlock flow (2 tests). Settings page (2 tests). **67/68 passing, 1 skipped (lifecycle), 0 flakes on repeat-each=3.**
+
+---
+
+### B7 — Auth akışları + governance drawers (original plan)
 
 **Strateji — e-posta bypass:** Supabase Admin API'nin `auth.admin.generateLink()` fonksiyonu servis rolü anahtarı ile token üretir; e-posta altyapısı gerekmez. `e2e/helpers/supabaseAdmin.ts` yardımcısı bu çağrıyı sarar; spec'ler URL'i doğrudan `page.goto()` ile açar.
 
@@ -297,24 +303,24 @@ Legend: ✅ covered · ⚠️ shallow · 🔜 planned sprint · ❌ not started
 |---------|--------|--------|-------|
 | Email+password login → dashboard | ✅ | B2 | happy + 2 error paths |
 | Google OAuth login (mocked) → dashboard | 🔜 | B8 | OAuth URL redirect mock only |
-| Forgot password → reset link flow | 🔜 | B7 | Supabase `generateLink` bypass |
-| Invite-accept → complete profile → dashboard | 🔜 | B7 | Supabase `generateLink` bypass |
+| Forgot password → reset link flow | ✅ | B7 | form + success banner |
+| Invite-accept → complete profile → dashboard | ✅ | B7 | localStorage injection; `AuthProvider` deadlock fix |
 | Tenant application → approval → user created | 🔜 | B8 | Admin approval side only; anon form seeded |
 | Organizations CRUD | ✅ | B3 | create/edit/delete + validation |
 | Periods + Semesters CRUD, publish, close | ✅ | B3 | CRUD + lifecycle (1 skip: DB precondition) |
 | Jurors CRUD, affiliation edit | ✅ | B3 | create/edit/delete + validation |
 | Projects CRUD + CSV import | ✅ | B3 | CRUD + import |
 | Entry token: create, copy URL, revoke | ✅ | B3 | create + revoke + cancel |
-| Criteria drawers CRUD + rubric bands | 🔜 | B7 | |
-| Outcomes + Programme Outcomes drawers | 🔜 | B7 | |
+| Criteria drawers CRUD + rubric bands | ✅ | B7 | add + validation; rubric bands deferred to B8 |
+| Outcomes + Programme Outcomes drawers | ✅ | B7 | add drawer CRUD |
 | Rankings export to xlsx | ⚠️ | B4 | panel opens; actual download not tested |
-| Heatmap renders without errors | 🔜 | B6 | render-level only |
-| Reviews page renders | 🔜 | B6 | render-level only |
-| Analytics page renders | 🔜 | B6 | render-level only |
-| Audit log filters work | ⚠️ | B4 | render + tab + search; date/category filter B6 |
-| Setup wizard: all 6 steps | ⚠️ | B4 | 3/6 steps; remaining 3 in B6 |
-| Pin-blocking: block / unblock juror | 🔜 | B7 | |
-| Settings: org settings update | 🔜 | B7 | |
+| Heatmap renders without errors | ✅ | B6 | render-level only |
+| Reviews page renders | ✅ | B6 | render-level only |
+| Analytics page renders | ✅ | B6 | render-level only |
+| Audit log filters work | ✅ | B6 | render + tab + search + date/category filter |
+| Setup wizard: all 6 steps | ✅ | B6 | all 6 steps covered |
+| Pin-blocking: block / unblock juror | ✅ | B7 | unlock button + modal open |
+| Settings: org settings update | ✅ | B7 | security policy drawer (super-admin) |
 | Tenant-admin restricted nav | ✅ | B4 | nav items hidden |
 | Cross-tenant URL manipulation blocked | 🔜 | B8 | |
 
@@ -325,8 +331,8 @@ Legend: ✅ covered · ⚠️ shallow · 🔜 planned sprint · ❌ not started
 | Entry token gate (valid token → identity) | ✅ | B4 | |
 | First-visit PIN reveal | ✅ | B4 | |
 | Known juror → PIN step (resume) | ✅ | B4 | |
-| Full evaluation write + complete | 🔜 | B6 | evaluate + complete pages |
-| Mid-eval resume (tab close → reopen) | 🔜 | B6 | blur-save + resume test |
+| Full evaluation write + complete | ✅ | B6 | evaluate + complete pages (pre-seeded scores) |
+| Mid-eval resume (tab close → reopen) | ✅ | B6 | blur-save + resume test |
 | Lock banner on locked semester | ✅ | B4 | |
 | Expired session → re-auth | 🔜 | B8 | localStorage clear trick |
 
@@ -334,5 +340,5 @@ Legend: ✅ covered · ⚠️ shallow · 🔜 planned sprint · ❌ not started
 
 | Journey | Status | Sprint |
 |---------|--------|--------|
-| `/demo` auto-login → `/demo/admin` | 🔜 | B6 |
-| Demo admin shell tabs work | 🔜 | B6 |
+| `/demo` auto-login → `/demo/admin` | ✅ | B6 |
+| Demo admin shell tabs work | ✅ | B6 |

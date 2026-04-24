@@ -242,7 +242,7 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
   const saveBtnRef = useShakeOnError(displayError);
 
   return (
-    <Drawer open={open} onClose={onClose}>
+    <Drawer id="drawer-security-policy" open={open} onClose={onClose}>
       <div className="fs-drawer-header">
         <div className="fs-drawer-header-row">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

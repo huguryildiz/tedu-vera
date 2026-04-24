@@ -346,6 +346,7 @@ export default function EditSingleCriterionDrawer({
           Details
         </button>
         <button
+          data-testid="criteria-drawer-tab-rubric"
           className={`crt-drawer-tab${activeTab === "rubric" ? " active" : ""}`}
           onClick={() => handleTabChange("rubric")}
           type="button"
@@ -407,6 +408,7 @@ export default function EditSingleCriterionDrawer({
                   Label <span className="crt-req">*</span>
                 </div>
                 <input
+                  data-testid="criteria-drawer-name"
                   className={[
                     "crt-field-input",
                     showError("label") && "error",
@@ -445,6 +447,7 @@ export default function EditSingleCriterionDrawer({
                 ) : (
                   <>
                     <input
+                      data-testid="criteria-drawer-weight"
                       className={[
                         "crt-field-input mono",
                         showError("max") && "error",
@@ -583,6 +586,7 @@ export default function EditSingleCriterionDrawer({
         </button>
         <button
           ref={saveBtnRef}
+          data-testid="criteria-drawer-save"
           className="crt-save-btn"
           disabled={saving || fullyLocked}
           onClick={handleSave}

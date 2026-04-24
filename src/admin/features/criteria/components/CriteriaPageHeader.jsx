@@ -45,6 +45,7 @@ export default function CriteriaPageHeader({
         </div>
       ) : (
         <button
+          data-testid="criteria-add-btn"
           className="btn btn-primary btn-sm mobile-toolbar-primary"
           onClick={onAddCriterion}
         >
