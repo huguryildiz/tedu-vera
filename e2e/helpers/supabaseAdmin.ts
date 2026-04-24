@@ -127,6 +127,21 @@ export async function deleteUserByEmail(email: string): Promise<void> {
   }
 }
 
+/**
+ * Reads score_sheets (with nested score_sheet_items) for a given juror+period.
+ * Uses the service-role client so RLS is bypassed — suitable for test assertions.
+ * Returns an empty array if no sheets exist yet.
+ */
+export async function readRubricScores(jurorId: string, periodId: string) {
+  const { data, error } = await adminClient
+    .from("score_sheets")
+    .select("id, juror_id, period_id, project_id, status, score_sheet_items(score_value)")
+    .eq("juror_id", jurorId)
+    .eq("period_id", periodId);
+  if (error) throw new Error(`readRubricScores failed: ${error.message}`);
+  return data ?? [];
+}
+
 // Full cascading cleanup needed because several public tables reference profiles(id)
 // without ON DELETE CASCADE:
 //   audit_logs.user_id → profiles(id)   (nullable — null it out)

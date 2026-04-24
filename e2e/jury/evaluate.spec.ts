@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { JuryPom } from "../poms/JuryPom";
 import { JuryEvalPom } from "../poms/JuryEvalPom";
 import { JuryCompletePom } from "../poms/JuryCompletePom";
+import { readRubricScores } from "../helpers/supabaseAdmin";
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
@@ -17,6 +18,9 @@ const EVAL_PERIOD_ID = "a0d6f60d-ece4-40f8-aca2-955b4abc5d88";
 test.describe("jury evaluate flow", () => {
   test.describe.configure({ mode: "serial" });
 
+  // ID of the juror used exclusively by DB-validating C1 tests.
+  const BLUR_JUROR_ID = "bbbbbbbb-e2e0-4000-b000-000000000001";
+
   test.beforeEach(async ({ request }) => {
     for (const { id } of EVAL_JURORS) {
       await request.patch(
@@ -28,10 +32,23 @@ test.describe("jury evaluate flow", () => {
             "Content-Type": "application/json",
             Prefer: "return=minimal",
           },
-          data: { failed_attempts: 0, locked_until: null, final_submitted_at: null },
+          data: { failed_attempts: 0, locked_until: null, final_submitted_at: null, session_token_hash: null },
         },
       );
     }
+    // Clean score_sheets only for the Blur juror used in C1 DB-validating tests,
+    // so assertions on score_value always see a fresh write rather than stale rows.
+    // score_sheet_items cascade-deletes automatically.
+    await request.delete(
+      `${SUPABASE_URL}/rest/v1/score_sheets?juror_id=eq.${BLUR_JUROR_ID}&period_id=eq.${EVAL_PERIOD_ID}`,
+      {
+        headers: {
+          apikey: SERVICE_KEY,
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          Prefer: "return=minimal",
+        },
+      },
+    );
   });
 
   async function navigateToEval(
@@ -104,5 +121,82 @@ test.describe("jury evaluate flow", () => {
     const complete = new JuryCompletePom(page);
     await complete.waitForCompleteStep();
     await complete.expectCompletionScreen();
+  });
+
+  // ── C1: DB round-trip validation ───────────────────────────────────────────
+
+  test("onBlur → score_sheets DB row exists with correct value", async ({ page }) => {
+    const evalPom = await navigateToEval(page, "E2E Eval Blur");
+    await evalPom.waitForEvalStep();
+
+    const firstInput = evalPom.allScoreInputs().first();
+    await firstInput.fill("7");
+    await firstInput.blur();
+
+    // Wait for autosave cycle: saving pill appears then clears
+    await expect(evalPom.saveStatusSaving()).toBeVisible({ timeout: 5_000 });
+    await expect(evalPom.saveStatusSaving()).not.toBeVisible({ timeout: 8_000 });
+
+    const jurorId = EVAL_JURORS.find((j) => j.name === "E2E Eval Blur")!.id;
+    const rows = await readRubricScores(jurorId, EVAL_PERIOD_ID);
+
+    expect(rows.length).toBeGreaterThan(0);
+    const allItems = rows.flatMap((r: any) => r.score_sheet_items ?? []);
+    expect(allItems.some((i: any) => Number(i.score_value) === 7)).toBe(true);
+  });
+
+  test("visibilitychange save → score_sheets DB row exists", async ({ page }) => {
+    const evalPom = await navigateToEval(page, "E2E Eval Blur");
+    await evalPom.waitForEvalStep();
+
+    const firstInput = evalPom.allScoreInputs().first();
+    await firstInput.fill("8");
+    // Deliberately do NOT blur — visibilitychange should trigger the save instead.
+
+    // Simulate tab becoming hidden: override visibilityState then dispatch the event.
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => "hidden",
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    // Give the async writeGroup time to complete (no UI indicator in hidden state).
+    await page.waitForTimeout(2_000);
+
+    const jurorId = EVAL_JURORS.find((j) => j.name === "E2E Eval Blur")!.id;
+    const rows = await readRubricScores(jurorId, EVAL_PERIOD_ID);
+
+    expect(rows.length).toBeGreaterThan(0);
+    const allItems = rows.flatMap((r: any) => r.score_sheet_items ?? []);
+    expect(allItems.some((i: any) => Number(i.score_value) === 8)).toBe(true);
+  });
+
+  test("deduplication: identical blur does not trigger a second RPC call", async ({ page }) => {
+    const evalPom = await navigateToEval(page, "E2E Eval Blur");
+    await evalPom.waitForEvalStep();
+
+    let rpcCallCount = 0;
+    await page.route("**/rest/v1/rpc/rpc_jury_upsert_score**", async (route) => {
+      rpcCallCount++;
+      await route.continue();
+    });
+
+    const firstInput = evalPom.allScoreInputs().first();
+
+    // First blur — should trigger upsertScore (lastWrittenRef is empty).
+    await firstInput.fill("6");
+    await firstInput.blur();
+    await expect(evalPom.saveStatusSaving()).toBeVisible({ timeout: 5_000 });
+    await expect(evalPom.saveStatusSaving()).not.toBeVisible({ timeout: 8_000 });
+
+    // Second blur with same value — lastWrittenRef key unchanged, RPC skipped.
+    await firstInput.fill("6");
+    await firstInput.blur();
+    // Small wait to let any potential second RPC resolve.
+    await page.waitForTimeout(1_000);
+
+    expect(rpcCallCount).toBe(1);
   });
 });
