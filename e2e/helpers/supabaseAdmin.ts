@@ -167,6 +167,41 @@ export async function readRubricScores(jurorId: string, periodId: string) {
   return data ?? [];
 }
 
+/**
+ * Reads audit_logs rows matching the given action and optional filters.
+ * Pass orgId=null to match rows where organization_id IS NULL (e.g. auth failure events).
+ */
+export async function readAuditLogs(
+  orgId: string | null,
+  action: string,
+  since?: string,
+  actorName?: string,
+): Promise<any[]> {
+  let query = adminClient
+    .from("audit_logs")
+    .select("*")
+    .eq("action", action)
+    .order("created_at", { ascending: false });
+
+  if (orgId !== null) {
+    query = query.eq("organization_id", orgId);
+  } else {
+    query = query.is("organization_id", null);
+  }
+
+  if (since) {
+    query = query.gte("created_at", since);
+  }
+
+  if (actorName) {
+    query = query.eq("actor_name", actorName);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(`readAuditLogs failed: ${error.message}`);
+  return data ?? [];
+}
+
 // Full cascading cleanup needed because several public tables reference profiles(id)
 // without ON DELETE CASCADE:
 //   audit_logs.user_id → profiles(id)   (nullable — null it out)

@@ -2,6 +2,8 @@ import { test, expect } from "@playwright/test";
 import { LoginPom } from "../poms/LoginPom";
 import { AdminShellPom } from "../poms/AdminShellPom";
 import { AuditPom } from "../poms/AuditPom";
+import { adminClient, readAuditLogs } from "../helpers/supabaseAdmin";
+import { E2E_PERIODS_ORG_ID } from "../fixtures/seed-ids";
 
 const EMAIL = process.env.E2E_ADMIN_EMAIL || "demo-admin@vera-eval.app";
 const PASSWORD = process.env.E2E_ADMIN_PASSWORD || "";
@@ -61,5 +63,126 @@ test.describe("audit log", () => {
     await audit.openFilter();
     await page.locator('[data-testid="audit-filter-reset"]').click();
     await expect(audit.searchInput()).toHaveValue("");
+  });
+});
+
+test.describe("audit log — content verification (E2)", () => {
+  test("period create → audit_logs has periods.insert entry with correct org_id", async () => {
+    const since = new Date().toISOString();
+    const name = `E2 AuditPeriod ${Date.now()}`;
+    const { data: period, error } = await adminClient
+      .from("periods")
+      .insert({ organization_id: E2E_PERIODS_ORG_ID, name, season: "Spring" })
+      .select()
+      .single();
+    expect(error).toBeNull();
+
+    const entries = await readAuditLogs(E2E_PERIODS_ORG_ID, "periods.insert", since);
+    expect(entries.length).toBeGreaterThan(0);
+    const entry = entries.find((e: any) => e.resource_id === period!.id);
+    expect(entry).not.toBeUndefined();
+    expect(entry!.organization_id).toBe(E2E_PERIODS_ORG_ID);
+    expect(entry!.resource_type).toBe("periods");
+
+    await adminClient.from("periods").delete().eq("id", period!.id);
+  });
+
+  test("juror delete → audit_logs has jurors.delete entry with correct resource_id", async () => {
+    const { data: juror } = await adminClient
+      .from("jurors")
+      .insert({
+        organization_id: E2E_PERIODS_ORG_ID,
+        juror_name: `E2 AuditJuror ${Date.now()}`,
+        affiliation: "E2 Test",
+      })
+      .select("id")
+      .single();
+
+    const since = new Date().toISOString();
+    await adminClient.from("jurors").delete().eq("id", juror!.id);
+
+    const entries = await readAuditLogs(E2E_PERIODS_ORG_ID, "jurors.delete", since);
+    expect(entries.length).toBeGreaterThan(0);
+    const entry = entries.find((e: any) => e.resource_id === juror!.id);
+    expect(entry).not.toBeUndefined();
+    expect(entry!.resource_type).toBe("jurors");
+  });
+
+  test("failed login → audit_logs has auth.admin.login.failure entry with correct actor_name", async () => {
+    const testEmail = `e2-test-${Date.now()}@audit-test.invalid`;
+    const since = new Date().toISOString();
+
+    const { data, error } = await adminClient.rpc("rpc_write_auth_failure_event", {
+      p_email: testEmail,
+      p_method: "password",
+    });
+    expect(error).toBeNull();
+    expect(data?.ok).toBe(true);
+
+    const entries = await readAuditLogs(null, "auth.admin.login.failure", since, testEmail);
+    expect(entries.length).toBeGreaterThan(0);
+    expect(entries[0].actor_name).toBe(testEmail);
+    expect(entries[0].details?.email).toBe(testEmail);
+  });
+
+  test("entry token insert → audit_logs has entry_tokens.insert entry for the correct period", async () => {
+    const { data: period } = await adminClient
+      .from("periods")
+      .insert({
+        organization_id: E2E_PERIODS_ORG_ID,
+        name: `E2 TokenPeriod ${Date.now()}`,
+        season: "Fall",
+      })
+      .select("id")
+      .single();
+
+    const since = new Date().toISOString();
+    const tokenHash = `e2test${Date.now()}`;
+    const { data: token } = await adminClient
+      .from("entry_tokens")
+      .insert({
+        period_id: period!.id,
+        token_hash: tokenHash,
+        token_plain: tokenHash,
+        expires_at: new Date(Date.now() + 86400000).toISOString(),
+      })
+      .select("id")
+      .single();
+
+    const entries = await readAuditLogs(E2E_PERIODS_ORG_ID, "entry_tokens.insert", since);
+    expect(entries.length).toBeGreaterThan(0);
+    const entry = entries.find((e: any) => e.resource_id === token!.id);
+    expect(entry).not.toBeUndefined();
+    expect(entry!.resource_type).toBe("entry_tokens");
+
+    await adminClient.from("periods").delete().eq("id", period!.id);
+  });
+
+  test("project create → audit_logs has projects.insert entry with correct resource_id", async () => {
+    const suffix = `${Date.now()}`;
+    const { data: period } = await adminClient
+      .from("periods")
+      .insert({
+        organization_id: E2E_PERIODS_ORG_ID,
+        name: `E2 ProjectPeriod ${suffix}`,
+        season: "Spring",
+      })
+      .select("id")
+      .single();
+
+    const since = new Date().toISOString();
+    const { data: project } = await adminClient
+      .from("projects")
+      .insert({ period_id: period!.id, title: `E2 AuditProject ${suffix}`, members: [] })
+      .select("id")
+      .single();
+
+    const entries = await readAuditLogs(E2E_PERIODS_ORG_ID, "projects.insert", since);
+    expect(entries.length).toBeGreaterThan(0);
+    const entry = entries.find((e: any) => e.resource_id === project!.id);
+    expect(entry).not.toBeUndefined();
+    expect(entry!.resource_type).toBe("projects");
+
+    await adminClient.from("periods").delete().eq("id", period!.id);
   });
 });
