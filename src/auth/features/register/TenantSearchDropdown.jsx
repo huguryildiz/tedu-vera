@@ -6,7 +6,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useFloating } from "../../shared/hooks/useFloating";
+import { useFloating } from "@/shared/hooks/useFloating";
 
 export default function TenantSearchDropdown({ tenants, value, onChange, disabled }) {
   const [query, setQuery] = useState("");

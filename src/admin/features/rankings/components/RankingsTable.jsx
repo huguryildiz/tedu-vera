@@ -118,10 +118,12 @@ export default function RankingsTable({
                     <MedalCell rank={rank} />
                   </td>
                   <td className="col-project" data-label="Project Title">
-                    {proj.group_no != null && (
-                      <span className="ranking-proj-no">P{proj.group_no}</span>
-                    )}
-                    <span className="proj-title-text">{title}</span>
+                    <div className="proj-title-row">
+                      {proj.group_no != null && (
+                        <span className="ranking-proj-no">P{proj.group_no}</span>
+                      )}
+                      <span className="proj-title-text">{title}</span>
+                    </div>
                     {proj.advisor && (() => {
                       const advisors = proj.advisor.split(",").map((s) => s.trim()).filter(Boolean);
                       if (!advisors.length) return null;
@@ -129,7 +131,7 @@ export default function RankingsTable({
                         <div className="meta-chips-row overview-top-advisors">
                           <span className="meta-chips-eyebrow">Advised by</span>
                           {advisors.map((name, idx) => (
-                            <JurorBadge key={`${name}-${idx}`} name={name} size="sm" nameOnly />
+                            <JurorBadge key={`${name}-${idx}`} name={name} size="sm" nameOnly variant="advisor" />
                           ))}
                         </div>
                       );
@@ -148,7 +150,7 @@ export default function RankingsTable({
                           <span className="meta-chips-eyebrow">ADVISED BY</span>
                           <div className="meta-chips-row">
                             {advisors.map((name, idx) => (
-                              <JurorBadge key={`${name}-${idx}`} name={name} size="sm" nameOnly />
+                              <JurorBadge key={`${name}-${idx}`} name={name} size="sm" nameOnly variant="advisor" />
                             ))}
                           </div>
                         </div>

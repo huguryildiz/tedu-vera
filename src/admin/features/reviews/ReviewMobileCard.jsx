@@ -89,7 +89,7 @@ function AdvisedByRow({ advisor }) {
       <span className="meta-chips-eyebrow">ADVISED BY</span>
       <div className="meta-chips-row">
         {advisors.map((name, i) => (
-          <JurorBadge key={`${name}-${i}`} name={name} size="sm" nameOnly />
+          <JurorBadge key={`${name}-${i}`} name={name} size="sm" nameOnly variant="advisor" />
         ))}
       </div>
     </div>

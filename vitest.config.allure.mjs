@@ -5,13 +5,30 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import AllureReporter from "allure-vitest/reporter";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
   base: "/",
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
   test: {
     environment: "jsdom",
-    exclude: ["**/node_modules/**", "**/e2e/**"],
+    exclude: [
+      "**/node_modules/**",
+      "**/e2e/**",
+      "**/__tests__.archive/**",
+      "**/sql/__tests__.archive/**",
+      "**/*.archive.*",
+      "**/supabase/functions/**",
+      "**/sql/tests/**",
+    ],
     // allure-vitest/setup must come first so the runtime is ready for every test
     setupFiles: ["allure-vitest/setup", "./src/test/setup.js"],
     reporters: [

@@ -20,6 +20,7 @@ export default function JurorBadge({
   avatarUrl,
   size = "md",
   nameOnly = false,
+  variant,
   style,
   className,
 }) {
@@ -37,7 +38,7 @@ export default function JurorBadge({
 
   return (
     <div
-      className={`jb-badge${className ? ` ${className}` : ""}`}
+      className={`jb-badge${variant ? ` jb-badge--${variant}` : ""}${className ? ` ${className}` : ""}`}
       style={{ display: "flex", alignItems: "center", gap: s.gap, minWidth: 0, ...style }}
     >
       {avatarUrl ? (
@@ -68,7 +69,7 @@ export default function JurorBadge({
         <div
           className="jb-name"
           style={{
-            fontWeight: 600, fontSize: s.nameSize, lineHeight: 1.3,
+            fontWeight: 700, fontSize: s.nameSize, lineHeight: 1.3, color: "var(--text-primary)",
           }}
         >
           {displayName}
@@ -77,7 +78,7 @@ export default function JurorBadge({
           <div
             className="jb-affiliation"
             style={{
-              fontSize: s.instSize, color: "var(--text-tertiary)", lineHeight: 1.3,
+              fontSize: s.instSize, color: "var(--text-secondary)", lineHeight: 1.3,
             }}
           >
             {affiliation}

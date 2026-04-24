@@ -103,11 +103,12 @@
   margin-bottom: 2px;
 }
 
-/* ── Juror Activity: pill below name (mobile only) ── */
+/* ── Juror Activity: pill + last-active below name (mobile only) ── */
 .oja-pill-mobile {
   display: none;
   margin-top: 6px;
 }
+.oja-last-active { display: none; }
 
 @media (max-width: 768px) {
   #page-overview{padding-top:0}
@@ -118,8 +119,44 @@
   /* ── Juror Activity: show mobile donut layout, hide desktop bar ── */
   .oja-donut-col        { display: flex; }
   .oja-field-label      { display: block; }
-  .oja-pill-mobile      { display: block; }
   .oja-bar-desktop      { display: none !important; }
+  .oja-last-active      { display: flex; }
+  .oja-pill-mobile {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 16px;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    margin-top: 8px;
+  }
+  .oja-pill-left,
+  .oja-pill-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .oja-pill-right .oja-prog-frac {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+  .oja-last-active {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    margin-top: 8px;
+  }
+  .oja-last-icon { color: var(--text-tertiary); flex-shrink: 0; }
+  .oja-last-active .oja-field-label { margin-bottom: 0; }
+  .oja-last-time {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
 
   /* Slightly smaller donut text so it sits comfortably inside the ring */
   .oja-donut-avg        { font-size: 10px; letter-spacing: -0.3px; }
@@ -245,7 +282,7 @@
     align-items: center;
     justify-content: center;
     align-self: center;
-    padding: 12px 0 12px 8px;
+    padding: 10px 0 10px 8px;
   }
   .overview-top-rank {
     width: 34px;
@@ -284,9 +321,11 @@
   /* ── TITLE ── */
   .overview-top-projects-table td.col-project {
     grid-area: title;
-    padding: 12px 12px 6px 10px;
+    padding: 10px 12px 10px 10px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-self: center;
     gap: 3px;
     min-width: 0;
     font-size: 12.5px;
@@ -294,12 +333,18 @@
     color: var(--text-primary);
     line-height: 1.35;
   }
-  .overview-top-projects-table td.col-project .ranking-proj-no {
+  .overview-top-projects-table td.col-project .proj-title-row {
     display: block;
+  }
+  .overview-top-projects-table td.col-project .ranking-proj-no {
+    display: inline;
     background: none;
     border: none;
     padding: 0;
-    margin-right: 0;
+    margin-right: 3px;
+  }
+  .overview-top-projects-table td.col-project .proj-title-row .proj-title-text {
+    display: inline;
   }
 
   .overview-top-projects-table td.col-project .overview-top-advisors { display: none; }
@@ -308,7 +353,8 @@
   .overview-top-projects-table td.col-advisors {
     grid-area: adv;
     display: block !important;
-    padding: 4px 12px 6px;
+    padding: 8px 12px 6px;
+    border-top: 1px solid var(--border);
     font-size: inherit;
     color: inherit;
   }
@@ -344,7 +390,8 @@
   .overview-top-projects-table td.col-students {
     grid-area: mem;
     display: block !important;
-    padding: 4px 12px 10px;
+    padding: 8px 12px 10px;
+    border-top: 1px solid var(--border);
     font-size: inherit;
     color: inherit;
   }

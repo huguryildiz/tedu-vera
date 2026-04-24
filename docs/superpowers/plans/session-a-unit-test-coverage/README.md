@@ -71,8 +71,8 @@ Metric per sprint: **number of zero-coverage files eliminated.** Each eliminated
 | A2 | ✅ done | Admin orchestration hooks (`useAdminData`, `useAdminRealtime`, `useAdminNav`, `useGlobalTableSort`, `useDeleteConfirm`, `useBackups`, `useAdminTeam`, `usePeriodOutcomes`) | — (pre-metric) | — |
 | A3 | ✅ done | OOM remediation + audit correction; net +1 behaviour test beyond A2 baseline | baseline captured: **149** | 149 |
 | A4 | ✅ done | **Largest single-file wins**: `GovernanceDrawers.jsx` (1310), `LandingPage.jsx` (1184), `DemoAdminLoader.jsx` (240), `adminTourSteps.js` (103), `analyticsExport.js` (405) + batch B (SortIcons×6, AvgDonut, SaveBar, ChartDataTable, StepperBar, PeriodCells) | −16 files | **133** |
-| A5 | pending | **Medium surfaces**: `PeriodsTable.jsx` (555), `ControlPanel.jsx` (458), `OutcomesTable.jsx` (266), `CriteriaManager.jsx` (222), remaining 300+ line 0% files | −30 files | ≤ 104 |
-| A6 | pending | **Long tail mop-up**: small utility components / modals / confirm dialogs under 150 lines. Eliminate as many as fit in the sprint; target absolute count threshold | target < 30 files | < 30 |
+| A5 | ✅ done | **Medium surfaces**: `PeriodsTable.jsx` (555), `ControlPanel.jsx` (458), `OutcomesTable.jsx` (266), `CriteriaManager.jsx` (222), remaining 300+ line 0% files | −29 files | **104** |
+| A6 | ✅ done | **Long tail mop-up**: small utility components / modals / confirm dialogs under 150 lines. Eliminate as many as fit in the sprint; target absolute count threshold | target < 30 files | **26** |
 
 Per-sprint verification command:
 

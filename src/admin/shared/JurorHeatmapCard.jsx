@@ -94,12 +94,12 @@ export default function JurorHeatmapCard({
               affiliation={juror.dept || juror.affiliation}
               size="sm"
             />
-            <div className="juror-progress-wrap">
-              <span className="juror-progress-lbl">Juror Progress</span>
-              <JurorStatusPill status={status} />
-            </div>
           </div>
           <AvgDonut value={avg} max={tabMax} />
+        </div>
+        <div className="juror-progress-wrap">
+          <span className="juror-progress-lbl">Juror Progress</span>
+          <JurorStatusPill status={status} />
         </div>
         <div className="hm-card-summary">
           <span className="hm-card-summary-text">

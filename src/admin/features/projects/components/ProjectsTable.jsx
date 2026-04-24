@@ -231,7 +231,7 @@ export default function ProjectsTable({
                           <div className="meta-chips-eyebrow">Advised by</div>
                           <div className="meta-chips-row">
                             {advisors.map((name, i) => (
-                              <JurorBadge key={`${name}-${i}`} name={name} size="sm" nameOnly />
+                              <JurorBadge key={`${name}-${i}`} name={name} size="sm" nameOnly variant="advisor" />
                             ))}
                           </div>
                         </div>

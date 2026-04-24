@@ -870,7 +870,7 @@ export default function ReviewsPage() {
                       <td className="col-advisor">
                         {row.advisor
                           ? row.advisor.split(',').map(s => s.trim()).filter(Boolean).map((name, i) => (
-                              <JurorBadge key={`${name}-${i}`} name={name} size="sm" nameOnly />
+                              <JurorBadge key={`${name}-${i}`} name={name} size="sm" nameOnly variant="advisor" />
                             ))
                           : <span className="text-xs text-muted">—</span>}
                       </td>

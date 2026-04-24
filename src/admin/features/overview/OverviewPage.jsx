@@ -82,12 +82,8 @@ function donutColor(status) {
 }
 
 function completionFillColor(pct) {
-  if (pct >= 90) return "var(--score-excellent-text)";
-  if (pct >= 80) return "var(--score-high-text)";
-  if (pct >= 75) return "var(--score-good-text)";
-  if (pct >= 70) return "var(--score-adequate-text)";
-  if (pct >= 60) return "var(--score-low-text)";
-  return "var(--score-poor-text)";
+  const hue = Math.round((Math.min(100, Math.max(0, pct)) / 100) * 120);
+  return `hsl(${hue}, 72%, 38%)`;
 }
 
 function SortIcon({ colKey, sortKey, sortDir }) {
@@ -387,8 +383,21 @@ export default function OverviewPage() {
                         <JurorBadge name={j.juryName} affiliation={j.affiliation} size="sm" />
 
                         <div className="oja-pill-mobile">
-                          <span className="oja-field-label">Juror Progress</span>
-                          <JurorStatusPill status={status} />
+                          <div className="oja-pill-left">
+                            <span className="oja-field-label">Juror Progress</span>
+                            <JurorStatusPill status={status} />
+                          </div>
+                          <div className="oja-pill-right">
+                            <span className="oja-field-label oja-eval-label">Eval. Progress</span>
+                            <div className="oja-prog-frac">{done} / {total}</div>
+                          </div>
+                        </div>
+                        <div className="oja-last-active">
+                          <ClockIcon size={10} strokeWidth={2} className="oja-last-icon" />
+                          <span className="oja-field-label">Last Active</span>
+                          <span className="oja-last-time vera-datetime-text">
+                            {j.lastSeenMs ? relativeTime(j.lastSeenMs) : "Never seen"}
+                          </span>
                         </div>
                       </td>
                       <td><JurorStatusPill status={status} /></td>
@@ -401,11 +410,6 @@ export default function OverviewPage() {
                         </div>
                         <div className="oja-donut-col">
                           <AvgDonut value={avg != null ? parseFloat(avg) : null} max={totalMax || 100} />
-                          <div className="oja-prog-track">
-                            <div className="oja-prog-fill" style={{ width: `${pct}%`, background: dColor }} />
-                          </div>
-                          <div className="oja-prog-frac">{done} / {total}</div>
-                          <span className="oja-field-label">Progress</span>
                         </div>
                       </td>
                       <td className="mono text-right">
@@ -790,8 +794,10 @@ export default function OverviewPage() {
                         <span className="overview-top-rank">{i + 1}</span>
                       </td>
                       <td className="col-project" data-label="Project Title">
-                        <span className="ranking-proj-no">{p.group_no != null ? `P${p.group_no}` : ""}</span>
-                        <span className="proj-title-text">{p.title}</span>
+                        <div className="proj-title-row">
+                          <span className="ranking-proj-no">{p.group_no != null ? `P${p.group_no}` : ""}</span>
+                          <span className="proj-title-text">{p.title}</span>
+                        </div>
                         {p.advisor && (() => {
                           const advisors = p.advisor.split(",").map((s) => s.trim()).filter(Boolean);
                           if (!advisors.length) return null;
@@ -799,7 +805,7 @@ export default function OverviewPage() {
                             <div className="meta-chips-row overview-top-advisors">
                               <span className="meta-chips-eyebrow">Advised by</span>
                               {advisors.map((name, idx) => (
-                                <JurorBadge key={`${name}-${idx}`} name={name} size="sm" nameOnly />
+                                <JurorBadge key={`${name}-${idx}`} name={name} size="sm" nameOnly variant="advisor" />
                               ))}
                             </div>
                           );
@@ -819,7 +825,7 @@ export default function OverviewPage() {
                             <div className="meta-chips-row">
                               <span className="meta-chips-eyebrow">Advised by</span>
                               {advisors.map((name, idx) => (
-                                <JurorBadge key={`${name}-${idx}`} name={name} size="sm" nameOnly />
+                                <JurorBadge key={`${name}-${idx}`} name={name} size="sm" nameOnly variant="advisor" />
                               ))}
                             </div>
                           </td>

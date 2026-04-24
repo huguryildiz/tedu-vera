@@ -226,8 +226,8 @@
 .j-av{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#fff;flex-shrink:0;letter-spacing:-0.3px}
 .j-row{display:flex;align-items:center;gap:8px;min-width:0}
 .j-row .j-info{min-width:0}
-.j-row .j-name{font-weight:500;font-size:12px;color:var(--entity-name-color)}
-.j-row .j-inst{display:block;font-size:10px;color:var(--entity-secondary-color);font-weight:400}
+.j-row .j-name{font-weight:700;font-size:12px;color:var(--text-primary)}
+.j-row .j-inst{display:block;font-size:10px;color:var(--text-secondary);font-weight:400}
 
 /* ─── Tooltip base (used for disabled action menu items) ───── */
 [data-juror-tooltip] { position: relative }
