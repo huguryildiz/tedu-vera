@@ -471,6 +471,7 @@ export default function HeatmapPage() {
                 {(groups || []).map((g) => {
                   const entry = lookup[juror.key]?.[g.id];
                   const cell = getCellDisplay(entry, activeTab, activeCriteria);
+                  const cellTestId = `heatmap-cell-${juror.key}-${g.id}`;
 
                   if (!cell) {
                     return (
@@ -479,6 +480,8 @@ export default function HeatmapPage() {
                         className="m-cell"
                         style={{ color: "var(--text-quaternary)" }}
                         aria-label={`${g.title}: not scored`}
+                        data-testid={cellTestId}
+                        data-cell-state="empty"
                       >
                         —
                       </td>
@@ -492,6 +495,9 @@ export default function HeatmapPage() {
                         className="m-cell partial"
                         style={{ background: "var(--score-partial-bg)" }}
                         aria-label={`${g.title}: partial ${cell.score}`}
+                        data-testid={cellTestId}
+                        data-cell-state="partial"
+                        data-cell-score={String(cell.score)}
                       >
                         {cell.score}
                         <span className="m-flag" aria-hidden="true">!</span>
@@ -505,6 +511,9 @@ export default function HeatmapPage() {
                       className={["m-cell", scoreCellClass(cell.score, cell.max)].filter(Boolean).join(" ")}
                       style={scoreCellStyle(cell.score, cell.max, isDark) || {}}
                       aria-label={`${g.title}: ${cell.score}`}
+                      data-testid={cellTestId}
+                      data-cell-state="scored"
+                      data-cell-score={String(cell.score)}
                     >
                       {cell.score}
                     </td>
@@ -515,6 +524,8 @@ export default function HeatmapPage() {
                 <td
                   className="m-cell m-cell-avg avg-score-cell"
                   aria-label={`${juror.name || juror.juror_name} average`}
+                  data-testid={`heatmap-juror-avg-${juror.key}`}
+                  data-avg={jurorRowAvgs[jurorIdx] == null ? "" : jurorRowAvgs[jurorIdx].toFixed(1)}
                 >
                   {jurorRowAvgs[jurorIdx] == null ? (
                     <span className="avg-score-empty">—</span>
@@ -535,7 +546,13 @@ export default function HeatmapPage() {
               {(groups || []).map((g, i) => {
                 const avg = visibleAverages[i];
                 return (
-                  <td key={g.id} className="m-cell" aria-label={`${g.title} average`}>
+                  <td
+                    key={g.id}
+                    className="m-cell"
+                    aria-label={`${g.title} average`}
+                    data-testid={`heatmap-project-avg-${g.id}`}
+                    data-avg={avg == null ? "" : avg.toFixed(1)}
+                  >
                     {avg == null ? (
                       <span className="avg-score-empty">—</span>
                     ) : (
@@ -548,7 +565,12 @@ export default function HeatmapPage() {
                 );
               })}
               {/* Overall avg across all juror row averages */}
-              <td className="m-cell m-cell-avg avg-score-cell" aria-label="Overall juror average">
+              <td
+                className="m-cell m-cell-avg avg-score-cell"
+                aria-label="Overall juror average"
+                data-testid="heatmap-overall-avg"
+                data-avg={overallAvg == null ? "" : overallAvg.toFixed(1)}
+              >
                 {overallAvg == null ? (
                   <span className="avg-score-empty">—</span>
                 ) : (

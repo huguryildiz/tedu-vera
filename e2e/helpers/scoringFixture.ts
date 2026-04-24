@@ -20,10 +20,20 @@ export interface ScoringFixture {
   periodId: string;
   periodName: string;
   criteriaAId: string;
+  criteriaAKey: string;
   criteriaBId: string;
+  criteriaBKey: string;
   p1Id: string;
   p2Id: string;
+  /** First juror — kept as `jurorId` for backward compatibility with C4 tests. */
   jurorId: string;
+  /** All juror rows created by setupScoringFixture (length === opts.jurors). */
+  jurorIds: string[];
+  /** Outcome snapshot rows created when `outcomes: true`. Undefined otherwise. */
+  outcomeAId?: string;
+  outcomeACode?: string;
+  outcomeBId?: string;
+  outcomeBCode?: string;
 }
 
 export interface SetupScoringFixtureOpts {
@@ -32,11 +42,40 @@ export interface SetupScoringFixtureOpts {
   aWeight?: number;
   bWeight?: number;
   namePrefix?: string;
+  /** Number of jurors to seed. Default 1. C4 tests rely on the default; E3 uses 2. */
+  jurors?: number;
+  /**
+   * When true, seed two `period_outcomes` (PO_A, PO_B) and map them 1:1 to
+   * criteria A/B via `period_criterion_outcome_maps`. Required for analytics
+   * attainment card tests.
+   */
+  outcomes?: boolean;
 }
 
 export interface ProjectScores {
   a: number;
   b: number;
+}
+
+/**
+ * Per-juror, per-project scoring cell for multi-juror fixtures.
+ * - `a` / `b` omitted → item not inserted (yields a "partial" cell state).
+ * - `status` defaults to "submitted".
+ */
+export interface MatrixCell {
+  a?: number;
+  b?: number;
+  status?: "submitted" | "in_progress" | "draft";
+}
+
+/**
+ * Pattern entry for writeMatrixScores — one entry per juror in fixture.jurorIds.
+ * Set a project to `null` (or omit) to leave the juror×project cell empty
+ * (no score_sheet row inserted).
+ */
+export interface MatrixJurorPattern {
+  p1?: MatrixCell | null;
+  p2?: MatrixCell | null;
 }
 
 const uniqueSuffix = (): string => `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
@@ -48,8 +87,11 @@ export async function setupScoringFixture(
   const bMax = opts.bMax ?? 70;
   const aWeight = opts.aWeight ?? aMax;
   const bWeight = opts.bWeight ?? bMax;
+  const jurorCount = Math.max(1, opts.jurors ?? 1);
   const suffix = uniqueSuffix();
   const periodName = `${opts.namePrefix ?? "C4 Scoring"} ${suffix}`;
+  const aKey = `c4_a_${suffix}`;
+  const bKey = `c4_b_${suffix}`;
 
   // Step 1 — create period unlocked so criteria & projects inserts are allowed
   // by the block_period_*_on_locked triggers.
@@ -74,7 +116,7 @@ export async function setupScoringFixture(
     .insert([
       {
         period_id: periodId,
-        key: `c4_a_${suffix}`,
+        key: aKey,
         label: "Criterion A",
         max_score: aMax,
         weight: aWeight,
@@ -82,7 +124,7 @@ export async function setupScoringFixture(
       },
       {
         period_id: periodId,
-        key: `c4_b_${suffix}`,
+        key: bKey,
         label: "Criterion B",
         max_score: bMax,
         weight: bWeight,
@@ -116,38 +158,80 @@ export async function setupScoringFixture(
     throw new Error("setupScoringFixture: could not resolve project IDs from insert");
   }
 
-  // Step 4 — juror (org-scoped)
-  const { data: juror, error: jurorErr } = await adminClient
+  // Step 4 — jurors (org-scoped). Names suffixed with index so both
+  // backward-compat (single juror) and multi-juror paths produce stable rows.
+  const jurorRows = Array.from({ length: jurorCount }, (_, idx) => ({
+    organization_id: E2E_PERIODS_ORG_ID,
+    juror_name: jurorCount === 1
+      ? `C4 Judge ${suffix}`
+      : `E3 Judge ${idx + 1} ${suffix}`,
+    affiliation: jurorCount === 1 ? "C4 Test Affiliation" : `E3 Test Affiliation ${idx + 1}`,
+  }));
+  const { data: jurors, error: jurorErr } = await adminClient
     .from("jurors")
-    .insert({
-      organization_id: E2E_PERIODS_ORG_ID,
-      juror_name: `C4 Judge ${suffix}`,
-      affiliation: "C4 Test Affiliation",
-    })
-    .select("id")
-    .single();
-  if (jurorErr || !juror) {
+    .insert(jurorRows)
+    .select("id, juror_name");
+  if (jurorErr || !jurors || jurors.length !== jurorCount) {
     throw new Error(`setupScoringFixture juror insert failed: ${jurorErr?.message}`);
   }
-  const jurorId = juror.id as string;
+  // Resolve by name so a PostgREST return-order reshuffle can't swap J1 ↔ J2.
+  const jurorIds: string[] = jurorRows.map((row) => {
+    const match = jurors.find((j) => j.juror_name === row.juror_name);
+    if (!match) {
+      throw new Error(`setupScoringFixture: could not resolve juror row for ${row.juror_name}`);
+    }
+    return match.id as string;
+  });
+  const jurorId = jurorIds[0];
 
-  // Step 5 — juror_period_auth (F1 rule: session_token_hash explicitly null)
+  // Step 5 — juror_period_auth for each juror (F1 rule: session_token_hash explicitly null)
   const { error: authErr } = await adminClient
     .from("juror_period_auth")
-    .insert({
-      juror_id: jurorId,
-      period_id: periodId,
-      pin_hash: null,
-      session_token_hash: null,
-      failed_attempts: 0,
-      locked_until: null,
-      final_submitted_at: null,
-    });
+    .insert(
+      jurorIds.map((id) => ({
+        juror_id: id,
+        period_id: periodId,
+        pin_hash: null,
+        session_token_hash: null,
+        failed_attempts: 0,
+        locked_until: null,
+        final_submitted_at: null,
+      })),
+    );
   if (authErr) {
     throw new Error(`setupScoringFixture juror_period_auth insert failed: ${authErr.message}`);
   }
 
-  // Step 6 — lock period + set activated_at so pickDefaultPeriod auto-selects it
+  // Step 6 — optional outcome snapshot + criterion→outcome maps.
+  let outcomeAId: string | undefined;
+  let outcomeBId: string | undefined;
+  const outcomeACode = `PO_A_${suffix}`;
+  const outcomeBCode = `PO_B_${suffix}`;
+  if (opts.outcomes) {
+    const { data: outcomes, error: outcomeErr } = await adminClient
+      .from("period_outcomes")
+      .insert([
+        { period_id: periodId, code: outcomeACode, label: "E3 Outcome A", sort_order: 0, coverage_type: "direct" },
+        { period_id: periodId, code: outcomeBCode, label: "E3 Outcome B", sort_order: 1, coverage_type: "direct" },
+      ])
+      .select("id, sort_order");
+    if (outcomeErr || !outcomes) {
+      throw new Error(`setupScoringFixture period_outcomes insert failed: ${outcomeErr?.message}`);
+    }
+    outcomeAId = outcomes.find((o) => o.sort_order === 0)?.id as string;
+    outcomeBId = outcomes.find((o) => o.sort_order === 1)?.id as string;
+    const { error: mapErr } = await adminClient
+      .from("period_criterion_outcome_maps")
+      .insert([
+        { period_id: periodId, period_criterion_id: criteriaAId, period_outcome_id: outcomeAId, coverage_type: "direct", weight: 1 },
+        { period_id: periodId, period_criterion_id: criteriaBId, period_outcome_id: outcomeBId, coverage_type: "direct", weight: 1 },
+      ]);
+    if (mapErr) {
+      throw new Error(`setupScoringFixture period_criterion_outcome_maps insert failed: ${mapErr.message}`);
+    }
+  }
+
+  // Step 7 — lock period + set activated_at so pickDefaultPeriod auto-selects it
   const { error: lockErr } = await adminClient
     .from("periods")
     .update({
@@ -159,7 +243,22 @@ export async function setupScoringFixture(
     throw new Error(`setupScoringFixture period lock failed: ${lockErr.message}`);
   }
 
-  return { periodId, periodName, criteriaAId, criteriaBId, p1Id, p2Id, jurorId };
+  return {
+    periodId,
+    periodName,
+    criteriaAId,
+    criteriaAKey: aKey,
+    criteriaBId,
+    criteriaBKey: bKey,
+    p1Id,
+    p2Id,
+    jurorId,
+    jurorIds,
+    outcomeAId,
+    outcomeACode: opts.outcomes ? outcomeACode : undefined,
+    outcomeBId,
+    outcomeBCode: opts.outcomes ? outcomeBCode : undefined,
+  };
 }
 
 /**
@@ -218,6 +317,107 @@ export async function writeScoresAsJuror(
     );
   if (itemsErr) {
     throw new Error(`writeScoresAsJuror items upsert failed: ${itemsErr.message}`);
+  }
+}
+
+/**
+ * Multi-juror matrix scoring for E3 tests.
+ * `patterns[jurorIndex]` describes the cells for `fixture.jurorIds[jurorIndex]`.
+ *
+ * Omitting `a` or `b` on a cell skips that score_sheet_item insert (produces a
+ * "partial" cell when paired with a sheet row). Setting a project to `null`
+ * creates no score_sheet row at all (produces an "empty" cell). `status`
+ * defaults to "submitted".
+ *
+ * Uses upsert so callers can re-apply a pattern to mutate state mid-test.
+ */
+export async function writeMatrixScores(
+  fixture: ScoringFixture,
+  patterns: MatrixJurorPattern[],
+): Promise<void> {
+  if (patterns.length !== fixture.jurorIds.length) {
+    throw new Error(
+      `writeMatrixScores: patterns.length=${patterns.length} does not match fixture.jurorIds.length=${fixture.jurorIds.length}`,
+    );
+  }
+  const now = new Date().toISOString();
+
+  interface SheetToUpsert {
+    jurorIndex: number;
+    projectKey: "p1" | "p2";
+    cell: MatrixCell;
+  }
+  const sheetsToUpsert: SheetToUpsert[] = [];
+  for (let ji = 0; ji < patterns.length; ji++) {
+    const pat = patterns[ji] ?? {};
+    if (pat.p1 != null) sheetsToUpsert.push({ jurorIndex: ji, projectKey: "p1", cell: pat.p1 });
+    if (pat.p2 != null) sheetsToUpsert.push({ jurorIndex: ji, projectKey: "p2", cell: pat.p2 });
+  }
+
+  if (sheetsToUpsert.length === 0) return;
+
+  const sheetRows = sheetsToUpsert.map(({ jurorIndex, projectKey, cell }) => ({
+    period_id: fixture.periodId,
+    project_id: projectKey === "p1" ? fixture.p1Id : fixture.p2Id,
+    juror_id: fixture.jurorIds[jurorIndex],
+    status: cell.status ?? "submitted",
+    started_at: now,
+    last_activity_at: now,
+  }));
+
+  const { data: sheets, error: sheetErr } = await adminClient
+    .from("score_sheets")
+    .upsert(sheetRows, { onConflict: "juror_id,project_id" })
+    .select("id, juror_id, project_id");
+  if (sheetErr || !sheets) {
+    throw new Error(`writeMatrixScores sheets upsert failed: ${sheetErr?.message}`);
+  }
+  const sheetIdByJurorProject = new Map<string, string>();
+  for (const s of sheets) {
+    sheetIdByJurorProject.set(`${s.juror_id}:${s.project_id}`, s.id as string);
+  }
+
+  interface ItemToUpsert {
+    score_sheet_id: string;
+    period_criterion_id: string;
+    score_value: number;
+  }
+  const items: ItemToUpsert[] = [];
+  const itemsToDelete: Array<{ sheetId: string; criterionId: string }> = [];
+  for (const { jurorIndex, projectKey, cell } of sheetsToUpsert) {
+    const jurorId = fixture.jurorIds[jurorIndex];
+    const projectId = projectKey === "p1" ? fixture.p1Id : fixture.p2Id;
+    const sheetId = sheetIdByJurorProject.get(`${jurorId}:${projectId}`);
+    if (!sheetId) throw new Error("writeMatrixScores: could not resolve sheet id after upsert");
+    if (cell.a != null) {
+      items.push({ score_sheet_id: sheetId, period_criterion_id: fixture.criteriaAId, score_value: cell.a });
+    } else {
+      itemsToDelete.push({ sheetId, criterionId: fixture.criteriaAId });
+    }
+    if (cell.b != null) {
+      items.push({ score_sheet_id: sheetId, period_criterion_id: fixture.criteriaBId, score_value: cell.b });
+    } else {
+      itemsToDelete.push({ sheetId, criterionId: fixture.criteriaBId });
+    }
+  }
+
+  if (items.length > 0) {
+    const { error: itemsErr } = await adminClient
+      .from("score_sheet_items")
+      .upsert(items, { onConflict: "score_sheet_id,period_criterion_id" });
+    if (itemsErr) {
+      throw new Error(`writeMatrixScores items upsert failed: ${itemsErr.message}`);
+    }
+  }
+
+  // Delete any items left over from a prior pattern so a juror's cell can
+  // transition from "scored" back to "partial" without a full teardown.
+  for (const { sheetId, criterionId } of itemsToDelete) {
+    await adminClient
+      .from("score_sheet_items")
+      .delete()
+      .eq("score_sheet_id", sheetId)
+      .eq("period_criterion_id", criterionId);
   }
 }
 
@@ -306,9 +506,10 @@ export async function teardownScoringFixture(
     }
   }
 
-  if (fixture.jurorId) {
+  const jurorIds = fixture.jurorIds ?? (fixture.jurorId ? [fixture.jurorId] : []);
+  if (jurorIds.length) {
     try {
-      await adminClient.from("jurors").delete().eq("id", fixture.jurorId);
+      await adminClient.from("jurors").delete().in("id", jurorIds);
     } catch {
       // swallow
     }

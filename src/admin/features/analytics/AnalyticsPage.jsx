@@ -502,7 +502,13 @@ export default function AnalyticsPage() {
         <>
           <div className="attainment-cards" id="pdf-chart-attainment-status">
             {attCards.map(({ code, label, attRate, statusClass, statusLabel, statusPrefix, delta }) => (
-              <div key={code} className={`att-card ${statusClass}`}>
+              <div
+                key={code}
+                className={`att-card ${statusClass}`}
+                data-testid={`analytics-att-card-${code}`}
+                data-att-rate={attRate == null ? "" : String(attRate)}
+                data-att-status={statusClass.replace("status-", "")}
+              >
                 <div className="att-card-header">
                   <span className="att-card-code">{code}</span>
                   <span className={`att-card-status ${statusClass.replace("status-", "")}`}>
@@ -511,7 +517,10 @@ export default function AnalyticsPage() {
                 </div>
                 <div className="att-card-label">{label}</div>
                 <div className="att-card-metric">
-                  <span className={`att-card-value ${statusClass.replace("status-", "")}`}>
+                  <span
+                    className={`att-card-value ${statusClass.replace("status-", "")}`}
+                    data-testid={`analytics-att-card-value-${code}`}
+                  >
                     {attRate != null ? `${attRate}%` : "—"}
                   </span>
                   <span className="att-card-unit">above threshold</span>
@@ -540,7 +549,12 @@ export default function AnalyticsPage() {
             ))}
           </div>
           {totalCount > 0 && (
-            <div className="insight-banner insight-banner-full">
+            <div
+              className="insight-banner insight-banner-full"
+              data-testid="analytics-outcomes-met-summary"
+              data-met-count={String(metCount)}
+              data-total-count={String(totalCount)}
+            >
               <InfoIcon />
               <div>
                 <strong>{metCount} of {totalCount}</strong> outcomes met —
