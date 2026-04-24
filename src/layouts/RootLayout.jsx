@@ -21,8 +21,11 @@ function RootLayoutInner() {
 
   // After Google OAuth, Supabase may redirect to site root instead of /register
   // when the redirect URL isn't in the allow-list. Catch that here.
+  // Exclude invite/accept and reset-password — those routes handle their own
+  // session and must not be displaced by the profile-completion redirect.
+  const PROFILE_REDIRECT_SKIP = ["/register", "/invite/accept", "/reset-password"];
   useEffect(() => {
-    if (auth?.profileIncomplete && pathname !== "/register") {
+    if (auth?.profileIncomplete && !PROFILE_REDIRECT_SKIP.includes(pathname)) {
       navigate("/register", { replace: true });
     }
   }, [auth?.profileIncomplete, pathname, navigate]);

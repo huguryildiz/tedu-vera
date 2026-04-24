@@ -248,7 +248,7 @@ export default function InviteAcceptScreen() {
       <div className="login-screen">
         <div style={{ width: "400px", maxWidth: "92vw" }}>
           <div className="login-card">
-            <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div data-testid="invite-success" style={{ textAlign: "center", padding: "20px 0" }}>
               <div style={{
                 width: "48px", height: "48px", borderRadius: "50%",
                 background: "rgba(22,163,74,0.1)", display: "inline-grid",
@@ -334,6 +334,7 @@ export default function InviteAcceptScreen() {
               </label>
               <input
                 id="invite-display-name"
+                data-testid="invite-name"
                 className="form-input"
                 type="text"
                 value={displayName}
@@ -353,6 +354,7 @@ export default function InviteAcceptScreen() {
               <div style={{ position: "relative" }}>
                 <input
                   id="invite-password"
+                  data-testid="invite-password"
                   className="form-input"
                   type={showPass ? "text" : "password"}
                   value={password}
@@ -440,6 +442,7 @@ export default function InviteAcceptScreen() {
               <div style={{ position: "relative" }}>
                 <input
                   id="invite-confirm-password"
+                  data-testid="invite-confirm-password"
                   className="form-input"
                   type={showConfirmPass ? "text" : "password"}
                   value={confirmPassword}
@@ -473,6 +476,7 @@ export default function InviteAcceptScreen() {
 
             <button
               ref={submitBtnRef}
+              data-testid="invite-submit"
               type="submit"
               className="btn btn-primary"
               disabled={!canSubmit || submitting}

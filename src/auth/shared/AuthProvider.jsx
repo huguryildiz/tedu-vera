@@ -173,9 +173,18 @@ export default function AuthProvider({ children }) {
       orgName: newSession.user.user_metadata?.orgName || "",
     });
     currentUserIdRef.current = newSession.user.id;
-    const skipAdminBootstrap = isJuryOrEvalPath(
-      typeof window !== "undefined" ? window.location.pathname : ""
-    );
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    const skipAdminBootstrap = isJuryOrEvalPath(pathname);
+    const isInviteAcceptPath = pathname === "/invite/accept" || pathname.startsWith("/invite/accept?");
+
+    // Skip fetchMemberships on /invite/accept to avoid a circular async deadlock:
+    // _recoverAndRefresh fires SIGNED_IN inside initializePromise's lock chain;
+    // fetchMemberships → getSession → supabase.auth.getUser() awaits initializePromise
+    // → deadlock. InviteAcceptScreen only needs the session object, not memberships.
+    if (isInviteAcceptPath) {
+      setLoading(false);
+      return;
+    }
 
     // Fetch memberships — /demo authenticated users resolve their real role
     // against the demo Supabase project (same as prod flow).
