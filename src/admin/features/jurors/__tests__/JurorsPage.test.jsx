@@ -1,5 +1,5 @@
 import { describe, vi, expect, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { qaTest } from "@/test/qaTest";
 
@@ -124,7 +124,7 @@ vi.mock("@/admin/shared/JurorBadge", () => ({ default: () => null }));
 vi.mock("@/admin/shared/JurorStatusPill", () => ({ default: () => null }));
 vi.mock("@/shared/ui/Pagination", () => ({ default: () => null }));
 vi.mock("@/shared/ui/FloatingMenu", () => ({ default: () => null }));
-vi.mock("@/shared/ui/PremiumTooltip", () => ({ default: () => null }));
+vi.mock("@/shared/ui/PremiumTooltip", () => ({ default: ({ children }) => <>{children}</> }));
 vi.mock("@/shared/ui/CustomSelect", () => ({ default: () => null }));
 vi.mock("@/shared/ui/FbAlert", () => ({ default: () => null }));
 vi.mock("@/shared/ui/FilterButton", () => ({ FilterButton: () => null }));
@@ -198,12 +198,14 @@ describe("JurorsPage", () => {
     expect(screen.getByText(/Juror Progress/)).toBeInTheDocument();
   });
 
-  qaTest("admin.jurors.page.no-period-state", () => {
+  qaTest("admin.jurors.page.no-period-state", async () => {
     mockPeriodState.viewPeriodId = null;
     mockPeriodState.periodList = [{ id: "p1", name: "Spring 2026" }];
     renderPage();
-    expect(
-      screen.getByText("Select an evaluation period above to manage jurors.")
-    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByText("Select an evaluation period above to manage jurors.")
+      ).toBeInTheDocument()
+    );
   });
 });

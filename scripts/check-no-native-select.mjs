@@ -10,6 +10,7 @@ function walk(dir) {
   for (const entry of entries) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
+      if (entry.name === "__tests__") continue; // test mocks may use native <select>
       walk(full);
       continue;
     }

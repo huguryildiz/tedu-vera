@@ -108,4 +108,10 @@ describe("AnalyticsPage", () => {
     renderPage();
     expect(screen.getByText("No Attainment Data")).toBeInTheDocument();
   });
+
+  qaTest("admin.analytics.page.nav-rendered", () => {
+    renderPage();
+    expect(screen.getByRole("navigation", { name: "Analytics sections" })).toBeInTheDocument();
+    expect(screen.getByText("Attainment Status")).toBeInTheDocument();
+  });
 });

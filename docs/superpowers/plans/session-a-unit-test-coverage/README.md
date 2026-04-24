@@ -1,31 +1,46 @@
 # Session A — Unit Test Coverage Expansion
 
-**Goal:** Raise unit test coverage from the current **40.47% lines / 31.05% functions** baseline to a **calibrated "healthy SaaS" target of 65% lines / 50% functions / 62% branches**, and ratchet the vitest CI threshold along with it.
+**Goal:** Eliminate zero-coverage dark corners from the codebase. Primary metric: **count of `src/` files at 0% line coverage** should drop from **149 → < 30** by end of A6. Percentage-based coverage is tracked as a secondary indicator only.
 
 **Parallel with:** Session B — E2E Test Expansion (see `../session-b-e2e-test-coverage/`)
 
 ---
 
-## Calibration note (2026-04-24, post-A2)
+## Calibration history
 
-Original plan targeted 80/60 lines/functions. A1+A2 delivered only ~+3pp lines against a ~+14pp combined target. Root cause: the codebase is 73,874 src lines across 389 files; small hooks (96–634 lines) don't materially move a v8 percentage regardless of how thoroughly they're tested. Hitting 80% lines from A2's 43.42% would require ~27,000 newly-covered lines over 4 sprints = ~9× measured velocity, most of it chasing render/JSX branches that E2E already covers.
+1. **Original plan (A1 start):** 40.47% → 80% lines. Math assumed velocity that turned out to be ~9× reality.
+2. **Post-A2 recalibration:** 80% → 65% lines. Still assumed a rate that didn't hold up.
+3. **Post-A3 audit (2026-04-24):** three sprints delivered only +1.3pp lines in reality — percentage-based targets were a wrong-shape metric for this codebase. Switched to **zero-coverage file count** as the steering metric.
 
-**Recalibrated** to 65% lines / 50% functions / 62% branches — genuinely healthy, achievable at ~5× A1+A2 velocity by targeting large surface areas (pages, drawer bundles, landing). Deep branch chasing on UI components is explicitly out of scope; Session B (E2E) owns those paths.
+Why percentage stopped being useful:
+
+- v8 reporter "All files" row disagrees with threshold-checker by ~0.6pp → measurement noise > sprint signal
+- Parallel feature work adds source lines (denominator grows) → coverage dilutes faster than it rises unless tests land on large files
+- Small hooks (96–634 lines) tested thoroughly move the overall percentage by ~0.3pp each → low signal-per-sprint
+
+Zero-coverage file count avoids all three: it's measurable by grep, monotone (only goes down unless a new 0% file appears), and focuses effort on the highest-risk surface (files with **no** safety net).
 
 ---
 
-## Baseline and target
+## Baseline and target (2026-04-24, post-A3)
 
-| Metric | Pre-A1 Baseline | Post-A2 Current | Calibrated Target | Remaining Delta |
-|---|---|---|---|---|
-| Lines | 40.47% | 43.42% | 65% | +21.6 pts |
-| Branches | 55.62% | 57.21% | 62% | +4.8 pts |
-| Functions | 31.05% | 33.19% | 50% | +16.8 pts |
-| Statements | 40.47% | 43.42% | 65% | +21.6 pts |
-| Test files | 147 | 160 | ~260 | +100 |
-| Tests | 463 | 535 | ~900 | +365 |
+| Metric | Post-A3 Current | A6 Target | Notes |
+|---|---|---|---|
+| **Zero-coverage files** (primary) | **149** | **< 30** | Eliminate ≥ 120 over A4-A6 |
+| Lines % (secondary) | 41.77% | ≥ 48% | Expected byproduct; no threshold chase |
+| Branches % (secondary) | 57.18% | ≥ 60% | — |
+| Functions % (secondary) | 31.41% | ≥ 40% | — |
+| Tests | 581 | ~900 | +320 |
 
-**Source/test ratio:** 389 src files vs 160 test files (1 test per 2.4 src files → target 1:1.5).
+**Zero-coverage file size distribution (2026-04-24):**
+
+- 15 files > 300 lines (high-risk, hit first)
+- ~50 files 100–300 lines
+- ~84 files < 100 lines (utilities, small components)
+
+**Largest offenders:** `GovernanceDrawers.jsx` (1310), `LandingPage.jsx` (1184), `PeriodsTable.jsx` (555), `ControlPanel.jsx` (458), `analyticsExport.js` (405).
+
+**Source/test ratio:** 389 src files vs 160 test files — secondary target 1:1.8.
 
 ---
 
@@ -48,16 +63,25 @@ From the coverage report:
 
 ## Sprint plan
 
-A1 and A2 are complete. A3–A6 are recalibrated against the target above.
+Metric per sprint: **number of zero-coverage files eliminated.** Each eliminated file requires at least a render/import smoke test plus ≥ 1 behaviour assertion (for tiny utility files with a single function, 1 behaviour test suffices).
 
-| Sprint | Status | Scope | Delta | Cumul. line cov |
+| Sprint | Status | Scope | Zero-cov target | End-of-sprint count |
 |---|---|---|---|---|
-| A1 | ✅ done | `shared/lib/*` + `shared/schemas/*` + `shared/theme/*` zero-coverage cleanup | +~1pp (regression fixes + thresholds) | ~41% |
-| A2 | ✅ done | Admin orchestration hooks (`useAdminData`, `useAdminRealtime`, `useAdminNav`, `useGlobalTableSort`, `useDeleteConfirm`, `useBackups`, `useAdminTeam`, `usePeriodOutcomes`) | +1.85pp | 43.42% |
-| A3 | pending | **Admin page expansion**: push big pages from 1–3 smoke tests to 5–8 tests each covering filter / row-action / empty / error branches. Targets: `JurorsPage`, `ProjectsPage`, `PeriodsPage`, `RankingsPage`, `HeatmapPage`, `ReviewsPage`, `OutcomesPage`, `AuditLogPage`, `AnalyticsPage`, `OverviewPage` | +5pp | ~48% |
-| A4 | pending | **Jury flow + large zero-cov UI**: `AdminLoader.jsx` (240, 0%), `HighlightTour.jsx`, `Tooltip.jsx` + `useJuryState` sub-hooks, `writeGroup` dedup, expired/lock/offline paths | +5pp | ~53% |
-| A5 | pending | **Drawer bundles + landing**: `GovernanceDrawers.jsx` (1308), `LandingPage.jsx` (1183) — render smoke + tab switching + key CTAs; `SetupWizardPage` branch coverage | +6pp | ~59% |
-| A6 | pending | **API wrapper edges + gap fill + final ratchet**: `src/shared/api/admin/*` low-coverage modules, `adminTourSteps.js`, `Icons.jsx` (3.7% func), any <60% files not yet touched → thresholds to **65/50/62/65** | +6pp | ~65% |
+| A1 | ✅ done | `shared/lib/*` + `shared/schemas/*` + `shared/theme/*` zero-coverage cleanup | — (pre-metric) | — |
+| A2 | ✅ done | Admin orchestration hooks (`useAdminData`, `useAdminRealtime`, `useAdminNav`, `useGlobalTableSort`, `useDeleteConfirm`, `useBackups`, `useAdminTeam`, `usePeriodOutcomes`) | — (pre-metric) | — |
+| A3 | ✅ done | OOM remediation + audit correction; net +1 behaviour test beyond A2 baseline | baseline captured: **149** | 149 |
+| A4 | ✅ done | **Largest single-file wins**: `GovernanceDrawers.jsx` (1310), `LandingPage.jsx` (1184), `DemoAdminLoader.jsx` (240), `adminTourSteps.js` (103), `analyticsExport.js` (405) + batch B (SortIcons×6, AvgDonut, SaveBar, ChartDataTable, StepperBar, PeriodCells) | −16 files | **133** |
+| A5 | pending | **Medium surfaces**: `PeriodsTable.jsx` (555), `ControlPanel.jsx` (458), `OutcomesTable.jsx` (266), `CriteriaManager.jsx` (222), remaining 300+ line 0% files | −30 files | ≤ 104 |
+| A6 | pending | **Long tail mop-up**: small utility components / modals / confirm dialogs under 150 lines. Eliminate as many as fit in the sprint; target absolute count threshold | target < 30 files | < 30 |
+
+Per-sprint verification command:
+
+```bash
+npm test -- --run --coverage 2>&1 \
+  | grep -cE "^\s+\S+\s+\|\s+0\s+\|\s+0\s+\|\s+0\s+\|\s+0\s+\|"
+```
+
+Result at start of A4 should be **149**, at end of A4 **≤ 134**, and so on.
 
 ---
 
@@ -66,10 +90,12 @@ A1 and A2 are complete. A3–A6 are recalibrated against the target above.
 1. **No component signature or DOM changes.** Session A only adds tests. If a component needs refactoring for testability, flag it — don't change shape.
 2. **`data-testid` attributes are Session B's territory.** If a new testid helps a unit test, document it in the sprint report and notify Session B before commit.
 3. **Shared fixtures:** `src/test/qa-catalog.json` must stay in sync across sessions. Register every new `qaTest()` id here first.
-4. **CI threshold ratchet:** Every sprint ends with a bump in `vite.config.js` coverage.thresholds. Never lower a threshold. Do not over-ratchet — leave a small buffer (~1–2pp) below measured values for jitter.
-5. **Per-sprint report:** Drop a file in `implementation_reports/A<N>-<slug>.md` summarising files touched, tests added, coverage delta.
-6. **Depth discipline for UI tests:** On page/drawer/landing tests, cover render + happy path + one critical error/empty state. Do **not** exhaustively enumerate every internal branch — E2E owns that. Exhaustive branch coverage belongs on logic modules (helpers, selectors, pure functions, reducers).
-7. **Per-folder function thresholds:** Global function threshold stays modest; add folder-scoped thresholds when raising overall numbers, e.g. `shared/lib` 70%, `shared/hooks` 50%, `shared/api` 55%, `admin/shared` 45%, `admin/features` 40%. This keeps thresholds honest against UI-heavy folders that inflate function counts with render/memo callbacks.
+4. **Threshold handling under the new metric:** Percentage thresholds in `vite.config.js` are kept at the post-A3 floor (lines 41 / statements 41 / branches 56 / functions 31). Raise them only if measured values climb comfortably above each floor (>2pp buffer). No sprint is blocked by a failed percentage ratchet; the primary success criterion is the zero-coverage file count.
+5. **Per-sprint report:** Drop a file in `implementation_reports/A<N>-<slug>.md` summarising the files eliminated from zero-coverage, before/after count, and any files deliberately deferred.
+6. **Quality bar per eliminated file:** A file counts as "eliminated from 0%" only if it has at least one **behaviour** assertion (render + `expect(...)` on output). Import-only smoke tests do NOT count — they game the metric.
+7. **Depth discipline for UI tests:** On page/drawer/landing tests, cover render + happy path + one critical error/empty state. Do **not** exhaustively enumerate every internal branch — E2E owns that. Exhaustive branch coverage belongs on logic modules (helpers, selectors, pure functions, reducers).
+8. **Stable mock references (learned A3 the hard way):** When mocking hooks, hoist return-value constants to module scope (`const EMPTY = Object.freeze([])`). Never return fresh object/array literals from a factory — they cause runaway re-renders and OOM in page tests.
+9. **Relative mock path check (learned A3 the hard way):** In `__tests__/foo.test.jsx`, sibling-component mocks must use `../Component`, not `./Component`. The wrong path silently bypasses the mock and loads the real heavy component. Quick audit: `grep -n 'vi\.mock("\\./' src/**/__tests__/**/*.{js,jsx}`.
 
 ---
 

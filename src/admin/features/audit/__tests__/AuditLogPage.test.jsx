@@ -146,7 +146,7 @@ describe("AuditLogPage", () => {
 
   qaTest("admin.audit.page.no-events-yet", () => {
     renderPage();
-    expect(screen.getByText("No audit events yet.")).toBeInTheDocument();
+    expect(screen.getAllByText("No audit events yet.").length).toBeGreaterThan(0);
   });
 
   qaTest("admin.audit.page.skeleton-shown", () => {

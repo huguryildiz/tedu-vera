@@ -1,26 +1,22 @@
-import { describe, beforeEach, afterEach, vi, expect } from "vitest";
+import { describe, afterEach, vi, expect } from "vitest";
 import { qaTest } from "../../../test/qaTest.js";
 
+// DEMO_MODE is evaluated at module load time, so we must set the pathname via
+// history.pushState BEFORE each dynamic import, then reset modules after.
 describe("demoMode — DEMO_MODE", () => {
-  let originalWindow;
-
-  beforeEach(() => {
-    originalWindow = global.window;
-  });
-
   afterEach(() => {
-    global.window = originalWindow;
+    window.history.pushState({}, "", "/");
     vi.resetModules();
   });
 
   qaTest("lib.demo.01", async () => {
-    global.window = { location: { pathname: "/admin/overview" } };
+    window.history.pushState({}, "", "/admin/overview");
     const { DEMO_MODE } = await import("../demoMode.js");
     expect(DEMO_MODE).toBe(false);
   });
 
   qaTest("lib.demo.02", async () => {
-    global.window = { location: { pathname: "/demo/admin" } };
+    window.history.pushState({}, "", "/demo/admin");
     const { DEMO_MODE } = await import("../demoMode.js");
     expect(DEMO_MODE).toBe(true);
   });

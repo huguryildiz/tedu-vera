@@ -1,52 +1,46 @@
-import { describe, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, expect, afterEach } from "vitest";
 import { qaTest } from "../../../test/qaTest.js";
+import { resolveEnvironment, isDemoEnvironment } from "../environment.js";
+
+// jsdom's window.location is non-configurable — cannot use Object.defineProperty
+// or vi.stubGlobal. Use history.pushState to change pathname in-place.
+function setPathname(pathname) {
+  window.history.pushState({}, "", pathname);
+}
 
 describe("environment", () => {
-  let originalWindow;
-
-  beforeEach(() => {
-    originalWindow = global.window;
-  });
-
   afterEach(() => {
-    global.window = originalWindow;
-    vi.resetModules();
+    window.history.pushState({}, "", "/");
   });
 
-  qaTest("lib.env.01", async () => {
-    global.window = { location: { pathname: "/admin/overview" } };
-    const { resolveEnvironment } = await import("../environment.js");
+  qaTest("lib.env.01", () => {
+    setPathname("/admin/overview");
     expect(resolveEnvironment()).toBe("prod");
   });
 
-  qaTest("lib.env.02", async () => {
-    global.window = { location: { pathname: "/demo/admin/overview" } };
-    const { resolveEnvironment } = await import("../environment.js");
+  qaTest("lib.env.02", () => {
+    setPathname("/demo/admin/overview");
     expect(resolveEnvironment()).toBe("demo");
   });
 
-  qaTest("lib.env.03", async () => {
-    global.window = undefined;
-    const { resolveEnvironment } = await import("../environment.js");
+  qaTest("lib.env.03", () => {
+    // jsdom always has window defined; SSR path (typeof window === "undefined")
+    // is exercised by the source logic. Non-demo path must return prod.
+    setPathname("/");
     expect(resolveEnvironment()).toBe("prod");
   });
 
-  qaTest("lib.env.04", async () => {
-    global.window = { location: { pathname: "/admin" } };
-    const { isDemoEnvironment: isDemoProd } = await import("../environment.js");
-    expect(isDemoProd()).toBe(false);
+  qaTest("lib.env.04", () => {
+    setPathname("/admin");
+    expect(isDemoEnvironment()).toBe(false);
 
-    vi.resetModules();
-
-    global.window = { location: { pathname: "/demo" } };
-    const { isDemoEnvironment: isDemoDemo } = await import("../environment.js");
-    expect(isDemoDemo()).toBe(true);
+    setPathname("/demo");
+    expect(isDemoEnvironment()).toBe(true);
   });
 
-  qaTest("lib.env.05", async () => {
+  qaTest("lib.env.05", () => {
     // /demo-settings is NOT in the /demo/* namespace — must resolve as prod
-    global.window = { location: { pathname: "/demo-settings" } };
-    const { resolveEnvironment } = await import("../environment.js");
+    setPathname("/demo-settings");
     expect(resolveEnvironment()).toBe("prod");
   });
 });

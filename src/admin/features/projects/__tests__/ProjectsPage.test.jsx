@@ -1,5 +1,5 @@
 import { describe, vi, expect, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { qaTest } from "@/test/qaTest";
 
@@ -75,7 +75,7 @@ vi.mock("@/admin/shared/ImportCsvModal", () => ({ default: () => null }));
 vi.mock("@/admin/shared/ExportPanel", () => ({ default: () => null }));
 vi.mock("@/shared/ui/Pagination", () => ({ default: () => null }));
 vi.mock("@/shared/ui/FloatingMenu", () => ({ default: () => null }));
-vi.mock("@/shared/ui/PremiumTooltip", () => ({ default: () => null }));
+vi.mock("@/shared/ui/PremiumTooltip", () => ({ default: ({ children }) => <>{children}</> }));
 vi.mock("@/shared/ui/CustomSelect", () => ({ default: () => null }));
 vi.mock("@/shared/ui/FbAlert", () => ({ default: () => null }));
 vi.mock("@/shared/ui/FilterButton", () => ({ FilterButton: () => null }));
@@ -123,8 +123,8 @@ describe("ProjectsPage", () => {
 
   qaTest("admin.projects.page.kpi-labels", () => {
     renderPage();
-    expect(screen.getByText("Team Members")).toBeInTheDocument();
-    expect(screen.getByText("Evaluated")).toBeInTheDocument();
+    expect(screen.getAllByText("Team Members").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Evaluated").length).toBeGreaterThan(0);
   });
 
   qaTest("admin.projects.page.search-input", () => {
@@ -137,17 +137,21 @@ describe("ProjectsPage", () => {
     expect(screen.getByTestId("projects-add-btn")).toBeInTheDocument();
   });
 
-  qaTest("admin.projects.page.no-periods-empty-state", () => {
+  qaTest("admin.projects.page.no-periods-empty-state", async () => {
     renderPage();
-    expect(screen.getByText("No evaluation periods yet")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText("No evaluation periods yet")).toBeInTheDocument()
+    );
   });
 
-  qaTest("admin.projects.page.no-period-selected", () => {
+  qaTest("admin.projects.page.no-period-selected", async () => {
     mockProjectPeriodState.periodList = [{ id: "p1", name: "Spring 2026" }];
     mockProjectPeriodState.viewPeriodId = null;
     renderPage();
-    expect(
-      screen.getByText("Select an evaluation period above to manage projects.")
-    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByText("Select an evaluation period above to manage projects.")
+      ).toBeInTheDocument()
+    );
   });
 });

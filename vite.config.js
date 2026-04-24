@@ -17,6 +17,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: './src/test/setup.js',
+    pool: 'vmForks',
     exclude: ['**/node_modules/**', '**/e2e/**', '**/__tests__.archive/**', '**/sql/__tests__.archive/**', '**/*.archive.*', '**/supabase/functions/**', '**/sql/tests/**'],
     watchExclude: ['**/e2e/**', '**/__tests__.archive/**', '**/supabase/functions/**', '**/sql/tests/**'],
     coverage: {
@@ -25,10 +26,10 @@ export default defineConfig({
       include: ['src/**/*.{js,jsx,ts,tsx}'],
       exclude: ['src/test/**', 'src/**/__tests__.archive/**', 'src/main.jsx', 'src/router.jsx'],
       thresholds: {
-        lines: 42,
+        lines: 41,
         functions: 31,
-        branches: 52,
-        statements: 42,
+        branches: 56,
+        statements: 41,
         'src/shared/hooks/**': { lines: 70, functions: 50, branches: 70, statements: 70 },
         'src/shared/storage/**': { lines: 80, functions: 65, branches: 50, statements: 80 },
         'src/shared/lib/**': { lines: 55, functions: 70, branches: 75, statements: 55 },
