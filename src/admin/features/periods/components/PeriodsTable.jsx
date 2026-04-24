@@ -102,7 +102,7 @@ function PeriodRow({
 
       {/* Status */}
       <td data-label="Status">
-        <div className="periods-status-cell">
+        <div className="periods-status-cell" data-testid="period-status-pill">
           <StatusPill status={state} />
           {isDraft && (
             <ReadinessPopover
@@ -306,6 +306,7 @@ function PeriodRow({
             <button
               className="floating-menu-item"
               onMouseDown={() => { setOpenMenuId(null); onClose(period); }}
+              data-testid="period-menu-close"
             >
               <Archive size={13} />
               Close Period
@@ -340,6 +341,7 @@ function PeriodRow({
                     onPublish(period);
                   }}
                   title={isReady ? undefined : `Fix ${blockerCount} issue${blockerCount === 1 ? "" : "s"} first`}
+                  data-testid="period-menu-publish"
                 >
                   <Send size={13} />
                   {isReady ? "Publish Period" : `Publish Period (${blockerCount} issue${blockerCount === 1 ? "" : "s"})`}

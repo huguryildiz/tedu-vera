@@ -56,13 +56,13 @@ export default function WelcomeStep({ onContinue, onSkip }) {
       </div>
 
       <div className="sw-actions">
-        <button className="sw-btn sw-btn-primary" onClick={onContinue}>
+        <button className="sw-btn sw-btn-primary" onClick={onContinue} data-testid="wizard-welcome-continue">
           Get Started <ArrowRight size={16} />
         </button>
       </div>
 
       <div className="sw-footer">
-        <button className="sw-btn-link" onClick={onSkip}>
+        <button className="sw-btn-link" onClick={onSkip} data-testid="wizard-welcome-skip">
           I'll set up later
         </button>
       </div>

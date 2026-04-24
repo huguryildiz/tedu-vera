@@ -5247,6 +5247,28 @@
     "severity": "major"
   },
   {
+    "id": "reviews.kpi.04",
+    "module": "Admin / Utils",
+    "area": "reviewsKpiHelpers",
+    "story": "computeHighDisagreement — projects with σ > threshold",
+    "scenario": "Returns count of projects where inter-juror σ exceeds threshold; excludes projects with <2 completed jurors",
+    "whyItMatters": "High-disagreement KPI highlights projects where evaluators diverge significantly.",
+    "risk": "Counting single-juror projects or using wrong threshold inflates/deflates the metric.",
+    "coverageStrength": "Strong",
+    "severity": "major"
+  },
+  {
+    "id": "reviews.kpi.05",
+    "module": "Admin / Utils",
+    "area": "reviewsKpiHelpers",
+    "story": "computeOutlierReviews — reviews deviating > threshold from project mean",
+    "scenario": "Returns count of completed reviews where score deviates more than threshold from that project's mean",
+    "whyItMatters": "Outlier KPI flags individual reviews that may need admin attention.",
+    "risk": "Including incomplete reviews or wrong mean calculation produces false positives.",
+    "coverageStrength": "Strong",
+    "severity": "major"
+  },
+  {
     "id": "score.helper.01",
     "module": "Admin / Utils",
     "area": "scoreHelpers",

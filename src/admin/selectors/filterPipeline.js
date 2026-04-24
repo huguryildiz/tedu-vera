@@ -17,15 +17,19 @@ import {
 import { cmp, tsToMillis } from "../utils/adminUtils";
 
 // ── buildProjectMetaMap ──────────────────────────────────────
-// Builds a Map from summaryData: projectId -> { title, students }
+// Builds a Map from summaryData: projectId -> { title, students, advisor }
 //
 // @param {Array} summaryData
-// @returns {Map<string, { title: string, students: string }>}
+// @returns {Map<string, { title: string, students: string, advisor: string }>}
 export function buildProjectMetaMap(summaryData) {
   return new Map(
     (summaryData || []).map((p) => [
       p.id,
-      { title: p?.title ?? p?.name ?? "", students: p?.members ?? p?.students ?? "" },
+      {
+        title: p?.title ?? p?.name ?? "",
+        students: p?.members ?? p?.students ?? "",
+        advisor: p?.advisor ?? "",
+      },
     ])
   );
 }
@@ -244,6 +248,7 @@ export function enrichRows(rows, projectMeta, jurorEditMap, groups, periodName, 
           .filter(Boolean)
           .join(", ")
       : String(studentsRaw).trim();
+    const advisor = String(row.advisor ?? meta?.advisor ?? "").trim();
     const jurorKey = rowKey(row);
     const isEditing = !!(
       jurorEditMap.get(row.jurorId) || jurorEditMap.get(jurorKey)
@@ -258,6 +263,7 @@ export function enrichRows(rows, projectMeta, jurorEditMap, groups, periodName, 
       period: row.period ?? periodName ?? "",
       title,
       students,
+      advisor,
       isEditing,
       finalSubmittedAt: finalTs,
       effectiveStatus: getCellState(row, criteria),

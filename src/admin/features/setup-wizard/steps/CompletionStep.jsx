@@ -230,7 +230,7 @@ export default function CompletionStep({ periodId, organizationId, isDemoMode, o
 
   return (
     <>
-      <div className="sw-card sw-completion sw-fade-in">
+      <div className="sw-card sw-completion sw-fade-in" data-testid="wizard-completion">
         <div className="sw-completion-icon">
           <Check size={36} strokeWidth={2.5} />
         </div>
@@ -338,7 +338,7 @@ export default function CompletionStep({ periodId, organizationId, isDemoMode, o
         </div>
 
         <div className="sw-completion-actions">
-          <button className="sw-btn sw-btn-ghost" onClick={onDashboard}>
+          <button className="sw-btn sw-btn-ghost" onClick={onDashboard} data-testid="wizard-completion-dashboard">
             Go to Dashboard <ArrowRight size={15} />
           </button>
         </div>

@@ -87,6 +87,7 @@ export default function ClosePeriodModal({ open, onClose, period, onCloseAction 
             autoComplete="off"
             spellCheck={false}
             disabled={closing}
+            data-testid="period-close-confirm-input"
           />
         </div>
       </div>
@@ -110,6 +111,7 @@ export default function ClosePeriodModal({ open, onClose, period, onCloseAction 
           onClick={handleConfirm}
           disabled={closing || !canConfirm}
           style={{ flex: 1 }}
+          data-testid="period-close-confirm"
         >
           <AsyncButtonContent loading={closing} loadingText="Closing…">
             Close Period

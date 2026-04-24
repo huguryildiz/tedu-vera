@@ -359,7 +359,7 @@ export default function AuditLogPage() {
   }
 
   return (
-    <div id="page-audit" className="page audit-log-page">
+    <div id="page-audit" className="page audit-log-page" data-testid="audit-log-page">
       <div className="page-title">Audit Log</div>
       <div className="page-desc">
         Track admin actions, score changes, and access events for compliance and accountability.
@@ -388,7 +388,7 @@ export default function AuditLogPage() {
       )}
 
       {/* KPI strip */}
-      <div className="scores-kpi-strip">
+      <div className="scores-kpi-strip" data-testid="audit-kpi-strip">
         <div className="scores-kpi-item">
           <div className="scores-kpi-item-value">{auditLoading && total === 0 ? "—" : total}</div>
           <div className="scores-kpi-item-label">Total Events</div>
@@ -433,6 +433,7 @@ export default function AuditLogPage() {
             placeholder="Search events, actors, actions…"
             value={auditSearch}
             onChange={(e) => { setAuditSearch(e.target.value); setCurrentPage(1); }}
+            data-testid="audit-log-search"
           />
         </div>
 
@@ -450,6 +451,7 @@ export default function AuditLogPage() {
           type="button"
           disabled={auditExporting}
           onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}
+          data-testid="audit-log-export-btn"
         >
           <Download size={13} style={{ marginRight: 4 }} />
           Export
@@ -608,6 +610,7 @@ export default function AuditLogPage() {
             type="button"
             className={`audit-view-chip${savedView === sv.label ? " active" : ""}`}
             onClick={() => { setSavedView(sv.label); setCurrentPage(1); setSelectedLog(null); }}
+            data-testid={`audit-view-${sv.label.toLowerCase().replace(/ /g, '-')}`}
           >
             {sv.label}
             <span className="audit-view-chip-count">
@@ -742,6 +745,7 @@ export default function AuditLogPage() {
                       ].filter(Boolean).join(" ")}
                       style={{ cursor: "pointer" }}
                       onClick={() => setSelectedLog(isSelected ? null : log)}
+                      data-testid="audit-row"
                     >
                       <td className="audit-ts" data-label="Timestamp">
                         <div className="audit-ts-main">{ts}</div>

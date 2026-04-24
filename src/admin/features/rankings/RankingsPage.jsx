@@ -217,8 +217,9 @@ export default function RankingsPage() {
     }
     return [
       { key: 'rank',      label: 'Rank',                  sortKey: 'rank',      thClass: 'col-rank',       getValue: r => rankMap.get(r.id) ?? '' },
-      { key: 'title',     label: 'Project Title',         sortKey: 'project',                              getValue: r => r.title || r.name || '' },
+      { key: 'title',     label: 'Project Title',         sortKey: 'project',                              getValue: r => r.group_no != null ? `P${r.group_no} — ${r.title || r.name || ''}` : (r.title || r.name || '') },
       { key: 'members',   label: 'Team Members',                                                           getValue: r => fmtMembers(r.members || r.students) },
+      { key: 'advisor',   label: 'Advised By',    exportOnly: true,                                        getValue: r => r.advisor ? r.advisor.split(',').map(s => s.trim()).filter(Boolean).join('; ') : '' },
       ...criteriaConfig.map(c => ({
         key: c.id,
         label: `${c.shortLabel || c.label} (${c.max})`,
@@ -367,6 +368,7 @@ export default function RankingsPage() {
             <button
               className={`btn btn-outline btn-sm mobile-toolbar-export${exportPanelOpen ? " active" : ""}`}
               onClick={() => setExportPanelOpen((o) => !o)}
+              data-testid="rankings-export-btn"
             >
               <DownloadIcon style={{ verticalAlign: "-1px" }} /> Export
             </button>
@@ -374,7 +376,7 @@ export default function RankingsPage() {
         </div>
 
         {/* ── KPI Strip ────────────────────────────────────────── */}
-        <div className="scores-kpi-strip">
+        <div className="scores-kpi-strip" data-testid="rankings-kpi-strip">
           <div className="scores-kpi-item">
             <div className="scores-kpi-item-value">{totalProjects}</div>
             <div className="scores-kpi-item-label">Projects</div>
@@ -487,7 +489,7 @@ export default function RankingsPage() {
         )}
 
         {/* ── Export Panel (always in DOM, toggled via CSS class) ─ */}
-        <div className={`export-panel${exportPanelOpen ? " show" : ""}`}>
+        <div className={`export-panel${exportPanelOpen ? " show" : ""}`} data-testid="rankings-export-panel">
           <div className="export-panel-header">
             <div>
               <h4>
@@ -601,7 +603,7 @@ export default function RankingsPage() {
           sortDir={sortDir}
           loading={loading}
           isPortraitMobile={isPortraitMobile}
-          columns={columns}
+          columns={columns.filter(c => !c.exportOnly)}
           rowsScopeRef={rowsScopeRef}
           onSort={handleSort}
           openConsensusPopover={openConsensusPopover}

@@ -111,7 +111,7 @@
 /* ─── Side-by-side chart grid ─── */
 .analytics-chart-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 
-/* ─── Group attainment heatmap ─── */
+/* ─── Project attainment heatmap ─── */
 .ga-heatmap-wrap{overflow-x:auto}
 .ga-heatmap{width:100%;border-collapse:separate;border-spacing:2px}
 .ga-heatmap th{color:var(--text-tertiary);text-align:center;vertical-align:bottom}
@@ -336,7 +336,7 @@ body:not(.dark-mode) .ga-cv-poor{background:rgba(220,38,38,0.12);box-shadow:inse
 .lollipop-val.negative{color:var(--danger)}
 .lollipop-axis-labels{display:flex;justify-content:space-between;margin-left:90px;font-size:9px;color:var(--text-tertiary);font-family:var(--mono);font-weight:500;padding-top:4px}
 
-/* Group attainment heatmap */
+/* Project attainment heatmap */
 .ga-heatmap{width:100%;border-collapse:separate;border-spacing:2px}
 .ga-heatmap th{color:var(--text-tertiary);text-align:center;vertical-align:bottom}
 .ga-heatmap th:first-child{text-align:right;min-width:110px}
@@ -490,19 +490,7 @@ body:not(.dark-mode) .ga-cv-poor{background:rgba(220,38,38,0.12);box-shadow:inse
 .filter-panel-sub{font-size:11px;color:var(--text-tertiary);margin-top:2px;line-height:1.4}
 .filter-panel-close{width:28px;height:28px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-card);color:var(--text-tertiary);display:inline-grid;place-items:center;cursor:pointer;font-size:0;font-weight:400;transition:all .12s;flex-shrink:0;font-family:var(--font);line-height:0;padding:0;vertical-align:middle;text-align:center;font-kerning:none;font-variant-ligatures:none;position:relative}
 .filter-panel-close:hover{border-color:var(--border-strong);color:var(--text-primary);background:var(--surface-1)}
-.filter-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;padding:16px 20px}
-.filter-group{display:flex;flex-direction:column;gap:5px;min-width:160px;flex:1}
-.filter-group label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-tertiary)}
-.filter-group select,.filter-group input{height:38px;padding:0 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:12.5px;font-weight:500;background:var(--surface-1);color:var(--text-primary);outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
-.filter-group select:hover,.filter-group input:hover{border-color:var(--border-strong);background:var(--bg-card)}
-.filter-group select:focus,.filter-group input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:var(--bg-card)}
-.filter-group.filter-range-pair{flex-direction:row;gap:0;min-width:auto}
-.filter-group.filter-range-pair .filter-range-input{flex:1;min-width:100px}
-.filter-group.filter-range-pair .filter-range-input:first-child input{border-radius:var(--radius-sm) 0 0 var(--radius-sm);border-right:none}
-.filter-group.filter-range-pair .filter-range-input:last-child input{border-radius:0 var(--radius-sm) var(--radius-sm) 0}
-.filter-group.filter-range-pair label{margin-bottom:1px}
-.filter-clear-btn{height:38px;padding:0 16px;color:var(--text-tertiary);font-size:11.5px;font-weight:600;letter-spacing:0.1px;border-radius:var(--radius-sm) !important;transition:color .12s,border-color .12s,background .12s;flex-shrink:0}
-.filter-clear-btn:hover{color:var(--danger);border-color:var(--danger-ring);background:var(--danger-soft)}
+/* filter-row / filter-group / filter-clear-btn — global, see src/styles/components/cards.css */
 .filter-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 .filter-tag{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;font-size:11px;font-weight:500;background:var(--accent-soft);color:var(--accent);border:1px solid rgba(59,130,246,0.15);transition:background .12s}
 .filter-tag:hover{background:rgba(59,130,246,0.12)}

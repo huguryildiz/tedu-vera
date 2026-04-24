@@ -495,7 +495,7 @@ export function ExportBackupDrawer({ open, onClose }) {
       const XLSX = await import("xlsx-js-style");
       const headers = ["Period", "Project", "Title", "Team Members"];
       const data = projectsByPeriod.flatMap(({ periodName, rows }) =>
-        (rows || []).map((p) => [periodName, p?.group_no ?? "", p?.title ?? "", p?.members || ""]),
+        (rows || []).map((p) => [periodName, p?.group_no ?? "", p?.group_no != null ? `P${p.group_no} — ${p?.title ?? ""}` : (p?.title ?? ""), p?.members || ""]),
       );
       const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
       ws["!cols"] = [18, 8, 36, 42].map((w) => ({ wch: w }));

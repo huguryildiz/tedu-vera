@@ -176,6 +176,7 @@ export default function IdentityStep({ state, onBack }) {
           <div className="form-input-with-avatar">
             <input
               type="text"
+              data-testid="jury-name-input"
               className="form-input"
               placeholder="e.g., Jane Smith"
               value={juryName}
@@ -193,6 +194,7 @@ export default function IdentityStep({ state, onBack }) {
           <label className="form-label">Affiliation <span className="form-required">*</span></label>
           <input
             type="text"
+            data-testid="jury-affiliation-input"
             className="form-input"
             placeholder="e.g., TED University / EE"
             value={affiliation}
@@ -219,6 +221,7 @@ export default function IdentityStep({ state, onBack }) {
         </div>
 
         <button
+          data-testid="jury-identity-submit"
           className="btn-landing-primary id-tour-submit"
           onClick={handleSubmit}
           disabled={!juryName.trim() || !affiliation.trim() || submitting}

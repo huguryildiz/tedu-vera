@@ -389,7 +389,7 @@ export default function ProjectsPage() {
             <Download size={14} strokeWidth={2} style={{ verticalAlign: "-1px" }} />
             {" "}Export
           </button>
-          <button className="btn btn-outline btn-sm mobile-toolbar-secondary" onClick={() => !isLocked && setImportOpen(true)} disabled={isLocked}>
+          <button className="btn btn-outline btn-sm mobile-toolbar-secondary" onClick={() => !isLocked && setImportOpen(true)} disabled={isLocked} data-testid="projects-import-btn">
             <Upload size={14} strokeWidth={2} style={{ verticalAlign: "-1px" }} />
             {" "}Import
           </button>

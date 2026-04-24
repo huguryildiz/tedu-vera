@@ -251,7 +251,7 @@ export async function exportXLSX(rows, { periodName = "", summaryData = [], juro
     return [
     r.juryName    ?? "",
     r.groupNo     ?? "",
-    r.projectName ?? "",
+    r.groupNo != null ? `P${r.groupNo} — ${r.projectName ?? ""}` : (r.projectName ?? ""),
     studentsMap.get(r.projectId) ?? "",
     ...activeCriteria.map((c) => exportScoreValue(r[c.id])),
     exportScoreValue(r.total),
@@ -277,7 +277,11 @@ export async function exportXLSX(rows, { periodName = "", summaryData = [], juro
 export async function exportGridXLSX(exportRows, groups, { periodName = "", tenantCode = "", criterionTabs = [] } = {}) {
   const XLSX = await import("xlsx-js-style");
 
-  const groupHeaders = groups.map((g) => (g.groupNo ?? g.group_no) != null ? `P${g.groupNo ?? g.group_no}` : (g.label || g.title || g.id));
+  const groupHeaders = groups.map((g) => {
+    const no = g.groupNo ?? g.group_no;
+    const name = g.label || g.title || "";
+    return no != null ? [`P${no}`, name].filter(Boolean).join(" — ") : (name || String(g.id));
+  });
   const colWidths = [28, 28, 18, ...groups.map(() => 10)];
 
   function makeSheet(rows, includeStatus = true) {
@@ -334,7 +338,7 @@ export async function exportRankingsXLSX(ranked, criteria, { periodName = "", te
       : "";
     return [
       Number.isFinite(p?.totalAvg) ? lastRank : "",
-      p.title || p.name || "",
+      p.group_no != null ? `P${p.group_no} — ${p.title || p.name || ""}` : (p.title || p.name || ""),
       fmtMembers(p.members || p.students),
       ...criteria.map((c) => Number.isFinite(p.avg?.[c.id]) ? Number(p.avg[c.id].toFixed(2)) : ""),
       Number.isFinite(p.totalAvg) ? Number(p.totalAvg.toFixed(2)) : "",

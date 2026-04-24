@@ -364,6 +364,7 @@ export default function JuryGatePage() {
               <KeyRound size={14} className="jg-input-icon" />
               <input
                 ref={inputRef}
+                data-testid="jury-token-input"
                 className="form-input jg-token-input"
                 placeholder="Paste your access link or code…"
                 value={manualToken}
@@ -379,6 +380,7 @@ export default function JuryGatePage() {
             </div>
             <button
               type="submit"
+              data-testid="jury-verify-btn"
               className="jg-verify-btn"
               disabled={!manualToken.trim()}
             >

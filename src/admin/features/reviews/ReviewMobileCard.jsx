@@ -5,6 +5,7 @@ import { TeamMembersInline } from "@/shared/ui/EntityMeta";
 import { formatTs } from "@/admin/utils/adminUtils";
 import ScoreStatusPill from "@/admin/shared/ScoreStatusPill";
 import JurorStatusPill from "@/admin/shared/JurorStatusPill";
+import JurorBadge from "@/admin/shared/JurorBadge";
 
 function scoreBandColor(total, totalMax) {
   if (total == null || !Number.isFinite(Number(total))) return "var(--text-tertiary)";
@@ -40,7 +41,7 @@ function CritBar({ criterion, value }) {
   const missing = value === null || value === undefined;
   const pct = missing ? 0 : Math.max(0, Math.min(100, (value / criterion.max) * 100));
   const color = criterion.color || "var(--accent)";
-  const label = criterion.shortLabel || criterion.label;
+  const label = criterion.label || criterion.shortLabel;
 
   return (
     <div className="rmc-crit-bar-row">
@@ -70,9 +71,27 @@ function CritBar({ criterion, value }) {
 function MemberChips({ students }) {
   if (!students || (Array.isArray(students) && students.length === 0)) return null;
   return (
-    <div className="rmc-team-row">
-      <span className="rmc-team-label">TEAM MEMBERS</span>
-      <TeamMembersInline names={students} />
+    <div className="rmc-meta-section">
+      <span className="meta-chips-eyebrow">TEAM MEMBERS</span>
+      <div className="meta-chips-row">
+        <TeamMembersInline names={students} />
+      </div>
+    </div>
+  );
+}
+
+function AdvisedByRow({ advisor }) {
+  if (!advisor) return null;
+  const advisors = advisor.split(",").map((s) => s.trim()).filter(Boolean);
+  if (!advisors.length) return null;
+  return (
+    <div className="rmc-meta-section">
+      <span className="meta-chips-eyebrow">ADVISED BY</span>
+      <div className="meta-chips-row">
+        {advisors.map((name, i) => (
+          <JurorBadge key={`${name}-${i}`} name={name} size="sm" nameOnly />
+        ))}
+      </div>
     </div>
   );
 }
@@ -120,10 +139,12 @@ export default function ReviewMobileCard({ row, criteria }) {
           </span>
         </div>
         <MemberChips students={row.students} />
+        <AdvisedByRow advisor={row.advisor} />
       </div>
 
       {criteria.length > 0 && (
         <div className="rmc-crit-bars">
+          <span className="meta-chips-eyebrow rmc-crit-heading">CRITERIA SCORES</span>
           {criteria.map((criterion, idx) => {
             const value = row[criterion.id] ?? row[criterion.key] ?? null;
             return (

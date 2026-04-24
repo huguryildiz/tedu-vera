@@ -147,6 +147,7 @@ body:not(.dark-mode) .kpi:hover {
 .audit-ts-rel,
 .ec-session-time,
 .jrm-submitted {
+  font-family: var(--mono);
   color: var(--text-tertiary) !important;
 }
 

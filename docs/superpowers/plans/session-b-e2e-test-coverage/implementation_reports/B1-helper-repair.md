@@ -42,7 +42,7 @@ The landing-page entry button had been refactored. Prior session (before B1 logg
 
 Affects ~12 admin specs. Root cause investigation:
 
-### Confirmed from DB (`vera-demo` — `kmprsxrofnemmsryjhfj`)
+### Confirmed from DB (`vera-demo`)
 
 ```sql
 SELECT m.user_id, m.organization_id, m.role, m.status

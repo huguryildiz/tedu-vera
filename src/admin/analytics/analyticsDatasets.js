@@ -175,7 +175,7 @@ export function buildProgrammeAveragesDataset(submittedData, outcomes = []) {
 export function buildJurorConsistencyDataset(dashboardStats, submittedData, outcomes = []) {
   const groups = (dashboardStats || []).filter((s) => s.count > 0);
   const rows   = submittedData || [];
-  const headers = ["Title", ...outcomes.map((o) => o.label)];
+  const headers = ["Project Title", ...outcomes.map((o) => o.label)];
 
   const buildMatrix = (metric) =>
     groups.map((g) => {
@@ -195,7 +195,8 @@ export function buildJurorConsistencyDataset(dashboardStats, submittedData, outc
         }
         return null;
       });
-      return [g.title || g.name || "—", ...cells];
+      const label = g.group_no != null ? `P${g.group_no} — ${g.title || g.name || "—"}` : (g.title || g.name || "—");
+      return [label, ...cells];
     });
 
   return {
@@ -205,9 +206,9 @@ export function buildJurorConsistencyDataset(dashboardStats, submittedData, outc
     headers,
     rows: buildMatrix("cv"),
     extra: [
-      { title: "Mean (%) by Title x Criterion", headers, rows: buildMatrix("mean") },
-      { title: "Std. deviation (σ) by Title x Criterion", headers, rows: buildMatrix("sd") },
-      { title: "N (Juror Count) by Title x Criterion", headers, rows: buildMatrix("n") },
+      { title: "Mean (%) by Project x Criterion", headers, rows: buildMatrix("mean") },
+      { title: "Std. deviation (σ) by Project x Criterion", headers, rows: buildMatrix("sd") },
+      { title: "N (Juror Count) by Project x Criterion", headers, rows: buildMatrix("n") },
     ],
   };
 }
@@ -574,7 +575,7 @@ export function buildThresholdGapDataset({ submittedData = [], activeOutcomes = 
 }
 
 /**
- * Group Attainment Heatmap — groups on rows, criteria on columns.
+ * Project Attainment Heatmap — projects on rows, criteria on columns.
  * Project titles are long and wrap when used as column headers; using them as
  * row labels (with the P<n> code prefix) keeps the table compact and readable.
  * Criterion labels are short and fit cleanly as column headers.
@@ -591,7 +592,7 @@ export function buildGroupHeatmapDataset({ dashboardStats = [], activeOutcomes =
       sheet: "Project Heatmap",
       title: "Project Attainment Heatmap",
       note: `Normalized score (%) per criterion per project — cells below ${threshold}% threshold are flagged`,
-      headers: ["Group"],
+      headers: ["Project Title"],
       rows: [],
     };
   }
@@ -602,7 +603,7 @@ export function buildGroupHeatmapDataset({ dashboardStats = [], activeOutcomes =
     return code ? (title ? `${code} — ${title}` : code) : title || "—";
   };
 
-  const headers = ["Group", ...criteria.map((c) => c.label), "Cells Below Threshold"];
+  const headers = ["Project Title", ...criteria.map((c) => c.label), "Cells Below Threshold"];
 
   const rows = groups.map((g) => {
     let belowCount = 0;

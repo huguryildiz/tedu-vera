@@ -75,4 +75,40 @@ export class PeriodsPom extends BasePom {
   async expectRowGone(name: string): Promise<void> {
     await expect(this.periodRow(name)).toHaveCount(0, { timeout: 10000 });
   }
+
+  // Publish & Close lifecycle
+  statusPill(name: string): Locator {
+    return this.page.locator(`[data-testid="period-row"][data-period-name="${name}"] [data-testid="period-status-pill"]`);
+  }
+
+  async expectStatus(name: string, text: string): Promise<void> {
+    await expect(this.statusPill(name)).toContainText(text, { ignoreCase: true, timeout: 10000 });
+  }
+
+  publishConfirmBtn(): Locator { return this.byTestId("period-publish-confirm"); }
+  closeInput(): Locator { return this.byTestId("period-close-confirm-input"); }
+  closeConfirmBtn(): Locator { return this.byTestId("period-close-confirm"); }
+
+  async clickPublishFor(name: string): Promise<void> {
+    await this.openKebabFor(name);
+    await this.byTestId("period-menu-publish").click();
+    await expect(this.publishConfirmBtn()).toBeVisible();
+  }
+
+  async confirmPublish(): Promise<void> {
+    await this.publishConfirmBtn().click();
+    await expect(this.publishConfirmBtn()).not.toBeVisible({ timeout: 10000 });
+  }
+
+  async clickCloseFor(name: string): Promise<void> {
+    await this.openKebabFor(name);
+    await this.byTestId("period-menu-close").click();
+    await expect(this.closeInput()).toBeVisible();
+  }
+
+  async confirmClose(name: string): Promise<void> {
+    await this.closeInput().fill(name);
+    await this.closeConfirmBtn().click();
+    await expect(this.closeInput()).not.toBeVisible({ timeout: 10000 });
+  }
 }

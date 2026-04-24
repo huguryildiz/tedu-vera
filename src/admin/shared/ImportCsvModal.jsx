@@ -286,7 +286,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
             )}
           </div>
 
-          <input ref={inputRef} type="file" accept=".csv" style={{ display: "none" }} onChange={onInputChange} />
+          <input ref={inputRef} type="file" accept=".csv" style={{ display: "none" }} onChange={onInputChange} data-testid="projects-import-file" />
 
           <div className="fs-modal-footer">
             {file
@@ -301,6 +301,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
               className="fs-btn fs-btn-primary"
               onClick={handleImport}
               disabled={importing || !file || validCount === 0}
+              data-testid="projects-import-submit"
             >
               <span className="btn-loading-content">
                 <AsyncButtonContent loading={importing} loadingText="Importing…">
@@ -312,7 +313,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
         </>
       ) : (
         <>
-          <div className="fs-modal-body" style={{ textAlign: "center", paddingTop: 8 }}>
+          <div className="fs-modal-body" style={{ textAlign: "center", paddingTop: 8 }} data-testid="projects-import-success">
             <div className="fs-modal-icon success" style={{ margin: "0 auto 10px" }}>
               <CheckCircle size={20} />
             </div>
@@ -349,7 +350,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
             )}
           </div>
           <div className="fs-modal-footer" style={{ justifyContent: "center", borderTop: "none", background: "transparent", paddingTop: 0 }}>
-            <button className="fs-btn fs-btn-primary" style={{ minWidth: 140 }} onClick={handleClose}>
+            <button className="fs-btn fs-btn-primary" style={{ minWidth: 140 }} onClick={handleClose} data-testid="projects-import-done">
               Done
             </button>
           </div>

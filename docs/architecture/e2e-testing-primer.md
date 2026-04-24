@@ -187,7 +187,7 @@ Playwright loads env vars in this order (see `playwright.config.ts`):
 2. `.env.local` (override: false, backfill only)
 
 **Use `.env.e2e.local` for everything E2E-specific**, including:
-- `VITE_SUPABASE_URL` (points to vera-demo: `https://kmprsxrofnemmsryjhfj.supabase.co`)
+- `VITE_SUPABASE_URL` (points to vera-demo: `https://<demo-ref>.supabase.co`)
 - `VITE_SUPABASE_ANON_KEY`
 - `VITE_RPC_SECRET`
 - `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`
@@ -207,7 +207,7 @@ Playwright browsers live in `~/Library/Caches/ms-playwright/`. After `rm -rf nod
 
 ### Target project
 
-E2E runs against **vera-demo only** (`kmprsxrofnemmsryjhfj`). Never point E2E at vera-prod. Seed changes made for E2E must still be applied to both projects to keep parity (project rule), but the actual test traffic stays on demo.
+E2E runs against **vera-demo only**. Never point E2E at vera-prod. Seed changes made for E2E must still be applied to both projects to keep parity (project rule), but the actual test traffic stays on demo.
 
 ---
 

@@ -152,6 +152,8 @@ export async function generateTableBlob(format, opts) {
 
     const pdfHeader = (h) => String(h).replace(/\s*(\(\d+\))$/, "\n$1");
 
+    const HEADER_H = 37;
+
     const startY = renderPageHeader(sheetName);
     autoTable(doc, {
       startY,
@@ -160,9 +162,12 @@ export async function generateTableBlob(format, opts) {
       styles: tableStyles,
       headStyles,
       alternateRowStyles: { fillColor: [248, 250, 252] },
-      margin: { left: 14, right: 14 },
+      margin: { left: 14, right: 14, top: HEADER_H },
       tableWidth: pageW - 28,
       columnStyles: pdfColumnStyles,
+      didDrawPage: (data) => {
+        if (data.pageNumber > 1) renderPageHeader(sheetName);
+      },
     });
 
     extraSections.forEach((sec) => {
@@ -175,8 +180,11 @@ export async function generateTableBlob(format, opts) {
         styles: tableStyles,
         headStyles,
         alternateRowStyles: { fillColor: [248, 250, 252] },
-        margin: { left: 14, right: 14 },
+        margin: { left: 14, right: 14, top: HEADER_H },
         tableWidth: pageW - 28,
+        didDrawPage: (data) => {
+          if (data.pageNumber > 1) renderPageHeader(sec.title);
+        },
       });
     });
 

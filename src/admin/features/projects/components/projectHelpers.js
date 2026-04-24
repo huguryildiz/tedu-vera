@@ -10,7 +10,7 @@ export const COLUMNS = [
 
 export function getProjectCell(p, key, avgMap) {
   if (key === "group_no")   return p.group_no ?? "";
-  if (key === "title")      return p.title ?? "";
+  if (key === "title")      return p.group_no != null ? `P${p.group_no} — ${p.title ?? ""}` : (p.title ?? "");
   if (key === "members")    return membersToString(p.members);
   if (key === "avg_score")  return avgMap?.get(p.id) ?? "—";
   if (key === "updated_at") return formatFull(p.updated_at) || "—";

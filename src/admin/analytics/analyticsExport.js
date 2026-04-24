@@ -228,19 +228,25 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
   const margin = 14;
   const imgW = pageW - margin * 2;
 
-  async function drawPageHeader() {
-    try {
-      const logoData = await loadLogoBase64();
-      doc.addImage(logoData, "PNG", margin, 5, 20, 6.4);
-    } catch { /* continue without logo */ }
-    doc.setFontSize(7.5);
-    doc.setTextColor(110);
-    doc.text(metaParts.join(" · ") || "All Periods", margin + 23, 9.5);
-    doc.text(`Generated ${dateStr}`, pageW - margin, 9.5, { align: "right" });
+  const logoData = await loadLogoBase64().catch(() => null);
+
+  function drawPageHeader() {
+    doc.setFont("Inter");
+    if (logoData) {
+      try { doc.addImage(logoData, "PNG", margin, 10, 28, 9); } catch { /* skip */ }
+    }
+    doc.setFontSize(16);
+    doc.setTextColor(0);
+    doc.text("Analytics", margin + 32, 16);
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text(metaParts.join(" · ") || "All Periods", margin + 32, 22);
+    doc.setFontSize(8);
+    doc.text(`Generated ${dateStr}`, pageW - margin, 16, { align: "right" });
     doc.setTextColor(0);
     doc.setDrawColor(200);
-    doc.line(margin, 13, pageW - margin, 13);
-    return 20; // startY after header — 7mm breathing room below the divider
+    doc.line(margin, 26, pageW - margin, 26);
+    return 33; // startY after header
   }
 
   // Decide whether a section's table shares the chart's page or starts fresh below.
@@ -271,7 +277,7 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
   const totalCount = statusDs.summary?.totalCount ?? 0;
 
   // Render sections — first section starts directly on page 1
-  let startY = await drawPageHeader();
+  let startY = drawPageHeader();
 
   // Cover summary band (small, under the header, before first section)
   if (totalCount > 0) {
@@ -336,7 +342,7 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
     // above is not cramped by its first few rows.
     if (!shareWithTable && ds.rows.length) {
       doc.addPage();
-      startY = await drawPageHeader();
+      startY = drawPageHeader();
       doc.setFontSize(10);
       doc.setTextColor(0);
       doc.text(`${section.title} — Data`, margin, startY);
@@ -381,7 +387,7 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
     // Page break after each section except the last
     if (i < ANALYTICS_SECTIONS.length - 1) {
       doc.addPage();
-      startY = await drawPageHeader();
+      startY = drawPageHeader();
     }
   }
 

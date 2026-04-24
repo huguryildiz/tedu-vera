@@ -85,4 +85,34 @@ export class ProjectsPom extends BasePom {
   async expectProjectGone(title: string): Promise<void> {
     await expect(this.projectRow(title)).toHaveCount(0, { timeout: 10000 });
   }
+
+  // Import CSV
+  importBtn(): Locator { return this.byTestId("projects-import-btn"); }
+  importFileInput(): Locator { return this.byTestId("projects-import-file"); }
+  importSubmitBtn(): Locator { return this.byTestId("projects-import-submit"); }
+  importSuccessScreen(): Locator { return this.byTestId("projects-import-success"); }
+  importDoneBtn(): Locator { return this.byTestId("projects-import-done"); }
+
+  async openImportModal(): Promise<void> {
+    await this.importBtn().click();
+    await expect(this.importFileInput()).toBeAttached();
+  }
+
+  async uploadCsvInMemory(csvContent: string, filename = "projects.csv"): Promise<void> {
+    await this.importFileInput().setInputFiles({
+      name: filename,
+      mimeType: "text/csv",
+      buffer: Buffer.from(csvContent),
+    });
+  }
+
+  async submitImport(): Promise<void> {
+    await this.importSubmitBtn().click();
+    await expect(this.importSuccessScreen()).toBeVisible({ timeout: 15000 });
+  }
+
+  async closeImportModal(): Promise<void> {
+    await this.importDoneBtn().click();
+    await expect(this.importSuccessScreen()).not.toBeVisible({ timeout: 10000 });
+  }
 }

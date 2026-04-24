@@ -512,10 +512,11 @@
 .reviews-table tbody tr.partial-row{background:rgba(217,119,6,0.025)}
 .reviews-table tbody tr.partial-row:hover{background:rgba(217,119,6,0.06)}
 /* ── Column: Juror ── */
-.reviews-table .col-juror{vertical-align:middle}
+.reviews-table .col-juror{vertical-align:middle;min-width:180px;white-space:nowrap}
 /* ── Column: Project ── */
 .reviews-table .col-project{
-  min-width:0;
+  min-width:220px;
+  width:22%;
   white-space:normal;
   word-break:break-word;
   overflow-wrap:break-word;
@@ -527,6 +528,8 @@
 }
 /* ── Column: Team Members — vertical stack in table context ── */
 .reviews-table .col-members{vertical-align:middle}
+.reviews-table .col-advisor{vertical-align:middle}
+.reviews-table .col-advisor .jb-name{font-weight:400 !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
 .reviews-table .col-members .team-members-inline{
   display:flex;
   flex-direction:column;
@@ -559,7 +562,6 @@
 .reviews-table .col-submitted{white-space:nowrap;font-size:11px;vertical-align:middle}
 .reviews-table .col-status{vertical-align:middle}
 .reviews-table .col-progress{vertical-align:middle}
-.reviews-table .col-no{vertical-align:middle}
 .reviews-table .partial-row .col-total{color:var(--warning)}
 .reviews-pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border);background:var(--surface-1);border-radius:0 0 var(--radius) var(--radius)}
 .reviews-pagination-info{font-size:11px;color:var(--text-tertiary)}

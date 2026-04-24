@@ -339,7 +339,7 @@ export default function HeatmapPage() {
         generateFile={async (fmt) => {
           const exportRows = buildExportRows(visibleJurors, "all");
           const groupHeaders = (groups || []).map((g) =>
-            g.group_no != null ? `P${g.group_no}` : (g.title || g.id)
+            g.group_no != null ? [`P${g.group_no}`, g.title || ""].filter(Boolean).join(" — ") : (g.title || String(g.id))
           );
           const makeRows = (tabRows, includeStatus) =>
             tabRows.map((r) => [

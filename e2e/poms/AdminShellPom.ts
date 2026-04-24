@@ -32,4 +32,12 @@ export class AdminShellPom extends BasePom {
   async signOut(): Promise<void> {
     await this.signOutButton().click();
   }
+
+  navOrganizations(): Locator {
+    return this.byTestId("admin-shell-nav-organizations");
+  }
+
+  async expectOrganizationsNavHidden(): Promise<void> {
+    await expect(this.navOrganizations()).toHaveCount(0);
+  }
 }

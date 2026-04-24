@@ -87,6 +87,7 @@ export default function PinStep({ state, onBack }) {
             <input
               key={i}
               ref={(el) => (pinRefs.current[i] = el)}
+              data-testid={`jury-pin-input-${i}`}
               type="text"
               className="dj-pin-input dj-pin-input--lg"
               maxLength="1"
@@ -119,6 +120,7 @@ export default function PinStep({ state, onBack }) {
         )}
 
         <button
+          data-testid="jury-pin-submit"
           className="btn-landing-primary ps-tour-submit"
           onClick={handleSubmit}
           disabled={!!state.pinLockedUntil || submitting}

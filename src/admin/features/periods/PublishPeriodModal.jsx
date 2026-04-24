@@ -91,6 +91,7 @@ export default function PublishPeriodModal({ open, onClose, period, onPublish })
           onClick={handlePublish}
           disabled={publishing}
           style={{ flex: 1 }}
+          data-testid="period-publish-confirm"
         >
           <AsyncButtonContent loading={publishing} loadingText="Publishing…">
             Publish Period

@@ -69,7 +69,7 @@ export default function LockedStep({ state, onBack }) {
   };
 
   return (
-    <div className="jury-step">
+    <div data-testid="jury-locked-screen" className="jury-step">
       <div className="jury-card dj-glass-card">
 
         {/* Icon */}

@@ -38,7 +38,7 @@ import JurorBadge from "@/admin/shared/JurorBadge";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import { TeamMemberNames } from "@/shared/ui/EntityMeta";
-import { computeCoverage, computePending, computeSpread } from "@/admin/utils/reviewsKpiHelpers";
+import { computeCoverage, computeHighDisagreement, computeOutlierReviews } from "@/admin/utils/reviewsKpiHelpers";
 import "./styles/index.css";
 
 
@@ -314,9 +314,9 @@ export default function ReviewsPage() {
   const maxTotal = criteriaConfig.reduce((s, c) => s + (c.max || 0), 0);
   const columns = useMemo(() => [
     { key: 'juror',       label: 'Juror',              sortKey: 'juryName',          getValue: r => r.juryName ?? '' },
-    { key: 'no',          label: 'No',                 sortKey: 'groupNo',           thClass: 'text-center', getValue: r => r.groupNo != null ? `P${r.groupNo}` : '—' },
-    { key: 'project',     label: 'Project Title',      sortKey: 'title',             getValue: r => r.title || r.projectName || '—' },
-    { key: 'members',     label: 'Team Members',                                     getValue: r => Array.isArray(r.students) ? r.students.join(', ') : (r.students ?? '—') },
+    { key: 'project',     label: 'Project Title',      sortKey: 'title',             getValue: r => r.groupNo != null ? `P${r.groupNo} — ${r.title || r.projectName || '—'}` : (r.title || r.projectName || '—') },
+    { key: 'members',     label: 'Team Members',                                     getValue: r => Array.isArray(r.students) ? r.students.join('; ') : (r.students ?? '—') },
+    { key: 'advisor',     label: 'Advised By',                                        getValue: r => r.advisor ? r.advisor.split(',').map(s => s.trim()).filter(Boolean).join('; ') : '—' },
     ...scoreCols.filter(c => c.key !== 'total').map(c => ({
       key: c.key, label: c.label, sortKey: c.key, thClass: 'text-right', getValue: r => r[c.key] ?? '—',
     })),
@@ -334,12 +334,11 @@ export default function ReviewsPage() {
 
   // ── KPI stats (reflects active filters) ─────────────────
   const kpiBase = filtered.length !== enriched.length ? filtered : enriched;
-  const totalReviews = kpiBase.length;
   const uniqueJurors = new Set(kpiBase.map((r) => r.jurorId || r.juryName)).size;
   const partialCount = kpiBase.filter((r) => r.effectiveStatus === "partial").length;
   const coverage = computeCoverage(kpiBase, assignedJurors || jurors);
-  const pendingCount = computePending(kpiBase);
-  const avgSpread = computeSpread(kpiBase);
+  const highDisagreementCount = computeHighDisagreement(kpiBase);
+  const outlierCount = computeOutlierReviews(kpiBase);
   const scoredRows = kpiBase.filter(
     (r) => r.total != null && Number.isFinite(Number(r.total)) && r.jurorStatus === "completed"
   );
@@ -456,7 +455,7 @@ export default function ReviewsPage() {
         pdfSubtitle: `${periodName || "All Periods"} · ${sorted.length} reviews · ${uniqueJurors} jurors`,
         header,
         rows,
-        colWidths: [24, 6, 24, 28, ...scoreCols.filter((c) => c.key !== "total").map(() => 10), 8, 12, 14, 32, 18],
+        colWidths: [24, 28, 22, 18, ...scoreCols.filter((c) => c.key !== "total").map(() => 10), 8, 12, 14, 32, 18],
       });
       const fmtLabel = exportFormat === "pdf" ? "PDF" : exportFormat === "csv" ? "CSV" : "Excel";
       toast.success(`${sorted.length} review${sorted.length !== 1 ? "s" : ""} · ${uniqueJurors} juror${uniqueJurors !== 1 ? "s" : ""} exported · ${fmtLabel}`);
@@ -514,10 +513,6 @@ export default function ReviewsPage() {
       {/* KPI strip */}
       <div className="scores-kpi-strip">
         <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value">{totalReviews}</div>
-          <div className="scores-kpi-item-label">Reviews</div>
-        </div>
-        <div className="scores-kpi-item">
           <div
             className="scores-kpi-item-value"
             style={{
@@ -534,23 +529,60 @@ export default function ReviewsPage() {
           <div className="scores-kpi-item-label">Completed</div>
         </div>
         <div className="scores-kpi-item">
-          <div
-            className="scores-kpi-item-value"
-            style={{ color: pendingCount > 0 ? "var(--warning)" : undefined }}
-          >
-            {pendingCount}
-          </div>
-          <div className="scores-kpi-item-label">Pending Submit</div>
-        </div>
-        <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value">
-            {avgSpread !== "—" ? `Δ ${avgSpread}` : "—"}
-          </div>
-          <div className="scores-kpi-item-label">Juror Agreement</div>
-        </div>
-        <div className="scores-kpi-item">
           <div className="scores-kpi-item-value">{avgScore}</div>
           <div className="scores-kpi-item-label">Avg Score</div>
+        </div>
+        <div className="scores-kpi-item">
+          <div
+            className="scores-kpi-item-value"
+            style={{ color: highDisagreementCount > 0 ? "var(--warning)" : "var(--success)" }}
+          >
+            {highDisagreementCount}
+          </div>
+          <PremiumTooltip
+            position="bottom"
+            text={
+              <span className="kpi-tip-wrap">
+                <span className="kpi-tip-title">High Disagreement</span>
+                <span className="kpi-tip-body">
+                  Projects where inter-juror score deviation (σ) exceeds 10 points. Indicates evaluators are assessing the same project very differently.
+                </span>
+                <span className="kpi-tip-divider" />
+                <span className="kpi-tip-row"><span className="kpi-tip-dot kpi-tip-dot--good" />σ ≤ 10 → jurors aligned</span>
+                <span className="kpi-tip-row"><span className="kpi-tip-dot kpi-tip-dot--warn" />σ &gt; 10 → review divergence</span>
+              </span>
+            }
+          >
+            <div className="scores-kpi-item-label">
+              High Disagreement <Info size={8} strokeWidth={2.5} className="kpi-label-info-icon" />
+            </div>
+          </PremiumTooltip>
+        </div>
+        <div className="scores-kpi-item">
+          <div
+            className="scores-kpi-item-value"
+            style={{ color: outlierCount > 0 ? "var(--danger)" : undefined }}
+          >
+            {outlierCount}
+          </div>
+          <PremiumTooltip
+            position="bottom"
+            text={
+              <span className="kpi-tip-wrap">
+                <span className="kpi-tip-title">Outlier Reviews</span>
+                <span className="kpi-tip-body">
+                  Completed reviews where a juror's total score deviates more than 15 points from the project average. May warrant a second look.
+                </span>
+                <span className="kpi-tip-divider" />
+                <span className="kpi-tip-row"><span className="kpi-tip-dot kpi-tip-dot--good" />0 outliers → consistent scoring</span>
+                <span className="kpi-tip-row"><span className="kpi-tip-dot kpi-tip-dot--warn" />Outlier → &gt; ±15 pts from avg</span>
+              </span>
+            }
+          >
+            <div className="scores-kpi-item-label">
+              Outlier Reviews <Info size={8} strokeWidth={2.5} className="kpi-label-info-icon" />
+            </div>
+          </PremiumTooltip>
         </div>
       </div>
       {/* Status & progress legend — collapsible guide */}
@@ -736,10 +768,10 @@ export default function ReviewsPage() {
         <div className="table-wrap table-wrap--split">
           <table className="reviews-table table-standard table-pill-balance" style={{ tableLayout: "fixed", width: "100%" }}>
             <colgroup>
-              <col style={{ width: 148 }} />{/* Juror */}
-              <col style={{ width: 44 }} />{/* No */}
+              <col style={{ width: 192 }} />{/* Juror */}
               <col />{/* Project — flexible */}
               <col style={{ width: 110 }} />{/* Team Members */}
+              <col style={{ width: 110 }} />{/* Advised By */}
               {scoreCols.filter(c => c.key !== "total").map(c => (
                 <col key={c.key} style={{ width: 60 }} />
               ))}{/* Each criterion score */}
@@ -751,7 +783,7 @@ export default function ReviewsPage() {
             </colgroup>
             <thead>
               <tr>
-                {columns.map(col => (
+                {columns.filter(col => !col.exportOnly).map(col => (
                   <th
                     key={col.key}
                     className={[
@@ -800,15 +832,22 @@ export default function ReviewsPage() {
                       <td className="col-juror">
                         <JurorBadge name={row.juryName} affiliation={row.affiliation} size="sm" />
                       </td>
-                      <td className="col-no text-center" data-project={row.title || row.projectName || ""}>
-                        {row.groupNo != null
-                          ? <span className="project-no-badge">P{row.groupNo}</span>
-                          : <span style={{ color: "var(--text-tertiary)", fontSize: 11 }}>—</span>}
+                      <td className="col-project text-sm">
+                        {row.groupNo != null && (
+                          <span className="project-no-badge" style={{ marginRight: 6 }}>P{row.groupNo}</span>
+                        )}
+                        {row.title || row.projectName || "—"}
                       </td>
-                      <td className="col-project text-sm">{row.title || row.projectName || "—"}</td>
                       <td className="col-members text-xs text-muted">
                         <TeamMemberNames names={row.students} />
                         {!row.students ? "—" : null}
+                      </td>
+                      <td className="col-advisor">
+                        {row.advisor
+                          ? row.advisor.split(',').map(s => s.trim()).filter(Boolean).map((name, i) => (
+                              <JurorBadge key={`${name}-${i}`} name={name} size="sm" nameOnly />
+                            ))
+                          : <span className="text-xs text-muted">—</span>}
                       </td>
                       {scoreCols.filter((c) => c.key !== "total").map((col) => {
                         const val = row[col.key];

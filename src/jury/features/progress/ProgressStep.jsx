@@ -75,7 +75,7 @@ export default function ProgressStep({ state, onBack }) {
         </div>
 
         {/* Title */}
-        <div className="jury-title">
+        <div data-testid="jury-progress-title" className="jury-title">
           {isResume ? "Welcome Back" : "Ready to Begin"}
         </div>
         <div className="jury-sub" style={{ marginBottom: 20 }}>
@@ -157,6 +157,7 @@ export default function ProgressStep({ state, onBack }) {
 
         {/* Action */}
         <button
+          data-testid="jury-progress-action"
           className={`btn-landing-primary ps-tour-action ${isResume ? "" : "btn-success"}`}
           onClick={handleContinue}
           disabled={submitting}

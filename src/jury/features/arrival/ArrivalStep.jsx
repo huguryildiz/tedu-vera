@@ -92,6 +92,7 @@ export default function ArrivalStep({ state, onBack }) {
             <button
               type="button"
               className="ja-cta"
+              data-testid="jury-arrival-begin"
               onClick={handleContinue}
               autoFocus
             >

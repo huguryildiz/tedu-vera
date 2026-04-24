@@ -116,11 +116,15 @@ export default function SetupWizardPage() {
 
   // If the wizard holds a periodId that no longer exists, or all periods were
   // deleted, reset to step 1 so the user is prompted to create a new period.
+  // Only reset when periodId was previously assigned — skip when null/undefined
+  // so a fresh wizard on an empty org isn't kicked back while creating a period.
   useEffect(() => {
     if (!Array.isArray(sortedPeriods)) return;
     if (sortedPeriods.length === 0) {
-      setWizardData({ periodId: null });
-      goToStep(1);
+      if (periodId != null) {
+        setWizardData({ periodId: null });
+        goToStep(1);
+      }
       return;
     }
     if (!periodId) return;

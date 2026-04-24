@@ -153,7 +153,7 @@ describe("admin/analytics/analyticsDatasets", () => {
     expect(result.rows).toEqual([]);
     // Group leads the headers when no data is present; trailing Cells-Below-Threshold
     // column is only appended when criteria/groups exist.
-    expect(result.headers).toEqual(["Group"]);
+    expect(result.headers).toEqual(["Project Title"]);
   });
 
   // Group Heatmap with real data: rows = project groups, columns = criteria.
@@ -170,7 +170,7 @@ describe("admin/analytics/analyticsDatasets", () => {
     ];
     const result = buildGroupHeatmapDataset({ dashboardStats, activeOutcomes, threshold: 70 });
     expect(result.headers).toEqual([
-      "Group", "Technical", "Teamwork", "Cells Below Threshold",
+      "Project Title", "Technical", "Teamwork", "Cells Below Threshold",
     ]);
     expect(result.rows).toHaveLength(2);
     // g1: technical 90%, teamwork 60% → 1 below threshold

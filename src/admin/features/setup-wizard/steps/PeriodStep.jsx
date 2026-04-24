@@ -118,7 +118,7 @@ export default function PeriodStep({ onContinue, onBack, onCreateNew, existingPe
               Create a new period instead
             </button>
           )}
-          <button className="sw-btn-link" onClick={onBack}>← Back</button>
+          <button className="sw-btn-link" onClick={onBack} data-testid="wizard-period-back">← Back</button>
         </div>
       </div>
     );
@@ -148,6 +148,7 @@ export default function PeriodStep({ onContinue, onBack, onCreateNew, existingPe
             setFormData({ ...formData, periodName: e.target.value });
             if (nameError) setNameError("");
           }}
+          data-testid="wizard-period-name"
         />
         {nameError ? (
           <p className="vera-inline-error"><AlertCircle size={12} strokeWidth={2} />{nameError}</p>
@@ -200,13 +201,14 @@ export default function PeriodStep({ onContinue, onBack, onCreateNew, existingPe
           className="sw-btn sw-btn-primary"
           onClick={handleCreate}
           disabled={saving}
+          data-testid="wizard-period-create"
         >
           {saving ? <><Loader2 size={16} className="sw-btn-spinner" /> Creating…</> : <>Create Period & Continue <ArrowRight size={16} /></>}
         </button>
       </div>
 
       <div className="sw-footer">
-        <button className="sw-btn-link" onClick={onBack}>
+        <button className="sw-btn-link" onClick={onBack} data-testid="wizard-period-back">
           ← Back
         </button>
       </div>

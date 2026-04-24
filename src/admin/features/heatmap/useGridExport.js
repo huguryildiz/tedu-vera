@@ -58,7 +58,7 @@ export function useGridExport({ buildExportRows, groups, periodName, visibleJuro
 
     // PDF: "All Criteria" page + one extra page per criterion
     const groupHeaders = (groups || []).map((g) =>
-      g.group_no != null ? `P${g.group_no}` : (g.title || g.id)
+      g.group_no != null ? [`P${g.group_no}`, g.title || ""].filter(Boolean).join(" — ") : (g.title || String(g.id))
     );
     const allHeader = ["Juror", "Affiliation", "Juror Progress", ...groupHeaders];
     const makeDataRows = (tabRows, includeStatus) =>

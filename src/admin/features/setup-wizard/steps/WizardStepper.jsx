@@ -23,7 +23,7 @@ export default function WizardStepper({ currentStep, completedSteps, onStepClick
   }, [currentStep]);
 
   return (
-    <div className="sw-stepper" ref={stepperRef}>
+    <div className="sw-stepper" ref={stepperRef} data-testid="wizard-stepper">
       {STEP_LABELS.map((label, idx) => {
         const step = idx + 1;
         const isActive = step === currentStep;
@@ -36,6 +36,7 @@ export default function WizardStepper({ currentStep, completedSteps, onStepClick
             <div
               className={`sw-step ${stepClass}${isClickable ? " clickable" : ""}`}
               onClick={isClickable ? () => onStepClick(step) : undefined}
+              data-testid={`wizard-step-${step}`}
             >
               <div className="sw-step-circle">
                 {isCompleted ? <Check size={13} strokeWidth={2.5} /> : step}
