@@ -476,6 +476,7 @@ export default function RankingsPage() {
                 key={opt.id}
                 className={`export-option${exportFormat === opt.id ? " selected" : ""}`}
                 onClick={() => setExportFormat(opt.id)}
+                data-testid={`rankings-export-format-${opt.id}`}
               >
                 <span className="export-option-selected-pill">Selected</span>
                 <div className={`export-option-icon export-option-icon--${opt.id}`}>
@@ -509,6 +510,7 @@ export default function RankingsPage() {
               <button
                 className="btn btn-primary btn-sm export-download-btn"
                 onClick={handleExport}
+                data-testid="rankings-export-download-btn"
               >
                 <DownloadIcon size={14} />
                 {exportFormat === "xlsx"
