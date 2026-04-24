@@ -66,19 +66,59 @@
   line-height:1;
   flex-shrink:0;
 }
-/* Global: JurorBadge name color in admin pages.
- * size/weight/line-height controlled by JurorBadge size prop (inline styles). */
+/* ── JurorBadge (shared admin component)
+ * Size variants (sm/md/lg) set via .jb-badge--<size> modifier on the container.
+ * Only per-name colors (bg/fg) remain inline — everything else is tokenized. */
+.jb-badge{display:flex;align-items:center;min-width:0}
+.jb-badge--sm{gap:6px}
+.jb-badge--md{gap:8px}
+.jb-badge--lg{gap:10px}
+
+.jb-avatar{
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  letter-spacing:-0.3px;
+  flex-shrink:0;
+  line-height:1;
+  object-fit:cover;
+}
+.jb-badge--sm .jb-avatar{width:var(--type-avatar-sm);height:var(--type-avatar-sm);font-size:8px}
+.jb-badge--md .jb-avatar{width:var(--type-avatar-md);height:var(--type-avatar-md);font-size:10px}
+.jb-badge--lg .jb-avatar{width:var(--type-avatar-lg);height:var(--type-avatar-lg);font-size:12px}
+
+.jb-info{min-width:0}
+
 .jb-name{
+  font-weight:var(--type-person-name-weight);
+  line-height:var(--type-person-name-lh);
   color:var(--text-secondary);
 }
+.jb-badge--sm .jb-name{font-size:var(--type-person-name-sm-size)}
+.jb-badge--md .jb-name{font-size:var(--type-person-name-size)}
+.jb-badge--lg .jb-name{font-size:var(--type-person-name-lg-size)}
+
+.jb-affiliation{
+  font-weight:var(--type-affiliation-weight);
+  line-height:var(--type-affiliation-lh);
+  color:var(--text-tertiary);
+}
+.jb-badge--sm .jb-affiliation{font-size:var(--type-affiliation-sm-size)}
+.jb-badge--md .jb-affiliation{font-size:var(--type-affiliation-size)}
+.jb-badge--lg .jb-affiliation{font-size:var(--type-affiliation-size)}
+
+/* meta-chips-row normalizes both JurorBadge and TeamMember chips to the
+ * same size (sm) when rendered side-by-side inside a chip row. */
 .meta-chips-row .team-member-name,
 .meta-chips-row .jb-name{
-  font-size:12px !important;
+  font-size:var(--type-person-name-sm-size) !important;
 }
 .meta-chips-row .team-member-avatar,
 .meta-chips-row .jb-avatar{
-  width:22px !important;
-  height:22px !important;
+  width:var(--type-avatar-sm) !important;
+  height:var(--type-avatar-sm) !important;
   font-size:9px !important;
 }
 .meta-chips-row .team-member-chip,
