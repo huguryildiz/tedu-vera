@@ -181,8 +181,8 @@ Deno.serve(async (req: Request) => {
     ].filter(Boolean).join("\n\n");
 
     const envLogoUrl = Deno.env.get("NOTIFICATION_LOGO_URL") || "";
-    const qrLogoUrl = "https://vera-eval.app/vera_logo_dark.png";
-    const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(payload.tokenUrl)}&size=220&ecLevel=H&dark=1e3a5f&light=ffffff&centerImageUrl=${encodeURIComponent(qrLogoUrl)}&centerImageSizeRatio=0.4`;
+    const qrLogoUrl = "https://vera-eval.app/vera_logo_white.png";
+    const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(payload.tokenUrl)}&size=220&ecLevel=H&dark=1e3a5f&light=ffffff&dotStyle=rounded&finderStyle=rounded&finderDotStyle=dot&centerImageUrl=${encodeURIComponent(qrLogoUrl)}&centerImageSizeRatio=0.46`;
 
     const html = buildHtml({
       title: "Jury Evaluation Access",

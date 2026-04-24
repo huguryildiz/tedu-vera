@@ -85,9 +85,9 @@ function buildHtml(params: {
     `<span style="display:inline-block;width:52px;height:64px;line-height:64px;text-align:center;background:rgba(255,255,255,0.06);border:2px solid rgba(108,71,255,0.4);border-radius:8px;font-size:36px;font-weight:800;color:#ffffff;font-family:monospace;margin:0 4px;">${escapeHtml(d)}</span>`
   ).join("");
 
-  const qrLogoUrl = "https://vera-eval.app/vera_logo_dark.png";
+  const qrLogoUrl = "https://vera-eval.app/vera_logo_white.png";
   const qrUrl = params.tokenUrl
-    ? `https://quickchart.io/qr?text=${encodeURIComponent(params.tokenUrl)}&size=220&ecLevel=H&dark=1e3a5f&light=ffffff&centerImageUrl=${encodeURIComponent(qrLogoUrl)}&centerImageSizeRatio=0.4`
+    ? `https://quickchart.io/qr?text=${encodeURIComponent(params.tokenUrl)}&size=220&ecLevel=H&dark=1e3a5f&light=ffffff&dotStyle=rounded&finderStyle=rounded&finderDotStyle=dot&centerImageUrl=${encodeURIComponent(qrLogoUrl)}&centerImageSizeRatio=0.46`
     : "";
 
   const ctaBlock = params.tokenUrl
