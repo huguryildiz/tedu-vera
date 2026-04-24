@@ -37,7 +37,7 @@ export async function generateInviteLink(
 
 /**
  * Returns the URL hash fragment (e.g. "#access_token=...&type=invite")
- * produced by visiting the invite action_link.
+ * produced by visiting a Supabase auth action_link (invite or recovery).
  *
  * Supabase requires redirect_to to be in the project's allowed-URL list.
  * In local E2E environments localhost isn't in that list, so Supabase
@@ -46,18 +46,28 @@ export async function generateInviteLink(
  * Location header, and return it so tests can navigate directly to the
  * local app route with the token already in the hash.
  */
-export async function extractInviteHash(
+export async function extractAuthHash(
+  type: "invite" | "recovery",
   email: string,
-  appBase: string
+  appBase: string,
 ): Promise<string> {
-  const actionLink = await generateInviteLink(email, `${appBase}/invite/accept`);
+  const redirectPath = type === "invite" ? "/invite/accept" : "/reset-password";
+  const actionLink =
+    type === "invite"
+      ? await generateInviteLink(email, `${appBase}${redirectPath}`)
+      : await generateRecoveryLink(email);
   const res = await fetch(actionLink, { redirect: "manual" });
   const location = res.headers.get("location") ?? "";
   const hashIdx = location.indexOf("#");
   if (hashIdx === -1) {
     throw new Error(`No hash fragment in Supabase redirect. Location: ${location.slice(0, 120)}`);
   }
-  return location.slice(hashIdx); // "#access_token=...&refresh_token=...&type=invite"
+  return location.slice(hashIdx); // "#access_token=...&refresh_token=...&type=invite|recovery"
+}
+
+/** Back-compat alias — existing tests import extractInviteHash. */
+export async function extractInviteHash(email: string, appBase: string): Promise<string> {
+  return extractAuthHash("invite", email, appBase);
 }
 
 /**
@@ -76,17 +86,18 @@ export async function extractInviteHash(
  *   endpoint that rejects ES256 signatures. Pre-seeding localStorage lets the
  *   SDK restore the session on init via the Auth-v1 path (tolerates ES256).
  */
-export async function buildInviteSession(
+async function buildAuthSession(
+  type: "invite" | "recovery",
   email: string,
-  appBase: string
+  appBase: string,
 ): Promise<{ storageKey: string; sessionValue: object }> {
-  const hash = await extractInviteHash(email, appBase);
+  const hash = await extractAuthHash(type, email, appBase);
 
   const params = new URLSearchParams(hash.replace(/^#/, ""));
   const accessToken = params.get("access_token");
   const refreshToken = params.get("refresh_token") ?? "";
   const expiresIn = parseInt(params.get("expires_in") ?? "3600", 10);
-  if (!accessToken) throw new Error("No access_token in invite hash");
+  if (!accessToken) throw new Error(`No access_token in ${type} hash`);
 
   // Decode the sub (user ID) from the JWT payload without verifying the signature
   const payloadB64 = accessToken.split(".")[1];
@@ -112,6 +123,20 @@ export async function buildInviteSession(
   return { storageKey, sessionValue };
 }
 
+export function buildInviteSession(email: string, appBase: string) {
+  return buildAuthSession("invite", email, appBase);
+}
+
+/**
+ * Builds a recovery session storage payload for injection into localStorage.
+ * Mirrors buildInviteSession; same cross-project ES256 rationale — see that
+ * function's docstring. Use for /reset-password E2E flows where generating
+ * a real recovery email + intercepting the link isn't feasible.
+ */
+export function buildRecoverySession(email: string, appBase: string) {
+  return buildAuthSession("recovery", email, appBase);
+}
+
 export async function deleteUserByEmail(email: string): Promise<void> {
   // listUsers paginates (default 50/page); iterate until found or exhausted
   let page = 1;
@@ -127,10 +152,62 @@ export async function deleteUserByEmail(email: string): Promise<void> {
   }
 }
 
+/**
+ * Directly sets juror_period_auth fields to simulate an admin having toggled
+ * edit mode (or its expiration). We bypass rpc_juror_toggle_edit_mode here
+ * because that RPC requires auth.uid() to match a tenant admin membership,
+ * which the service-role adminClient does not satisfy. Writing the same
+ * resulting columns reproduces the state rpc_jury_upsert_score checks.
+ */
+export async function setJurorEditMode(
+  jurorId: string,
+  periodId: string,
+  fields: {
+    final_submitted_at?: string | null;
+    edit_enabled?: boolean;
+    edit_reason?: string | null;
+    edit_expires_at?: string | null;
+    session_token_hash?: string | null;
+    session_expires_at?: string | null;
+  },
+): Promise<void> {
+  const { error } = await adminClient
+    .from("juror_period_auth")
+    .update(fields)
+    .eq("juror_id", jurorId)
+    .eq("period_id", periodId);
+  if (error) throw new Error(`setJurorEditMode failed: ${error.message}`);
+}
+
+/**
+ * Seeds a usable session_token_hash so service-role-driven test calls can
+ * invoke rpc_jury_upsert_score (which verifies session_token_hash against
+ * sha256(plaintext)). Returns the plaintext token for the caller to use.
+ */
+export async function seedJurorSession(
+  jurorId: string,
+  periodId: string,
+  hoursValid = 12,
+): Promise<string> {
+  const { randomBytes, createHash } = await import("crypto");
+  const token = randomBytes(32).toString("hex");
+  const hash = createHash("sha256").update(token).digest("hex");
+  const expiresAt = new Date(Date.now() + hoursValid * 3600 * 1000).toISOString();
+  const { error } = await adminClient
+    .from("juror_period_auth")
+    .update({ session_token_hash: hash, session_expires_at: expiresAt })
+    .eq("juror_id", jurorId)
+    .eq("period_id", periodId);
+  if (error) throw new Error(`seedJurorSession failed: ${error.message}`);
+  return token;
+}
+
 export async function readJurorAuth(jurorId: string, periodId: string) {
   const { data, error } = await adminClient
     .from("juror_period_auth")
-    .select("failed_attempts, locked_until, is_blocked, session_token_hash")
+    .select(
+      "failed_attempts, locked_until, is_blocked, session_token_hash, final_submitted_at, edit_enabled, edit_reason, edit_expires_at",
+    )
     .eq("juror_id", jurorId)
     .eq("period_id", periodId)
     .single();
@@ -146,6 +223,9 @@ export async function resetJurorAuth(jurorId: string, periodId: string): Promise
       locked_until: null,
       final_submitted_at: null,
       session_token_hash: null, // F1: prevents cross-test session leak
+      edit_enabled: false,
+      edit_reason: null,
+      edit_expires_at: null,
     })
     .eq("juror_id", jurorId)
     .eq("period_id", periodId);
