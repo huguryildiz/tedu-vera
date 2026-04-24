@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { adminClient } from "./supabaseAdmin";
 import { E2E_PERIODS_ORG_ID } from "../fixtures/seed-ids";
 
@@ -9,10 +10,12 @@ import { E2E_PERIODS_ORG_ID } from "../fixtures/seed-ids";
  * is locked at the end so the configuration matches the real "analytics can
  * read this period" state.
  *
- * `readAttainment` replicates the per-outcome weighted-average formula at
+ * `readAttainment(page, periodId)` invokes the real production function
+ * `getOutcomeAttainmentTrends` from
  * [src/shared/api/admin/scores.js:259-345](src/shared/api/admin/scores.js#L259-L345)
- * (`getOutcomeAttainmentTrends`). The test reads DB state through service role,
- * applies the same math, and returns `{ [outcomeCode]: avg }`.
+ * inside the admin page context via `page.evaluate` — the attainment math runs
+ * against the same module the production UI uses, so a regression in scores.js
+ * propagates to these tests.
  *
  * Schema note: two `weight` fields exist.
  *   - `period_criteria.weight`   → stored, NOT used by attainment math
@@ -266,84 +269,40 @@ export async function setupOutcomeFixture(opts: SetupOutcomeFixtureOpts): Promis
 }
 
 /**
- * Reads per-outcome attainment (`avg` field) from DB state.
+ * Reads per-outcome attainment (`avg` field) by invoking the real production
+ * function `getOutcomeAttainmentTrends` inside an authenticated admin page.
  *
- * Formula mirrors `getOutcomeAttainmentTrends` at
- * [src/shared/api/admin/scores.js:259-345](src/shared/api/admin/scores.js#L259-L345):
- *   per evaluation  evalScore = Σ (raw/max * 100 * weight) / Σ weight
- *   per outcome     avg       = mean(evalScores); rounded to 1 decimal
+ * Why page.evaluate + dynamic import:
+ *   - The Vite dev server serves `/src/shared/api/admin/scores.js` on demand.
+ *   - Running inside a signed-in admin page means the supabase client singleton
+ *     carries the admin's auth session, so RLS resolves the same way as prod.
+ *   - Any regression in scores.js (e.g. `* 100` → `* 200`, weight normalization
+ *     drift) surfaces as a test failure — the test is coupled to the real module,
+ *     not to a TypeScript replica.
  *
- * Returns `{ [outcomeCode]: avg }`. Outcomes with no contributors are omitted.
+ * Prerequisites: caller must have signed the admin in and navigated to an
+ * `/admin/*` route (so Vite has the app bundle loaded and the supabase client
+ * has a session). Returns `{ [outcomeCode]: avg }`, omitting outcomes with no
+ * contributors. `avg` is pre-rounded to 1 decimal by scores.js.
  */
-export async function readAttainment(periodId: string): Promise<Record<string, number>> {
-  const [criteriaRes, mapsRes, sheetsRes] = await Promise.all([
-    adminClient
-      .from("period_criteria")
-      .select("id, key, max_score")
-      .eq("period_id", periodId),
-    adminClient
-      .from("period_criterion_outcome_maps")
-      .select("period_criterion_id, weight, period_outcomes(code)")
-      .eq("period_id", periodId),
-    adminClient
-      .from("score_sheets")
-      .select("id, score_sheet_items(score_value, period_criteria(key))")
-      .eq("period_id", periodId),
-  ]);
-  if (criteriaRes.error) throw new Error(`readAttainment criteria query failed: ${criteriaRes.error.message}`);
-  if (mapsRes.error) throw new Error(`readAttainment maps query failed: ${mapsRes.error.message}`);
-  if (sheetsRes.error) throw new Error(`readAttainment sheets query failed: ${sheetsRes.error.message}`);
-
-  // criterion id → { key, max }
-  const criteriaById: Record<string, { key: string; max: number }> = {};
-  for (const c of criteriaRes.data || []) {
-    criteriaById[c.id as string] = { key: c.key as string, max: Number(c.max_score) };
-  }
-
-  // outcome code → [{ key, max, weight }, ...]
-  const outcomeContributors: Record<string, Array<{ key: string; max: number; weight: number }>> = {};
-  for (const m of mapsRes.data || []) {
-    // supabase-js types nested joins as array | object depending on FK cardinality;
-    // period_outcomes is a single-row join, so treat as object.
-    const code = (m.period_outcomes as { code?: string } | null)?.code;
-    const critId = m.period_criterion_id as string;
-    const criterion = criteriaById[critId];
-    if (!code || !criterion) continue;
-    const weight = typeof m.weight === "number" ? m.weight : 1;
-    (outcomeContributors[code] ||= []).push({ key: criterion.key, max: criterion.max, weight });
-  }
-
-  // Pivot each score_sheet into { criterionKey: value }
-  const evals: Array<Record<string, number>> = [];
-  for (const sheet of sheetsRes.data || []) {
-    const row: Record<string, number> = {};
-    for (const item of (sheet.score_sheet_items as Array<{ score_value: number; period_criteria: { key?: string } | null }> | null) || []) {
-      const key = item.period_criteria?.key;
-      if (!key) continue;
-      const val = item.score_value != null ? Number(item.score_value) : NaN;
-      if (Number.isFinite(val)) row[key] = val;
-    }
-    evals.push(row);
-  }
-
-  const result: Record<string, number> = {};
-  for (const [code, contributors] of Object.entries(outcomeContributors)) {
-    const evalScores: number[] = [];
-    for (const evalRow of evals) {
-      let weightedSum = 0;
-      let effectiveWeight = 0;
-      for (const c of contributors) {
-        const raw = evalRow[c.key];
-        if (raw == null || !Number.isFinite(Number(raw)) || c.max === 0) continue;
-        weightedSum += (Number(raw) / c.max) * 100 * c.weight;
-        effectiveWeight += c.weight;
+export async function readAttainment(
+  page: Page,
+  periodId: string,
+): Promise<Record<string, number>> {
+  const result = await page.evaluate(async (pid) => {
+    // @ts-expect-error Vite dev server resolves this absolute-from-root path at runtime
+    const mod = await import("/src/shared/api/admin/scores.js");
+    const trends = await mod.getOutcomeAttainmentTrends([pid]);
+    const period = Array.isArray(trends) ? trends[0] : null;
+    if (!period || !Array.isArray(period.outcomes)) return {};
+    const out: Record<string, number> = {};
+    for (const o of period.outcomes) {
+      if (o && typeof o.code === "string" && typeof o.avg === "number") {
+        out[o.code] = o.avg;
       }
-      if (effectiveWeight > 0) evalScores.push(weightedSum / effectiveWeight);
     }
-    if (!evalScores.length) continue;
-    const avg = evalScores.reduce((s, v) => s + v, 0) / evalScores.length;
-    result[code] = Math.round(avg * 10) / 10;
-  }
+    return out;
+  }, periodId);
   return result;
 }
 
