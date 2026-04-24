@@ -555,7 +555,7 @@ export default function PeriodsPage() {
             <Download size={14} strokeWidth={2} style={{ verticalAlign: "-1px" }} />
             {" "}Export
           </button>
-          <button className="btn btn-primary btn-sm mobile-toolbar-primary" onClick={openAddDrawer}>
+          <button className="btn btn-primary btn-sm mobile-toolbar-primary" onClick={openAddDrawer} data-testid="periods-add-btn">
             <Plus size={13} strokeWidth={2.2} />
             Add Period
           </button>

@@ -365,7 +365,7 @@ table.outcome-attainment-table tbody td.outcome-attainment-label {
   z-index: 50;
   width: 260px;
   padding: 14px 16px;
-  background: var(--surface-0);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06);

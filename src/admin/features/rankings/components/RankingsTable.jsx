@@ -128,20 +128,6 @@ export default function RankingsTable({
                     <div className="meta-chips-row">
                       <TeamMemberNames names={members} />
                     </div>
-                    {proj.advisor && (() => {
-                      const advisors = proj.advisor.split(",").map((s) => s.trim()).filter(Boolean);
-                      if (!advisors.length) return null;
-                      return (
-                        <div className="rk-advisor-block">
-                          <div className="meta-chips-row overview-top-advisors">
-                            <span className="meta-chips-eyebrow">Advised by</span>
-                            {advisors.map((name, i) => (
-                              <JurorBadge key={`${name}-${i}`} name={name} size="sm" nameOnly />
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })()}
                   </td>
                   {criteriaConfig.map((c) => (
                     <HeatCell

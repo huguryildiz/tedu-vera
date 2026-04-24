@@ -219,7 +219,6 @@ export default function RankingsPage() {
       { key: 'rank',      label: 'Rank',                  sortKey: 'rank',      thClass: 'col-rank',       getValue: r => rankMap.get(r.id) ?? '' },
       { key: 'title',     label: 'Project Title',         sortKey: 'project',                              getValue: r => r.title || r.name || '' },
       { key: 'members',   label: 'Team Members',                                                           getValue: r => fmtMembers(r.members || r.students) },
-      ...(filteredRows.some(r => r.advisor) ? [{ key: 'advisor', label: 'Advised By', getValue: r => (r.advisor || '').split(',').map(s => s.trim()).filter(Boolean).join('; ') }] : []),
       ...criteriaConfig.map(c => ({
         key: c.id,
         label: `${c.shortLabel || c.label} (${c.max})`,

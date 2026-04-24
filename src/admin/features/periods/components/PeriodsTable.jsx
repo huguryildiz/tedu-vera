@@ -53,6 +53,9 @@ function PeriodRow({
   return (
     <tr
       data-card-selectable=""
+      data-testid="period-row"
+      data-period-id={period.id}
+      data-period-name={period.name}
       className={[
         "mcard",
         "sem-row-" + (isDraft ? "draft" : state),
@@ -256,12 +259,13 @@ function PeriodRow({
                 setOpenMenuId((prev) => (prev === period.id ? null : period.id));
               }}
               title="Actions"
+              data-testid="period-row-kebab"
             >
               <MoreVertical size={18} strokeWidth={2} />
             </button>
           }
         >
-          <button className="floating-menu-item" onMouseDown={() => { setOpenMenuId(null); onEdit(period); }}>
+          <button className="floating-menu-item" onMouseDown={() => { setOpenMenuId(null); onEdit(period); }} data-testid="period-menu-edit">
             <Pencil size={13} />
             Edit Period
           </button>
@@ -344,7 +348,7 @@ function PeriodRow({
             })()
           )}
           {period.is_locked ? (
-            <button className="floating-menu-item danger" disabled>
+            <button className="floating-menu-item danger" disabled data-testid="period-menu-delete">
               <Trash2 size={13} />
               Delete Period
             </button>
@@ -352,6 +356,7 @@ function PeriodRow({
             <button
               className="floating-menu-item danger"
               onMouseDown={() => { setOpenMenuId(null); onDelete(period); }}
+              data-testid="period-menu-delete"
             >
               <Trash2 size={13} />
               Delete Period

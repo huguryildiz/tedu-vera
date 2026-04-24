@@ -121,6 +121,7 @@ export default function DeletePeriodModal({ open, onClose, period, onDelete }) {
             autoComplete="off"
             spellCheck={false}
             disabled={deleting}
+            data-testid="period-delete-confirm-input"
           />
         </div>
       </div>
@@ -134,6 +135,7 @@ export default function DeletePeriodModal({ open, onClose, period, onDelete }) {
           onClick={handleClose}
           disabled={deleting}
           style={{ flex: 1 }}
+          data-testid="period-delete-cancel"
         >
           Keep Period
         </button>
@@ -143,6 +145,7 @@ export default function DeletePeriodModal({ open, onClose, period, onDelete }) {
           onClick={handleDelete}
           disabled={deleting || !canDelete}
           style={{ flex: 1 }}
+          data-testid="period-delete-confirm"
         >
           <AsyncButtonContent loading={deleting} loadingText="Deleting…">
             Delete Period

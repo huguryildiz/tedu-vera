@@ -132,20 +132,24 @@ describe("admin/analytics/analyticsDatasets", () => {
 
   qaTest("analytics.datasets.13", () => {
     const activeOutcomes = [
-      { key: "technical", id: "c1", max: 30, outcomes: ["PO1"] },
+      { key: "technical", id: "c1", label: "Technical Content", max: 30, outcomes: ["PO1", "PO2"] },
     ];
-    const submittedData = [{ technical: 18 }]; // 60%; gap = 60-70 = -10
+    // PO1: score 18/30 = 60% → below 70% threshold; attainment rate = 0%
+    // PO2: score 24/30 = 80% → above 70% threshold; attainment rate = 100%
+    const submittedData = [{ technical: 18 }, { technical: 24 }];
     const result = buildThresholdGapDataset({ submittedData, activeOutcomes, threshold: 70 });
     expect(result.sheet).toBe("Threshold Gap");
-    expect(result.rows).toHaveLength(1);
-    expect(result.rows[0][0]).toBe("PO1");
-    expect(result.rows[0][2]).toBe(60);
-    expect(result.rows[0][3]).toBe(-10);
+    expect(result.rows).toHaveLength(2);
+    // Both PO1 and PO2 share same criterion key → same attainment rate (1/2 = 50%)
+    expect(result.rows[0][0]).toMatch(/^PO/);
+    expect(result.rows[0][1]).toBe("Technical Content"); // criterion label
+    expect(result.rows[0][2]).toBe(50); // attainment rate %
+    expect(result.rows[0][3]).toBe("-20%"); // gap formatted
   });
 
   qaTest("analytics.datasets.14", () => {
     const result = buildGroupHeatmapDataset({ dashboardStats: [], activeOutcomes: [], threshold: 70 });
-    expect(result.sheet).toBe("Group Heatmap");
+    expect(result.sheet).toBe("Project Heatmap");
     expect(result.rows).toEqual([]);
     // Group leads the headers when no data is present; trailing Cells-Below-Threshold
     // column is only appended when criteria/groups exist.

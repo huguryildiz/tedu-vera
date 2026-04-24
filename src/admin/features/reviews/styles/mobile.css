@@ -259,7 +259,7 @@
   }
 
   .rmc-crit-score-val {
-    font-weight: 600;
+    font-weight: 700;
     font-family: var(--mono);
     font-variant-numeric: tabular-nums;
   }

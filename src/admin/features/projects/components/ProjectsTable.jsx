@@ -181,7 +181,7 @@ export default function ProjectsTable({
                 </td>
               </tr>
             ) : pagedList.map((project) => (
-              <tr key={project.id} data-card-selectable="" className="mcard">
+              <tr key={project.id} data-card-selectable="" data-testid="project-row" data-project-id={project.id} data-project-title={project.title} className="mcard">
                 <td className="text-center col-no" data-label="No">
                   <span className="mobile-rank-ring" aria-hidden="true">
                     <span
@@ -271,6 +271,7 @@ export default function ProjectsTable({
                           setOpenMenuId((prev) => (prev === project.id ? null : project.id));
                         }}
                         title="Actions"
+                        data-testid="project-row-kebab"
                       >
                         <MoreVertical size={18} strokeWidth={2} />
                       </button>
@@ -281,6 +282,7 @@ export default function ProjectsTable({
                       onMouseDown={() => { if (!isLocked) onEdit(project); }}
                       disabled={isLocked}
                       style={isLocked ? { opacity: 0.4, pointerEvents: "none" } : {}}
+                      data-testid="project-menu-edit"
                     >
                       <Pencil size={13} />
                       Edit Project
@@ -307,6 +309,7 @@ export default function ProjectsTable({
                       onMouseDown={() => { if (!isLocked) { setOpenMenuId(null); onDelete(project); } }}
                       disabled={isLocked}
                       style={isLocked ? { opacity: 0.4, pointerEvents: "none" } : {}}
+                      data-testid="project-menu-delete"
                     >
                       <Trash2 size={13} />
                       Delete Project

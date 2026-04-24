@@ -397,6 +397,7 @@ export default function ProjectsPage() {
             className="btn btn-primary btn-sm mobile-toolbar-primary"
             onClick={() => !isLocked && setAddDrawerOpen(true)}
             disabled={isLocked}
+            data-testid="projects-add-btn"
           >
             <Plus size={13} strokeWidth={2.2} />
             Add Project

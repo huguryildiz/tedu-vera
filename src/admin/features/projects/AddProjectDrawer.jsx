@@ -136,6 +136,7 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
             value={form.title}
             onChange={(e) => set("title", e.target.value)}
             disabled={saving}
+            data-testid="project-drawer-title"
           />
         </div>
 
@@ -189,6 +190,7 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
                 onChange={(e) => setMember(i, e.target.value)}
                 disabled={saving}
                 style={{ cursor: "text" }}
+                data-testid={`project-drawer-member-${i}`}
               />
               {form.members.length > 1 && (
                 <button
@@ -220,7 +222,7 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
         </div>
       </div>
       <div className="fs-drawer-footer">
-        <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose} disabled={saving}>
+        <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose} disabled={saving} data-testid="project-drawer-cancel">
           Cancel
         </button>
         <button
@@ -229,6 +231,7 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
           type="button"
           onClick={handleSave}
           disabled={saving || !form.title.trim() || !form.members.some((m) => m.trim())}
+          data-testid="project-drawer-save"
         >
           <span className="btn-loading-content">
             <AsyncButtonContent loading={saving} loadingText="Saving…">Add Project</AsyncButtonContent>

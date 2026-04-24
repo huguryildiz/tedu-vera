@@ -232,6 +232,8 @@
 .cta-action-btn{padding:9px 24px !important;border-radius:8px !important;font-size:13px !important;font-weight:600;letter-spacing:.01em;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
 .export-send-btn svg,
 .cta-action-btn svg{width:14px;height:14px}
+.dark-mode .export-option-icon .file-icon{box-shadow:0 6px 18px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.03) !important}
+.dark-mode .export-option-icon .file-icon::before{background:#0f172a !important;border-color:rgba(255,255,255,0.06) !important}
 .dark-mode .export-option-icon--xlsx .file-icon{background:linear-gradient(180deg,#0f2418 0%,#0a1c12 100%) !important;border-color:rgba(34,197,94,0.2) !important}
 .dark-mode .export-option-icon--csv .file-icon{background:linear-gradient(180deg,#0f1a2e 0%,#0a1428 100%) !important;border-color:rgba(59,130,246,0.2) !important}
 .dark-mode .export-option-icon--pdf .file-icon{background:linear-gradient(180deg,#1c0f0f 0%,#1a0a0a 100%) !important;border-color:rgba(239,68,68,0.2) !important}

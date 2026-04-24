@@ -27,7 +27,7 @@ function RingDonut({ total, totalMax }) {
       >
         <span className="rmc-ring-inner">
           <span className="rmc-ring-score" style={{ color }}>
-            {hasValue ? total : "—"}
+            {hasValue ? (Number.isFinite(Number(total)) ? Number(total).toFixed(1) : total) : "—"}
           </span>
           <span className="rmc-ring-denom">/{totalMax}</span>
         </span>
@@ -56,7 +56,7 @@ function CritBar({ criterion, value }) {
       <div className="rmc-crit-bar-score">
         {!missing ? (
           <>
-            <span className="rmc-crit-score-val" style={{ color }}>{value}</span>
+            <span className="rmc-crit-score-val" style={{ color }}>{Number.isFinite(Number(value)) ? Number(value).toFixed(1) : value}</span>
             <span className="rmc-crit-score-max">/{criterion.max}</span>
           </>
         ) : (

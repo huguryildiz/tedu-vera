@@ -815,14 +815,14 @@ export default function ReviewsPage() {
                         const missing = val === null || val === undefined;
                         return (
                           <td key={col.key} className={`col-score${missing ? " missing" : ""}`} data-label={col.label.split(" / ")[0]}>
-                            {missing ? "—" : <span style={{ color: col.color }}>{val}</span>}
+                            {missing ? "—" : <span style={{ color: col.color }}>{Number.isFinite(Number(val)) ? Number(val).toFixed(1) : val}</span>}
                           </td>
                         );
                       })}
                       <td className="col-total">
                         {row.total != null ? (
                           <>
-                            <span className="total-score-value">{row.total}</span>
+                            <span className="total-score-value">{Number.isFinite(Number(row.total)) ? Number(row.total).toFixed(1) : row.total}</span>
                             {isPartialRow && (
                               <span style={{ marginLeft: 2, width: 12, height: 12, borderRadius: "50%", background: "rgba(217,119,6,0.12)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 7, color: "var(--warning)", fontWeight: 700 }}>!</span>
                             )}

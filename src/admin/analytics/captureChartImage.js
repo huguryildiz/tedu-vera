@@ -16,17 +16,17 @@ export async function captureChartImage(elementId) {
   const el = document.getElementById(elementId);
   if (!el) return null;
 
-  el.classList.add("pdf-capture-mode");
-  try {
-    const { default: html2canvas } = await import("html2canvas");
-    const canvas = await html2canvas(el, {
-      backgroundColor: "#ffffff",
-      scale: 2.5,
-      useCORS: true,
-      logging: false,
-    });
-    return { dataURL: canvas.toDataURL("image/jpeg", 0.80), width: canvas.width, height: canvas.height };
-  } finally {
-    el.classList.remove("pdf-capture-mode");
-  }
+  const { default: html2canvas } = await import("html2canvas");
+  const canvas = await html2canvas(el, {
+    backgroundColor: "#ffffff",
+    scale: 2.5,
+    useCORS: true,
+    logging: false,
+    onclone: (clonedDoc) => {
+      clonedDoc.body.classList.remove("dark-mode");
+      const clonedEl = clonedDoc.getElementById(elementId);
+      if (clonedEl) clonedEl.classList.add("pdf-capture-mode");
+    },
+  });
+  return { dataURL: canvas.toDataURL("image/jpeg", 0.80), width: canvas.width, height: canvas.height };
 }

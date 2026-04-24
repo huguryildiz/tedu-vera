@@ -67,14 +67,21 @@
 
 .reviews-table .col-score {
   font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--table-body-size, 12px);
+  font-weight: 700;
   text-align: right;
   white-space: nowrap;
 }
 
 .reviews-table .col-score.missing {
   color: var(--text-tertiary);
+}
+
+.reviews-table .col-score span {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
 }
 
 .reviews-table .col-comment {
@@ -383,7 +390,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: var(--text-quaternary);
+  color: var(--text-tertiary);
   margin-bottom: 6px;
   padding-left: 2px;
 }
@@ -545,7 +552,7 @@
 }
 /* ── Score columns ── */
 .reviews-table .col-total{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px;font-weight:700;text-align:right;vertical-align:middle;white-space:nowrap}
-.reviews-table .col-score{font-family:var(--mono);font-size:12px;font-weight:500;text-align:right;color:var(--text-primary);vertical-align:middle}
+.reviews-table .col-score{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--table-body-size,12px);font-weight:700;text-align:right;color:var(--text-primary);vertical-align:middle}
 .reviews-table .col-score.missing{color:var(--text-tertiary)}
 .reviews-table .col-comment{max-width:260px;font-size:11px;color:var(--text-tertiary);vertical-align:middle}
 .reviews-table .col-comment-inner{display:block;max-width:260px;white-space:normal;line-height:1.5;text-align:justify;text-justify:inter-word;cursor:default}

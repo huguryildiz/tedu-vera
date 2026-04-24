@@ -629,18 +629,18 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* ══════ SECTION 03: Outcome Achievement by Group ══════ */}
+      {/* ══════ SECTION 03: Outcome Achievement by Project ══════ */}
       <div className="analytics-section">
         <div className="analytics-section-title">
-          <span className="section-num">03</span>Outcome Achievement by Group
+          <span className="section-num">03</span>Outcome Achievement by Project
         </div>
       </div>
 
       <div className="chart-card-v2" style={{ marginBottom: 18 }}>
         <div className="chart-header">
           <div>
-            <div className="chart-title">Outcome Achievement by Group</div>
-            <div className="chart-subtitle">{`Normalized score (0–100%) per criterion per project group — ${threshold}% threshold reference`}</div>
+            <div className="chart-title">Outcome Achievement by Project</div>
+            <div className="chart-subtitle">{`Normalized score (0–100%) per criterion per project — ${threshold}% threshold reference`}</div>
           </div>
         </div>
         <div className="chart-body" id="pdf-chart-outcome-by-group">
@@ -663,7 +663,7 @@ export default function AnalyticsPage() {
       <div className="insight-banner insight-banner-full">
         <InfoIcon />
         <div>
-          Per-group normalized scores provide <strong>direct assessment evidence</strong> for accreditation. Groups below threshold trigger continuous improvement actions.
+          Per-project normalized scores provide <strong>direct assessment evidence</strong> for accreditation. Projects below threshold trigger continuous improvement actions.
         </div>
       </div>
 
@@ -759,18 +759,18 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* ══════ SECTION 06: Group-Level Attainment ══════ */}
+      {/* ══════ SECTION 06: Project-Level Attainment ══════ */}
       <div className="analytics-section" id="ans-reliability">
         <div className="analytics-section-title">
-          <span className="section-num">06</span>Group-Level Attainment
+          <span className="section-num">06</span>Project-Level Attainment
         </div>
       </div>
 
       <div className="chart-card-v2" style={{ marginBottom: 18 }}>
         <div className="chart-header">
           <div>
-            <div className="chart-title">Group Attainment Heatmap</div>
-            <div className="chart-subtitle">{`Normalized score (%) per outcome per project group — cells below ${threshold}% threshold are flagged`}</div>
+            <div className="chart-title">Project Attainment Heatmap</div>
+            <div className="chart-subtitle">{`Normalized score (%) per outcome per project — cells below ${threshold}% threshold are flagged`}</div>
           </div>
         </div>
         <div className="chart-body" id="pdf-chart-group-heatmap">
@@ -795,7 +795,7 @@ export default function AnalyticsPage() {
         <div className="chart-header">
           <div>
             <div className="chart-title">Inter-Rater Consistency Heatmap</div>
-            <div className="chart-subtitle">Coefficient of variation (CV = σ/μ × 100%) per project group — CV &gt;25% indicates poor agreement</div>
+            <div className="chart-subtitle">Coefficient of variation (CV = σ/μ × 100%) per project — CV &gt;25% indicates poor agreement</div>
           </div>
         </div>
         <div className="chart-body" id="pdf-chart-juror-cv">

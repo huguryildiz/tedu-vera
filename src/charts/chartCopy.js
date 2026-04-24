@@ -4,8 +4,8 @@
 
 export const CHART_COPY = {
   outcomeByGroup: {
-    title: "Outcome Achievement by Group",
-    note: "Average score per criterion per project group. Normalized to percentage of maximum possible score.",
+    title: "Outcome Achievement by Project",
+    note: "Average score per criterion per project. Normalized to percentage of maximum possible score.",
   },
   programmeAverages: {
     title: "Programme-Level Outcome Averages",
@@ -21,7 +21,7 @@ export const CHART_COPY = {
   },
   jurorConsistency: {
     title: "Inter-Rater Consistency Heatmap",
-    note: "Coefficient of Variation (CV = σ/μ × 100) per group × criterion. CV >25% indicates poor inter-rater agreement.",
+    note: "Coefficient of Variation (CV = σ/μ × 100) per project × criterion. CV >25% indicates poor inter-rater agreement.",
   },
   scoreDistribution: {
     title: "Score Distribution (Boxplot)",

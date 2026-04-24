@@ -125,6 +125,7 @@ export default function AddEditPeriodDrawer({
               onChange={(e) => setFormName(e.target.value)}
               disabled={saving}
               autoFocus
+              data-testid="period-drawer-name"
             />
             {nameError && (
               <div className="fs-field-helper" style={{ color: "var(--danger, #ef4444)" }}>
@@ -151,6 +152,7 @@ export default function AddEditPeriodDrawer({
               onChange={(e) => setFormDescription(e.target.value)}
               disabled={saving}
               style={{ resize: "vertical", minHeight: 60 }}
+              data-testid="period-drawer-description"
             />
           </div>
 
@@ -188,7 +190,7 @@ export default function AddEditPeriodDrawer({
       </div>
       {/* ── Footer ── */}
       <div className="fs-drawer-footer">
-        <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose} disabled={saving}>
+        <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose} disabled={saving} data-testid="period-drawer-cancel">
           Cancel
         </button>
         <button
@@ -197,6 +199,7 @@ export default function AddEditPeriodDrawer({
           type="button"
           onClick={handleSave}
           disabled={!canSave}
+          data-testid="period-drawer-save"
         >
           <AsyncButtonContent loading={saving} loadingText="Saving…">
             {isEdit ? "Save Changes" : "Create Period"}

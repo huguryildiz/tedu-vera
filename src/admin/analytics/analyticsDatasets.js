@@ -128,18 +128,21 @@ export function buildAttainmentStatusDataset({
 // outside the component and easy to unit test independently.
 
 export function buildOutcomeByGroupDataset(dashboardStats, outcomes = []) {
-  const groups = (dashboardStats || []).filter((s) => s.count > 0);
+  const groups = (dashboardStats || [])
+    .filter((s) => s.count > 0)
+    .sort((a, b) => (a.group_no ?? 0) - (b.group_no ?? 0));
   const headers = [
-    "Title",
+    "Project Title",
     ...outcomes.flatMap((o) => [`${o.label} Avg`, `${o.label} (%)`]),
   ];
   const rows = groups.map((g) => {
+    const label = g.group_no != null ? `P${g.group_no} — ${g.title || g.name || "—"}` : (g.title || g.name || "—");
     const cells = outcomes.flatMap((o) => {
       const avgRaw = Number(g.avg?.[o.key] ?? 0);
       const pct = o.max > 0 ? (avgRaw / o.max) * 100 : 0;
       return [fmt2(avgRaw), fmt1(pct)];
     });
-    return [g.title || g.name || "—", ...cells];
+    return [label, ...cells];
   });
   return {
     sheet: "Outcome Achievement",
@@ -537,34 +540,35 @@ export function buildThresholdGapDataset({ submittedData = [], activeOutcomes = 
   for (const c of activeOutcomes) {
     for (const code of (c.outcomes || [])) {
       if (!outcomeMap.has(code)) {
-        outcomeMap.set(code, { criterionKey: c.key ?? c.id, max: c.max });
+        outcomeMap.set(code, { criterionKey: c.key ?? c.id, max: c.max, label: c.label ?? c.key ?? c.id });
       }
     }
   }
 
   const rows = [];
-  for (const [code, meta] of outcomeMap) {
-    const vals = outcomeValues(submittedData, meta.criterionKey);
-    const avgRaw = vals.length ? mean(vals) : null;
-    const avgPct = avgRaw != null && meta.max > 0 ? fmt1((avgRaw / meta.max) * 100) : null;
-    const gapPct = avgPct != null ? fmt1(avgPct - threshold) : null;
-    rows.push([code, code, avgPct, gapPct]);
+  for (const [code, { criterionKey, max, label }] of outcomeMap) {
+    const vals = outcomeValues(submittedData, criterionKey);
+    if (!vals.length) { rows.push([code, label, null, null]); continue; }
+    const aboveThreshold = vals.filter((v) => (v / max) * 100 >= threshold).length;
+    const attRate = fmt1((aboveThreshold / vals.length) * 100);
+    const gap = fmt1(attRate - threshold);
+    rows.push([code, label, attRate, gap >= 0 ? `+${gap}%` : `${gap}%`]);
   }
 
   rows.sort((a, b) => {
-    const gapA = a[3];
-    const gapB = b[3];
-    if (gapA == null && gapB == null) return 0;
-    if (gapA == null) return 1;
-    if (gapB == null) return -1;
-    return gapA - gapB;
+    const gapA = parseFloat(a[3]);
+    const gapB = parseFloat(b[3]);
+    if (isNaN(gapA) && isNaN(gapB)) return 0;
+    if (isNaN(gapA)) return 1;
+    if (isNaN(gapB)) return -1;
+    return gapB - gapA;
   });
 
   return {
     sheet: "Threshold Gap",
     title: "Threshold Gap Analysis",
     note: `Deviation from ${threshold}% competency threshold per outcome`,
-    headers: ["Outcome", "Description", "Average Score (%)", "Gap vs Threshold (%)"],
+    headers: ["Outcome", "Criterion", "Attainment Rate (%)", "Gap vs Threshold"],
     rows,
   };
 }
@@ -584,9 +588,9 @@ export function buildGroupHeatmapDataset({ dashboardStats = [], activeOutcomes =
 
   if (!groups.length || !criteria.length) {
     return {
-      sheet: "Group Heatmap",
-      title: "Group Attainment Heatmap",
-      note: `Normalized score (%) per criterion per project group — cells below ${threshold}% threshold are flagged`,
+      sheet: "Project Heatmap",
+      title: "Project Attainment Heatmap",
+      note: `Normalized score (%) per criterion per project — cells below ${threshold}% threshold are flagged`,
       headers: ["Group"],
       rows: [],
     };
@@ -614,9 +618,9 @@ export function buildGroupHeatmapDataset({ dashboardStats = [], activeOutcomes =
   });
 
   return {
-    sheet: "Group Heatmap",
-    title: "Group Attainment Heatmap",
-    note: `Normalized score (%) per criterion per project group — cells below ${threshold}% threshold are flagged`,
+    sheet: "Project Heatmap",
+    title: "Project Attainment Heatmap",
+    note: `Normalized score (%) per criterion per project — cells below ${threshold}% threshold are flagged`,
     headers,
     rows,
   };

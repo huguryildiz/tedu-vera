@@ -210,6 +210,7 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
               autoFocus
               rows={1}
               style={{ resize: "none", overflow: "hidden", minHeight: "40px", lineHeight: "1.5" }}
+              data-testid="project-edit-drawer-title"
             />
             {titleTrimmed && (
               <div className="fs-field-helper" style={{ color: "var(--success, #22c55e)" }}>
@@ -320,7 +321,7 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
         </div>
       </div>
       <div className="fs-drawer-footer">
-        <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose} disabled={saving}>
+        <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose} disabled={saving} data-testid="project-edit-drawer-cancel">
           Cancel
         </button>
         <button
@@ -329,6 +330,7 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
           type="button"
           onClick={handleSave}
           disabled={saving || !titleTrimmed}
+          data-testid="project-edit-drawer-save"
         >
           <AsyncButtonContent loading={saving} loadingText="Saving…">Save Changes</AsyncButtonContent>
         </button>

@@ -137,6 +137,7 @@ export default function DeleteProjectModal({ open, onClose, project, impact = {}
             autoComplete="off"
             spellCheck={false}
             disabled={deleting}
+            data-testid="project-delete-confirm-input"
           />
         </div>
       </div>
@@ -150,6 +151,7 @@ export default function DeleteProjectModal({ open, onClose, project, impact = {}
           onClick={handleClose}
           disabled={deleting}
           style={{ flex: 1 }}
+          data-testid="project-delete-cancel"
         >
           Keep Project
         </button>
@@ -159,6 +161,7 @@ export default function DeleteProjectModal({ open, onClose, project, impact = {}
           onClick={handleDelete}
           disabled={deleting || !canDelete}
           style={{ flex: 1 }}
+          data-testid="project-delete-confirm"
         >
           <AsyncButtonContent loading={deleting} loadingText="Deleting…">Delete Project</AsyncButtonContent>
         </button>

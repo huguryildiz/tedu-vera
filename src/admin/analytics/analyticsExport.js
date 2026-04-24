@@ -94,7 +94,7 @@ export const ANALYTICS_SECTIONS = [
   },
   {
     key: "outcome-by-group",
-    title: "Outcome Achievement by Group",
+    title: "Outcome Achievement by Project",
     chartId: "pdf-chart-outcome-by-group",
     build: (p) => buildOutcomeByGroupDataset(p.dashboardStats, p.activeOutcomes),
   },
@@ -120,7 +120,7 @@ export const ANALYTICS_SECTIONS = [
   },
   {
     key: "group-heatmap",
-    title: "Group Attainment Heatmap",
+    title: "Project Attainment Heatmap",
     chartId: "pdf-chart-group-heatmap",
     build: (p) => buildGroupHeatmapDataset({
       dashboardStats: p.dashboardStats,
