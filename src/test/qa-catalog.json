@@ -13335,5 +13335,137 @@
     "coverageStrength": "Strong",
     "severity": "high",
     "status": "backlog"
+  },
+  {
+    "id": "admin.realtime.useAdminRealtime.01",
+    "module": "Admin / Hooks",
+    "area": "realtime",
+    "story": "useAdminRealtime subscription opens on mount",
+    "scenario": "Channel subscribes to score_sheets, score_sheet_items, juror_period_auth, projects when enabled=true and organizationId is set",
+    "whyItMatters": "Admin score data must sync in real-time across jurors and systems.",
+    "risk": "Missing subscription would leave the admin panel stale during live jury days.",
+    "coverageStrength": "Strong",
+    "severity": "high"
+  },
+  {
+    "id": "admin.realtime.useAdminRealtime.02",
+    "module": "Admin / Hooks",
+    "area": "realtime",
+    "story": "useAdminRealtime cleanup unsubscribes on unmount",
+    "scenario": "Cleanup function clears timeout and calls removeChannel when component unmounts",
+    "whyItMatters": "Dangling subscriptions leak memory and cause spurious RPC calls.",
+    "risk": "Memory leak from uncleaned subscriptions; repeated calls to onRefresh on background polling.",
+    "coverageStrength": "Strong",
+    "severity": "high"
+  },
+  {
+    "id": "admin.realtime.useAdminRealtime.03",
+    "module": "Admin / Hooks",
+    "area": "realtime",
+    "story": "useAdminRealtime re-subscribes when organizationId changes",
+    "scenario": "Cleanup and new subscription triggered when organizationId prop changes",
+    "whyItMatters": "Switching tenants must switch Realtime subscriptions to the new tenant's data.",
+    "risk": "Stale subscription would show scores from the previous tenant.",
+    "coverageStrength": "Strong",
+    "severity": "high"
+  },
+  {
+    "id": "admin.analytics.getOutcomeAttainmentTrends.01",
+    "module": "Admin / API",
+    "area": "analytics",
+    "story": "getOutcomeAttainmentTrends empty input returns empty array",
+    "scenario": "Called with empty periodIds array returns []",
+    "whyItMatters": "Edge case must not throw or return undefined.",
+    "risk": "Unhandled empty array would crash chart rendering.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.analytics.getOutcomeAttainmentTrends.02",
+    "module": "Admin / API",
+    "area": "analytics",
+    "story": "getOutcomeAttainmentTrends single period with scores",
+    "scenario": "Single period with 3 evaluations; each outcome computed with normalized weighted scores",
+    "whyItMatters": "Core analytics function must aggregate outcome attainment correctly.",
+    "risk": "Incorrect weighting or threshold logic would misrepresent student performance.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "admin.analytics.getOutcomeAttainmentTrends.03",
+    "module": "Admin / API",
+    "area": "analytics",
+    "story": "getOutcomeAttainmentTrends multiple periods aggregates correctly",
+    "scenario": "Multiple periods each return separate outcome trend objects",
+    "whyItMatters": "Multi-year comparisons must isolate data per period.",
+    "risk": "Period data leakage would corrupt trend analysis.",
+    "coverageStrength": "Strong",
+    "severity": "high"
+  },
+  {
+    "id": "admin.analytics.getOutcomeAttainmentTrends.04",
+    "module": "Admin / API",
+    "area": "analytics",
+    "story": "getOutcomeAttainmentTrends tied scores compute correct percentages",
+    "scenario": "When half evaluations meet threshold, attainmentRate = 50",
+    "whyItMatters": "Percentage calculation must be precise for reporting.",
+    "risk": "Off-by-one or rounding errors corrupt outcome metrics.",
+    "coverageStrength": "Strong",
+    "severity": "high"
+  },
+  {
+    "id": "admin.analytics.getOutcomeAttainmentTrends.05",
+    "module": "Admin / API",
+    "area": "analytics",
+    "story": "getOutcomeAttainmentTrends all-zero scores returns null metrics",
+    "scenario": "When no valid scores exist for an outcome, avg=null and attainmentRate=null",
+    "whyItMatters": "Missing data must be explicitly null, not undefined or 0.",
+    "risk": "Undefined metrics would render as NaN or break chart logic.",
+    "coverageStrength": "Strong",
+    "severity": "high"
+  },
+  {
+    "id": "admin.analytics.getOutcomeAttainmentTrends.06",
+    "module": "Admin / API",
+    "area": "analytics",
+    "story": "getOutcomeAttainmentTrends filters nonexistent periods",
+    "scenario": "Period with no outcomes/criteria/scores returns null and is filtered from results",
+    "whyItMatters": "Invalid periods must not appear in analytics.",
+    "risk": "Orphaned period records would cause null-reference errors in charts.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "auth.AuthProvider.sessionRefresh.01",
+    "module": "Shared / Auth",
+    "area": "session-refresh",
+    "story": "onAuthStateChange TOKEN_REFRESHED updates session state",
+    "scenario": "TOKEN_REFRESHED event updates session in context with new token",
+    "whyItMatters": "Session refresh must keep user logged in across tab switching.",
+    "risk": "Stale session would auto-sign user out mid-workflow.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "auth.AuthProvider.sessionRefresh.02",
+    "module": "Shared / Auth",
+    "area": "session-refresh",
+    "story": "onAuthStateChange SIGNED_OUT clears user and session",
+    "scenario": "SIGNED_OUT event sets user=null, session=null, organizations=[]",
+    "whyItMatters": "Sign-out must fully clear all auth context state.",
+    "risk": "Leftover session state would leave user authenticated in UI despite logout.",
+    "coverageStrength": "Strong",
+    "severity": "critical"
+  },
+  {
+    "id": "auth.AuthProvider.sessionRefresh.03",
+    "module": "Shared / Auth",
+    "area": "session-refresh",
+    "story": "remember-me localStorage persists when set true",
+    "scenario": "When ADMIN_REMEMBER_ME key is set to 'true' in localStorage, persisted session is not cleared",
+    "whyItMatters": "Remember-me must allow session persistence across browser restarts.",
+    "risk": "Incorrect persistence would force re-login every session.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
   }
 ]
