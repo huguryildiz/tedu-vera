@@ -1,7 +1,6 @@
 import { useState, useId } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import JurorBadge from "./JurorBadge.jsx";
-import JurorStatusPill from "./JurorStatusPill.jsx";
 import AvgDonut from "@/admin/shared/AvgDonut.jsx";
 import { useTheme } from "@/shared/theme/ThemeProvider";
 import { scoreCellClass, scoreCellStyle } from "@/admin/utils/scoreHelpers";
@@ -64,7 +63,6 @@ export default function JurorHeatmapCard({
   avg,
   tabMax,
   tabLabel = "Total",
-  status,
   rows,
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -96,10 +94,6 @@ export default function JurorHeatmapCard({
             />
           </div>
           <AvgDonut value={avg} max={tabMax} />
-        </div>
-        <div className="juror-progress-wrap">
-          <span className="juror-progress-lbl">Juror Progress</span>
-          <JurorStatusPill status={status} />
         </div>
         <div className="hm-card-summary">
           <span className="hm-card-summary-text">

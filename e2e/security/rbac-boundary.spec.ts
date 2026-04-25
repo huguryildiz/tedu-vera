@@ -39,6 +39,7 @@ test.describe("RBAC boundary (tenant-admin cross-org mutation)", () => {
       .limit(1);
 
     if (!periods || periods.length === 0) {
+      // Skip if E2E_PROJECTS_ORG_ID has no periods (valid test dependency)
       test.skip();
     }
 
@@ -87,6 +88,7 @@ test.describe("RBAC boundary (tenant-admin cross-org mutation)", () => {
       .limit(1);
 
     if (!jurors || jurors.length === 0) {
+      // Skip if E2E_PROJECTS_ORG_ID has no jurors (valid test dependency)
       test.skip();
     }
 
@@ -134,6 +136,7 @@ test.describe("deliberately-break evidence (RBAC boundary)", () => {
       .limit(1);
 
     if (!periods || periods.length === 0) {
+      // Skip if E2E_PERIODS_ORG_ID has no periods (valid test dependency)
       test.skip();
     }
 

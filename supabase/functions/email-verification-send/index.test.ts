@@ -28,6 +28,7 @@ Deno.test("email-verification-send — OPTIONS returns 200 with CORS", async () 
   const res = await handler(makeRequest({ method: "OPTIONS" }));
   assertEquals(res.status, 200);
   assertEquals(res.headers.get("access-control-allow-origin"), "*");
+  assertEquals(typeof res.headers.get("access-control-allow-origin"), "string");
 });
 
 // qa: edge.real.email-verification-send.02
@@ -37,6 +38,7 @@ Deno.test("email-verification-send — non-POST returns 405", async () => {
   assertEquals(res.status, 405);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Method not allowed");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.email-verification-send.03
@@ -47,6 +49,7 @@ Deno.test("email-verification-send — missing Supabase env returns 500", async 
   assertEquals(res.status, 500);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error.includes("not configured"), true);
+  assertEquals(typeof body.error, "string");
   setDefaultEnv();
 });
 
@@ -57,6 +60,7 @@ Deno.test("email-verification-send — missing bearer token returns 401", async 
   assertEquals(res.status, 401);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Missing bearer token");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.email-verification-send.05
@@ -69,6 +73,7 @@ Deno.test("email-verification-send — invalid JWT returns 401 Unauthorized", as
   assertEquals(res.status, 401);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Unauthorized");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.email-verification-send.06
@@ -84,7 +89,9 @@ Deno.test("email-verification-send — already verified user returns 200 already
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean; alreadyVerified: boolean };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.alreadyVerified, true);
+  assertEquals(typeof body.alreadyVerified, "boolean");
 });
 
 // qa: edge.real.email-verification-send.07
@@ -103,6 +110,7 @@ Deno.test("email-verification-send — token insert error returns 500", async ()
   assertEquals(res.status, 500);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Failed to create verification token");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.email-verification-send.08
@@ -121,6 +129,7 @@ Deno.test("email-verification-send — success without RESEND returns 200 ok:tru
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
 });
 
 // qa: edge.real.email-verification-send.09
@@ -139,6 +148,7 @@ Deno.test("email-verification-send — response shape pinning: ok + optional alr
   assertEquals(res.status, 200);
   const body = await res.json() as { ok?: boolean; alreadyVerified?: boolean; error?: string };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
   // Verify only expected fields are present: ok or alreadyVerified, never error on success
   const keys = Object.keys(body);
   const allowedKeys = ["ok", "alreadyVerified"];

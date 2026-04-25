@@ -499,7 +499,9 @@ CREATE TABLE maintenance_mode (
   CONSTRAINT maintenance_mode_single_row CHECK (id = 1)
 );
 
-INSERT INTO maintenance_mode (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+INSERT INTO maintenance_mode (id, is_active, mode, message, notify_admins, updated_at)
+VALUES (1, false, 'immediate', 'VERA is undergoing scheduled maintenance. We''ll be back shortly.', true, now())
+ON CONFLICT (id) DO NOTHING;
 
 -- =============================================================================
 -- 21. SECURITY_POLICY (single-row config)

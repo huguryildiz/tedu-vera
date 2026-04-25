@@ -23,6 +23,7 @@ Deno.test("email-verification-confirm — OPTIONS returns 200 with CORS headers"
   const res = await handler(makeRequest({ method: "OPTIONS" }));
   assertEquals(res.status, 200);
   assertEquals(res.headers.get("access-control-allow-origin"), "*");
+  assertEquals(typeof res.headers.get("access-control-allow-origin"), "string");
 });
 
 // qa: edge.verify.02
@@ -30,6 +31,8 @@ Deno.test("email-verification-confirm — non-POST returns 405", async () => {
   const handler = await setup();
   const res = await handler(makeRequest({ method: "GET" }));
   assertEquals(res.status, 405);
+  const body = await readJson(res) as { error: string };
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.verify.03
@@ -40,6 +43,7 @@ Deno.test("email-verification-confirm — missing env returns 500", async () => 
   assertEquals(res.status, 500);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Supabase environment is not configured.");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.verify.04
@@ -54,6 +58,7 @@ Deno.test("email-verification-confirm — invalid JSON returns 400", async () =>
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Invalid JSON");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.verify.05
@@ -63,6 +68,7 @@ Deno.test("email-verification-confirm — missing token returns 400", async () =
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "token is required and must be a string");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.verify.06
@@ -72,6 +78,7 @@ Deno.test("email-verification-confirm — non-UUID token returns 400 invalid_tok
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "invalid_token_format");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.verify.07
@@ -88,6 +95,7 @@ Deno.test("email-verification-confirm — unknown token returns 404", async () =
   assertEquals(res.status, 404);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "token_not_found");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.verify.08
@@ -113,6 +121,7 @@ Deno.test("email-verification-confirm — already-consumed token returns 410", a
   assertEquals(res.status, 410);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "token_already_used");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.verify.09
@@ -138,6 +147,7 @@ Deno.test("email-verification-confirm — expired token returns 410", async () =
   assertEquals(res.status, 410);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "token_expired");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.verify.10
@@ -167,6 +177,7 @@ Deno.test("email-verification-confirm — valid token returns 200 and marks veri
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
 });
 
 // qa: edge.verify.11
@@ -195,6 +206,7 @@ Deno.test("email-verification-confirm — profile update error returns 500", asy
   assertEquals(res.status, 500);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "update failed");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.verify.12
@@ -224,4 +236,5 @@ Deno.test("email-verification-confirm — token mark-consumed error returns 500"
   assertEquals(res.status, 500);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "token update failed");
+  assertEquals(typeof body.error, "string");
 });

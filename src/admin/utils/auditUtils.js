@@ -286,7 +286,7 @@ export function getActorInfo(log) {
 // Prefix-matched groups (export.*, notification.*) are handled by
 // formatSentence's fallback matchers; no narrative entry needed here.
 
-const EVENT_META = {
+export const EVENT_META = {
   // ── Auth ──────────────────────────────────────────────────────
   "admin.login": {
     // Legacy action — kept so historical rows still render with the right label.

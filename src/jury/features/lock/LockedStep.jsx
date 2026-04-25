@@ -30,13 +30,14 @@ export default function LockedStep({ state, onBack }) {
     const target = new Date(state.pinLockedUntil).getTime();
     if (Number.isNaN(target)) return;
 
+    let id;
     const tick = () => {
       const diff = Math.max(0, target - Date.now());
       setRemaining(diff);
       if (diff <= 0) clearInterval(id);
     };
     tick();
-    const id = setInterval(tick, 1000);
+    id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [state.pinLockedUntil]);
 

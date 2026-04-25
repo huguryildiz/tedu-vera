@@ -48,7 +48,9 @@ Deno.test("notify-unlock-request — invalid JSON body → 500 with error messag
   assertEquals(res.status, 500);
   const body = await readJson(res) as { ok: boolean; error: string };
   assertEquals(body.ok, false);
+  assertEquals(typeof body.ok, "boolean");
   assert(body.error.length > 0);
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.unlock-request.03
@@ -60,6 +62,7 @@ Deno.test("notify-unlock-request — missing type returns 400", async () => {
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assert(body.error.includes("type"));
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.unlock-request.04
@@ -71,6 +74,7 @@ Deno.test("notify-unlock-request — missing request_id returns 400", async () =
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assert(body.error.includes("request_id"));
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.unlock-request.05
@@ -103,8 +107,11 @@ Deno.test(
     assertEquals(res.status, 200);
     const body = await readJson(res) as { ok: boolean; sent: boolean; error?: string };
     assertEquals(body.ok, true);
+    assertEquals(typeof body.ok, "boolean");
     assertEquals(body.sent, false);
+    assertEquals(typeof body.sent, "boolean");
     assertEquals(body.error, "RESEND_API_KEY not configured");
+    assertEquals(typeof body.error, "string");
   },
 );
 
@@ -144,7 +151,9 @@ Deno.test(
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean; sent: boolean };
       assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
       assertEquals(body.sent, true);
+      assertEquals(typeof body.sent, "boolean");
       assert(fetchCalls.length >= 1);
     } finally {
       restore();
@@ -188,7 +197,9 @@ Deno.test(
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean; sent: boolean };
       assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
       assertEquals(body.sent, true);
+      assertEquals(typeof body.sent, "boolean");
     } finally {
       restore();
       Deno.env.delete("RESEND_API_KEY");
@@ -222,8 +233,11 @@ Deno.test(
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean; sent: boolean; error?: string };
       assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
       assertEquals(body.sent, false);
+      assertEquals(typeof body.sent, "boolean");
       assertEquals(body.error, "No recipient email resolved");
+      assertEquals(typeof body.error, "string");
     } finally {
       Deno.env.delete("RESEND_API_KEY");
     }
@@ -239,6 +253,7 @@ Deno.test("notify-unlock-request — missing request_id → 400", async () => {
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assert(body.error.includes("request_id"));
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.notify-unlock-request.02
@@ -276,7 +291,9 @@ Deno.test(
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean; sent: boolean };
       assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
       assertEquals(body.sent, true);
+      assertEquals(typeof body.sent, "boolean");
       assert(fetchCalls.length >= 1, "expected Resend fetch");
       assertEquals(fetchCalls[0].url, "https://api.resend.com/emails");
       assert(
@@ -314,8 +331,11 @@ Deno.test(
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean; sent: boolean; error?: string };
       assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
       assertEquals(body.sent, false);
+      assertEquals(typeof body.sent, "boolean");
       assert(body.error && body.error.includes("No recipient"));
+      if (body.error) assertEquals(typeof body.error, "string");
     } finally {
       Deno.env.delete("RESEND_API_KEY");
     }
@@ -351,8 +371,11 @@ Deno.test(
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean; sent: boolean; error?: string };
       assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
       assertEquals(body.sent, false);
+      assertEquals(typeof body.sent, "boolean");
       assert(body.error && body.error.includes("Resend"));
+      if (body.error) assertEquals(typeof body.error, "string");
     } finally {
       restore();
       Deno.env.delete("RESEND_API_KEY");

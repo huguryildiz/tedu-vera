@@ -34,6 +34,8 @@ Deno.test("admin-session-touch — non-POST returns 405", async () => {
   const handler = await setup();
   const res = await handler(makeRequest({ method: "GET" }));
   assertEquals(res.status, 405);
+  const body = await readJson(res) as { error: string };
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.admin-session-touch.03
@@ -43,6 +45,7 @@ Deno.test("admin-session-touch — missing Authorization returns 401", async () 
   assertEquals(res.status, 401);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Missing bearer token");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.admin-session-touch.04
@@ -51,6 +54,8 @@ Deno.test("admin-session-touch — missing env returns 500", async () => {
   clearSupabaseEnv();
   const res = await handler(makeRequest({ token: "abc", body: { deviceId: "d1" } }));
   assertEquals(res.status, 500);
+  const body = await readJson(res) as { error: string };
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.admin-session-touch.05
@@ -61,8 +66,9 @@ Deno.test("admin-session-touch — invalid JWT returns 401 via auth.getUser erro
   });
   const res = await handler(makeRequest({ token: "invalid", body: { deviceId: "d1" } }));
   assertEquals(res.status, 401);
-  const body = await readJson(res) as { error: string };
+  const body = await readJson(res) as { error: string; details?: string };
   assertEquals(body.error, "Unauthorized");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.admin-session-touch.06
@@ -75,6 +81,7 @@ Deno.test("admin-session-touch — missing deviceId returns 400", async () => {
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "deviceId is required");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.admin-session-touch.07
@@ -92,6 +99,7 @@ Deno.test("admin-session-touch — existing-select error returns 500", async () 
   assertEquals(res.status, 500);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "boom");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.admin-session-touch.08
@@ -127,7 +135,9 @@ Deno.test("admin-session-touch — valid input upserts session and returns 200",
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean; session: unknown };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.session, session);
+  assertEquals(typeof body.session, "object");
 
   const calls = getCalls();
   const upsertCall = calls.find((c) => c.op === "upsert" && c.table === "admin_user_sessions");
@@ -157,6 +167,7 @@ Deno.test("admin-session-touch — upsert error returns 500", async () => {
   assertEquals(res.status, 500);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "constraint");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.admin-session-touch.10

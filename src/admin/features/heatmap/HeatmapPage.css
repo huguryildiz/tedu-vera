@@ -16,24 +16,6 @@
 .j-row .j-name { font-weight: 500; font-size: 12px; }
 .j-row .j-inst { display: block; font-size: 10px; color: var(--text-tertiary); font-weight: 400; }
 
-/* ── Juror Progress label above status pill ─────────────────── */
-.juror-progress-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-subtle, var(--border));
-}
-.juror-progress-lbl {
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-tertiary);
-  line-height: 1;
-}
-
 /* ── Header ─────────────────────────────────────────────────── */
 .matrix-header {
   display: flex; align-items: flex-start;

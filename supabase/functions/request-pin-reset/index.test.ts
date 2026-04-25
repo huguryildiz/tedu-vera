@@ -76,6 +76,7 @@ Deno.test("request-pin-reset — missing periodId returns 400", async () => {
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assert(body.error.includes("Missing required fields"));
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.pin.03
@@ -83,6 +84,8 @@ Deno.test("request-pin-reset — missing jurorName returns 400", async () => {
   const handler = await setup();
   const res = await handler(makeRequest({ body: { periodId: "p-1" } }));
   assertEquals(res.status, 400);
+  const body = await readJson(res) as { error: string };
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.pin.04
@@ -99,7 +102,9 @@ Deno.test("request-pin-reset — unknown period returns 404", async () => {
   assertEquals(res.status, 404);
   const body = await readJson(res) as { ok: boolean; error: string };
   assertEquals(body.ok, false);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.error, "Period not found");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.pin.05
@@ -131,7 +136,9 @@ Deno.test(
     assertEquals(res.status, 404);
     const body = await readJson(res) as { ok: boolean; error: string };
     assertEquals(body.ok, false);
+    assertEquals(typeof body.ok, "boolean");
     assert(body.error.includes("No admin email"));
+    assertEquals(typeof body.error, "string");
   },
 );
 
@@ -165,9 +172,12 @@ Deno.test(
     assertEquals(res.status, 200);
     const body = await readJson(res) as { ok: boolean; sent: boolean; error?: string };
     assertEquals(body.ok, true);
+    assertEquals(typeof body.ok, "boolean");
     // RESEND_API_KEY not set → sent=false, error populated.
     assertEquals(body.sent, false);
+    assertEquals(typeof body.sent, "boolean");
     assertEquals(body.error, "RESEND_API_KEY not configured");
+    assertEquals(typeof body.error, "string");
   },
 );
 
@@ -185,7 +195,9 @@ Deno.test(
     assertEquals(res.status, 500);
     const body = await readJson(res) as { ok: boolean; error: string };
     assertEquals(body.ok, false);
+    assertEquals(typeof body.ok, "boolean");
     assert(body.error.length > 0);
+    assertEquals(typeof body.error, "string");
   },
 );
 
@@ -235,6 +247,9 @@ Deno.test(
       },
     }));
     assertEquals(res.status, 200);
+    const body = await readJson(res) as { ok: boolean; sent: boolean };
+    assertEquals(typeof body.ok, "boolean");
+    assertEquals(typeof body.sent, "boolean");
 
     const auditInsert = getCalls().find(
       (c) => c.table === "audit_logs" && c.op === "insert",
@@ -296,7 +311,9 @@ Deno.test(
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean; sent: boolean };
       assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
       assertEquals(body.sent, true);
+      assertEquals(typeof body.sent, "boolean");
 
       assert(fetchCalls.length >= 1, "expected Resend fetch");
       assertEquals(fetchCalls[0].url, "https://api.resend.com/emails");
@@ -357,8 +374,11 @@ Deno.test(
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean; sent: boolean; error?: string };
       assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
       assertEquals(body.sent, false);
+      assertEquals(typeof body.sent, "boolean");
       assert(body.error && body.error.includes("Resend"));
+      if (body.error) assertEquals(typeof body.error, "string");
     } finally {
       restore();
       Deno.env.delete("RESEND_API_KEY");

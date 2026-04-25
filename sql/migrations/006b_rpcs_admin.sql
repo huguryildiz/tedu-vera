@@ -193,15 +193,23 @@ RETURNS JSON
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET row_security = off
 AS $$
 DECLARE
-  v_row  maintenance_mode%ROWTYPE;
-  v_now  TIMESTAMPTZ := now();
-  v_live BOOLEAN;
+  v_row      maintenance_mode%ROWTYPE;
+  v_now      TIMESTAMPTZ := now();
+  v_live     BOOLEAN;
+  v_upcoming BOOLEAN;
 BEGIN
-  SELECT * INTO v_row FROM maintenance_mode WHERE id = 1;
+  -- SECURITY DEFINER + SET row_security = off ensures we can read the maintenance_mode
+  -- table directly, even when called from anon context. This bypasses both RLS and the
+  -- Postgres role restrictions that PostgREST might impose.
+  SELECT * INTO v_row FROM public.maintenance_mode WHERE id = 1;
 
-  IF v_row.is_active THEN
+  -- Determine live state (with NULL safety)
+  -- Use FOUND instead of v_row IS NOT NULL because SELECT INTO doesn't set a row to NULL
+  -- when individual columns have NULL values. FOUND is the proper way to check if a row was found.
+  IF FOUND AND v_row.is_active THEN
     IF v_row.mode = 'scheduled' THEN
       v_live := (v_row.start_time IS NOT NULL AND v_now >= v_row.start_time);
     ELSE
@@ -211,13 +219,27 @@ BEGIN
     v_live := false;
   END IF;
 
+  -- Upcoming: scheduled and not yet started (show countdown banner)
+  v_upcoming := (
+    FOUND
+    AND v_row.is_active
+    AND v_row.mode = 'scheduled'
+    AND v_row.start_time IS NOT NULL
+    AND v_now < v_row.start_time
+  );
+
   IF v_live AND v_row.end_time IS NOT NULL AND v_now > v_row.end_time THEN
     v_live := false;
   END IF;
 
   RETURN jsonb_build_object(
-    'is_active', v_live, 'mode', v_row.mode,
-    'start_time', v_row.start_time, 'end_time', v_row.end_time, 'message', v_row.message
+    'is_active',        COALESCE(v_live, false),
+    'upcoming',         COALESCE(v_upcoming, false),
+    'mode',             COALESCE(v_row.mode, 'immediate'),
+    'start_time',       v_row.start_time,
+    'end_time',         v_row.end_time,
+    'message',          COALESCE(v_row.message, 'VERA is undergoing scheduled maintenance. We''ll be back shortly.'),
+    'affected_org_ids', v_row.affected_org_ids
   )::JSON;
 END;
 $$;
@@ -323,11 +345,71 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, auth
 AS $$
+DECLARE
+  v_bool_fields  TEXT[] := ARRAY[
+    'googleOAuth','emailPassword','rememberMe',
+    'ccOnPinReset','ccOnScoreEdit','ccOnTenantApplication',
+    'ccOnMaintenance','ccOnPasswordChanged'
+  ];
+  v_allowed_keys TEXT[] := ARRAY[
+    'googleOAuth','emailPassword','rememberMe','qrTtl',
+    'maxPinAttempts','pinLockCooldown',
+    'ccOnPinReset','ccOnScoreEdit','ccOnTenantApplication',
+    'ccOnMaintenance','ccOnPasswordChanged'
+  ];
+  v_key      TEXT;
+  v_val      JSONB;
+  v_attempts INT;
 BEGIN
   IF NOT current_user_is_super_admin() THEN RAISE EXCEPTION 'super_admin required'; END IF;
+
+  -- Reject unknown keys
+  FOR v_key IN SELECT jsonb_object_keys(p_policy) LOOP
+    IF NOT (v_key = ANY(v_allowed_keys)) THEN
+      RAISE EXCEPTION 'unknown_policy_key: %', v_key;
+    END IF;
+  END LOOP;
+
+  -- Validate boolean fields
+  FOREACH v_key IN ARRAY v_bool_fields LOOP
+    v_val := p_policy -> v_key;
+    IF v_val IS NOT NULL AND jsonb_typeof(v_val) != 'boolean' THEN
+      RAISE EXCEPTION 'policy field % must be boolean', v_key;
+    END IF;
+  END LOOP;
+
+  -- maxPinAttempts: integer 1–20
+  v_val := p_policy -> 'maxPinAttempts';
+  IF v_val IS NOT NULL THEN
+    IF jsonb_typeof(v_val) != 'number' THEN
+      RAISE EXCEPTION 'maxPinAttempts must be a number';
+    END IF;
+    v_attempts := (v_val #>> '{}')::INT;
+    IF v_attempts < 1 OR v_attempts > 20 THEN
+      RAISE EXCEPTION 'maxPinAttempts must be between 1 and 20';
+    END IF;
+  END IF;
+
+  -- qrTtl: string matching ^\d+[hd]$
+  v_val := p_policy -> 'qrTtl';
+  IF v_val IS NOT NULL THEN
+    IF jsonb_typeof(v_val) != 'string' OR (v_val #>> '{}') !~ '^\d+[hd]$' THEN
+      RAISE EXCEPTION 'qrTtl must match pattern like "24h" or "7d"';
+    END IF;
+  END IF;
+
+  -- pinLockCooldown: string matching ^\d+m$
+  v_val := p_policy -> 'pinLockCooldown';
+  IF v_val IS NOT NULL THEN
+    IF jsonb_typeof(v_val) != 'string' OR (v_val #>> '{}') !~ '^\d+m$' THEN
+      RAISE EXCEPTION 'pinLockCooldown must match pattern like "30m"';
+    END IF;
+  END IF;
+
   UPDATE security_policy
   SET policy = policy || p_policy, updated_by = auth.uid(), updated_at = now()
   WHERE id = 1;
+
   RETURN jsonb_build_object('ok', true)::JSON;
 END;
 $$;

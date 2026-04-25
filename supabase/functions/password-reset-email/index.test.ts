@@ -31,6 +31,7 @@ Deno.test("password-reset-email — non-POST returns 405", async () => {
   assertEquals(res.status, 405);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Method not allowed");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.password-reset-email.03
@@ -40,6 +41,7 @@ Deno.test("password-reset-email — missing email returns 400", async () => {
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "A valid email is required.");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.password-reset-email.04
@@ -49,6 +51,7 @@ Deno.test("password-reset-email — email without @ returns 400", async () => {
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "A valid email is required.");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.password-reset-email.05
@@ -64,6 +67,7 @@ Deno.test("password-reset-email — generateLink error returns 200 ok:true (no l
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
 });
 
 // qa: edge.real.password-reset-email.06
@@ -85,6 +89,7 @@ Deno.test("password-reset-email — generateLink success without RESEND returns 
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
 });
 
 // qa: edge.real.password-reset-email.07
@@ -114,6 +119,7 @@ Deno.test("password-reset-email — generateLink success with RESEND calls fetch
     assertEquals(res.status, 200);
     const body = await readJson(res) as { ok: boolean };
     assertEquals(body.ok, true);
+    assertEquals(typeof body.ok, "boolean");
     assertEquals(fetchCalls.length, 1);
     assertEquals(fetchCalls[0].url, "https://api.resend.com/emails");
     const payload = JSON.parse(fetchCalls[0].init.body as string);
@@ -145,6 +151,7 @@ Deno.test("password-reset-email — response shape pinning: only ok field on suc
   assertEquals(res.status, 200);
   const body = await res.json() as Record<string, unknown>;
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
   // Verify only 'ok' field is present on success (no extra fields like 'sent' or 'error')
   const keys = Object.keys(body);
   assertEquals(keys.length, 1);
@@ -170,4 +177,5 @@ Deno.test("password-reset-email — audit write failure is logged but returns 20
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
 });

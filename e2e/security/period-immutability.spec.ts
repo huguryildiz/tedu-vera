@@ -61,6 +61,7 @@ test.describe("period structural immutability (locked-period trigger)", () => {
       .limit(1);
 
     if (!periods?.length) {
+      // Skip if no unlocked periods exist (valid test dependency)
       test.skip();
       return;
     }
@@ -108,6 +109,7 @@ test.describe("period structural immutability (locked-period trigger)", () => {
       .limit(1);
 
     if (!periods?.length) {
+      // Skip if no unlocked periods exist (valid test dependency)
       test.skip();
       return;
     }
@@ -188,6 +190,7 @@ test.describe("closed period score write protection (enforced)", () => {
   }) => {
     const slot = await findClosedPeriodWithCleanSlot();
     if (!slot) {
+      // Skip if no closed period with clean scoring slot exists (valid test dependency)
       test.skip();
       return;
     }
@@ -236,6 +239,7 @@ test.describe("closed period score write protection (enforced)", () => {
       .not("closed_at", "is", null)
       .limit(10);
     if (!closedPeriods?.length) {
+      // Skip if no closed periods exist (valid test dependency)
       test.skip();
       return;
     }
@@ -268,6 +272,7 @@ test.describe("closed period score write protection (enforced)", () => {
       }
     }
     if (!authRow) {
+      // Skip if no suitable closed-period auth row found (valid test dependency)
       test.skip();
       return;
     }
@@ -312,6 +317,7 @@ test.describe("closed period score write protection (enforced)", () => {
       .is("closed_at", null)
       .limit(10);
     if (!openPeriods?.length) {
+      // Skip if no open periods exist (valid test dependency)
       test.skip();
       return;
     }
@@ -342,6 +348,7 @@ test.describe("closed period score write protection (enforced)", () => {
       }
     }
     if (!authRow) {
+      // Skip if no suitable open-period auth row found (valid test dependency)
       test.skip();
       return;
     }

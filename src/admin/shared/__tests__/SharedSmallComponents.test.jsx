@@ -51,7 +51,6 @@ describe("JurorHeatmapCard", () => {
           avg={75}
           tabMax={100}
           tabLabel="Total"
-          status="completed"
           rows={[]}
         />
       </ThemeProvider>

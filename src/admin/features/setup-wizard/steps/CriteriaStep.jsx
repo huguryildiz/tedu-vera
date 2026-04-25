@@ -471,6 +471,7 @@ function CriteriaPhase({ periodId, onContinue, onBack, loading }) {
         <div className="sw-actions">
           <button
             className="sw-btn sw-btn-primary"
+            data-testid="wizard-step-criteria-next"
             disabled={savingName}
             onClick={async () => {
               if (!criteriaName) {
@@ -563,6 +564,7 @@ function CriteriaPhase({ periodId, onContinue, onBack, loading }) {
 
           <button
             className="sw-btn sw-btn-primary"
+            data-testid="wizard-step-criteria-apply-template"
             onClick={handleApplyTemplate}
             disabled={loading || criteriaLoading}
           >

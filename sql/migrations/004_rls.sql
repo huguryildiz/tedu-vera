@@ -453,10 +453,6 @@ CREATE POLICY "juror_period_auth_select" ON juror_period_auth FOR SELECT USING (
   )
 );
 
--- Public: jury flow reads edit state via PostgREST
-CREATE POLICY "juror_period_auth_select_public" ON juror_period_auth
-  FOR SELECT USING (true);
-
 CREATE POLICY "juror_period_auth_insert" ON juror_period_auth FOR INSERT WITH CHECK (
   juror_id IN (SELECT id FROM jurors WHERE (
     organization_id IN (SELECT organization_id FROM memberships WHERE user_id = (SELECT auth.uid()) AND organization_id IS NOT NULL)

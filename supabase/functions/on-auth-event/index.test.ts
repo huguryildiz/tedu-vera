@@ -23,6 +23,7 @@ Deno.test("on-auth-event — OPTIONS returns 200 with CORS", async () => {
   const res = await handler(makeRequest({ method: "OPTIONS" }));
   assertEquals(res.status, 200);
   assertEquals(res.headers.get("access-control-allow-origin"), "*");
+  // CORS responses have no body
 });
 
 // qa: edge.real.on-auth-event.02
@@ -33,7 +34,9 @@ Deno.test("on-auth-event — missing Supabase env returns 200 ok:false", async (
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean; error: string };
   assertEquals(body.ok, false);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.error, "Environment not configured");
+  assertEquals(typeof body.error, "string");
   setDefaultEnv();
 });
 
@@ -49,7 +52,9 @@ Deno.test("on-auth-event — invalid JSON returns 200 ok:false", async () => {
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean; error: string };
   assertEquals(body.ok, false);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.error, "Invalid JSON");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.on-auth-event.04
@@ -68,7 +73,9 @@ Deno.test("on-auth-event — wrong webhook secret returns 200 ok:false Unauthori
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean; error: string };
   assertEquals(body.ok, false);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.error, "Unauthorized");
+  assertEquals(typeof body.error, "string");
   Deno.env.delete("WEBHOOK_HMAC_SECRET");
 });
 
@@ -81,7 +88,9 @@ Deno.test("on-auth-event — non-sessions schema returns 200 skipped:true", asyn
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean; skipped: boolean };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.skipped, true);
+  assertEquals(typeof body.skipped, "boolean");
 });
 
 // qa: edge.real.on-auth-event.06
@@ -104,7 +113,9 @@ Deno.test("on-auth-event — INSERT event logs login success", async () => {
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean; action: string };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.action, "auth.admin.login.success");
+  assertEquals(typeof body.action, "string");
 });
 
 // qa: edge.real.on-auth-event.07
@@ -127,7 +138,9 @@ Deno.test("on-auth-event — DELETE event logs logout", async () => {
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean; action: string };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.action, "admin.logout");
+  assertEquals(typeof body.action, "string");
 });
 
 // qa: edge.real.on-auth-event.08
@@ -144,7 +157,9 @@ Deno.test("on-auth-event — missing user_id in record returns 200 ok:false", as
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean; error: string };
   assertEquals(body.ok, false);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.error, "No user_id");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.on-auth-event.09

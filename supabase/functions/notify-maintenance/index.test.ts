@@ -24,6 +24,7 @@ Deno.test("notify-maintenance — missing token returns 401", async () => {
   assertEquals(res.status, 401);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Missing bearer token");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.notify-maintenance.02
@@ -34,6 +35,7 @@ Deno.test("notify-maintenance — missing Supabase env returns 500", async () =>
   assertEquals(res.status, 500);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error.includes("not configured"), true);
+  assertEquals(typeof body.error, "string");
   setDefaultEnv();
 });
 
@@ -47,6 +49,7 @@ Deno.test("notify-maintenance — non-super-admin returns 403", async () => {
   assertEquals(res.status, 403);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "super_admin required");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.notify-maintenance.04
@@ -62,8 +65,11 @@ Deno.test("notify-maintenance — no active org admins returns 200 sent:0", asyn
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean; sent: number; skipped: string };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.sent, 0);
+  assertEquals(typeof body.sent, "number");
   assertEquals(body.skipped, "no active org admins found");
+  assertEquals(typeof body.skipped, "string");
 });
 
 // qa: edge.real.notify-maintenance.05
@@ -80,6 +86,7 @@ Deno.test("notify-maintenance — testRecipient mismatch returns 400", async () 
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error.includes("testRecipient"), true);
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.notify-maintenance.06
@@ -95,6 +102,7 @@ Deno.test("notify-maintenance — members fetch error returns 500", async () => 
   assertEquals(res.status, 500);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error.includes("Failed to list members"), true);
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.notify-maintenance.07
@@ -103,6 +111,7 @@ Deno.test("notify-maintenance — OPTIONS returns 200 with CORS", async () => {
   const res = await handler(makeRequest({ method: "OPTIONS" }));
   assertEquals(res.status, 200);
   assertEquals(res.headers.get("access-control-allow-origin"), "*");
+  assertEquals(typeof res.headers.get("access-control-allow-origin"), "string");
 });
 
 // qa: edge.real.notify-maintenance.08
@@ -112,6 +121,7 @@ Deno.test("notify-maintenance — non-POST returns 405", async () => {
   assertEquals(res.status, 405);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Method not allowed");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.notify-maintenance.09
@@ -139,6 +149,7 @@ Deno.test("notify-maintenance — listUsers error returns 500", async () => {
   assertEquals(res.status, 500);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error.includes("Failed to list auth users"), true);
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.notify-maintenance.10
@@ -170,8 +181,11 @@ Deno.test("notify-maintenance — happy path no RESEND returns 200 sent:1", asyn
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean; sent: number; total: number };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.sent, 1);
+  assertEquals(typeof body.sent, "number");
   assertEquals(body.total, 1);
+  assertEquals(typeof body.total, "number");
 });
 
 // qa: edge.real.notify-maintenance.11
@@ -191,7 +205,6 @@ Deno.test("notify-maintenance — invalid JSON body returns 500", async () => {
   const res = await handler(req);
   assertEquals(res.status, 500);
   const body = await readJson(res) as { error: string };
-  // Error message contains the JSON parse error
   assertEquals(typeof body.error, "string");
   assert(body.error.length > 0);
 });
@@ -228,7 +241,9 @@ Deno.test("notify-maintenance — profiles fetch error does not block send", asy
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean; sent: number };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.sent, 1);
+  assertEquals(typeof body.sent, "number");
 });
 
 // qa: edge.real.notify-maintenance.13
@@ -263,4 +278,7 @@ Deno.test("notify-maintenance — response shape pins ok/sent/total/errors field
   assertEquals(typeof body.sent, "number");
   assertEquals(typeof body.total, "number");
   // errors field is optional (only present if errors.length > 0)
+  if (body.errors) {
+    assertEquals(Array.isArray(body.errors), true);
+  }
 });

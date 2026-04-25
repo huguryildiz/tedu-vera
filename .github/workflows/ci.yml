@@ -13,9 +13,8 @@ name: CI
 # Actions UI. All four jobs run in parallel by default.
 #
 # Note on migration-test: previously gated to `paths: sql/**`. After merge it
-# runs on every PR. The job is `continue-on-error: true` (soft check during
-# initial bootstrap), so non-sql PRs don't pay a hard cost — only a few
-# minutes of wall-clock parallel.
+# runs on every PR as a hard-fail check — migration failures block PRs. The
+# job takes ~5 min wall-clock in parallel with unit-tests and edge-tests.
 #
 # The `test-report` job (Allure + Excel) is gated on workflow_dispatch so the
 # fast PR gate is not blocked by report-generation overhead.
@@ -99,15 +98,11 @@ jobs:
     name: Migration + pgTAP
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # NOTE — soft check during initial bootstrap.
-    # Re-applying VERA's snapshot migrations (001..009) on a vanilla
-    # Postgres requires faithfully reproducing several Supabase-environment
-    # dependencies (auth schema, supabase_realtime publication, storage
-    # schema, possibly extensions). Each pass surfaces another piece. Until
-    # those are all in the bootstrap below, mark the job continue-on-error
-    # so the existence + early-stage value of the workflow does not block
-    # PRs. Hard-fail will be flipped on once a clean fresh apply succeeds.
-    continue-on-error: true
+    # Bootstrap is stable: auth schema shim, roles, supabase_realtime
+    # publication, and all Supabase-managed dependencies are reproduced in
+    # the "Create test role + db + auth shim" step below. Migrations are
+    # capped at 007 (008/009 require pg_cron/pg_net, not on PGDG vanilla).
+    # Hard-fail — migration failures now block PRs.
 
     env:
       PGHOST: localhost

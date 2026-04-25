@@ -76,6 +76,7 @@ Deno.test("notify-juror — OPTIONS returns 200 with CORS", async () => {
   const res = await handler(makeRequest({ method: "OPTIONS" }));
   assertEquals(res.status, 200);
   assertEquals(res.headers.get("access-control-allow-origin"), "*");
+  assertEquals(typeof res.headers.get("access-control-allow-origin"), "string");
 });
 
 // qa: edge.notify-juror.02
@@ -85,6 +86,7 @@ Deno.test("notify-juror — missing bearer token returns 401", async () => {
   assertEquals(res.status, 401);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Missing bearer token");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.notify-juror.03
@@ -98,6 +100,8 @@ Deno.test("notify-juror — invalid auth token returns 401", async () => {
     body: { juror_id: "j-1", period_id: "p-1" },
   }));
   assertEquals(res.status, 401);
+  const body = await readJson(res) as { error: string };
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.notify-juror.04
@@ -114,6 +118,8 @@ Deno.test("notify-juror — non-admin user returns 403", async () => {
     body: { juror_id: "j-1", period_id: "p-1" },
   }));
   assertEquals(res.status, 403);
+  const body = await readJson(res) as { error: string };
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.notify-juror.05
@@ -127,6 +133,7 @@ Deno.test("notify-juror — missing juror_id returns 400", async () => {
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "juror_id and period_id are required");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.notify-juror.06
@@ -140,6 +147,7 @@ Deno.test("notify-juror — missing period_id returns 400", async () => {
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "juror_id and period_id are required");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.notify-juror.07
@@ -164,6 +172,7 @@ Deno.test("notify-juror — juror not found returns 404", async () => {
   assertEquals(res.status, 404);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Juror not found");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.notify-juror.08
@@ -188,6 +197,7 @@ Deno.test("notify-juror — juror has no email returns 422", async () => {
   assertEquals(res.status, 422);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Juror has no email address");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.notify-juror.09
@@ -218,6 +228,7 @@ Deno.test("notify-juror — period not found returns 404", async () => {
   assertEquals(res.status, 404);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Period not found");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.notify-juror.10
@@ -233,8 +244,11 @@ Deno.test(
     assertEquals(res.status, 500);
     const body = await readJson(res) as { ok: boolean; sent: boolean; error: string };
     assertEquals(body.ok, false);
+    assertEquals(typeof body.ok, "boolean");
     assertEquals(body.sent, false);
+    assertEquals(typeof body.sent, "boolean");
     assert(body.error.length > 0);
+    assertEquals(typeof body.error, "string");
   },
 );
 
@@ -247,6 +261,7 @@ Deno.test("notify-juror — missing Authorization → 401", async () => {
   assertEquals(res.status, 401);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Missing bearer token");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.notify-juror.02
@@ -279,7 +294,9 @@ Deno.test("notify-juror — Resend success → 200 sent=true, juror email in pay
     assertEquals(res.status, 200);
     const body = await readJson(res) as { ok: boolean; sent: boolean };
     assertEquals(body.ok, true);
+    assertEquals(typeof body.ok, "boolean");
     assertEquals(body.sent, true);
+    assertEquals(typeof body.sent, "boolean");
     assert(fetchCalls.length >= 1, "expected Resend fetch");
     assertEquals(fetchCalls[0].url, "https://api.resend.com/emails");
     assert(fetchCalls[0].body.includes("ali@test.com"), "expected juror email in Resend payload");
@@ -301,8 +318,11 @@ Deno.test("notify-juror — Resend non-2xx (429) → 500 sent=false", async () =
     assertEquals(res.status, 500);
     const body = await readJson(res) as { ok: boolean; sent: boolean; error?: string };
     assertEquals(body.ok, false);
+    assertEquals(typeof body.ok, "boolean");
     assertEquals(body.sent, false);
+    assertEquals(typeof body.sent, "boolean");
     assert(body.error && body.error.includes("Resend"));
+    assertEquals(typeof body.error, "string");
   } finally {
     restore();
     Deno.env.delete("RESEND_API_KEY");

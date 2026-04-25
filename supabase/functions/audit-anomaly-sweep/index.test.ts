@@ -56,6 +56,7 @@ Deno.test("audit-anomaly-sweep — missing cron secret header returns 401", asyn
   assertEquals(res.status, 401);
   const body = await readJson(res) as { error: string };
   assert(body.error.includes("cron secret"));
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.audit.03
@@ -80,6 +81,7 @@ Deno.test("audit-anomaly-sweep — missing env returns 500", async () => {
   assertEquals(res.status, 500);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Supabase environment not configured.");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.audit.06
@@ -101,8 +103,11 @@ Deno.test(
       chain_ok: boolean;
     };
     assertEquals(body.checked, true);
+    assertEquals(typeof body.checked, "boolean");
     assertEquals(body.anomalies, 0);
+    assertEquals(typeof body.anomalies, "number");
     assertEquals(body.chain_ok, true);
+    assertEquals(typeof body.chain_ok, "boolean");
   },
 );
 
@@ -125,7 +130,9 @@ Deno.test(
     assertEquals(res.status, 500);
     const body = await readJson(res) as { error: string; details?: string };
     assertEquals(body.error, "Failed to fetch audit logs");
+    assertEquals(typeof body.error, "string");
     assertEquals(body.details, "fetch boom");
+    if (body.details) assertEquals(typeof body.details, "string");
   },
 );
 
@@ -149,7 +156,9 @@ Deno.test(
       chain_error: string | null;
     };
     assertEquals(body.chain_ok, false);
+    assertEquals(typeof body.chain_ok, "boolean");
     assertEquals(body.chain_error, "rpc down");
+    if (body.chain_error) assertEquals(typeof body.chain_error, "string");
   },
 );
 
@@ -175,6 +184,7 @@ Deno.test(
     assertEquals(res.status, 200);
     const body = await readJson(res) as { chain_ok: boolean };
     assertEquals(body.chain_ok, false);
+    assertEquals(typeof body.chain_ok, "boolean");
 
     const inserts = insertedAnomalyRows();
     const chainBroken = inserts.find((r) => r.action === "security.chain.broken");

@@ -179,15 +179,14 @@ export async function listProjects(periodId, jurorId = null, signal, sessionToke
 }
 
 export async function getJurorEditState(periodId, jurorId, sessionToken, signal) {
-  let query = supabase
-    .from("juror_period_auth")
-    .select("edit_enabled, edit_expires_at, is_blocked, last_seen_at, final_submitted_at")
-    .match({ juror_id: jurorId, period_id: periodId })
-    .single();
-
+  let query = supabase.rpc("rpc_jury_get_edit_state", {
+    p_juror_id: jurorId,
+    p_period_id: periodId,
+  });
   if (signal) query = query.abortSignal(signal);
   const { data, error } = await query;
   if (error) throw error;
+  if (!data?.ok) throw new Error(data?.error_code ?? "juror_session_not_found");
   const expiresMs = data.edit_expires_at ? Date.parse(data.edit_expires_at) : NaN;
   const editAllowed = !!data.edit_enabled && Number.isFinite(expiresMs) && expiresMs > Date.now();
   return {

@@ -70,6 +70,7 @@ Deno.test("password-changed-notify — missing bearer token returns 401", async 
   assertEquals(res.status, 401);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Missing bearer token");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.password-changed.03
@@ -83,6 +84,7 @@ Deno.test(
     assertEquals(res.status, 200);
     const body = await readJson(res) as { ok: boolean };
     assertEquals(body.ok, true);
+    assertEquals(typeof body.ok, "boolean");
   },
 );
 
@@ -98,6 +100,7 @@ Deno.test("password-changed-notify — auth failure returns 401", async () => {
     assertEquals(res.status, 401);
     const body = await readJson(res) as { error: string };
     assert(body.error.length > 0);
+    assertEquals(typeof body.error, "string");
   } finally {
     Deno.env.delete("RESEND_API_KEY");
   }
@@ -119,6 +122,7 @@ Deno.test(
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean };
       assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
     } finally {
       restore();
       Deno.env.delete("RESEND_API_KEY");
@@ -163,6 +167,9 @@ Deno.test(
     try {
       const res = await handler(makeRequest({ token: "tok" }));
       assertEquals(res.status, 200);
+      const body = await readJson(res) as { ok: boolean };
+      assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
       assert(sentSubjects.length >= 1);
       assert(
         sentSubjects[0].toLowerCase().includes("super admin"),
@@ -192,6 +199,7 @@ Deno.test(
       assertEquals(res.status, 500);
       const body = await readJson(res) as { error: string };
       assert(body.error.length > 0);
+      assertEquals(typeof body.error, "string");
     } finally {
       restore();
       Deno.env.delete("RESEND_API_KEY");
@@ -210,6 +218,7 @@ Deno.test("password-changed-notify — missing Authorization → 401", async () 
   assertEquals(res.status, 401);
   const body = await readJson(res) as { error: string };
   assert(body.error.includes("Missing bearer token"));
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.password-changed-notify.02
@@ -224,6 +233,7 @@ Deno.test("password-changed-notify — getUser returns user with no email → 40
     assertEquals(res.status, 401);
     const body = await readJson(res) as { error: string };
     assert(body.error.includes("Could not resolve user"));
+    assertEquals(typeof body.error, "string");
   } finally {
     Deno.env.delete("RESEND_API_KEY");
   }
@@ -260,6 +270,7 @@ Deno.test(
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean };
       assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
       assert(fetchCalls.length >= 1, "expected Resend fetch");
       assertEquals(fetchCalls[0].url, "https://api.resend.com/emails");
       assert(
@@ -299,6 +310,7 @@ Deno.test(
       assertEquals(res.status, 500);
       const body = await readJson(res) as { error: string };
       assert(body.error && body.error.includes("Resend"));
+      assertEquals(typeof body.error, "string");
     } finally {
       restore();
       Deno.env.delete("RESEND_API_KEY");

@@ -1,142 +1,183 @@
 import { test, expect } from "@playwright/test";
-import {
-  adminClient,
-  buildInviteSession,
-  deleteUserByEmail,
-} from "../helpers/supabaseAdmin";
+import { adminClient, deleteUserByEmail } from "../helpers/supabaseAdmin";
+import { buildAdminSession } from "../helpers/oauthSession";
 import { E2E_WIZARD_ORG_ID } from "../fixtures/seed-ids";
-import { LoginPom } from "../poms/LoginPom";
 
 const APP_BASE = process.env.E2E_BASE_URL || "http://localhost:5174";
 
-// Unique suffix for setup-wizard test
-const WIZARD_SUFFIX = "e5wiz";
-const WIZARD_EMAIL = `e2e-wizard-admin-${WIZARD_SUFFIX}@vera-eval.app`;
-const WIZARD_NAME = "E2E Setup Wizard Admin";
+const WIZARD_EMAIL = "e2e-wizard-admin@vera-eval.app";
 const WIZARD_PASSWORD = "E2eWizardPass!2026";
 
-// SKIPPED: spec was authored against speculative testids that don't match the
-// actual SetupWizard implementation. Testids that exist (PeriodStep,
-// JurorsStep, CompletionStep) use names like `wizard-period-create` and
-// `wizard-step-jurors-next`, not the `wizard-next-step-N` / `wizard-finalize`
-// pattern this spec assumes. A real spec would need to walk through each step
-// (Period → Criteria → Outcomes → Jurors → Completion) using the real testids
-// AND handle the multi-step state machine. Re-enable after rewriting against
-// the actual wizard component tree.
-test.describe.skip("setup-wizard complete flow", () => {
+test.describe("setup-wizard complete flow", () => {
   test.describe.configure({ mode: "serial" });
 
-  let userId: string;
-
   test.beforeAll(async () => {
+    // Delete any periods from previous runs (cascades to criteria, projects, jurors).
+    // A previous successful run leaves the period locked (setup_completed_at fires
+    // a path that hardens the period). The block_locked_period_delete trigger
+    // rejects DELETE with period_locked, so unlock first.
+    const { data: periods } = await adminClient
+      .from("periods")
+      .select("id")
+      .eq("organization_id", E2E_WIZARD_ORG_ID);
+
+    if (periods?.length) {
+      const ids = periods.map((p) => p.id);
+      await adminClient
+        .from("periods")
+        .update({ is_locked: false })
+        .in("id", ids);
+      await adminClient
+        .from("periods")
+        .delete()
+        .in("id", ids);
+    }
+
+    await adminClient
+      .from("organizations")
+      .update({ setup_completed_at: null })
+      .eq("id", E2E_WIZARD_ORG_ID);
+
     await deleteUserByEmail(WIZARD_EMAIL).catch(() => {});
 
-    // Create the invite user
     const { data, error } = await adminClient.auth.admin.createUser({
       email: WIZARD_EMAIL,
       password: WIZARD_PASSWORD,
       email_confirm: true,
     });
     expect(error).toBeNull();
-    userId = data?.user?.id || "";
+    const userId = data?.user?.id ?? "";
     expect(userId).toBeTruthy();
 
-    // Create a membership row for the wizard org
-    const { error: membershipErr } = await adminClient
-      .from("memberships")
-      .insert({
-        user_id: userId,
-        organization_id: E2E_WIZARD_ORG_ID,
-        status: "active",
-        role: "admin",
-        is_owner: true,
-      });
+    const { error: membershipErr } = await adminClient.from("memberships").insert({
+      user_id: userId,
+      organization_id: E2E_WIZARD_ORG_ID,
+      status: "active",
+      role: "org_admin",
+      is_owner: true,
+    });
     expect(membershipErr).toBeNull();
   });
 
   test.afterAll(async () => {
     await deleteUserByEmail(WIZARD_EMAIL).catch(() => {});
+
+    const { data: periods } = await adminClient
+      .from("periods")
+      .select("id")
+      .eq("organization_id", E2E_WIZARD_ORG_ID);
+
+    if (periods?.length) {
+      await adminClient
+        .from("periods")
+        .delete()
+        .in("id", periods.map((p) => p.id));
+    }
+
+    await adminClient
+      .from("organizations")
+      .update({ setup_completed_at: null })
+      .eq("id", E2E_WIZARD_ORG_ID);
   });
 
-  test("login to wizard org, complete all 5 setup steps → setup_completed_at populated", async ({
-    page,
-  }) => {
-    // Log in as the setup wizard admin
-    const login = new LoginPom(page);
-    await login.goto();
-    await login.signIn(WIZARD_EMAIL, WIZARD_PASSWORD);
+  test("complete all 5 setup steps → setup_completed_at populated", async ({ page }) => {
+    // Suppress admin SpotlightTour before React mounts
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem("vera.admin_tour_done", "1");
+      } catch {}
+    });
 
-    // Should redirect to /admin/overview
-    await page.waitForURL((url) => url.pathname.includes("/admin/"), { timeout: 15000 });
+    // Inject the wizard user's session so the browser is authenticated.
+    // Also clear the wizard's sessionStorage keys (`sw_step_*`, `sw_data_*`)
+    // so a previous run's "step 5 done" state doesn't leak into this run and
+    // make useSetupWizard auto-resolve to a step that is no longer valid.
+    const session = await buildAdminSession(WIZARD_EMAIL, WIZARD_PASSWORD);
+    await page.addInitScript(
+      ({ key, value, orgId }: { key: string; value: object; orgId: string }) => {
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+          sessionStorage.removeItem(`sw_step_${orgId}`);
+          sessionStorage.removeItem(`sw_data_${orgId}`);
+        } catch {}
+      },
+      { key: session.storageKey, value: session.sessionValue, orgId: E2E_WIZARD_ORG_ID },
+    );
 
-    // Check if setup wizard modal/drawer is visible
-    // The wizard likely opens automatically if setup_completed_at IS NULL
-    await expect(page.locator(`[data-testid="setup-wizard"]`)).toBeVisible({ timeout: 12000 });
+    await page.goto(`${APP_BASE}/demo/admin/setup`);
+    // Wait for the page to settle — DemoAdminLoader and buildAdminSession can
+    // both fire ad-hoc auth state transitions on first paint, which detaches
+    // and re-renders the welcome button. Without this, the click below races
+    // the second render.
+    await page.waitForLoadState("networkidle");
 
-    // Step 1: Period creation
-    // Look for the period name input and fill it
-    const periodNameInput = page.locator(`[data-testid="wizard-period-name"]`);
-    if (await periodNameInput.isVisible()) {
-      await periodNameInput.fill(`E2E Setup Period ${Date.now()}`);
-      await page.locator(`[data-testid="wizard-next-step-1"]`).click();
-    }
+    // Step 1 — Welcome
+    const continueBtn = page.locator('[data-testid="wizard-welcome-continue"]');
+    await expect(continueBtn).toBeVisible({ timeout: 20_000 });
+    await continueBtn.click();
 
-    // Step 2: Criteria setup
-    // Add a criterion if the form is visible
-    const criteriaAddBtn = page.locator(`[data-testid="wizard-add-criterion"]`);
-    if (await criteriaAddBtn.isVisible()) {
-      await criteriaAddBtn.click();
-      const criteriaNameInput = page.locator(`[data-testid="wizard-criterion-label"]`);
-      await criteriaNameInput.fill("E2E Test Criterion");
-      const criteriaMaxInput = page.locator(`[data-testid="wizard-criterion-max"]`);
-      await criteriaMaxInput.fill("100");
-      await page.locator(`[data-testid="wizard-next-step-2"]`).click();
-    }
+    // Step 2 — Period creation
+    // Advance to step 3 is reactive (useSetupWizard detects new period in sortedPeriods)
+    const periodNameInput = page.locator('[data-testid="wizard-period-name"]');
+    await expect(periodNameInput).toBeVisible({ timeout: 10_000 });
+    await periodNameInput.fill(`E2E Wizard Period ${Date.now()}`);
+    await page.locator('[data-testid="wizard-period-create"]').click();
 
-    // Step 3: Outcomes setup (optional)
-    const outcomesAddBtn = page.locator(`[data-testid="wizard-add-outcome"]`);
-    if (await outcomesAddBtn.isVisible()) {
-      await outcomesAddBtn.click();
-      const outcomeInput = page.locator(`[data-testid="wizard-outcome-label"]`);
-      await outcomeInput.fill("E2E Test Outcome");
-      await page.locator(`[data-testid="wizard-next-step-3"]`).click();
-    } else {
-      // Skip if no outcome step
-      const skipBtn = page.locator(`[data-testid="wizard-skip-outcomes"]`);
-      if (await skipBtn.isVisible()) {
-        await skipBtn.click();
-      }
-    }
+    // Step 3 — Criteria: two sub-phases.
+    // (a) phase=criteria → Apply Template & Continue.
+    // (b) After apply, hasCriteria flips true → CriteriaStep auto-transitions to
+    //     phase=framework ("Set accreditation framework"). This is internal to
+    //     step 3 — the parent currentStep is still 3 — so we must skip the
+    //     framework picker (or pick MÜDEK) before the wizard advances to step 4.
+    const applyTemplateBtn = page.locator('[data-testid="wizard-step-criteria-apply-template"]');
+    await expect(applyTemplateBtn).toBeVisible({ timeout: 15_000 });
+    await applyTemplateBtn.click();
 
-    // Step 4: Jurors setup
-    const jurorAddBtn = page.locator(`[data-testid="wizard-add-juror"]`);
-    if (await jurorAddBtn.isVisible()) {
-      await jurorAddBtn.click();
-      const jurorNameInput = page.locator(`[data-testid="wizard-juror-name"]`);
-      await jurorNameInput.fill("E2E Test Juror");
-      const jurorAffiliationInput = page.locator(`[data-testid="wizard-juror-affiliation"]`);
-      await jurorAffiliationInput.fill("E2E Test Org");
-      await page.locator(`[data-testid="wizard-next-step-4"]`).click();
-    }
+    // Wait for framework phase, then skip (no testid; click the inline link).
+    const skipFrameworkLink = page.getByRole("button", { name: /Skip for now/i });
+    await expect(skipFrameworkLink).toBeVisible({ timeout: 15_000 });
+    await skipFrameworkLink.click();
 
-    // Step 5: Finalize
-    const finalizeBtn = page.locator(`[data-testid="wizard-finalize"]`);
-    if (await finalizeBtn.isVisible()) {
-      await finalizeBtn.click();
-    }
+    // Step 4 — Projects: use placeholder selectors (no testids on inputs)
+    const projectTitleInput = page.getByPlaceholder("Autonomous Warehouse Router");
+    await expect(projectTitleInput).toBeVisible({ timeout: 10_000 });
+    await projectTitleInput.fill("E2E Test Project");
+    await page.getByPlaceholder("Ali Vural, Zeynep Şahin, Ege Tan").fill("E2E Student A, E2E Student B");
+    await page.locator('[data-testid="wizard-step-projects-next"]').click();
 
-    // After finalization, the wizard should close
-    await expect(page.locator(`[data-testid="setup-wizard"]`)).not.toBeVisible({ timeout: 10000 });
+    // Step 5 — Jurors: fill form and save (no jurors exist yet)
+    const jurorNameInput = page.getByPlaceholder("Dr. Ayşe Demir");
+    await expect(jurorNameInput).toBeVisible({ timeout: 10_000 });
+    await jurorNameInput.fill("E2E Test Juror");
+    await page.getByPlaceholder("TED University").fill("E2E Test University");
+    await page.locator('[data-testid="wizard-step-jurors-next"]').click();
 
-    // Verify DB: organizations.setup_completed_at should be NOT NULL
-    const { data: org, error: orgErr } = await adminClient
-      .from("organizations")
-      .select("setup_completed_at")
-      .eq("id", E2E_WIZARD_ORG_ID)
-      .single();
+    // After save + fetchData re-renders to the "jurors already exist" branch,
+    // the "Generate Entry Token" button appears
+    const launchBtn = page.locator('[data-testid="wizard-step-jurors-launch"]');
+    await expect(launchBtn).toBeVisible({ timeout: 15_000 });
+    await launchBtn.click();
 
-    expect(orgErr).toBeNull();
-    expect(org?.setup_completed_at).toBeTruthy();
-    expect(new Date(org?.setup_completed_at || "").getTime()).toBeGreaterThan(0);
+    // Completion step — readiness check passes (template + 1 project), complete setup
+    const completionDiv = page.locator('[data-testid="wizard-completion"]');
+    await expect(completionDiv).toBeVisible({ timeout: 20_000 });
+    const completeBtn = page.locator('[data-testid="wizard-step-review-complete"]');
+    await expect(completeBtn).toBeVisible({ timeout: 15_000 });
+    await completeBtn.click();
+
+    // Verify DB: setup_completed_at should be stamped
+    await expect
+      .poll(
+        async () => {
+          const { data: org } = await adminClient
+            .from("organizations")
+            .select("setup_completed_at")
+            .eq("id", E2E_WIZARD_ORG_ID)
+            .single();
+          return org?.setup_completed_at ?? null;
+        },
+        { timeout: 10_000, intervals: [500] },
+      )
+      .toBeTruthy();
   });
 });

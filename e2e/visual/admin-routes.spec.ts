@@ -24,13 +24,34 @@ for (const route of ROUTES) {
       test(`visual: ${route.name} ${viewport.label} ${theme}`, async ({ page }) => {
         await page.setViewportSize(viewport);
 
-        // Navigate to demo route — DemoAdminLoader auto-logs in with the demo admin account
-        await page.goto(`${APP_BASE}${route.path}`);
-
-        // Wait for the admin shell to be present (not the login page)
-        await expect(page.locator('[data-testid="admin-shell-root"]')).toBeVisible({
-          timeout: 20_000,
+        // Suppress the admin onboarding tour (SpotlightTour) before React mounts.
+        // Without this, every fresh-context screenshot captures the welcome
+        // overlay instead of the page content.
+        await page.addInitScript(() => {
+          try {
+            localStorage.setItem("vera.admin_tour_done", "1");
+          } catch {}
         });
+
+        // Step 1 — trigger auto-login. Visiting /demo (or any /demo/admin/*
+        // route while logged out) shows DemoAdminLoader, which signs in with
+        // the demo admin and then `window.location.replace("/demo/admin")`.
+        // We MUST land on /demo/admin first because the loader hardcodes that
+        // redirect target — going directly to the deep link drops the path.
+        await page.goto(`${APP_BASE}/demo/admin`);
+        await expect(page.locator('[data-testid="admin-shell-root"]')).toBeVisible({
+          timeout: 30_000,
+        });
+
+        // Step 2 — auth session is now in storage; navigate to the actual
+        // route. AdminRouteLayout renders directly without bouncing through
+        // DemoAdminLoader.
+        if (route.path !== "/demo/admin") {
+          await page.goto(`${APP_BASE}${route.path}`);
+          await expect(page.locator('[data-testid="admin-shell-root"]')).toBeVisible({
+            timeout: 20_000,
+          });
+        }
 
         // Wait for data to load (no loading spinner visible)
         await page.waitForLoadState("networkidle");

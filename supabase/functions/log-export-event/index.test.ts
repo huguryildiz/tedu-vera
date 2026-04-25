@@ -57,6 +57,7 @@ Deno.test("log-export-event — missing bearer token returns 401", async () => {
   assertEquals(res.status, 401);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Missing bearer token");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.log.05
@@ -70,6 +71,8 @@ Deno.test("log-export-event — invalid JWT returns 401", async () => {
     body: { action: "export.scores" },
   }));
   assertEquals(res.status, 401);
+  const body = await readJson(res) as { error: string };
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.log.06
@@ -90,6 +93,7 @@ Deno.test("log-export-event — invalid JSON body returns 400", async () => {
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Invalid JSON body");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.log.07
@@ -107,6 +111,7 @@ Deno.test(
     assertEquals(res.status, 400);
     const body = await readJson(res) as { error: string };
     assert(body.error.includes("export."));
+    assertEquals(typeof body.error, "string");
   },
 );
 
@@ -134,6 +139,7 @@ Deno.test(
     assertEquals(res.status, 403);
     const body = await readJson(res) as { error: string };
     assert(body.error.includes("Forbidden"));
+    assertEquals(typeof body.error, "string");
   },
 );
 
@@ -157,6 +163,8 @@ Deno.test(
     assertEquals(res.status, 403);
     const body = await readJson(res) as { error: string; details?: string };
     assertEquals(body.error, "Membership check failed");
+    assertEquals(typeof body.error, "string");
+    if (body.details) assertEquals(typeof body.details, "string");
   },
 );
 
@@ -196,6 +204,7 @@ Deno.test(
     assertEquals(res.status, 200);
     const body = await readJson(res) as { ok: boolean };
     assertEquals(body.ok, true);
+    assertEquals(typeof body.ok, "boolean");
 
     const insert = getCalls().find(
       (c) => c.table === "audit_logs" && c.op === "insert",
@@ -237,5 +246,6 @@ Deno.test(
     assertEquals(res.status, 500);
     const body = await readJson(res) as { error: string };
     assertEquals(body.error, "Audit write failed");
+    assertEquals(typeof body.error, "string");
   },
 );

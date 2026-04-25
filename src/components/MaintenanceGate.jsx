@@ -54,9 +54,10 @@ export default function MaintenanceGate({ children }) {
       try {
         const data = await getMaintenanceStatus();
         if (cancelled || mySeq !== fetchSeq.current) return;
+        console.log("[MaintenanceGate] Status fetched:", data);
         setStatus(data || null);
       } catch (err) {
-        console.warn("[MaintenanceGate] fetch failed:", err);
+        console.error("[MaintenanceGate] fetch failed:", err?.message || String(err));
         // Non-fatal: keep last known status. Polling will retry.
       }
     }

@@ -47,6 +47,7 @@ Deno.test("send-export-report — missing required fields returns 400", async ()
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error.includes("Missing required fields"), true);
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.send-export-report.04
@@ -56,6 +57,7 @@ Deno.test("send-export-report — missing auth token returns 401", async () => {
   assertEquals(res.status, 401);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Missing bearer token");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.send-export-report.05
@@ -71,6 +73,7 @@ Deno.test("send-export-report — non-admin caller returns 403", async () => {
   assertEquals(res.status, 403);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "admin access required");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.send-export-report.07
@@ -90,6 +93,7 @@ Deno.test("send-export-report — org-A admin requesting org-B export → 403", 
   assertEquals(res.status, 403);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "admin access required");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.send-export-report.06
@@ -110,7 +114,9 @@ Deno.test("send-export-report — super_admin, no RESEND_API_KEY returns 200 sen
     assertEquals(res.status, 200);
     const body = await readJson(res) as { ok: boolean; sent: boolean };
     assertEquals(body.ok, true);
+    assertEquals(typeof body.ok, "boolean");
     assertEquals(body.sent, false);
+    assertEquals(typeof body.sent, "boolean");
   } finally {
     restoreFetch();
   }

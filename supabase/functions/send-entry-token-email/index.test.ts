@@ -45,6 +45,7 @@ Deno.test("send-entry-token-email — missing tokenUrl → 400 before auth", asy
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assert(body.error.includes("Missing required fields"));
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.send-entry-token-email.02
@@ -60,6 +61,7 @@ Deno.test("send-entry-token-email — no admin membership → 403", async () => 
   assertEquals(res.status, 403);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "admin access required");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.send-entry-token-email.03
@@ -79,7 +81,9 @@ Deno.test("send-entry-token-email — Resend success, tokenUrl in text payload",
     assertEquals(res.status, 200);
     const body = await readJson(res) as { ok: boolean; sent: boolean };
     assertEquals(body.ok, true);
+    assertEquals(typeof body.ok, "boolean");
     assertEquals(body.sent, true);
+    assertEquals(typeof body.sent, "boolean");
     assert(fetchCalls.length >= 1, "expected Resend fetch");
     assertEquals(fetchCalls[0].url, "https://api.resend.com/emails");
     // PII assertion: tokenUrl must appear in the text field of the Resend payload
@@ -103,8 +107,11 @@ Deno.test("send-entry-token-email — Resend 429 → 200 sent=false", async () =
     assertEquals(res.status, 200);
     const body = await readJson(res) as { ok: boolean; sent: boolean; error?: string };
     assertEquals(body.ok, true);
+    assertEquals(typeof body.ok, "boolean");
     assertEquals(body.sent, false);
+    assertEquals(typeof body.sent, "boolean");
     assert(body.error && body.error.includes("Resend"));
+    if (body.error) assertEquals(typeof body.error, "string");
   } finally {
     restore();
     Deno.env.delete("RESEND_API_KEY");

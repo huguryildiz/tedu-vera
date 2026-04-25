@@ -105,18 +105,21 @@ describe("juryApi", () => {
       last_seen_at: "2025-06-01T00:00:00Z",
       final_submitted_at: null,
     };
-    const makeMock = (data) =>
-      mockFrom.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          match: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data, error: null }),
-          }),
-        }),
+    const makeMock = (data) => {
+      const result = { data: { ok: true, ...data }, error: null };
+      const chainable = Object.assign(Promise.resolve(result), {
+        abortSignal: vi.fn().mockReturnValue(Promise.resolve(result)),
       });
+      mockRpc.mockReturnValue(chainable);
+    };
 
     // edit_enabled=true + future expiry → edit_allowed=true
     makeMock(editData);
     const active = await getJurorEditState("p1", "j1", "token1", null);
+    expect(mockRpc).toHaveBeenCalledWith("rpc_jury_get_edit_state", {
+      p_juror_id: "j1",
+      p_period_id: "p1",
+    });
     expect(active.edit_allowed).toBe(true);
     expect(active.lock_active).toBe(false);
     expect(active.final_submitted_at).toBeNull();
@@ -136,6 +139,10 @@ describe("juryApi", () => {
     makeMock({ ...editData, is_blocked: true });
     const blocked = await getJurorEditState("p1", "j1", "token1", null);
     expect(blocked.lock_active).toBe(true);
+
+    // ok:false → throws error_code
+    mockRpc.mockResolvedValue({ data: { ok: false, error_code: "juror_session_not_found" }, error: null });
+    await expect(getJurorEditState("p1", "j1", "token1", null)).rejects.toThrow("juror_session_not_found");
   });
 
   qaTest("api.juryApi.07", async () => {

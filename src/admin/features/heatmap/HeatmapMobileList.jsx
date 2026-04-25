@@ -91,7 +91,6 @@ export default function HeatmapMobileList({
                 avg={jurorRowAvgs[originalIdx]}
                 tabMax={tabMax}
                 tabLabel={tabLabel}
-                status={jurorWorkflowMap?.get(juror.key)}
                 rows={rows}
               />
             );

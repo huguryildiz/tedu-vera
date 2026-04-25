@@ -134,7 +134,7 @@ export default function JurorsStep({ periodId, onContinue, onBack, onLaunch, loa
           })}
         </div>
         <div className="sw-actions">
-          <button className="sw-btn sw-btn-success" onClick={onLaunch}>
+          <button className="sw-btn sw-btn-success" data-testid="wizard-step-jurors-launch" onClick={onLaunch}>
             <Zap size={16} /> Generate Entry Token
           </button>
         </div>

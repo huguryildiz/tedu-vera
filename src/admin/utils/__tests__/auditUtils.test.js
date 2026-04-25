@@ -533,3 +533,289 @@ describe("auditUtils — detectAnomalies", () => {
     expect(rPriority.key).toBe("auth.login_failure.burst");
   });
 });
+
+describe("auditUtils — buildAuditParams filter validation", () => {
+  qaTest("audit-filter-actor-types", () => {
+    // Valid actor types pass through
+    const validTypes = ["admin", "system", "juror", "service"];
+    const params1 = buildAuditParams({ actorTypes: validTypes }, 50, null, "");
+    expect(params1.actorTypes).toEqual(validTypes);
+
+    // Unknown actor type passes through unchecked (no enum validation)
+    const params2 = buildAuditParams({ actorTypes: ["unknown_type"] }, 50, null, "");
+    expect(params2.actorTypes).toEqual(["unknown_type"]);
+
+    // Empty array → null
+    const params3 = buildAuditParams({ actorTypes: [] }, 50, null, "");
+    expect(params3.actorTypes).toBeNull();
+
+    // Single-item array
+    const params4 = buildAuditParams({ actorTypes: ["admin"] }, 50, null, "");
+    expect(params4.actorTypes).toEqual(["admin"]);
+
+    // Null/undefined actorTypes → null (not passed in object returns null)
+    const params5 = buildAuditParams({}, 50, null, "");
+    expect(params5.actorTypes).toBeNull();
+  });
+
+  qaTest("audit-filter-actions", () => {
+    // Valid action strings pass through
+    const validActions = ["data.score.submitted", "admin.login", "evaluation.complete"];
+    const params1 = buildAuditParams({ actions: validActions }, 50, null, "");
+    expect(params1.actions).toEqual(validActions);
+
+    // Unknown action type passes through unchecked
+    const params2 = buildAuditParams({ actions: ["unknown.action"] }, 50, null, "");
+    expect(params2.actions).toEqual(["unknown.action"]);
+
+    // Empty array → null
+    const params3 = buildAuditParams({ actions: [] }, 50, null, "");
+    expect(params3.actions).toBeNull();
+
+    // Mixed valid and invalid actions (no validation, passes through)
+    const params4 = buildAuditParams(
+      { actions: ["admin.login", "totally.unknown"] },
+      50,
+      null,
+      ""
+    );
+    expect(params4.actions).toEqual(["admin.login", "totally.unknown"]);
+
+    // No actions key → returns null
+    const params5 = buildAuditParams({}, 50, null, "");
+    expect(params5.actions).toBeNull();
+  });
+
+  qaTest("audit-filter-categories", () => {
+    // Valid categories from CATEGORY_META (auth, access, data, config, security)
+    const validCats = ["auth", "access", "data", "config", "security"];
+    const params1 = buildAuditParams({ categories: validCats }, 50, null, "");
+    expect(params1.categories).toEqual(validCats);
+
+    // Unknown category passes through unchecked
+    const params2 = buildAuditParams({ categories: ["unknown"] }, 50, null, "");
+    expect(params2.categories).toEqual(["unknown"]);
+
+    // Empty array → null
+    const params3 = buildAuditParams({ categories: [] }, 50, null, "");
+    expect(params3.categories).toBeNull();
+
+    // Subset of valid categories
+    const params4 = buildAuditParams({ categories: ["auth", "data"] }, 50, null, "");
+    expect(params4.categories).toEqual(["auth", "data"]);
+
+    // No categories key → returns null
+    const params5 = buildAuditParams({}, 50, null, "");
+    expect(params5.categories).toBeNull();
+  });
+
+  qaTest("audit-filter-severities", () => {
+    // Valid severities from SEVERITY_META (info, low, medium, high, critical)
+    const validSevs = ["info", "low", "medium", "high", "critical"];
+    const params1 = buildAuditParams({ severities: validSevs }, 50, null, "");
+    expect(params1.severities).toEqual(validSevs);
+
+    // Unknown severity passes through unchecked
+    const params2 = buildAuditParams({ severities: ["unknown_sev"] }, 50, null, "");
+    expect(params2.severities).toEqual(["unknown_sev"]);
+
+    // Empty array → null
+    const params3 = buildAuditParams({ severities: [] }, 50, null, "");
+    expect(params3.severities).toBeNull();
+
+    // Subset of valid severities
+    const params4 = buildAuditParams({ severities: ["high", "critical"] }, 50, null, "");
+    expect(params4.severities).toEqual(["high", "critical"]);
+
+    // No severities key → returns null
+    const params5 = buildAuditParams({}, 50, null, "");
+    expect(params5.severities).toBeNull();
+  });
+
+  qaTest("audit-filter-date-range", () => {
+    // Reversed date range (start > end) — buildAuditParams does NOT validate;
+    // validation is handled by getAuditDateRangeError called separately in UI
+    const reversed = buildAuditParams(
+      { startDate: "2025-06-30", endDate: "2025-01-01" },
+      50,
+      null,
+      ""
+    );
+    // Function returns params anyway; RPC or UI error handler catches it
+    expect(reversed.startAt).not.toBeNull();
+    expect(reversed.endAt).not.toBeNull();
+
+    // Boundary dates (same day)
+    const params1 = buildAuditParams(
+      { startDate: "2025-06-15", endDate: "2025-06-15" },
+      50,
+      null,
+      ""
+    );
+    expect(params1.startAt).not.toBeNull();
+    expect(params1.endAt).not.toBeNull();
+
+    // Year far in past (year boundary)
+    const params2 = buildAuditParams({ startDate: "1900-01-01" }, 50, null, "");
+    // parseAuditDateString validates year bounds; invalid year → null
+    expect(params2.startAt).toBeNull(); // APP_DATE_MIN_YEAR is likely ~2000
+
+    // Year far in future
+    const params3 = buildAuditParams({ endDate: "2999-12-31" }, 50, null, "");
+    // APP_DATE_MAX_YEAR validation may reject this
+    expect(params3.endAt).toBeNull();
+
+    // Malformed date string (not ISO)
+    const params4 = buildAuditParams({ startDate: "not-a-date" }, 50, null, "");
+    expect(params4.startAt).toBeNull();
+
+    // Empty date string → parsed as falsy, startAt → null
+    const params5 = buildAuditParams({ startDate: "" }, 50, null, "");
+    expect(params5.startAt).toBeNull();
+
+    // No dates
+    const params6 = buildAuditParams({}, 50, null, "");
+    expect(params6.startAt).toBeNull();
+    expect(params6.endAt).toBeNull();
+  });
+
+  qaTest("audit-filter-search-text", () => {
+    // Normal search text
+    const params1 = buildAuditParams({}, 50, null, "Alice Smith");
+    expect(params1.search).toBe("Alice Smith");
+
+    // SQL-suspect characters: ; (semicolon) — passes through unchecked, no escaping
+    const params2 = buildAuditParams({}, 50, null, "test; DROP TABLE logs");
+    expect(params2.search).toBe("test; DROP TABLE logs");
+
+    // SQL wildcard %, _ — passes through, no escaping
+    const params3 = buildAuditParams({}, 50, null, "test%value_name");
+    expect(params3.search).toBe("test%value_name");
+
+    // Backslash — passes through, no escaping
+    const params4 = buildAuditParams({}, 50, null, "path\\to\\file");
+    expect(params4.search).toBe("path\\to\\file");
+
+    // Unicode characters
+    const params5 = buildAuditParams({}, 50, null, "Ahmet Çalışkan 北京");
+    expect(params5.search).toBe("Ahmet Çalışkan 北京");
+
+    // Very long string (>1000 chars) — passes through, no truncation
+    const longStr = "x".repeat(2000);
+    const params6 = buildAuditParams({}, 50, null, longStr);
+    expect(params6.search).toBe(longStr);
+    expect(params6.search.length).toBe(2000);
+
+    // Empty string → search returns null (because `search ? search : null`)
+    const params7 = buildAuditParams({}, 50, null, "");
+    expect(params7.search).toBeNull();
+
+    // Only whitespace → trim() results in empty string, then → null
+    const params8 = buildAuditParams({}, 50, null, "   ");
+    expect(params8.search).toBeNull();
+
+    // Null/undefined searchText → "" after String().trim(), then → null
+    const params9 = buildAuditParams({}, 50, null, null);
+    expect(params9.search).toBeNull();
+
+    // Date-like string → also sets searchDay/Month/Year
+    const params10 = buildAuditParams({}, 50, null, "15 jan 2025");
+    expect(params10.search).toBe("15 jan 2025");
+    expect(params10.searchDay).toBe(15);
+    expect(params10.searchMonth).toBe(1);
+    expect(params10.searchYear).toBe(2025);
+  });
+
+  qaTest("audit-filter-limit-cursor", () => {
+    // Normal positive limit
+    const params1 = buildAuditParams({}, 50, null, "");
+    expect(params1.limit).toBe(50);
+
+    // Limit = 1 (minimum)
+    const params2 = buildAuditParams({}, 1, null, "");
+    expect(params2.limit).toBe(1);
+
+    // Limit = 0 (falsy, defaults to AUDIT_PAGE_SIZE)
+    const params3 = buildAuditParams({}, 0, null, "");
+    expect(params3.limit).toBe(50); // AUDIT_PAGE_SIZE
+
+    // Negative limit (truthy, passes through)
+    const params4 = buildAuditParams({}, -10, null, "");
+    expect(params4.limit).toBe(-10);
+
+    // Very large limit (10000)
+    const params5 = buildAuditParams({}, 10000, null, "");
+    expect(params5.limit).toBe(10000);
+
+    // Cursor object with valid fields
+    const cursor1 = { beforeAt: "2025-03-01T12:00:00Z", beforeId: "uuid-1234" };
+    const params6 = buildAuditParams({}, 50, cursor1, "");
+    expect(params6.beforeAt).toBe(cursor1.beforeAt);
+    expect(params6.beforeId).toBe(cursor1.beforeId);
+
+    // Cursor with null beforeAt (passes through)
+    const cursor2 = { beforeAt: null, beforeId: "uuid-5678" };
+    const params7 = buildAuditParams({}, 50, cursor2, "");
+    expect(params7.beforeAt).toBeNull();
+    expect(params7.beforeId).toBe("uuid-5678");
+
+    // Cursor with null beforeId
+    const cursor3 = { beforeAt: "2025-03-01T12:00:00Z", beforeId: null };
+    const params8 = buildAuditParams({}, 50, cursor3, "");
+    expect(params8.beforeAt).toBe(cursor3.beforeAt);
+    expect(params8.beforeId).toBeNull();
+
+    // Invalid cursor format (not ISO datetime) — passes through unchecked
+    const cursor4 = { beforeAt: "not-a-datetime", beforeId: "invalid-uuid" };
+    const params9 = buildAuditParams({}, 50, cursor4, "");
+    expect(params9.beforeAt).toBe("not-a-datetime");
+    expect(params9.beforeId).toBe("invalid-uuid");
+
+    // Null cursor → both beforeAt and beforeId return null
+    const params10 = buildAuditParams({}, 50, null, "");
+    expect(params10.beforeAt).toBeNull();
+    expect(params10.beforeId).toBeNull();
+  });
+
+  qaTest("audit-filter-combined", () => {
+    // All filters active at once
+    const filters = {
+      startDate: "2025-01-01",
+      endDate: "2025-06-30",
+      actorTypes: ["admin", "system"],
+      actions: ["admin.login", "data.score.submitted"],
+      categories: ["auth", "data"],
+      severities: ["high", "critical"],
+    };
+    const cursor = { beforeAt: "2025-03-15T10:00:00Z", beforeId: "some-uuid" };
+    const params = buildAuditParams(filters, 25, cursor, "test search");
+
+    // All expected keys are present and not corrupted
+    expect(params).toHaveProperty("startAt");
+    expect(params).toHaveProperty("endAt");
+    expect(params).toHaveProperty("actorTypes");
+    expect(params).toHaveProperty("actions");
+    expect(params).toHaveProperty("categories");
+    expect(params).toHaveProperty("severities");
+    expect(params).toHaveProperty("limit");
+    expect(params).toHaveProperty("beforeAt");
+    expect(params).toHaveProperty("beforeId");
+    expect(params).toHaveProperty("search");
+    expect(params).toHaveProperty("searchDay");
+    expect(params).toHaveProperty("searchMonth");
+    expect(params).toHaveProperty("searchYear");
+
+    // Values are correct
+    expect(params.startAt).not.toBeNull();
+    expect(params.endAt).not.toBeNull();
+    expect(params.actorTypes).toEqual(["admin", "system"]);
+    expect(params.actions).toEqual(["admin.login", "data.score.submitted"]);
+    expect(params.categories).toEqual(["auth", "data"]);
+    expect(params.severities).toEqual(["high", "critical"]);
+    expect(params.limit).toBe(25);
+    expect(params.beforeAt).toBe(cursor.beforeAt);
+    expect(params.beforeId).toBe(cursor.beforeId);
+    expect(params.search).toBe("test search");
+    expect(params.searchDay).toBeNull(); // "test search" is not a date pattern
+  });
+});

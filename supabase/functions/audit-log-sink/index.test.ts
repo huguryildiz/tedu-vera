@@ -39,6 +39,8 @@ Deno.test("audit-log-sink — non-POST returns 405", async () => {
   const handler = await setup();
   const res = await handler(makeRequest({ method: "GET" }));
   assertEquals(res.status, 405);
+  const body = await readJson(res) as { error: string };
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.sink.03
@@ -57,7 +59,9 @@ Deno.test(
     assertEquals(res.status, 200);
     const body = await readJson(res) as { ok: boolean; error?: string };
     assertEquals(body.ok, false);
+    assertEquals(typeof body.ok, "boolean");
     assertEquals(body.error, "Unauthorized");
+    assertEquals(typeof body.error, "string");
     Deno.env.delete("WEBHOOK_HMAC_SECRET");
     Deno.env.delete("AUDIT_SINK_WEBHOOK_URL");
   },
@@ -80,7 +84,9 @@ Deno.test(
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean; skipped: boolean; reason?: string };
       assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
       assertEquals(body.skipped, true);
+      assertEquals(typeof body.skipped, "boolean");
       assert(!fetched, "expected no sink fetch when URL is unset");
     } finally {
       restore();
@@ -103,7 +109,9 @@ Deno.test(
     assertEquals(res.status, 200);
     const body = await readJson(res) as { ok: boolean; error: string };
     assertEquals(body.ok, false);
+    assertEquals(typeof body.ok, "boolean");
     assertEquals(body.error, "Invalid JSON");
+    assertEquals(typeof body.error, "string");
     Deno.env.delete("AUDIT_SINK_WEBHOOK_URL");
   },
 );
@@ -125,7 +133,10 @@ Deno.test(
       }));
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean; skipped: boolean };
+      assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
       assertEquals(body.skipped, true);
+      assertEquals(typeof body.skipped, "boolean");
       assert(!fetched);
     } finally {
       restore();
@@ -150,8 +161,11 @@ Deno.test(
         body: { type: "INSERT", table: "scores", record: { id: 1 } },
       }));
       assertEquals(res.status, 200);
-      const body = await readJson(res) as { skipped: boolean };
+      const body = await readJson(res) as { skipped: boolean; ok: boolean };
       assertEquals(body.skipped, true);
+      assertEquals(typeof body.skipped, "boolean");
+      assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
       assert(!fetched);
     } finally {
       restore();
@@ -190,7 +204,9 @@ Deno.test(
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean; sink_status: number };
       assertEquals(body.ok, true);
+      assertEquals(typeof body.ok, "boolean");
       assertEquals(body.sink_status, 200);
+      assertEquals(typeof body.sink_status, "number");
       assertEquals(captured.length, 1);
       assertEquals(captured[0].url, "https://sink.example/ingest");
       assertEquals(captured[0].auth, "Bearer sk-test");
@@ -224,7 +240,9 @@ Deno.test(
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean; sink_status: number };
       assertEquals(body.ok, false);
+      assertEquals(typeof body.ok, "boolean");
       assertEquals(body.sink_status, 502);
+      assertEquals(typeof body.sink_status, "number");
     } finally {
       restore();
       Deno.env.delete("AUDIT_SINK_WEBHOOK_URL");
@@ -248,6 +266,8 @@ Deno.test(
       assertEquals(res.status, 200);
       const body = await readJson(res) as { ok: boolean; error: string };
       assertEquals(body.ok, false);
+      assertEquals(typeof body.ok, "boolean");
+      assertEquals(typeof body.error, "string");
       assert(body.error.includes("ECONNRESET"));
     } finally {
       restore();

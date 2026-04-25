@@ -11,7 +11,11 @@ import { invokeEdgeFunction } from "../core/invokeEdgeFunction";
  */
 export async function getMaintenanceStatus() {
   const { data, error } = await supabase.rpc("rpc_public_maintenance_status");
-  if (error) throw error;
+  if (error) {
+    console.error("[getMaintenanceStatus] RPC error:", error);
+    throw error;
+  }
+  console.log("[getMaintenanceStatus] RPC returned:", data);
   return data;
 }
 

@@ -16,7 +16,7 @@
  *   });
  */
 
-import { it } from "vitest";
+import { it, it as itSkipped } from "vitest";
 import { allure } from "allure-vitest";
 import catalog from "./qa-catalog.json";
 
@@ -68,6 +68,27 @@ export function qaTest(id, testFn) {
   }
 
   it(meta.scenario, async () => {
+    applyAllureMeta(meta);
+    await testFn();
+  });
+}
+
+/**
+ * Declare a test placeholder that is skipped during execution.
+ * Used for backlog/planned tests that are not yet implemented.
+ *
+ * @param {string}   id     - Catalog entry ID (e.g. "grid.filter.04")
+ * @param {Function} testFn - Test body (sync or async, will be skipped)
+ */
+export function todo(id, testFn) {
+  const meta = META_BY_ID[id];
+  if (!meta) {
+    throw new Error(
+      `[todo] Unknown QA test ID: "${id}". Add an entry to src/test/qa-catalog.json.`
+    );
+  }
+
+  it.skip(meta.scenario, async () => {
     applyAllureMeta(meta);
     await testFn();
   });

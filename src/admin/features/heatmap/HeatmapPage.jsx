@@ -461,10 +461,6 @@ export default function HeatmapPage() {
                 <td className="sticky-col" role="rowheader">
                   <div className="table-cell-stack">
                     <JurorBadge name={juror.name || juror.juror_name} affiliation={juror.dept || juror.affiliation} size="sm" />
-                    <div className="juror-progress-wrap">
-                      <span className="juror-progress-lbl">Juror Progress</span>
-                      <JurorStatusPill status={jurorWorkflowMap.get(juror.key)} />
-                    </div>
                   </div>
                 </td>
 

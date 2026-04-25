@@ -33,6 +33,7 @@ Deno.test("request-score-edit — missing required fields returns 400", async ()
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error.includes("Missing required fields"), true);
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.request-score-edit.03
@@ -45,7 +46,9 @@ Deno.test("request-score-edit — missing Supabase env returns 500", async () =>
   assertEquals(res.status, 500);
   const body = await readJson(res) as { ok: boolean; error: string };
   assertEquals(body.ok, false);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.error, "Service client unavailable");
+  assertEquals(typeof body.error, "string");
   setDefaultEnv();
 });
 
@@ -63,7 +66,9 @@ Deno.test("request-score-edit — invalid session token returns 401", async () =
   assertEquals(res.status, 401);
   const body = await readJson(res) as { ok: boolean; error: string };
   assertEquals(body.ok, false);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.error, "Invalid or expired session");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.request-score-edit.05
@@ -81,7 +86,9 @@ Deno.test("request-score-edit — period not found returns 404", async () => {
   assertEquals(res.status, 404);
   const body = await readJson(res) as { ok: boolean; error: string };
   assertEquals(body.ok, false);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.error, "Period not found");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.request-score-edit.07
@@ -99,7 +106,9 @@ Deno.test("request-score-edit — session token for period-A does not validate f
   assertEquals(res.status, 401);
   const body = await readJson(res) as { ok: boolean; error: string };
   assertEquals(body.ok, false);
+  assertEquals(typeof body.ok, "boolean");
   assertEquals(body.error, "Invalid or expired session");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.real.request-score-edit.06
@@ -133,8 +142,11 @@ Deno.test("request-score-edit — no RESEND_API_KEY returns 200 sent:false", asy
     assertEquals(res.status, 200);
     const body = await readJson(res) as { ok: boolean; sent: boolean; error?: string };
     assertEquals(body.ok, true);
+    assertEquals(typeof body.ok, "boolean");
     assertEquals(body.sent, false);
+    assertEquals(typeof body.sent, "boolean");
     assertEquals(body.error, "RESEND_API_KEY not configured");
+    assertEquals(typeof body.error, "string");
   } finally {
     restoreFetch();
   }

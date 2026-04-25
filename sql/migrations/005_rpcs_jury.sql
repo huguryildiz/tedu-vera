@@ -378,6 +378,47 @@ $$;
 GRANT EXECUTE ON FUNCTION public.rpc_jury_validate_entry_token(TEXT) TO anon, authenticated;
 
 -- =============================================================================
+-- rpc_jury_get_edit_state
+-- =============================================================================
+-- Returns only non-sensitive edit-state columns for a juror+period pair.
+-- SECURITY DEFINER allows this to bypass the now-removed public SELECT policy
+-- on juror_period_auth, so anonymous jury users can still get their edit state
+-- without exposing pin_hash / session_token_hash via PostgREST.
+CREATE OR REPLACE FUNCTION public.rpc_jury_get_edit_state(
+  p_juror_id  UUID,
+  p_period_id UUID
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_row RECORD;
+BEGIN
+  SELECT edit_enabled, edit_expires_at, is_blocked, last_seen_at, final_submitted_at
+    INTO v_row
+  FROM juror_period_auth
+  WHERE juror_id = p_juror_id AND period_id = p_period_id;
+
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('ok', false, 'error_code', 'juror_session_not_found')::JSON;
+  END IF;
+
+  RETURN jsonb_build_object(
+    'ok',                 true,
+    'edit_enabled',       v_row.edit_enabled,
+    'edit_expires_at',    v_row.edit_expires_at,
+    'is_blocked',         v_row.is_blocked,
+    'last_seen_at',       v_row.last_seen_at,
+    'final_submitted_at', v_row.final_submitted_at
+  )::JSON;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.rpc_jury_get_edit_state(UUID, UUID) TO anon, authenticated;
+
+-- =============================================================================
 -- rpc_jury_validate_entry_reference (short Access History reference ID)
 -- =============================================================================
 

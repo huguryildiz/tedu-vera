@@ -23,6 +23,7 @@ Deno.test("platform-metrics — OPTIONS returns 200 with CORS", async () => {
   const res = await handler(makeRequest({ method: "OPTIONS" }));
   assertEquals(res.status, 200);
   assertEquals(res.headers.get("access-control-allow-origin"), "*");
+  // CORS responses have no body
 });
 
 // qa: edge.platform-metrics.02
@@ -30,6 +31,9 @@ Deno.test("platform-metrics — non-POST returns 405", async () => {
   const handler = await setup();
   const res = await handler(makeRequest({ method: "GET" }));
   assertEquals(res.status, 405);
+  const body = await readJson(res) as { error: string };
+  assertEquals(typeof body.error, "string");
+  assertEquals(body.error.length > 0, true);
 });
 
 // qa: edge.platform-metrics.03
@@ -76,6 +80,7 @@ Deno.test("platform-metrics — tenant admin (non-super) returns 403", async () 
   assertEquals(res.status, 403);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Super admin access required.");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.platform-metrics.07
@@ -93,6 +98,7 @@ Deno.test("platform-metrics — membership query error returns 500", async () =>
   assertEquals(res.status, 500);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "db down");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.platform-metrics.08

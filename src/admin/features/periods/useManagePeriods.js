@@ -23,6 +23,7 @@ import {
   assignFrameworkToPeriod,
   freezePeriodSnapshot,
   setPeriodCriteriaName,
+  updatePeriodOutcomeConfig,
 } from "@/shared/api";
 import { getActiveCriteria } from "@/shared/criteria/criteriaHelpers";
 import { sortPeriodsByStartDateDesc } from "@/shared/periodSort";
@@ -443,6 +444,10 @@ export function useManagePeriods({
       setPanelError("period", "Organization context missing. Please re-login.");
       return { ok: false };
     }
+    if (!periodId) {
+      setPanelError("period", "No period selected. Please select a period to continue.");
+      return { ok: false };
+    }
     const period = periodList.find((s) => s.id === periodId);
     if (period?.is_locked) {
       return {
@@ -473,6 +478,10 @@ export function useManagePeriods({
     clearPanelError("period");
     if (!organizationId) {
       setPanelError("period", "Organization context missing. Please re-login.");
+      return { ok: false };
+    }
+    if (!periodId) {
+      setPanelError("period", "No period selected. Please select a period to continue.");
       return { ok: false };
     }
     const period = periodList.find((s) => s.id === periodId);

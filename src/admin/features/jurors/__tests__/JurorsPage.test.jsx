@@ -3,6 +3,37 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { qaTest } from "@/test/qaTest";
 
+// Mock API layer (boundary layer)
+const mockListJurorsSummary = vi.fn();
+const mockGetScores = vi.fn();
+const mockGetPeriodMaxScore = vi.fn();
+const mockCreateJuror = vi.fn();
+const mockUpdateJuror = vi.fn();
+const mockDeleteJuror = vi.fn();
+const mockResetJurorPin = vi.fn();
+const mockSetJurorEditMode = vi.fn();
+const mockForceCloseJurorEditMode = vi.fn();
+const mockNotifyJuror = vi.fn();
+const mockLogExportInitiated = vi.fn();
+const mockSendJurorPinEmail = vi.fn();
+const mockGetActiveEntryTokenPlain = vi.fn();
+
+vi.mock("@/shared/api", () => ({
+  listJurorsSummary: (...a) => mockListJurorsSummary(...a),
+  getScores: (...a) => mockGetScores(...a),
+  getPeriodMaxScore: (...a) => mockGetPeriodMaxScore(...a),
+  createJuror: (...a) => mockCreateJuror(...a),
+  updateJuror: (...a) => mockUpdateJuror(...a),
+  deleteJuror: (...a) => mockDeleteJuror(...a),
+  resetJurorPin: (...a) => mockResetJurorPin(...a),
+  setJurorEditMode: (...a) => mockSetJurorEditMode(...a),
+  forceCloseJurorEditMode: (...a) => mockForceCloseJurorEditMode(...a),
+  notifyJuror: (...a) => mockNotifyJuror(...a),
+  logExportInitiated: (...a) => mockLogExportInitiated(...a),
+  sendJurorPinEmail: (...a) => mockSendJurorPinEmail(...a),
+  getActiveEntryTokenPlain: (...a) => mockGetActiveEntryTokenPlain(...a),
+}));
+
 vi.mock("@/admin/shared/useAdminContext", () => ({
   useAdminContext: () => ({
     organizationId: "org-001",
@@ -34,6 +65,10 @@ vi.mock("@/shared/hooks/useToast", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }),
 }));
 
+vi.mock("@/admin/shared/usePageRealtime", () => ({
+  usePageRealtime: vi.fn(),
+}));
+
 const mockPeriodState = {
   periodList: [],
   viewPeriodId: "period-001",
@@ -58,34 +93,6 @@ vi.mock("@/admin/features/projects/useManageProjects", () => {
     useManageProjects: () => ({
       projects: [],
       loadProjects,
-    }),
-  };
-});
-
-vi.mock("../useManageJurors", () => {
-  const loadJurorsAndEnrich = vi.fn().mockResolvedValue(undefined);
-  return {
-    useManageJurors: () => ({
-      jurors: [],
-      scoreRows: [],
-      periodMaxScore: 100,
-      pinResetTarget: null,
-      resetPinInfo: null,
-      pinResetLoading: false,
-      pinCopied: false,
-      loadJurorsAndEnrich,
-      handleAddJuror: vi.fn(),
-      handleEditJuror: vi.fn(),
-      handleDeleteJuror: vi.fn(),
-      handleImportJurors: vi.fn(),
-      requestResetPin: vi.fn(),
-      confirmResetPin: vi.fn(),
-      closeResetPinDialog: vi.fn(),
-      handleCopyPin: vi.fn(),
-      handleToggleJurorEdit: vi.fn(),
-      handleForceCloseJurorEdit: vi.fn(),
-      handleNotifyJuror: vi.fn(),
-      scheduleJurorRefresh: vi.fn(),
     }),
   };
 });
@@ -138,12 +145,6 @@ vi.mock("@/admin/utils/jurorIdentity", () => ({
   jurorAvatarBg: () => "#000",
   jurorAvatarFg: () => "#fff",
 }));
-vi.mock("@/shared/api", () => ({
-  getPeriodMaxScore: vi.fn().mockResolvedValue({ data: 100 }),
-  logExportInitiated: vi.fn(),
-  sendJurorPinEmail: vi.fn(),
-  getActiveEntryTokenPlain: vi.fn(),
-}));
 vi.mock("@/shared/lib/dateUtils", () => ({ formatDateTime: () => "2026-01-01" }));
 vi.mock("@/auth/shared/lockedActions", () => ({
   LOCK_TOOLTIP_GRACE: "",
@@ -166,6 +167,21 @@ describe("JurorsPage", () => {
     mockPeriodState.periodList = [];
     mockPeriodState.viewPeriodId = "period-001";
     mockPeriodState.viewPeriodLabel = "Spring 2026";
+
+    // Initialize API mocks with default resolved values
+    mockListJurorsSummary.mockResolvedValue([]);
+    mockGetScores.mockResolvedValue([]);
+    mockGetPeriodMaxScore.mockResolvedValue({ data: 100 });
+    mockCreateJuror.mockResolvedValue({});
+    mockUpdateJuror.mockResolvedValue({});
+    mockDeleteJuror.mockResolvedValue({});
+    mockResetJurorPin.mockResolvedValue({});
+    mockSetJurorEditMode.mockResolvedValue({});
+    mockForceCloseJurorEditMode.mockResolvedValue({});
+    mockNotifyJuror.mockResolvedValue({});
+    mockLogExportInitiated.mockResolvedValue({});
+    mockSendJurorPinEmail.mockResolvedValue({});
+    mockGetActiveEntryTokenPlain.mockResolvedValue({});
   });
 
   qaTest("admin.jurors.page.render", () => {

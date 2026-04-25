@@ -200,6 +200,7 @@ RETURNS JSON
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET row_security = off
 AS $$
 DECLARE
   v_row      maintenance_mode%ROWTYPE;
@@ -207,10 +208,15 @@ DECLARE
   v_live     BOOLEAN;
   v_upcoming BOOLEAN;
 BEGIN
-  SELECT * INTO v_row FROM maintenance_mode WHERE id = 1;
+  -- SECURITY DEFINER means this function runs as its owner (postgres),
+  -- so it bypasses RLS policies and can read the maintenance_mode table directly.
+  -- No SET role needed; SECURITY DEFINER is sufficient.
+  SELECT * INTO v_row FROM public.maintenance_mode WHERE id = 1;
 
-  -- Determine live state
-  IF v_row.is_active THEN
+  -- Determine live state (with NULL safety)
+  -- Use FOUND instead of v_row IS NOT NULL because SELECT INTO doesn't set a row to NULL
+  -- when individual columns have NULL values. FOUND is the proper way to check if a row was found.
+  IF FOUND AND v_row.is_active THEN
     IF v_row.mode = 'scheduled' THEN
       v_live := (v_row.start_time IS NOT NULL AND v_now >= v_row.start_time);
     ELSE
@@ -220,27 +226,22 @@ BEGIN
     v_live := false;
   END IF;
 
-  -- Auto-expire if end_time has passed (cron cleans up the DB row,
-  -- but we must not advertise liveness after the window closes)
-  IF v_live AND v_row.end_time IS NOT NULL AND v_now > v_row.end_time THEN
-    v_live := false;
-  END IF;
-
   -- Upcoming: scheduled and not yet started (show countdown banner)
   v_upcoming := (
-    v_row.is_active
+    FOUND
+    AND v_row.is_active
     AND v_row.mode = 'scheduled'
     AND v_row.start_time IS NOT NULL
     AND v_now < v_row.start_time
   );
 
   RETURN jsonb_build_object(
-    'is_active',        v_live,
-    'upcoming',         v_upcoming,
-    'mode',             v_row.mode,
+    'is_active',        COALESCE(v_live, false),
+    'upcoming',         COALESCE(v_upcoming, false),
+    'mode',             COALESCE(v_row.mode, 'immediate'),
     'start_time',       v_row.start_time,
     'end_time',         v_row.end_time,
-    'message',          v_row.message,
+    'message',          COALESCE(v_row.message, 'VERA is undergoing scheduled maintenance. We''ll be back shortly.'),
     'affected_org_ids', v_row.affected_org_ids
   )::JSON;
 END;
@@ -264,6 +265,7 @@ RETURNS JSON
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, auth
+SET row_security = off
 AS $$
 DECLARE
   v_end_time        TIMESTAMPTZ;
@@ -271,6 +273,9 @@ DECLARE
   v_before          maintenance_mode%ROWTYPE;
   v_after           maintenance_mode%ROWTYPE;
 BEGIN
+  RAISE NOTICE '[rpc_admin_set_maintenance] Starting: p_mode=%, p_start_time=%, p_duration_min=%, p_message=%, p_affected_org_ids=%, p_notify_admins=%',
+    p_mode, p_start_time, p_duration_min, p_message, p_affected_org_ids, p_notify_admins;
+
   IF NOT current_user_is_super_admin() THEN
     RAISE EXCEPTION 'super_admin required';
   END IF;
@@ -282,24 +287,32 @@ BEGIN
   FROM maintenance_mode
   WHERE id = 1;
 
+  RAISE NOTICE '[rpc_admin_set_maintenance] v_before: is_active=%, mode=%, message=%', v_before.is_active, v_before.mode, v_before.message;
+
   v_effective_start := CASE WHEN p_mode = 'immediate' THEN now() ELSE p_start_time END;
+
+  RAISE NOTICE '[rpc_admin_set_maintenance] v_effective_start=%', v_effective_start;
 
   IF p_duration_min IS NOT NULL AND v_effective_start IS NOT NULL THEN
     v_end_time := v_effective_start + (p_duration_min || ' minutes')::INTERVAL;
   END IF;
+
+  RAISE NOTICE '[rpc_admin_set_maintenance] About to UPDATE: is_active=true, mode=%, message=%', p_mode, COALESCE(p_message, v_before.message);
 
   UPDATE maintenance_mode SET
     is_active        = true,
     mode             = p_mode,
     start_time       = v_effective_start,
     end_time         = v_end_time,
-    message          = COALESCE(p_message, message),
+    message          = COALESCE(p_message, v_before.message),
     affected_org_ids = p_affected_org_ids,
     notify_admins    = p_notify_admins,
     activated_by     = auth.uid(),
     updated_at       = now()
   WHERE id = 1
   RETURNING * INTO v_after;
+
+  RAISE NOTICE '[rpc_admin_set_maintenance] UPDATE complete. v_after: is_active=%, mode=%, message=%', v_after.is_active, v_after.mode, v_after.message;
 
   PERFORM public._audit_write(
     NULL,

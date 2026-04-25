@@ -34,6 +34,8 @@ Deno.test("invite-org-admin — non-POST returns 405", async () => {
   const handler = await setup();
   const res = await handler(makeRequest({ method: "GET" }));
   assertEquals(res.status, 405);
+  const body = await readJson(res) as { error: string };
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.invite.03
@@ -43,6 +45,7 @@ Deno.test("invite-org-admin — missing Authorization returns 401", async () => 
   assertEquals(res.status, 401);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Missing bearer token");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.invite.04
@@ -52,6 +55,7 @@ Deno.test("invite-org-admin — missing org_id returns 400", async () => {
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Missing required field: org_id");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.invite.05
@@ -64,6 +68,7 @@ Deno.test("invite-org-admin — invalid email returns 400", async () => {
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "A valid email is required.");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.invite.06
@@ -77,6 +82,8 @@ Deno.test("invite-org-admin — auth.getUser error returns 401", async () => {
     body: { org_id: "o1", email: "a@b.com" },
   }));
   assertEquals(res.status, 401);
+  const body = await readJson(res) as { error: string };
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.invite.06b
@@ -97,6 +104,7 @@ Deno.test("invite-org-admin — malformed Authorization header returns 401", asy
   assertEquals(res.status, 401);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "Unauthorized");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.invite.07
@@ -115,6 +123,7 @@ Deno.test("invite-org-admin — non-admin caller (_assert_can_invite fails) retu
   assertEquals(res.status, 403);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "unauthorized");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.invite.08
@@ -145,7 +154,9 @@ Deno.test("invite-org-admin — existing member returns 409 already_member", asy
   assertEquals(res.status, 409);
   const body = await readJson(res) as { error: string; status: string };
   assertEquals(body.error, "already_member");
+  assertEquals(typeof body.error, "string");
   assertEquals(body.status, "active");
+  assertEquals(typeof body.status, "string");
 });
 
 // qa: edge.invite.09
@@ -176,6 +187,7 @@ Deno.test("invite-org-admin — existing confirmed user without approval_flow �
   assertEquals(res.status, 409);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "already_exists_in_auth");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.invite.10
@@ -213,7 +225,9 @@ Deno.test("invite-org-admin — approval_flow with existing confirmed user → 2
   assertEquals(res.status, 200);
   const body = await readJson(res) as Record<string, unknown>;
   assertEquals(body.status, "added");
+  assertEquals(typeof body.status, "string");
   assertEquals(body.user_id, "existing-user");
+  assertEquals(typeof body.user_id, "string");
 
   // Verify membership insert carried the right shape.
   const calls = getCalls();
@@ -264,8 +278,11 @@ Deno.test("invite-org-admin — new user → generateLink + insert membership 'i
   assertEquals(res.status, 200);
   const body = await readJson(res) as { status: string; user_id: string; email: string };
   assertEquals(body.status, "invited");
+  assertEquals(typeof body.status, "string");
   assertEquals(body.user_id, "new-user-1");
+  assertEquals(typeof body.user_id, "string");
   assertEquals(body.email, "new@example.com");
+  assertEquals(typeof body.email, "string");
 
   const calls = getCalls();
   const membershipInsert = calls.find((c) => c.op === "insert" && c.table === "memberships");
@@ -298,6 +315,7 @@ Deno.test("invite-org-admin — generateLink error returns 400", async () => {
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "generate failed");
+  assertEquals(typeof body.error, "string");
 });
 
 // qa: edge.invite.13

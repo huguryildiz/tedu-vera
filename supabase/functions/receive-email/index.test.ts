@@ -37,6 +37,7 @@ Deno.test("receive-email — non-POST returns 405 plain text", async () => {
   assertEquals(res.status, 405);
   const body = await res.text();
   assertEquals(body, "Method not allowed");
+  assertEquals(typeof body, "string");
 });
 
 // qa: edge.real.receive-email.02
@@ -51,6 +52,7 @@ Deno.test("receive-email — invalid JSON returns 400 plain text", async () => {
   assertEquals(res.status, 400);
   const body = await res.text();
   assertEquals(body, "Invalid JSON");
+  assertEquals(typeof body, "string");
 });
 
 // qa: edge.real.receive-email.03
@@ -74,6 +76,7 @@ Deno.test("receive-email — valid POST stores email and returns 200 ok:true", a
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
 });
 
 // qa: edge.real.receive-email.04
@@ -99,6 +102,7 @@ Deno.test("receive-email — with RESEND_API_KEY forwards email and returns 200"
     assertEquals(res.status, 200);
     const body = await readJson(res) as { ok: boolean };
     assertEquals(body.ok, true);
+    assertEquals(typeof body.ok, "boolean");
   } finally {
     restoreFetch();
   }
@@ -118,6 +122,7 @@ Deno.test("receive-email — DB insert error is fail-open, still returns 200", a
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
 });
 
 // qa: edge.real.receive-email.06
@@ -141,6 +146,7 @@ Deno.test("receive-email — response shape pinning: only ok field on success", 
   assertEquals(res.status, 200);
   const body = await res.json() as Record<string, unknown>;
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
   // Verify only 'ok' field is present on success (no extra fields like 'sent', 'error', or 'processed')
   const keys = Object.keys(body);
   assertEquals(keys.length, 1);
@@ -167,6 +173,7 @@ Deno.test("receive-email — missing from field gracefully handles null", async 
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
 });
 
 // qa: edge.real.receive-email.08
@@ -189,6 +196,7 @@ Deno.test("receive-email — missing to field gracefully handles null", async ()
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
 });
 
 // qa: edge.real.receive-email.09
@@ -211,6 +219,7 @@ Deno.test("receive-email — missing subject field gracefully handles null", asy
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
 });
 
 // qa: edge.real.receive-email.10
@@ -234,4 +243,5 @@ Deno.test("receive-email — to as string (not array) extracts and stores", asyn
   assertEquals(res.status, 200);
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
+  assertEquals(typeof body.ok, "boolean");
 });
