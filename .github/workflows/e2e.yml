@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   e2e:
@@ -79,5 +80,140 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-results-${{ github.run_number }}
+          path: test-results/
+          retention-days: 14
+
+  a11y-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get Playwright version
+        id: pw-version
+        run: echo "version=$(node -e "console.log(require('./node_modules/@playwright/test/package.json').version)")" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium --with-deps
+
+      - name: Install Playwright system deps (cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Run accessibility smoke tests
+        run: npm run e2e -- e2e/a11y/smoke.spec.ts
+        env:
+          CI: true
+          # Supabase — demo/E2E project
+          VITE_SUPABASE_URL:           ${{ secrets.E2E_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY:      ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+          VITE_RPC_SECRET:             ${{ secrets.E2E_RPC_SECRET }}
+          # Service-role key — used by e2e/jury/evaluate.spec.ts beforeEach to
+          # reset final_submitted_at / failed_attempts via PostgREST PATCH.
+          # Also needed by future B7 auth-flow specs (generateLink bypass).
+          SUPABASE_SERVICE_ROLE_KEY:   ${{ secrets.E2E_SERVICE_ROLE_KEY }}
+          # Demo mode (needed for VERA's demo-bypass auth path)
+          VITE_DEMO_MODE:              "true"
+          VITE_DEMO_ADMIN_EMAIL:       "demo-admin@vera-eval.app"
+          VITE_DEMO_ADMIN_PASSWORD:    ${{ secrets.E2E_ADMIN_PASSWORD }}
+          VITE_DEMO_ENTRY_TOKEN:       ${{ secrets.E2E_DEMO_ENTRY_TOKEN }}
+          # E2E flag — disables Supabase realtime to prevent race conditions
+          VITE_E2E:                    "true"
+          # Test credentials
+          E2E_ADMIN_EMAIL:             "demo-admin@vera-eval.app"
+          E2E_ADMIN_PASSWORD:          ${{ secrets.E2E_ADMIN_PASSWORD }}
+
+      - name: Upload a11y test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-results-${{ github.run_number }}
+          path: test-results/
+          retention-days: 14
+
+  visual-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get Playwright version
+        id: pw-version
+        run: echo "version=$(node -e "console.log(require('./node_modules/@playwright/test/package.json').version)")" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium --with-deps
+
+      - name: Install Playwright system deps (cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Run visual regression tests
+        run: npm run e2e -- e2e/visual/admin-routes.spec.ts
+        env:
+          CI: true
+          # Supabase — demo/E2E project
+          VITE_SUPABASE_URL:           ${{ secrets.E2E_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY:      ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+          VITE_RPC_SECRET:             ${{ secrets.E2E_RPC_SECRET }}
+          # Service-role key — used by e2e/jury/evaluate.spec.ts beforeEach to
+          # reset final_submitted_at / failed_attempts via PostgREST PATCH.
+          SUPABASE_SERVICE_ROLE_KEY:   ${{ secrets.E2E_SERVICE_ROLE_KEY }}
+          # Demo mode (needed for VERA's demo-bypass auth path)
+          VITE_DEMO_MODE:              "true"
+          VITE_DEMO_ADMIN_EMAIL:       "demo-admin@vera-eval.app"
+          VITE_DEMO_ADMIN_PASSWORD:    ${{ secrets.E2E_ADMIN_PASSWORD }}
+          VITE_DEMO_ENTRY_TOKEN:       ${{ secrets.E2E_DEMO_ENTRY_TOKEN }}
+          # E2E flag — disables Supabase realtime to prevent race conditions
+          VITE_E2E:                    "true"
+          # Test credentials
+          E2E_ADMIN_EMAIL:             "demo-admin@vera-eval.app"
+          E2E_ADMIN_PASSWORD:          ${{ secrets.E2E_ADMIN_PASSWORD }}
+
+      - name: Upload visual regression results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-results-${{ github.run_number }}
           path: test-results/
           retention-days: 14

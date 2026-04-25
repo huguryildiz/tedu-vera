@@ -26,10 +26,14 @@ export default defineConfig({
       include: ['src/**/*.{js,jsx,ts,tsx}'],
       exclude: ['src/test/**', 'src/**/__tests__.archive/**', 'src/main.jsx', 'src/router.jsx'],
       thresholds: {
-        lines: 47,
-        functions: 32,
-        branches: 56,
-        statements: 47,
+        // Ratcheted 2026-04-25 from 47/32/56/47 to lock in P0+P1 gains.
+        // Actual measured at this commit: 54.92/38.44/58.88/54.92. Targets
+        // sit ~2 pts below measured for flake margin; raise to audit's
+        // 60/50/65 stretch goal once subsequent sprints add more tests.
+        lines: 53,
+        functions: 37,
+        branches: 57,
+        statements: 53,
         'src/shared/hooks/**': { lines: 70, functions: 50, branches: 70, statements: 70 },
         'src/shared/storage/**': { lines: 80, functions: 65, branches: 50, statements: 80 },
         'src/shared/lib/**': { lines: 55, functions: 70, branches: 75, statements: 55 },
