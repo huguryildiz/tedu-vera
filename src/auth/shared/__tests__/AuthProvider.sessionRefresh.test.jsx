@@ -19,13 +19,16 @@ vi.mock("@/shared/lib/supabaseClient", () => ({
   clearPersistedSession: vi.fn(),
 }));
 
+// API wrappers return raw values (array or object), not { data, error } envelopes.
+// AuthProvider.fetchMemberships does `data || []` on getSession's return; mocking
+// it as { data: [] } yields a truthy object that fails .map(...).
 vi.mock("@/shared/api", () => ({
-  getSession: vi.fn().mockResolvedValue({ data: [] }),
-  getMyJoinRequests: vi.fn().mockResolvedValue({ data: [] }),
-  listOrganizationsPublic: vi.fn().mockResolvedValue({ data: [] }),
-  getSecurityPolicy: vi.fn().mockResolvedValue({ data: {} }),
-  getPublicAuthFlags: vi.fn().mockResolvedValue({ data: {} }),
-  touchAdminSession: vi.fn().mockResolvedValue({ data: {} }),
+  getSession: vi.fn().mockResolvedValue([]),
+  getMyJoinRequests: vi.fn().mockResolvedValue([]),
+  listOrganizationsPublic: vi.fn().mockResolvedValue([]),
+  getSecurityPolicy: vi.fn().mockResolvedValue({}),
+  getPublicAuthFlags: vi.fn().mockResolvedValue({}),
+  touchAdminSession: vi.fn().mockResolvedValue({}),
 }));
 
 vi.mock("@/shared/api/admin/profiles", () => ({
