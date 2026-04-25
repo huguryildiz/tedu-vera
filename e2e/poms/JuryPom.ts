@@ -99,4 +99,14 @@ export class JuryPom extends BasePom {
     await this.page.waitForURL(/\/demo\/jury\/locked/);
     await expect(this.lockedScreen()).toBeVisible();
   }
+
+  async waitForPinRevealStep(): Promise<void> {
+    await this.page.waitForURL(/\/demo\/jury\/pin-reveal/);
+    // Wait for the "Begin Evaluation" button to be visible
+    await expect(this.page.locator("button:has-text(\"Begin Evaluation\")")).toBeVisible();
+  }
+
+  async clickBeginEvaluation(): Promise<void> {
+    await this.page.locator("button:has-text(\"Begin Evaluation\")").click();
+  }
 }

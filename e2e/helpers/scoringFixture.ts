@@ -1,3 +1,5 @@
+import { createHash, randomBytes } from "crypto";
+import bcrypt from "bcrypt";
 import { adminClient } from "./supabaseAdmin";
 import { E2E_PERIODS_ORG_ID } from "../fixtures/seed-ids";
 
@@ -29,6 +31,10 @@ export interface ScoringFixture {
   jurorId: string;
   /** All juror rows created by setupScoringFixture (length === opts.jurors). */
   jurorIds: string[];
+  /** Juror names corresponding to jurorIds (for E2E test authentication). */
+  jurorNames: string[];
+  /** Juror affiliations corresponding to jurorIds (for E2E test authentication). */
+  jurorAffiliations: string[];
   /** Outcome snapshot rows created when `outcomes: true`. Undefined otherwise. */
   outcomeAId?: string;
   outcomeACode?: string;
@@ -183,8 +189,13 @@ export async function setupScoringFixture(
     return match.id as string;
   });
   const jurorId = jurorIds[0];
+  // Capture juror names and affiliations for E2E tests to use during authentication
+  const jurorNames = jurorRows.map((row) => row.juror_name);
+  const jurorAffiliations = jurorRows.map((row) => row.affiliation);
 
   // Step 5 — juror_period_auth for each juror (F1 rule: session_token_hash explicitly null)
+  // Leave pin_hash as NULL; the rpc_jury_authenticate RPC will auto-generate and return
+  // a PIN via pin_plain_once. E2E tests should capture and use this PIN.
   const { error: authErr } = await adminClient
     .from("juror_period_auth")
     .insert(
@@ -201,6 +212,9 @@ export async function setupScoringFixture(
   if (authErr) {
     throw new Error(`setupScoringFixture juror_period_auth insert failed: ${authErr.message}`);
   }
+
+  console.log(`[setupScoringFixture] Created ${jurorIds.length} juror_period_auth rows with pin_hash=NULL (PIN will be auto-generated on authenticate)`);
+
 
   // Step 6 — optional outcome snapshot + criterion→outcome maps.
   let outcomeAId: string | undefined;
@@ -254,6 +268,8 @@ export async function setupScoringFixture(
     p2Id,
     jurorId,
     jurorIds,
+    jurorNames,
+    jurorAffiliations,
     outcomeAId,
     outcomeACode: opts.outcomes ? outcomeACode : undefined,
     outcomeBId,
@@ -475,6 +491,35 @@ export async function reweightFixture(
   if (relockErr) {
     throw new Error(`reweightFixture relock failed: ${relockErr.message}`);
   }
+}
+
+/**
+ * Generate an entry token for a period that can be shared with concurrent
+ * jurors. Returns the plaintext token (hashed version stored in DB).
+ *
+ * Public tokens are suitable for demos; production tokens should have TTL set.
+ */
+export async function generateEntryToken(periodId: string): Promise<string> {
+  // Generate 32-byte random token
+  const plainToken = randomBytes(32).toString("hex");
+  const tokenHash = createHash("sha256").update(plainToken).digest("hex");
+
+  // Insert token (no TTL = valid indefinitely, suitable for test fixtures)
+  const { error: insertErr } = await adminClient
+    .from("entry_tokens")
+    .insert({
+      period_id: periodId,
+      token_hash: tokenHash,
+      token_plain: plainToken, // stored for demo/test convenience
+      is_revoked: false,
+      expires_at: null,
+    });
+
+  if (insertErr) {
+    throw new Error(`generateEntryToken insert failed: ${insertErr.message}`);
+  }
+
+  return plainToken;
 }
 
 /**
