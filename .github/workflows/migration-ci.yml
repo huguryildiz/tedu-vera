@@ -136,7 +136,13 @@ jobs:
             ALTER FUNCTION auth.uid() OWNER TO postgres;"
           # Supabase Realtime publication — VERA's 002_tables.sql adds tables
           # to "supabase_realtime" so live updates flow to the admin UI.
-          sudo -u postgres psql -d vera_test -c "CREATE PUBLICATION IF NOT EXISTS supabase_realtime;"
+          # NOTE: Postgres does not support "IF NOT EXISTS" for CREATE PUBLICATION,
+          # so guard with a DO block instead.
+          sudo -u postgres psql -d vera_test -c "DO \$\$BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+              CREATE PUBLICATION supabase_realtime;
+            END IF;
+          END\$\$;"
           # Allow ci user to write into vera_test
           sudo -u postgres psql -d vera_test -c "GRANT ALL ON SCHEMA public, auth TO ci;"
 
