@@ -1,15 +1,14 @@
 import { test, expect } from "@playwright/test";
-import { LoginPom } from "../poms/LoginPom";
-import { AdminShellPom } from "../poms/AdminShellPom";
 
-const EMAIL = process.env.E2E_ADMIN_EMAIL || "demo-admin@vera-eval.app";
-const PASSWORD = process.env.E2E_ADMIN_PASSWORD || "";
+// Demo routes auto-login via DemoAdminLoader — no credentials needed.
+// E2E_BASE_URL should point to a running VERA instance (demo env or localhost).
+const APP_BASE = process.env.E2E_BASE_URL || "http://localhost:5174";
 
 const ROUTES = [
-  { path: "/admin/rankings", name: "rankings" },
-  { path: "/admin/periods", name: "periods" },
-  { path: "/admin/projects", name: "projects" },
-  { path: "/admin/jurors", name: "jurors" },
+  { path: "/demo/admin/rankings", name: "rankings" },
+  { path: "/demo/admin/periods", name: "periods" },
+  { path: "/demo/admin/projects", name: "projects" },
+  { path: "/demo/admin/jurors", name: "jurors" },
 ];
 
 const VIEWPORTS = [
@@ -23,34 +22,28 @@ for (const route of ROUTES) {
   for (const viewport of VIEWPORTS) {
     for (const theme of THEMES) {
       test(`visual: ${route.name} ${viewport.label} ${theme}`, async ({ page }) => {
-        // Set viewport before navigation
         await page.setViewportSize(viewport);
 
-        // Login once per test
-        const login = new LoginPom(page);
-        await login.goto();
-        await login.signIn(EMAIL, PASSWORD);
+        // Navigate to demo route — DemoAdminLoader auto-logs in with the demo admin account
+        await page.goto(`${APP_BASE}${route.path}`);
 
-        // Verify successful login
-        const shell = new AdminShellPom(page);
-        await shell.expectOnDashboard();
+        // Wait for the admin shell to be present (not the login page)
+        await expect(page.locator('[data-testid="admin-shell-root"]')).toBeVisible({
+          timeout: 20_000,
+        });
 
-        // Navigate to route
-        await page.goto(route.path);
+        // Wait for data to load (no loading spinner visible)
         await page.waitForLoadState("networkidle");
 
-        // Apply theme if dark
         if (theme === "dark") {
           await page.evaluate(() => document.body.classList.add("dark-mode"));
-          // Wait for dark mode CSS to apply
           await page.waitForTimeout(300);
         }
 
-        // Capture screenshot
-        await expect(page).toHaveScreenshot(`${route.name}-${viewport.label}-${theme}.png`, {
-          maxDiffPixelRatio: 0.02,
-          fullPage: true,
-        });
+        await expect(page).toHaveScreenshot(
+          `${route.name}-${viewport.label}-${theme}.png`,
+          { maxDiffPixelRatio: 0.02, fullPage: true },
+        );
       });
     }
   }
