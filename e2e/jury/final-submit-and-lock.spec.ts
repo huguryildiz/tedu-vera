@@ -10,7 +10,16 @@ import { JuryPom } from "../poms/JuryPom";
 
 const APP_BASE = process.env.E2E_BASE_URL || "http://localhost:5174";
 
-test.describe("jury final-submit-and-lock flow", () => {
+// SKIPPED: spec assumes testids `jury-final-submit`, `jury-submit-confirm`,
+// and `jury-submitted-banner` that do not exist in the actual jury components.
+// The real submit flow uses `jury-eval-submit` + `jury-eval-confirm-submit`
+// (both in EvalStep.jsx), and reaches the done step via JuryPom.waitForDoneStep
+// (which itself was not defined on the POM). Additionally, JuryPom.goto() uses
+// a hardcoded `/demo/eval?t=e2e-jury-token` entry token that is not seeded
+// via setupScoringFixture, so the arrival step is never reached. A working
+// version exists in concurrentJuror.ts (uses generateEntryToken + the real
+// EvalStep testids); this spec should be rewritten following that pattern.
+test.describe.skip("jury final-submit-and-lock flow", () => {
   test.describe.configure({ mode: "serial" });
 
   let fixture: ScoringFixture | null = null;
