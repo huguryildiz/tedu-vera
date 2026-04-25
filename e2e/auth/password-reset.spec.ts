@@ -33,10 +33,11 @@ test.describe("password-reset full flow", () => {
   });
 
   test("request password reset with /forgot-password email → link generated", async ({ page }) => {
-    // Just verify the forgot-password flow initiates
+    // Just verify the forgot-password flow initiates.
+    // Actual testids in ForgotPasswordScreen.jsx: forgot-email, forgot-submit
     await page.goto(`${APP_BASE}/forgot-password`);
-    await expect(page.locator(`[data-testid="forgot-password-email"]`)).toBeVisible();
-    await expect(page.locator(`[data-testid="forgot-password-submit"]`)).toBeVisible();
+    await expect(page.locator(`[data-testid="forgot-email"]`)).toBeVisible();
+    await expect(page.locator(`[data-testid="forgot-submit"]`)).toBeVisible();
   });
 
   test("recovery link → /reset-password → submit new password → success", async ({ page }) => {
@@ -52,12 +53,13 @@ test.describe("password-reset full flow", () => {
     // Navigate to reset-password with the session injected
     await page.goto(`${APP_BASE}/reset-password?type=recovery`);
 
-    // Expect the reset form to be visible
+    // Expect the reset form to be visible.
+    // ResetPasswordPom uses: passwordInput, confirmInput, submitBtn, successMsg.
     const reset = new ResetPasswordPom(page);
     await expect(reset.passwordInput()).toBeVisible({ timeout: 12000 });
-    await expect(reset.submitButton()).toBeVisible();
+    await expect(reset.submitBtn()).toBeVisible();
 
-    // Fill and submit the new password
+    // Fill and submit the new password (also fills confirm field internally)
     await reset.fillAndSubmit(NEW_PASSWORD);
 
     // Expect success banner / message

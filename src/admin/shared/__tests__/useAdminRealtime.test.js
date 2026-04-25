@@ -79,4 +79,40 @@ describe("useAdminRealtime", () => {
 
     vi.useRealTimers();
   });
+
+  qaTest("admin.realtime.useAdminRealtime.01", () => {
+    mockChannel.on.mockClear();
+    mockChannel.subscribe.mockClear();
+    mockSupabaseChannel.mockClear();
+
+    const onRefreshRef = { current: vi.fn() };
+    renderHook(() =>
+      useAdminRealtime({ organizationId: "org-1", onRefreshRef, enabled: true })
+    );
+    expect(mockSupabaseChannel).toHaveBeenCalledWith("admin-panel-live");
+    expect(mockChannel.on).toHaveBeenCalledTimes(4);
+    expect(mockChannel.subscribe).toHaveBeenCalled();
+  });
+
+  qaTest("admin.realtime.useAdminRealtime.02", () => {
+    const onRefreshRef = { current: vi.fn() };
+    const { unmount } = renderHook(() =>
+      useAdminRealtime({ organizationId: "org-1", onRefreshRef, enabled: true })
+    );
+    unmount();
+    expect(mockRemoveChannel).toHaveBeenCalledWith(mockChannel);
+  });
+
+  qaTest("admin.realtime.useAdminRealtime.03", () => {
+    const onRefreshRef = { current: vi.fn() };
+    const { rerender } = renderHook(
+      ({ orgId }) => useAdminRealtime({ organizationId: orgId, onRefreshRef, enabled: true }),
+      { initialProps: { orgId: "org-1" } }
+    );
+    vi.clearAllMocks();
+    mockSupabaseChannel.mockReturnValue(mockChannel);
+    rerender({ orgId: "org-2" });
+    expect(mockRemoveChannel).toHaveBeenCalled();
+    expect(mockSupabaseChannel).toHaveBeenCalledWith("admin-panel-live");
+  });
 });
