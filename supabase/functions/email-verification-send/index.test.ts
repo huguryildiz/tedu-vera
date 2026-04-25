@@ -122,3 +122,27 @@ Deno.test("email-verification-send — success without RESEND returns 200 ok:tru
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
 });
+
+// qa: edge.real.email-verification-send.09
+Deno.test("email-verification-send — response shape pinning: ok + optional alreadyVerified", async () => {
+  const handler = await setup();
+  setMockConfig({
+    authGetUser: { data: { user: validUser }, error: null },
+    tables: {
+      profiles: { selectMaybeSingle: { data: { email_verified_at: null }, error: null } },
+      email_verification_tokens: {
+        selectMaybeSingle: { data: { token: "verify-tok-abc123" }, error: null },
+      },
+    },
+  });
+  const res = await handler(makeRequest({ token: "valid-jwt", body: {} }));
+  assertEquals(res.status, 200);
+  const body = await res.json() as { ok?: boolean; alreadyVerified?: boolean; error?: string };
+  assertEquals(body.ok, true);
+  // Verify only expected fields are present: ok or alreadyVerified, never error on success
+  const keys = Object.keys(body);
+  const allowedKeys = ["ok", "alreadyVerified"];
+  for (const key of keys) {
+    assertEquals(allowedKeys.includes(key), true, `unexpected field in response: ${key}`);
+  }
+});

@@ -79,6 +79,26 @@ Deno.test("invite-org-admin — auth.getUser error returns 401", async () => {
   assertEquals(res.status, 401);
 });
 
+// qa: edge.invite.06b
+Deno.test("invite-org-admin — malformed Authorization header returns 401", async () => {
+  const handler = await setup();
+  const req = new Request("http://localhost/fn", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: "Bearer not-a-jwt-at-all",
+    },
+    body: JSON.stringify({ org_id: "o1", email: "a@b.com" }),
+  });
+  setMockConfig({
+    authGetUser: { data: { user: null }, error: { message: "jwt malformed" } },
+  });
+  const res = await handler(req);
+  assertEquals(res.status, 401);
+  const body = await readJson(res) as { error: string };
+  assertEquals(body.error, "Unauthorized");
+});
+
 // qa: edge.invite.07
 Deno.test("invite-org-admin — non-admin caller (_assert_can_invite fails) returns 403", async () => {
   const handler = await setup();
@@ -191,7 +211,7 @@ Deno.test("invite-org-admin — approval_flow with existing confirmed user → 2
     body: { org_id: "o1", email: "a@b.com", approval_flow: true },
   }));
   assertEquals(res.status, 200);
-  const body = await readJson(res) as { status: string; user_id: string };
+  const body = await readJson(res) as Record<string, unknown>;
   assertEquals(body.status, "added");
   assertEquals(body.user_id, "existing-user");
 
@@ -278,4 +298,50 @@ Deno.test("invite-org-admin — generateLink error returns 400", async () => {
   assertEquals(res.status, 400);
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "generate failed");
+});
+
+// qa: edge.invite.13
+Deno.test("invite-org-admin — success with new user includes expected response shape", async () => {
+  const handler = await setup();
+  setMockConfig({
+    authGetUser: { data: { user: { id: "caller-1" } }, error: null },
+    rpc: {
+      _assert_can_invite: { data: null, error: null },
+      rpc_admin_find_user_by_email: { data: [], error: null },
+    },
+    adminGenerateLink: {
+      data: {
+        properties: { action_link: "https://vera-eval.app/invite/accept?token=xyz" },
+        user: { id: "new-user-2" },
+      },
+      error: null,
+    },
+    tables: {
+      organizations: {
+        selectSingle: { data: { institution: "Test Org" }, error: null },
+      },
+      memberships: {
+        insert: { data: null, error: null },
+      },
+      profiles: {
+        insert: { data: null, error: null },
+      },
+      audit_logs: {
+        insert: { data: null, error: null },
+      },
+    },
+  });
+  const res = await handler(makeRequest({
+    token: "valid",
+    body: { org_id: "o1", email: "newuser@test.com" },
+  }));
+  assertEquals(res.status, 200);
+  const body = await readJson(res) as Record<string, unknown>;
+  // Pin response shape: should have status, user_id, and email
+  assertEquals(typeof body.status, "string");
+  assertEquals(body.status, "invited");
+  assertEquals(typeof body.user_id, "string");
+  assertEquals(body.user_id, "new-user-2");
+  assertEquals(typeof body.email, "string");
+  assertEquals(body.email, "newuser@test.com");
 });

@@ -1,0 +1,76 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@std/assert@1": "1.0.19",
+    "jsr:@std/internal@^1.0.12": "1.0.13"
+  },
+  "jsr": {
+    "@std/assert@1.0.19": {
+      "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.13": {
+      "integrity": "2f9546691d4ac2d32859c82dff284aaeac980ddeca38430d07941e7e288725c0"
+    }
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@base-ui/react@^1.3.0",
+        "npm:@dnd-kit/core@^6.3.1",
+        "npm:@dnd-kit/sortable@10",
+        "npm:@dnd-kit/utilities@^3.2.2",
+        "npm:@fontsource-variable/geist@^5.2.8",
+        "npm:@fontsource-variable/inter@^5.2.8",
+        "npm:@fontsource-variable/plus-jakarta-sans@^5.2.8",
+        "npm:@fontsource/jetbrains-mono@^5.2.8",
+        "npm:@playwright/test@^1.58.2",
+        "npm:@supabase/supabase-js@^2.98.0",
+        "npm:@tanstack/react-table@^8.21.3",
+        "npm:@testing-library/jest-dom@^6.4.2",
+        "npm:@testing-library/react@^14.2.1",
+        "npm:@vitejs/plugin-react@^4.2.0",
+        "npm:@vitest/coverage-v8@^1.6.1",
+        "npm:allure-commandline@^2.38.0",
+        "npm:allure-vitest@^2.15.1",
+        "npm:autoprefixer@^10.4.27",
+        "npm:class-variance-authority@~0.7.1",
+        "npm:clsx@^2.1.1",
+        "npm:cmdk@^1.1.1",
+        "npm:date-fns@^4.1.0",
+        "npm:dnd-kit@^0.0.2",
+        "npm:dotenv@^17.3.1",
+        "npm:embla-carousel-react@^8.6.0",
+        "npm:html2canvas@^1.4.1",
+        "npm:input-otp@^1.4.2",
+        "npm:jsdom@24",
+        "npm:jspdf-autotable@^5.0.7",
+        "npm:jspdf@^4.2.1",
+        "npm:lucide-react@0.576",
+        "npm:next-themes@~0.4.6",
+        "npm:papaparse@^5.5.3",
+        "npm:postcss@^8.5.8",
+        "npm:qr-code-styling@^1.9.2",
+        "npm:qrcode.react@^4.2.0",
+        "npm:react-day-picker@^9.14.0",
+        "npm:react-dom@^18.2.0",
+        "npm:react-resizable-panels@^4.7.6",
+        "npm:react-router-dom@^6.30.3",
+        "npm:react-virtualized-auto-sizer@^1.0.26",
+        "npm:react-window@^1.8.11",
+        "npm:react@^18.2.0",
+        "npm:recharts@^3.8.0",
+        "npm:shadcn@^4.1.1",
+        "npm:svg2pdf.js@^2.7.0",
+        "npm:vaul@^1.1.2",
+        "npm:vite@^4.5.0",
+        "npm:vitest-axe@0.1",
+        "npm:vitest@^1.3.1",
+        "npm:xlsx-js-style@^1.2.0",
+        "npm:zod@^4.3.6"
+      ]
+    }
+  }
+}

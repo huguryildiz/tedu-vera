@@ -172,10 +172,13 @@ CREATE TABLE framework_criteria (
 -- 8. FRAMEWORK_CRITERION_OUTCOME_MAPS
 -- =============================================================================
 
+-- NOTE: period_id is added via ALTER TABLE after `periods` is created
+-- (section 9, below). The forward reference here would fail on a fresh
+-- DB apply; on prod/demo this snapshot was reached incrementally so the
+-- bug never surfaced until migration-ci was added.
 CREATE TABLE framework_criterion_outcome_maps (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   framework_id    UUID NOT NULL REFERENCES frameworks(id) ON DELETE CASCADE,
-  period_id       UUID REFERENCES periods(id) ON DELETE CASCADE,
   criterion_id    UUID NOT NULL REFERENCES framework_criteria(id) ON DELETE CASCADE,
   outcome_id      UUID NOT NULL REFERENCES framework_outcomes(id) ON DELETE CASCADE,
   coverage_type   TEXT NOT NULL DEFAULT 'direct'
@@ -210,6 +213,11 @@ CREATE TABLE periods (
   created_at          TIMESTAMPTZ DEFAULT now(),
   updated_at          TIMESTAMPTZ DEFAULT now()
 );
+
+-- Now that `periods` exists, add the deferred FK column to
+-- framework_criterion_outcome_maps (see note in section 8 above).
+ALTER TABLE framework_criterion_outcome_maps
+  ADD COLUMN IF NOT EXISTS period_id UUID REFERENCES periods(id) ON DELETE CASCADE;
 
 -- =============================================================================
 -- 10. PROJECTS

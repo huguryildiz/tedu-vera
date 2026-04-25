@@ -365,3 +365,41 @@ Deno.test(
     }
   },
 );
+
+// qa: edge.real.pin.11
+Deno.test(
+  "request-pin-reset — response shape pinning: ok, sent, error fields",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      tables: {
+        periods: {
+          selectSingle: {
+            data: {
+              name: "Fall 2026",
+              organization_id: "org-1",
+              organizations: { name: "Tedu", contact_email: "contact@tedu.edu" },
+            },
+            error: null,
+          },
+        },
+        memberships: { selectList: { data: [], error: null } },
+        security_policy: {
+          selectSingle: { data: { policy: { ccOnPinReset: false } }, error: null },
+        },
+        audit_logs: { insert: { data: null, error: null } },
+      },
+    });
+    const res = await handler(makeRequest({
+      body: { periodId: "p-1", jurorName: "Ali", affiliation: "CS" },
+    }));
+    assertEquals(res.status, 200);
+    const body = await res.json() as Record<string, unknown>;
+    // Always has ok and sent; error only when !sent
+    assertEquals(typeof body.ok, "boolean");
+    assertEquals(typeof body.sent, "boolean");
+    if (!body.sent) {
+      assertEquals(typeof body.error, "string");
+    }
+  },
+);

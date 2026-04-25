@@ -84,6 +84,24 @@ Deno.test("request-score-edit — period not found returns 404", async () => {
   assertEquals(body.error, "Period not found");
 });
 
+// qa: edge.real.request-score-edit.07
+Deno.test("request-score-edit — session token for period-A does not validate for period-B (cross-period boundary) → 401", async () => {
+  const handler = await setup();
+  setMockConfig({
+    tables: {
+      juror_period_auth: { selectMaybeSingle: { data: null, error: null } },
+    },
+  });
+  // Token is valid for period-A but request targets period-B — DB returns no match
+  const res = await handler(makeRequest({
+    body: { periodId: "period-B", jurorName: "Ali", sessionToken: "token-for-period-A" },
+  }));
+  assertEquals(res.status, 401);
+  const body = await readJson(res) as { ok: boolean; error: string };
+  assertEquals(body.ok, false);
+  assertEquals(body.error, "Invalid or expired session");
+});
+
 // qa: edge.real.request-score-edit.06
 Deno.test("request-score-edit — no RESEND_API_KEY returns 200 sent:false", async () => {
   const handler = await setup();

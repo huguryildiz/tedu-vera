@@ -82,6 +82,47 @@ Deno.test("auto-backup — no active organizations returns 200 with empty backed
   assertEquals(body.message, "No active organizations");
 });
 
+// qa: edge.real.auto-backup.08
+Deno.test("auto-backup — manual path: super_admin JWT → 200 backed_up", async () => {
+  const handler = await setup();
+  setMockConfig({
+    rpc: {
+      current_user_is_super_admin: { data: true, error: null },
+      rpc_backup_register: { data: null, error: null },
+    },
+    tables: {
+      organizations: { selectList: { data: [{ id: "org-2", name: "SuperAdminOrg" }], error: null } },
+      periods: { selectList: { data: [], error: null } },
+      jurors: { selectList: { data: [], error: null } },
+      audit_logs: { selectList: { data: [], error: null } },
+    },
+    storageUpload: { data: { path: "org-2/backup.json" }, error: null },
+  });
+  const res = await handler(makeRequest({ token: "super-admin-jwt", body: {} }));
+  assertEquals(res.status, 200);
+  const body = await readJson(res) as {
+    ok: boolean;
+    backed_up: Array<{ orgId: string; orgName: string; path: string; sizeBytes: number }>;
+  };
+  assertEquals(body.ok, true);
+  assertEquals(body.backed_up.length, 1);
+  assertEquals(body.backed_up[0].orgId, "org-2");
+  assertEquals(body.backed_up[0].orgName, "SuperAdminOrg");
+  assert(body.backed_up[0].sizeBytes > 0, "backup must have positive size");
+});
+
+// qa: edge.real.auto-backup.09
+Deno.test("auto-backup — tenant_admin manual trigger → 403", async () => {
+  const handler = await setup();
+  setMockConfig({
+    rpc: { current_user_is_super_admin: { data: false, error: null } },
+  });
+  const res = await handler(makeRequest({ token: "tenant-admin-jwt", body: {} }));
+  assertEquals(res.status, 403);
+  const body = await readJson(res) as { error: string };
+  assertEquals(body.error, "super_admin or service role required");
+});
+
 // qa: edge.real.auto-backup.07
 Deno.test("auto-backup — cron path with one org returns 200 backed_up", async () => {
   const handler = await setup();

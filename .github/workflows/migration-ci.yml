@@ -1,0 +1,185 @@
+# Migration CI — Functional validation of DB schema and RPCs via pgTAP
+#
+# This workflow enforces CLAUDE.md rule: "Test from zero: After any migration change,
+# apply 001→009 on a fresh DB and verify."
+#
+# Reference: docs/qa/vera-test-audit-report.md §9 P0 #2
+#            sql/README.md — migration structure
+#            sql/tests/RUNNING.md — pgTAP test layout
+#
+# Trigger: any changes to sql/** or this workflow file on push/PR, or manual dispatch.
+# Postgres 15 + pgTAP installed via PGDG apt repo on the runner host (NOT a service
+# container — the postgres:15 Docker image does not include pgtap, and adding it
+# requires a custom image; runner-host install keeps server + extension on the
+# same filesystem so CREATE EXTENSION pgtap works.)
+# Migrations apply in strict order (001-009), pgTAP helpers install, and all
+# SQL-level tests run via pg_prove. Fails the PR if any migration or test fails.
+
+name: Migration CI
+
+on:
+  pull_request:
+    paths:
+      - 'sql/**'
+      - '.github/workflows/migration-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'sql/**'
+  workflow_dispatch:
+
+jobs:
+  migration-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # NOTE — soft check during initial bootstrap.
+    # Re-applying VERA's snapshot migrations (001..009) on a vanilla
+    # Postgres requires faithfully reproducing several Supabase-environment
+    # dependencies (auth schema, supabase_realtime publication, storage
+    # schema, possibly extensions). Each pass surfaces another piece. Until
+    # those are all in the bootstrap below, mark the job continue-on-error
+    # so the existence + early-stage value of the workflow does not block
+    # PRs. Hard-fail will be flipped on once a clean fresh apply succeeds.
+    continue-on-error: true
+
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: ci
+      PGPASSWORD: ci
+      PGDATABASE: vera_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Postgres 15 + pgTAP from PGDG
+        # postgresql-15-pgtap lives in the PostgreSQL Global Development Group
+        # repo, not the default Ubuntu archive. Install postgres + pgtap on the
+        # runner host so CREATE EXTENSION pgtap can find /usr/share/postgresql/15/
+        # extension/pgtap.control.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl ca-certificates lsb-release gnupg
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          # postgresql-15 brings the server + psql client; -pgtap brings the
+          # extension; perl package brings pg_prove.
+          sudo apt-get install -y postgresql-15 postgresql-15-pgtap libtap-parser-sourcehandler-pgtap-perl
+
+      - name: Start Postgres 15 cluster on port 5432
+        run: |
+          # Ubuntu 24.04 runner image ships with postgres-16 already running
+          # on port 5432, but pgtap is installed for the postgres-15 binary
+          # tree (/usr/share/postgresql/15/extension/pgtap.control). Stop and
+          # drop any non-15 cluster, then start only postgres-15 on 5432.
+          echo "--- Existing clusters ---"
+          sudo pg_lsclusters || true
+          # Stop and drop everything that isn't postgres-15
+          for v in 14 16 17; do
+            sudo pg_ctlcluster $v main stop 2>/dev/null || true
+            sudo pg_dropcluster $v main 2>/dev/null || true
+          done
+          # Recreate or restart 15 on port 5432
+          if ! sudo pg_lsclusters | grep -q "^15 .*main"; then
+            sudo pg_createcluster 15 main --port=5432
+          fi
+          sudo pg_ctlcluster 15 main stop 2>/dev/null || true
+          # Force the port to 5432 in postgresql.conf in case a fresh cluster
+          # was assigned a different port to avoid collisions.
+          sudo sed -i "s/^port =.*/port = 5432/" /etc/postgresql/15/main/postgresql.conf
+          sudo pg_ctlcluster 15 main start
+          echo "--- Cluster after start ---"
+          sudo pg_lsclusters
+          sudo -u postgres psql -c "SELECT version();"
+
+      - name: Create test role + db + auth shim
+        run: |
+          sudo -u postgres createuser -s ci
+          sudo -u postgres psql -c "ALTER USER ci WITH PASSWORD 'ci';"
+          sudo -u postgres createdb -O ci vera_test
+          # Required app roles. Tests SET LOCAL role authenticated; if these
+          # roles do not exist, become_a/become_b/become_super raise.
+          sudo -u postgres psql -c "DO \$\$BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+              CREATE ROLE authenticated NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+              CREATE ROLE anon NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+              CREATE ROLE service_role NOLOGIN BYPASSRLS;
+            END IF;
+          END\$\$;"
+          # Auth schema is normally provided by Supabase. Create a minimal
+          # stand-in so 002_tables / triggers that reference auth.users /
+          # auth.uid() can resolve.
+          sudo -u postgres psql -d vera_test -c "
+            CREATE SCHEMA IF NOT EXISTS auth;
+            CREATE TABLE IF NOT EXISTS auth.users (
+              id uuid PRIMARY KEY,
+              instance_id uuid,
+              aud text,
+              role text,
+              email text,
+              email_confirmed_at timestamptz,
+              raw_user_meta_data jsonb,
+              raw_app_meta_data jsonb,
+              created_at timestamptz DEFAULT now(),
+              updated_at timestamptz DEFAULT now()
+            );
+            CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE
+            AS \$\$ SELECT (NULLIF(current_setting('request.jwt.claims', true), '')::jsonb->>'sub')::uuid \$\$;
+            ALTER FUNCTION auth.uid() OWNER TO postgres;
+            CREATE OR REPLACE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE
+            AS \$\$ SELECT NULLIF(current_setting('request.jwt.claims', true), '')::jsonb \$\$;
+            ALTER FUNCTION auth.jwt() OWNER TO postgres;
+            CREATE OR REPLACE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE
+            AS \$\$ SELECT NULLIF(current_setting('request.jwt.claims', true), '')::jsonb->>'role' \$\$;
+            ALTER FUNCTION auth.role() OWNER TO postgres;
+            CREATE OR REPLACE FUNCTION auth.email() RETURNS text LANGUAGE sql STABLE
+            AS \$\$ SELECT NULLIF(current_setting('request.jwt.claims', true), '')::jsonb->>'email' \$\$;
+            ALTER FUNCTION auth.email() OWNER TO postgres;"
+          # Supabase Realtime publication — VERA's 002_tables.sql adds tables
+          # to "supabase_realtime" so live updates flow to the admin UI.
+          # NOTE: Postgres does not support "IF NOT EXISTS" for CREATE PUBLICATION,
+          # so guard with a DO block instead.
+          sudo -u postgres psql -d vera_test -c "DO \$\$BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+              CREATE PUBLICATION supabase_realtime;
+            END IF;
+          END\$\$;"
+          # Allow ci user to write into vera_test
+          sudo -u postgres psql -d vera_test -c "GRANT ALL ON SCHEMA public, auth TO ci;"
+
+      - name: Wait for Postgres to accept connections
+        run: |
+          until pg_isready -h localhost -p 5432; do sleep 1; done
+
+      - name: Apply migrations in order (001 → 009)
+        run: |
+          for f in 001_extensions 002_tables 003_helpers_and_triggers 004_rls 005_rpcs_jury 006a_rpcs_admin 006b_rpcs_admin 007_identity 008_platform 009_audit; do
+            echo "--- Applying $f.sql ---"
+            psql -v ON_ERROR_STOP=1 -f sql/migrations/$f.sql || exit 1
+          done
+
+      - name: Load pgTAP test helpers
+        run: |
+          echo "--- Loading test helpers (_helpers.sql) ---"
+          psql -v ON_ERROR_STOP=1 -f sql/tests/_helpers.sql
+
+      - name: Run pgTAP test suite via pg_prove
+        run: |
+          echo "--- Running pgTAP tests ---"
+          pg_prove --verbose \
+            sql/tests/rls/*.sql \
+            sql/tests/rpcs/jury/*.sql \
+            sql/tests/rpcs/admin/*.sql \
+            sql/tests/rpcs/contracts/*.sql
+
+      - name: Test suite summary
+        if: success()
+        run: echo "✓ All migrations applied successfully and all pgTAP tests passed"

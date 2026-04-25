@@ -119,3 +119,119 @@ Deno.test("receive-email — DB insert error is fail-open, still returns 200", a
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
 });
+
+// qa: edge.real.receive-email.06
+Deno.test("receive-email — response shape pinning: only ok field on success", async () => {
+  const handler = await setup();
+  setMockConfig({
+    tables: {
+      received_emails: { insert: { data: null, error: null } },
+    },
+  });
+  const res = await handler(makeRequest({
+    body: {
+      data: {
+        from: "sender@example.com",
+        to: ["inbox@vera-eval.app"],
+        subject: "Shape Test",
+        text: "Test body",
+      },
+    },
+  }));
+  assertEquals(res.status, 200);
+  const body = await res.json() as Record<string, unknown>;
+  assertEquals(body.ok, true);
+  // Verify only 'ok' field is present on success (no extra fields like 'sent', 'error', or 'processed')
+  const keys = Object.keys(body);
+  assertEquals(keys.length, 1);
+  assertEquals(keys[0], "ok");
+});
+
+// qa: edge.real.receive-email.07
+Deno.test("receive-email — missing from field gracefully handles null", async () => {
+  const handler = await setup();
+  setMockConfig({
+    tables: {
+      received_emails: { insert: { data: null, error: null } },
+    },
+  });
+  const res = await handler(makeRequest({
+    body: {
+      data: {
+        to: ["inbox@vera-eval.app"],
+        subject: "No From",
+        text: "Content",
+      },
+    },
+  }));
+  assertEquals(res.status, 200);
+  const body = await readJson(res) as { ok: boolean };
+  assertEquals(body.ok, true);
+});
+
+// qa: edge.real.receive-email.08
+Deno.test("receive-email — missing to field gracefully handles null", async () => {
+  const handler = await setup();
+  setMockConfig({
+    tables: {
+      received_emails: { insert: { data: null, error: null } },
+    },
+  });
+  const res = await handler(makeRequest({
+    body: {
+      data: {
+        from: "sender@example.com",
+        subject: "No To",
+        text: "Content",
+      },
+    },
+  }));
+  assertEquals(res.status, 200);
+  const body = await readJson(res) as { ok: boolean };
+  assertEquals(body.ok, true);
+});
+
+// qa: edge.real.receive-email.09
+Deno.test("receive-email — missing subject field gracefully handles null", async () => {
+  const handler = await setup();
+  setMockConfig({
+    tables: {
+      received_emails: { insert: { data: null, error: null } },
+    },
+  });
+  const res = await handler(makeRequest({
+    body: {
+      data: {
+        from: "sender@example.com",
+        to: ["inbox@vera-eval.app"],
+        text: "Content",
+      },
+    },
+  }));
+  assertEquals(res.status, 200);
+  const body = await readJson(res) as { ok: boolean };
+  assertEquals(body.ok, true);
+});
+
+// qa: edge.real.receive-email.10
+Deno.test("receive-email — to as string (not array) extracts and stores", async () => {
+  const handler = await setup();
+  setMockConfig({
+    tables: {
+      received_emails: { insert: { data: null, error: null } },
+    },
+  });
+  const res = await handler(makeRequest({
+    body: {
+      data: {
+        from: "sender@example.com",
+        to: "single@vera-eval.app",
+        subject: "String To",
+        text: "Content",
+      },
+    },
+  }));
+  assertEquals(res.status, 200);
+  const body = await readJson(res) as { ok: boolean };
+  assertEquals(body.ok, true);
+});

@@ -146,3 +146,35 @@ Deno.test("on-auth-event — missing user_id in record returns 200 ok:false", as
   assertEquals(body.ok, false);
   assertEquals(body.error, "No user_id");
 });
+
+// qa: edge.real.on-auth-event.09
+Deno.test("on-auth-event — successful INSERT returns 200 with expected response shape", async () => {
+  const handler = await setup();
+  setMockConfig({
+    tables: {
+      memberships: { selectSingle: { data: null, error: null } },
+      audit_logs: { insert: { data: null, error: null } },
+    },
+  });
+  const res = await handler(makeRequest({
+    body: {
+      type: "INSERT",
+      schema: "auth",
+      table: "sessions",
+      record: {
+        user_id: "user-xyz",
+        id: "sess-xyz",
+        ip: "192.168.1.1",
+        user_agent: "Mozilla/5.0",
+      },
+    },
+  }));
+  assertEquals(res.status, 200);
+  const body = await readJson(res) as Record<string, unknown>;
+  // Pin response shape: should have ok and action
+  assertEquals(typeof body.ok, "boolean");
+  assertEquals(body.ok, true);
+  assertEquals(typeof body.action, "string");
+  assertEquals(body.action, "auth.admin.login.success");
+  assertEquals(body.skipped, undefined);
+});

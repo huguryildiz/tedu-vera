@@ -3174,6 +3174,115 @@ out.push(`UPDATE periods SET is_locked = true WHERE activated_at IS NOT NULL;`);
 out.push('');
 
 // ═══════════════════════════════════════════════════════════════
+// E2E TEST FIXTURES
+// Dedicated rows referenced by `e2e/fixtures/seed-ids.ts`. These
+// coexist with the regular demo data above (different UUID space).
+// Edit this block + seed-ids.ts together when fixtures change.
+// ═══════════════════════════════════════════════════════════════
+
+out.push(`-- ────────────────────────────────────────────────────────────`);
+out.push(`-- E2E TEST FIXTURES (referenced by e2e/fixtures/seed-ids.ts)`);
+out.push(`-- ────────────────────────────────────────────────────────────`);
+
+// E2E fixture UUIDs — keep in sync with e2e/fixtures/seed-ids.ts
+const E2E_PERIODS_ORG     = 'b2c3d4e5-f6a7-8901-bcde-f12345678901';
+const E2E_PROJECTS_ORG    = 'c3d4e5f6-a7b8-9012-cdef-123456789012';
+const E2E_LIFECYCLE_ORG   = 'd4e5f6a7-b8c9-0123-def0-234567890123';
+const E2E_WIZARD_ORG      = 'e5f6a7b8-c9d0-1234-ef01-345678901234';
+const E2E_CRITERIA_ORG    = 'f7340e37-9349-4210-8d6b-073a5616bf49';
+const E2E_ENTRY_TOKEN_ORG = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+
+const E2E_EVAL_PERIOD     = 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88';
+const E2E_CRIT_PERIOD     = 'cccccccc-0004-4000-c000-000000000004';
+const E2E_OUT_PERIOD      = 'cccccccc-0005-4000-c000-000000000005';
+
+const E2E_LOCKED_JUROR    = 'eeeeeeee-0001-4000-e000-000000000001';
+const E2E_EVAL_JURORS = [
+  { id: 'b3aa250b-3049-4788-9c68-5fa0e8aec86a', name: 'E2E Eval Render' },
+  { id: 'bbbbbbbb-e2e0-4000-b000-000000000001', name: 'E2E Eval Blur' },
+  { id: 'bbbbbbbb-e2e0-4000-b000-000000000002', name: 'E2E Eval Submit' },
+];
+
+// 1) Fixture organizations — Wizard org has setup_completed_at = NULL
+const e2eOrgs = [
+  { id: E2E_PERIODS_ORG,     name: 'E2E Periods Org',     code: 'E2E-PER',  setup: true  },
+  { id: E2E_PROJECTS_ORG,    name: 'E2E Projects Org',    code: 'E2E-PRJ',  setup: true  },
+  { id: E2E_LIFECYCLE_ORG,   name: 'E2E Lifecycle Org',   code: 'E2E-LIF',  setup: true  },
+  { id: E2E_WIZARD_ORG,      name: 'E2E Wizard Org',      code: 'E2E-WIZ',  setup: false },
+  { id: E2E_CRITERIA_ORG,    name: 'E2E Criteria Org',    code: 'E2E-CRT',  setup: true  },
+  { id: E2E_ENTRY_TOKEN_ORG, name: 'E2E Entry Token Org', code: 'E2E-TOK',  setup: true  },
+];
+e2eOrgs.forEach(o => {
+  const setupTs = o.setup ? 'now()' : 'NULL';
+  out.push(`INSERT INTO organizations (id, name, code, status, settings, contact_email, setup_completed_at, updated_at) VALUES ('${o.id}', '${escapeSql(o.name)}', '${o.code}', 'active', '{}', 'e2e-${o.code.toLowerCase()}@vera-eval.test', ${setupTs}, now()) ON CONFLICT (id) DO UPDATE SET setup_completed_at = EXCLUDED.setup_completed_at;`);
+});
+out.push('');
+
+// 2) Fixture periods — inserted unlocked so child INSERTs (period_criteria,
+// period_outcomes) below are not blocked by the block_period_child_on_locked
+// trigger. We re-lock them at the end of the fixture block.
+const e2ePeriods = [
+  { id: E2E_EVAL_PERIOD, orgId: E2E_PERIODS_ORG,  name: 'E2E Eval Period',     season: 'Spring' },
+  { id: E2E_CRIT_PERIOD, orgId: E2E_CRITERIA_ORG, name: 'E2E Criteria Period', season: 'Spring' },
+  { id: E2E_OUT_PERIOD,  orgId: E2E_CRITERIA_ORG, name: 'E2E Outcomes Period', season: 'Spring' },
+];
+e2ePeriods.forEach(p => {
+  out.push(`INSERT INTO periods (id, organization_id, framework_id, name, season, description, start_date, end_date, is_locked, criteria_name, snapshot_frozen_at, activated_at, closed_at, updated_at) VALUES ('${p.id}', '${p.orgId}', '${VERA_FW_ID}', '${escapeSql(p.name)}', '${p.season}', 'E2E fixture period', '${TODAY}', '${TODAY}', false, 'VERA Standard', now(), now(), NULL, now()) ON CONFLICT (id) DO NOTHING;`);
+});
+out.push('');
+
+// 3) Period criteria (snapshot from VERA framework) for criteria/outcomes periods
+const e2ePcCriteria = [
+  { critId: VERA_CT_ID, key: 'technical', label: 'Technical Content',    max: 30, weight: 30, color: '#F59E0B', sort: 1 },
+  { critId: VERA_CD_ID, key: 'design',    label: 'Written Communication', max: 30, weight: 30, color: '#22C55E', sort: 2 },
+  { critId: VERA_CO_ID, key: 'delivery',  label: 'Oral Communication',    max: 30, weight: 30, color: '#3B82F6', sort: 3 },
+  { critId: VERA_CW_ID, key: 'teamwork',  label: 'Teamwork',              max: 10, weight: 10, color: '#EF4444', sort: 4 },
+];
+[E2E_CRIT_PERIOD, E2E_OUT_PERIOD].forEach(periodId => {
+  e2ePcCriteria.forEach(c => {
+    const pcId = uuid(`e2e-pc-${periodId}-${c.key}`);
+    out.push(`INSERT INTO period_criteria (id, period_id, source_criterion_id, key, label, description, max_score, weight, color, rubric_bands, sort_order) VALUES ('${pcId}', '${periodId}', '${c.critId}', '${c.key}', '${escapeSql(c.label)}', 'E2E fixture criterion', ${c.max}, ${c.weight}, '${c.color}', '[]'::jsonb, ${c.sort}) ON CONFLICT (id) DO NOTHING;`);
+  });
+});
+out.push('');
+
+// 4) Period outcomes (snapshot from VERA LO 1–6) for outcomes period
+const e2ePoOutcomes = [
+  { code: 'LO 1', label: 'Engineering knowledge',     sort: 1 },
+  { code: 'LO 2', label: 'Problem analysis',          sort: 2 },
+  { code: 'LO 3', label: 'Design / development',      sort: 3 },
+  { code: 'LO 4', label: 'Communication',             sort: 4 },
+  { code: 'LO 5', label: 'Teamwork',                  sort: 5 },
+  { code: 'LO 6', label: 'Lifelong learning',         sort: 6 },
+];
+e2ePoOutcomes.forEach(o => {
+  const poId = uuid(`e2e-po-${E2E_OUT_PERIOD}-${o.code}`);
+  const sourceOutId = uuid(`platform-vera-outcome-${o.code}`);
+  out.push(`INSERT INTO period_outcomes (id, period_id, source_outcome_id, code, label, description, sort_order) VALUES ('${poId}', '${E2E_OUT_PERIOD}', '${sourceOutId}', '${o.code}', '${escapeSql(o.label)}', 'E2E fixture outcome', ${o.sort}) ON CONFLICT (id) DO NOTHING;`);
+});
+out.push('');
+
+// 5) Locked juror + locked juror_period_auth (for pin-blocking spec)
+out.push(`INSERT INTO jurors (id, organization_id, juror_name, affiliation, email, avatar_color) VALUES ('${E2E_LOCKED_JUROR}', '${E2E_PERIODS_ORG}', 'E2E Locked Juror', 'E2E Test Affiliation', 'e2e-locked@vera-eval.test', '#EF4444') ON CONFLICT (id) DO NOTHING;`);
+out.push(`INSERT INTO juror_period_auth (juror_id, period_id, pin_hash, last_seen_at, session_expires_at, final_submitted_at, edit_enabled, edit_reason, edit_expires_at, failed_attempts, locked_until, locked_at, is_blocked) VALUES ('${E2E_LOCKED_JUROR}', '${E2E_EVAL_PERIOD}', NULL, now(), NULL, NULL, false, NULL, NULL, 3, now() + interval '1 hour', now(), false) ON CONFLICT (juror_id, period_id) DO UPDATE SET failed_attempts = 3, locked_until = now() + interval '1 hour', locked_at = now();`);
+out.push('');
+
+// 6) Eval jurors (3) + their juror_period_auth rows under E2E_EVAL_PERIOD
+E2E_EVAL_JURORS.forEach(j => {
+  out.push(`INSERT INTO jurors (id, organization_id, juror_name, affiliation, email, avatar_color) VALUES ('${j.id}', '${E2E_PERIODS_ORG}', '${escapeSql(j.name)}', 'E2E Test Affiliation', 'e2e-${j.id.slice(0,8)}@vera-eval.test', '#3B82F6') ON CONFLICT (id) DO NOTHING;`);
+  out.push(`INSERT INTO juror_period_auth (juror_id, period_id, pin_hash, last_seen_at, session_expires_at, final_submitted_at, edit_enabled, edit_reason, edit_expires_at, failed_attempts, locked_until, locked_at, is_blocked) VALUES ('${j.id}', '${E2E_EVAL_PERIOD}', NULL, NULL, NULL, NULL, false, NULL, NULL, 0, NULL, NULL, false) ON CONFLICT (juror_id, period_id) DO NOTHING;`);
+});
+out.push('');
+
+// 7) Re-lock fixture periods now that all child rows exist. pickDefaultPeriod
+// prefers locked + activated periods, so EVAL_PERIOD must end the fixture
+// block in is_locked=true.
+e2ePeriods.forEach(p => {
+  out.push(`UPDATE periods SET is_locked = true WHERE id = '${p.id}';`);
+});
+out.push('');
+
+// ═══════════════════════════════════════════════════════════════
 // OUTPUT
 // ═══════════════════════════════════════════════════════════════
 

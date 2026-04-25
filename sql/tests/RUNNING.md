@@ -14,7 +14,10 @@ sql/tests/
 ├── rls/                 Row-Level Security isolation tests (9 files).
 ├── rpcs/
 │   ├── jury/            Jury-facing RPC behavior tests (4 files).
-│   └── admin/           Admin-facing RPC behavior tests (5 files).
+│   ├── admin/           Admin-facing RPC behavior tests (5 files).
+│   └── contracts/       RPC contract pinning — has_function +
+│                        function_returns + auth-gate + error-code shape
+│                        for the 9 most-critical RPCs (9 files).
 ├── migrations/          Migration idempotency tests (1 file).
 └── RUNNING.md           This file.
 ```
@@ -101,14 +104,43 @@ result pane shows the final `result` column.
   `postgres`; add `GRANT SELECT ON …  TO authenticated` if a test reads them
   after `become_*`. Easier: use `SELECT … FROM (VALUES …)` or inline arrays.
 
-## Current suite summary (session 23)
+## Current suite summary
 
 | Folder                | Files | Assertions |
 |-----------------------|------:|-----------:|
 | `rls/`                |     9 |         36 |
 | `rpcs/jury/`          |     4 |         19 |
 | `rpcs/admin/`         |     5 |         19 |
+| `rpcs/contracts/`     |     9 |         61 |
 | `migrations/`         |     1 |  (legacy)  |
-| **Total**             | **19**|     **74** |
+| **Total**             | **28**|    **135** |
 
-All 18 pgTAP files pass on `vera-prod`; smoke subset passes on `vera-demo`.
+All pgTAP files pass on `vera-prod` (RLS + behavior tests); the
+`rpcs/contracts/` set was authored against `vera-demo` in the
+2026-04-25 P0 sprint and verified there via Supabase MCP `execute_sql`
+with `BEGIN / ROLLBACK` isolation. Schema parity policy keeps prod and
+demo identical, so `contracts/` is expected to pass on prod as well —
+re-run via `pg_prove` to confirm before treating it as such.
+
+## About `rpcs/contracts/`
+
+These tests are deliberately narrow: they pin **signature, return type,
+auth gate, and error-code envelope** for the 9 most-called RPCs. They do
+not exercise full business behavior (the per-RPC files in `rpcs/jury/`
+and `rpcs/admin/` cover that). Their value is preventing silent shape
+drift — e.g., a developer changing `rpc_jury_finalize_submission`'s
+return from `{ok, error_code}` to `{success, msg}` would break every
+client that consumes the envelope; this contract test would catch it on
+the first PR.
+
+Coverage list (audit ref: `docs/qa/vera-test-audit-report.md` §6 + §9 P0 #4):
+
+- `rpc_jury_finalize_submission` (8 assertions)
+- `rpc_jury_get_scores` (7)
+- `rpc_period_freeze_snapshot` (6)
+- `rpc_admin_save_period_criteria` (7)
+- `rpc_admin_upsert_period_criterion_outcome_map` (7)
+- `rpc_admin_verify_audit_chain` (6)
+- `rpc_juror_unlock_pin` (9)
+- `rpc_admin_update_organization` (6)
+- `rpc_admin_delete_organization` (5)

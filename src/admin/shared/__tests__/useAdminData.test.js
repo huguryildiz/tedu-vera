@@ -122,4 +122,88 @@ describe("useAdminData", () => {
     expect(sorted[0].start_date >= sorted[1]?.start_date || sorted.length <= 1).toBe(true);
     expect(sorted.map((p) => p.id)).toContain("p1");
   });
+
+  // ── Partial-failure scenarios ──────────────────────────────
+
+  qaTest("admin.shared.adminData.07", async () => {
+    // Partial failure A: getScores succeeds, getProjectSummary rejects with RLS error
+    // Hook catches Promise.all rejection and clears all data (fail-safe strategy)
+    const rpcError = new Error("RLS policy denies select");
+    rpcError.code = "42501";
+    mockGetProjectSummary.mockRejectedValue(rpcError);
+
+    const opts = makeOpts();
+    const { result } = renderHook(() => useAdminData(opts), { wrapper: makeWrapper() });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    // When Promise.all rejects, hook clears both scores and summary (fail-safe)
+    expect(result.current.rawScores).toEqual([]);
+    expect(result.current.summaryData).toEqual([]);
+    // Error message should be set
+    expect(result.current.loadError).toMatch(/Could not load/);
+    // onInitialLoadDone should still be called even on error
+    expect(opts.onInitialLoadDone).toHaveBeenCalled();
+  });
+
+  qaTest("admin.shared.adminData.08", async () => {
+    // Partial failure B: listPeriods succeeds, getScores rejects
+    // Hook should surface error immediately and NOT call getProjectSummary
+    const scoreError = new Error("Permission denied");
+    mockGetScores.mockRejectedValue(scoreError);
+    mockGetProjectSummary.mockResolvedValue([{ id: "proj1", students: "Alice, Bob" }]);
+
+    const opts = makeOpts();
+    const { result } = renderHook(() => useAdminData(opts), { wrapper: makeWrapper() });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    // Scores should be empty due to failure
+    expect(result.current.rawScores).toEqual([]);
+    // Summary should be empty (not called after getScores failed)
+    expect(result.current.summaryData).toEqual([]);
+    // Error should be set
+    expect(result.current.loadError).toMatch(/Could not load/);
+    // getScores was called once (from listPeriods flow), getProjectSummary called once in Promise.all
+    // but the error in getScores means the Promise.all rejects immediately
+    expect(mockGetScores).toHaveBeenCalled();
+  });
+
+  qaTest("admin.shared.adminData.09", async () => {
+    // Empty-state distinction: all succeed but return empty arrays
+    // Hook should distinguish "no data" (empty arrays) from "not loaded yet" (loading=true)
+    mockGetScores.mockResolvedValue([]);
+    mockGetProjectSummary.mockResolvedValue([]);
+    mockListJurorsSummary.mockResolvedValue([]);
+
+    const opts = makeOpts();
+    const { result } = renderHook(() => useAdminData(opts), { wrapper: makeWrapper() });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    // All data should be empty arrays, not undefined
+    expect(result.current.rawScores).toEqual([]);
+    expect(result.current.summaryData).toEqual([]);
+    expect(result.current.allJurors).toEqual([]);
+    // Loading should be false (not stuck in loading)
+    expect(result.current.loading).toBe(false);
+    // No error should be set
+    expect(result.current.loadError).toBe("");
+  });
+
+  qaTest("admin.shared.adminData.10", async () => {
+    // listJurorsSummary degrades gracefully (non-fatal)
+    // Per the code, this RPC failure is caught and defaults to []
+    const jurorError = new Error("RPC not deployed");
+    mockListJurorsSummary.mockRejectedValue(jurorError);
+
+    const opts = makeOpts();
+    const { result } = renderHook(() => useAdminData(opts), { wrapper: makeWrapper() });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    // Scores and summary should be populated
+    expect(result.current.rawScores).toEqual(makeScores());
+    expect(result.current.summaryData).toHaveLength(1);
+    // Jurors should be empty (degraded gracefully)
+    expect(result.current.allJurors).toEqual([]);
+    // No error should be set (it's non-fatal)
+    expect(result.current.loadError).toBe("");
+  });
 });

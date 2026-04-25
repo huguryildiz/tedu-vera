@@ -73,6 +73,25 @@ Deno.test("send-export-report — non-admin caller returns 403", async () => {
   assertEquals(body.error, "admin access required");
 });
 
+// qa: edge.real.send-export-report.07
+Deno.test("send-export-report — org-A admin requesting org-B export → 403", async () => {
+  const handler = await setup();
+  // org-A admin has membership for org-A only; requesting org-B export → requireAdminCaller → 403
+  setMockConfig({
+    authGetUser: { data: { user: { id: "org-a-admin" } }, error: null },
+    tables: {
+      memberships: { selectMaybeSingle: { data: null, error: null } },
+    },
+  });
+  const res = await handler(makeRequest({
+    token: "org-a-jwt",
+    body: { ...validBody, organizationId: "org-B" },
+  }));
+  assertEquals(res.status, 403);
+  const body = await readJson(res) as { error: string };
+  assertEquals(body.error, "admin access required");
+});
+
 // qa: edge.real.send-export-report.06
 Deno.test("send-export-report — super_admin, no RESEND_API_KEY returns 200 sent:false", async () => {
   const handler = await setup();

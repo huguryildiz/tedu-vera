@@ -168,3 +168,60 @@ Deno.test("email-verification-confirm — valid token returns 200 and marks veri
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
 });
+
+// qa: edge.verify.11
+Deno.test("email-verification-confirm — profile update error returns 500", async () => {
+  const handler = await setup();
+  setMockConfig({
+    tables: {
+      email_verification_tokens: {
+        selectMaybeSingle: {
+          data: {
+            token: "11111111-1111-1111-1111-111111111111",
+            user_id: "user-1",
+            email: "a@b.com",
+            expires_at: new Date(Date.now() + 3600_000).toISOString(),
+            consumed_at: null,
+          },
+          error: null,
+        },
+      },
+      profiles: {
+        update: { data: null, error: { message: "update failed" } },
+      },
+    },
+  });
+  const res = await handler(makeRequest({ body: { token: "11111111-1111-1111-1111-111111111111" } }));
+  assertEquals(res.status, 500);
+  const body = await readJson(res) as { error: string };
+  assertEquals(body.error, "update failed");
+});
+
+// qa: edge.verify.12
+Deno.test("email-verification-confirm — token mark-consumed error returns 500", async () => {
+  const handler = await setup();
+  setMockConfig({
+    tables: {
+      email_verification_tokens: {
+        selectMaybeSingle: {
+          data: {
+            token: "11111111-1111-1111-1111-111111111111",
+            user_id: "user-1",
+            email: "a@b.com",
+            expires_at: new Date(Date.now() + 3600_000).toISOString(),
+            consumed_at: null,
+          },
+          error: null,
+        },
+        update: { data: null, error: { message: "token update failed" } },
+      },
+      profiles: {
+        update: { data: null, error: null },
+      },
+    },
+  });
+  const res = await handler(makeRequest({ body: { token: "11111111-1111-1111-1111-111111111111" } }));
+  assertEquals(res.status, 500);
+  const body = await readJson(res) as { error: string };
+  assertEquals(body.error, "token update failed");
+});

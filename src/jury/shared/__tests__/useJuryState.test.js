@@ -430,3 +430,129 @@ describe("resume flow guard — no implicit submit modal", () => {
     expect(result.current.confirmingSubmit).toBe(false);
   });
 });
+
+// ── Partial-failure scenarios — error resilience ────────────
+
+describe("jury.state — partial-failure scenarios", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    api.getJurorEditState.mockResolvedValue({ edit_allowed: false, lock_active: false });
+    api.listPeriodCriteria.mockResolvedValue(MOCK_CRITERIA_ROWS);
+  });
+
+  qaTest("jury.state.05", async () => {
+    // Network error during upsertScore → saveStatus="error", in-memory scores preserved
+    const { result } = renderHook(() => useJuryState());
+    await advanceToEval2(result);
+
+    // Mock upsertScore to fail with a transient network error
+    api.upsertScore.mockRejectedValue(new Error("Network timeout"));
+
+    // User enters a score and blurs to trigger write
+    act(() => { result.current.handleScore("p-1", "technical", "18"); });
+    await act(async () => { result.current.handleScoreBlur("p-1", "technical"); });
+
+    // Give the async upsertScore call time to fail
+    await new Promise((r) => setTimeout(r, 100));
+
+    // saveStatus should show error state
+    expect(result.current.saveStatus).toBe("error");
+    // BUT in-memory score is preserved (not cleared on error)
+    expect(result.current.scores["p-1"].technical).toBe(18);
+    // Step should still be "eval" (not redirected)
+    expect(result.current.step).toBe("eval");
+    // groupSynced should NOT mark as synced (write failed)
+    expect(result.current.groupSynced["p-1"]).not.toBe(true);
+  });
+
+  qaTest("jury.state.06", async () => {
+    // Session expired during eval → redirects to PIN step with error message
+    const { result } = renderHook(() => useJuryState());
+    await advanceToEval2(result);
+
+    const sessionExpiredErr = {
+      code: "P0401",
+      message: "juror_session_expired",
+    };
+    api.upsertScore.mockRejectedValue(sessionExpiredErr);
+
+    act(() => { result.current.handleScore("p-2", "design", "22"); });
+    await act(async () => { result.current.handleScoreBlur("p-2", "design"); });
+
+    // Wait for the async error to be caught and processed
+    await waitFor(
+      () => expect(result.current.step).toBe("pin"),
+      { timeout: 3000 }
+    );
+
+    // Verify PIN error is set with session expired message
+    expect(result.current.pinError).toContain("session has expired");
+    // In-memory score should be preserved
+    expect(result.current.scores["p-2"].design).toBe(22);
+  });
+
+  qaTest("jury.state.07", async () => {
+    // Period lock error during eval → editLockActive=true, saves blocked, UI error shown
+    const { result } = renderHook(() => useJuryState());
+    await advanceToEval2(result);
+
+    // Use the exact message format that the DB returns
+    const periodLockErr = Object.assign(new Error("period_locked"), { code: "P0001" });
+    api.upsertScore.mockRejectedValue(periodLockErr);
+
+    act(() => { result.current.handleScore("p-1", "delivery", "15"); });
+    await act(async () => { result.current.handleScoreBlur("p-1", "delivery"); });
+
+    // Wait for error to set editLockActive
+    await new Promise((r) => setTimeout(r, 100));
+
+    // editLockActive should prevent further writes
+    expect(result.current.editLockActive).toBe(true);
+    // saveStatus should show error
+    expect(result.current.saveStatus).toBe("error");
+    // In-memory score is still there
+    expect(result.current.scores["p-1"].delivery).toBe(15);
+    // Step is still eval (not redirected for lock errors)
+    expect(result.current.step).toBe("eval");
+  });
+
+  qaTest("jury.state.08", async () => {
+    // Subsequent write after first write succeeds → in-memory state remains valid
+    const { result } = renderHook(() => useJuryState());
+    await advanceToEval2(result);
+
+    api.upsertScore.mockResolvedValue({ ok: true });
+
+    // First project: fill all criteria to trigger groupSynced
+    const criteria = ["technical", "design", "delivery", "teamwork"];
+    for (const crit of criteria) {
+      act(() => { result.current.handleScore("p-1", crit, "20"); });
+      await act(async () => { result.current.handleScoreBlur("p-1", crit); });
+    }
+
+    // Wait for the last async write to complete and groupSynced to be set
+    await waitFor(
+      () => expect(result.current.groupSynced["p-1"]).toBe(true),
+      { timeout: 3000 }
+    );
+    expect(result.current.saveStatus).toBe("saved");
+
+    // Now mock a failure for second project
+    api.upsertScore.mockRejectedValue(new Error("Network failure"));
+
+    act(() => { result.current.handleScore("p-2", "technical", "19"); });
+    await act(async () => { result.current.handleScoreBlur("p-2", "technical"); });
+
+    // Wait for the error to be processed
+    await new Promise((r) => setTimeout(r, 150));
+
+    // First project is still synced and valid
+    expect(result.current.scores["p-1"].technical).toBe(20);
+    expect(result.current.groupSynced["p-1"]).toBe(true);
+    // Second project has the score in memory but not synced
+    expect(result.current.scores["p-2"].technical).toBe(19);
+    expect(result.current.groupSynced["p-2"]).not.toBe(true);
+    // Overall saveStatus is error (most recent operation failed)
+    expect(result.current.saveStatus).toBe("error");
+  });
+});

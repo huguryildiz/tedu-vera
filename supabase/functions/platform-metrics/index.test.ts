@@ -138,3 +138,22 @@ Deno.test("platform-metrics — rpc error returns 500", async () => {
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "rpc failed");
 });
+
+// qa: edge.platform-metrics.10
+Deno.test("platform-metrics — malformed JWT returns 401 with error shape", async () => {
+  const handler = await setup();
+  const req = new Request("http://localhost/fn", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: "Bearer not.a.valid.jwt",
+    },
+  });
+  setMockConfig({
+    authGetUser: { data: { user: null }, error: { message: "jwt signature invalid" } },
+  });
+  const res = await handler(req);
+  assertEquals(res.status, 401);
+  const body = await readJson(res) as Record<string, unknown>;
+  assertEquals(typeof body.error, "string");
+});

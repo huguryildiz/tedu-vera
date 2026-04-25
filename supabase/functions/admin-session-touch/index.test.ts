@@ -158,3 +158,23 @@ Deno.test("admin-session-touch — upsert error returns 500", async () => {
   const body = await readJson(res) as { error: string };
   assertEquals(body.error, "constraint");
 });
+
+// qa: edge.admin-session-touch.10
+Deno.test("admin-session-touch — malformed JWT returns 401 with error shape", async () => {
+  const handler = await setup();
+  const req = new Request("http://localhost/fn", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: "Bearer definitely-not-a-valid-jwt",
+    },
+    body: JSON.stringify({ deviceId: "d1" }),
+  });
+  setMockConfig({
+    authGetUser: { data: { user: null }, error: { message: "jwt malformed" } },
+  });
+  const res = await handler(req);
+  assertEquals(res.status, 401);
+  const body = await readJson(res) as Record<string, unknown>;
+  assertEquals(typeof body.error, "string");
+});
