@@ -37,6 +37,7 @@ jobs:
       PGHOST: localhost
       PGPORT: 5432
       PGUSER: ci
+      PGPASSWORD: ci
       PGDATABASE: vera_test
 
     steps:
@@ -65,6 +66,7 @@ jobs:
           # Ubuntu's pg_ctlcluster manages a default cluster on port 5432.
           sudo systemctl start postgresql || sudo pg_ctlcluster 15 main start
           sudo -u postgres createuser -s ci
+          sudo -u postgres psql -c "ALTER USER ci WITH PASSWORD 'ci';"
           sudo -u postgres createdb -O ci vera_test
           # Required app roles. Tests SET LOCAL role authenticated; if these
           # roles do not exist, become_a/become_b/become_super raise.
