@@ -105,7 +105,7 @@ function GoogleOAuthTestConsumer() {
       <span data-testid="loading">{String(auth.loading)}</span>
       <span data-testid="profile-incomplete">{String(auth.profileIncomplete)}</span>
       <span data-testid="is-pending">{String(auth.isPending)}</span>
-      <button onClick={() => auth.signInWithGoogle(false)} data-testid="google-signin-btn">
+      <button onClick={() => auth.signInWithGoogle(false).catch(() => {})} data-testid="google-signin-btn">
         Sign in with Google
       </button>
     </div>

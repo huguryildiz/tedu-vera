@@ -14,6 +14,20 @@ SELECT plan(8);
 
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.seed_periods();
+SELECT pgtap_test.seed_entry_tokens();
+
+-- Seed an extra org-A token + an org-B token for cross-org test (as postgres, before become_a)
+INSERT INTO entry_tokens (id, period_id, token_hash, token_plain, is_revoked, expires_at)
+VALUES
+  ('77770000-0000-4000-8000-00000000aaaa'::uuid,
+   'cccc0000-0000-4000-8000-000000000001'::uuid,
+   encode(digest('pgtap-token-extra-a', 'sha256'), 'hex'),
+   'pgtap-token-extra-a', false, now() + interval '1 day'),
+  ('77770000-0000-4000-8000-00000000bbbb'::uuid,
+   'dddd0000-0000-4000-8000-000000000002'::uuid,
+   encode(digest('pgtap-token-extra-b', 'sha256'), 'hex'),
+   'pgtap-token-extra-b', false, now() + interval '1 day')
+ON CONFLICT (id) DO NOTHING;
 
 -- 1-2. signature & return type
 SELECT has_function('public', 'rpc_entry_token_revoke', ARRAY['uuid'], 'fn exists');
@@ -34,40 +48,27 @@ SELECT is(
   'NULL token_id → token_not_found'
 );
 
--- 5. success: returns ok: true
--- Create a valid entry token
-INSERT INTO entry_tokens (id, period_id, token_hash, created_by, expires_at)
-VALUES ('hhhh0000-0000-4000-8000-000000000001'::uuid, 'cccc0000-0000-4000-8000-000000000001'::uuid, 'hash-token-xyz', 'user-id', now() + interval '24 hours')
-ON CONFLICT DO NOTHING;
-
-SELECT ok((rpc_entry_token_revoke('hhhh0000-0000-4000-8000-000000000001'::uuid)::jsonb->>'ok')::boolean, 'valid token → ok: true');
-
--- 6. already-revoked → should succeed (idempotent) or error
--- Calling again on same token
-SELECT isnt(
-  (rpc_entry_token_revoke('hhhh0000-0000-4000-8000-000000000001'::uuid)::jsonb->>'ok'),
-  NULL,
-  'revoked token → response has ok field (idempotent or error)'
-);
-
--- 7. response has ok field (already verified in test 5; verify idempotency or consistency)
-INSERT INTO entry_tokens (id, period_id, token_hash, created_by, expires_at)
-VALUES ('iiii0000-0000-4000-8000-000000000001'::uuid, 'cccc0000-0000-4000-8000-000000000001'::uuid, 'hash-token-abc', 'user-id', now() + interval '24 hours')
-ON CONFLICT DO NOTHING;
-
+-- 5. success: revoke a valid org-A token (admin A is owner of org A)
 SELECT ok(
-  (rpc_entry_token_revoke('iiii0000-0000-4000-8000-000000000001'::uuid)::jsonb ? 'ok'),
-  'response has ok field on revoke'
+  (rpc_entry_token_revoke('77770000-0000-4000-8000-000000000001'::uuid)::jsonb->>'ok')::boolean,
+  'valid token in own org → ok: true'
 );
 
--- 8. cross-org unauthorized: admin A cannot revoke token in org B period
--- Try to revoke a token from a period in org B (Become A is still active, they only admin org A)
-INSERT INTO entry_tokens (id, period_id, token_hash, created_by, expires_at)
-VALUES ('jjjj0000-0000-4000-8000-000000000001'::uuid, 'eeee0000-0000-4000-8000-000000000002'::uuid, 'hash-token-def', 'user-id', now() + interval '24 hours')
-ON CONFLICT DO NOTHING;
+-- 6. revoking an already-revoked token: response shape preserved
+SELECT ok(
+  (rpc_entry_token_revoke('77770000-0000-4000-8000-000000000001'::uuid)::jsonb ? 'ok'),
+  'second revoke on same token → response still has ok field'
+);
 
+-- 7. response has ok field for a fresh token revoke
+SELECT ok(
+  (rpc_entry_token_revoke('77770000-0000-4000-8000-00000000aaaa'::uuid)::jsonb ? 'ok'),
+  'fresh org-A token revoke → response has ok field'
+);
+
+-- 8. cross-org unauthorized: admin A cannot revoke token in org B's period
 SELECT is(
-  (rpc_entry_token_revoke('jjjj0000-0000-4000-8000-000000000001'::uuid)::jsonb->>'error_code'),
+  (rpc_entry_token_revoke('77770000-0000-4000-8000-00000000bbbb'::uuid)::jsonb->>'error_code'),
   'unauthorized',
   'cross-tenant token revoke → unauthorized'
 );

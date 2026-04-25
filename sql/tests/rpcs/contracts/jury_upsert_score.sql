@@ -36,21 +36,14 @@ SELECT function_returns(
 );
 
 -- ────────── 2. setup: create valid session token ──────────
--- First, authenticate the juror and get them set up
-PERFORM rpc_jury_authenticate(
-  'cccc0000-0000-4000-8000-000000000001'::uuid,
-  'pgtap Juror A',
-  'pgtap dept',
-  true,
-  NULL
-);
-
--- Now manually set a known session token so we can test with it
-UPDATE juror_period_auth
-SET session_token_hash = encode(digest('test-session-token', 'sha256'), 'hex'),
-    session_expires_at = now() + interval '12 hours'
-WHERE juror_id = '55550000-0000-4000-8000-000000000001'::uuid
-  AND period_id = 'cccc0000-0000-4000-8000-000000000001'::uuid;
+-- Create juror_period_auth directly with known session token
+-- (rpc_jury_authenticate may create new jurors with generated UUIDs)
+INSERT INTO juror_period_auth (juror_id, period_id, session_token_hash, session_expires_at)
+VALUES ('55550000-0000-4000-8000-000000000001'::uuid, 'cccc0000-0000-4000-8000-000000000001'::uuid,
+        encode(digest('test-session-token', 'sha256'), 'hex'), now() + interval '12 hours')
+ON CONFLICT (juror_id, period_id) DO UPDATE SET
+  session_token_hash = encode(digest('test-session-token', 'sha256'), 'hex'),
+  session_expires_at = now() + interval '12 hours';
 
 -- We also need at least one criterion in the period for scoring
 INSERT INTO period_criteria (period_id, key, label, max_score, weight)
@@ -112,15 +105,17 @@ SELECT ok(
 );
 
 -- ────────── 6. idempotent: same (juror_id, project_id) updates existing row ──────────
--- First write
-PERFORM rpc_jury_upsert_score(
-  'cccc0000-0000-4000-8000-000000000001'::uuid,
-  '33330000-0000-4000-8000-000000000001'::uuid,
-  '55550000-0000-4000-8000-000000000001'::uuid,
-  'test-session-token',
-  '[{"key":"design","value":"5"}]'::jsonb,
-  'First comment'
-);
+-- First write (wrap in DO so the result is discarded; PERFORM is PL/pgSQL-only)
+DO $$ BEGIN
+  PERFORM rpc_jury_upsert_score(
+    'cccc0000-0000-4000-8000-000000000001'::uuid,
+    '33330000-0000-4000-8000-000000000001'::uuid,
+    '55550000-0000-4000-8000-000000000001'::uuid,
+    'test-session-token',
+    '[{"key":"design","value":"5"}]'::jsonb,
+    'First comment'
+  );
+END $$;
 
 -- Second write with same key: should update, not insert duplicate
 SELECT is(

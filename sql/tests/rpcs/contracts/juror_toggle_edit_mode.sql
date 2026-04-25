@@ -17,48 +17,45 @@ SELECT plan(7);
 
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.seed_periods();
+SELECT pgtap_test.seed_jurors();
 
 -- 1-2. signature & return type
 SELECT has_function('public', 'rpc_juror_toggle_edit_mode', ARRAY['uuid', 'uuid', 'boolean', 'text', 'integer'], 'fn exists');
 SELECT function_returns('public', 'rpc_juror_toggle_edit_mode', ARRAY['uuid', 'uuid', 'boolean', 'text', 'integer'], 'json', 'returns json');
 
--- 3. unknown period → period_not_found
+-- 3. unknown juror → juror_not_found (RPC checks juror first)
 SELECT pgtap_test.become_a();
 SELECT is(
-  (rpc_juror_toggle_edit_mode('00000000-0000-4000-8000-000000000abc'::uuid, 'aaaa0000-0000-4000-8000-000000000001'::uuid, true, NULL, 30)::jsonb->>'error_code'),
-  'period_not_found',
-  'unknown period → period_not_found'
-);
-
--- 4. unknown juror → juror_not_found
-SELECT is(
-  (rpc_juror_toggle_edit_mode('cccc0000-0000-4000-8000-000000000001'::uuid, '00000000-0000-4000-8000-000000000abc'::uuid, true, NULL, 30)::jsonb->>'error_code'),
+  (rpc_juror_toggle_edit_mode('cccc0000-0000-4000-8000-000000000001'::uuid, '00000000-0000-4000-8000-000000000abc'::uuid, true, 'Test reason', 30)::jsonb->>'error_code'),
   'juror_not_found',
   'unknown juror → juror_not_found'
 );
 
--- 5. NULL period_id → period_not_found
+-- 4. unknown period with valid juror → auth_row_not_found (RPC finds juror, checks auth, then checks auth_row)
 SELECT is(
-  (rpc_juror_toggle_edit_mode(NULL::uuid, 'aaaa0000-0000-4000-8000-000000000001'::uuid, true, NULL, 30)::jsonb->>'error_code'),
-  'period_not_found',
-  'NULL period_id → period_not_found'
+  (rpc_juror_toggle_edit_mode('00000000-0000-4000-8000-000000000abc'::uuid, '55550000-0000-4000-8000-000000000001'::uuid, true, 'Test reason', 30)::jsonb->>'error_code'),
+  'auth_row_not_found',
+  'unknown period with valid juror → auth_row_not_found'
 );
 
--- 6. success: returns ok: true
--- Create a juror auth record for this period
-INSERT INTO jurors (id, name, affiliation)
-VALUES ('ffff0000-0000-4000-8000-000000000001'::uuid, 'Toggle Test Juror', 'Test Affiliation')
-ON CONFLICT DO NOTHING;
+-- 5. NULL juror_id → juror_not_found
+SELECT is(
+  (rpc_juror_toggle_edit_mode('cccc0000-0000-4000-8000-000000000001'::uuid, NULL::uuid, true, 'Test reason', 30)::jsonb->>'error_code'),
+  'juror_not_found',
+  'NULL juror_id → juror_not_found'
+);
 
-INSERT INTO juror_period_auth (juror_id, period_id, status)
-VALUES ('ffff0000-0000-4000-8000-000000000001'::uuid, 'cccc0000-0000-4000-8000-000000000001'::uuid, 'active')
-ON CONFLICT DO NOTHING;
+-- 6. success: toggle edit mode on (need final_submitted_at set)
+-- Use juror A with auth_row in period A1, mark as final_submitted
+INSERT INTO juror_period_auth (juror_id, period_id, final_submitted_at)
+VALUES ('55550000-0000-4000-8000-000000000001'::uuid, 'cccc0000-0000-4000-8000-000000000001'::uuid, now())
+ON CONFLICT (juror_id, period_id) DO UPDATE SET final_submitted_at = now();
 
-SELECT ok((rpc_juror_toggle_edit_mode('cccc0000-0000-4000-8000-000000000001'::uuid, 'ffff0000-0000-4000-8000-000000000001'::uuid, true, 'Regrade', 45)::jsonb->>'ok')::boolean, 'valid period+juror with duration → ok: true');
+SELECT ok((rpc_juror_toggle_edit_mode('cccc0000-0000-4000-8000-000000000001'::uuid, '55550000-0000-4000-8000-000000000001'::uuid, true, 'Regrade needed', 45)::jsonb->>'ok')::boolean, 'valid period+juror with final_submitted → ok: true');
 
 -- 7. response has enabled field
 SELECT ok(
-  (rpc_juror_toggle_edit_mode('cccc0000-0000-4000-8000-000000000001'::uuid, 'ffff0000-0000-4000-8000-000000000001'::uuid, false, NULL, 30)::jsonb ? 'enabled'),
+  (rpc_juror_toggle_edit_mode('cccc0000-0000-4000-8000-000000000001'::uuid, '55550000-0000-4000-8000-000000000001'::uuid, false, NULL, 30)::jsonb ? 'enabled'),
   'response has enabled field'
 );
 

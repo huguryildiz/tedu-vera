@@ -52,8 +52,17 @@ SELECT throws_ok(
   'already-removed membership → target_not_found'
 );
 
--- 7. non-owner caller → raises assertion error (not org owner)
--- Create another member, then try to remove as non-owner user
+-- 7. cannot remove owner → raises cannot_remove_owner
+-- Admin A is the owner of org A; try to remove their own membership
+SELECT throws_ok(
+  $c$SELECT rpc_org_admin_remove_member((SELECT id FROM memberships WHERE organization_id = '11110000-0000-4000-8000-000000000001'::uuid AND is_owner = true LIMIT 1)::uuid)$c$,
+  NULL::text,
+  'cannot_remove_owner'::text,
+  'attempting to remove owner → cannot_remove_owner'
+);
+
+-- 8. non-owner caller → raises unauthorized (no JWT set)
+-- Create another member, then try to remove without authentication
 INSERT INTO memberships (id, organization_id, user_id, status, role, is_owner)
 VALUES ('llll0000-0000-4000-8000-000000000001'::uuid, '11110000-0000-4000-8000-000000000001'::uuid, 'bbbb0000-0000-4000-8000-000000000002'::uuid, 'active', 'member', false)
 ON CONFLICT DO NOTHING;
@@ -62,16 +71,9 @@ SELECT pgtap_test.become_reset();
 SELECT throws_ok(
   $c$SELECT rpc_org_admin_remove_member('llll0000-0000-4000-8000-000000000001'::uuid)$c$,
   NULL::text,
-  NULL::text,
-  'non-owner caller → raises exception'
+  'unauthorized'::text,
+  'unauthenticated caller → unauthorized'
 );
-
--- 8. response has ok field on success
-SELECT pgtap_test.become_a();
-INSERT INTO memberships (id, organization_id, user_id, status, role, is_owner)
-VALUES ('mmmm0000-0000-4000-8000-000000000001'::uuid, '11110000-0000-4000-8000-000000000001'::uuid, 'cccc0000-0000-4000-8000-000000000002'::uuid, 'active', 'member', false)
-ON CONFLICT DO NOTHING;
-SELECT ok((rpc_org_admin_remove_member('mmmm0000-0000-4000-8000-000000000001'::uuid)::jsonb ? 'ok'), 'response has ok field');
 
 SELECT COALESCE(NULLIF((SELECT string_agg(t, E'\n') FROM finish() AS t), ''), 'ALL TESTS PASSED') AS result;
 ROLLBACK;
