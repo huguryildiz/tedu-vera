@@ -61,10 +61,34 @@ jobs:
           # extension; perl package brings pg_prove.
           sudo apt-get install -y postgresql-15 postgresql-15-pgtap libtap-parser-sourcehandler-pgtap-perl
 
-      - name: Start Postgres + create test role/db
+      - name: Start Postgres 15 cluster on port 5432
         run: |
-          # Ubuntu's pg_ctlcluster manages a default cluster on port 5432.
-          sudo systemctl start postgresql || sudo pg_ctlcluster 15 main start
+          # Ubuntu 24.04 runner image ships with postgres-16 already running
+          # on port 5432, but pgtap is installed for the postgres-15 binary
+          # tree (/usr/share/postgresql/15/extension/pgtap.control). Stop and
+          # drop any non-15 cluster, then start only postgres-15 on 5432.
+          echo "--- Existing clusters ---"
+          sudo pg_lsclusters || true
+          # Stop and drop everything that isn't postgres-15
+          for v in 14 16 17; do
+            sudo pg_ctlcluster $v main stop 2>/dev/null || true
+            sudo pg_dropcluster $v main 2>/dev/null || true
+          done
+          # Recreate or restart 15 on port 5432
+          if ! sudo pg_lsclusters | grep -q "^15 .*main"; then
+            sudo pg_createcluster 15 main --port=5432
+          fi
+          sudo pg_ctlcluster 15 main stop 2>/dev/null || true
+          # Force the port to 5432 in postgresql.conf in case a fresh cluster
+          # was assigned a different port to avoid collisions.
+          sudo sed -i "s/^port =.*/port = 5432/" /etc/postgresql/15/main/postgresql.conf
+          sudo pg_ctlcluster 15 main start
+          echo "--- Cluster after start ---"
+          sudo pg_lsclusters
+          sudo -u postgres psql -c "SELECT version();"
+
+      - name: Create test role + db + auth shim
+        run: |
           sudo -u postgres createuser -s ci
           sudo -u postgres psql -c "ALTER USER ci WITH PASSWORD 'ci';"
           sudo -u postgres createdb -O ci vera_test
