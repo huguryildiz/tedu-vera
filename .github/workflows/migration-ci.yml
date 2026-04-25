@@ -115,7 +115,12 @@ jobs:
               instance_id uuid,
               aud text,
               role text,
-              email text
+              email text,
+              email_confirmed_at timestamptz,
+              raw_user_meta_data jsonb,
+              raw_app_meta_data jsonb,
+              created_at timestamptz DEFAULT now(),
+              updated_at timestamptz DEFAULT now()
             );
             CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE
             AS \$\$ SELECT (NULLIF(current_setting('request.jwt.claims', true), '')::jsonb->>'sub')::uuid \$\$;
