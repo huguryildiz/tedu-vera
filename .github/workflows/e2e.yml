@@ -7,6 +7,13 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Cancel older runs on the same branch — same vera-demo DB is shared, so
+# overlapping pipelines mutate global singletons (maintenance_mode) under
+# each other and produce false admin failures.
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   e2e-admin:
     name: E2E — Admin panel
