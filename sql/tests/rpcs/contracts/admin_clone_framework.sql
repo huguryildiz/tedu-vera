@@ -11,7 +11,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(8);
+SELECT plan(7);
 
 SELECT pgtap_test.seed_two_orgs();
 
@@ -36,8 +36,13 @@ SELECT throws_ok(
   'NULL framework_id → framework_not_found'
 );
 
+-- Seed the source framework for tests 5 and 6
+INSERT INTO frameworks (id, organization_id, name) VALUES
+  ('a1b2c3d4-e5f6-4000-a000-000000000001'::uuid,
+   '11110000-0000-4000-8000-000000000001'::uuid, 'pgtap VERA Standard')
+ON CONFLICT (id) DO NOTHING;
+
 -- 5. success: returns non-null UUID
--- Use a real framework from seed data (a1b2c3d4-e5f6-4000-a000-000000000001 = VERA Standard)
 SELECT isnt(
   rpc_admin_clone_framework('a1b2c3d4-e5f6-4000-a000-000000000001'::uuid, 'Cloned VERA', '11110000-0000-4000-8000-000000000001'::uuid),
   NULL::uuid,

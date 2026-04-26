@@ -104,7 +104,7 @@ SELECT rpc_admin_generate_entry_token('cccc0000-0000-4000-8000-000000000011'::uu
 
 -- Count non-revoked tokens for this period; should be exactly 1
 SELECT is(
-  (SELECT COUNT(*) FROM entry_tokens
+  (SELECT COUNT(*)::int FROM entry_tokens
    WHERE period_id = 'cccc0000-0000-4000-8000-000000000011'::uuid
      AND is_revoked = false),
   1,

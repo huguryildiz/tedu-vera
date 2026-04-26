@@ -12,6 +12,7 @@ SELECT plan(7);
 -- Seed organizations and periods to establish foreign key relationships
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.seed_periods();
+SELECT pgtap_test.seed_period_criteria();
 
 -- ====================================================================
 -- Test 1: organizations.updated_at advances on UPDATE

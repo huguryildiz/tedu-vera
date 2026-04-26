@@ -44,7 +44,7 @@ VALUES ('beef0000-0000-4000-8000-000000000001'::uuid,
         'aaaa0000-0000-4000-8000-000000000001'::uuid,
         '11110000-0000-4000-8000-000000000001'::uuid,
         'org_admin', 'active', false)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (user_id, organization_id) DO NOTHING;
 SELECT pgtap_test.become_a();
 
 SELECT throws_ok(
