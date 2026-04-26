@@ -405,30 +405,34 @@ GRANT EXECUTE ON FUNCTION public.rpc_admin_verify_audit_chain(UUID) TO authentic
 -- The URL and X-Cron-Secret must match the Edge Function's deployment env vars.
 -- Replace <project-ref> and <AUDIT_SWEEP_SECRET> before applying.
 
-CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
-
--- Idempotent: remove existing job before re-scheduling
-DO $$
-BEGIN
-  IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'audit-anomaly-sweep-hourly') THEN
-    PERFORM cron.unschedule('audit-anomaly-sweep-hourly');
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'pg_net') THEN
+    CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
   END IF;
 END $$;
 
-SELECT cron.schedule(
-  'audit-anomaly-sweep-hourly',
-  '0 * * * *',
-  $$
-  SELECT extensions.http_post(
-    url := 'https://<project-ref>.supabase.co/functions/v1/audit-anomaly-sweep',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'X-Cron-Secret', '<AUDIT_SWEEP_SECRET>'
-    ),
-    body := '{}'::jsonb
-  )
-  $$
-);
+-- Idempotent: remove existing job before re-scheduling
+DO $guard$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'audit-anomaly-sweep-hourly') THEN
+      PERFORM cron.unschedule('audit-anomaly-sweep-hourly');
+    END IF;
+    PERFORM cron.schedule(
+      'audit-anomaly-sweep-hourly',
+      '0 * * * *',
+      $job$
+      SELECT extensions.http_post(
+        url := 'https://<project-ref>.supabase.co/functions/v1/audit-anomaly-sweep',
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'X-Cron-Secret', '<AUDIT_SWEEP_SECRET>'
+        ),
+        body := '{}'::jsonb
+      )
+      $job$
+    );
+  END IF;
+END $guard$;
 
 -- =============================================================================
 -- 5) ADMIN ATOMIC MUTATION RPCs
@@ -1576,15 +1580,15 @@ REVOKE EXECUTE ON FUNCTION public._cleanup_unverified_expired_accounts() FROM au
 GRANT  EXECUTE ON FUNCTION public._cleanup_unverified_expired_accounts() TO service_role;
 
 -- Idempotent: remove existing job before re-scheduling
-DO $$
-BEGIN
-  IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'cleanup-unverified-expired-accounts') THEN
-    PERFORM cron.unschedule('cleanup-unverified-expired-accounts');
+DO $guard$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'cleanup-unverified-expired-accounts') THEN
+      PERFORM cron.unschedule('cleanup-unverified-expired-accounts');
+    END IF;
+    PERFORM cron.schedule(
+      'cleanup-unverified-expired-accounts',
+      '0 3 * * *',   -- daily at 03:00 UTC
+      $job$SELECT public._cleanup_unverified_expired_accounts()$job$
+    );
   END IF;
-END $$;
-
-SELECT cron.schedule(
-  'cleanup-unverified-expired-accounts',
-  '0 3 * * *',   -- daily at 03:00 UTC
-  $$SELECT public._cleanup_unverified_expired_accounts()$$
-);
+END $guard$;

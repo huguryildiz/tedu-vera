@@ -221,14 +221,13 @@ jobs:
         run: |
           until pg_isready -h localhost -p 5432; do sleep 1; done
 
-      - name: Apply migrations in order (001 → 007)
-        # 008_platform requires pg_cron and 009_audit depends on platform —
-        # both are Supabase-managed extensions not available on PGDG vanilla
-        # Postgres. Our pgTAP suite (constraints/triggers/rls/rpcs) only
-        # exercises objects defined through 007, so we stop there. Re-enable
-        # 008/009 once the runner ships pg_cron + pg_net.
+      - name: Apply migrations in order (001 → 009)
+        # 008_platform and 009_audit use pg_cron and pg_net. Both migration
+        # files now include skip-guards (DO $$ IF EXISTS pg_available_extensions
+        # …) so they run cleanly on PGDG vanilla Postgres without those
+        # extensions; cron jobs and net calls are simply skipped.
         run: |
-          for f in 001_extensions 002_tables 003_helpers_and_triggers 004_rls 005_rpcs_jury 006a_rpcs_admin 006b_rpcs_admin 007_identity; do
+          for f in 001_extensions 002_tables 003_helpers_and_triggers 004_rls 005_rpcs_jury 006a_rpcs_admin 006b_rpcs_admin 007_identity 008_platform 009_audit; do
             echo "--- Applying $f.sql ---"
             psql -v ON_ERROR_STOP=1 -f sql/migrations/$f.sql || exit 1
           done

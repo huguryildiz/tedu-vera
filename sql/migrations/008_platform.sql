@@ -6,8 +6,14 @@
 -- EXTENSIONS (pg_cron for scheduled jobs, pg_net for HTTP callbacks)
 -- =============================================================================
 
-CREATE EXTENSION IF NOT EXISTS pg_cron;
-CREATE EXTENSION IF NOT EXISTS pg_net;
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'pg_cron') THEN
+    CREATE EXTENSION IF NOT EXISTS pg_cron;
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'pg_net') THEN
+    CREATE EXTENSION IF NOT EXISTS pg_net;
+  END IF;
+END $$;
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- A) PLATFORM SETTINGS
@@ -426,18 +432,22 @@ GRANT EXECUTE ON FUNCTION public.rpc_admin_cancel_maintenance() TO authenticated
 -- Checks every minute: if end_time has passed, set is_active = false.
 -- The gate's polling loop (30 s) picks up the change shortly after.
 
-SELECT cron.schedule(
-  'maintenance-auto-lift',
-  '* * * * *',
-  $$
-    UPDATE maintenance_mode
-       SET is_active  = false,
-           updated_at = now()
-     WHERE is_active  = true
-       AND end_time   IS NOT NULL
-       AND end_time    < now();
-  $$
-);
+DO $guard$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+    PERFORM cron.schedule(
+      'maintenance-auto-lift',
+      '* * * * *',
+      $job$
+        UPDATE maintenance_mode
+           SET is_active  = false,
+               updated_at = now()
+         WHERE is_active  = true
+           AND end_time   IS NOT NULL
+           AND end_time    < now();
+      $job$
+    );
+  END IF;
+END $guard$;
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- C) PLATFORM METRICS
@@ -981,25 +991,28 @@ GRANT EXECUTE ON FUNCTION public.rpc_admin_set_backup_schedule(TEXT) TO authenti
 --   current_setting('app.settings.supabase_url')      → project URL
 --   current_setting('app.settings.service_role_key')  → service role JWT
 
-SELECT cron.unschedule('auto-backup-daily') WHERE EXISTS (
-  SELECT 1 FROM cron.job WHERE jobname = 'auto-backup-daily'
-);
-
-SELECT cron.schedule(
-  'auto-backup-daily',
-  '0 2 * * *',  -- 02:00 UTC every day (overridden by rpc_admin_set_backup_schedule)
-  $$
-  SELECT
-    net.http_post(
-      url     := current_setting('app.settings.supabase_url', true) || '/functions/v1/auto-backup',
-      headers := jsonb_build_object(
-        'Content-Type',  'application/json',
-        'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key', true)
-      ),
-      body    := '{}'::JSONB
-    ) AS request_id;
-  $$
-);
+DO $guard$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'auto-backup-daily') THEN
+      PERFORM cron.unschedule('auto-backup-daily');
+    END IF;
+    PERFORM cron.schedule(
+      'auto-backup-daily',
+      '0 2 * * *',  -- 02:00 UTC every day (overridden by rpc_admin_set_backup_schedule)
+      $job$
+      SELECT
+        net.http_post(
+          url     := current_setting('app.settings.supabase_url', true) || '/functions/v1/auto-backup',
+          headers := jsonb_build_object(
+            'Content-Type',  'application/json',
+            'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key', true)
+          ),
+          body    := '{}'::JSONB
+        ) AS request_id;
+      $job$
+    );
+  END IF;
+END $guard$;
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- GLOBAL FRAMEWORK TEMPLATES (organization_id IS NULL → read-only for all orgs)
