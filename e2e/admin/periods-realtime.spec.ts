@@ -44,6 +44,8 @@ async function signInAndOpenPeriods(page: Page) {
       localStorage.setItem("vera.admin_tour_done", "1");
       localStorage.setItem("admin.remember_me", "true");
       localStorage.setItem("admin.active_organization_id", id);
+      // Opt into Realtime for this spec — usePageRealtime skips by default in E2E.
+      (window as unknown as { __VERA_E2E_REALTIME__?: boolean }).__VERA_E2E_REALTIME__ = true;
     } catch {}
   }, E2E_PERIODS_ORG_ID);
 
