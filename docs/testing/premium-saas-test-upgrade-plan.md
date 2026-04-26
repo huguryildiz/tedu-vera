@@ -856,19 +856,28 @@ GitHub branch protection rule'da "e2e-critical / Critical path E2E (must pass)" 
 
 ## 8. Final Scorecard
 
-| Alan | Şu an | Phase 1 sonrası | Phase 2 sonrası | Phase 4 sonrası (hedef) |
-|------|-------|------------------|-----------------|--------------------------|
-| Settings | 8 | 9 | 9 | 9 |
-| Export | 6 | 8 | 8 | 9 |
-| Criteria | 8 | 9 | 9 | 9 |
-| Outcomes | 9 | 9 | 9 | 10 |
-| Analytics | 7 | 7 | 9 | 9 |
-| Overview | **4** | 5 | 8 | 9 |
-| Reviews | 6 | 8 | 9 | 9 |
-| RLS / RPC sentinel | 5 (soft) | 7 | 9 (hard) | 10 |
-| Audit-trail integrity | 5 | 8 | 9 | 9 |
-| General test quality | 7.2 | 7.8 | 8.4 | 9.0 |
-| Premium SaaS readiness | 6.5 | 7.4 | 8.4 | 9.2 |
+| Alan | Şu an | Phase 1 sonrası | Phase 2 sonrası | Phase 4 sonrası (hedef) | Phase 4 sonrası (gerçekleşen) |
+|------|-------|------------------|-----------------|--------------------------|-------------------------------|
+| Settings | 8 | 9 | 9 | 9 | **9** ✅ |
+| Export | 6 | 8 | 8 | 9 | **8** ⚠️ (Phase 4 export'a dokunmadı) |
+| Criteria | 8 | 9 | 9 | 9 | **9** ✅ |
+| Outcomes | 9 | 9 | 9 | 10 | **10** ✅ |
+| Analytics | 7 | 7 | 9 | 9 | **9** ✅ |
+| Overview | **4** | 5 | 8 | 9 | **9** ✅ (Phase 4.3 +3 KPI testi) |
+| Reviews | 6 | 8 | 9 | 9 | **9** ✅ |
+| RLS / RPC sentinel | 5 (soft) | 7 | 9 (hard) | 10 | **9** ⚠️ (RLS hard ✅; RPC contracts 63/89, 26 eksik) |
+| Audit-trail integrity | 5 | 8 | 9 | 9 | **9** ✅ |
+| General test quality | 7.2 | 7.8 | 8.4 | 9.0 | **8.8** ⚠️ (HeatmapPom + ProjectsPage sibling-hook kalan) |
+| Premium SaaS readiness | 6.5 | 7.4 | 8.4 | 9.2 | **9.0** ⚠️ (lock enforcement DB-level guard yok) |
+
+**Final test count (Phase 4 close-out, 2026-04-26):** 1007/1007 unit ✅, 232 test dosyası, 16/16 Phase 2 E2E ✅.
+
+**Açık backlog (Phase 5+):**
+
+1. 26 eksik RPC contract test → Task 3.2 sentinel hard-gate'e flip için ön koşul
+2. `e2e/poms/HeatmapPom.ts` → `firstCellScore()` / `cellColor()` metotları (heatmap E2E behavior augment için)
+3. `ProjectsPage.test.jsx` → `useManagePeriods` sibling hook mock'unu kaldır (8/8 tautology için)
+4. Lock enforcement DB-level RPC guard (opsiyonel — şu an application-layer reject yeterli)
 
 ---
 

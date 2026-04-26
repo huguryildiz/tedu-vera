@@ -60,11 +60,7 @@ test.describe("period structural immutability (locked-period trigger)", () => {
       .eq("is_locked", false)
       .limit(1);
 
-    if (!periods?.length) {
-      // Skip if no unlocked periods exist (valid test dependency)
-      test.skip();
-      return;
-    }
+    expect(periods?.length ?? 0, 'E2E requires at least one unlocked period').toBeGreaterThan(0);
 
     const { id: periodId, name: originalName } = periods[0];
 
@@ -108,11 +104,7 @@ test.describe("period structural immutability (locked-period trigger)", () => {
       .eq("is_locked", false)
       .limit(1);
 
-    if (!periods?.length) {
-      // Skip if no unlocked periods exist (valid test dependency)
-      test.skip();
-      return;
-    }
+    expect(periods?.length ?? 0, 'E2E requires at least one unlocked period').toBeGreaterThan(0);
 
     const { id: periodId, name: originalName } = periods[0];
     const testName = `E2E-IMMUTABILITY-BREAK-${Date.now()}`;
@@ -189,11 +181,8 @@ test.describe("closed period score write protection (enforced)", () => {
     request,
   }) => {
     const slot = await findClosedPeriodWithCleanSlot();
-    if (!slot) {
-      // Skip if no closed period with clean scoring slot exists (valid test dependency)
-      test.skip();
-      return;
-    }
+    expect(slot, 'E2E requires a closed period with at least one clean scoring slot').not.toBeNull();
+    if (!slot) return;
 
     const jwt = await getTenantJwt(request);
     const res = await request.post(`${SUPABASE_URL}/rest/v1/score_sheets`, {
@@ -238,11 +227,8 @@ test.describe("closed period score write protection (enforced)", () => {
       .select("id")
       .not("closed_at", "is", null)
       .limit(10);
-    if (!closedPeriods?.length) {
-      // Skip if no closed periods exist (valid test dependency)
-      test.skip();
-      return;
-    }
+    expect(closedPeriods?.length ?? 0, 'E2E requires at least one closed period').toBeGreaterThan(0);
+    if (!closedPeriods?.length) return;
 
     let authRow: { juror_id: string; period_id: string; session_token_hash: string | null } | null = null;
     for (const p of closedPeriods) {
@@ -316,11 +302,8 @@ test.describe("closed period score write protection (enforced)", () => {
       .select("id")
       .is("closed_at", null)
       .limit(10);
-    if (!openPeriods?.length) {
-      // Skip if no open periods exist (valid test dependency)
-      test.skip();
-      return;
-    }
+    expect(openPeriods?.length ?? 0, 'E2E requires at least one open period').toBeGreaterThan(0);
+    if (!openPeriods?.length) return;
 
     let authRow: { juror_id: string; period_id: string; session_token_hash: string | null } | null = null;
     for (const p of openPeriods) {
@@ -348,8 +331,7 @@ test.describe("closed period score write protection (enforced)", () => {
       }
     }
     if (!authRow) {
-      // Skip if no suitable open-period auth row found (valid test dependency)
-      test.skip();
+      expect(authRow, 'E2E requires an unblocked juror_period_auth row for an open period').not.toBeNull();
       return;
     }
 

@@ -14,7 +14,8 @@
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { adminClient, deleteUserByEmail } from "../helpers/supabaseAdmin";
-import { E2E_PERIODS_ORG_ID } from "../fixtures/seed-ids";
+import { findLatestAuditEntry } from "../helpers/auditHelpers";
+import { E2E_PERIODS_ORG_ID, E2E_PROJECTS_ORG_ID } from "../fixtures/seed-ids";
 
 // ── Supabase connection ───────────────────────────────────────────────────────
 
@@ -337,5 +338,144 @@ test.describe("settings-save flows", () => {
     await adminClient.from("audit_logs").update({ user_id: null }).eq("user_id", userId);
     await adminClient.from("profiles").delete().eq("id", userId);
     await adminClient.auth.admin.deleteUser(userId);
+  });
+
+  // ── Test 5: RBAC — non-super cannot set security policy ──────────────────
+  // The plan asked for a "read-only role" RBAC test, but VERA's role enum has
+  // only ('org_admin','super_admin') (sql/migrations/002_tables.sql:67). The
+  // closest meaningful negative case is asserting an org_admin (non-super) is
+  // rejected from a super-admin-only RPC.
+  test("RBAC: org_admin cannot call rpc_admin_set_security_policy (super-only)", async () => {
+    const { error } = await orgClient.rpc("rpc_admin_set_security_policy", {
+      p_policy: { maxPinAttempts: 6 },
+    });
+    expect(error, "org_admin must be rejected").not.toBeNull();
+    expect(
+      (error?.message ?? "").toLowerCase(),
+      `error must indicate super_admin requirement, got: ${error?.message}`,
+    ).toContain("super");
+
+    // Side-effect check: policy is unchanged
+    const { data: row } = await adminClient
+      .from("security_policy")
+      .select("policy")
+      .eq("id", 1)
+      .single();
+    const attemptsAfter = (row?.policy as Record<string, unknown>)
+      ?.maxPinAttempts;
+    expect(attemptsAfter).not.toBe(6);
+  });
+
+  // ── Test 6: RBAC — non-org-member cannot set PIN policy for that org ──────
+  test("RBAC: org_admin from a different organization cannot call rpc_admin_set_pin_policy here", async () => {
+    // org_admin user belongs to E2E_PERIODS_ORG_ID. Create a foreign-org
+    // org_admin and verify they cannot influence this org's pin policy.
+    const FOREIGN_EMAIL = "e2e-settings-foreign@vera-eval.app";
+    const FOREIGN_PASS = SHARED_PASS;
+    await deleteUserByEmail(FOREIGN_EMAIL).catch(() => {});
+    const { data: foreignData, error: foreignErr } =
+      await adminClient.auth.admin.createUser({
+        email: FOREIGN_EMAIL,
+        password: FOREIGN_PASS,
+        email_confirm: true,
+      });
+    expect(foreignErr).toBeNull();
+    await adminClient.from("memberships").insert({
+      user_id: foreignData!.user!.id,
+      organization_id: E2E_PROJECTS_ORG_ID,
+      status: "active",
+      role: "org_admin",
+      is_owner: false,
+    });
+
+    const foreignToken = await signInWithPassword(FOREIGN_EMAIL, FOREIGN_PASS);
+    const foreignClient = makeUserClient(foreignToken);
+
+    // PIN policy is platform-wide (single row id=1) — assertion: this RPC is
+    // gated by _assert_tenant_admin, so a tenant admin in any org can call it.
+    // The cross-tenant negative therefore applies to org-scoped settings, not
+    // to the platform policy. We verify the platform-wide nature here so the
+    // test stays honest about scope rather than asserting a non-existent gate.
+    const { data: ok } = await foreignClient.rpc("rpc_admin_set_pin_policy", {
+      p_max_attempts: 7,
+      p_cooldown: "30m",
+      p_qr_ttl: "24h",
+    });
+    expect(
+      ok?.ok,
+      "platform PIN policy is intentionally tenant-agnostic — any tenant_admin may call it (gated only by _assert_tenant_admin). If this assumption changes, scope this RPC to the caller's org.",
+    ).toBe(true);
+
+    // Cleanup
+    await deleteUserByEmail(FOREIGN_EMAIL).catch(() => {});
+  });
+
+  // ── Test 7: Persistence roundtrip — value survives a fresh client instance
+  // The existing tests verify writes via adminClient (service-role). This test
+  // proves the value persists across the auth boundary by reading back through
+  // a brand-new authenticated user client.
+  test("persistence: PIN policy change is visible to a fresh authenticated client", async () => {
+    const originalAttempts = (originalPolicy.maxPinAttempts as number) ?? 5;
+    const newAttempts = originalAttempts === 11 ? 12 : 11;
+
+    const { error: setErr } = await orgClient.rpc("rpc_admin_set_pin_policy", {
+      p_max_attempts: newAttempts,
+      p_cooldown: "30m",
+      p_qr_ttl: "24h",
+    });
+    expect(setErr).toBeNull();
+
+    // Brand-new client (different sign-in, no shared cache)
+    const freshToken = await signInWithPassword(ORG_EMAIL, SHARED_PASS);
+    const freshClient = makeUserClient(freshToken);
+    const { data: policy, error: getErr } = await freshClient.rpc(
+      "rpc_admin_get_pin_policy",
+    );
+    expect(getErr).toBeNull();
+    expect(policy?.maxPinAttempts).toBe(newAttempts);
+
+    // Revert
+    await orgClient.rpc("rpc_admin_set_pin_policy", {
+      p_max_attempts: originalAttempts,
+      p_cooldown: "30m",
+      p_qr_ttl: "24h",
+    });
+  });
+
+  // ── Test 8: Audit-write integration probe (negative — backlog gap) ────────
+  // Phase 1 finding: rpc_admin_set_security_policy / rpc_admin_set_pin_policy /
+  // rpc_org_admin_cancel_invite do NOT call _audit_write. This test asserts
+  // the current (incorrect) behavior so when those RPCs gain audit integration
+  // the test fails and forces reviewers to flip the expectation.
+  // Tracked in: docs/superpowers/plans/test-quality-upgrade/phase-1-completion-report.md
+  test("audit gap: security_policy.update writes no audit row today (BACKLOG flip when fixed)", async () => {
+    const sinceIso = new Date(Date.now() - 60_000).toISOString();
+    await superClient.rpc("rpc_admin_set_security_policy", {
+      p_policy: { maxPinAttempts: (originalPolicy.maxPinAttempts as number) ?? 5 },
+    });
+
+    // Probe several plausible action names — none should match today.
+    const actions = [
+      "security.policy.updated",
+      "security.policy.update",
+      "config.security_policy.updated",
+      "settings.security.update",
+    ];
+    for (const action of actions) {
+      const row = await findLatestAuditEntry({
+        eventType: action,
+        withinSeconds: 60,
+      });
+      // We assert the row was NOT freshly written by this RPC. If a future
+      // migration wires _audit_write into rpc_admin_set_security_policy with
+      // any of these action names, this test fails and the assertion must be
+      // flipped to `>` to verify the row exists.
+      if (row && row.created_at >= sinceIso) {
+        throw new Error(
+          `Audit gap closed: ${action} now writes an audit row. Update this test ` +
+            `to assert the row's payload, then enable Phase 1 audit assertions.`,
+        );
+      }
+    }
   });
 });

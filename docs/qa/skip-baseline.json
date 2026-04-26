@@ -1,0 +1,12 @@
+{
+  "baselineSkipCount": 5,
+  "lastUpdated": "2026-04-26",
+  "breakdown": {
+    "src/test/qaTest.js": 1,
+    "e2e/security/period-immutability.spec.ts": 1,
+    "e2e/security/rbac-boundary.spec.ts": 1,
+    "e2e/admin/export-content-parity.spec.ts": 1,
+    "e2e/admin/periods.spec.ts": 1
+  },
+  "note": "Phase 3.6 close-out (2026-04-26): converted 8 runtime data guards in security specs from test.skip() to expect() assertions. 5 remaining skips are all legitimate: 1 permanent harness skip, 2 seed-missing guards (no org-B jurors, no unblocked auth row for closed period), 1 PDF export not in build, 1 conditional state guard. Decreasing only — adding new skips requires updating this baseline with a PR comment explaining why."
+}

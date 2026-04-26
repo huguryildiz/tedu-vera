@@ -3,14 +3,6 @@ node_modules/
 dist/
 .vite/
 
-# Docs (internal / generated)
-docs/development/
-docs/misc/
-docs/reports/
-docs/prompts/
-docs/refactor/
-docs/superpowers/
-
 # Test output
 test-results/
 coverage/

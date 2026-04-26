@@ -245,12 +245,15 @@ export async function setupScoringFixture(
     }
   }
 
-  // Step 7 — lock period + set activated_at so pickDefaultPeriod auto-selects it
+  // Step 7 — lock period + set activated_at so pickDefaultPeriod auto-selects it.
+  // Push activated_at 1 hour into the future so this fixture period beats any
+  // leftover fixture periods from prior test runs (pickDefaultPeriod sorts by
+  // activated_at DESC).
   const { error: lockErr } = await adminClient
     .from("periods")
     .update({
       is_locked: true,
-      activated_at: new Date().toISOString(),
+      activated_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
     })
     .eq("id", periodId);
   if (lockErr) {
@@ -523,6 +526,272 @@ export async function generateEntryToken(periodId: string): Promise<string> {
 }
 
 /**
+ * Phase 2.1 — extended fixture for Overview KPI tests.
+ *
+ * Builds a wider seed (configurable juror & project counts), then optionally
+ * marks a subset of jurors as `final_submitted_at = now()` and seeds score
+ * sheets so the Overview page renders deterministic KPI numbers:
+ *
+ *   - `kpi.totalJ` = `jurors`
+ *   - `kpi.completed` = `completedJurors`
+ *   - `kpi.editing` = `editingJurors`
+ *   - `summaryData.length` = `projects`
+ *   - `kpi.pct` = round((completedJurors / jurors) × 100)
+ *   - `groupCompletion` per project = round((scoredJurorCount / jurors) × 100)
+ *
+ * `lastSeenAt` is staggered (latest juror = newest) so live-feed ordering is
+ * stable. The fixture period is auto-locked (so `pickDefaultPeriod` selects it).
+ */
+export interface OverviewFixture {
+  periodId: string;
+  periodName: string;
+  jurorIds: string[];
+  jurorNames: string[];
+  jurorAffiliations: string[];
+  projectIds: string[];
+  criteriaAId: string;
+  criteriaBId: string;
+}
+
+export interface SetupOverviewFixtureOpts {
+  jurors: number;
+  projects: number;
+  /** Number of jurors that should appear as `finalSubmitted=true && !editEnabled`. */
+  completedJurors?: number;
+  /** Number of jurors that should appear as `editEnabled=true`. */
+  editingJurors?: number;
+  /** Number of jurors with `last_seen_at` set; the rest stay `NULL` (= "never seen"). */
+  seenJurors?: number;
+  /**
+   * Per-project, an integer 0..jurors specifying how many jurors submitted a
+   * non-null total for that project. Length must equal `projects`.
+   * Default: every juror scores every project (100% completion bars).
+   */
+  scoredPerProject?: number[];
+  /** Score value used for every cell (per criterion) when seeding scores. Default 50. */
+  scoreValue?: number;
+  namePrefix?: string;
+}
+
+export async function setupOverviewFixture(
+  opts: SetupOverviewFixtureOpts,
+): Promise<OverviewFixture> {
+  const jurorCount = Math.max(1, opts.jurors);
+  const projectCount = Math.max(1, opts.projects);
+  const completedCount = Math.max(0, Math.min(jurorCount, opts.completedJurors ?? 0));
+  const editingCount = Math.max(0, Math.min(jurorCount - completedCount, opts.editingJurors ?? 0));
+  const seenCount = Math.max(0, Math.min(jurorCount, opts.seenJurors ?? jurorCount));
+  const scoreValue = opts.scoreValue ?? 50;
+  const scoredPerProject = opts.scoredPerProject
+    ?? Array.from({ length: projectCount }, () => jurorCount);
+  if (scoredPerProject.length !== projectCount) {
+    throw new Error(
+      `setupOverviewFixture: scoredPerProject.length=${scoredPerProject.length} must equal projects=${projectCount}`,
+    );
+  }
+
+  const suffix = uniqueSuffix();
+  const periodName = `${opts.namePrefix ?? "Overview KPI"} ${suffix}`;
+  const aKey = `ov_a_${suffix}`;
+  const bKey = `ov_b_${suffix}`;
+
+  // Period (unlocked while seeding).
+  const { data: period, error: periodErr } = await adminClient
+    .from("periods")
+    .insert({
+      organization_id: E2E_PERIODS_ORG_ID,
+      name: periodName,
+      is_locked: false,
+      season: "Spring",
+    })
+    .select("id")
+    .single();
+  if (periodErr || !period) {
+    throw new Error(`setupOverviewFixture period insert failed: ${periodErr?.message}`);
+  }
+  const periodId = period.id as string;
+
+  // Two criteria — A (max 50) + B (max 50) → totalMax 100 so KPI Average Score is "/100".
+  const { data: criteria, error: critErr } = await adminClient
+    .from("period_criteria")
+    .insert([
+      { period_id: periodId, key: aKey, label: "Criterion A", max_score: 50, weight: 50, sort_order: 0 },
+      { period_id: periodId, key: bKey, label: "Criterion B", max_score: 50, weight: 50, sort_order: 1 },
+    ])
+    .select("id, sort_order");
+  if (critErr || !criteria) {
+    throw new Error(`setupOverviewFixture criteria insert failed: ${critErr?.message}`);
+  }
+  const criteriaAId = criteria.find((c) => c.sort_order === 0)?.id as string;
+  const criteriaBId = criteria.find((c) => c.sort_order === 1)?.id as string;
+  if (!criteriaAId || !criteriaBId) {
+    throw new Error("setupOverviewFixture: could not resolve criteria IDs");
+  }
+
+  // Projects.
+  const projectRows = Array.from({ length: projectCount }, (_, i) => ({
+    period_id: periodId,
+    title: `OV P${i + 1} ${suffix}`,
+    members: [],
+  }));
+  const { data: projects, error: projErr } = await adminClient
+    .from("projects")
+    .insert(projectRows)
+    .select("id, title");
+  if (projErr || !projects || projects.length !== projectCount) {
+    throw new Error(`setupOverviewFixture projects insert failed: ${projErr?.message}`);
+  }
+  const projectIds = projectRows.map((row) => {
+    const match = projects.find((p) => p.title === row.title);
+    if (!match) throw new Error(`setupOverviewFixture: missing project ${row.title}`);
+    return match.id as string;
+  });
+
+  // Jurors.
+  const jurorRows = Array.from({ length: jurorCount }, (_, idx) => ({
+    organization_id: E2E_PERIODS_ORG_ID,
+    juror_name: `OV J${idx + 1} ${suffix}`,
+    affiliation: `OV Affiliation ${idx + 1}`,
+  }));
+  const { data: jurors, error: jurorErr } = await adminClient
+    .from("jurors")
+    .insert(jurorRows)
+    .select("id, juror_name");
+  if (jurorErr || !jurors || jurors.length !== jurorCount) {
+    throw new Error(`setupOverviewFixture jurors insert failed: ${jurorErr?.message}`);
+  }
+  const jurorIds = jurorRows.map((row) => {
+    const match = jurors.find((j) => j.juror_name === row.juror_name);
+    if (!match) throw new Error(`setupOverviewFixture: missing juror ${row.juror_name}`);
+    return match.id as string;
+  });
+
+  // juror_period_auth — staggered last_seen_at + completed/editing flags.
+  const editExpiresFuture = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  const baseSeenMs = Date.now();
+  const authRows = jurorIds.map((id, idx) => {
+    const isSeen = idx < seenCount;
+    const isCompleted = idx < completedCount;
+    // Editing slots fall AFTER completed slots so they don't overlap.
+    const isEditing = !isCompleted && idx >= completedCount && idx < completedCount + editingCount;
+    const lastSeenIso = isSeen
+      ? new Date(baseSeenMs - idx * 60_000).toISOString()
+      : null;
+    return {
+      juror_id: id,
+      period_id: periodId,
+      pin_hash: null,
+      session_token_hash: null,
+      failed_attempts: 0,
+      locked_until: null,
+      last_seen_at: lastSeenIso,
+      final_submitted_at: isCompleted ? new Date().toISOString() : null,
+      edit_enabled: isEditing,
+      edit_expires_at: isEditing ? editExpiresFuture : null,
+      edit_reason: isEditing ? "OV fixture editing" : null,
+    };
+  });
+  const { error: authErr } = await adminClient
+    .from("juror_period_auth")
+    .insert(authRows);
+  if (authErr) {
+    throw new Error(`setupOverviewFixture auth insert failed: ${authErr.message}`);
+  }
+
+  // score_sheets + items: for each project p, the first scoredPerProject[p]
+  // jurors get a submitted sheet with both criteria filled.
+  const now = new Date().toISOString();
+  interface SheetSeed {
+    period_id: string;
+    project_id: string;
+    juror_id: string;
+    status: "submitted";
+    started_at: string;
+    last_activity_at: string;
+  }
+  const sheetSeeds: SheetSeed[] = [];
+  for (let pi = 0; pi < projectCount; pi++) {
+    const pid = projectIds[pi];
+    const scoredCount = Math.max(0, Math.min(jurorCount, scoredPerProject[pi]));
+    for (let ji = 0; ji < scoredCount; ji++) {
+      sheetSeeds.push({
+        period_id: periodId,
+        project_id: pid,
+        juror_id: jurorIds[ji],
+        status: "submitted",
+        started_at: now,
+        last_activity_at: now,
+      });
+    }
+  }
+  if (sheetSeeds.length) {
+    const { data: sheets, error: sheetErr } = await adminClient
+      .from("score_sheets")
+      .insert(sheetSeeds)
+      .select("id, juror_id, project_id");
+    if (sheetErr || !sheets) {
+      throw new Error(`setupOverviewFixture sheet insert failed: ${sheetErr?.message}`);
+    }
+    const itemRows = sheets.flatMap((s) => [
+      { score_sheet_id: s.id, period_criterion_id: criteriaAId, score_value: scoreValue },
+      { score_sheet_id: s.id, period_criterion_id: criteriaBId, score_value: scoreValue },
+    ]);
+    if (itemRows.length) {
+      const { error: itemErr } = await adminClient
+        .from("score_sheet_items")
+        .insert(itemRows);
+      if (itemErr) {
+        throw new Error(`setupOverviewFixture item insert failed: ${itemErr.message}`);
+      }
+    }
+  }
+
+  // Lock + activate the period so admin's pickDefaultPeriod selects it.
+  // Push activated_at 2 hours into the future (scoring fixtures use +1h) so
+  // this overview fixture always wins when both are active simultaneously.
+  const { error: lockErr } = await adminClient
+    .from("periods")
+    .update({
+      is_locked: true,
+      activated_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    })
+    .eq("id", periodId);
+  if (lockErr) {
+    throw new Error(`setupOverviewFixture period lock failed: ${lockErr.message}`);
+  }
+
+  return {
+    periodId,
+    periodName,
+    jurorIds,
+    jurorNames: jurorRows.map((r) => r.juror_name),
+    jurorAffiliations: jurorRows.map((r) => r.affiliation),
+    projectIds,
+    criteriaAId,
+    criteriaBId,
+  };
+}
+
+export async function teardownOverviewFixture(
+  fixture: OverviewFixture | null | undefined,
+): Promise<void> {
+  if (!fixture) return;
+  if (fixture.periodId) {
+    try {
+      await adminClient.from("periods").update({ is_locked: false }).eq("id", fixture.periodId);
+    } catch { /* swallow */ }
+    try {
+      await adminClient.from("periods").delete().eq("id", fixture.periodId);
+    } catch { /* swallow */ }
+  }
+  if (fixture.jurorIds?.length) {
+    try {
+      await adminClient.from("jurors").delete().in("id", fixture.jurorIds);
+    } catch { /* swallow */ }
+  }
+}
+
+/**
  * Idempotent teardown. Unlocks the period (so CASCADE-delete doesn't trip the
  * block_period_*_on_locked triggers on child tables), deletes the period
  * (cascading to projects, period_criteria, score_sheets, score_sheet_items,
@@ -530,6 +799,23 @@ export async function generateEntryToken(periodId: string): Promise<string> {
  *
  * Safe to call with an undefined / partial fixture — used as afterAll cleanup.
  */
+/**
+ * Sets final_submitted_at = now() for all jurors in the fixture period so that
+ * enrichRows() resolves jurorStatus = "completed". Required by
+ * computeHighDisagreement, computeOutlierReviews, and computeCoverage, which
+ * only aggregate rows where jurorStatus === "completed".
+ */
+export async function finalizeJurors(fixture: ScoringFixture): Promise<void> {
+  const { error } = await adminClient
+    .from("juror_period_auth")
+    .update({ final_submitted_at: new Date().toISOString() })
+    .eq("period_id", fixture.periodId)
+    .in("juror_id", fixture.jurorIds);
+  if (error) {
+    throw new Error(`finalizeJurors update failed: ${error.message}`);
+  }
+}
+
 export async function teardownScoringFixture(
   fixture: ScoringFixture | null | undefined,
 ): Promise<void> {

@@ -56,6 +56,17 @@ jobs:
         # CI run after re-enabling. `forks` is cheaper and stable on CI.
         run: npx vitest run --reporter=dot --pool=forks
 
+      - name: Coverage threshold check
+        # text-only reporter avoids multi-MB HTML artifact in CI; thresholds
+        # are enforced by vite.config.js (lines/funcs/branches/statements: 53/37/57/53).
+        run: npx vitest run --coverage --coverage.reporter=text --pool=forks
+
+      - name: Skip baseline check
+        # Fails if any new test.skip / it.skip / describe.skip / qaTest.skip is
+        # added beyond the baseline in docs/qa/skip-baseline.json. To add a
+        # legitimate skip, update the baseline with a PR comment explaining why.
+        run: node scripts/check-no-skip.js
+
       - name: Production build
         run: npm run build
         env:
@@ -312,7 +323,7 @@ jobs:
           SUPABASE_PROJECT_ID: etxgvkvxvbyserhrugjw
         run: npm run check:db-types
       - name: RLS isolation coverage (P0-G1)
-        continue-on-error: true # red until W2 fills the 16 missing RLS files
+        # Hard gate as of W2 close-out (2026-04-26): all 27 RLS-enabled tables have isolation tests; sentinel green.
         run: npm run check:rls-tests
       - name: RPC contract coverage (P0-G2)
         continue-on-error: true # red until W3–W5 fill the 71 missing contracts

@@ -307,6 +307,42 @@ export async function readAttainment(
 }
 
 /**
+ * Like {@link readAttainment} but returns the full per-outcome record
+ * (`avg` + `attainmentRate`) and tolerates `null` values. Phase 1 edge-case
+ * tests need to assert the threshold-driven `attainmentRate` and the
+ * "missing score → null" code path that `readAttainment` filters out.
+ */
+export interface AttainmentRow {
+  avg: number | null;
+  attainmentRate: number | null;
+}
+
+export async function readAttainmentFull(
+  page: Page,
+  periodId: string,
+): Promise<Record<string, AttainmentRow>> {
+  const result = await page.evaluate(async (pid) => {
+    // @ts-expect-error Vite dev server resolves this absolute-from-root path at runtime
+    const mod = await import("/src/shared/api/admin/scores.js");
+    const trends = await mod.getOutcomeAttainmentTrends([pid]);
+    const period = Array.isArray(trends) ? trends[0] : null;
+    const out: Record<string, { avg: number | null; attainmentRate: number | null }> = {};
+    if (!period || !Array.isArray(period.outcomes)) return out;
+    for (const o of period.outcomes) {
+      if (o && typeof o.code === "string") {
+        out[o.code] = {
+          avg: typeof o.avg === "number" ? o.avg : null,
+          attainmentRate:
+            typeof o.attainmentRate === "number" ? o.attainmentRate : null,
+        };
+      }
+    }
+    return out;
+  }, periodId);
+  return result;
+}
+
+/**
  * Idempotent teardown. Unlocks the period (so block_period_*_on_locked triggers
  * don't reject DELETE cascades on child tables), then deletes the period
  * (CASCADE removes projects, score_sheets, score_sheet_items, period_criteria,

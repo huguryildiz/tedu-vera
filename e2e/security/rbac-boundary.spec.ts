@@ -38,10 +38,7 @@ test.describe("RBAC boundary (tenant-admin cross-org mutation)", () => {
       .eq("organization_id", E2E_PROJECTS_ORG_ID)
       .limit(1);
 
-    if (!periods || periods.length === 0) {
-      // Skip if E2E_PROJECTS_ORG_ID has no periods (valid test dependency)
-      test.skip();
-    }
+    expect(periods?.length ?? 0, 'E2E_PROJECTS_ORG_ID must have at least one period').toBeGreaterThan(0);
 
     const periodId = periods![0].id;
     const originalName = periods![0].name;
@@ -88,8 +85,9 @@ test.describe("RBAC boundary (tenant-admin cross-org mutation)", () => {
       .limit(1);
 
     if (!jurors || jurors.length === 0) {
-      // Skip if E2E_PROJECTS_ORG_ID has no jurors (valid test dependency)
+      // Skip if E2E_PROJECTS_ORG_ID has no jurors — seed missing for this org
       test.skip();
+      return;
     }
 
     const jurorId = jurors![0].id;
@@ -128,17 +126,17 @@ test.describe("deliberately-break evidence (RBAC boundary)", () => {
     const jwt = await getTenantJwt(request);
     const anonKey = process.env.VITE_DEMO_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "";
 
-    // Use adminClient to fetch a period from tenant A's own org (E2E_PERIODS_ORG_ID)
+    // Use adminClient to fetch an unlocked period from tenant A's own org (E2E_PERIODS_ORG_ID).
+    // Must be unlocked — trigger_block_periods_on_locked_mutate blocks name changes on locked periods.
     const { data: periods } = await adminClient
       .from("periods")
       .select("id, name")
       .eq("organization_id", E2E_PERIODS_ORG_ID)
+      .eq("is_locked", false)
       .limit(1);
 
-    if (!periods || periods.length === 0) {
-      // Skip if E2E_PERIODS_ORG_ID has no periods (valid test dependency)
-      test.skip();
-    }
+    expect(periods?.length ?? 0, 'E2E_PERIODS_ORG_ID must have at least one unlocked period').toBeGreaterThan(0);
+    if (!periods?.length) return;
 
     const periodId = periods![0].id;
     const originalName = periods![0].name;

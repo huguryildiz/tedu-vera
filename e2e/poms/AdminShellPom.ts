@@ -49,8 +49,29 @@ export class AdminShellPom extends BasePom {
     return this.byTestId(`period-popover-item-${periodId}`);
   }
 
-  async selectPeriod(periodId: string): Promise<void> {
+  periodPopoverSearchInput(): Locator {
+    return this.page.getByPlaceholder("Search periods…");
+  }
+
+  /**
+   * Selects a period from the period selector popover.
+   *
+   * The popover only renders the pinned period + the 5 most-recent periods by
+   * default. When a fixture-created period is not in that subset (common when
+   * many periods exist), pass `searchTerm` (typically the period name) — this
+   * method types into the search input so the popover renders ALL matching
+   * results before clicking the item.
+   */
+  async selectPeriod(periodId: string, searchTerm?: string): Promise<void> {
     await this.periodSelectorTrigger().click();
-    await this.periodPopoverItem(periodId).click();
+    const item = this.periodPopoverItem(periodId);
+    if (await item.isVisible().catch(() => false)) {
+      await item.click();
+      return;
+    }
+    if (searchTerm) {
+      await this.periodPopoverSearchInput().fill(searchTerm);
+    }
+    await item.click({ timeout: 5_000 });
   }
 }
