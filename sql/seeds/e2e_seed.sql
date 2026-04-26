@@ -31,13 +31,15 @@ ON CONFLICT (id) DO UPDATE
       email_confirmed_at = COALESCE(auth.users.email_confirmed_at, EXCLUDED.email_confirmed_at);
 
 -- Identities needed for GoTrue password login
+-- provider_id is required (NOT NULL) in Supabase CLI v2; for email provider it is the email address
 INSERT INTO auth.identities (
-  id, user_id, provider, identity_data, created_at, updated_at, last_sign_in_at
+  id, user_id, provider, provider_id, identity_data, created_at, updated_at, last_sign_in_at
 ) VALUES
   (
     '6ea7146f-1331-4828-8b8a-e777c9a35d6a',
     '6ea7146f-1331-4828-8b8a-e777c9a35d6a',
     'email',
+    'demo-admin@vera-eval.app',
     jsonb_build_object('sub', '6ea7146f-1331-4828-8b8a-e777c9a35d6a', 'email', 'demo-admin@vera-eval.app'),
     now(), now(), now()
   ),
@@ -45,6 +47,7 @@ INSERT INTO auth.identities (
     '5fe4ebbf-7a95-43b0-8712-56e94d6cb5a7',
     '5fe4ebbf-7a95-43b0-8712-56e94d6cb5a7',
     'email',
+    'tenant-admin@vera-eval.app',
     jsonb_build_object('sub', '5fe4ebbf-7a95-43b0-8712-56e94d6cb5a7', 'email', 'tenant-admin@vera-eval.app'),
     now(), now(), now()
   )
