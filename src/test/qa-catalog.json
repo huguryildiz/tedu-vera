@@ -6698,6 +6698,17 @@
     "severity": "minor"
   },
   {
+    "id": "admin.shared.adminData.11",
+    "module": "admin/shared/useAdminData",
+    "area": "AdminData",
+    "story": "Overlapping period fetches keep latest selection",
+    "scenario": "An initial default-period fetch is still pending when fetchData('p2') completes; the stale initial response must not overwrite p2 scores or selected period",
+    "whyItMatters": "Admin critical-path E2E can select a fixture period while initial dashboard loading is still in flight; stale data would make rankings rows disappear",
+    "risk": "high",
+    "coverageStrength": "race",
+    "severity": "critical"
+  },
+  {
     "id": "admin.shared.realtime.01",
     "module": "admin/shared/useAdminRealtime",
     "area": "AdminRealtime",

@@ -1,5 +1,5 @@
 import { describe, vi, expect, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import React from "react";
 import { MemoryRouter } from "react-router-dom";
 import { qaTest } from "@/test/qaTest";
@@ -41,6 +41,16 @@ const makeScores = () => [{ projectId: "proj1", scores: [90] }];
 
 const EMPTY_PERIODS = Object.freeze([]);
 
+function deferred() {
+  let resolve;
+  let reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
 function makeWrapper(path = "/admin/overview") {
   return ({ children }) =>
     React.createElement(MemoryRouter, { initialEntries: [path] }, children);
@@ -60,6 +70,7 @@ function makeOpts(overrides = {}) {
 
 describe("useAdminData", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     mockListPeriods.mockResolvedValue(makePeriods());
     mockGetScores.mockResolvedValue(makeScores());
     mockGetProjectSummary.mockResolvedValue([{ id: "proj1", students: "Alice, Bob" }]);
@@ -205,5 +216,35 @@ describe("useAdminData", () => {
     expect(result.current.allJurors).toEqual([]);
     // No error should be set (it's non-fatal)
     expect(result.current.loadError).toBe("");
+  });
+
+  qaTest("admin.shared.adminData.11", async () => {
+    const firstPeriods = deferred();
+    mockListPeriods
+      .mockReturnValueOnce(firstPeriods.promise)
+      .mockResolvedValue(makePeriods());
+    mockGetScores.mockImplementation((periodId) => Promise.resolve([{ projectId: periodId, scores: [90] }]));
+    mockGetProjectSummary.mockImplementation((periodId) => Promise.resolve([{ id: `summary-${periodId}` }]));
+    mockListJurorsSummary.mockImplementation((periodId) => Promise.resolve([{ id: `juror-${periodId}` }]));
+
+    const opts = makeOpts();
+    const { result } = renderHook(() => useAdminData(opts), { wrapper: makeWrapper() });
+    await waitFor(() => expect(mockListPeriods).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      await result.current.fetchData("p2");
+    });
+
+    expect(result.current.rawScores).toEqual([{ projectId: "p2", scores: [90] }]);
+    expect(opts.onSelectedPeriodChange).toHaveBeenLastCalledWith("p2");
+
+    await act(async () => {
+      firstPeriods.resolve(makePeriods());
+      await firstPeriods.promise;
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(result.current.rawScores).toEqual([{ projectId: "p2", scores: [90] }]);
+    expect(opts.onSelectedPeriodChange).toHaveBeenLastCalledWith("p2");
   });
 });

@@ -130,6 +130,7 @@ export function useAdminData({
   // bgRefresh: mutable ref holding the background-refresh callback.
   // Passed to useAdminRealtime so the subscription stays stable.
   const bgRefresh = useRef(null);
+  const fetchSeqRef = useRef(0);
 
   // ── sortedPeriods ─────────────────────────────────────────
   // Derived from periodList (owned here). Returned to AdminPanel so
@@ -143,10 +144,14 @@ export function useAdminData({
   // Stable via useCallback; all mutable reads go through refs so the
   // dependency array only includes the stable prop callbacks.
   const fetchData = useCallback(async (forcePeriodId) => {
+    const seq = ++fetchSeqRef.current;
+    const isLatest = () => seq === fetchSeqRef.current;
+    if (forcePeriodId) selectedPeriodRef.current = forcePeriodId;
     setLoading(true);
     setError("");
     try {
       if (!organizationIdRef.current) {
+        if (!isLatest()) return;
         // Organization not yet resolved (e.g. super-admin initial load).
         // Release the initial overlay; the effect re-triggers when organization resolves.
         if (!initialLoadFiredRef.current) {
@@ -159,6 +164,7 @@ export function useAdminData({
       // Always refresh period list (IDs change after reseed).
       // Uses the v2 organization-scoped RPC for server-side filtering.
       let periods = await listPeriods(organizationIdRef.current);
+      if (!isLatest()) return;
       setPeriodList(periods);
 
       // Determine target period
@@ -172,6 +178,7 @@ export function useAdminData({
         periods[0]?.id;
 
       if (!targetId) {
+        if (!isLatest()) return;
         setRawScores([]);
         setSummaryData([]);
         setAllJurors([]);
@@ -179,6 +186,7 @@ export function useAdminData({
         setLoading(false);
         return;
       }
+      selectedPeriodRef.current = targetId;
       onSelectedPeriodChange(targetId);
 
       // Fetch scores + summary + juror list in parallel.
@@ -188,6 +196,7 @@ export function useAdminData({
         getProjectSummary(targetId),
         listJurorsSummary(targetId).catch(() => []),
       ]);
+      if (!isLatest()) return;
 
       setRawScores(scores);
       setSummaryData(summary);
@@ -200,6 +209,7 @@ export function useAdminData({
         onInitialLoadDone?.();
       }
     } catch (e) {
+      if (!isLatest()) return;
       if (e.unauthorized) {
         if (onAuthError) { onAuthError("Invalid password"); return; }
         setAuthError("Incorrect password.");
@@ -213,7 +223,7 @@ export function useAdminData({
         onInitialLoadDone?.();
       }
     } finally {
-      setLoading(false);
+      if (isLatest()) setLoading(false);
     }
   }, [onSelectedPeriodChange, onAuthError, onInitialLoadDone]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -256,6 +266,8 @@ export function useAdminData({
   // the affected slices instead of always firing all three RPCs.
   bgRefresh.current = async (changedTables = []) => {
     if (!organizationIdRef.current) return;
+    const seq = fetchSeqRef.current;
+    const isLatest = () => seq === fetchSeqRef.current;
     const all = !changedTables || changedTables.length === 0;
     const touched = new Set(changedTables);
     const needPeriods  = all || touched.has("periods");
@@ -271,6 +283,7 @@ export function useAdminData({
       let periods = null;
       if (needPeriods || needScores || needSummary || needJurors) {
         periods = await listPeriods(organizationIdRef.current);
+        if (!isLatest()) return;
         setPeriodList(periods);
       }
       if (!periods) return;
@@ -280,15 +293,17 @@ export function useAdminData({
       const selectedIsValid = !!selectedId && periods.some((p) => p.id === selectedId);
       const periodId = selectedIsValid ? selectedId : activeId;
       if (!periodId) return;
-      if (periodId !== selectedPeriodRef.current) {
+      if (periodId !== selectedId) {
         onSelectedPeriodChange(periodId);
       }
+      selectedPeriodRef.current = periodId;
 
       const tasks = [];
       tasks.push(needScores  ? getScores(periodId)              : Promise.resolve(null));
       tasks.push(needSummary ? getProjectSummary(periodId)      : Promise.resolve(null));
       tasks.push(needJurors  ? listJurorsSummary(periodId).catch(() => []) : Promise.resolve(null));
       const [scores, summary, jurors] = await Promise.all(tasks);
+      if (!isLatest()) return;
 
       if (scores  !== null) setRawScores(scores);
       if (summary !== null) setSummaryData(summary);

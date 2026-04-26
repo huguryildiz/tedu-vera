@@ -59,14 +59,13 @@ test.describe("scoring correctness — criteria weight → ranking math", () => 
     await login.signIn(EMAIL, PASSWORD);
     await shell.expectOnDashboard();
 
-    // Fixture period was just activated_at = NOW with is_locked = true, so
-    // pickDefaultPeriod auto-selects it. Explicit selection defends against
-    // races with other recently-activated periods in the same org.
-    await shell.selectPeriod(fixture.periodId);
-
     await page.goto("/admin/rankings");
     const rankings = new RankingsPom(page);
     await rankings.waitForReady();
+    // Select after navigating to rankings. A full page.goto remounts the admin
+    // layout and drops in-memory selectedPeriodId, so selecting before route
+    // navigation lets parallel fixtures win pickDefaultPeriod again.
+    await shell.selectPeriod(fixture.periodId, fixture.periodName);
     return rankings;
   }
 
@@ -75,8 +74,8 @@ test.describe("scoring correctness — criteria weight → ranking math", () => 
 
     const p1Score = page.getByTestId(`rankings-row-score-${fixture.p1Id}`);
     const p2Score = page.getByTestId(`rankings-row-score-${fixture.p2Id}`);
-    await expect(p1Score).toBeVisible();
-    await expect(p2Score).toBeVisible();
+    await expect(p1Score).toBeVisible({ timeout: 15_000 });
+    await expect(p2Score).toBeVisible({ timeout: 15_000 });
 
     // Raw sum per VERA's pivotItems: P1 = 30 + 3 = 33, P2 = 3 + 70 = 73.
     // Displayed as .toFixed(1).
@@ -97,8 +96,8 @@ test.describe("scoring correctness — criteria weight → ranking math", () => 
     const rankings = await signInAndGoto(page);
     // Ensure both fixture rows rendered before triggering export — the export
     // serializes filteredRows, so opening the panel too early yields an empty sheet.
-    await expect(page.getByTestId(`rankings-row-score-${fixture.p1Id}`)).toBeVisible();
-    await expect(page.getByTestId(`rankings-row-score-${fixture.p2Id}`)).toBeVisible();
+    await expect(page.getByTestId(`rankings-row-score-${fixture.p1Id}`)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId(`rankings-row-score-${fixture.p2Id}`)).toBeVisible({ timeout: 15_000 });
 
     await rankings.openExportPanel();
     await rankings.selectFormat("xlsx");
@@ -136,8 +135,8 @@ test.describe("scoring correctness — criteria weight → ranking math", () => 
 
     const p1Score = page.getByTestId(`rankings-row-score-${fixture.p1Id}`);
     const p2Score = page.getByTestId(`rankings-row-score-${fixture.p2Id}`);
-    await expect(p1Score).toBeVisible();
-    await expect(p2Score).toBeVisible();
+    await expect(p1Score).toBeVisible({ timeout: 15_000 });
+    await expect(p2Score).toBeVisible({ timeout: 15_000 });
 
     // Tie: both projects display 53.0.
     await expect(p1Score).toHaveText("53.0");
