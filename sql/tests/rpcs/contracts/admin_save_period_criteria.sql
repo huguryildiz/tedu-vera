@@ -30,6 +30,11 @@ SELECT EXISTS (
     AND p.proname = 'rpc_admin_save_period_criteria'
 ) AS rpc_exists;
 
+-- Temp tables are owned by their creator (ci); subsequent become_*() role
+-- switches lose access. Grant the RLS roles read access so the role-switched
+-- assertions below can still consult the rpc_exists guard.
+GRANT SELECT ON _ctx TO authenticated, anon, service_role;
+
 SELECT skip('migration 009 not applied — rpc_admin_save_period_criteria missing', 7)
 FROM _ctx WHERE NOT rpc_exists;
 

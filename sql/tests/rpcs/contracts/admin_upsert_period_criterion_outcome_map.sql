@@ -33,6 +33,8 @@ SELECT EXISTS (
     AND p.proname = 'rpc_admin_upsert_period_criterion_outcome_map'
 ) AS rpc_exists;
 
+GRANT SELECT ON _ctx TO authenticated, anon, service_role;
+
 SELECT skip('migration 009 not applied — rpc_admin_upsert_period_criterion_outcome_map missing', 7)
 FROM _ctx WHERE NOT rpc_exists;
 

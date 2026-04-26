@@ -34,6 +34,8 @@ SELECT EXISTS (
     AND p.proname = 'rpc_admin_verify_audit_chain'
 ) AS rpc_exists;
 
+GRANT SELECT ON _ctx TO authenticated, anon, service_role;
+
 -- When the RPC is missing, emit 6 SKIPped pgTAP results once and stop.
 SELECT skip('migration 009 not applied — rpc_admin_verify_audit_chain missing', 6)
 FROM _ctx WHERE NOT rpc_exists;

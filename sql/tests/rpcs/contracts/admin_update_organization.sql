@@ -26,6 +26,8 @@ SELECT EXISTS (
     AND p.proname = 'rpc_admin_update_organization'
 ) AS rpc_exists;
 
+GRANT SELECT ON _ctx TO authenticated, anon, service_role;
+
 SELECT skip('migration 009 not applied — rpc_admin_update_organization missing', 6)
 FROM _ctx WHERE NOT rpc_exists;
 

@@ -65,12 +65,14 @@ SELECT throws_ok(
 );
 
 -- ────────── 5. success: cancel a real invited membership ──────────
+-- seed_two_orgs() already inserts a membership for (aaaa..., 1111...);
+-- conflict resolves on the unique (user_id, organization_id) key, not on id.
 INSERT INTO memberships (id, user_id, organization_id, role, status, is_owner)
 VALUES ('cafe0000-0000-4000-8000-000000000001'::uuid,
         'aaaa0000-0000-4000-8000-000000000001'::uuid,
         '11110000-0000-4000-8000-000000000001'::uuid,
         'org_admin', 'invited', false)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (user_id, organization_id) DO NOTHING;
 
 SELECT pgtap_test.become_a();
 
