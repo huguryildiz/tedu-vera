@@ -88,7 +88,7 @@ Each organization operates in complete isolation — periods, projects, jurors, 
 | **Frontend** | React 18 · Vite · React Router v6 · Recharts · custom SVG charts |
 | **UI** | lucide-react · cmdk · Vaul · @dnd-kit · Embla · Sonner · TanStack Table · react-window |
 | **Backend** | Supabase — PostgreSQL 15 · PL/pgSQL RPCs · Row-Level Security · Realtime |
-| **Edge** | Deno Edge Functions — auth events, notifications, audit, backups, admin sessions |
+| **Edge** | Deno Edge Functions — auth events, email delivery, notifications, audit, backups, exports, admin sessions |
 | **Auth** | Supabase Auth (email/password, Google OAuth, 30-day sessions) · juror QR token + bcrypt PIN |
 | **Testing** | Vitest · Testing Library · vitest-axe · Playwright E2E |
 | **Data & Export** | Zod validation · xlsx-js-style |
@@ -97,29 +97,30 @@ Each organization operates in complete isolation — periods, projects, jurors, 
 ### System shape
 
 ```text
-┌──────────────────────────────────────────────────────────┐
-│                    React SPA (Vite)                       │
-│                                                          │
-│  ┌──────────┐  ┌────────────┐  ┌──────────────────────┐ │
-│  │ Jury Flow│  │ Admin Panel│  │ Auth (OAuth/PIN/JWT) │ │
-│  └─────┬────┘  └─────┬──────┘  └──────────┬───────────┘ │
-│        └──────────────┼────────────────────┘             │
-│                       ▼                                  │
-│              src/shared/api/                              │
-│        (single API surface — all RPCs mediated)          │
-└───────────────────────┬──────────────────────────────────┘
-                        │
-          ┌─────────────┼────────────────┐
-          ▼             ▼                ▼
-   ┌────────────┐ ┌───────────┐  ┌──────────────┐
-   │ Supabase   │ │ PL/pgSQL  │  │ Edge         │
-   │ Auth (JWT) │ │ RPCs      │  │ Functions    │
-   └────────────┘ └─────┬─────┘  │ (Deno)       │
-                        │        └──────────────┘
-                  ┌─────┴─────┐
-                  │ PostgreSQL│
-                  │ + RLS     │
-                  └───────────┘
+┌──────────────────────────────────────┐
+│          React SPA (Vite)            │
+│                                      │
+│  ┌─────────┐ ┌──────────┐ ┌───────┐  │
+│  │  Jury   │ │  Admin   │ │ Auth  │  │
+│  │  Flow   │ │  Panel   │ │ JWT   │  │
+│  └────┬────┘ └────┬─────┘ └───┬───┘  │
+│       └───────────┼────────────┘     │
+│                   ▼                  │
+│           src/shared/api/            │
+│      (all RPCs mediated here)        │
+└───────────────────┬──────────────────┘
+                    │
+        ┌───────────┼──────────┐
+        ▼           ▼          ▼
+  ┌──────────┐ ┌─────────┐ ┌───────┐
+  │ Supabase │ │PL/pgSQL │ │ Edge  │
+  │   Auth   │ │  RPCs   │ │  Fns  │
+  └──────────┘ └────┬────┘ │(Deno) │
+                    │      └───────┘
+              ┌─────┴─────┐
+              │ PostgreSQL│
+              │   + RLS   │
+              └───────────┘
 ```
 
 All database access is mediated through `src/shared/api/` — components never call Supabase directly. In production, admin RPCs route through a Supabase Edge Function so privileged secrets never reach the browser. Environment (prod vs. demo) is resolved from the URL pathname alone; `/demo/*` targets a sandbox instance, everything else runs against production.
@@ -142,23 +143,35 @@ All database access is mediated through `src/shared/api/` — components never c
 
 ```text
 src/
-├── admin/            Admin workspace — pages, hooks, drawers, modals, analytics
-├── jury/             Guided jury flow — steps, hooks, utilities
-├── auth/             Authentication — screens, AuthProvider, session handling
+├── admin/              Admin workspace
+│   ├── features/       Per-feature pages, hooks, drawers, modals (overview, rankings, periods, jurors…)
+│   ├── analytics/      Analytics charts and dataset builders
+│   ├── layout/         Admin shell — sidebar, header, route layout
+│   └── shared/         Cross-feature admin hooks and components
+├── jury/               Guided jury flow
+│   ├── features/       Step-by-step screens (identity, period, PIN, evaluate, complete)
+│   └── shared/         useJuryState orchestrator + sub-hooks
+├── auth/               Authentication — login/register/reset screens, AuthProvider, guards
 ├── shared/
-│   ├── api/          Centralised Supabase API — all RPC wrappers
-│   ├── ui/           Shared UI primitives (lucide icons, custom selects, drawers)
-│   └── ...           hooks, lib, schemas, types, storage
-├── charts/           Chart components and dataset builders
-├── landing/          Public landing page
-├── styles/           Component CSS
-├── config.js         Criteria, outcomes, rubric bands
-└── router.jsx        React Router v6 tree
+│   ├── api/            Centralised Supabase API — all RPC wrappers
+│   ├── ui/             Shared UI primitives (drawers, selects, alerts, tooltips)
+│   ├── criteria/       Criteria helpers and validation
+│   ├── storage/        Browser storage abstraction (jury, admin, persist)
+│   ├── lib/            Environment, Supabase client, utilities
+│   ├── schemas/        Zod validation schemas
+│   └── constants.js    Default criteria, rubric bands, outcome mappings
+├── charts/             Reusable chart components
+├── components/         Cross-cutting standalone components
+├── landing/            Public landing page
+├── layouts/            Top-level route layouts
+├── styles/             Component CSS
+├── router.jsx          React Router v6 tree
+└── main.jsx            App entry
 
-sql/migrations/       Sequential schema migrations (000–009)
-supabase/functions/   Deno Edge Functions
-e2e/                  Playwright specs
-docs/                 Architecture, deployment, QA, audit documentation
+sql/migrations/         Sequential schema migrations (000–009)
+supabase/functions/     Deno Edge Functions
+e2e/                    Playwright specs + helpers + page objects
+docs/                   Architecture, deployment, decisions, walkthroughs
 ```
 
 ---
@@ -229,11 +242,13 @@ Full route tree, guards, and environment resolution: [`docs/architecture/url-rou
 
 ## Documentation
 
-- [`docs/architecture/`](docs/architecture/) — System overview, database schema, storage policy, routing
-- [`docs/audit/`](docs/audit/) — Audit log coverage: actions, triggers, actor classification
-- [`docs/deployment/`](docs/deployment/) — Supabase setup, Vercel config, environment variables
-- [`docs/qa/`](docs/qa/) — Unit and E2E guides, smoke test plan, QA workbook
-- [`docs/superpowers/`](docs/superpowers/) — Architectural decisions, migration plans, feature specs
+- [`docs/`](docs/) — Full documentation index (start here)
+- [`docs/architecture/`](docs/architecture/) — System overview, routing, storage policy, multi-tenancy, security model
+- [`docs/decisions/`](docs/decisions/) — Architectural Decision Records (pathname routing, auth, entry tokens, migrations)
+- [`docs/walkthroughs/`](docs/walkthroughs/) — End-to-end narratives for jury day, tenant onboarding, period lifecycle, audit trail
+- [`docs/operations/`](docs/operations/) — Backup & recovery, demo environment, audit system, incident runbooks
+- [`docs/deployment/`](docs/deployment/) — Environment variables, Supabase setup, Vercel config, migrations guide
+- [`docs/testing/`](docs/testing/) — Unit, E2E, SQL (pgTAP), and Edge Function test guides; smoke checklist
 
 ---
 
