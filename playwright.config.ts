@@ -41,14 +41,25 @@ export default defineConfig({
   projects: [
     {
       // Admin tests reuse a pre-authenticated session — skips the login form in every test.
+      // maintenance-mode mutates a global platform setting (maintenance_mode singleton)
+      // that blocks every non-super-admin page render — must run isolated.
       name: "admin",
       testMatch: /e2e\/admin\//,
+      testIgnore: /e2e\/admin\/maintenance-mode\.spec\.ts/,
       use: { storageState: "e2e/.auth/admin.json" },
     },
     {
       // Auth/jury/demo tests intentionally start unauthenticated.
       name: "other",
       testIgnore: /e2e\/admin\//,
+    },
+    {
+      // Global-state mutation specs — must run with no parallel workers because
+      // they toggle platform-wide flags (maintenance_mode) that other tests read.
+      name: "maintenance",
+      testMatch: /e2e\/admin\/maintenance-mode\.spec\.ts/,
+      use: { storageState: "e2e/.auth/admin.json" },
+      fullyParallel: false,
     },
   ],
   webServer: {
