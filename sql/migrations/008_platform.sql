@@ -548,11 +548,10 @@ CREATE POLICY "platform_backups_select_org_admin"
 -- Files are organized as: backups/<organization_id>/<backup_id>.<format>
 -- File size limit: 50 MB. Formats: JSON or XLSX.
 
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+INSERT INTO storage.buckets (id, name, file_size_limit, allowed_mime_types)
 VALUES (
   'backups',
   'backups',
-  false,
   52428800, -- 50 MB
   ARRAY[
     'application/json',
