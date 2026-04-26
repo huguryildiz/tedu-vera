@@ -1,5 +1,20 @@
+// PeriodsPage — minimal smoke render only.
+//
+// Architecture spec § 6 anti-pattern #6 ("one mega setup that mocks every
+// module") and #8 ("test for coverage"). The previous file mocked every
+// child component, then asserted that hardcoded copy strings rendered.
+// None of those assertions catch a behavioral regression — the page is
+// covered end-to-end by:
+//   • e2e/admin/periods.spec.ts (CRUD + lifecycle journeys)
+//   • e2e/admin/unlock-request.spec.ts (full unlock flow with real RPCs)
+//   • src/admin/features/periods/__tests__/useManagePeriods.lockEnforcement.test.js
+//     (the actual gating logic in the hook layer)
+//
+// We keep ONE smoke test that asserts the page mounts without throwing
+// — useful when refactoring the import graph; not useful for behavior.
+
 import { describe, vi, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { qaTest } from "@/test/qaTest";
 
@@ -20,7 +35,6 @@ vi.mock("@/admin/shared/useAdminContext", () => ({
     evalLockError: "",
   }),
 }));
-
 vi.mock("@/auth", () => ({
   useAuth: () => ({
     activeOrganization: { id: "org-001" },
@@ -28,51 +42,12 @@ vi.mock("@/auth", () => ({
     graceEndsAt: null,
   }),
 }));
-
 vi.mock("@/shared/hooks/useToast", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }),
 }));
-
-vi.mock("../useManagePeriods", () => {
-  // Hoist fn refs outside factory so useEffect([periods.loadPeriods]) sees a
-  // stable reference on every render — prevents infinite re-render loop.
-  const loadPeriods = vi.fn().mockResolvedValue(undefined);
-  const handleCreatePeriod = vi.fn();
-  const handleUpdatePeriod = vi.fn();
-  const handleDeletePeriod = vi.fn();
-  const handleSaveSettings = vi.fn();
-  const commitDraft = vi.fn();
-  const discardDraft = vi.fn();
-  const updateDraft = vi.fn();
-  return {
-    useManagePeriods: () => ({
-      periodList: [],
-      currentPeriodId: null,
-      viewPeriodId: null,
-      viewPeriodLabel: "—",
-      viewPeriod: null,
-      currentPeriod: null,
-      settings: { evalLockActive: false },
-      evalLockError: "",
-      evalLockConfirmOpen: false,
-      criteriaConfig: null,
-      outcomeConfig: null,
-      draftCriteria: [],
-      savedCriteria: [],
-      isDraftDirty: false,
-      draftTotal: 0,
-      canSaveDraft: false,
-      loadPeriods,
-      handleCreatePeriod,
-      handleUpdatePeriod,
-      handleDeletePeriod,
-      handleSaveSettings,
-      commitDraft,
-      discardDraft,
-      updateDraft,
-    }),
-  };
-});
+vi.mock("@/admin/shared/usePageRealtime", () => ({
+  usePageRealtime: () => {},
+}));
 
 vi.mock("../AddEditPeriodDrawer", () => ({ default: () => null }));
 vi.mock("../ClosePeriodModal", () => ({ default: () => null }));
@@ -101,6 +76,20 @@ vi.mock("@/shared/api", () => ({
   setEvalLock: vi.fn(),
   getPeriodCriteriaSnapshot: vi.fn(),
   listPeriodStats: vi.fn().mockResolvedValue({ data: [] }),
+  listPeriods: vi.fn().mockResolvedValue([]),
+  createPeriod: vi.fn(),
+  updatePeriod: vi.fn(),
+  duplicatePeriod: vi.fn(),
+  savePeriodCriteria: vi.fn(),
+  reorderPeriodCriteria: vi.fn(),
+  deletePeriod: vi.fn(),
+  listPeriodCriteria: vi.fn().mockResolvedValue({ data: [] }),
+  listPeriodOutcomes: vi.fn().mockResolvedValue([]),
+  cloneFramework: vi.fn(),
+  assignFrameworkToPeriod: vi.fn(),
+  freezePeriodSnapshot: vi.fn(),
+  setPeriodCriteriaName: vi.fn(),
+  updatePeriodOutcomeConfig: vi.fn(),
 }));
 vi.mock("@/shared/criteria/criteriaHelpers", () => ({ getActiveCriteria: () => [] }));
 vi.mock("@/auth/shared/lockedActions", () => ({
@@ -109,14 +98,7 @@ vi.mock("@/auth/shared/lockedActions", () => ({
 }));
 vi.mock("../styles/index.css", () => ({}));
 vi.mock("@/admin/features/setup-wizard/styles/index.css", () => ({}));
-vi.mock("../components/PeriodsTable", () => ({
-  default: ({ rows }) => (
-    <table>
-      <thead><tr><th>Status</th><th>Date Range</th></tr></thead>
-      <tbody>{rows && rows.length === 0 && <tr><td>No evaluation periods yet</td></tr>}</tbody>
-    </table>
-  ),
-}));
+vi.mock("../components/PeriodsTable", () => ({ default: () => <table /> }));
 vi.mock("../components/PeriodsFilterPanel", () => ({ default: () => null }));
 vi.mock("../components/LifecycleBar", () => ({ default: () => null }));
 vi.mock("../components/LifecycleGuide", () => ({ default: () => null }));
@@ -125,45 +107,17 @@ vi.mock("@/shared/ui/FbAlert", () => ({ default: () => null }));
 
 import PeriodsPage from "../PeriodsPage";
 
-function renderPage() {
-  return render(
-    <MemoryRouter>
-      <PeriodsPage />
-    </MemoryRouter>
-  );
-}
-
 describe("PeriodsPage", () => {
-  qaTest("admin.periods.page.render", () => {
-    renderPage();
-    expect(screen.getByText("Evaluation Periods")).toBeInTheDocument();
-  });
-
-  qaTest("admin.periods.page.page-desc", () => {
-    renderPage();
-    expect(
-      screen.getByText("Manage evaluation periods, active sessions, and locked historical records.")
-    ).toBeInTheDocument();
-  });
-
-  qaTest("admin.periods.page.add-btn", () => {
-    renderPage();
-    expect(screen.getByTestId("periods-add-btn")).toBeInTheDocument();
-  });
-
-  qaTest("admin.periods.page.subtitle", () => {
-    renderPage();
-    expect(screen.getByText("All Evaluation Periods")).toBeInTheDocument();
-  });
-
-  qaTest("admin.periods.page.empty-list", () => {
-    renderPage();
-    expect(screen.getByText("No evaluation periods yet")).toBeInTheDocument();
-  });
-
-  qaTest("admin.periods.page.column-headers", () => {
-    renderPage();
-    expect(screen.getByText(/Status/)).toBeInTheDocument();
-    expect(screen.getByText(/Date Range/)).toBeInTheDocument();
+  // BUG CLASS: import-graph break (a refactor that renames a barrel export
+  // or moves a hook so PeriodsPage no longer compiles). The test catches
+  // this at vitest time, before deploy. Anything richer belongs in E2E.
+  qaTest("admin.periods.page.mounts", () => {
+    expect(() =>
+      render(
+        <MemoryRouter>
+          <PeriodsPage />
+        </MemoryRouter>
+      )
+    ).not.toThrow();
   });
 });

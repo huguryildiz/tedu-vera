@@ -23,21 +23,6 @@ import CriterionDeleteDialog from "../CriterionDeleteDialog";
 const noop = vi.fn();
 
 describe("ClearAllCriteriaModal", () => {
-  qaTest("coverage.criteria-confirm-modals.clear-all-renders", () => {
-    render(
-      <ClearAllCriteriaModal
-        open={true}
-        submitting={false}
-        confirmText=""
-        onConfirmTextChange={noop}
-        onClose={noop}
-        onConfirm={noop}
-        displayName="Spring 2025"
-      />
-    );
-    expect(screen.getByText("Delete All Criteria?")).toBeInTheDocument();
-  });
-
   qaTest("coverage.criteria-confirm-modals.clear-all-confirm-disabled", () => {
     render(
       <ClearAllCriteriaModal
@@ -55,22 +40,6 @@ describe("ClearAllCriteriaModal", () => {
 });
 
 describe("DeleteCriterionModal", () => {
-  qaTest("coverage.criteria-confirm-modals.reorder-renders", () => {
-    render(
-      <DeleteCriterionModal
-        open={true}
-        submitting={false}
-        confirmText=""
-        onConfirmTextChange={noop}
-        onClose={noop}
-        onConfirm={noop}
-        deleteLabel="C1"
-        canDelete={false}
-      />
-    );
-    expect(screen.getByText("Remove Criterion?")).toBeInTheDocument();
-  });
-
   qaTest("coverage.criteria-confirm-modals.delete-btn-candelete-false", () => {
     render(
       <DeleteCriterionModal

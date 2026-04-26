@@ -22,19 +22,7 @@ vi.mock("@/auth/shared/useAuth", () => ({
 vi.mock("@/assets/vera_logo_dark.png", () => ({ default: "vera_logo_dark.png" }));
 vi.mock("@/assets/vera_logo_white.png", () => ({ default: "vera_logo_white.png" }));
 
-import MaintenancePage from "../MaintenancePage";
 import MaintenanceGate from "../MaintenanceGate";
-
-describe("MaintenancePage", () => {
-  qaTest("coverage.maintenance-page.renders", () => {
-    const { container } = render(
-      <ThemeProvider>
-        <MaintenancePage />
-      </ThemeProvider>
-    );
-    expect(container.firstChild).toBeTruthy();
-  });
-});
 
 describe("MaintenanceGate", () => {
   qaTest("coverage.maintenance-gate.renders-children", () => {

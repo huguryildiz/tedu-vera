@@ -13,18 +13,7 @@
 
 import { writeEdgeAuditLog } from "../_shared/audit-log.ts";
 import { requireAdminCaller } from "../_shared/admin-auth.ts";
-
-interface Payload {
-  recipientEmail: string;
-  jurorName: string;
-  pin: string;
-  jurorAffiliation?: string;
-  tokenUrl?: string;
-  periodName?: string;
-  organizationName?: string;
-  organizationId?: string;
-  jurorId?: string;
-}
+import { RequestPayloadSchema, type RequestPayload } from "./schema.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -172,14 +161,18 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const payload: Payload = await req.json();
+    const body = await req.json();
 
-    if (!payload.recipientEmail || !payload.jurorName || !payload.pin) {
+    // Schema validation
+    const parsed = RequestPayloadSchema.safeParse(body);
+    if (!parsed.success) {
+      const errorMessages = parsed.error.issues.map((i) => i.message).join(", ");
       return new Response(
-        JSON.stringify({ error: "Missing required fields: recipientEmail, jurorName, pin" }),
+        JSON.stringify({ error: errorMessages }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+    const payload: RequestPayload = parsed.data;
 
     const auth = await requireAdminCaller(req, payload.organizationId || null);
     if (!auth.ok) {
@@ -194,7 +187,7 @@ Deno.serve(async (req: Request) => {
       ? `Your VERA evaluation PIN — ${periodLabel}`
       : "Your VERA evaluation PIN";
 
-    const body = [
+    const textBody = [
       `Hello, ${payload.jurorName}.`,
       `Your jury evaluation PIN has been set${periodLabel ? ` for ${periodLabel}` : ""}.`,
       `PIN: ${payload.pin}`,
@@ -218,7 +211,7 @@ Deno.serve(async (req: Request) => {
     let sendError = "";
 
     if (resendKey && payload.recipientEmail) {
-      const result = await sendViaResend(resendKey, payload.recipientEmail, subject, body, html, fromAddr);
+      const result = await sendViaResend(resendKey, payload.recipientEmail, subject, textBody, html, fromAddr);
       sent = result.ok;
       sendError = result.error || "";
     } else {

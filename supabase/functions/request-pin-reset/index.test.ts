@@ -14,6 +14,11 @@ import {
   stubFetch,
 } from "../_test/harness.ts";
 import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
+import {
   getCalls,
   resetMockConfig,
   setMockConfig,
@@ -422,4 +427,121 @@ Deno.test(
       assertEquals(typeof body.error, "string");
     }
   },
+);
+
+// ─────────────────────────────────────────────────────────────────
+// Zod schema validation tests
+// ─────────────────────────────────────────────────────────────────
+
+// qa: edge.request-pin-reset.schema.success
+Deno.test(
+  "request-pin-reset — schema validation success with valid payload",
+  async () => {
+    const handler = await setup();
+    mockPeriodOrgResolved();
+    setMockConfig({
+      tables: {
+        periods: {
+          selectSingle: {
+            data: {
+              name: "Spring 2026",
+              organization_id: "org-1",
+              organizations: { name: "Tedu", contact_email: "contact@tedu.edu" },
+            },
+            error: null,
+          },
+        },
+        memberships: { selectList: { data: [{ user_id: "admin-1" }], error: null } },
+        security_policy: {
+          selectSingle: { data: { policy: { ccOnPinReset: true } }, error: null },
+        },
+        audit_logs: { insert: { data: null, error: null } },
+      },
+      adminGetUserById: {
+        "admin-1": { data: { user: { id: "admin-1", email: "admin@tedu.edu" } }, error: null },
+      },
+    });
+    const res = await handler(makeRequest({
+      body: { periodId: "p-1", jurorName: "Ali", affiliation: "CS", message: "Help" },
+    }));
+    assertEquals(res.status, 200);
+    const body = await readJson(res) as { ok: boolean; sent: boolean };
+    assertEquals(body.ok, true);
+    assertEquals(typeof body.sent, "boolean");
+  },
+);
+
+// qa: edge.request-pin-reset.schema.success
+Deno.test(
+  "request-pin-reset — 200 success response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    Deno.env.set("RESEND_API_KEY", "re_test");
+    setMockConfig({
+      tables: {
+        periods: {
+          selectSingle: {
+            data: {
+              name: "Spring 2026",
+              organization_id: "org-1",
+              organizations: { name: "Tedu", contact_email: "contact@tedu.edu" },
+            },
+            error: null,
+          },
+        },
+        memberships: { selectList: { data: [{ user_id: "admin-1" }], error: null } },
+        security_policy: {
+          selectSingle: { data: { policy: { ccOnPinReset: true } }, error: null },
+        },
+        audit_logs: { insert: { data: null, error: null } },
+      },
+      adminGetUserById: {
+        "admin-1": { data: { user: { id: "admin-1", email: "admin@tedu.edu" } }, error: null },
+      },
+    });
+    const restoreFetch = stubFetch(async () => new Response(JSON.stringify({ id: "email-ok" }), { status: 200 }));
+    try {
+      const res = await handler(makeRequest({
+        body: { periodId: "p-1", jurorName: "Ali", affiliation: "CS" },
+      }));
+      assertEquals(res.status, 200);
+      const body = await readJson(res);
+      SuccessResponseSchema.parse(body);
+    } finally {
+      restoreFetch();
+      Deno.env.delete("RESEND_API_KEY");
+    }
+  }
+);
+
+// qa: edge.request-pin-reset.schema.validation
+Deno.test(
+  "request-pin-reset — 400 empty-periodId response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    const res = await handler(makeRequest({
+      body: { periodId: "", jurorName: "Ali", affiliation: "CS" },
+    }));
+    assertEquals(res.status, 400);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  }
+);
+
+// qa: edge.request-pin-reset.schema.internal-error
+Deno.test(
+  "request-pin-reset — 500 unhandled-exception response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    // Invalid JSON body triggers outer catch → 500 { ok: false, error: "..." }
+    const req = new Request("http://localhost/fn", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{invalid json",
+    });
+    const res = await handler(req);
+    assertEquals(res.status, 500);
+    const body = await readJson(res);
+    InternalErrorResponseSchema.parse(body);
+  }
 );

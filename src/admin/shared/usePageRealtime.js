@@ -24,8 +24,15 @@ export function usePageRealtime({ organizationId, channelName, subscriptions, de
   useEffect(() => {
     // Disabled during E2E: realtime events from CRUD operations trigger stale
     // refreshPeriods/loadPeriods calls that race with optimistic state updates
-    // (e.g. removePeriod), causing deleted rows to reappear.
-    if (import.meta.env.VITE_E2E) return;
+    // (e.g. removePeriod), causing deleted rows to reappear. Tests that
+    // specifically exercise Realtime can opt back in by setting
+    // window.__VERA_E2E_REALTIME__ = true via Playwright's addInitScript.
+    if (
+      import.meta.env.VITE_E2E &&
+      !(typeof window !== "undefined" && window.__VERA_E2E_REALTIME__)
+    ) {
+      return;
+    }
     if (!organizationId) return;
     if (!subscriptions || subscriptions.length === 0) return;
 

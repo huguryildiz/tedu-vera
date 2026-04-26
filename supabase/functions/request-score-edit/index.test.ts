@@ -8,6 +8,11 @@ import {
   stubFetch,
 } from "../_test/harness.ts";
 import { resetMockConfig, setMockConfig } from "../_test/mock-supabase.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -151,3 +156,85 @@ Deno.test("request-score-edit — no RESEND_API_KEY returns 200 sent:false", asy
     restoreFetch();
   }
 });
+
+// qa: edge.request-score-edit.schema.success
+Deno.test(
+  "request-score-edit — 200 success response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      tables: {
+        juror_period_auth: {
+          selectMaybeSingle: {
+            data: { juror_id: "j-1" },
+            error: null,
+          },
+        },
+        periods: {
+          selectSingle: {
+            data: {
+              name: "Spring 2026",
+              organization_id: "org-1",
+              organizations: { name: "Org1", contact_email: "contact@org.com" },
+            },
+            error: null,
+          },
+        },
+        memberships: { selectList: { data: [], error: null } },
+        security_policy: { selectSingle: { data: null, error: null } },
+        audit_logs: { insert: { data: null, error: null } },
+      },
+    });
+    const restoreFetch = stubFetch(async () =>
+      new Response(JSON.stringify({ id: "email-id" }), { status: 200 })
+    );
+    try {
+      Deno.env.set("RESEND_API_KEY", "test-key");
+      const res = await handler(
+        makeRequest({
+          body: {
+            periodId: "p1",
+            jurorName: "Ali Yıldız",
+            sessionToken: "valid-token",
+          },
+        })
+      );
+      assertEquals(res.status, 200);
+      const body = await readJson(res);
+      SuccessResponseSchema.parse(body);
+    } finally {
+      restoreFetch();
+      Deno.env.delete("RESEND_API_KEY");
+    }
+  }
+);
+
+// qa: edge.request-score-edit.schema.validation
+Deno.test(
+  "request-score-edit — 400 missing-required-field response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    const res = await handler(makeRequest({ body: {} }));
+    assertEquals(res.status, 400);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  }
+);
+
+// qa: edge.request-score-edit.schema.internal-error
+Deno.test(
+  "request-score-edit — 500 unhandled-exception response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    // Invalid JSON body triggers outer catch → 500 { ok: false, error: "..." }
+    const req = new Request("http://localhost/fn", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{invalid json",
+    });
+    const res = await handler(req);
+    assertEquals(res.status, 500);
+    const body = await readJson(res);
+    InternalErrorResponseSchema.parse(body);
+  }
+);

@@ -23,6 +23,7 @@
 
 import { writeEdgeAuditLog } from "../_shared/audit-log.ts";
 import { requireAdminCaller } from "../_shared/admin-auth.ts";
+import { RequestPayloadSchema, type RequestPayload } from "./schema.ts";
 
 interface Payload {
   recipients: string[];
@@ -208,18 +209,15 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const payload: Payload = await req.json();
+    const body = await req.json();
 
-    if (
-      !payload.recipients ||
-      payload.recipients.length === 0 ||
-      !payload.fileName ||
-      !payload.fileBase64
-    ) {
+    // Schema validation
+    const parsed = RequestPayloadSchema.safeParse(body);
+    if (!parsed.success) {
+      const errorMessages = parsed.error.issues.map((i) => i.message).join(", ");
       return new Response(
         JSON.stringify({
-          error:
-            "Missing required fields: recipients, fileName, fileBase64",
+          error: errorMessages,
         }),
         {
           status: 400,
@@ -227,6 +225,7 @@ Deno.serve(async (req: Request) => {
         },
       );
     }
+    const payload: RequestPayload = parsed.data;
 
     const auth = await requireAdminCaller(req, payload.organizationId || null);
     if (!auth.ok) {

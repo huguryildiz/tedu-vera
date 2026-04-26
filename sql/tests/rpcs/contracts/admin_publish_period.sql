@@ -53,15 +53,39 @@ SELECT throws_ok(
   'unauthenticated caller → raises unauthorized'
 );
 
--- ────────__ 4. org-admin can publish their own period (may fail on readiness) ──────────
+-- ────────── 4. org-admin draft → published transition (real assertion) ──────────
+--   Set up a "ready" period under org A by inserting a criterion that
+--   satisfies the readiness gate's minimum requirements. Replaces the
+--   `SELECT ok(true, ...)` placeholder, which proved nothing.
+INSERT INTO period_criteria (id, period_id, key, label, max_score, weight, sort_order) VALUES
+  ('a1110000-0000-4000-8000-0000000000a3'::uuid,
+   'cccc0000-0000-4000-8000-000000000001'::uuid,
+   'tech', 'Technical', 100, 100, 1)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO projects (id, period_id, title, advisor_name) VALUES
+  ('33330000-0000-4000-8000-0000000000a3'::uuid,
+   'cccc0000-0000-4000-8000-000000000001'::uuid,
+   'pgtap publish test project', 'Advisor')
+ON CONFLICT (id) DO NOTHING;
+
+UPDATE periods SET criteria_name = 'pgtap setup'
+  WHERE id = 'cccc0000-0000-4000-8000-000000000001'::uuid;
+
 SELECT pgtap_test.become_a();
 
--- Period A1 (cccc...0001) is unlocked; try to publish it.
--- It may fail readiness, but not authorization.
--- We'll test that it either succeeds OR fails on readiness, not on authorization.
+-- The readiness gate may still fail (jurors, outcomes, etc. unset). The
+-- response shape is the contract: either ok=true OR error_code='readiness_failed'
+-- with a `readiness` envelope. A regression that drops the envelope or
+-- misnames the error_code shows up here.
+CREATE TEMP TABLE _publish_resp ON COMMIT DROP AS
+SELECT (rpc_admin_publish_period('cccc0000-0000-4000-8000-000000000001'::uuid)::jsonb) AS r;
+
 SELECT ok(
-  true,
-  'org_admin caller passes authorization (details depend on readiness gate)'
+  (SELECT (r->>'ok' = 'true')
+       OR (r->>'error_code' = 'readiness_failed' AND r ? 'readiness')
+   FROM _publish_resp),
+  'org_admin call returns either ok=true OR error_code=readiness_failed with readiness envelope'
 );
 
 -- ────────── 5. already-published (is_locked=true) → idempotent, returns already_published=true ──────────
@@ -104,12 +128,17 @@ SELECT throws_ok(
   'admin A on org B period → raises unauthorized'
 );
 
--- ────────── 8. super-admin can publish any org's period (subject to readiness) ──────────
+-- ────────── 8. super-admin authorization is verified, not asserted ──────────
+--   Replaces `SELECT ok(true, ...)`. We call publish on B's unlocked period
+--   as super_admin. It must NOT raise 'unauthorized'; it may return any
+--   other shape (already_published, readiness_failed, ok). The contract is
+--   that super_admin passes the auth gate.
+SELECT pgtap_test.become_reset();
 SELECT pgtap_test.become_super();
 
-SELECT ok(
-  true,
-  'super-admin authorized to publish any period'
+SELECT lives_ok(
+  $c$SELECT rpc_admin_publish_period('dddd0000-0000-4000-8000-000000000002'::uuid)$c$,
+  'super-admin call on org B period does not raise (auth gate passes)'
 );
 
 SELECT pgtap_test.become_reset();

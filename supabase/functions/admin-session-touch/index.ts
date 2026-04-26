@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { RequestPayloadSchema } from "./schema.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -84,18 +85,25 @@ Deno.serve(async (req: Request) => {
   }
 
   const body = await req.json().catch(() => null);
-  const deviceId = safeText(body?.deviceId, 128);
+
+  const parsed = RequestPayloadSchema.safeParse(body);
+  if (!parsed.success) {
+    return json(400, { error: parsed.error.issues.map(i => i.message).join(", ") });
+  }
+  const payload = parsed.data;
+
+  const deviceId = safeText(payload.deviceId, 128);
   if (!deviceId) {
     return json(400, { error: "deviceId is required" });
   }
 
   const nowIso = new Date().toISOString();
-  const signedInAt = toIsoOrNull(body?.signedInAt);
-  const expiresAt = toIsoOrNull(body?.expiresAt);
-  const userAgent = safeText(body?.userAgent || req.headers.get("user-agent"), 1024);
-  const browser = safeText(body?.browser, 80, "Unknown");
-  const os = safeText(body?.os, 80, "Unknown");
-  const authMethod = safeText(body?.authMethod, 80, "Unknown");
+  const signedInAt = toIsoOrNull(payload.signedInAt);
+  const expiresAt = toIsoOrNull(payload.expiresAt);
+  const userAgent = safeText(payload.userAgent || req.headers.get("user-agent"), 1024);
+  const browser = safeText(payload.browser, 80, "Unknown");
+  const os = safeText(payload.os, 80, "Unknown");
+  const authMethod = safeText(payload.authMethod, 80, "Unknown");
   const ipAddress = firstForwardedIp(req);
   const countryCode = countryFromHeaders(req);
 

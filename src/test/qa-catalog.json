@@ -3389,6 +3389,28 @@
     "severity": "critical"
   },
   {
+    "id": "admin.criteria.page.heading",
+    "module": "Admin / Criteria",
+    "area": "CriteriaPage",
+    "story": "CriteriaPage shows page heading",
+    "scenario": "heading 'Criteria' is visible after mount",
+    "whyItMatters": "Verifies the page title renders correctly, catching import-graph regressions.",
+    "risk": "A broken heading indicates a mount failure in the criteria feature tree.",
+    "coverageStrength": "Smoke",
+    "severity": "normal"
+  },
+  {
+    "id": "admin.criteria.page.no-periods-empty",
+    "module": "Admin / Criteria",
+    "area": "CriteriaPage",
+    "story": "CriteriaPage shows empty state when no periods exist",
+    "scenario": "empty state message is visible when periodList is empty",
+    "whyItMatters": "Empty state guides admins to create a period before configuring criteria.",
+    "risk": "Missing empty state leaves admins confused when there are no periods.",
+    "coverageStrength": "Smoke",
+    "severity": "normal"
+  },
+  {
     "id": "admin.criteria.form.init",
     "module": "Admin / Criteria",
     "area": "useCriteriaForm",
@@ -7415,6 +7437,61 @@
     "severity": "minor"
   },
   {
+    "id": "e2e.admin.reviews.smoke",
+    "module": "e2e/admin/reviews",
+    "area": "ReviewsPage",
+    "story": "reviews table visible after sign-in",
+    "scenario": "admin signs in and navigates to /admin/reviews; reviews-table is visible",
+    "whyItMatters": "Smoke gate: confirms the page mounts and loads data without crashing",
+    "risk": "high",
+    "coverageStrength": "e2e",
+    "severity": "critical"
+  },
+  {
+    "id": "e2e.admin.reviews.feedback.submit",
+    "module": "e2e/admin/reviews",
+    "area": "ReviewsPage",
+    "story": "jury feedback RPC writes correct row",
+    "scenario": "rpc_submit_jury_feedback is called with a valid session token; jury_feedback row appears with matching period_id, juror_id, rating, and comment",
+    "whyItMatters": "Verifies the end-to-end feedback submission path at the DB layer",
+    "risk": "high",
+    "coverageStrength": "e2e",
+    "severity": "critical"
+  },
+  {
+    "id": "e2e.admin.reviews.filter.juror",
+    "module": "e2e/admin/reviews",
+    "area": "ReviewsPage",
+    "story": "juror filter shows only matching rows",
+    "scenario": "admin opens filter panel, selects a juror; every visible col-juror cell shows only that juror's name",
+    "whyItMatters": "Filter correctness — wrong filtering silently hides or leaks juror data",
+    "risk": "high",
+    "coverageStrength": "e2e",
+    "severity": "major"
+  },
+  {
+    "id": "e2e.admin.reviews.filter.project",
+    "module": "e2e/admin/reviews",
+    "area": "ReviewsPage",
+    "story": "project filter shows only matching rows",
+    "scenario": "admin opens filter panel, selects a project title; every visible col-project cell shows only that project title",
+    "whyItMatters": "Filter correctness — wrong filtering silently hides or leaks project scores",
+    "risk": "high",
+    "coverageStrength": "e2e",
+    "severity": "major"
+  },
+  {
+    "id": "e2e.admin.reviews.score.edit.enable",
+    "module": "e2e/admin/reviews",
+    "area": "ReviewsPage",
+    "story": "admin enables juror re-editing via edit-mode toggle",
+    "scenario": "setJurorEditMode is called with edit_enabled=true; juror_period_auth row has edit_enabled=true, edit_reason set, final_submitted_at not null",
+    "whyItMatters": "Score re-edit flow correctness — ensures the DB state that unlocks jury editing is set correctly",
+    "risk": "high",
+    "coverageStrength": "e2e",
+    "severity": "major"
+  },
+  {
     "id": "admin.outcomes.page.add-btn",
     "module": "admin/features/outcomes/OutcomesPage",
     "area": "OutcomesPage",
@@ -7558,17 +7635,6 @@
     "severity": "minor"
   },
   {
-    "id": "coverage.admin-tour.shape",
-    "module": "admin/adminTourSteps",
-    "area": "adminTourSteps",
-    "story": "ADMIN_TOUR_STEPS array length",
-    "scenario": "ADMIN_TOUR_STEPS exports exactly 16 step objects",
-    "whyItMatters": "Tour step count drives guided-tour rendering; wrong count skips or repeats steps.",
-    "risk": "Mis-count would break the tour UX for every new admin.",
-    "coverageStrength": "Strong",
-    "severity": "normal"
-  },
-  {
     "id": "coverage.admin-tour.fields",
     "module": "admin/adminTourSteps",
     "area": "adminTourSteps",
@@ -7589,17 +7655,6 @@
     "risk": "Invalid placement would misplace the tour popover on desktop.",
     "coverageStrength": "Medium",
     "severity": "minor"
-  },
-  {
-    "id": "coverage.analytics-export.sections-count",
-    "module": "admin/analytics/analyticsExport",
-    "area": "analyticsExport",
-    "story": "ANALYTICS_SECTIONS array length",
-    "scenario": "ANALYTICS_SECTIONS exports exactly 10 section descriptors",
-    "whyItMatters": "Missing sections silently omit worksheets from the exported workbook.",
-    "risk": "Fewer sections = missing tabs in export; harder to catch without counting.",
-    "coverageStrength": "Strong",
-    "severity": "normal"
   },
   {
     "id": "coverage.analytics-export.section-shape",
@@ -7624,72 +7679,6 @@
     "severity": "critical"
   },
   {
-    "id": "coverage.analytics-export.workbook-builds",
-    "module": "admin/analytics/analyticsExport",
-    "area": "analyticsExport",
-    "story": "buildAnalyticsWorkbook returns workbook",
-    "scenario": "buildAnalyticsWorkbook with empty params returns an XLSX workbook object",
-    "whyItMatters": "Workbook must be returned even when all sections have no rows so the file can still be saved.",
-    "risk": "Returning null or undefined would crash the XLSX.writeFile call in the export handler.",
-    "coverageStrength": "Medium",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.governance.global-settings-renders",
-    "module": "admin/features/organizations/GovernanceDrawers",
-    "area": "GovernanceDrawers",
-    "story": "GlobalSettingsDrawer renders title",
-    "scenario": "GlobalSettingsDrawer renders 'Global Settings' heading when open=false",
-    "whyItMatters": "Title must always be in DOM for screen reader and tab focus.",
-    "risk": "Missing title breaks accessibility navigation in the drawer.",
-    "coverageStrength": "render",
-    "severity": "minor"
-  },
-  {
-    "id": "coverage.governance.export-backup-renders",
-    "module": "admin/features/organizations/GovernanceDrawers",
-    "area": "GovernanceDrawers",
-    "story": "ExportBackupDrawer renders title",
-    "scenario": "ExportBackupDrawer renders 'Export & Backup' heading when open=false",
-    "whyItMatters": "Ensures drawer header is always present regardless of data-loading state.",
-    "risk": "Blank drawer header confuses admins triggering the backup export flow.",
-    "coverageStrength": "render",
-    "severity": "minor"
-  },
-  {
-    "id": "coverage.governance.maintenance-renders",
-    "module": "admin/features/organizations/GovernanceDrawers",
-    "area": "GovernanceDrawers",
-    "story": "MaintenanceDrawer renders title",
-    "scenario": "MaintenanceDrawer renders 'Maintenance Mode' heading when open=false",
-    "whyItMatters": "Drawer title confirms correct panel opened; prevents opening wrong governance panel.",
-    "risk": "Wrong panel renders wrong controls — admin could accidentally trigger wrong action.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.governance.system-health-renders",
-    "module": "admin/features/organizations/GovernanceDrawers",
-    "area": "GovernanceDrawers",
-    "story": "SystemHealthDrawer renders title",
-    "scenario": "SystemHealthDrawer renders 'System Health' heading when open=false",
-    "whyItMatters": "Health check drawer title confirms correct panel; run health checks are destructive-adjacent.",
-    "risk": "Wrong panel title → admin misidentifies the panel and runs checks at wrong time.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.governance.maintenance-mode-toggle",
-    "module": "admin/features/organizations/GovernanceDrawers",
-    "area": "GovernanceDrawers",
-    "story": "MaintenanceDrawer shows schedule button",
-    "scenario": "MaintenanceDrawer renders a 'Schedule Maintenance' button in footer when open=false (default mode=scheduled)",
-    "whyItMatters": "Primary CTA must be present so admin can activate maintenance before a deploy.",
-    "risk": "Missing button prevents admin from locking the system before critical maintenance.",
-    "coverageStrength": "behaviour",
-    "severity": "critical"
-  },
-  {
     "id": "coverage.landing.hero-renders",
     "module": "landing/LandingPage",
     "area": "LandingPage",
@@ -7697,28 +7686,6 @@
     "scenario": "renders 'Evaluate anything' hero headline in the DOM",
     "whyItMatters": "Hero is the first impression; must render for any visitor to understand the product.",
     "risk": "Broken hero render leaves a blank landing page — zero conversion.",
-    "coverageStrength": "render",
-    "severity": "critical"
-  },
-  {
-    "id": "coverage.landing.nav-signin",
-    "module": "landing/LandingPage",
-    "area": "LandingPage",
-    "story": "Sign In button present",
-    "scenario": "renders a Sign In navigation link accessible via data-testid='admin-landing-signin'",
-    "whyItMatters": "Admin entry point must always be in the nav; primary conversion path.",
-    "risk": "Missing Sign In → admins cannot reach the login page from the landing.",
-    "coverageStrength": "render",
-    "severity": "critical"
-  },
-  {
-    "id": "coverage.landing.cta-try-demo",
-    "module": "landing/LandingPage",
-    "area": "LandingPage",
-    "story": "Experience Demo CTA present",
-    "scenario": "renders 'Experience Demo' call-to-action button with id='btn-try-demo'",
-    "whyItMatters": "Demo CTA drives trial conversions; must be present on every render.",
-    "risk": "Missing CTA removes the trial conversion path from the landing page.",
     "coverageStrength": "render",
     "severity": "critical"
   },
@@ -7742,39 +7709,6 @@
     "whyItMatters": "Auth failures must surface a recovery path; otherwise users are stuck on a blank loader.",
     "risk": "No retry → user must hard-reload; increases demo drop-off rate.",
     "coverageStrength": "behaviour",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.sort-icon.inactive",
-    "module": "admin/features/*/components/SortIcon",
-    "area": "SortIcon",
-    "story": "inactive state renders up-triangle",
-    "scenario": "renders sort-icon-inactive span when sortKey does not match colKey",
-    "whyItMatters": "Inactive indicator tells users this column is sortable but not currently sorted.",
-    "risk": "Missing indicator → table sort affordance invisible.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.sort-icon.active-asc",
-    "module": "admin/features/*/components/SortIcon",
-    "area": "SortIcon",
-    "story": "active ascending state renders up-triangle",
-    "scenario": "renders ▲ (up-triangle) when sortKey matches colKey and sortDir is asc",
-    "whyItMatters": "Ascending sort indicator must match current direction for user orientation.",
-    "risk": "Wrong indicator → users misread sort direction.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.sort-icon.active-desc",
-    "module": "admin/features/*/components/SortIcon",
-    "area": "SortIcon",
-    "story": "active descending state renders down-triangle",
-    "scenario": "renders ▼ (down-triangle) when sortKey matches colKey and sortDir is desc",
-    "whyItMatters": "Descending sort indicator must match current direction for user orientation.",
-    "risk": "Wrong indicator → users misread sort direction.",
-    "coverageStrength": "render",
     "severity": "normal"
   },
   {
@@ -7932,47 +7866,36 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.periods-table.empty-state",
+    "id": "admin.periods.table.empty-state",
     "module": "admin/features/periods/components/PeriodsTable",
     "area": "PeriodsTable",
-    "story": "renders empty state when no periods",
-    "scenario": "shows 'No evaluation periods yet' card when rows and pagedRows are empty",
-    "whyItMatters": "Empty state guides admins to create their first period.",
-    "risk": "Missing empty state → admins see blank table with no guidance.",
-    "coverageStrength": "render",
+    "story": "empty-state branch",
+    "scenario": "renders 'No evaluation periods yet' when rows is empty and no filters are active",
+    "whyItMatters": "Without the empty-state branch, an admin opening a fresh tenant sees a ghost table with only headers.",
+    "risk": "Empty-state branch regression makes the page look broken on first load.",
+    "coverageStrength": "Strong",
     "severity": "normal"
   },
   {
-    "id": "coverage.periods-table.renders-rows",
+    "id": "admin.periods.table.filter-empty-state",
     "module": "admin/features/periods/components/PeriodsTable",
     "area": "PeriodsTable",
-    "story": "renders one row per period",
-    "scenario": "renders data-testid period-row elements matching the pagedRows array length",
-    "whyItMatters": "Row count must match the paginated period list for the table to be usable.",
-    "risk": "Row mismatch → admin sees wrong number of periods.",
-    "coverageStrength": "render",
+    "story": "filter-empty branch",
+    "scenario": "renders 'No periods match your filters' when rows empty AND activeFilterCount > 0",
+    "whyItMatters": "Distinguishing empty-data from filtered-out is the only way an admin knows whether to clear a filter or seed a period.",
+    "risk": "Missing the filter-empty branch makes admins think data was lost.",
+    "coverageStrength": "Strong",
     "severity": "normal"
   },
   {
-    "id": "coverage.periods-table.filter-empty-state",
-    "module": "admin/features/periods/components/PeriodsTable",
-    "area": "PeriodsTable",
-    "story": "renders filter empty state",
-    "scenario": "shows 'No periods match your filters' when rows empty and activeFilterCount > 0",
-    "whyItMatters": "Filter empty state signals the admin that results exist but are hidden by filters.",
-    "risk": "Missing filter state → admin may think data is lost when it is only filtered.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.periods-table.column-headers",
-    "module": "admin/features/periods/components/PeriodsTable",
-    "area": "PeriodsTable",
-    "story": "renders table column headers",
-    "scenario": "renders Status and Date Range column header text",
-    "whyItMatters": "Column headers orient admins to data columns in the evaluation period table.",
-    "risk": "Missing headers → table columns are unlabelled and unusable.",
-    "coverageStrength": "render",
+    "id": "admin.periods.page.mounts",
+    "module": "admin/features/periods/PeriodsPage",
+    "area": "PeriodsPage",
+    "story": "smoke mount",
+    "scenario": "PeriodsPage mounts inside a MemoryRouter without throwing — exercises the full import graph",
+    "whyItMatters": "A barrel-export rename or hook move can break the page's import graph in a way unit tests should catch before E2E runs.",
+    "risk": "Build-time import errors slip into a deploy that takes minutes to discover via E2E.",
+    "coverageStrength": "Smoke",
     "severity": "normal"
   },
   {
@@ -7983,17 +7906,6 @@
     "scenario": "renders 'Select a period' guidance text when periodId prop is undefined",
     "whyItMatters": "Admins must select a period before managing jury access tokens.",
     "risk": "Missing prompt → admin cannot identify why controls are unavailable.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.jury-entry-control.renders-section-label",
-    "module": "admin/features/entry-control/JuryEntryControlPanel",
-    "area": "JuryEntryControlPanel",
-    "story": "renders section label",
-    "scenario": "renders 'Jury Access Control' heading regardless of periodId",
-    "whyItMatters": "Section label identifies the panel in the settings layout.",
-    "risk": "Missing heading → panel loses its identity in the settings layout.",
     "coverageStrength": "render",
     "severity": "normal"
   },
@@ -8031,17 +7943,6 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.outcomes-table.framework-name",
-    "module": "admin/features/outcomes/components/OutcomesTable",
-    "area": "OutcomesTable",
-    "story": "renders framework name",
-    "scenario": "renders the frameworkName prop as the card title",
-    "whyItMatters": "Framework name identifies which accreditation standard the outcomes belong to.",
-    "risk": "Wrong name → admin may configure criteria for the wrong framework.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
     "id": "coverage.criteria-manager.weight-summary",
     "module": "admin/features/criteria/CriteriaManager",
     "area": "CriteriaManager",
@@ -8061,17 +7962,6 @@
     "whyItMatters": "Locked notice prevents admin from attempting illegal edits during evaluation.",
     "risk": "Missing notice → admin tries edits that are silently blocked.",
     "coverageStrength": "behaviour",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.criteria-manager.add-criterion-btn",
-    "module": "admin/features/criteria/CriteriaManager",
-    "area": "CriteriaManager",
-    "story": "renders Add Criterion button when not locked",
-    "scenario": "shows Add Criterion button when fullyLocked is false",
-    "whyItMatters": "Add Criterion is the primary action for building evaluation criteria.",
-    "risk": "Missing button → admin cannot add criteria.",
-    "coverageStrength": "render",
     "severity": "normal"
   },
   {
@@ -8171,17 +8061,6 @@
     "whyItMatters": "Chart titles drive export headers and UI labels.",
     "risk": "Missing keys → blank chart titles in exports.",
     "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.download-table.array-buffer-to-base64",
-    "module": "admin/utils/downloadTable",
-    "area": "downloadTable",
-    "story": "converts ArrayBuffer to base64",
-    "scenario": "arrayBufferToBase64 encodes a known byte array",
-    "whyItMatters": "Base64 encoding is required for PDF font embedding.",
-    "risk": "Encoding bug → PDF fonts corrupt.",
-    "coverageStrength": "behaviour",
     "severity": "normal"
   },
   {
@@ -8504,17 +8383,6 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.export-xlsx.build-filename",
-    "module": "admin/utils/exportXLSX",
-    "area": "exportXLSX",
-    "story": "builds export filename from type and period",
-    "scenario": "buildExportFilename joins parts with underscores and adds extension",
-    "whyItMatters": "Filename determines what users see in their Downloads folder.",
-    "risk": "Wrong separator or missing part → confusing or invalid filename.",
-    "coverageStrength": "behaviour",
-    "severity": "normal"
-  },
-  {
     "id": "coverage.demo-layout.renders-outlet",
     "module": "layouts/DemoLayout",
     "area": "DemoLayout",
@@ -8533,105 +8401,6 @@
     "scenario": "AuthRouteLayout renders Outlet content",
     "whyItMatters": "All auth screens (/login, /register) depend on this layout.",
     "risk": "Broken layout → auth screens render nothing.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.jury-spotlight-tour.smoke",
-    "module": "jury/shared/SpotlightTour",
-    "area": "SpotlightTour",
-    "story": "re-exports from shared",
-    "scenario": "SpotlightTour default export is a function",
-    "whyItMatters": "Jury tour depends on this re-export resolving correctly.",
-    "risk": "Broken re-export → guided tour unavailable.",
-    "coverageStrength": "smoke",
-    "severity": "low"
-  },
-  {
-    "id": "coverage.slide-jury-flow.renders",
-    "module": "landing/components/showcase/SlideJuryFlow",
-    "area": "SlideJuryFlow",
-    "story": "renders scoring window",
-    "scenario": "SlideJuryFlow renders the scoring label",
-    "whyItMatters": "Showcase slide must render for landing page first impression.",
-    "risk": "Broken slide → blank showcase panel.",
-    "coverageStrength": "render",
-    "severity": "low"
-  },
-  {
-    "id": "coverage.slide-overview.renders",
-    "module": "landing/components/showcase/SlideOverview",
-    "area": "SlideOverview",
-    "story": "renders KPI strip",
-    "scenario": "SlideOverview renders Active Jurors KPI card",
-    "whyItMatters": "Overview slide must show live stats KPIs.",
-    "risk": "Blank KPI strip → poor first impression.",
-    "coverageStrength": "render",
-    "severity": "low"
-  },
-  {
-    "id": "coverage.slide-criteria.renders",
-    "module": "landing/components/showcase/SlideCriteria",
-    "area": "SlideCriteria",
-    "story": "renders criteria window",
-    "scenario": "SlideCriteria renders without crashing",
-    "whyItMatters": "Criteria slide must render for landing showcase.",
-    "risk": "Blank slide → incomplete showcase.",
-    "coverageStrength": "render",
-    "severity": "low"
-  },
-  {
-    "id": "coverage.slide-management.renders",
-    "module": "landing/components/showcase/SlideManagement",
-    "area": "SlideManagement",
-    "story": "renders management window",
-    "scenario": "SlideManagement renders without crashing",
-    "whyItMatters": "Management slide must render for landing showcase.",
-    "risk": "Blank slide → incomplete showcase.",
-    "coverageStrength": "render",
-    "severity": "low"
-  },
-  {
-    "id": "coverage.slide-analytics.renders",
-    "module": "landing/components/showcase/SlideAnalytics",
-    "area": "SlideAnalytics",
-    "story": "renders analytics window",
-    "scenario": "SlideAnalytics renders without crashing",
-    "whyItMatters": "Analytics slide must render for landing showcase.",
-    "risk": "Blank slide → incomplete showcase.",
-    "coverageStrength": "render",
-    "severity": "low"
-  },
-  {
-    "id": "coverage.slide-entry-control.renders",
-    "module": "landing/components/showcase/SlideEntryControl",
-    "area": "SlideEntryControl",
-    "story": "renders entry control window",
-    "scenario": "SlideEntryControl renders without crashing",
-    "whyItMatters": "Entry control slide must render for landing showcase.",
-    "risk": "Blank slide → incomplete showcase.",
-    "coverageStrength": "render",
-    "severity": "low"
-  },
-  {
-    "id": "coverage.slide-evaluation.renders",
-    "module": "landing/components/showcase/SlideEvaluation",
-    "area": "SlideEvaluation",
-    "story": "renders evaluation window",
-    "scenario": "SlideEvaluation renders without crashing",
-    "whyItMatters": "Evaluation slide must render for landing showcase.",
-    "risk": "Blank slide → incomplete showcase.",
-    "coverageStrength": "render",
-    "severity": "low"
-  },
-  {
-    "id": "coverage.product-showcase.renders",
-    "module": "landing/components/ProductShowcase",
-    "area": "ProductShowcase",
-    "story": "renders showcase container",
-    "scenario": "ProductShowcase renders without crashing",
-    "whyItMatters": "ProductShowcase is the main interactive demo on the landing page.",
-    "risk": "Broken showcase → key landing page section missing.",
     "coverageStrength": "render",
     "severity": "normal"
   },
@@ -8680,17 +8449,6 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.lifecycle-guide.renders",
-    "module": "admin/features/periods/components/LifecycleGuide",
-    "area": "LifecycleGuide",
-    "story": "renders collapsed/expanded guide",
-    "scenario": "LifecycleGuide renders the workflow heading",
-    "whyItMatters": "Guide teaches admins period lifecycle steps.",
-    "risk": "Broken guide → admins cannot learn the workflow.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
     "id": "coverage.lifecycle-guide.toggle",
     "module": "admin/features/periods/components/LifecycleGuide",
     "area": "LifecycleGuide",
@@ -8713,17 +8471,6 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.readiness-popover.renders-badge",
-    "module": "admin/features/periods/components/ReadinessPopover",
-    "area": "ReadinessPopover",
-    "story": "renders readiness badge",
-    "scenario": "ReadinessPopover renders a badge when readiness data is provided",
-    "whyItMatters": "Badge shows period readiness status at a glance.",
-    "risk": "Missing badge → admin cannot see readiness.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
     "id": "coverage.tenant-search-dropdown.renders",
     "module": "auth/features/register/TenantSearchDropdown",
     "area": "TenantSearchDropdown",
@@ -8733,42 +8480,6 @@
     "risk": "Broken dropdown → admins cannot register.",
     "coverageStrength": "render",
     "severity": "high"
-  },
-  {
-    "id": "coverage.tenant-search-dropdown.shows-placeholder",
-    "module": "auth/features/register/TenantSearchDropdown",
-    "area": "TenantSearchDropdown",
-    "story": "shows placeholder when nothing selected",
-    "scenario": "TenantSearchDropdown shows placeholder text when value is empty",
-    "whyItMatters": "Placeholder guides user to select a tenant.",
-    "risk": "No placeholder → confusing empty state.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.email-verify-banner.renders",
-    "module": "auth/features/verify-email/EmailVerifyBanner",
-    "area": "EmailVerifyBanner",
-    "story": "renders banner when unverified",
-    "scenario": "EmailVerifyBanner renders without crashing",
-    "whyItMatters": "Email verification nudge must be visible to unverified users.",
-    "risk": "Broken banner → users miss verification prompt.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.tenant-switcher.renders",
-    "module": "admin/features/organizations/TenantSwitcher",
-    "area": "TenantSwitcher",
-    "story": "renders switcher button",
-    "scenario": "TenantSwitcher renders the current tenant name",
-    "whyItMatters": "Super-admin must see and switch tenant context.",
-    "risk": "Broken switcher → super-admin locked to one tenant.",
-    "coverageStrength": "render",
-    "severity": "high",
-    "status": "backlog"
   },
   {
     "id": "coverage.setup-progress-banner.renders",
@@ -8782,53 +8493,6 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.setup-progress-banner.navigate",
-    "module": "admin/layout/SetupProgressBanner",
-    "area": "SetupProgressBanner",
-    "story": "navigates on button click",
-    "scenario": "clicking Continue Setup button triggers navigation",
-    "whyItMatters": "CTA must link to the setup wizard.",
-    "risk": "Broken CTA → admins cannot start setup.",
-    "coverageStrength": "behaviour",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.project-averages-card.renders",
-    "module": "admin/shared/ProjectAveragesCard",
-    "area": "ProjectAveragesCard",
-    "story": "renders with no groups",
-    "scenario": "ProjectAveragesCard renders Project Averages header with empty data",
-    "whyItMatters": "Card must render gracefully before heatmap data loads.",
-    "risk": "Crash on empty → heatmap footer card missing.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.project-averages-card.shows-averages",
-    "module": "admin/shared/ProjectAveragesCard",
-    "area": "ProjectAveragesCard",
-    "story": "displays group averages",
-    "scenario": "ProjectAveragesCard renders each group row with its average",
-    "whyItMatters": "Admins rely on per-group averages to spot outliers.",
-    "risk": "Missing rows → average data not visible.",
-    "coverageStrength": "behaviour",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.delete-outcome-modal.renders",
-    "module": "admin/features/outcomes/components/DeleteOutcomeModal",
-    "area": "DeleteOutcomeModal",
-    "story": "renders delete confirmation",
-    "scenario": "DeleteOutcomeModal renders Remove Outcome heading when open",
-    "whyItMatters": "Modal must display before user can confirm deletion.",
-    "risk": "Broken modal → outcomes cannot be deleted.",
-    "coverageStrength": "render",
-    "severity": "high"
-  },
-  {
     "id": "coverage.delete-outcome-modal.confirm-disabled",
     "module": "admin/features/outcomes/components/DeleteOutcomeModal",
     "area": "DeleteOutcomeModal",
@@ -8838,50 +8502,6 @@
     "risk": "Missing guard → outcomes deleted accidentally.",
     "coverageStrength": "behaviour",
     "severity": "high"
-  },
-  {
-    "id": "coverage.unassign-framework-modal.renders",
-    "module": "admin/features/outcomes/components/UnassignFrameworkModal",
-    "area": "UnassignFrameworkModal",
-    "story": "renders framework name",
-    "scenario": "UnassignFrameworkModal renders framework name when open",
-    "whyItMatters": "User must see which framework is being unassigned.",
-    "risk": "Missing name → confusing confirmation.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.import-confirm-modal.renders",
-    "module": "admin/features/outcomes/components/ImportConfirmModal",
-    "area": "ImportConfirmModal",
-    "story": "renders proposal name",
-    "scenario": "ImportConfirmModal renders the proposed framework name",
-    "whyItMatters": "User must confirm the framework they are importing.",
-    "risk": "Missing name → user imports wrong framework.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.criteria-confirm-modals.clear-all-renders",
-    "module": "admin/features/criteria/components/CriteriaConfirmModals",
-    "area": "CriteriaConfirmModals",
-    "story": "ClearAllCriteriaModal renders",
-    "scenario": "ClearAllCriteriaModal renders Delete All Criteria heading when open",
-    "whyItMatters": "Modal must show before user can confirm bulk delete.",
-    "risk": "Broken modal → bulk delete inaccessible.",
-    "coverageStrength": "render",
-    "severity": "high"
-  },
-  {
-    "id": "coverage.criteria-confirm-modals.reorder-renders",
-    "module": "admin/features/criteria/components/CriteriaConfirmModals",
-    "area": "CriteriaConfirmModals",
-    "story": "ReorderCriteriaModal or second export renders",
-    "scenario": "CriteriaConfirmModals module exports at least one modal component",
-    "whyItMatters": "Module must export usable components.",
-    "risk": "Missing export → import crashes CriteriaPage.",
-    "coverageStrength": "smoke",
-    "severity": "normal"
   },
   {
     "id": "coverage.criterion-delete-dialog.hidden-when-closed",
@@ -8906,268 +8526,6 @@
     "severity": "high"
   },
   {
-    "id": "coverage.jury-revoke-confirm-dialog.renders",
-    "module": "admin/shared/JuryRevokeConfirmDialog",
-    "area": "JuryRevokeConfirmDialog",
-    "story": "renders revoke warning",
-    "scenario": "JuryRevokeConfirmDialog renders Revoke Jury Access heading when open",
-    "whyItMatters": "Admin must see confirmation before revoking active jury sessions.",
-    "risk": "Broken dialog → revoke action has no confirmation.",
-    "coverageStrength": "render",
-    "severity": "high"
-  },
-  {
-    "id": "coverage.reset-pin-modal.renders",
-    "module": "admin/shared/ResetPinModal",
-    "area": "ResetPinModal",
-    "story": "renders juror info",
-    "scenario": "ResetPinModal renders juror name when open",
-    "whyItMatters": "Admin must confirm which juror's PIN is being reset.",
-    "risk": "Missing name → wrong PIN reset.",
-    "coverageStrength": "render",
-    "severity": "high"
-  },
-  {
-    "id": "coverage.group-attainment-heatmap.empty",
-    "module": "charts/GroupAttainmentHeatmap",
-    "area": "GroupAttainmentHeatmap",
-    "story": "renders with no data",
-    "scenario": "GroupAttainmentHeatmap renders without crashing when data is empty",
-    "whyItMatters": "Chart must not crash before data loads.",
-    "risk": "Crash on empty → analytics tab broken.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.group-attainment-heatmap.renders-header",
-    "module": "charts/GroupAttainmentHeatmap",
-    "area": "GroupAttainmentHeatmap",
-    "story": "renders chart heading",
-    "scenario": "GroupAttainmentHeatmap renders a chart container when data provided",
-    "whyItMatters": "Header confirms chart mounted correctly.",
-    "risk": "Missing container → chart not visible.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.attainment-rate-chart.empty",
-    "module": "charts/AttainmentRateChart",
-    "area": "AttainmentRateChart",
-    "story": "renders with empty data",
-    "scenario": "AttainmentRateChart renders without crashing when submittedData is empty",
-    "whyItMatters": "Chart must not crash before data loads.",
-    "risk": "Crash on empty → analytics tab broken.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.attainment-rate-chart.renders",
-    "module": "charts/AttainmentRateChart",
-    "area": "AttainmentRateChart",
-    "story": "renders bars for criteria",
-    "scenario": "AttainmentRateChart renders chart element when criteria provided",
-    "whyItMatters": "Bars must appear for each criterion.",
-    "risk": "Missing bars → attainment rates not visible.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.coverage-matrix.renders",
-    "module": "charts/CoverageMatrix",
-    "area": "CoverageMatrix",
-    "story": "renders matrix container",
-    "scenario": "CoverageMatrix renders without crashing",
-    "whyItMatters": "Coverage matrix must render for analytics.",
-    "risk": "Crash → analytics section missing.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.juror-consistency-heatmap.renders",
-    "module": "charts/JurorConsistencyHeatmap",
-    "area": "JurorConsistencyHeatmap",
-    "story": "renders heatmap container",
-    "scenario": "JurorConsistencyHeatmap renders without crashing",
-    "whyItMatters": "Heatmap must render for analytics tab.",
-    "risk": "Crash → analytics section missing.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.score-distribution-chart.renders",
-    "module": "charts/ScoreDistributionChart",
-    "area": "ScoreDistributionChart",
-    "story": "renders distribution container",
-    "scenario": "ScoreDistributionChart renders without crashing",
-    "whyItMatters": "Score distribution chart is key analytics output.",
-    "risk": "Crash → distribution chart missing.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.threshold-gap-chart.renders",
-    "module": "charts/ThresholdGapChart",
-    "area": "ThresholdGapChart",
-    "story": "renders gap chart container",
-    "scenario": "ThresholdGapChart renders without crashing",
-    "whyItMatters": "Threshold gap chart highlights failing outcomes.",
-    "risk": "Crash → critical insight missing.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.attainment-trend-chart.renders",
-    "module": "charts/AttainmentTrendChart",
-    "area": "AttainmentTrendChart",
-    "story": "renders trend container",
-    "scenario": "AttainmentTrendChart renders without crashing",
-    "whyItMatters": "Trend chart shows progress over semesters.",
-    "risk": "Crash → trend view missing.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.outcome-attainment-heatmap.renders",
-    "module": "charts/OutcomeAttainmentHeatmap",
-    "area": "OutcomeAttainmentHeatmap",
-    "story": "renders heatmap",
-    "scenario": "OutcomeAttainmentHeatmap renders without crashing",
-    "whyItMatters": "Outcome attainment heatmap drives MÜDEK reporting.",
-    "risk": "Crash → MÜDEK report section missing.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.outcome-by-group-chart.renders",
-    "module": "charts/OutcomeByGroupChart",
-    "area": "OutcomeByGroupChart",
-    "story": "renders group chart",
-    "scenario": "OutcomeByGroupChart renders without crashing",
-    "whyItMatters": "Per-group outcome chart shows group-level attainment.",
-    "risk": "Crash → group analytics missing.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.rubric-achievement-chart.renders",
-    "module": "charts/RubricAchievementChart",
-    "area": "RubricAchievementChart",
-    "story": "renders rubric bars",
-    "scenario": "RubricAchievementChart renders without crashing",
-    "whyItMatters": "Rubric achievement chart drives band distribution view.",
-    "risk": "Crash → rubric section missing.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.programme-averages-chart.renders",
-    "module": "charts/ProgrammeAveragesChart",
-    "area": "ProgrammeAveragesChart",
-    "story": "renders programme bars",
-    "scenario": "ProgrammeAveragesChart renders without crashing",
-    "whyItMatters": "Programme averages chart is a key summary view.",
-    "risk": "Crash → programme summary missing.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.outcome-attainment-trend-chart.renders",
-    "module": "charts/OutcomeAttainmentTrendChart",
-    "area": "OutcomeAttainmentTrendChart",
-    "story": "renders trend lines",
-    "scenario": "OutcomeAttainmentTrendChart renders without crashing",
-    "whyItMatters": "Outcome trend chart shows semester-over-semester improvement.",
-    "risk": "Crash → trend view missing.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.submission-timeline-chart.renders",
-    "module": "charts/SubmissionTimelineChart",
-    "area": "SubmissionTimelineChart",
-    "story": "renders timeline",
-    "scenario": "SubmissionTimelineChart renders without crashing",
-    "whyItMatters": "Submission timeline shows when jurors submitted scores.",
-    "risk": "Crash → timeline section missing.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.coverage-bar.null-bands",
-    "module": "admin/features/criteria/CoverageBar",
-    "area": "CoverageBar",
-    "story": "returns null with no bands",
-    "scenario": "CoverageBar renders nothing when bands array is empty",
-    "whyItMatters": "Empty state must not crash criterion card.",
-    "risk": "Crash → criteria page broken.",
-    "coverageStrength": "guard",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.coverage-bar.renders",
-    "module": "admin/features/criteria/CoverageBar",
-    "area": "CoverageBar",
-    "story": "renders band segments",
-    "scenario": "CoverageBar renders a bar container when bands provided",
-    "whyItMatters": "Bar shows rubric coverage visually in criterion card.",
-    "risk": "Missing bar → coverage not visible.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.inline-weight-edit.shows-value",
-    "module": "admin/features/criteria/InlineWeightEdit",
-    "area": "InlineWeightEdit",
-    "story": "shows current weight",
-    "scenario": "InlineWeightEdit renders the weight value badge",
-    "whyItMatters": "Weight must be visible before editing.",
-    "risk": "Missing weight → admins cannot see current allocation.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.inline-weight-edit.disabled-state",
-    "module": "admin/features/criteria/InlineWeightEdit",
-    "area": "InlineWeightEdit",
-    "story": "respects disabled prop",
-    "scenario": "InlineWeightEdit renders in disabled state without crashing",
-    "whyItMatters": "Weight editing must be locked when period is live.",
-    "risk": "Editable when locked → weight changed during evaluation.",
-    "coverageStrength": "render",
-    "severity": "high",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.outcome-pill-selector.empty-options",
-    "module": "admin/features/criteria/OutcomePillSelector",
-    "area": "OutcomePillSelector",
-    "story": "renders nothing when no outcomes",
-    "scenario": "OutcomePillSelector renders nothing when outcomeConfig is empty",
-    "whyItMatters": "Empty outcome list must not show broken UI.",
-    "risk": "Broken pill selector → criteria cannot be mapped.",
-    "coverageStrength": "guard",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
     "id": "coverage.outcome-pill-selector.renders-pills",
     "module": "admin/features/criteria/OutcomePillSelector",
     "area": "OutcomePillSelector",
@@ -9175,87 +8533,6 @@
     "scenario": "OutcomePillSelector renders a pill for each outcome option",
     "whyItMatters": "Pills drive the outcome mapping interaction.",
     "risk": "Missing pills → outcomes cannot be mapped.",
-    "coverageStrength": "render",
-    "severity": "high"
-  },
-  {
-    "id": "coverage.edit-criteria-drawer.renders-closed",
-    "module": "admin/features/criteria/EditCriteriaDrawer",
-    "area": "EditCriteriaDrawer",
-    "story": "renders without crashing",
-    "scenario": "EditCriteriaDrawer renders without crashing when open is false",
-    "whyItMatters": "Drawer must not crash when closed.",
-    "risk": "Crash on mount → criteria page broken.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.juror-heatmap-card.renders",
-    "module": "admin/shared/JurorHeatmapCard",
-    "area": "JurorHeatmapCard",
-    "story": "renders juror card",
-    "scenario": "JurorHeatmapCard renders without crashing",
-    "whyItMatters": "Card is the main juror row in heatmap mobile view.",
-    "risk": "Crash → heatmap mobile view broken.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.export-panel.renders-formats",
-    "module": "admin/shared/ExportPanel",
-    "area": "ExportPanel",
-    "story": "renders export format options",
-    "scenario": "ExportPanel renders XLSX, CSV, and PDF format buttons",
-    "whyItMatters": "Admins must see format options before downloading.",
-    "risk": "Missing formats → export not selectable.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.view-sessions-drawer.renders-empty",
-    "module": "admin/shared/ViewSessionsDrawer",
-    "area": "ViewSessionsDrawer",
-    "story": "renders empty sessions list",
-    "scenario": "ViewSessionsDrawer renders without crashing when sessions is empty",
-    "whyItMatters": "Drawer must not crash when no session data exists.",
-    "risk": "Crash → session inspector unavailable.",
-    "coverageStrength": "render",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.outcome-row.renders-code",
-    "module": "admin/features/outcomes/components/OutcomeRow",
-    "area": "OutcomeRow",
-    "story": "renders outcome code",
-    "scenario": "OutcomeRow renders the outcome code in a table row",
-    "whyItMatters": "Code is the primary identifier in the outcomes table.",
-    "risk": "Missing code → outcomes unidentifiable.",
-    "coverageStrength": "render",
-    "severity": "high",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.delete-backup-modal.renders",
-    "module": "admin/shared/DeleteBackupModal",
-    "area": "DeleteBackupModal",
-    "story": "renders backup info",
-    "scenario": "DeleteBackupModal renders confirmation heading when open",
-    "whyItMatters": "Admin must confirm before deleting a backup.",
-    "risk": "Broken modal → backups deleted without confirmation.",
-    "coverageStrength": "render",
-    "severity": "high"
-  },
-  {
-    "id": "coverage.confirm-dialog.renders-title",
-    "module": "shared/ui/ConfirmDialog",
-    "area": "ConfirmDialog",
-    "story": "renders dialog title",
-    "scenario": "ConfirmDialog renders its title when open",
-    "whyItMatters": "Title is essential for user to understand what they are confirming.",
-    "risk": "Missing title → user confirms wrong action.",
     "coverageStrength": "render",
     "severity": "high"
   },
@@ -9271,28 +8548,6 @@
     "severity": "high"
   },
   {
-    "id": "coverage.confirm-modal.renders",
-    "module": "shared/ui/ConfirmModal",
-    "area": "ConfirmModal",
-    "story": "renders confirmation modal",
-    "scenario": "ConfirmModal renders title and description when open",
-    "whyItMatters": "Modal must display before user can confirm.",
-    "risk": "Broken modal → dangerous actions have no confirmation.",
-    "coverageStrength": "render",
-    "severity": "high"
-  },
-  {
-    "id": "coverage.maintenance-page.renders",
-    "module": "components/MaintenancePage",
-    "area": "MaintenancePage",
-    "story": "renders maintenance message",
-    "scenario": "MaintenancePage renders the maintenance heading",
-    "whyItMatters": "Maintenance page must display during platform downtime.",
-    "risk": "Broken page → users see blank screen during maintenance.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
     "id": "coverage.maintenance-gate.renders-children",
     "module": "components/MaintenanceGate",
     "area": "MaintenanceGate",
@@ -9302,30 +8557,6 @@
     "risk": "Gate blocks app → app inaccessible normally.",
     "coverageStrength": "render",
     "severity": "high"
-  },
-  {
-    "id": "coverage.jury-flow.renders",
-    "module": "jury/JuryFlow",
-    "area": "JuryFlow",
-    "story": "renders without crashing",
-    "scenario": "JuryFlow renders without crashing when wrapped in MemoryRouter",
-    "whyItMatters": "JuryFlow is the root of the entire jury evaluation experience.",
-    "risk": "Crash → jurors cannot evaluate.",
-    "coverageStrength": "render",
-    "severity": "critical",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.segmented-bar.empty",
-    "module": "jury/features/evaluation/SegmentedBar",
-    "area": "SegmentedBar",
-    "story": "renders nothing with no projects",
-    "scenario": "SegmentedBar renders null when projects array is empty",
-    "whyItMatters": "Empty state must not crash the evaluator.",
-    "risk": "Crash → evaluation panel broken.",
-    "coverageStrength": "guard",
-    "severity": "normal",
-    "status": "backlog"
   },
   {
     "id": "coverage.segmented-bar.renders-segments",
@@ -9339,85 +8570,6 @@
     "severity": "high"
   },
   {
-    "id": "coverage.rubric-sheet.null-crit",
-    "module": "jury/features/evaluation/RubricSheet",
-    "area": "RubricSheet",
-    "story": "returns null when no criterion",
-    "scenario": "RubricSheet renders nothing when crit is null",
-    "whyItMatters": "Sheet must not crash when no criterion is selected.",
-    "risk": "Crash → rubric sheet crashes evaluation.",
-    "coverageStrength": "guard",
-    "severity": "normal",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.rubric-sheet.renders-bands",
-    "module": "jury/features/evaluation/RubricSheet",
-    "area": "RubricSheet",
-    "story": "renders rubric bands",
-    "scenario": "RubricSheet renders rubric band labels when criterion with rubric provided",
-    "whyItMatters": "Rubric bands help jurors assign correct scores.",
-    "risk": "Missing bands → jurors score blindly.",
-    "coverageStrength": "render",
-    "severity": "high",
-    "status": "backlog"
-  },
-  {
-    "id": "coverage.project-drawer.renders",
-    "module": "jury/features/evaluation/ProjectDrawer",
-    "area": "ProjectDrawer",
-    "story": "renders project list",
-    "scenario": "ProjectDrawer renders without crashing",
-    "whyItMatters": "Drawer lets jurors navigate between projects.",
-    "risk": "Crash → project navigation unavailable.",
-    "coverageStrength": "render",
-    "severity": "high"
-  },
-  {
-    "id": "coverage.theme-toggle-icon.renders",
-    "module": "jury/shared/ThemeToggleIcon",
-    "area": "ThemeToggleIcon",
-    "story": "renders toggle button",
-    "scenario": "ThemeToggleIcon renders a button element",
-    "whyItMatters": "Theme toggle is essential for dark/light mode switching in jury UI.",
-    "risk": "Crash → jurors stuck in one theme.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.draggable-theme-toggle.renders",
-    "module": "jury/shared/DraggableThemeToggle",
-    "area": "DraggableThemeToggle",
-    "story": "renders floating toggle",
-    "scenario": "DraggableThemeToggle renders without crashing inside MemoryRouter",
-    "whyItMatters": "Floating toggle is primary theme switcher in jury flow.",
-    "risk": "Crash → theme toggle missing from jury UI.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.attainment-rate-chart.empty-state",
-    "module": "charts/AttainmentRateChart",
-    "area": "AttainmentRateChart",
-    "story": "renders empty state",
-    "scenario": "renders no-data placeholder when criteria is empty",
-    "whyItMatters": "Analytics page shows a graceful empty state when no data is available.",
-    "risk": "Crash → analytics page broken for new periods.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.attainment-rate-chart.with-data",
-    "module": "charts/AttainmentRateChart",
-    "area": "AttainmentRateChart",
-    "story": "renders bars with data",
-    "scenario": "renders outcome bars when criteria and scores are provided",
-    "whyItMatters": "Core chart functionality must render correctly.",
-    "risk": "Crash → attainment chart invisible.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
     "id": "coverage.attainment-trend-chart.empty-state",
     "module": "charts/AttainmentTrendChart",
     "area": "AttainmentTrendChart",
@@ -9425,171 +8577,6 @@
     "scenario": "renders no-data placeholder when no periods selected",
     "whyItMatters": "Trend chart must handle no selection gracefully.",
     "risk": "Crash → trend chart breaks analytics.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.coverage-matrix.empty-state",
-    "module": "charts/CoverageMatrix",
-    "area": "CoverageMatrix",
-    "story": "renders empty state",
-    "scenario": "renders no-data placeholder when outcomes list is empty",
-    "whyItMatters": "Coverage matrix shows helpful message when no outcomes configured.",
-    "risk": "Crash → outcome coverage matrix invisible.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.coverage-matrix.with-data",
-    "module": "charts/CoverageMatrix",
-    "area": "CoverageMatrix",
-    "story": "renders matrix with data",
-    "scenario": "renders table headers when outcomes and criteria provided",
-    "whyItMatters": "Coverage matrix must show outcome × criterion table.",
-    "risk": "Crash → accreditation matrix missing.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.group-attainment-heatmap.empty-state",
-    "module": "charts/GroupAttainmentHeatmap",
-    "area": "GroupAttainmentHeatmap",
-    "story": "renders empty state",
-    "scenario": "renders no-data placeholder when dashboardStats is empty",
-    "whyItMatters": "Heatmap shows helpful message before any data submitted.",
-    "risk": "Crash → group attainment heatmap invisible.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.group-attainment-heatmap.with-data",
-    "module": "charts/GroupAttainmentHeatmap",
-    "area": "GroupAttainmentHeatmap",
-    "story": "renders heatmap with data",
-    "scenario": "renders table with group columns when dashboardStats has entries",
-    "whyItMatters": "Heatmap shows per-group per-criterion attainment.",
-    "risk": "Crash → group heatmap missing.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.juror-consistency-heatmap.empty-state",
-    "module": "charts/JurorConsistencyHeatmap",
-    "area": "JurorConsistencyHeatmap",
-    "story": "renders empty state",
-    "scenario": "renders no-data placeholder when no group data",
-    "whyItMatters": "Consistency heatmap shows meaningful message before data available.",
-    "risk": "Crash → inter-rater consistency view broken.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.outcome-attainment-heatmap.empty-state",
-    "module": "charts/OutcomeAttainmentHeatmap",
-    "area": "OutcomeAttainmentHeatmap",
-    "story": "renders empty state",
-    "scenario": "renders no-data placeholder when rows and outcomeMeta are empty",
-    "whyItMatters": "Multi-period heatmap shows helpful message when no history.",
-    "risk": "Crash → historical attainment heatmap broken.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.outcome-attainment-heatmap.with-data",
-    "module": "charts/OutcomeAttainmentHeatmap",
-    "area": "OutcomeAttainmentHeatmap",
-    "story": "renders heatmap with data",
-    "scenario": "renders outcome rows and period columns when data provided",
-    "whyItMatters": "Multi-period attainment heatmap must display correctly.",
-    "risk": "Crash → accreditation trend heatmap invisible.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.outcome-attainment-trend-chart.empty-state",
-    "module": "charts/OutcomeAttainmentTrendChart",
-    "area": "OutcomeAttainmentTrendChart",
-    "story": "renders empty state",
-    "scenario": "renders no-data placeholder when rows and outcomeMeta are empty",
-    "whyItMatters": "Trend chart shows helpful placeholder before multi-period data exists.",
-    "risk": "Crash → outcome trend chart invisible.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.outcome-by-group-chart.empty-state",
-    "module": "charts/OutcomeByGroupChart",
-    "area": "OutcomeByGroupChart",
-    "story": "renders empty state",
-    "scenario": "renders no-data placeholder when dashboardStats is empty",
-    "whyItMatters": "Group chart shows helpful placeholder before any scores.",
-    "risk": "Crash → outcome by group chart invisible.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.programme-averages-chart.empty-state",
-    "module": "charts/ProgrammeAveragesChart",
-    "area": "ProgrammeAveragesChart",
-    "story": "renders empty state",
-    "scenario": "renders no-data placeholder when submittedData is empty",
-    "whyItMatters": "Averages chart shows helpful placeholder before scores submitted.",
-    "risk": "Crash → programme averages chart invisible.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.rubric-achievement-chart.empty-state",
-    "module": "charts/RubricAchievementChart",
-    "area": "RubricAchievementChart",
-    "story": "renders empty state",
-    "scenario": "renders no-data placeholder when submittedData is empty",
-    "whyItMatters": "Rubric breakdown chart shows helpful placeholder before scores.",
-    "risk": "Crash → rubric achievement chart invisible.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.score-distribution-chart.empty-state",
-    "module": "charts/ScoreDistributionChart",
-    "area": "ScoreDistributionChart",
-    "story": "renders empty state",
-    "scenario": "renders no-data placeholder when rawScores is empty",
-    "whyItMatters": "Distribution histogram shows helpful placeholder before scores.",
-    "risk": "Crash → score distribution chart invisible.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.submission-timeline-chart.empty-state",
-    "module": "charts/SubmissionTimelineChart",
-    "area": "SubmissionTimelineChart",
-    "story": "renders empty state",
-    "scenario": "renders no-data placeholder when allJurors is empty",
-    "whyItMatters": "Timeline chart shows helpful placeholder before submissions.",
-    "risk": "Crash → submission timeline invisible.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.threshold-gap-chart.empty-state",
-    "module": "charts/ThresholdGapChart",
-    "area": "ThresholdGapChart",
-    "story": "renders empty state",
-    "scenario": "renders no-data placeholder when no outcome data",
-    "whyItMatters": "Gap chart shows helpful placeholder before outcomes mapped.",
-    "risk": "Crash → threshold gap chart invisible.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.threshold-gap-chart.with-data",
-    "module": "charts/ThresholdGapChart",
-    "area": "ThresholdGapChart",
-    "story": "renders lollipop bars with data",
-    "scenario": "renders outcome rows with gap values when data provided",
-    "whyItMatters": "Lollipop chart must render gap annotations correctly.",
-    "risk": "Crash → threshold gap visualization broken.",
     "coverageStrength": "render",
     "severity": "normal"
   },
@@ -9704,28 +8691,6 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.auth-route-layout.renders",
-    "module": "layouts/AuthRouteLayout",
-    "area": "Auth Route Layout",
-    "story": "AuthRouteLayout renders Outlet",
-    "scenario": "renders children via Outlet without error",
-    "whyItMatters": "All auth pages depend on this layout.",
-    "risk": "Crash → all auth pages broken.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.project-averages-card.empty",
-    "module": "admin/shared/ProjectAveragesCard",
-    "area": "ProjectAveragesCard",
-    "story": "renders empty averages card",
-    "scenario": "renders with empty groups array without crash",
-    "whyItMatters": "Card must handle zero groups gracefully.",
-    "risk": "Crash → analytics card broken when no data.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
     "id": "coverage.project-averages-card.with-data",
     "module": "admin/shared/ProjectAveragesCard",
     "area": "ProjectAveragesCard",
@@ -9733,17 +8698,6 @@
     "scenario": "renders group averages and overall average",
     "whyItMatters": "Card must display group averages correctly.",
     "risk": "Crash → analytics averages invisible.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.export-panel.renders",
-    "module": "admin/shared/ExportPanel",
-    "area": "ExportPanel",
-    "story": "ExportPanel renders without crash",
-    "scenario": "renders export panel with minimal props",
-    "whyItMatters": "Export panel used in analytics and rankings pages.",
-    "risk": "Crash → export functionality broken.",
     "coverageStrength": "render",
     "severity": "normal"
   },
@@ -9792,17 +8746,6 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.inline-weight-edit.badge-renders",
-    "module": "admin/features/criteria/InlineWeightEdit",
-    "area": "InlineWeightEdit",
-    "story": "InlineWeightEdit renders weight badge",
-    "scenario": "renders weight value badge when not in edit mode",
-    "whyItMatters": "InlineWeightEdit is the primary weight display in criteria table.",
-    "risk": "Crash → criteria weights invisible.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
     "id": "coverage.outcome-pill-selector.empty-state",
     "module": "admin/features/criteria/OutcomePillSelector",
     "area": "OutcomePillSelector",
@@ -9832,17 +8775,6 @@
     "scenario": "returns null when crit prop is falsy",
     "whyItMatters": "RubricSheet must not crash when no criterion selected.",
     "risk": "Crash → rubric panel broken.",
-    "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.rubric-sheet.renders",
-    "module": "jury/features/evaluation/RubricSheet",
-    "area": "RubricSheet",
-    "story": "RubricSheet renders rubric bands",
-    "scenario": "renders criterion rubric bands when crit provided",
-    "whyItMatters": "RubricSheet is the juror's guide during scoring.",
-    "risk": "Crash → jurors lose rubric guidance.",
     "coverageStrength": "render",
     "severity": "normal"
   },
@@ -14468,8 +13400,7 @@
     "risk": "Missing metadata could make exports ambiguous without context.",
     "coverageStrength": "Medium",
     "severity": "normal"
-  }
-,
+  },
   {
     "id": "period-lock-enforcement.criteria-config.locked-rejected",
     "module": "Admin / Hooks / useManagePeriods",

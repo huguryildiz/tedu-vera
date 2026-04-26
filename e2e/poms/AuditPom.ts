@@ -44,4 +44,16 @@ export class AuditPom extends BasePom {
   async typeSearch(text: string): Promise<void> {
     await this.searchInput().fill(text);
   }
+
+  pageSizeBtn(n: number): Locator {
+    return this.page.locator(".pagination-sizes").getByText(String(n), { exact: true });
+  }
+
+  nextPageBtn(): Locator {
+    return this.page.getByRole("button", { name: "Next page" });
+  }
+
+  pageInfo(): Locator {
+    return this.page.locator(".pagination-info");
+  }
 }

@@ -189,9 +189,100 @@ BEGIN
 END;
 $$;
 
--- Grant execute so tests running under `authenticated` can call them if needed.
-GRANT USAGE ON SCHEMA pgtap_test TO authenticated;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA pgtap_test TO authenticated;
+-- ---------------------------------------------------------------------------
+-- pgtap_test.become_anon()
+--   Drop privileges to the anon role with no JWT claims. Mirrors how Supabase
+--   serves a request from a logged-out client. Use after seed inserts have
+--   been written under postgres; cannot insert protected rows from this
+--   role. See architecture spec § 3.3 for the canonical pattern.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION pgtap_test.become_anon()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RESET request.jwt.claims;
+  SET LOCAL role anon;
+END;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- pgtap_test.seed_period_criteria()
+--   Two criteria per UNLOCKED period (A1 + B1). Locked periods deliberately
+--   left empty so unlock-trigger tests can attempt INSERT and observe the
+--   period_locked rejection. Depends on seed_periods().
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION pgtap_test.seed_period_criteria()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  INSERT INTO period_criteria (id, period_id, key, label, max_score, weight, sort_order) VALUES
+    ('a1110000-0000-4000-8000-000000000a01'::uuid,
+     'cccc0000-0000-4000-8000-000000000001'::uuid, 'tech_a', 'Technical (A)', 10, 1.0, 1),
+    ('a1110000-0000-4000-8000-000000000a02'::uuid,
+     'cccc0000-0000-4000-8000-000000000001'::uuid, 'design_a', 'Design (A)', 10, 1.0, 2),
+    ('a1110000-0000-4000-8000-000000000b01'::uuid,
+     'dddd0000-0000-4000-8000-000000000002'::uuid, 'tech_b', 'Technical (B)', 10, 1.0, 1),
+    ('a1110000-0000-4000-8000-000000000b02'::uuid,
+     'dddd0000-0000-4000-8000-000000000002'::uuid, 'design_b', 'Design (B)', 10, 1.0, 2)
+  ON CONFLICT (id) DO NOTHING;
+END;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- pgtap_test.seed_period_outcomes()
+--   One outcome per UNLOCKED period (A1 + B1). Same locked-period exclusion
+--   as seed_period_criteria(). Depends on seed_periods().
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION pgtap_test.seed_period_outcomes()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  INSERT INTO period_outcomes (id, period_id, code, label, sort_order) VALUES
+    ('a2220000-0000-4000-8000-000000000a01'::uuid,
+     'cccc0000-0000-4000-8000-000000000001'::uuid, 'O1A', 'Outcome 1 (A)', 1),
+    ('a2220000-0000-4000-8000-000000000b01'::uuid,
+     'dddd0000-0000-4000-8000-000000000002'::uuid, 'O1B', 'Outcome 1 (B)', 1)
+  ON CONFLICT (id) DO NOTHING;
+END;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- pgtap_test.seed_unlock_requests()
+--   One pending unlock_request per locked period (A2_locked + B2_locked).
+--   Each request is created by the org's admin (sub-tenant) so RLS visibility
+--   tests are meaningful. Depends on seed_two_orgs() + seed_periods().
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION pgtap_test.seed_unlock_requests()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  INSERT INTO unlock_requests
+    (id, period_id, organization_id, requested_by, reason, status)
+  VALUES
+    ('a3330000-0000-4000-8000-000000000a11'::uuid,
+     'cccc0000-0000-4000-8000-000000000011'::uuid,
+     '11110000-0000-4000-8000-000000000001'::uuid,
+     'aaaa0000-0000-4000-8000-000000000001'::uuid,
+     'pgtap fixture — admin A unlock request', 'pending'),
+    ('a3330000-0000-4000-8000-000000000b22'::uuid,
+     'dddd0000-0000-4000-8000-000000000022'::uuid,
+     '22220000-0000-4000-8000-000000000002'::uuid,
+     'bbbb0000-0000-4000-8000-000000000002'::uuid,
+     'pgtap fixture — admin B unlock request', 'pending')
+  ON CONFLICT (id) DO NOTHING;
+END;
+$$;
+
+-- Grant execute so tests running under `authenticated` and `anon` can call
+-- the helpers (become_*, seed_*) when the test transaction has already
+-- dropped privileges. Without the anon grant, become_anon() callers would
+-- fail to call become_reset() afterwards.
+GRANT USAGE ON SCHEMA pgtap_test TO authenticated, anon;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA pgtap_test TO authenticated, anon;
 
 COMMENT ON SCHEMA pgtap_test IS
   'VERA pgTAP test fixtures. Safe to drop; not referenced by application code.';

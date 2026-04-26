@@ -13,6 +13,12 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { writeEdgeAuditLog } from "../_shared/audit-log.ts";
+import {
+  RequestPayloadSchema,
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -101,11 +107,12 @@ Deno.serve(async (req: Request) => {
     return json(400, { error: "Invalid JSON body" });
   }
 
-  const { action, organizationId, resourceType, resourceId, details } = body;
-
-  if (!action || typeof action !== "string" || !action.startsWith("export.")) {
-    return json(400, { error: "action must be a string starting with 'export.'" });
+  const validation = RequestPayloadSchema.safeParse(body);
+  if (!validation.success) {
+    const errorMsg = validation.error.issues[0]?.message || "Invalid request payload";
+    return json(400, { error: errorMsg });
   }
+  const { action, organizationId, resourceType, resourceId, details } = validation.data;
 
   // Tenant scope check for org-bound exports.
   if (typeof organizationId === "string" && organizationId.length > 0) {

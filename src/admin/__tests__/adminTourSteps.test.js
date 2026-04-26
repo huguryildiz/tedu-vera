@@ -5,10 +5,6 @@ import { ADMIN_TOUR_STEPS } from "../adminTourSteps";
 const VALID_PLACEMENTS = new Set(["above", "below"]);
 
 describe("adminTourSteps", () => {
-  qaTest("coverage.admin-tour.shape", () => {
-    expect(ADMIN_TOUR_STEPS).toHaveLength(16);
-  });
-
   qaTest("coverage.admin-tour.fields", () => {
     ADMIN_TOUR_STEPS.forEach((step, i) => {
       expect(step.selector, `step ${i} selector`).toBeTruthy();

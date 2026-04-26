@@ -15,6 +15,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getSuperAdminEmails, shouldCcOn } from "../_shared/super-admin-cc.ts";
 import { writeEdgeAuditLog } from "../_shared/audit-log.ts";
+import {
+  RequestPayloadSchema,
+  SuccessResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 interface MaintenancePayload {
   message?: string;
@@ -224,7 +229,13 @@ Deno.serve(async (req: Request) => {
     const token = authHeader.replace(/^Bearer\s+/i, "").trim();
     if (!token) return json(401, { error: "Missing bearer token" });
 
-    const payload: MaintenancePayload = await req.json();
+    const rawPayload = await req.json();
+    const validation = RequestPayloadSchema.safeParse(rawPayload);
+    if (!validation.success) {
+      const errorMsg = validation.error.issues[0]?.message || "Invalid request payload";
+      return json(400, { error: errorMsg });
+    }
+    const payload = validation.data as MaintenancePayload;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";

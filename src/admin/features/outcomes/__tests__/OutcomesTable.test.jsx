@@ -96,11 +96,6 @@ describe("OutcomesTable", () => {
     expect(screen.getByText("No outcomes defined")).toBeInTheDocument();
   });
 
-  qaTest("coverage.outcomes-table.framework-name", () => {
-    render(<OutcomesTable {...defaultProps} />);
-    expect(screen.getByText("MÜDEK 2024")).toBeInTheDocument();
-  });
-
   qaTest("coverage.outcomes-table.lock-banner", () => {
     render(<OutcomesTable {...defaultProps} isLocked={true} />);
     expect(

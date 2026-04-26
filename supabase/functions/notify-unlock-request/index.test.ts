@@ -16,6 +16,11 @@ import {
   stubFetch,
 } from "../_test/harness.ts";
 import { resetMockConfig, setMockConfig } from "../_test/mock-supabase.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -380,5 +385,74 @@ Deno.test(
       restore();
       Deno.env.delete("RESEND_API_KEY");
     }
+  },
+);
+
+// ── Zod-parse contract tests ──────────────────────────────────────────────
+//
+// Architecture spec § 3.5: every Edge Function has a co-located schema.ts
+// that pins the wire shape. Tests assert the response parses cleanly with
+// the schema, which is the same module the frontend imports. A regression
+// (renamed field, dropped key, changed ok-flag literal) shows up as a Zod
+// parse error here AND as a TS compile error in any frontend wrapper that
+// consumes the type.
+
+// qa: edge.unlock-request.schema.success
+Deno.test(
+  "notify-unlock-request — success response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      tables: {
+        memberships: { selectList: { data: [{ user_id: "sa-1" }], error: null } },
+        audit_logs: { insert: { data: null, error: null } },
+      },
+      adminGetUserById: {
+        "sa-1": { data: { user: { id: "sa-1", email: "sa@vera.app" } }, error: null },
+      },
+    });
+    const res = await handler(makeRequest({
+      body: {
+        type: "request_submitted",
+        request_id: "r-schema-success",
+        period_name: "Spring",
+        organization_name: "Org",
+      },
+    }));
+    assertEquals(res.status, 200);
+    const body = await readJson(res);
+    // Will throw with a precise message if a field changed shape.
+    SuccessResponseSchema.parse(body);
+  },
+);
+
+// qa: edge.unlock-request.schema.validation
+Deno.test(
+  "notify-unlock-request — 400 missing-field response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    const res = await handler(makeRequest({
+      body: { type: "request_submitted" }, // request_id missing
+    }));
+    assertEquals(res.status, 400);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  },
+);
+
+// qa: edge.unlock-request.schema.internal-error
+Deno.test(
+  "notify-unlock-request — 500 unhandled-exception response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    const req = new Request("http://localhost/fn", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{not valid json",
+    });
+    const res = await handler(req);
+    assertEquals(res.status, 500);
+    const body = await readJson(res);
+    InternalErrorResponseSchema.parse(body);
   },
 );

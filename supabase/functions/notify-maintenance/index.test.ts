@@ -7,6 +7,11 @@ import {
   setDefaultEnv,
 } from "../_test/harness.ts";
 import { resetMockConfig, setMockConfig } from "../_test/mock-supabase.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -282,3 +287,133 @@ Deno.test("notify-maintenance — response shape pins ok/sent/total/errors field
     assertEquals(Array.isArray(body.errors), true);
   }
 });
+
+// ── edge.schema namespace ──────────────────────────────────────────────────
+
+// qa: edge.schema.notify-maintenance.success
+Deno.test("notify-maintenance — schema.success pins ok/sent/total response shape on success", async () => {
+  const handler = await setup();
+  Deno.env.delete("RESEND_API_KEY");
+  setMockConfig({
+    rpc: { current_user_is_super_admin: { data: true, error: null } },
+    tables: {
+      memberships: {
+        selectList: {
+          data: [
+            {
+              user_id: "u1",
+              organization_id: "org1",
+              organizations: { id: "org1", name: "Test Org", status: "active" },
+            },
+          ],
+          error: null,
+        },
+      },
+    },
+    adminListUsers: {
+      data: { users: [{ id: "u1", email: "admin@test.com" }] },
+      error: null,
+    },
+  });
+  const res = await handler(makeRequest({ token: "super-jwt", body: {} }));
+  assertEquals(res.status, 200);
+  const body = await res.json() as { ok: boolean; sent: number; total: number };
+  assertEquals(typeof body.ok, "boolean");
+  assertEquals(body.ok, true);
+  assertEquals(typeof body.sent, "number");
+  assertEquals(typeof body.total, "number");
+  assertEquals(body.sent >= 0, true);
+  assertEquals(body.total >= 0, true);
+});
+
+// qa: edge.schema.notify-maintenance.internal-error
+Deno.test("notify-maintenance — schema.internal-error pins error field on listUsers failure", async () => {
+  const handler = await setup();
+  setMockConfig({
+    rpc: { current_user_is_super_admin: { data: true, error: null } },
+    tables: {
+      memberships: {
+        selectList: {
+          data: [
+            {
+              user_id: "u1",
+              organization_id: "org1",
+              organizations: { id: "org1", name: "Test Org", status: "active" },
+            },
+          ],
+          error: null,
+        },
+      },
+    },
+    adminListUsers: { data: null, error: { message: "auth unavailable" } },
+  });
+  const res = await handler(makeRequest({ token: "super-jwt", body: {} }));
+  assertEquals(res.status, 500);
+  const body = await res.json() as Record<string, unknown>;
+  assertEquals(typeof body.error, "string");
+  assert(body.error && String(body.error).length > 0);
+});
+
+// qa: edge.notify-maintenance.schema.success
+Deno.test(
+  "notify-maintenance — 200 success response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    Deno.env.delete("RESEND_API_KEY");
+    setMockConfig({
+      rpc: { current_user_is_super_admin: { data: true, error: null } },
+      tables: {
+        memberships: {
+          selectList: {
+            data: [
+              {
+                user_id: "u1",
+                organization_id: "org1",
+                organizations: { id: "org1", name: "Test Org", status: "active" },
+              },
+            ],
+            error: null,
+          },
+        },
+      },
+      adminListUsers: {
+        data: { users: [{ id: "u1", email: "admin@test.com" }] },
+        error: null,
+      },
+    });
+    const res = await handler(makeRequest({ token: "super-jwt", body: {} }));
+    assertEquals(res.status, 200);
+    const body = await readJson(res);
+    SuccessResponseSchema.parse(body);
+  }
+);
+
+// qa: edge.notify-maintenance.schema.validation
+Deno.test(
+  "notify-maintenance — 401 missing-token response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    const res = await handler(makeRequest({ body: {} }));
+    assertEquals(res.status, 401);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  }
+);
+
+// qa: edge.notify-maintenance.schema.internal-error
+Deno.test(
+  "notify-maintenance — 500 members-fetch-error response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      rpc: { current_user_is_super_admin: { data: true, error: null } },
+      tables: {
+        memberships: { selectList: { data: null, error: { message: "fetch failed" } } },
+      },
+    });
+    const res = await handler(makeRequest({ token: "super-jwt", body: {} }));
+    assertEquals(res.status, 500);
+    const body = await readJson(res);
+    InternalErrorResponseSchema.parse(body);
+  }
+);

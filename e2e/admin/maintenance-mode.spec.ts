@@ -32,7 +32,7 @@ test.describe("maintenance mode", () => {
   test.afterAll(async () => {
     const { error } = await adminClient
       .from("maintenance_mode")
-      .update({ is_active: false, end_time: null })
+      .update({ is_active: false, mode: null, message: null, start_time: null, end_time: null })
       .eq("id", 1);
     if (error) console.error("Failed to reset maintenance after tests:", error);
   });

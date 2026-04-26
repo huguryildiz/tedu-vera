@@ -117,3 +117,56 @@ export function readXLSX(filePath: string): { headers: string[]; rows: Record<st
 
   return { headers, rows };
 }
+
+/**
+ * Per-sheet 2D-array view of an XLSX workbook.
+ *
+ * `rows` preserves the original sheet layout cell-by-cell — row 0 is the
+ * literal first row of the sheet (e.g. a title row in analytics exports), not
+ * a header row. Use this when sheets have title/note/blank rows above the
+ * actual headers (analyticsExport's addTableSheet emits
+ * `[title], [note], [], headers, ...rows`).
+ *
+ * `cell(ref)` returns the raw `.v` value at any A1-style cell reference (e.g.
+ * "C5") — the escape hatch for sheets where sheet_to_json's heuristics break
+ * on merged cells, multi-section layouts, or non-standard header positions.
+ */
+export interface SheetView {
+  rows: unknown[][];
+  cell(ref: string): unknown;
+}
+
+export type MultiSheetXLSX = Record<string, SheetView>;
+
+/**
+ * Read every sheet of an XLSX file as a 2D array of raw values.
+ * Returns an object keyed by sheet name. Useful for analytics exports where
+ * each chart section emits its own sheet and the first row is a title, not
+ * headers.
+ */
+export function readXLSXAllSheets(filePath: string): MultiSheetXLSX {
+  const XLSX = _require("xlsx-js-style") as typeof import("xlsx-js-style");
+  const wb = XLSX.readFile(path.resolve(filePath));
+  const out: MultiSheetXLSX = {};
+  for (const name of wb.SheetNames) {
+    const ws = wb.Sheets[name];
+    const rows = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, defval: null });
+    out[name] = {
+      rows,
+      cell: (ref: string) => ws[ref]?.v,
+    };
+  }
+  return out;
+}
+
+/**
+ * Read a single cell value by A1-style coordinate from a specific sheet.
+ * Returns `undefined` if the sheet or cell is missing.
+ */
+export function cellAt(filePath: string, sheetName: string, cellRef: string): unknown {
+  const XLSX = _require("xlsx-js-style") as typeof import("xlsx-js-style");
+  const wb = XLSX.readFile(path.resolve(filePath));
+  const ws = wb.Sheets[sheetName];
+  if (!ws) return undefined;
+  return ws[cellRef]?.v;
+}

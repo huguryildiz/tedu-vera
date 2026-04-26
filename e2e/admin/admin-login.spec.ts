@@ -35,4 +35,22 @@ test.describe("admin login", () => {
     await login.expectErrorMessage(/invalid email or password/i);
     await expect(page).toHaveURL(/\/login(\?|$)/);
   });
+
+  test("repeated wrong password — error shown on each attempt, page recovers for correct login", async ({ page }) => {
+    const login = new LoginPom(page);
+    await login.goto();
+
+    // 3 failed attempts — verify error shown each time and the page stays
+    // mounted on /login. Guard message regex against Supabase rate-limiting.
+    for (let i = 0; i < 3; i++) {
+      await login.signIn(EMAIL, `completely-wrong-pwd-${i}`);
+      await login.expectErrorMessage(/invalid email or password|too many requests/i);
+      await expect(page).toHaveURL(/\/login(\?|$)/);
+    }
+
+    // Recovery: correct credentials should still work after repeated failures.
+    await login.signIn(EMAIL, PASSWORD);
+    const shell = new AdminShellPom(page);
+    await shell.expectOnDashboard();
+  });
 });

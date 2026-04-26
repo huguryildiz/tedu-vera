@@ -7,6 +7,11 @@ import {
   setDefaultEnv,
 } from "../_test/harness.ts";
 import { resetMockConfig, setMockConfig } from "../_test/mock-supabase.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -238,3 +243,78 @@ Deno.test("email-verification-confirm — token mark-consumed error returns 500"
   assertEquals(body.error, "token update failed");
   assertEquals(typeof body.error, "string");
 });
+
+// qa: edge.email-verification-confirm.schema.success
+Deno.test(
+  "email-verification-confirm — 200 success response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      tables: {
+        email_verification_tokens: {
+          selectMaybeSingle: {
+            data: {
+              token: "11111111-1111-1111-1111-111111111111",
+              user_id: "user-1",
+              email: "a@b.com",
+              expires_at: new Date(Date.now() + 3600_000).toISOString(),
+              consumed_at: null,
+            },
+            error: null,
+          },
+          update: { data: null, error: null },
+        },
+        profiles: {
+          update: { data: null, error: null },
+        },
+      },
+    });
+    const res = await handler(makeRequest({ body: { token: "11111111-1111-1111-1111-111111111111" } }));
+    assertEquals(res.status, 200);
+    const body = await readJson(res);
+    SuccessResponseSchema.parse(body);
+  },
+);
+
+// qa: edge.email-verification-confirm.schema.validation
+Deno.test(
+  "email-verification-confirm — 400 missing-token response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    const res = await handler(makeRequest({ body: {} }));
+    assertEquals(res.status, 400);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  },
+);
+
+// qa: edge.email-verification-confirm.schema.internal-error
+Deno.test(
+  "email-verification-confirm — 500 unhandled-exception response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      tables: {
+        email_verification_tokens: {
+          selectMaybeSingle: {
+            data: {
+              token: "11111111-1111-1111-1111-111111111111",
+              user_id: "user-1",
+              email: "a@b.com",
+              expires_at: new Date(Date.now() + 3600_000).toISOString(),
+              consumed_at: null,
+            },
+            error: null,
+          },
+        },
+        profiles: {
+          update: { data: null, error: { message: "profile update failed" } },
+        },
+      },
+    });
+    const res = await handler(makeRequest({ body: { token: "11111111-1111-1111-1111-111111111111" } }));
+    assertEquals(res.status, 500);
+    const body = await readJson(res);
+    InternalErrorResponseSchema.parse(body);
+  },
+);

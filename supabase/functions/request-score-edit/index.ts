@@ -16,6 +16,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getSuperAdminEmails, shouldCcOn } from "../_shared/super-admin-cc.ts";
 import { writeEdgeAuditLog } from "../_shared/audit-log.ts";
+import { RequestPayloadSchema, type RequestPayload } from "./schema.ts";
 
 interface Payload {
   periodId: string;
@@ -235,14 +236,18 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const payload: Payload = await req.json();
+    const body = await req.json();
 
-    if (!payload.periodId || !payload.jurorName || !payload.sessionToken) {
+    // Schema validation
+    const parsed = RequestPayloadSchema.safeParse(body);
+    if (!parsed.success) {
+      const errorMessages = parsed.error.issues.map((i) => i.message).join(", ");
       return new Response(
-        JSON.stringify({ error: "Missing required fields: periodId, jurorName, sessionToken" }),
+        JSON.stringify({ error: errorMessages }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+    const payload: RequestPayload = parsed.data;
 
     const client = getServiceClient();
     if (!client) {

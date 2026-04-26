@@ -14,6 +14,7 @@
 
 import { writeEdgeAuditLog } from "../_shared/audit-log.ts";
 import { requireAdminCaller } from "../_shared/admin-auth.ts";
+import { RequestPayloadSchema, type RequestPayload } from "./schema.ts";
 
 interface Payload {
   recipientEmail: string;
@@ -130,14 +131,18 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const payload: Payload = await req.json();
+    const body = await req.json();
 
-    if (!payload.recipientEmail || !payload.tokenUrl) {
+    // Schema validation
+    const parsed = RequestPayloadSchema.safeParse(body);
+    if (!parsed.success) {
+      const errorMessages = parsed.error.issues.map((i) => i.message).join(", ");
       return new Response(
-        JSON.stringify({ error: "Missing required fields: recipientEmail, tokenUrl" }),
+        JSON.stringify({ error: errorMessages }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+    const payload: RequestPayload = parsed.data;
 
     const auth = await requireAdminCaller(req, payload.organizationId || null);
     if (!auth.ok) {
@@ -171,7 +176,7 @@ Deno.serve(async (req: Request) => {
       : "";
 
     const subject = `Your evaluation access link${periodLabel}`;
-    const body = [
+    const textBody = [
       `You have been invited to participate in a jury evaluation.`,
       payload.organizationInstitution ? `Organization: ${payload.organizationInstitution}` : "",
       payload.periodName ? `Period: ${payload.periodName}` : "",
@@ -209,7 +214,7 @@ Deno.serve(async (req: Request) => {
     let sendError = "";
 
     if (resendKey && payload.recipientEmail) {
-      const result = await sendViaResend(resendKey, payload.recipientEmail, subject, body, html, fromAddr);
+      const result = await sendViaResend(resendKey, payload.recipientEmail, subject, textBody, html, fromAddr);
       sent = result.ok;
       sendError = result.error || "";
     } else {

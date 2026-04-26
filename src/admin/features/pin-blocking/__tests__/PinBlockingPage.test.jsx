@@ -24,19 +24,18 @@ vi.mock("@/admin/shared/useAdminContext", () => ({
   }),
 }));
 
-vi.mock("../usePinBlocking", () => ({
-  usePinBlocking: () => ({
-    lockedJurors: [],
-    todayLockEvents: 0,
-    loading: false,
-    error: "",
-    loadLockedJurors: vi.fn(),
-    handleUnlock: vi.fn(),
-    handleUnlockAll: vi.fn(),
-    unlockModal: null,
-    closeUnlockModal: vi.fn(),
-  }),
+vi.mock("@/shared/api", () => ({
+  listLockedJurors: vi.fn().mockResolvedValue([]),
+  countTodayLockEvents: vi.fn().mockResolvedValue(0),
+  unlockJurorPin: vi.fn(),
+  listJurorsSummary: vi.fn().mockResolvedValue([]),
 }));
+
+vi.mock("@/shared/hooks/useToast", () => ({
+  useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }),
+}));
+
+vi.mock("../PinBlockingPage.css", () => ({}));
 
 vi.mock("@/shared/hooks/useCardSelection", () => ({
   default: () => ({ selectedId: null, select: vi.fn(), clear: vi.fn() }),

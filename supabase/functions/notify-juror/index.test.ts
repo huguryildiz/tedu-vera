@@ -15,6 +15,11 @@ import {
   stubFetch,
 } from "../_test/harness.ts";
 import { resetMockConfig, setMockConfig } from "../_test/mock-supabase.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -328,3 +333,82 @@ Deno.test("notify-juror — Resend non-2xx (429) → 500 sent=false", async () =
     Deno.env.delete("RESEND_API_KEY");
   }
 });
+
+// ── edge.schema namespace ──────────────────────────────────────────────────
+
+// qa: edge.schema.notify-juror.success
+Deno.test("notify-juror — schema.success pins ok/sent response shape on success", async () => {
+  const handler = await setup();
+  Deno.env.set("RESEND_API_KEY", "re_test");
+  mockFullPath();
+
+  const restore = stubFetch(async () => new Response(JSON.stringify({ id: "email-ok" }), { status: 200 }));
+  try {
+    const res = await handler(makeRequest({ token: "jwt", body: { juror_id: "j-1", period_id: "p-1" } }));
+    assertEquals(res.status, 200);
+    const body = await res.json() as Record<string, unknown>;
+    assertEquals(typeof body.ok, "boolean");
+    assertEquals(body.ok, true);
+    assertEquals(typeof body.sent, "boolean");
+    assertEquals(body.sent, true);
+  } finally {
+    restore();
+    Deno.env.delete("RESEND_API_KEY");
+  }
+});
+
+// qa: edge.notify-juror.schema.success
+Deno.test(
+  "notify-juror — 200 success response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    Deno.env.set("RESEND_API_KEY", "re_test");
+    mockFullPath();
+    const restoreFetch = stubFetch(async () => new Response(JSON.stringify({ id: "email-ok" }), { status: 200 }));
+    try {
+      const res = await handler(makeRequest({ token: "jwt", body: { juror_id: "j-1", period_id: "p-1" } }));
+      assertEquals(res.status, 200);
+      const body = await readJson(res);
+      SuccessResponseSchema.parse(body);
+    } finally {
+      restoreFetch();
+      Deno.env.delete("RESEND_API_KEY");
+    }
+  }
+);
+
+// qa: edge.notify-juror.schema.validation
+Deno.test(
+  "notify-juror — 400 missing-juror-id response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    mockValidAuth();
+    const res = await handler(makeRequest({
+      token: "tok",
+      body: { period_id: "p-1" },
+    }));
+    assertEquals(res.status, 400);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  }
+);
+
+// qa: edge.notify-juror.schema.internal-error
+Deno.test(
+  "notify-juror — 500 unhandled-exception response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    Deno.env.set("RESEND_API_KEY", "re_test");
+    mockFullPath();
+    const restoreFetch = stubFetch(async () => new Response("error", { status: 500 }));
+    try {
+      const res = await handler(makeRequest({ token: "jwt", body: { juror_id: "j-1", period_id: "p-1" } }));
+      assertEquals(res.status, 500);
+      const body = await readJson(res);
+      InternalErrorResponseSchema.parse(body);
+    } finally {
+      restoreFetch();
+      Deno.env.delete("RESEND_API_KEY");
+    }
+  }
+);

@@ -1,14 +1,31 @@
 import { test, expect } from "@playwright/test";
 
 // Demo routes auto-login via DemoAdminLoader — no credentials needed.
+// Public routes navigate directly with no auth step.
 // E2E_BASE_URL should point to a running VERA instance (demo env or localhost).
 const APP_BASE = process.env.E2E_BASE_URL || "http://localhost:5174";
 
-const ROUTES = [
-  { path: "/demo/admin/rankings", name: "rankings" },
-  { path: "/demo/admin/periods", name: "periods" },
-  { path: "/demo/admin/projects", name: "projects" },
-  { path: "/demo/admin/jurors", name: "jurors" },
+type RouteEntry =
+  | { path: string; name: string; type: "demo" }
+  | { path: string; name: string; type: "public"; waitFor: string };
+
+const ROUTES: RouteEntry[] = [
+  // Demo auto-login routes (DemoAdminLoader sets auth then navigates to target)
+  { path: "/demo/admin/rankings",  name: "rankings",       type: "demo" },
+  { path: "/demo/admin/periods",   name: "periods",        type: "demo" },
+  { path: "/demo/admin/projects",  name: "projects",       type: "demo" },
+  { path: "/demo/admin/jurors",    name: "jurors",         type: "demo" },
+
+  // P2-6 key screens — demo admin
+  { path: "/demo/admin/overview",  name: "admin-overview", type: "demo" },
+  // /demo/jury/evaluate requires an active jury session; snapshots whatever
+  // state the demo env serves (token gate or score grid).
+  { path: "/demo/jury/evaluate",   name: "score-grid",     type: "demo" },
+
+  // P2-6 key screens — public (no auth)
+  { path: "/",      name: "landing",    type: "public", waitFor: ".landing-nav" },
+  { path: "/login", name: "login",      type: "public", waitFor: "form" },
+  { path: "/eval",  name: "jury-gate",  type: "public", waitFor: ".eval-entry, form, [data-testid]" },
 ];
 
 const VIEWPORTS = [
@@ -33,24 +50,31 @@ for (const route of ROUTES) {
           } catch {}
         });
 
-        // Step 1 — trigger auto-login. Visiting /demo (or any /demo/admin/*
-        // route while logged out) shows DemoAdminLoader, which signs in with
-        // the demo admin and then `window.location.replace("/demo/admin")`.
-        // We MUST land on /demo/admin first because the loader hardcodes that
-        // redirect target — going directly to the deep link drops the path.
-        await page.goto(`${APP_BASE}/demo/admin`);
-        await expect(page.locator('[data-testid="admin-shell-root"]')).toBeVisible({
-          timeout: 30_000,
-        });
-
-        // Step 2 — auth session is now in storage; navigate to the actual
-        // route. AdminRouteLayout renders directly without bouncing through
-        // DemoAdminLoader.
-        if (route.path !== "/demo/admin") {
-          await page.goto(`${APP_BASE}${route.path}`);
+        if (route.type === "demo") {
+          // Step 1 — trigger auto-login. DemoAdminLoader signs in with the
+          // demo admin and then window.location.replace("/demo/admin").
+          // We MUST land on /demo/admin first because the loader hardcodes
+          // that redirect target — going directly to a deep link drops the path.
+          await page.goto(`${APP_BASE}/demo/admin`);
           await expect(page.locator('[data-testid="admin-shell-root"]')).toBeVisible({
-            timeout: 20_000,
+            timeout: 30_000,
           });
+
+          // Step 2 — auth session is now in storage; navigate to the target.
+          if (route.path !== "/demo/admin") {
+            await page.goto(`${APP_BASE}${route.path}`);
+            // Admin routes show the shell; jury/public demo routes don't —
+            // just wait for networkidle below.
+            if (route.path.startsWith("/demo/admin/")) {
+              await expect(page.locator('[data-testid="admin-shell-root"]')).toBeVisible({
+                timeout: 20_000,
+              });
+            }
+          }
+        } else {
+          // Public route — navigate directly, no auth needed.
+          await page.goto(`${APP_BASE}${route.path}`);
+          await page.waitForSelector(route.waitFor, { timeout: 20_000 });
         }
 
         // Wait for data to load (no loading spinner visible)

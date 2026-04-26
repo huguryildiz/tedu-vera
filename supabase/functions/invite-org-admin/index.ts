@@ -17,6 +17,12 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { writeEdgeAuditLog } from "../_shared/audit-log.ts";
+import {
+  RequestPayloadSchema,
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -182,19 +188,18 @@ Deno.serve(async (req: Request) => {
     const token = authHeader.replace(/^Bearer\s+/i, "").trim();
     if (!token) return json(401, { error: "Missing bearer token" });
 
-    const { org_id, email, approval_flow } = await req.json();
+    const payload = await req.json();
+    const validation = RequestPayloadSchema.safeParse(payload);
+    if (!validation.success) {
+      const errorMsg = validation.error.issues[0]?.message || "Invalid request payload";
+      return json(400, { error: errorMsg });
+    }
+    const { org_id, email, approval_flow } = validation.data;
     const normalizedEmail = String(email || "").trim().toLowerCase();
     // When called from an approval flow, create membership as 'active' directly
     // so the admin panel reflects the approval immediately without waiting for
     // the user to click the invite link.
     const initialMembershipStatus = approval_flow ? "active" : "invited";
-
-    if (!org_id || typeof org_id !== "string") {
-      return json(400, { error: "Missing required field: org_id" });
-    }
-    if (!normalizedEmail || !normalizedEmail.includes("@")) {
-      return json(400, { error: "A valid email is required." });
-    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";

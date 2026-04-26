@@ -7,6 +7,11 @@ import {
   stubFetch,
 } from "../_test/harness.ts";
 import { resetMockConfig, setMockConfig } from "../_test/mock-supabase.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -121,3 +126,70 @@ Deno.test("send-export-report — super_admin, no RESEND_API_KEY returns 200 sen
     restoreFetch();
   }
 });
+
+// qa: edge.send-export-report.schema.success
+Deno.test(
+  "send-export-report — 200 success response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      authGetUser: { data: { user: { id: "user-1" } }, error: null },
+      tables: {
+        memberships: { selectMaybeSingle: { data: { user_id: "user-1" }, error: null } },
+        audit_logs: { insert: { data: null, error: null } },
+      },
+    });
+    Deno.env.set("RESEND_API_KEY", "re_test");
+    const restoreFetch = stubFetch(async () =>
+      new Response(JSON.stringify({ id: "email-ok" }), { status: 200 })
+    );
+    try {
+      const res = await handler(makeRequest({ token: "jwt", body: validBody }));
+      assertEquals(res.status, 200);
+      const body = await readJson(res);
+      SuccessResponseSchema.parse(body);
+    } finally {
+      restoreFetch();
+      Deno.env.delete("RESEND_API_KEY");
+    }
+  }
+);
+
+// qa: edge.send-export-report.schema.validation
+Deno.test(
+  "send-export-report — 400 missing-recipients response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    const res = await handler(
+      makeRequest({
+        token: "jwt",
+        body: {
+          fileName: "report.xlsx",
+          fileBase64: "base64data==",
+          mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        },
+      })
+    );
+    assertEquals(res.status, 400);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  }
+);
+
+// qa: edge.send-export-report.schema.internal-error
+Deno.test(
+  "send-export-report — 500 unhandled-exception response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    // Invalid JSON body triggers outer catch → 500 { ok: false, error: "..." }
+    const req = new Request("http://localhost/fn", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{invalid json",
+    });
+    const res = await handler(req);
+    assertEquals(res.status, 500);
+    const body = await readJson(res);
+    InternalErrorResponseSchema.parse(body);
+  }
+);

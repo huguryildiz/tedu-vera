@@ -15,6 +15,11 @@ import {
   readJson,
   stubFetch,
 } from "../_test/harness.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -269,6 +274,65 @@ Deno.test(
       assertEquals(typeof body.ok, "boolean");
       assertEquals(typeof body.error, "string");
       assert(body.error.includes("ECONNRESET"));
+    } finally {
+      restore();
+      Deno.env.delete("AUDIT_SINK_WEBHOOK_URL");
+    }
+  },
+);
+
+// qa: edge.audit-log-sink.schema.success
+Deno.test(
+  "audit-log-sink — 200 skipped response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    const res = await handler(makeRequest({
+      body: { type: "UPDATE", table: "audit_logs", record: { id: 1 } },
+    }));
+    assertEquals(res.status, 200);
+    const body = await readJson(res);
+    SuccessResponseSchema.parse(body);
+  },
+);
+
+// qa: edge.audit-log-sink.schema.validation
+Deno.test(
+  "audit-log-sink — 200 wrong-secret response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    Deno.env.set("WEBHOOK_HMAC_SECRET", "shared-secret");
+    Deno.env.set("AUDIT_SINK_WEBHOOK_URL", "https://sink.example/ingest");
+    try {
+      const res = await handler(makeRequest({
+        body: { type: "INSERT", table: "audit_logs", record: { id: 1 } },
+        headers: { "x-webhook-secret": "wrong" },
+      }));
+      assertEquals(res.status, 200);
+      const body = await readJson(res);
+      ValidationErrorResponseSchema.parse(body);
+    } finally {
+      Deno.env.delete("WEBHOOK_HMAC_SECRET");
+      Deno.env.delete("AUDIT_SINK_WEBHOOK_URL");
+    }
+  },
+);
+
+// qa: edge.audit-log-sink.schema.internal-error
+Deno.test(
+  "audit-log-sink — 200 network-error response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    Deno.env.set("AUDIT_SINK_WEBHOOK_URL", "https://sink.example/ingest");
+    const restore = stubFetch(async () => {
+      throw new Error("ECONNRESET");
+    });
+    try {
+      const res = await handler(makeRequest({
+        body: { type: "INSERT", table: "audit_logs", record: { id: 1 } },
+      }));
+      assertEquals(res.status, 200);
+      const body = await readJson(res);
+      InternalErrorResponseSchema.parse(body);
     } finally {
       restore();
       Deno.env.delete("AUDIT_SINK_WEBHOOK_URL");

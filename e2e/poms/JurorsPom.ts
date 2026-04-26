@@ -93,8 +93,12 @@ export class JurorsPom extends BasePom {
     await this.deleteConfirm().click();
   }
 
+  jurorRow(name: string): Locator {
+    return this.page.locator("tr").filter({ hasText: name }).first();
+  }
+
   async expectJurorRowVisible(name: string): Promise<void> {
-    await expect(this.page.locator("tr").filter({ hasText: name }).first()).toBeVisible();
+    await expect(this.jurorRow(name)).toBeVisible();
   }
 
   async expectJurorRowGone(name: string): Promise<void> {

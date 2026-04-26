@@ -1,43 +1,81 @@
 # Pending pgTAP contract tests
 
-These RPC contract tests are temporarily excluded from CI's `pg_prove` run
-because they fail in CI's migration-007 cap or have logic bugs that need
-deeper investigation than a quick patch can deliver.
+This directory holds RPC contract tests that are temporarily excluded from
+CI's `pg_prove` run. The drift sentinel `scripts/check-rpc-tests-exist.mjs`
+explicitly excludes `_pending/` from its coverage scan, so files here do
+**not** satisfy the gate.
 
-## Why excluded
+## Current state
 
-| File | Root cause |
-|---|---|
-| `admin_verify_audit_chain.sql` | RPC lives in migration 009 (`009_audit.sql`); CI caps at 007. The `\gset` + `\if` skip pattern produced exit code 3 even with `plan(0)`. Need to either: (a) bump CI migration cap to 009 with `pg_cron`/`pg_net` shims (per `docs/superpowers/plans/test-hardening/REMAINING-WORK.md` A.3) or (b) use `skip_all('migration 009 not applied')` from pgTAP. |
-| `admin_reject_application.sql` | planned 10 tests but only 8 ran; test 7 fails. Likely RPC error-path assertion mismatch + abort on test 9 setup. |
-| `admin_reject_join_request.sql` | Test 4 fails, then abort. Setup in test 5 likely hits FK / RLS issue. |
-| `admin_save_period_criteria.sql` | Tests 1-5 fail. Probable signature mismatch between assertion ARRAY and actual RPC arg types. |
-| `admin_update_organization.sql` | Tests 1-3 fail (signature/return-type pinning), then abort. Same likely root cause. |
-| `admin_upsert_period_criterion_outcome_map.sql` | All 7 tests fail. Need to read the RPC body, then realign every assertion. |
-| `juror_toggle_edit_mode.sql` | Test 7 (success path) fails — `INSERT INTO juror_period_auth ... ON CONFLICT (juror_id, period_id) DO UPDATE SET final_submitted_at = now()` runs as `authenticated` (after `become_a()`); RLS may block. |
-| `org_admin_remove_member.sql` | Aborts after test 4 — `INSERT INTO memberships` references non-seeded user `aaaa-...0002` (only `0001` exists in seed_two_orgs). |
-| `submit_jury_feedback.sql` | Aborts after test 5 — test 6 INSERT into `juror_period_auth (juror_id, period_id, status, session_token_hash)` may have a column that doesn't exist (`status` column may not be there) or NOT NULL violation. |
+**Empty.** All 9 files quarantined in commit `185df0b6` were re-promoted in
+window W3 (test reclassification plan § 4.3). See
+`docs/superpowers/plans/test-reclassification/implementation_reports/session-NN-W3-quarantine-repromote.md`
+for the per-file fix log.
 
-## How to fix
+## When to put a file here
 
-For each file, the recipe is:
+Use `_pending/` only when a contract is genuinely blocked — e.g. the RPC's
+behavior is intentionally in flux during a refactor and rewriting the test
+now would just churn. For tests that fail because of test-side mismatches
+(arg names, error envelope shape, missing seed data), fix the test in
+place rather than quarantining.
 
-1. Read the RPC body in `sql/migrations/00{5,6a,6b}_*.sql`. Identify the exact error-code priority and which fields are required.
-2. Verify the seeded UUIDs match `sql/tests/_helpers.sql`. Specifically:
-   - Admin A user id = `aaaa0000-0000-4000-8000-000000000001` (NOT `0002`)
-   - Admin B = `bbbb0000-0000-4000-8000-000000000002`
-   - Super = `eeee0000-0000-4000-8000-00000000000e`
+## Quarantine recipe
+
+If you must quarantine:
+
+1. Move the file from `sql/tests/rpcs/contracts/<file>.sql` into this dir.
+2. Add a row to the table below describing the root cause + fix recipe.
+3. Open a follow-up issue and reference it in the row.
+4. Schedule re-promotion as soon as the upstream change lands.
+
+| File | Root cause | Fix recipe |
+|---|---|---|
+| _(none)_ | — | — |
+
+## Re-promotion checklist
+
+When fixing a quarantined test:
+
+1. Read the current RPC body in `sql/migrations/00{5,6a,6b,9}_*.sql` to
+   confirm the actual error codes, return shape, and pre-conditions.
+2. Verify seed UUIDs against `sql/tests/_helpers.sql`:
+   - Admin A user id = `aaaa0000-0000-4000-8000-000000000001`
+   - Admin B user id = `bbbb0000-0000-4000-8000-000000000002`
+   - Super       = `eeee0000-0000-4000-8000-00000000000e`
    - Juror A (after `seed_jurors`) = `55550000-0000-4000-8000-000000000001`
-3. Move all `INSERT`s for privileged tables (`memberships`, `jurors`, `entry_tokens`, `juror_period_auth`) BEFORE any `become_*()` call so they run as postgres without RLS interference.
-4. Verify the test plan(N) count matches the actual number of pgTAP assertions.
-5. Run locally with a postgres-15 + pgTAP setup (Docker image `bitnami/postgresql:15` plus `pgtap` extension) before pushing.
+3. Move all `INSERT`s for privileged tables (`memberships`, `jurors`,
+   `entry_tokens`, `juror_period_auth`) BEFORE any `become_*()` call so they
+   run as postgres without RLS interference.
+4. For RPCs that live in migration 009 (audit module): CI caps at 007,
+   so the test must skip cleanly when the function is absent. The
+   canonical pattern is:
 
-## Re-enabling
+   ```sql
+   CREATE TEMP TABLE _ctx ON COMMIT DROP AS
+   SELECT EXISTS (
+     SELECT 1 FROM pg_proc p
+     JOIN pg_namespace n ON n.oid = p.pronamespace
+     WHERE n.nspname = 'public' AND p.proname = '<rpc_name>'
+   ) AS rpc_exists;
 
-When fixed, move the file back to `sql/tests/rpcs/contracts/` and verify:
+   SELECT skip('migration 009 not applied — <rpc_name> missing', N)
+   FROM _ctx WHERE NOT rpc_exists;
 
-```bash
-pg_prove --verbose sql/tests/rpcs/contracts/<file>.sql
-```
+   -- Each assertion gates on rpc_exists:
+   SELECT has_function(...) FROM _ctx WHERE rpc_exists;
+   SELECT pgtap_test.become_a() FROM _ctx WHERE rpc_exists;
+   SELECT throws_ok(...) FROM _ctx WHERE rpc_exists;
+   ```
 
-Both locally and via CI.
+   Avoid `\if` / `\gset` psql meta-commands — they previously produced
+   `pg_prove` exit code 3 even with `plan(0)`.
+5. Verify the test plan(N) matches the actual assertion count.
+6. Move file back to `sql/tests/rpcs/contracts/` and run:
+
+   ```bash
+   pg_prove --verbose sql/tests/rpcs/contracts/<file>.sql
+   ```
+
+   …both locally and via CI. The file will then be picked up by
+   `check:rpc-tests`.

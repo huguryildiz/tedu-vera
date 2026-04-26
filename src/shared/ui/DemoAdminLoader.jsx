@@ -60,12 +60,16 @@ const STEPS = [
 ];
 
 async function fetchDemoStats() {
-  const [orgsRes, projectsRes, jurorsRes, periodsRes] = await Promise.all([
+  const queries = Promise.all([
     supabase.from("organizations").select("*", { count: "exact", head: true }),
     supabase.from("projects").select("*", { count: "exact", head: true }),
     supabase.from("jurors").select("*", { count: "exact", head: true }),
     supabase.from("periods").select("*", { count: "exact", head: true }),
   ]);
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("timeout")), 7000),
+  );
+  const [orgsRes, projectsRes, jurorsRes, periodsRes] = await Promise.race([queries, timeout]);
   return {
     orgs: orgsRes.error ? null : orgsRes.count,
     projects: projectsRes.error ? null : projectsRes.count,

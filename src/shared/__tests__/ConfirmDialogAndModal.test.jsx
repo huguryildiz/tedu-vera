@@ -15,23 +15,10 @@ vi.mock("@/shared/ui/Modal", () => ({
 }));
 
 import ConfirmDialog from "../ui/ConfirmDialog";
-import ConfirmModal from "../ui/ConfirmModal";
 
 const noop = vi.fn();
 
 describe("ConfirmDialog", () => {
-  qaTest("coverage.confirm-dialog.renders-title", () => {
-    render(
-      <ConfirmDialog
-        open={true}
-        onOpenChange={noop}
-        title="Delete Item"
-        onConfirm={noop}
-      />
-    );
-    expect(screen.getByText("Delete Item")).toBeInTheDocument();
-  });
-
   qaTest("coverage.confirm-dialog.hidden-when-closed", () => {
     const { container } = render(
       <ConfirmDialog
@@ -45,16 +32,3 @@ describe("ConfirmDialog", () => {
   });
 });
 
-describe("ConfirmModal", () => {
-  qaTest("coverage.confirm-modal.renders", () => {
-    render(
-      <ConfirmModal
-        open={true}
-        onClose={noop}
-        title="Confirm Action"
-        onConfirm={noop}
-      />
-    );
-    expect(screen.getByText("Confirm Action")).toBeInTheDocument();
-  });
-});

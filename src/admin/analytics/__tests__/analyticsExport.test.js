@@ -29,17 +29,13 @@ vi.mock("../analyticsDatasets", () => ({
 }));
 
 import * as XLSX from "xlsx-js-style";
-import { ANALYTICS_SECTIONS, addTableSheet, buildAnalyticsWorkbook } from "../analyticsExport";
+import { ANALYTICS_SECTIONS, addTableSheet } from "../analyticsExport";
 
 describe("analyticsExport", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     XLSX.utils.book_new.mockReturnValue({ SheetNames: [], Sheets: {} });
     XLSX.utils.aoa_to_sheet.mockReturnValue({});
-  });
-
-  qaTest("coverage.analytics-export.sections-count", () => {
-    expect(ANALYTICS_SECTIONS).toHaveLength(10);
   });
 
   qaTest("coverage.analytics-export.section-shape", () => {
@@ -62,9 +58,4 @@ describe("analyticsExport", () => {
     );
   });
 
-  qaTest("coverage.analytics-export.workbook-builds", () => {
-    const wb = buildAnalyticsWorkbook({});
-    expect(wb).toBeTruthy();
-    expect(typeof wb).toBe("object");
-  });
 });

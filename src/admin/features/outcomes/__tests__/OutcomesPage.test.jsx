@@ -30,24 +30,6 @@ vi.mock("@/shared/hooks/useToast", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }),
 }));
 
-vi.mock("@/admin/shared/usePeriodOutcomes", () => ({
-  usePeriodOutcomes: () => ({
-    outcomes: [],
-    criteria: [],
-    mappings: [],
-    savedOutcomesCount: 0,
-    savedMappingsCount: 0,
-    pendingFrameworkImport: null,
-    pendingFrameworkName: undefined,
-    loading: false,
-    error: null,
-    save: vi.fn(),
-    isDirty: false,
-    addMapping: vi.fn(),
-    removeMapping: vi.fn(),
-  }),
-}));
-
 vi.mock("@/shared/hooks/useCardSelection", () => ({
   default: () => ({ selectedId: null, select: vi.fn(), clear: vi.fn() }),
 }));
@@ -62,6 +44,16 @@ vi.mock("@/shared/api", () => ({
   assignFrameworkToPeriod: vi.fn(),
   unassignPeriodFramework: vi.fn(),
   listFrameworks: vi.fn().mockResolvedValue(EMPTY_FRAMEWORKS),
+  listPeriodOutcomes: vi.fn().mockResolvedValue([]),
+  listPeriodCriteriaForMapping: vi.fn().mockResolvedValue([]),
+  listPeriodCriterionOutcomeMaps: vi.fn().mockResolvedValue([]),
+  createPeriodOutcome: vi.fn(),
+  updatePeriodOutcome: vi.fn(),
+  deletePeriodOutcome: vi.fn(),
+  upsertPeriodCriterionOutcomeMap: vi.fn(),
+  deletePeriodCriterionOutcomeMap: vi.fn(),
+  createFramework: vi.fn(),
+  freezePeriodSnapshot: vi.fn(),
 }));
 
 vi.mock("@/admin/features/outcomes/useOutcomesExport", () => ({

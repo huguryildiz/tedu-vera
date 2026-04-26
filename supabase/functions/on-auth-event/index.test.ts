@@ -7,6 +7,11 @@ import {
   setDefaultEnv,
 } from "../_test/harness.ts";
 import { resetMockConfig, setMockConfig } from "../_test/mock-supabase.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -193,3 +198,66 @@ Deno.test("on-auth-event — successful INSERT returns 200 with expected respons
   assertEquals(body.action, "auth.admin.login.success");
   assertEquals(body.skipped, undefined);
 });
+
+// qa: edge.on-auth-event.schema.success
+Deno.test("on-auth-event — success response parses against SuccessResponseSchema", async () => {
+  const handler = await setup();
+  setMockConfig({
+    tables: {
+      memberships: { selectSingle: { data: null, error: null } },
+      audit_logs: { insert: { data: null, error: null } },
+    },
+  });
+  const res = await handler(makeRequest({
+    body: {
+      type: "INSERT",
+      schema: "auth",
+      table: "sessions",
+      record: { user_id: "u1", id: "s1" },
+    },
+  }));
+  assertEquals(res.status, 200);
+  SuccessResponseSchema.parse(await readJson(res));
+});
+
+// qa: edge.on-auth-event.schema.validation
+Deno.test(
+  "on-auth-event — 200 invalid-JSON response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    const req = new Request("http://localhost/fn", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "not-json",
+    });
+    const res = await handler(req);
+    assertEquals(res.status, 200);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  },
+);
+
+// qa: edge.on-auth-event.schema.internal-error
+Deno.test(
+  "on-auth-event — 200 audit-insert-failure response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      tables: {
+        memberships: { selectSingle: { data: null, error: null } },
+        audit_logs: { insert: { data: null, error: { message: "audit insert failed" } } },
+      },
+    });
+    const res = await handler(makeRequest({
+      body: {
+        type: "INSERT",
+        schema: "auth",
+        table: "sessions",
+        record: { user_id: "u1", id: "s1" },
+      },
+    }));
+    assertEquals(res.status, 200);
+    const body = await readJson(res);
+    InternalErrorResponseSchema.parse(body);
+  },
+);

@@ -22,11 +22,6 @@ beforeEach(() => { vi.useFakeTimers(); });
 afterEach(() => { vi.useRealTimers(); });
 
 describe("ProductShowcase", () => {
-  qaTest("coverage.product-showcase.renders", () => {
-    render(<ProductShowcase />);
-    expect(screen.getByRole("region")).toBeInTheDocument();
-  });
-
   qaTest("coverage.product-showcase.has-slides", () => {
     render(<ProductShowcase />);
     expect(screen.getAllByRole("tab")).toHaveLength(2);

@@ -7,6 +7,11 @@ import {
   stubFetch,
 } from "../_test/harness.ts";
 import { resetMockConfig, setMockConfig } from "../_test/mock-supabase.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -117,3 +122,58 @@ Deno.test("send-juror-pin-email — Resend 429 → 200 sent=false", async () => 
     Deno.env.delete("RESEND_API_KEY");
   }
 });
+
+// qa: edge.send-juror-pin-email.schema.success
+Deno.test(
+  "send-juror-pin-email — 200 success response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    Deno.env.set("RESEND_API_KEY", "re_test");
+    mockSuperAdmin();
+    const restoreFetch = stubFetch(async () =>
+      new Response(JSON.stringify({ id: "email-ok" }), { status: 200 })
+    );
+    try {
+      const res = await handler(makeRequest({ token: "jwt", body: validBody }));
+      assertEquals(res.status, 200);
+      const body = await readJson(res);
+      SuccessResponseSchema.parse(body);
+    } finally {
+      restoreFetch();
+      Deno.env.delete("RESEND_API_KEY");
+    }
+  }
+);
+
+// qa: edge.send-juror-pin-email.schema.validation
+Deno.test(
+  "send-juror-pin-email — 400 missing-pin response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    const res = await handler(
+      makeRequest({
+        body: { recipientEmail: "juror@test.edu", jurorName: "Ali" },
+      })
+    );
+    assertEquals(res.status, 400);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  }
+);
+
+// qa: edge.send-juror-pin-email.schema.internal-error
+Deno.test(
+  "send-juror-pin-email — 500 unhandled-exception response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    const req = new Request("http://localhost/fn", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{invalid json",
+    });
+    const res = await handler(req);
+    assertEquals(res.status, 500);
+    const body = await readJson(res);
+    InternalErrorResponseSchema.parse(body);
+  }
+);

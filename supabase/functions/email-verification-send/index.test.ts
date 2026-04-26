@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert@^1.0.0";
+import { assert, assertEquals } from "jsr:@std/assert@^1.0.0";
 import {
   captureHandler,
   clearSupabaseEnv,
@@ -7,6 +7,11 @@ import {
   setDefaultEnv,
 } from "../_test/harness.ts";
 import { resetMockConfig, setMockConfig } from "../_test/mock-supabase.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -156,3 +161,104 @@ Deno.test("email-verification-send — response shape pinning: ok + optional alr
     assertEquals(allowedKeys.includes(key), true, `unexpected field in response: ${key}`);
   }
 });
+
+// ── edge.schema namespace ──────────────────────────────────────────────────
+
+// qa: edge.schema.email-verification-send.success
+Deno.test("email-verification-send — schema.success pins ok/alreadyVerified response shape", async () => {
+  const handler = await setup();
+  const validUser = { id: "user-1", email: "user@test.com" };
+  setMockConfig({
+    authGetUser: { data: { user: validUser }, error: null },
+    tables: {
+      profiles: { selectMaybeSingle: { data: { email_verified_at: null }, error: null } },
+      email_verification_tokens: {
+        selectMaybeSingle: { data: { token: "verify-tok-abc123" }, error: null },
+      },
+    },
+  });
+  const res = await handler(makeRequest({ token: "valid-jwt", body: {} }));
+  assertEquals(res.status, 200);
+  const body = await res.json() as Record<string, unknown>;
+  assertEquals(typeof body.ok, "boolean");
+  assertEquals(body.ok, true);
+  // alreadyVerified is optional; if present, must be boolean
+  if (body.alreadyVerified !== undefined) {
+    assertEquals(typeof body.alreadyVerified, "boolean");
+  }
+});
+
+// qa: edge.schema.email-verification-send.internal-error
+Deno.test("email-verification-send — schema.internal-error pins error field on failure", async () => {
+  const handler = await setup();
+  Deno.env.delete("RESEND_API_KEY");
+  setMockConfig({
+    authGetUser: { data: { user: { id: "user-1", email: "user@test.com" } as unknown as { id: string } }, error: null },
+    tables: {
+      profiles: { selectMaybeSingle: { data: { email_verified_at: null }, error: null } },
+      email_verification_tokens: {
+        selectMaybeSingle: { data: null, error: { message: "token not found" } },
+      },
+    },
+  });
+  const res = await handler(makeRequest({ token: "valid-jwt", body: {} }));
+  assertEquals(res.status, 500);
+  const body = await res.json() as Record<string, unknown>;
+  assertEquals(typeof body.error, "string");
+  assert(body.error && String(body.error).length > 0);
+});
+
+// qa: edge.email-verification-send.schema.success
+Deno.test(
+  "email-verification-send — 200 success response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      authGetUser: { data: { user: validUser }, error: null },
+      tables: {
+        profiles: { selectMaybeSingle: { data: { email_verified_at: null }, error: null } },
+        email_verification_tokens: {
+          selectMaybeSingle: { data: { token: "verify-tok-abc123" }, error: null },
+        },
+      },
+    });
+    const res = await handler(makeRequest({ token: "valid-jwt", body: {} }));
+    assertEquals(res.status, 200);
+    const body = await readJson(res);
+    SuccessResponseSchema.parse(body);
+  }
+);
+
+// qa: edge.email-verification-send.schema.validation
+Deno.test(
+  "email-verification-send — 401 missing-bearer-token response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    const res = await handler(makeRequest({ body: {} }));
+    assertEquals(res.status, 401);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  }
+);
+
+// qa: edge.email-verification-send.schema.internal-error
+Deno.test(
+  "email-verification-send — 500 unhandled-exception response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    Deno.env.delete("RESEND_API_KEY");
+    setMockConfig({
+      authGetUser: { data: { user: validUser }, error: null },
+      tables: {
+        profiles: { selectMaybeSingle: { data: { email_verified_at: null }, error: null } },
+        email_verification_tokens: {
+          selectMaybeSingle: { data: null, error: { message: "token creation failed" } },
+        },
+      },
+    });
+    const res = await handler(makeRequest({ token: "valid-jwt", body: {} }));
+    assertEquals(res.status, 500);
+    const body = await readJson(res);
+    InternalErrorResponseSchema.parse(body);
+  }
+);

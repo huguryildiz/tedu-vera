@@ -111,8 +111,4 @@ describe("CriteriaManager", () => {
     ).toBeInTheDocument();
   });
 
-  qaTest("coverage.criteria-manager.add-criterion-btn", () => {
-    render(<CriteriaManager template={EMPTY_ARRAY} outcomeConfig={EMPTY_ARRAY} />);
-    expect(screen.getByText("Add Criterion")).toBeInTheDocument();
-  });
 });

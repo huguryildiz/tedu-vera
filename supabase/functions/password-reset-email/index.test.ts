@@ -6,6 +6,7 @@ import {
   setDefaultEnv,
 } from "../_test/harness.ts";
 import { resetMockConfig, setMockConfig } from "../_test/mock-supabase.ts";
+import { SuccessResponseSchema, ValidationErrorResponseSchema, InternalErrorResponseSchema } from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -178,4 +179,43 @@ Deno.test("password-reset-email — audit write failure is logged but returns 20
   const body = await readJson(res) as { ok: boolean };
   assertEquals(body.ok, true);
   assertEquals(typeof body.ok, "boolean");
+});
+
+// qa: edge.password-reset-email.schema.success
+Deno.test("password-reset-email — success response parses against SuccessResponseSchema", async () => {
+  const handler = await setup();
+  setMockConfig({
+    adminGenerateLink: {
+      data: {
+        properties: { action_link: "https://test.supabase.co/auth/v1/verify?token=abc" },
+        user: { id: "user-1" },
+      },
+      error: null,
+    },
+    tables: {
+      audit_logs: { insert: { data: null, error: null } },
+    },
+  });
+  const res = await handler(makeRequest({ body: { email: "user@test.com" } }));
+  assertEquals(res.status, 200);
+  SuccessResponseSchema.parse(await readJson(res));
+});
+
+// qa: edge.password-reset-email.schema.validation
+Deno.test("password-reset-email — 400 missing-email response parses against ValidationErrorResponseSchema", async () => {
+  const handler = await setup();
+  const res = await handler(makeRequest({ body: {} }));
+  assertEquals(res.status, 400);
+  ValidationErrorResponseSchema.parse(await readJson(res));
+});
+
+// qa: edge.password-reset-email.schema.internal-error
+Deno.test("password-reset-email — 500 unhandled-exception response parses against InternalErrorResponseSchema", async () => {
+  const handler = await setup();
+  const req = new Request("http://localhost/fn", {
+    method: "POST", headers: { "content-type": "application/json" }, body: "{bad json",
+  });
+  const res = await handler(req);
+  assertEquals(res.status, 500);
+  InternalErrorResponseSchema.parse(await readJson(res));
 });

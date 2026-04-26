@@ -14,6 +14,11 @@ import {
   stubFetch,
 } from "../_test/harness.ts";
 import { resetMockConfig, setMockConfig } from "../_test/mock-supabase.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -317,3 +322,50 @@ Deno.test(
     }
   },
 );
+
+// qa: edge.password-changed-notify.schema.success
+Deno.test("password-changed-notify — success response parses against SuccessResponseSchema", async () => {
+  const handler = await setup();
+  Deno.env.set("RESEND_API_KEY", "re_test");
+  mockAuthSuccess();
+
+  const restore = stubFetch(async () =>
+    new Response(JSON.stringify({ id: "re_ok" }), { status: 200 })
+  );
+  try {
+    const res = await handler(makeRequest({ token: "tok" }));
+    assertEquals(res.status, 200);
+    SuccessResponseSchema.parse(await readJson(res));
+  } finally {
+    restore();
+    Deno.env.delete("RESEND_API_KEY");
+  }
+});
+
+// qa: edge.password-changed-notify.schema.validation
+Deno.test("password-changed-notify — 401 missing-bearer-token response parses against ValidationErrorResponseSchema", async () => {
+  const handler = await setup();
+  const res = await handler(makeRequest({ body: {} }));
+  assertEquals(res.status, 401);
+  const body = await readJson(res);
+  ValidationErrorResponseSchema.parse(body);
+});
+
+// qa: edge.password-changed-notify.schema.internal-error
+Deno.test("password-changed-notify — 500 unhandled-exception response parses against InternalErrorResponseSchema", async () => {
+  const handler = await setup();
+  Deno.env.set("RESEND_API_KEY", "re_test");
+  mockAuthSuccess();
+
+  const restore = stubFetch(async () =>
+    new Response("rate limited", { status: 429 })
+  );
+  try {
+    const res = await handler(makeRequest({ token: "tok" }));
+    assertEquals(res.status, 500);
+    InternalErrorResponseSchema.parse(await readJson(res));
+  } finally {
+    restore();
+    Deno.env.delete("RESEND_API_KEY");
+  }
+});

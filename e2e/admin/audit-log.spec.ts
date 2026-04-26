@@ -7,6 +7,7 @@ import { E2E_PERIODS_ORG_ID } from "../fixtures/seed-ids";
 
 const EMAIL = process.env.E2E_ADMIN_EMAIL || "demo-admin@vera-eval.app";
 const PASSWORD = process.env.E2E_ADMIN_PASSWORD || "";
+const SEED_SUFFIX = String(Date.now());
 
 test.describe("audit log", () => {
   test.describe.configure({ mode: "serial" });
@@ -14,12 +15,13 @@ test.describe("audit log", () => {
   async function signInAndGoto(
     page: Parameters<Parameters<typeof test>[1]>[0]["page"],
   ) {
-    await page.addInitScript(() => {
+    await page.addInitScript((orgId) => {
       try {
         localStorage.setItem("vera.admin_tour_done", "1");
         localStorage.setItem("admin.remember_me", "true");
+        localStorage.setItem("admin.active_organization_id", orgId);
       } catch {}
-    });
+    }, E2E_PERIODS_ORG_ID);
 
     const login = new LoginPom(page);
     const shell = new AdminShellPom(page);
@@ -63,6 +65,61 @@ test.describe("audit log", () => {
     await audit.openFilter();
     await page.locator('[data-testid="audit-filter-reset"]').click();
     await expect(audit.searchInput()).toHaveValue("");
+  });
+
+  // ── Pagination tests (P2-4) ───────────────────────────────────────────────
+  // Seeds 30 audit_log rows with distinct action codes (prevents bulk grouping)
+  // and a unique actor_name so the server-side ilike search isolates them.
+
+  test.describe("pagination", () => {
+    const SEED_ACTOR = `P2-4-seed-${SEED_SUFFIX}`;
+    const SEED_COUNT = 30;
+    let seededIds: string[] = [];
+
+    test.beforeAll(async () => {
+      const rows = Array.from({ length: SEED_COUNT }, (_, i) => ({
+        organization_id: E2E_PERIODS_ORG_ID,
+        action: `p2.4.pg.${i}`,
+        actor_name: SEED_ACTOR,
+        category: "data",
+        severity: "info",
+        actor_type: "admin",
+      }));
+      const { data, error } = await adminClient
+        .from("audit_logs")
+        .insert(rows)
+        .select("id");
+      if (error) throw new Error(`pagination seed failed: ${error.message}`);
+      seededIds = (data ?? []).map((r: { id: string }) => r.id);
+    });
+
+    test.afterAll(async () => {
+      if (seededIds.length > 0) {
+        await adminClient.from("audit_logs").delete().in("id", seededIds);
+      }
+    });
+
+    test("page size 25 limits display to 25 rows with correct info text", async ({ page }) => {
+      const audit = await signInAndGoto(page);
+      await audit.typeSearch(SEED_ACTOR);
+      // Wait for server-side search to settle on exactly 30 rows
+      await expect(audit.rows()).toHaveCount(SEED_COUNT, { timeout: 15_000 });
+      // Switch from default 50 to 25 per page
+      await audit.pageSizeBtn(25).click();
+      await expect(audit.rows()).toHaveCount(25);
+      await expect(audit.pageInfo()).toContainText("1–25 of 30");
+    });
+
+    test("next page button advances to page 2 showing remaining 5 rows", async ({ page }) => {
+      const audit = await signInAndGoto(page);
+      await audit.typeSearch(SEED_ACTOR);
+      await expect(audit.rows()).toHaveCount(SEED_COUNT, { timeout: 15_000 });
+      await audit.pageSizeBtn(25).click();
+      await expect(audit.rows()).toHaveCount(25);
+      await audit.nextPageBtn().click();
+      await expect(audit.rows()).toHaveCount(5);
+      await expect(audit.pageInfo()).toContainText("26–30 of 30");
+    });
   });
 });
 

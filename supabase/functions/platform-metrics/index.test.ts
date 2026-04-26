@@ -7,6 +7,11 @@ import {
   setDefaultEnv,
 } from "../_test/harness.ts";
 import { resetMockConfig, setMockConfig } from "../_test/mock-supabase.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -162,4 +167,55 @@ Deno.test("platform-metrics — malformed JWT returns 401 with error shape", asy
   assertEquals(res.status, 401);
   const body = await readJson(res) as Record<string, unknown>;
   assertEquals(typeof body.error, "string");
+});
+
+// qa: edge.platform-metrics.schema.validation
+Deno.test("platform-metrics — 401 missing-authorization response parses against ValidationErrorResponseSchema", async () => {
+  const handler = await setup();
+  const res = await handler(makeRequest({}));
+  assertEquals(res.status, 401);
+  const body = await readJson(res);
+  ValidationErrorResponseSchema.parse(body);
+});
+
+// qa: edge.platform-metrics.schema.success
+Deno.test("platform-metrics — success response parses against SuccessResponseSchema", async () => {
+  const handler = await setup();
+  const metrics = {
+    db_size_bytes: 1234567,
+    db_size_pretty: "1.2 MB",
+    active_connections: 3,
+    audit_requests_24h: 42,
+    total_organizations: 5,
+    total_jurors: 77,
+  };
+  setMockConfig({
+    authGetUser: { data: { user: { id: "super-1" } }, error: null },
+    tables: {
+      memberships: { selectMaybeSingle: { data: { user_id: "super-1" }, error: null } },
+    },
+    rpc: {
+      rpc_platform_metrics: { data: metrics, error: null },
+    },
+  });
+  const res = await handler(makeRequest({ token: "valid" }));
+  assertEquals(res.status, 200);
+  SuccessResponseSchema.parse(await readJson(res));
+});
+
+// qa: edge.platform-metrics.schema.internal-error
+Deno.test("platform-metrics — 500 unhandled-exception response parses against InternalErrorResponseSchema", async () => {
+  const handler = await setup();
+  setMockConfig({
+    authGetUser: { data: { user: { id: "super-1" } }, error: null },
+    tables: {
+      memberships: { selectMaybeSingle: { data: { user_id: "super-1" }, error: null } },
+    },
+    rpc: {
+      rpc_platform_metrics: { data: null, error: { message: "rpc failed" } },
+    },
+  });
+  const res = await handler(makeRequest({ token: "valid" }));
+  assertEquals(res.status, 500);
+  InternalErrorResponseSchema.parse(await readJson(res));
 });

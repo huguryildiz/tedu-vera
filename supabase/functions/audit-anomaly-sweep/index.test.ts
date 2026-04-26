@@ -17,6 +17,11 @@ import {
   resetMockConfig,
   setMockConfig,
 } from "../_test/mock-supabase.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 const CRON_SECRET = "test-cron-secret";
@@ -249,5 +254,45 @@ Deno.test(
     assert("logs_scanned" in body);
     assert("write_errors" in body);
     assert("anomalies_skipped_dedup" in body);
+  },
+);
+
+// qa: edge.audit-anomaly-sweep.schema.success
+Deno.test(
+  "audit-anomaly-sweep — success response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      rpc: { _audit_verify_chain_internal: { data: [], error: null } },
+    });
+    const res = await handler(cronRequest());
+    assertEquals(res.status, 200);
+    const body = await readJson(res);
+    SuccessResponseSchema.parse(body);
+  },
+);
+
+// qa: edge.audit-anomaly-sweep.schema.validation
+Deno.test(
+  "audit-anomaly-sweep — 401 bad-cron-secret response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    const res = await handler(cronRequest({}, "wrong-secret"));
+    assertEquals(res.status, 401);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  },
+);
+
+// qa: edge.audit-anomaly-sweep.schema.internal-error
+Deno.test(
+  "audit-anomaly-sweep — 500 unhandled-exception response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    clearSupabaseEnv();
+    const res = await handler(cronRequest());
+    assertEquals(res.status, 500);
+    const body = await readJson(res);
+    InternalErrorResponseSchema.parse(body);
   },
 );

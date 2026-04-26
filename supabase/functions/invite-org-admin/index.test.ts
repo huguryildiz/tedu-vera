@@ -6,6 +6,11 @@ import {
   setDefaultEnv,
 } from "../_test/harness.ts";
 import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
+import {
   getCalls,
   resetMockConfig,
   setMockConfig,
@@ -363,3 +368,123 @@ Deno.test("invite-org-admin — success with new user includes expected response
   assertEquals(typeof body.email, "string");
   assertEquals(body.email, "newuser@test.com");
 });
+
+// ── edge.schema namespace ──────────────────────────────────────────────────
+
+// qa: edge.schema.invite-org-admin.success
+Deno.test("invite-org-admin — schema.success pins status/user_id response shape", async () => {
+  const handler = await setup();
+  setMockConfig({
+    authGetUser: { data: { user: { id: "caller-1" } }, error: null },
+    rpc: {
+      _assert_can_invite: { data: null, error: null },
+      rpc_admin_find_user_by_email: { data: [], error: null },
+    },
+    adminGenerateLink: {
+      data: {
+        properties: { action_link: "https://vera-eval.app/invite?token=xyz" },
+        user: { id: "new-user-3" },
+      },
+      error: null,
+    },
+    tables: {
+      organizations: { selectSingle: { data: { institution: "Test Org" }, error: null } },
+      memberships: { insert: { data: null, error: null } },
+      profiles: { insert: { data: null, error: null } },
+      audit_logs: { insert: { data: null, error: null } },
+    },
+  });
+  const res = await handler(makeRequest({
+    token: "valid",
+    body: { org_id: "o1", email: "new@test.com" },
+  }));
+  assertEquals(res.status, 200);
+  const body = await res.json() as Record<string, unknown>;
+  assertEquals(typeof body.status, "string");
+  assertEquals(body.status, "invited");
+  assertEquals(typeof body.user_id, "string");
+  // email is optional in success response
+  if (body.email !== undefined) {
+    assertEquals(typeof body.email, "string");
+  }
+});
+
+// qa: edge.invite-org-admin.schema.success
+Deno.test(
+  "invite-org-admin — 200 success response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      authGetUser: { data: { user: { id: "caller-1" } }, error: null },
+      rpc: {
+        _assert_can_invite: { data: null, error: null },
+        rpc_admin_find_user_by_email: { data: [], error: null },
+      },
+      adminGenerateLink: {
+        data: {
+          properties: { action_link: "https://vera-eval.app/invite?token=schema-test" },
+          user: { id: "new-user-schema" },
+        },
+        error: null,
+      },
+      tables: {
+        organizations: { selectSingle: { data: { institution: "Test Org" }, error: null } },
+        memberships: { insert: { data: null, error: null } },
+        profiles: { insert: { data: null, error: null } },
+        audit_logs: { insert: { data: null, error: null } },
+      },
+    });
+    const res = await handler(makeRequest({
+      token: "valid",
+      body: { org_id: "o1", email: "new@test.com" },
+    }));
+    assertEquals(res.status, 200);
+    const body = await readJson(res);
+    SuccessResponseSchema.parse(body);
+  }
+);
+
+// qa: edge.invite-org-admin.schema.validation
+Deno.test(
+  "invite-org-admin — 400 invalid-email response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    const res = await handler(makeRequest({
+      token: "valid",
+      body: { org_id: "o1", email: "invalid-email" },
+    }));
+    assertEquals(res.status, 400);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  }
+);
+
+// qa: edge.invite-org-admin.schema.internal-error
+Deno.test(
+  "invite-org-admin — 500 unhandled-exception response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      authGetUser: { data: { user: { id: "caller-1" } }, error: null },
+      rpc: {
+        _assert_can_invite: { data: null, error: null },
+        rpc_admin_find_user_by_email: { data: [], error: null },
+      },
+      // action_link present but no user.id → "Could not create invited user." → 500
+      adminGenerateLink: {
+        data: { properties: { action_link: "https://vera-eval.app/invite?token=x" } },
+        error: null,
+      },
+      tables: {
+        organizations: { selectSingle: { data: { institution: "Test Org" }, error: null } },
+      },
+    });
+    const res = await handler(makeRequest({
+      token: "valid",
+      body: { org_id: "o1", email: "new@test.com" },
+    }));
+    assertEquals(res.status, 500);
+    const body = await readJson(res);
+    InternalErrorResponseSchema.parse(body);
+  }
+);

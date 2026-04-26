@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { writeEdgeAuditLog } from "../_shared/audit-log.ts";
+import { RequestPayloadSchema } from "./schema.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -95,14 +96,14 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { email } = await req.json();
-    const to = String(email || "").trim().toLowerCase();
-    if (!to || !to.includes("@")) {
-      return new Response(JSON.stringify({ error: "A valid email is required." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const body = await req.json();
+    const parsed = RequestPayloadSchema.safeParse(body);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: parsed.error.issues.map(i => i.message).join(", ") }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    const { email } = parsed.data;
+    const to = String(email || "").trim().toLowerCase();
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";

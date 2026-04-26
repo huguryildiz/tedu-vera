@@ -48,21 +48,6 @@ vi.mock("@/admin/features/periods/useManagePeriods", () => {
   };
 });
 
-vi.mock("../useManageProjects", () => {
-  const loadProjects = vi.fn().mockResolvedValue(undefined);
-  return {
-    useManageProjects: () => ({
-      projects: [],
-      loadProjects,
-      handleAddProject: vi.fn(),
-      handleEditProject: vi.fn(),
-      handleDeleteProject: vi.fn(),
-      handleImportProjects: vi.fn(),
-      handleDuplicateProject: vi.fn(),
-    }),
-  };
-});
-
 vi.mock("@/shared/hooks/useCardSelection", () => ({
   default: () => ({ selectedId: null, select: vi.fn(), clear: vi.fn() }),
 }));
@@ -89,6 +74,10 @@ vi.mock("@/admin/utils/downloadTable", () => ({
 vi.mock("@/shared/api", () => ({
   getPeriodMaxScore: vi.fn().mockResolvedValue({ data: 100 }),
   logExportInitiated: vi.fn(),
+  adminListProjects: vi.fn().mockResolvedValue([]),
+  createProject: vi.fn(),
+  upsertProject: vi.fn(),
+  deleteProject: vi.fn(),
 }));
 vi.mock("@/shared/lib/dateUtils", () => ({ formatDateTime: () => "2026-01-01" }));
 vi.mock("@/shared/ui/avatarColor", () => ({ avatarGradient: () => "#000", initials: () => "AB" }));

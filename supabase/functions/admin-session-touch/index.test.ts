@@ -11,6 +11,11 @@ import {
   resetMockConfig,
   setMockConfig,
 } from "../_test/mock-supabase.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -189,3 +194,75 @@ Deno.test("admin-session-touch — malformed JWT returns 401 with error shape", 
   const body = await readJson(res) as Record<string, unknown>;
   assertEquals(typeof body.error, "string");
 });
+
+// qa: edge.admin-session-touch.schema.success
+Deno.test(
+  "admin-session-touch — success response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    const session = {
+      user_id: "user-1",
+      device_id: "device-abc",
+      browser: "Chrome",
+      os: "macOS",
+    };
+    setMockConfig({
+      authGetUser: { data: { user: { id: "user-1" } }, error: null },
+      tables: {
+        admin_user_sessions: {
+          selectMaybeSingle: { data: null, error: null },
+          upsert: { data: session, error: null },
+          delete: { data: null, error: null },
+        },
+      },
+    });
+    const res = await handler(makeRequest({
+      token: "valid",
+      body: { deviceId: "device-abc", browser: "Chrome", os: "macOS" },
+    }));
+    assertEquals(res.status, 200);
+    const body = await readJson(res);
+    SuccessResponseSchema.parse(body);
+  },
+);
+
+// qa: edge.admin-session-touch.schema.validation
+Deno.test(
+  "admin-session-touch — 400 missing-deviceId response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      authGetUser: { data: { user: { id: "user-1" } }, error: null },
+    });
+    const res = await handler(makeRequest({
+      token: "valid",
+      body: {},
+    }));
+    assertEquals(res.status, 400);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  },
+);
+
+// qa: edge.admin-session-touch.schema.internal-error
+Deno.test(
+  "admin-session-touch — 500 unhandled-exception response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      authGetUser: { data: { user: { id: "user-1" } }, error: null },
+      tables: {
+        admin_user_sessions: {
+          selectMaybeSingle: { data: null, error: { message: "DB error" } },
+        },
+      },
+    });
+    const res = await handler(makeRequest({
+      token: "valid",
+      body: { deviceId: "d1" },
+    }));
+    assertEquals(res.status, 500);
+    const body = await readJson(res);
+    InternalErrorResponseSchema.parse(body);
+  },
+);

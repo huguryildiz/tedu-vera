@@ -6,6 +6,11 @@ import {
   setDefaultEnv,
 } from "../_test/harness.ts";
 import { resetMockConfig, setMockConfig } from "../_test/mock-supabase.ts";
+import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -157,3 +162,54 @@ Deno.test("auto-backup — cron path with one org returns 200 backed_up", async 
   assertEquals(Array.isArray(body.backed_up), true);
   assertEquals(body.backed_up[0].orgId, "org-1");
 });
+
+// qa: edge.auto-backup.schema.success
+Deno.test(
+  "auto-backup — 200 backed_up response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      tables: {
+        organizations: { selectList: { data: [{ id: "org-1", name: "TestOrg" }], error: null } },
+        periods: { selectList: { data: [], error: null } },
+        jurors: { selectList: { data: [], error: null } },
+        audit_logs: { selectList: { data: [], error: null } },
+      },
+      storageUpload: { data: { path: "org-1/backup.json" }, error: null },
+      rpc: { rpc_backup_register: { data: null, error: null } },
+    });
+    const res = await handler(makeRequest({ token: "test-service-role-key", body: {} }));
+    assertEquals(res.status, 200);
+    const body = await readJson(res);
+    SuccessResponseSchema.parse(body);
+  },
+);
+
+// qa: edge.auto-backup.schema.validation
+Deno.test(
+  "auto-backup — 401 missing-token response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    const res = await handler(makeRequest({ body: {} }));
+    assertEquals(res.status, 401);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  },
+);
+
+// qa: edge.auto-backup.schema.internal-error
+Deno.test(
+  "auto-backup — 500 unhandled-exception response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      tables: {
+        organizations: { selectList: { data: null, error: { message: "DB error" } } },
+      },
+    });
+    const res = await handler(makeRequest({ token: "test-service-role-key", body: {} }));
+    assertEquals(res.status, 500);
+    const body = await readJson(res);
+    InternalErrorResponseSchema.parse(body);
+  },
+);

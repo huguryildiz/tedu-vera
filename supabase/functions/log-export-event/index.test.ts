@@ -14,6 +14,11 @@ import {
   setDefaultEnv,
 } from "../_test/harness.ts";
 import {
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
+import {
   getCalls,
   resetMockConfig,
   setMockConfig,
@@ -248,4 +253,88 @@ Deno.test(
     assertEquals(body.error, "Audit write failed");
     assertEquals(typeof body.error, "string");
   },
+);
+
+// ── edge.schema namespace ──────────────────────────────────────────────────
+
+// qa: edge.schema.log-export-event.success
+Deno.test("log-export-event — schema.success pins ok field on audit write success", async () => {
+  const handler = await setup();
+  setMockConfig({
+    authGetUser: { data: { user: { id: "u-1" } }, error: null },
+    tables: {
+      memberships: { selectList: { data: [{ organization_id: "org-1" }], error: null } },
+      audit_logs: { insert: { data: null, error: null } },
+    },
+  });
+  const res = await handler(makeRequest({
+    token: "tok",
+    body: { action: "export.scores", organizationId: "org-1" },
+  }));
+  assertEquals(res.status, 200);
+  const body = await readJson(res) as Record<string, unknown>;
+  assertEquals(typeof body.ok, "boolean");
+  assertEquals(body.ok, true);
+});
+
+// qa: edge.log-export-event.schema.success
+Deno.test(
+  "log-export-event — 200 success response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      authGetUser: { data: { user: { id: "u-1" } }, error: null },
+      tables: {
+        memberships: { selectList: { data: [{ organization_id: "org-1" }], error: null } },
+        audit_logs: { insert: { data: null, error: null } },
+      },
+    });
+    const res = await handler(makeRequest({
+      token: "tok",
+      body: { action: "export.scores", organizationId: "org-1" },
+    }));
+    assertEquals(res.status, 200);
+    const body = await readJson(res);
+    SuccessResponseSchema.parse(body);
+  }
+);
+
+// qa: edge.log-export-event.schema.validation
+Deno.test(
+  "log-export-event — 400 invalid-action response parses against ValidationErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      authGetUser: { data: { user: { id: "u-1" } }, error: null },
+    });
+    const res = await handler(makeRequest({
+      token: "tok",
+      body: { action: "notexport.scores", organizationId: "org-1" },
+    }));
+    assertEquals(res.status, 400);
+    const body = await readJson(res);
+    ValidationErrorResponseSchema.parse(body);
+  }
+);
+
+// qa: edge.log-export-event.schema.internal-error
+Deno.test(
+  "log-export-event — 500 unhandled-exception response parses against InternalErrorResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      authGetUser: { data: { user: { id: "u-1" } }, error: null },
+      tables: {
+        memberships: { selectList: { data: [{ organization_id: "org-1" }], error: null } },
+        audit_logs: { insert: { data: null, error: { message: "write failed" } } },
+      },
+    });
+    const res = await handler(makeRequest({
+      token: "tok",
+      body: { action: "export.scores", organizationId: "org-1" },
+    }));
+    assertEquals(res.status, 500);
+    const body = await readJson(res);
+    InternalErrorResponseSchema.parse(body);
+  }
 );

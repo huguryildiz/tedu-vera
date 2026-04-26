@@ -14,6 +14,12 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { writeEdgeAuditLog } from "../_shared/audit-log.ts";
+import {
+  RequestPayloadSchema,
+  SuccessResponseSchema,
+  ValidationErrorResponseSchema,
+  InternalErrorResponseSchema,
+} from "./schema.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -223,10 +229,12 @@ Deno.serve(async (req: Request) => {
     return json(400, { error: "Invalid JSON body" });
   }
 
-  const { juror_id, period_id } = body;
-  if (!juror_id || !period_id) {
-    return json(400, { error: "juror_id and period_id are required" });
+  const validation = RequestPayloadSchema.safeParse(body);
+  if (!validation.success) {
+    const errorMsg = validation.error.issues[0]?.message || "Invalid request payload";
+    return json(400, { error: errorMsg });
   }
+  const { juror_id, period_id } = validation.data;
 
   // Fetch juror
   const { data: juror, error: jurorErr } = await service

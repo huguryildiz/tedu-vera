@@ -647,6 +647,14 @@ GRANT SELECT ON score_sheets      TO anon;
 GRANT SELECT ON score_sheet_items TO anon;
 GRANT SELECT ON scores_compat     TO anon;
 
+-- Unlock requests (read-only for authenticated; writes go through SECURITY
+-- DEFINER RPCs rpc_admin_request_unlock + rpc_super_admin_resolve_unlock).
+-- Without this grant, the unlock_requests_select RLS policy would be dead
+-- code and tenant admins would receive "permission denied for table" before
+-- RLS even evaluates. Pinned by sql/tests/rls/unlock_requests_isolation.sql.
+GRANT SELECT ON unlock_requests TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON unlock_requests TO service_role;
+
 -- Config
 GRANT SELECT ON maintenance_mode TO anon, authenticated;
 

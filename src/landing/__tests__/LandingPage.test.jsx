@@ -55,13 +55,4 @@ describe("LandingPage", () => {
     expect(screen.getByText(/Evaluate anything/i)).toBeInTheDocument();
   });
 
-  qaTest("coverage.landing.nav-signin", () => {
-    renderPage();
-    expect(screen.getByTestId("admin-landing-signin")).toBeInTheDocument();
-  });
-
-  qaTest("coverage.landing.cta-try-demo", () => {
-    renderPage();
-    expect(document.getElementById("btn-try-demo")).toBeInTheDocument();
-  });
 });

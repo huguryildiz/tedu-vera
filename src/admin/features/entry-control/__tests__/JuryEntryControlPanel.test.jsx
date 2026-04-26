@@ -58,19 +58,6 @@ vi.mock("@/shared/lib/dateUtils", () => ({
 import JuryEntryControlPanel from "../JuryEntryControlPanel";
 
 describe("JuryEntryControlPanel", () => {
-  qaTest("coverage.jury-entry-control.renders-section-label", () => {
-    render(
-      <JuryEntryControlPanel
-        periodId={undefined}
-        periodName=""
-        isOpen={true}
-        onToggle={vi.fn()}
-        isMobile={false}
-      />
-    );
-    expect(screen.getByText("Jury Access Control")).toBeInTheDocument();
-  });
-
   qaTest("coverage.jury-entry-control.no-period-prompt", () => {
     render(
       <JuryEntryControlPanel

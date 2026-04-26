@@ -7,6 +7,7 @@ import {
   stubFetch,
 } from "../_test/harness.ts";
 import { resetMockConfig, setMockConfig } from "../_test/mock-supabase.ts";
+import { SuccessResponseSchema } from "./schema.ts";
 
 const modulePath = new URL("./index.ts", import.meta.url).href;
 
@@ -245,3 +246,60 @@ Deno.test("receive-email — to as string (not array) extracts and stores", asyn
   assertEquals(body.ok, true);
   assertEquals(typeof body.ok, "boolean");
 });
+
+// qa: edge.receive-email.schema.success
+Deno.test("receive-email — success response parses against SuccessResponseSchema", async () => {
+  const handler = await setup();
+  setMockConfig({
+    tables: {
+      received_emails: { insert: { data: null, error: null } },
+    },
+  });
+  const res = await handler(makeRequest({
+    body: {
+      data: {
+        from: "sender@example.com",
+        to: ["inbox@vera-eval.app"],
+        subject: "Test Subject",
+        text: "Hello world",
+      },
+    },
+  }));
+  assertEquals(res.status, 200);
+  SuccessResponseSchema.parse(await readJson(res));
+});
+
+// qa: edge.receive-email.schema.validation
+// receive-email returns plain text (not JSON) for 4xx errors;
+// this test pins the 405 method-not-allowed contract.
+Deno.test(
+  "receive-email — 405 non-POST returns plain-text Method not allowed",
+  async () => {
+    const handler = await setup();
+    const res = await handler(makeRequest({ method: "GET" }));
+    assertEquals(res.status, 405);
+    const body = await res.text();
+    assertEquals(body, "Method not allowed");
+    assertEquals(typeof body, "string");
+  },
+);
+
+// qa: edge.receive-email.schema.internal-error
+// receive-email is fail-open on DB errors — still returns { ok: true } (SuccessResponseSchema).
+Deno.test(
+  "receive-email — DB insert error is fail-open and response parses against SuccessResponseSchema",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      tables: {
+        received_emails: { insert: { data: null, error: { message: "DB unavailable" } } },
+      },
+    });
+    const res = await handler(makeRequest({
+      body: { from: "x@x.com", to: "y@y.com", subject: "hi" },
+    }));
+    assertEquals(res.status, 200);
+    const body = await readJson(res);
+    SuccessResponseSchema.parse(body);
+  },
+);

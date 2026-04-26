@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { RequestPayloadSchema } from "./schema.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,10 +36,13 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Invalid JSON" }, 400);
     }
 
-    const token = (body as Record<string, unknown>)?.token;
-    if (typeof token !== "string") {
-      return json({ error: "token is required and must be a string" }, 400);
+    const parsed = RequestPayloadSchema.safeParse(body);
+    if (!parsed.success) {
+      return json({ error: parsed.error.issues.map(i => i.message).join(", ") }, 400);
     }
+    const payload = parsed.data;
+
+    const token = payload.token;
 
     // Validate token format (UUID pattern)
     const uuidPattern = /^[0-9a-f-]{36}$/i;

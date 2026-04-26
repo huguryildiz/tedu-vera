@@ -12,6 +12,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getSuperAdminEmails } from "../_shared/super-admin-cc.ts";
 import { writeEdgeAuditLog } from "../_shared/audit-log.ts";
+import { RequestPayloadSchema } from "./schema.ts";
 
 interface NotificationPayload {
   type: "request_submitted" | "request_resolved";
@@ -144,14 +145,16 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const payload: NotificationPayload = await req.json();
-
-    if (!payload.type || !payload.request_id) {
+    const rawBody = await req.json();
+    const validation = RequestPayloadSchema.safeParse(rawBody);
+    if (!validation.success) {
+      const errorMsg = validation.error.issues[0]?.message || "Invalid request payload";
       return new Response(
-        JSON.stringify({ error: "Missing required fields: type, request_id" }),
+        JSON.stringify({ error: errorMsg }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+    const payload = validation.data;
 
     const portalUrl = resolvePortalUrl(req);
     const service = getServiceClientOrNull();

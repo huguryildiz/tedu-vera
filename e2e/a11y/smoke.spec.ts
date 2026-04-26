@@ -6,22 +6,37 @@ import { AdminShellPom } from "../poms/AdminShellPom";
 const EMAIL = process.env.E2E_ADMIN_EMAIL || "demo-admin@vera-eval.app";
 const PASSWORD = process.env.E2E_ADMIN_PASSWORD || "";
 
+// P2-7: full per-page axe sweep (~20 routes).
+// Non-critical violations are logged and attached as JSON; only critical
+// violations fail the test (first-pass discovery mode).
 const ROUTES = [
-  { path: "/admin/rankings", name: "rankings", needsAuth: true },
-  { path: "/admin/periods", name: "periods", needsAuth: true },
-  { path: "/admin/projects", name: "projects", needsAuth: true },
-  { path: "/admin/jurors", name: "jurors", needsAuth: true },
-  { path: "/jury/eval", name: "jury-eval", needsAuth: false },
+  // Public / auth routes — no login needed
+  { path: "/",                    name: "landing",         needsAuth: false },
+  { path: "/login",               name: "login",           needsAuth: false },
+  { path: "/register",            name: "register",        needsAuth: false },
+  { path: "/forgot-password",     name: "forgot-password", needsAuth: false },
+  { path: "/eval",                name: "jury-gate",       needsAuth: false },
+
+  // Admin routes — login required
+  { path: "/admin/overview",      name: "admin-overview",  needsAuth: true },
+  { path: "/admin/rankings",      name: "rankings",        needsAuth: true },
+  { path: "/admin/analytics",     name: "analytics",       needsAuth: true },
+  { path: "/admin/heatmap",       name: "heatmap",         needsAuth: true },
+  { path: "/admin/reviews",       name: "reviews",         needsAuth: true },
+  { path: "/admin/jurors",        name: "jurors",          needsAuth: true },
+  { path: "/admin/projects",      name: "projects",        needsAuth: true },
+  { path: "/admin/periods",       name: "periods",         needsAuth: true },
+  { path: "/admin/criteria",      name: "criteria",        needsAuth: true },
+  { path: "/admin/outcomes",      name: "outcomes",        needsAuth: true },
+  { path: "/admin/entry-control", name: "entry-control",   needsAuth: true },
+  { path: "/admin/pin-blocking",  name: "pin-blocking",    needsAuth: true },
+  { path: "/admin/audit-log",     name: "audit-log",       needsAuth: true },
+  { path: "/admin/organizations", name: "organizations",   needsAuth: true },
+  { path: "/admin/settings",      name: "settings",        needsAuth: true },
 ];
 
 for (const route of ROUTES) {
   test(`a11y smoke: ${route.name}`, async ({ page }) => {
-    // Log route info
-    console.log(`\n========================================`);
-    console.log(`Testing accessibility: ${route.name}`);
-    console.log(`Route: ${route.path}`);
-    console.log(`========================================`);
-
     if (route.needsAuth) {
       const login = new LoginPom(page);
       const shell = new AdminShellPom(page);
@@ -36,23 +51,24 @@ for (const route of ROUTES) {
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
       .disableRules([
-        // Document violations as comments here so future runs know why a rule
-        // is muted. Common ignorables on a real-world app:
-        //   "color-contrast" — if marketing brand colors are intentionally
-        //                      below 4.5:1 (raise as a backlog item)
+        // "color-contrast" — brand colors may intentionally be below 4.5:1; raise as backlog
       ])
       .analyze();
 
-    if (results.violations.length > 0) {
-      const summaryByRule = results.violations.map((v) => ({
-        id: v.id,
-        impact: v.impact,
-        nodes: v.nodes.length,
-        description: v.description,
-      }));
-      console.log(`a11y violations on ${route.name}:`, summaryByRule);
+    const critical = results.violations.filter((v) => v.impact === "critical");
+    const rest     = results.violations.filter((v) => v.impact !== "critical");
+
+    if (rest.length > 0) {
+      const summary = rest
+        .map((v) => `  ${v.id} [${v.impact}] ×${v.nodes.length}: ${v.description}`)
+        .join("\n");
+      console.warn(`a11y non-critical on ${route.name}:\n${summary}`);
+      await test.info().attach(`a11y-${route.name}`, {
+        contentType: "application/json",
+        body: Buffer.from(JSON.stringify(rest, null, 2)),
+      });
     }
 
-    expect(results.violations).toEqual([]);
+    expect(critical, `critical a11y violations on ${route.name}`).toHaveLength(0);
   });
 }

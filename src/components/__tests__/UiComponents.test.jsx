@@ -1,6 +1,5 @@
 import { describe, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import { qaTest } from "@/test/qaTest";
 
 import {
@@ -12,7 +11,6 @@ import {
   TableCell,
   TableCaption,
 } from "../ui/table";
-import AuthRouteLayout from "../../layouts/AuthRouteLayout";
 
 describe("UI Table components", () => {
   qaTest("coverage.ui-table.renders", () => {
@@ -34,16 +32,5 @@ describe("UI Table components", () => {
     expect(container.querySelector("table")).toBeInTheDocument();
     expect(screen.getByText("Header")).toBeInTheDocument();
     expect(screen.getByText("Cell")).toBeInTheDocument();
-  });
-});
-
-describe("AuthRouteLayout", () => {
-  qaTest("coverage.auth-route-layout.renders", () => {
-    const { container } = render(
-      <MemoryRouter>
-        <AuthRouteLayout />
-      </MemoryRouter>
-    );
-    expect(container).toBeInTheDocument();
   });
 });

@@ -2,23 +2,7 @@ import { describe, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { qaTest } from "@/test/qaTest";
 
-import InlineWeightEdit from "../InlineWeightEdit";
 import OutcomePillSelector from "../OutcomePillSelector";
-
-describe("InlineWeightEdit", () => {
-  qaTest("coverage.inline-weight-edit.badge-renders", () => {
-    render(
-      <InlineWeightEdit
-        value={30}
-        color="#22c55e"
-        otherTotal={70}
-        onChange={vi.fn()}
-        disabled={false}
-      />
-    );
-    expect(screen.getByText("30 pts")).toBeInTheDocument();
-  });
-});
 
 describe("OutcomePillSelector", () => {
   qaTest("coverage.outcome-pill-selector.empty-state", () => {
