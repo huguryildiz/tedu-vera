@@ -48,7 +48,7 @@ INSERT INTO auth.identities (
     jsonb_build_object('sub', '5fe4ebbf-7a95-43b0-8712-56e94d6cb5a7', 'email', 'tenant-admin@vera-eval.app'),
     now(), now(), now()
   )
-ON CONFLICT (provider, user_id) DO NOTHING;
+ON CONFLICT (id) DO NOTHING;
 
 -- ── Profiles + memberships ─────────────────────────────────────────────────────
 INSERT INTO profiles (id, display_name) VALUES
