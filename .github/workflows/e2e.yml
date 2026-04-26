@@ -8,9 +8,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  e2e:
+  e2e-admin:
+    name: E2E — Admin panel
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -44,31 +45,23 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
 
-      - name: Run E2E tests
-        run: npm run e2e
+      - name: Run admin E2E tests
+        run: npm run e2e -- --project=admin
         env:
           CI: true
-          # Supabase — demo/E2E project
           VITE_SUPABASE_URL:           ${{ secrets.E2E_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY:      ${{ secrets.E2E_SUPABASE_ANON_KEY }}
           VITE_RPC_SECRET:             ${{ secrets.E2E_RPC_SECRET }}
-          # Service-role key — used by e2e/jury/evaluate.spec.ts beforeEach to
-          # reset final_submitted_at / failed_attempts via PostgREST PATCH.
-          # Also needed by future B7 auth-flow specs (generateLink bypass).
           SUPABASE_SERVICE_ROLE_KEY:   ${{ secrets.E2E_SERVICE_ROLE_KEY }}
-          # Demo mode (needed for VERA's demo-bypass auth path)
           VITE_DEMO_MODE:              "true"
           VITE_DEMO_ADMIN_EMAIL:       "demo-admin@vera-eval.app"
           VITE_DEMO_ADMIN_PASSWORD:    ${{ secrets.E2E_ADMIN_PASSWORD }}
           VITE_DEMO_ENTRY_TOKEN:       ${{ secrets.E2E_DEMO_ENTRY_TOKEN }}
-          # E2E flag — disables Supabase realtime to prevent race conditions
           VITE_E2E:                    "true"
-          # Test credentials
           E2E_ADMIN_EMAIL:             "demo-admin@vera-eval.app"
           E2E_ADMIN_PASSWORD:          ${{ secrets.E2E_ADMIN_PASSWORD }}
           E2E_TENANT_ADMIN_EMAIL:      "tenant-admin@vera-eval.app"
           E2E_TENANT_ADMIN_PASSWORD:   ${{ secrets.E2E_TENANT_ADMIN_PASSWORD }}
-          # Fixture data (non-secret, kept here for traceability)
           E2E_JUROR_NAME:              "E2E Test Juror"
           E2E_JUROR_DEPT:              "E2E Test Department"
           E2E_JUROR_PIN:               "7291"
@@ -79,7 +72,75 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-results-${{ github.run_number }}
+          name: playwright-results-admin-${{ github.run_number }}
+          path: test-results/
+          retention-days: 14
+
+  e2e-other:
+    name: E2E — Auth / Jury / Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get Playwright version
+        id: pw-version
+        run: echo "version=$(node -e "console.log(require('./node_modules/@playwright/test/package.json').version)")" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium --with-deps
+
+      - name: Install Playwright system deps (cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Run auth/jury/security E2E tests
+        run: npm run e2e -- --project=other
+        env:
+          CI: true
+          VITE_SUPABASE_URL:           ${{ secrets.E2E_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY:      ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+          VITE_RPC_SECRET:             ${{ secrets.E2E_RPC_SECRET }}
+          SUPABASE_SERVICE_ROLE_KEY:   ${{ secrets.E2E_SERVICE_ROLE_KEY }}
+          VITE_DEMO_MODE:              "true"
+          VITE_DEMO_ADMIN_EMAIL:       "demo-admin@vera-eval.app"
+          VITE_DEMO_ADMIN_PASSWORD:    ${{ secrets.E2E_ADMIN_PASSWORD }}
+          VITE_DEMO_ENTRY_TOKEN:       ${{ secrets.E2E_DEMO_ENTRY_TOKEN }}
+          VITE_E2E:                    "true"
+          E2E_ADMIN_EMAIL:             "demo-admin@vera-eval.app"
+          E2E_ADMIN_PASSWORD:          ${{ secrets.E2E_ADMIN_PASSWORD }}
+          E2E_TENANT_ADMIN_EMAIL:      "tenant-admin@vera-eval.app"
+          E2E_TENANT_ADMIN_PASSWORD:   ${{ secrets.E2E_TENANT_ADMIN_PASSWORD }}
+          E2E_JUROR_NAME:              "E2E Test Juror"
+          E2E_JUROR_DEPT:              "E2E Test Department"
+          E2E_JUROR_PIN:               "7291"
+          E2E_SEMESTER_NAME:           "Spring 2026"
+          E2E_LOCKED:                  "false"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results-other-${{ github.run_number }}
           path: test-results/
           retention-days: 14
 
@@ -124,22 +185,15 @@ jobs:
         run: npm run e2e -- e2e/a11y/smoke.spec.ts
         env:
           CI: true
-          # Supabase — demo/E2E project
           VITE_SUPABASE_URL:           ${{ secrets.E2E_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY:      ${{ secrets.E2E_SUPABASE_ANON_KEY }}
           VITE_RPC_SECRET:             ${{ secrets.E2E_RPC_SECRET }}
-          # Service-role key — used by e2e/jury/evaluate.spec.ts beforeEach to
-          # reset final_submitted_at / failed_attempts via PostgREST PATCH.
-          # Also needed by future B7 auth-flow specs (generateLink bypass).
           SUPABASE_SERVICE_ROLE_KEY:   ${{ secrets.E2E_SERVICE_ROLE_KEY }}
-          # Demo mode (needed for VERA's demo-bypass auth path)
           VITE_DEMO_MODE:              "true"
           VITE_DEMO_ADMIN_EMAIL:       "demo-admin@vera-eval.app"
           VITE_DEMO_ADMIN_PASSWORD:    ${{ secrets.E2E_ADMIN_PASSWORD }}
           VITE_DEMO_ENTRY_TOKEN:       ${{ secrets.E2E_DEMO_ENTRY_TOKEN }}
-          # E2E flag — disables Supabase realtime to prevent race conditions
           VITE_E2E:                    "true"
-          # Test credentials
           E2E_ADMIN_EMAIL:             "demo-admin@vera-eval.app"
           E2E_ADMIN_PASSWORD:          ${{ secrets.E2E_ADMIN_PASSWORD }}
 
@@ -192,21 +246,15 @@ jobs:
         run: npm run e2e -- e2e/visual/admin-routes.spec.ts
         env:
           CI: true
-          # Supabase — demo/E2E project
           VITE_SUPABASE_URL:           ${{ secrets.E2E_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY:      ${{ secrets.E2E_SUPABASE_ANON_KEY }}
           VITE_RPC_SECRET:             ${{ secrets.E2E_RPC_SECRET }}
-          # Service-role key — used by e2e/jury/evaluate.spec.ts beforeEach to
-          # reset final_submitted_at / failed_attempts via PostgREST PATCH.
           SUPABASE_SERVICE_ROLE_KEY:   ${{ secrets.E2E_SERVICE_ROLE_KEY }}
-          # Demo mode (needed for VERA's demo-bypass auth path)
           VITE_DEMO_MODE:              "true"
           VITE_DEMO_ADMIN_EMAIL:       "demo-admin@vera-eval.app"
           VITE_DEMO_ADMIN_PASSWORD:    ${{ secrets.E2E_ADMIN_PASSWORD }}
           VITE_DEMO_ENTRY_TOKEN:       ${{ secrets.E2E_DEMO_ENTRY_TOKEN }}
-          # E2E flag — disables Supabase realtime to prevent race conditions
           VITE_E2E:                    "true"
-          # Test credentials
           E2E_ADMIN_EMAIL:             "demo-admin@vera-eval.app"
           E2E_ADMIN_PASSWORD:          ${{ secrets.E2E_ADMIN_PASSWORD }}
 

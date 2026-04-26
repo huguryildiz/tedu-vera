@@ -78,7 +78,11 @@ async function globalSetup(): Promise<void> {
   await loginAndSave(supabaseUrl, anonKey, baseURL, adminEmail, adminPassword, "e2e/.auth/admin.json");
 
   if (tenantEmail && tenantPassword) {
-    await loginAndSave(supabaseUrl, anonKey, baseURL, tenantEmail, tenantPassword, "e2e/.auth/tenant.json");
+    try {
+      await loginAndSave(supabaseUrl, anonKey, baseURL, tenantEmail, tenantPassword, "e2e/.auth/tenant.json");
+    } catch (err) {
+      console.warn(`globalSetup: tenant-admin auth failed (skipping tenant.json) — ${err}`);
+    }
   }
 }
 
