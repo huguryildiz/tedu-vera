@@ -3283,12 +3283,12 @@ E2E_EVAL_JURORS.forEach(j => {
 });
 out.push('');
 
-// 7) Re-lock fixture periods now that all child rows exist. pickDefaultPeriod
+// 7) Re-lock only EVAL_PERIOD now that all child rows exist. pickDefaultPeriod
 // prefers locked + activated periods, so EVAL_PERIOD must end the fixture
-// block in is_locked=true.
-e2ePeriods.forEach(p => {
-  out.push(`UPDATE periods SET is_locked = true WHERE id = '${p.id}';`);
-});
+// block in is_locked=true. CRIT_PERIOD and OUT_PERIOD must stay UNLOCKED so
+// criteria.spec / outcomes.spec can add new rows (add button is hidden when
+// is_locked=true; replaced by an "Evaluation Active" badge).
+out.push(`UPDATE periods SET is_locked = true WHERE id = '${E2E_EVAL_PERIOD}';`);
 out.push('');
 
 // ═══════════════════════════════════════════════════════════════
