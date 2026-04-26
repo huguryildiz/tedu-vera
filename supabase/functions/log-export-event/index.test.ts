@@ -230,6 +230,61 @@ Deno.test(
 
 // qa: edge.real.log.11
 Deno.test(
+  "log-export-event — nullable optional fields match browser export payload",
+  async () => {
+    const handler = await setup();
+    setMockConfig({
+      authGetUser: { data: { user: { id: "u-1" } }, error: null },
+      tables: {
+        memberships: {
+          selectList: { data: [{ organization_id: "org-1" }], error: null },
+        },
+        audit_logs: { insert: { data: null, error: null } },
+      },
+    });
+    const res = await handler(makeRequest({
+      token: "tok",
+      body: {
+        action: "export.rankings",
+        organizationId: "org-1",
+        resourceType: "score_sheets",
+        resourceId: null,
+        details: {
+          format: "xlsx",
+          period_name: null,
+          row_count: 2,
+          project_count: 2,
+          juror_count: null,
+          filters: {
+            search: null,
+            consensus: "all",
+            criterion: "all",
+            min_avg: null,
+            max_avg: null,
+          },
+        },
+      },
+    }));
+    assertEquals(res.status, 200);
+    const body = await readJson(res) as { ok: boolean };
+    assertEquals(body.ok, true);
+
+    const insert = getCalls().find(
+      (c) => c.table === "audit_logs" && c.op === "insert",
+    );
+    assert(insert, "expected audit_logs insert");
+    const row = insert!.payload as Record<string, unknown>;
+    assertEquals(row.action, "export.rankings");
+    assertEquals(row.resource_type, "score_sheets");
+    assertEquals(row.resource_id, null);
+    const details = row.details as Record<string, unknown>;
+    assertEquals(details.period_name, null);
+    assertEquals(details.juror_count, null);
+  },
+);
+
+// qa: edge.real.log.12
+Deno.test(
   "log-export-event — audit insert failure → 500 (fail-closed guarantee)",
   async () => {
     const handler = await setup();

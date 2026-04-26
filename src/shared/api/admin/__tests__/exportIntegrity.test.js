@@ -76,9 +76,6 @@ describe("admin/export — logExportInitiated", () => {
     expect(mockInvokeEdgeFunction).toHaveBeenCalledWith("log-export-event", {
       body: {
         action: "export.scores",
-        organizationId: null,
-        resourceType: null,
-        resourceId: null,
         details: {},
       },
     });

@@ -7,9 +7,9 @@ export const RequestPayloadSchema = z.object({
     (val) => val.startsWith("export."),
     "action must start with 'export.'"
   ),
-  organizationId: z.string().optional(),
-  resourceType: z.string().optional(),
-  resourceId: z.string().optional(),
+  organizationId: z.string().nullable().optional(),
+  resourceType: z.string().nullable().optional(),
+  resourceId: z.string().nullable().optional(),
   details: z.record(z.unknown()).optional(),
 });
 

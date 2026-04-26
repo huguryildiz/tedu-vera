@@ -26,8 +26,12 @@ export async function logExportInitiated({
   if (!action || !String(action).startsWith("export.")) {
     throw new Error("logExportInitiated: action must start with 'export.'");
   }
+  const body = { action, details };
+  if (typeof organizationId === "string") body.organizationId = organizationId;
+  if (typeof resourceType === "string") body.resourceType = resourceType;
+  if (typeof resourceId === "string") body.resourceId = resourceId;
   const { data, error } = await invokeEdgeFunction("log-export-event", {
-    body: { action, organizationId, resourceType, resourceId, details },
+    body,
   });
   if (error) throw error;
   if (data?.error) throw new Error(`logExportInitiated: ${data.error}`);
