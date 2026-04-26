@@ -45,6 +45,9 @@ CREATE TRIGGER set_updated_at_admin_user_sessions
 
 GRANT SELECT ON admin_user_sessions TO authenticated;
 GRANT SELECT ON admin_user_sessions TO anon;
+-- UPDATE/DELETE granted but no matching RLS policy: cross-user mutations silently
+-- affect 0 rows instead of erroring (matches Supabase platform default grants).
+GRANT UPDATE, DELETE ON admin_user_sessions TO authenticated;
 -- service_role needs full access so Edge Functions (admin-session-touch) can upsert rows
 GRANT SELECT, INSERT, UPDATE, DELETE ON admin_user_sessions TO service_role;
 
@@ -52,7 +55,7 @@ ALTER TABLE admin_user_sessions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "admin_user_sessions_select_own" ON admin_user_sessions
   FOR SELECT
-  USING (user_id = auth.uid());
+  USING (user_id = auth.uid() OR current_user_is_super_admin());
 
 -- DELETE policy intentionally absent: revocation is handled exclusively via
 -- rpc_admin_revoke_admin_session so every revocation produces an audit entry.
