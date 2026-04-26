@@ -37,6 +37,7 @@ SELECT throws_ok(
 -- ────────__ 3. org-admin for org_a can revoke org_a tokens ──────────
 SELECT pgtap_test.become_reset();
 SELECT pgtap_test.seed_two_orgs();
+SELECT pgtap_test.seed_periods();
 SELECT pgtap_test.seed_entry_tokens();
 SELECT pgtap_test.become_a();
 

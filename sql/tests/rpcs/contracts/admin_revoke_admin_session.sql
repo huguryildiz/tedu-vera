@@ -33,11 +33,29 @@ SELECT results_eq(
   'anon caller returns error_code field'
 );
 
--- ────────── 3. session not found ──────────
+-- ────────── seed data at postgres level (authenticated has no INSERT on admin_user_sessions) ──────────
 SELECT pgtap_test.become_reset();
 SELECT pgtap_test.seed_two_orgs();
+
+INSERT INTO admin_user_sessions (id, user_id, device_id, created_at, updated_at, first_seen_at, last_activity_at)
+VALUES (
+  'e0000000-0000-0000-0000-000000000001'::uuid,
+  (SELECT id FROM profiles WHERE email = 'pgtap_admin_a@test.local'),
+  'device-a',
+  now(), now(), now(), now()
+);
+
+INSERT INTO admin_user_sessions (id, user_id, device_id, created_at, updated_at, first_seen_at, last_activity_at)
+VALUES (
+  'e0000000-0000-0000-0000-000000000002'::uuid,
+  (SELECT id FROM profiles WHERE email = 'pgtap_admin_b@test.local'),
+  'device-b',
+  now(), now(), now(), now()
+);
+
 SELECT pgtap_test.become_a();
 
+-- ────────── 3. session not found ──────────
 SELECT results_eq(
   $c$SELECT (rpc_admin_revoke_admin_session('00000000-0000-0000-0000-000000009997'::uuid)::jsonb ->> 'error_code')$c$,
   ARRAY['session_not_found'],
@@ -45,29 +63,6 @@ SELECT results_eq(
 );
 
 -- ────────── 4. cannot revoke other user's session (non-super-admin) ──────────
--- Create sessions for user_a and user_b
-INSERT INTO admin_user_sessions (id, user_id, device_id, created_at, updated_at, first_seen_at, last_activity_at)
-VALUES (
-  'e0000000-0000-0000-0000-000000000001'::uuid,
-  (SELECT id FROM profiles WHERE email = 'a@test.local'),
-  'device-a',
-  now(),
-  now(),
-  now(),
-  now()
-);
-
-INSERT INTO admin_user_sessions (id, user_id, device_id, created_at, updated_at, first_seen_at, last_activity_at)
-VALUES (
-  'e0000000-0000-0000-0000-000000000002'::uuid,
-  (SELECT id FROM profiles WHERE email = 'b@test.local'),
-  'device-b',
-  now(),
-  now(),
-  now(),
-  now()
-);
-
 SELECT results_eq(
   $c$SELECT (rpc_admin_revoke_admin_session('e0000000-0000-0000-0000-000000000002'::uuid)::jsonb ->> 'error_code')$c$,
   ARRAY['unauthorized'],

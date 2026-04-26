@@ -8,7 +8,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(9);
+SELECT plan(7);
 
 -- ────────── 1. signature pinned ──────────
 SELECT has_function(
@@ -55,16 +55,20 @@ SELECT throws_ok(
   'invalid cron string raises Invalid cron expression'
 );
 
--- ────────── 5. valid cron expression succeeds ──────────
+-- ────────── 5. valid cron expression succeeds (skip when pg_cron not installed) ──────────
+SELECT skip('pg_cron not installed', 2) WHERE NOT EXISTS (
+  SELECT 1 FROM pg_extension WHERE extname = 'pg_cron'
+);
+
 SELECT lives_ok(
   $c$SELECT rpc_admin_set_backup_schedule('0 2 * * *')$c$,
   'valid 5-field cron expression succeeds'
-);
+) WHERE EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron');
 
 SELECT ok(
   (SELECT (rpc_admin_set_backup_schedule('0 3 * * *')::jsonb ->> 'ok')::boolean),
   'response ok is boolean true'
-);
+) WHERE EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron');
 
 SELECT pgtap_test.become_reset();
 SELECT COALESCE(

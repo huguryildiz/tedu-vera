@@ -34,10 +34,10 @@ SELECT throws_ok(
   'anon cannot call rpc_request_to_join_org'
 );
 
--- ────────── 3. authenticated can request join ──────────
+-- ────────── seed data before switching roles ──────────
+-- Organizations must be inserted before become_a() — aaaa cannot INSERT orgs under RLS.
 SELECT pgtap_test.become_reset();
 SELECT pgtap_test.seed_two_orgs();
-SELECT pgtap_test.become_a();
 
 INSERT INTO organizations (id, code, name, created_at, updated_at)
 VALUES (
@@ -48,6 +48,18 @@ VALUES (
   now()
 );
 
+INSERT INTO organizations (id, code, name, created_at, updated_at)
+VALUES (
+  '33300000-0000-0000-0000-000000000004'::uuid,
+  'ORG4',
+  'org_d',
+  now(),
+  now()
+);
+
+SELECT pgtap_test.become_a();
+
+-- ────────── 3. authenticated can request join ──────────
 SELECT lives_ok(
   $c$SELECT rpc_request_to_join_org('33300000-0000-0000-0000-000000000003'::uuid)$c$,
   'authenticated user can request to join org'
@@ -68,15 +80,6 @@ SELECT results_eq(
 );
 
 -- ────────── 6. response has ok and membership_id ──────────
-INSERT INTO organizations (id, code, name, created_at, updated_at)
-VALUES (
-  '33300000-0000-0000-0000-000000000004'::uuid,
-  'ORG4',
-  'org_d',
-  now(),
-  now()
-);
-
 SELECT ok(
   (SELECT (r ? 'ok') AND (r ? 'membership_id')
    FROM (SELECT rpc_request_to_join_org('33300000-0000-0000-0000-000000000004'::uuid)::jsonb AS r) t),

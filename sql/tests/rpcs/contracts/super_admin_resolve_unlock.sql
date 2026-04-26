@@ -44,24 +44,13 @@ SELECT results_eq(
   'unauthenticated gets unauthorized error code'
 );
 
--- ────────── 4. super-admin can approve unlock request ──────────
+-- ────────── seed data before switching to super role ──────────
+-- The unlock_request INSERT runs in reset mode (before become_super) because
+-- super_admin has no org and would fail the RLS INSERT policy on unlock_requests.
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.seed_periods();
 SELECT pgtap_test.seed_unlock_requests();
-SELECT pgtap_test.become_super();
 
-SELECT lives_ok(
-  $c$SELECT rpc_super_admin_resolve_unlock('a3330000-0000-4000-8000-000000000a11'::uuid, 'approved', NULL)$c$,
-  'super-admin can approve unlock request'
-);
-
--- ────────── 5. super-admin can reject unlock request ──────────
-SELECT lives_ok(
-  $c$SELECT rpc_super_admin_resolve_unlock('a3330000-0000-4000-8000-000000000b22'::uuid, 'rejected', NULL)$c$,
-  'super-admin can reject unlock request'
-);
-
--- ────────── 6. response has ok, request_id, decision ──────────
 INSERT INTO unlock_requests (id, organization_id, period_id, requested_by, reason, status, created_at, updated_at)
 SELECT
   '99990000-0000-0000-0000-000000000099'::uuid,
@@ -74,6 +63,21 @@ SELECT
   now()
 ON CONFLICT (id) DO NOTHING;
 
+SELECT pgtap_test.become_super();
+
+-- ────────── 4. super-admin can approve unlock request ──────────
+SELECT lives_ok(
+  $c$SELECT rpc_super_admin_resolve_unlock('a3330000-0000-4000-8000-000000000a11'::uuid, 'approved', NULL)$c$,
+  'super-admin can approve unlock request'
+);
+
+-- ────────── 5. super-admin can reject unlock request ──────────
+SELECT lives_ok(
+  $c$SELECT rpc_super_admin_resolve_unlock('a3330000-0000-4000-8000-000000000b22'::uuid, 'rejected', NULL)$c$,
+  'super-admin can reject unlock request'
+);
+
+-- ────────── 6. response has ok, request_id, decision ──────────
 SELECT ok(
   (SELECT (r ? 'ok') AND (r ? 'request_id') AND (r ? 'decision')
    FROM (SELECT rpc_super_admin_resolve_unlock('99990000-0000-0000-0000-000000000099'::uuid, 'approved', NULL)::jsonb AS r) t),

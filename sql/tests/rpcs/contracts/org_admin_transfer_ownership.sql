@@ -34,10 +34,22 @@ SELECT throws_ok(
 );
 
 -- ────────── seed data before switching roles ──────────
--- Use existing seeded users: bbbb and eeee have profiles from seed_two_orgs.
--- bbbb seeded as Org B admin; eeee is super_admin with no org membership.
+-- Replace aaaa's auto-UUID seeded Org A membership with a known UUID so step 6
+-- can reference it directly without a dynamic subquery.
 SELECT pgtap_test.become_reset();
 SELECT pgtap_test.seed_two_orgs();
+
+DELETE FROM memberships
+WHERE user_id = 'aaaa0000-0000-4000-8000-000000000001'::uuid
+  AND organization_id = '11110000-0000-4000-8000-000000000001'::uuid;
+
+INSERT INTO memberships (id, user_id, organization_id, role, status, is_owner)
+VALUES (
+  'f0000000-0000-0000-0000-000000002000'::uuid,
+  'aaaa0000-0000-4000-8000-000000000001'::uuid,
+  '11110000-0000-4000-8000-000000000001'::uuid,
+  'org_admin', 'active', true
+);
 
 -- bbbb as active org_admin in Org A (not owner)
 INSERT INTO memberships (id, user_id, organization_id, role, status, is_owner)
@@ -58,7 +70,7 @@ VALUES (
 );
 
 -- ────────── 3. org-admin (owner) can transfer ownership ──────────
--- aaaa is the seeded owner of Org A; transfer to bbbb (f000...2001)
+-- aaaa (f000...2000) is owner of Org A; transfer to bbbb (f000...2001)
 SELECT pgtap_test.become_a();
 
 SELECT lives_ok(
@@ -67,7 +79,7 @@ SELECT lives_ok(
 );
 
 -- ────────── 4. non-owner cannot transfer ──────────
--- user_a is no longer owner after step 3; try to transfer to eeee → fails
+-- aaaa is no longer owner after step 3; try to transfer to eeee → fails
 SELECT throws_ok(
   $c$SELECT rpc_org_admin_transfer_ownership('f0000000-0000-0000-0000-000000002002'::uuid)$c$,
   NULL::text,
@@ -82,22 +94,17 @@ SELECT throws_ok(
 );
 
 -- ────────── 6. super-admin can transfer ownership ──────────
--- Current owner is bbbb (after step 3). Super transfers to aaaa's seeded membership.
--- aaaa is still an active org_admin in Org A (is_owner=false after step 3).
+-- Current owner is bbbb (after step 3). Super transfers back to aaaa (f000...2000).
+-- aaaa has is_owner=false, role=org_admin, status=active — valid target.
 SELECT pgtap_test.become_super();
 
 SELECT lives_ok(
-  $c$SELECT rpc_org_admin_transfer_ownership(
-    (SELECT id FROM memberships
-     WHERE user_id = 'aaaa0000-0000-4000-8000-000000000001'::uuid
-       AND organization_id = '11110000-0000-4000-8000-000000000001'::uuid
-     LIMIT 1)
-  )$c$,
+  $c$SELECT rpc_org_admin_transfer_ownership('f0000000-0000-0000-0000-000000002000'::uuid)$c$,
   'super-admin can transfer org ownership'
 );
 
 -- ────────── 7. response has ok and new_owner_user_id ──────────
--- After step 6, aaaa is owner again. Super (eeee) transfers to bbbb (f000...2001, is_owner=false).
+-- After step 6, aaaa is owner again. Super transfers to bbbb (f000...2001, is_owner=false).
 SELECT ok(
   (SELECT (r ? 'ok') AND (r ? 'new_owner_user_id')
    FROM (SELECT rpc_org_admin_transfer_ownership('f0000000-0000-0000-0000-000000002001'::uuid)::jsonb AS r) t),

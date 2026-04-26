@@ -37,6 +37,8 @@ SELECT throws_ok(
 -- ────────__ 3. null parameters → required error ──────────
 SELECT pgtap_test.become_reset();
 SELECT pgtap_test.seed_two_orgs();
+SELECT pgtap_test.seed_periods();
+SELECT pgtap_test.seed_jurors();
 SELECT pgtap_test.become_a();
 
 SELECT throws_ok(
@@ -46,8 +48,6 @@ SELECT throws_ok(
 );
 
 -- ────────__ 4. org-admin can close edit mode for org juror/period ──────────
-SELECT pgtap_test.seed_periods();
-SELECT pgtap_test.seed_jurors();
 
 -- Get org_a's juror and period
 SELECT lives_ok(

@@ -48,8 +48,8 @@ SELECT throws_ok(
 -- ────────── 4. super-admin can create org ──────────
 SELECT pgtap_test.become_super();
 
-SELECT is_uuid(
-  (rpc_admin_super_create_organization('super-created-org'::text, 'SUPCR', NULL, 'active')::jsonb ->> 'id')::uuid,
+SELECT ok(
+  (rpc_admin_super_create_organization('super-created-org'::text, 'SUPCR', NULL, 'active')::jsonb ->> 'id')::uuid IS NOT NULL,
   'super-admin can create org, returns valid uuid id'
 );
 
