@@ -548,17 +548,28 @@ CREATE POLICY "platform_backups_select_org_admin"
 -- Files are organized as: backups/<organization_id>/<backup_id>.<format>
 -- File size limit: 50 MB. Formats: JSON or XLSX.
 
-INSERT INTO storage.buckets (id, name, file_size_limit, allowed_mime_types)
-VALUES (
-  'backups',
-  'backups',
-  52428800, -- 50 MB
-  ARRAY[
-    'application/json',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-  ]
-)
-ON CONFLICT (id) DO NOTHING;
+DO $$
+BEGIN
+  -- Hosted Supabase: buckets table has file_size_limit + allowed_mime_types columns
+  BEGIN
+    INSERT INTO storage.buckets (id, name, file_size_limit, allowed_mime_types)
+    VALUES (
+      'backups',
+      'backups',
+      52428800,
+      ARRAY[
+        'application/json',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      ]
+    )
+    ON CONFLICT (id) DO NOTHING;
+  EXCEPTION WHEN undefined_column THEN
+    -- Local Supabase CLI v2: minimal schema (id + name only)
+    INSERT INTO storage.buckets (id, name)
+    VALUES ('backups', 'backups')
+    ON CONFLICT (id) DO NOTHING;
+  END;
+END $$;
 
 -- Drop any pre-existing versions of these policies before creating the final ones.
 DROP POLICY IF EXISTS "backups_select_own_org" ON storage.objects;
