@@ -8,8 +8,8 @@ name: CI
 # runs on every PR as a hard-fail check — migration failures block PRs. The
 # job takes ~5 min wall-clock in parallel with unit-tests and edge-tests.
 #
-# The `test-report` job (Allure + Excel) is gated on workflow_dispatch so the
-# fast PR gate is not blocked by report-generation overhead.
+# The `test-report` job (Allure + Excel) runs on CI but is non-blocking; the
+# hard gates remain unit-tests, edge-tests, migration-test, and drift-sentinels.
 
 on:
   pull_request:
@@ -331,11 +331,11 @@ jobs:
         run: npm run check:edge-schema
 
   test-report:
-    # Allure + Excel reporting — heavyweight, runs only on manual dispatch.
+    # Allure + Excel reporting — downloadable CI artifact, but not a hard gate.
     name: Reports — Allure & Excel
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4

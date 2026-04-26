@@ -75,9 +75,10 @@ jobs:
             e2e/admin/audit-event-coverage.spec.ts \
             e2e/security/period-immutability.spec.ts \
             e2e/security/rbac-boundary.spec.ts \
-            --reporter=line
+            --reporter=line,json
         env:
           CI: true
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/playwright-results.json
           VITE_SUPABASE_URL:           ${{ secrets.E2E_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY:      ${{ secrets.E2E_SUPABASE_ANON_KEY }}
           VITE_RPC_SECRET:             ${{ secrets.E2E_RPC_SECRET }}
@@ -96,6 +97,11 @@ jobs:
           E2E_JUROR_PIN:               "7291"
           E2E_SEMESTER_NAME:           "Spring 2026"
           E2E_LOCKED:                  "false"
+
+      - name: Generate Excel E2E report
+        if: always()
+        run: npm run e2e:excel
+        continue-on-error: true
 
       - name: Upload test results
         if: always()

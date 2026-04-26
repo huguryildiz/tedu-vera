@@ -22,6 +22,7 @@ supabase/functions/.env.local
 CLAUDE.md
 AGENTS.md
 GEMINI.md
+.agents/
 .claude/
 .superpowers/
 .cursorrules

@@ -64,9 +64,10 @@ jobs:
         uses: ./.github/actions/start-local-supabase
 
       - name: Run admin E2E tests
-        run: npm run e2e -- --project=admin --shard=${{ matrix.shard }}/2
+        run: npm run e2e -- --project=admin --shard=${{ matrix.shard }}/2 --reporter=line,json
         env:
           CI: true
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/playwright-results.json
           VITE_SUPABASE_URL:           ${{ steps.supabase.outputs.url }}
           VITE_SUPABASE_ANON_KEY:      ${{ steps.supabase.outputs.anon_key }}
           VITE_RPC_SECRET:             e2e-local-rpc-secret
@@ -86,6 +87,11 @@ jobs:
           E2E_JUROR_PIN:               "7291"
           E2E_SEMESTER_NAME:           "Spring 2026"
           E2E_LOCKED:                  "false"
+
+      - name: Generate Excel E2E report
+        if: always()
+        run: npm run e2e:excel
+        continue-on-error: true
 
       - name: Upload test results
         if: always()
@@ -137,9 +143,10 @@ jobs:
         uses: ./.github/actions/start-local-supabase
 
       - name: Run auth/jury/security E2E tests
-        run: npm run e2e -- --project=other
+        run: npm run e2e -- --project=other --reporter=line,json
         env:
           CI: true
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/playwright-results.json
           VITE_SUPABASE_URL:           ${{ steps.supabase.outputs.url }}
           VITE_SUPABASE_ANON_KEY:      ${{ steps.supabase.outputs.anon_key }}
           VITE_RPC_SECRET:             e2e-local-rpc-secret
@@ -159,6 +166,11 @@ jobs:
           E2E_JUROR_PIN:               "7291"
           E2E_SEMESTER_NAME:           "Spring 2026"
           E2E_LOCKED:                  "false"
+
+      - name: Generate Excel E2E report
+        if: always()
+        run: npm run e2e:excel
+        continue-on-error: true
 
       - name: Upload test results
         if: always()
@@ -210,9 +222,10 @@ jobs:
         uses: ./.github/actions/start-local-supabase
 
       - name: Run maintenance E2E tests (serial — mutates maintenance_mode)
-        run: npm run e2e -- --project=maintenance
+        run: npm run e2e -- --project=maintenance --reporter=line,json
         env:
           CI: true
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/playwright-results.json
           VITE_SUPABASE_URL:           ${{ steps.supabase.outputs.url }}
           VITE_SUPABASE_ANON_KEY:      ${{ steps.supabase.outputs.anon_key }}
           VITE_RPC_SECRET:             e2e-local-rpc-secret
@@ -227,6 +240,11 @@ jobs:
           E2E_ADMIN_PASSWORD:          "E2eLocal!Admin123"
           E2E_TENANT_ADMIN_EMAIL:      "tenant-admin@vera-eval.app"
           E2E_TENANT_ADMIN_PASSWORD:   "TenantAdmin2026!"
+
+      - name: Generate Excel E2E report
+        if: always()
+        run: npm run e2e:excel
+        continue-on-error: true
 
       - name: Upload test results
         if: always()
@@ -275,9 +293,10 @@ jobs:
         run: npx playwright install-deps chromium
 
       - name: Run accessibility smoke tests
-        run: npm run e2e -- e2e/a11y/smoke.spec.ts
+        run: npm run e2e -- e2e/a11y/smoke.spec.ts --reporter=line,json
         env:
           CI: true
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/playwright-results.json
           VITE_SUPABASE_URL:           ${{ secrets.E2E_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY:      ${{ secrets.E2E_SUPABASE_ANON_KEY }}
           VITE_RPC_SECRET:             ${{ secrets.E2E_RPC_SECRET }}
@@ -289,6 +308,11 @@ jobs:
           VITE_E2E:                    "true"
           E2E_ADMIN_EMAIL:             "demo-admin@vera-eval.app"
           E2E_ADMIN_PASSWORD:          ${{ secrets.E2E_ADMIN_PASSWORD }}
+
+      - name: Generate Excel E2E report
+        if: always()
+        run: npm run e2e:excel
+        continue-on-error: true
 
       - name: Upload a11y test results
         if: always()
@@ -337,9 +361,10 @@ jobs:
         run: npx playwright install-deps chromium
 
       - name: Run visual regression tests
-        run: npm run e2e -- e2e/visual/admin-routes.spec.ts
+        run: npm run e2e -- e2e/visual/admin-routes.spec.ts --reporter=line,json
         env:
           CI: true
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/playwright-results.json
           VITE_SUPABASE_URL:           ${{ secrets.E2E_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY:      ${{ secrets.E2E_SUPABASE_ANON_KEY }}
           VITE_RPC_SECRET:             ${{ secrets.E2E_RPC_SECRET }}
@@ -351,6 +376,11 @@ jobs:
           VITE_E2E:                    "true"
           E2E_ADMIN_EMAIL:             "demo-admin@vera-eval.app"
           E2E_ADMIN_PASSWORD:          ${{ secrets.E2E_ADMIN_PASSWORD }}
+
+      - name: Generate Excel E2E report
+        if: always()
+        run: npm run e2e:excel
+        continue-on-error: true
 
       - name: Upload visual regression results
         if: always()

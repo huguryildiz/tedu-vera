@@ -159,9 +159,9 @@ INSERT INTO period_outcomes (id, period_id, source_outcome_id, code, label, desc
 ON CONFLICT (id) DO NOTHING;
 
 -- ── Projects for eval period (required by jury/edit-mode.spec.ts) ─────────────
-INSERT INTO projects (id, period_id, organization_id, title, group_no, team_members, advisor_name) VALUES
-  ('aaaaaaaa-0001-4000-a000-000000000001', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'b2c3d4e5-f6a7-8901-bcde-f12345678901', 'E2E Project Alpha', 1, '["Alice","Bob"]'::jsonb, 'Dr. Smith'),
-  ('aaaaaaaa-0002-4000-a000-000000000002', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'b2c3d4e5-f6a7-8901-bcde-f12345678901', 'E2E Project Beta',  2, '["Carol","Dave"]'::jsonb, 'Dr. Jones')
+INSERT INTO projects (id, period_id, project_no, title, members, advisor_name) VALUES
+  ('aaaaaaaa-0001-4000-a000-000000000001', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 1, 'E2E Project Alpha', '["Alice","Bob"]'::jsonb, 'Dr. Smith'),
+  ('aaaaaaaa-0002-4000-a000-000000000002', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 2, 'E2E Project Beta',  '["Carol","Dave"]'::jsonb, 'Dr. Jones')
 ON CONFLICT (id) DO NOTHING;
 
 -- ── Jurors ────────────────────────────────────────────────────────────────────
