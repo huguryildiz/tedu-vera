@@ -3204,6 +3204,11 @@ const E2E_ENTRY_TOKEN_ORG = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
 const E2E_EVAL_PERIOD     = 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88';
 const E2E_CRIT_PERIOD     = 'cccccccc-0004-4000-c000-000000000004';
 const E2E_OUT_PERIOD      = 'cccccccc-0005-4000-c000-000000000005';
+// Periods for orgs that previously had none — required by entry-tokens / projects
+// / pin-blocking specs. Each org gets one unlocked period so add buttons render.
+const E2E_TOK_PERIOD      = 'cccccccc-0006-4000-c000-000000000006';
+const E2E_PRJ_PERIOD      = 'cccccccc-0007-4000-c000-000000000007';
+const E2E_LIF_PERIOD      = 'cccccccc-0008-4000-c000-000000000008';
 
 const E2E_LOCKED_JUROR    = 'eeeeeeee-0001-4000-e000-000000000001';
 const E2E_EVAL_JURORS = [
@@ -3231,9 +3236,12 @@ out.push('');
 // period_outcomes) below are not blocked by the block_period_child_on_locked
 // trigger. We re-lock them at the end of the fixture block.
 const e2ePeriods = [
-  { id: E2E_EVAL_PERIOD, orgId: E2E_PERIODS_ORG,  name: 'E2E Eval Period',     season: 'Spring' },
-  { id: E2E_CRIT_PERIOD, orgId: E2E_CRITERIA_ORG, name: 'E2E Criteria Period', season: 'Spring' },
-  { id: E2E_OUT_PERIOD,  orgId: E2E_CRITERIA_ORG, name: 'E2E Outcomes Period', season: 'Spring' },
+  { id: E2E_EVAL_PERIOD, orgId: E2E_PERIODS_ORG,     name: 'E2E Eval Period',         season: 'Spring' },
+  { id: E2E_CRIT_PERIOD, orgId: E2E_CRITERIA_ORG,    name: 'E2E Criteria Period',     season: 'Spring' },
+  { id: E2E_OUT_PERIOD,  orgId: E2E_CRITERIA_ORG,    name: 'E2E Outcomes Period',     season: 'Spring' },
+  { id: E2E_TOK_PERIOD,  orgId: E2E_ENTRY_TOKEN_ORG, name: 'E2E Token Period',        season: 'Spring' },
+  { id: E2E_PRJ_PERIOD,  orgId: E2E_PROJECTS_ORG,    name: 'E2E Projects Period',     season: 'Spring' },
+  { id: E2E_LIF_PERIOD,  orgId: E2E_LIFECYCLE_ORG,   name: 'E2E Lifecycle Period',    season: 'Spring' },
 ];
 e2ePeriods.forEach(p => {
   out.push(`INSERT INTO periods (id, organization_id, framework_id, name, season, description, start_date, end_date, is_locked, criteria_name, snapshot_frozen_at, activated_at, closed_at, updated_at) VALUES ('${p.id}', '${p.orgId}', '${VERA_FW_ID}', '${escapeSql(p.name)}', '${p.season}', 'E2E fixture period', '${TODAY}', '${TODAY}', false, 'VERA Standard', now(), now(), NULL, now()) ON CONFLICT (id) DO NOTHING;`);
