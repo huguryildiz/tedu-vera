@@ -8,13 +8,13 @@ description: >
 outputs:
   url:
     description: Local Supabase API URL (http://127.0.0.1:54321)
-    value: ${{ steps.creds.outputs.url }}
+    value: ${{ steps.start.outputs.url }}
   anon_key:
-    description: Local anon JWT
-    value: ${{ steps.creds.outputs.anon_key }}
+    description: Local publishable API key
+    value: ${{ steps.start.outputs.anon_key }}
   service_role_key:
-    description: Local service-role JWT
-    value: ${{ steps.creds.outputs.service_role_key }}
+    description: Local secret API key
+    value: ${{ steps.start.outputs.service_role_key }}
 
 runs:
   using: composite
@@ -24,20 +24,28 @@ runs:
       with:
         version: latest
 
-    - name: Start local Supabase stack
-      shell: bash
-      run: supabase start --workdir ${{ github.workspace }}
-
-    - name: Capture local credentials
-      id: creds
+    - name: Start local Supabase stack + capture credentials
+      id: start
       shell: bash
       run: |
-        STATUS=$(supabase status --workdir ${{ github.workspace }} 2>&1)
-        ANON_KEY=$(echo "$STATUS"     | grep -E 'anon key'          | awk '{print $NF}')
-        SERVICE_KEY=$(echo "$STATUS"  | grep -E 'service_role key'  | awk '{print $NF}')
-        echo "url=http://127.0.0.1:54321"       >> $GITHUB_OUTPUT
-        echo "anon_key=$ANON_KEY"               >> $GITHUB_OUTPUT
-        echo "service_role_key=$SERVICE_KEY"    >> $GITHUB_OUTPUT
+        START_OUT=$(supabase start --workdir ${{ github.workspace }} 2>&1)
+        echo "$START_OUT"
+
+        # CLI v2: sb_publishable_* / sb_secret_* format
+        ANON_KEY=$(echo "$START_OUT"    | grep -oP 'sb_publishable_[A-Za-z0-9_-]+' | head -1)
+        SERVICE_KEY=$(echo "$START_OUT" | grep -oP 'sb_secret_[A-Za-z0-9_-]+'      | head -1)
+
+        # Fallback: CLI v1 JWT format (anon key / service_role key)
+        if [ -z "$ANON_KEY" ]; then
+          ANON_KEY=$(echo "$START_OUT" | grep -E 'anon key' | awk '{print $NF}')
+        fi
+        if [ -z "$SERVICE_KEY" ]; then
+          SERVICE_KEY=$(echo "$START_OUT" | grep -E 'service_role key' | awk '{print $NF}')
+        fi
+
+        echo "url=http://127.0.0.1:54321"    >> $GITHUB_OUTPUT
+        echo "anon_key=$ANON_KEY"            >> $GITHUB_OUTPUT
+        echo "service_role_key=$SERVICE_KEY" >> $GITHUB_OUTPUT
 
     - name: Apply migrations (001-009)
       shell: bash
