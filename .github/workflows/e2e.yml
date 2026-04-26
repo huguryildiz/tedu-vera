@@ -11,7 +11,11 @@ jobs:
   e2e-admin:
     name: E2E — Admin panel
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
 
     steps:
       - name: Checkout
@@ -46,7 +50,7 @@ jobs:
         run: npx playwright install-deps chromium
 
       - name: Run admin E2E tests
-        run: npm run e2e -- --project=admin
+        run: npm run e2e -- --project=admin --shard=${{ matrix.shard }}/2
         env:
           CI: true
           VITE_SUPABASE_URL:           ${{ secrets.E2E_SUPABASE_URL }}
@@ -72,14 +76,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-results-admin-${{ github.run_number }}
+          name: playwright-results-admin-${{ github.run_number }}-shard${{ matrix.shard }}
           path: test-results/
           retention-days: 14
 
   e2e-other:
     name: E2E — Auth / Jury / Security
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout

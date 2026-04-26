@@ -22,8 +22,11 @@ export default defineConfig({
   globalSetup: "./e2e/global.setup.ts",
   outputDir: "test-results/playwright-artifacts",
   timeout: 30_000,
-  workers: process.env.CI ? 1 : undefined,
-  retries: process.env.CI ? 1 : 0,
+  workers: process.env.CI ? 2 : undefined,
+  // PR run'da retry kapalı (hızlı feedback); main push'ta retry açık (flaky koruması)
+  retries: process.env.CI
+    ? (process.env.GITHUB_EVENT_NAME === "pull_request" ? 0 : 1)
+    : 0,
   reporter: [
     ["list"],
     ["html", { outputFolder: "test-results/playwright-report", open: "never" }],
