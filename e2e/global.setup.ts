@@ -59,9 +59,35 @@ async function loginAndSave(
   fs.writeFileSync(outPath, JSON.stringify(state, null, 2));
 }
 
+async function resetMaintenanceMode(supabaseUrl: string, serviceKey: string): Promise<void> {
+  // The maintenance-mode spec activates a global maintenance flag for ~5 min.
+  // If the spec hard-fails (Playwright timeout, runner kill, network drop),
+  // its afterAll never runs and the flag persists into the next test run —
+  // every non-super-admin page render breaks (admin-shell-root timeout).
+  // Force-reset before any spec starts.
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/maintenance_mode?id=eq.1`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({ is_active: false, end_time: null }),
+    });
+    if (!res.ok) {
+      console.warn(`globalSetup: maintenance reset returned ${res.status} ${await res.text()}`);
+    }
+  } catch (err) {
+    console.warn(`globalSetup: maintenance reset failed (non-fatal) — ${err}`);
+  }
+}
+
 async function globalSetup(): Promise<void> {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const baseURL = process.env.E2E_BASE_URL || "http://localhost:5174";
   const adminEmail = process.env.E2E_ADMIN_EMAIL;
   const adminPassword = process.env.E2E_ADMIN_PASSWORD;
@@ -73,6 +99,10 @@ async function globalSetup(): Promise<void> {
   }
   if (!adminEmail || !adminPassword) {
     throw new Error("globalSetup: E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD are required");
+  }
+
+  if (serviceKey) {
+    await resetMaintenanceMode(supabaseUrl, serviceKey);
   }
 
   await loginAndSave(supabaseUrl, anonKey, baseURL, adminEmail, adminPassword, "e2e/.auth/admin.json");
