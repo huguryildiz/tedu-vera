@@ -9,7 +9,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(7);
+SELECT plan(6);
 
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.seed_periods();
@@ -46,6 +46,7 @@ SELECT throws_ok(
 );
 
 -- ────────── 4. valid session token → succeeds ──────────
+SELECT pgtap_test.become_reset();
 -- Insert a valid session for juror A on period A1
 INSERT INTO juror_period_auth (juror_id, period_id, session_token_hash, edit_enabled, is_blocked)
 VALUES ('55550000-0000-4000-8000-000000000001'::uuid,
@@ -53,8 +54,6 @@ VALUES ('55550000-0000-4000-8000-000000000001'::uuid,
         encode(digest('pgtap-rankings-token', 'sha256'), 'hex'),
         true, false)
 ON CONFLICT (juror_id, period_id) DO NOTHING;
-
-SELECT pgtap_test.become_reset();
 
 SELECT lives_ok(
   $c$SELECT * FROM rpc_jury_project_rankings(

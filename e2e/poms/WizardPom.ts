@@ -45,6 +45,10 @@ export class WizardPom extends BasePom {
 
   async waitForReady(): Promise<void> {
     await expect(this.stepper()).toBeVisible();
+    // Auth context (activeOrganization) must be loaded before interacting —
+    // otherwise handleSkip fires with a null org id and sessionStorage key is
+    // never written, causing AdminRouteLayout to redirect back to /setup.
+    await this.page.waitForLoadState("networkidle");
   }
 
   async clickGetStarted(): Promise<void> {

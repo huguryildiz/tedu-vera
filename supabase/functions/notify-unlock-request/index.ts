@@ -148,7 +148,11 @@ Deno.serve(async (req: Request) => {
     const rawBody = await req.json();
     const validation = RequestPayloadSchema.safeParse(rawBody);
     if (!validation.success) {
-      const errorMsg = validation.error.issues[0]?.message || "Invalid request payload";
+      const issue = validation.error.issues[0];
+      const field = issue?.path?.[0];
+      const errorMsg = field
+        ? `${String(field)}: ${issue.message}`
+        : (issue?.message || "Invalid request payload");
       return new Response(
         JSON.stringify({ error: errorMsg }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },

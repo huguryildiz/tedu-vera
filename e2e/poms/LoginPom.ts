@@ -5,7 +5,12 @@ import { BasePom } from "./BasePom";
 export class LoginPom extends BasePom {
   async goto(): Promise<void> {
     await super.goto("/login");
-    await expect(this.emailInput()).toBeVisible({ timeout: 15_000 });
+    // storageState may pre-authenticate the browser; /login then redirects to /admin.
+    // Wait for whichever state arrives first.
+    await Promise.race([
+      this.emailInput().waitFor({ state: "visible", timeout: 15_000 }),
+      this.page.waitForURL(/\/admin/, { timeout: 15_000 }),
+    ]);
   }
 
   emailInput(): Locator {
@@ -37,6 +42,8 @@ export class LoginPom extends BasePom {
   }
 
   async signIn(email: string, password: string): Promise<void> {
+    // No-op when storageState already redirected us away from /login.
+    if (!(await this.emailInput().isVisible())) return;
     await this.fillEmail(email);
     await this.fillPassword(password);
     await this.submit();

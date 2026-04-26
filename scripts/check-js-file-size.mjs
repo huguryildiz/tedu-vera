@@ -28,7 +28,7 @@ function collectFiles(dir, files = []) {
     if (entry.isDirectory()) {
       if (['node_modules', 'dist', '.git', 'scripts'].includes(entry.name)) continue;
       collectFiles(full, files);
-    } else if (/\.(jsx?|tsx?)$/.test(entry.name) && !entry.name.includes('.archive')) {
+    } else if (/\.(jsx?|tsx?)$/.test(entry.name) && !entry.name.includes('.archive') && !entry.name.includes('.generated.')) {
       if (!full.includes('__tests__') && !full.includes('.archive')) {
         files.push(full);
       }

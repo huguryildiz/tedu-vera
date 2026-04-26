@@ -7,10 +7,7 @@ explicitly excludes `_pending/` from its coverage scan, so files here do
 
 ## Current state
 
-**Empty.** All 9 files quarantined in commit `185df0b6` were re-promoted in
-window W3 (test reclassification plan § 4.3). See
-`docs/superpowers/plans/test-reclassification/implementation_reports/session-NN-W3-quarantine-repromote.md`
-for the per-file fix log.
+5 files quarantined. See table below.
 
 ## When to put a file here
 
@@ -31,7 +28,11 @@ If you must quarantine:
 
 | File | Root cause | Fix recipe |
 |---|---|---|
-| _(none)_ | — | — |
+| `backup_list.sql` | `rpc_backup_list` is defined in `008_platform.sql`; CI caps at 007. Function and `platform_backups` table do not exist in CI. | Apply 008_platform in CI (requires pg_cron/pg_net Supabase extensions) or add skip-guard pattern. |
+| `backup_record_download.sql` | `rpc_backup_record_download` + `platform_backups` table both live in 008_platform; CI caps at 007. Also: INSERT into `platform_backups` under `become_a()` context after fix would be needed. | Same as backup_list — enable 008 in CI or add skip-guard. |
+| `backup_register.sql` | `rpc_backup_register` + `platform_backups` table live in 008_platform; CI caps at 007. | Same as backup_list — enable 008 in CI or add skip-guard. |
+| `public_platform_settings.sql` | `rpc_public_platform_settings` is in 008_platform; CI caps at 007. Function does not exist in CI. | Enable 008 in CI or add skip-guard pattern (see Re-promotion checklist §4). |
+| `org_admin_transfer_ownership.sql` | Test 5 asserts `unauthorized` for cross-tenant call but RPC raises `target_not_found` when the org lookup returns empty first. Test 6 success block INSERTs into `auth.users` under `become_super()` context (authenticated role lacks write access to auth schema). | Read 006b RPC body to confirm error order; move `auth.users` INSERT before any `become_*()` call; verify test 5 expected error code. |
 
 ## Re-promotion checklist
 

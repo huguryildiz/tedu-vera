@@ -5,6 +5,10 @@ import { AdminShellPom } from "../poms/AdminShellPom";
 const EMAIL = process.env.E2E_ADMIN_EMAIL || "demo-admin@vera-eval.app";
 const PASSWORD = process.env.E2E_ADMIN_PASSWORD || "";
 
+// This file tests the login form itself — opt out of the project-level storageState
+// so these tests start unauthenticated, just like real first-time visitors.
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test.describe("admin login", () => {
   test("happy path — valid credentials land on the admin dashboard", async ({ page }) => {
     const login = new LoginPom(page);

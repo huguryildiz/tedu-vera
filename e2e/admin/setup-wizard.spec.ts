@@ -8,7 +8,6 @@ const PASSWORD = process.env.E2E_ADMIN_PASSWORD || "";
 const E2E_WIZARD_ORG_ID = "e5f6a7b8-c9d0-1234-ef01-345678901234";
 
 test.describe("setup wizard", () => {
-  test.describe.configure({ mode: "serial" });
 
   async function signInAndGoto(
     page: Parameters<Parameters<typeof test>[1]>[0]["page"],

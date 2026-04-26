@@ -38,12 +38,14 @@ SELECT throws_ok(
 
 -- ────────── 3. active (non-invited) membership → invite_not_found ──────────
 -- Active memberships have status='active', not 'invited'; lookup returns NULL.
+SELECT pgtap_test.become_reset();
 INSERT INTO memberships (id, user_id, organization_id, role, status, is_owner)
 VALUES ('beef0000-0000-4000-8000-000000000001'::uuid,
         'aaaa0000-0000-4000-8000-000000000001'::uuid,
         '11110000-0000-4000-8000-000000000001'::uuid,
         'org_admin', 'active', false)
 ON CONFLICT (id) DO NOTHING;
+SELECT pgtap_test.become_a();
 
 SELECT throws_ok(
   $c$SELECT rpc_org_admin_cancel_invite('beef0000-0000-4000-8000-000000000001'::uuid)$c$,
