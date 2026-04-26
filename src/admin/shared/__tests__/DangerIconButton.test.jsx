@@ -13,7 +13,7 @@ vi.mock("@/shared/ui/PremiumTooltip", () => ({
 import DangerIconButton from "../DangerIconButton";
 
 describe("DangerIconButton", () => {
-  qaTest("coverage.danger-icon-button.renders", () => {
+  qaTest("coverage.danger-icon-button.renders-with-aria-label", () => {
     render(<DangerIconButton ariaLabel="Delete item" onClick={vi.fn()} />);
     expect(screen.getByRole("button", { name: "Delete item" })).toBeInTheDocument();
   });

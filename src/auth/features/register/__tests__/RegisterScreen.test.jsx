@@ -30,7 +30,7 @@ function renderScreen(props = {}) {
 }
 
 describe("RegisterScreen", () => {
-  qaTest("auth.register.render", () => {
+  qaTest("auth.register.shows-registration-form-fields", () => {
     renderScreen();
     expect(screen.getByPlaceholderText("Dr. Jane Doe")).toBeInTheDocument();
   });

@@ -59,6 +59,13 @@ export function useManageProjects({
   const viewPeriodIdRef = useRef(viewPeriodId);
   viewPeriodIdRef.current = viewPeriodId;
 
+  // ── Lock check helper ──────────────────────────────────────
+  const isViewPeriodLocked = useCallback(() => {
+    const pid = viewPeriodIdRef.current;
+    if (!pid || !periodList) return false;
+    return (periodList || []).find((p) => p.id === pid)?.is_locked ?? false;
+  }, [periodList]);
+
   // ── Patch / remove helpers ───────────────────────────────
   const applyProjectPatch = useCallback((patch) => {
     if (!patch) return;
@@ -113,6 +120,10 @@ export function useManageProjects({
       setPanelError("projects", "Select a period from the header before importing groups.");
       return { ok: false };
     }
+    if (isViewPeriodLocked()) {
+      setPanelError?.("projects", "Evaluation period is locked. Unlock the period to make changes.");
+      return;
+    }
     setMessage("");
     clearPanelError("projects");
     incLoading();
@@ -155,6 +166,10 @@ export function useManageProjects({
       setPanelError("projects", "Select a period before adding a group.");
       return { ok: false };
     }
+    if (isViewPeriodLocked()) {
+      setPanelError?.("projects", "Evaluation period is locked. Unlock the period to make changes.");
+      return { ok: false };
+    }
     setMessage("");
     clearPanelError("projects");
     incLoading();
@@ -190,6 +205,10 @@ export function useManageProjects({
   const handleEditProject = async (row) => {
     const targetPeriodId = row?.periodId || viewPeriodId;
     if (!targetPeriodId) return;
+    if (isViewPeriodLocked()) {
+      setPanelError?.("projects", "Evaluation period is locked. Unlock the period to make changes.");
+      return { ok: false };
+    }
     setMessage("");
     clearPanelError("projects");
     incLoading();
@@ -216,6 +235,10 @@ export function useManageProjects({
 
   const handleDeleteProject = async (projectId) => {
     if (!projectId) return;
+    if (isViewPeriodLocked()) {
+      setPanelError?.("projects", "Evaluation period is locked. Unlock the period to make changes.");
+      return { ok: false };
+    }
     setMessage("");
     clearPanelError("projects");
     incLoading();
@@ -233,6 +256,10 @@ export function useManageProjects({
 
   const handleDuplicateProject = async (project) => {
     if (!project || !viewPeriodId) return;
+    if (isViewPeriodLocked()) {
+      setPanelError?.("projects", "Evaluation period is locked. Unlock the period to make changes.");
+      return;
+    }
     setMessage("");
     clearPanelError("projects");
     incLoading();

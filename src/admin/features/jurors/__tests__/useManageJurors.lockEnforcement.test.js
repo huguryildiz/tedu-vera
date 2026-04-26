@@ -64,6 +64,7 @@ function makeOpts(overrides = {}) {
     viewPeriodId: "p-draft",
     viewPeriodLabel: "Fall 2025",
     projects: [],
+    periodList: [makeDraftPeriod(), makeLockedPeriod()],
     setMessage: vi.fn(),
     incLoading: vi.fn(),
     decLoading: vi.fn(),
@@ -91,92 +92,91 @@ describe("useManageJurors — lock enforcement", () => {
   // ── handleAddJuror (MISSING enforcement) ──
   // ─────────────────────────────────────────────────────────────
 
-  todo("period-lock-enforcement.add-juror.locked-rejected", async () => {
-    // Hook currently lacks client-side lock check.
-    // Product rule: when is_locked=true, createJuror RPC should reject
-    // This test is a TODO placeholder until enforcement is added.
-    // Expected behavior:
-    // - viewPeriodId → locked period (is_locked=true)
-    // - handleAddJuror() called
-    // - Should return {ok: false} early WITHOUT calling createJuror RPC
-    // - Error message should mention "locked" or "scoring in progress"
+  qaTest("period-lock-enforcement.add-juror.locked-rejected", async () => {
+    const opts = makeOpts({ viewPeriodId: "p-locked" });
+    const { result } = renderHook(() => useManageJurors(opts));
+    await waitFor(() => expect(result.current.jurors).toBeDefined());
+
+    const addResult = await result.current.handleAddJuror({ name: "Test", email: "t@test.edu" });
+
+    expect(mockCreateJuror).not.toHaveBeenCalled();
+    expect(addResult?.ok).toBe(false);
   });
 
   // ─────────────────────────────────────────────────────────────
   // ── handleImportJurors (MISSING enforcement) ──
   // ─────────────────────────────────────────────────────────────
 
-  todo("period-lock-enforcement.import-jurors.locked-rejected", async () => {
-    // Hook currently lacks client-side lock check in the import loop.
-    // Product rule: when is_locked=true, batch import must be rejected
-    // This test is a TODO placeholder until enforcement is added.
-    // Expected behavior:
-    // - viewPeriodId → locked period (is_locked=true)
-    // - handleImportJurors([...rows]) called with CSV data
-    // - Should return early WITHOUT calling createJuror for any row
-    // - Error message should prevent batch creation
+  qaTest("period-lock-enforcement.import-jurors.locked-rejected", async () => {
+    const opts = makeOpts({ viewPeriodId: "p-locked" });
+    const { result } = renderHook(() => useManageJurors(opts));
+    await waitFor(() => expect(result.current.jurors).toBeDefined());
+
+    await result.current.handleImportJurors([{ name: "Test", email: "t@test.edu" }]);
+
+    expect(mockCreateJuror).not.toHaveBeenCalled();
   });
 
   // ─────────────────────────────────────────────────────────────
   // ── handleEditJuror (MISSING enforcement) ──
   // ─────────────────────────────────────────────────────────────
 
-  todo("period-lock-enforcement.edit-juror.locked-rejected", async () => {
-    // Hook currently lacks client-side lock check before RPC.
-    // Fallback: line 369 has error handler for "period_locked" from RPC,
-    // but no preventive client-side fastfail per architecture rule.
-    // This test is a TODO placeholder until enforcement is added.
-    // Expected behavior:
-    // - viewPeriodId → locked period (is_locked=true)
-    // - handleEditJuror(jurorId, updates) called
-    // - Should return {ok: false} early WITHOUT calling updateJuror RPC
-    // - Error message should mention "locked"
+  qaTest("period-lock-enforcement.edit-juror.locked-rejected", async () => {
+    const opts = makeOpts({ viewPeriodId: "p-locked" });
+    const { result } = renderHook(() => useManageJurors(opts));
+    await waitFor(() => expect(result.current.jurors).toBeDefined());
+
+    const editResult = await result.current.handleEditJuror({ jurorId: "j1", juror_name: "Updated", email: "a@test.edu", affiliation: "Test" });
+
+    expect(mockUpdateJuror).not.toHaveBeenCalled();
+    expect(editResult?.ok).toBe(false);
   });
 
   // ─────────────────────────────────────────────────────────────
   // ── handleDeleteJuror (MISSING enforcement) ──
   // ─────────────────────────────────────────────────────────────
 
-  todo("period-lock-enforcement.delete-juror.locked-rejected", async () => {
-    // Hook currently lacks client-side lock check before RPC.
-    // Fallback: line 531 has error handler for "period_locked" from RPC,
-    // but no preventive client-side fastfail per architecture rule.
-    // This test is a TODO placeholder until enforcement is added.
-    // Expected behavior:
-    // - viewPeriodId → locked period (is_locked=true)
-    // - handleDeleteJuror(jurorId) called
-    // - Should return {ok: false} early WITHOUT calling deleteJuror RPC
-    // - Error message should mention "locked"
+  qaTest("period-lock-enforcement.delete-juror.locked-rejected", async () => {
+    const opts = makeOpts({ viewPeriodId: "p-locked" });
+    const { result } = renderHook(() => useManageJurors(opts));
+    await waitFor(() => expect(result.current.jurors).toBeDefined());
+
+    const deleteResult = await result.current.handleDeleteJuror("j1");
+
+    expect(mockDeleteJuror).not.toHaveBeenCalled();
+    expect(deleteResult?.ok).toBe(false);
   });
 
   // ─────────────────────────────────────────────────────────────
   // ── handleToggleJurorEdit (MISSING enforcement) ──
   // ─────────────────────────────────────────────────────────────
 
-  todo("period-lock-enforcement.toggle-juror-edit.locked-rejected", async () => {
-    // Hook currently lacks client-side lock check before RPC.
-    // Fallback: line 591 has error handler for "period_locked" from RPC,
-    // but no preventive client-side fastfail per architecture rule.
-    // This test is a TODO placeholder until enforcement is added.
-    // Expected behavior:
-    // - viewPeriodId → locked period (is_locked=true)
-    // - handleToggleJurorEdit(jurorId, mode) called
-    // - Should return {ok: false} early WITHOUT calling setJurorEditMode RPC
-    // - Error message should mention "locked"
+  qaTest("period-lock-enforcement.toggle-juror-edit.locked-rejected", async () => {
+    const setEvalLockError = vi.fn();
+    const opts = makeOpts({ viewPeriodId: "p-locked", setEvalLockError });
+    const { result } = renderHook(() => useManageJurors(opts));
+    await waitFor(() => expect(result.current.jurors).toBeDefined());
+
+    const toggleResult = await result.current.handleToggleJurorEdit({ jurorId: "j1", enabled: true, reason: "test", durationMinutes: 60 });
+
+    expect(mockSetJurorEditMode).not.toHaveBeenCalled();
+    expect(setEvalLockError).toHaveBeenCalledWith(expect.stringContaining("locked"));
   });
 
   // ─────────────────────────────────────────────────────────────
   // ── handleForceCloseJurorEdit (MISSING enforcement) ──
   // ─────────────────────────────────────────────────────────────
 
-  todo("period-lock-enforcement.force-close-juror-edit.locked-rejected", async () => {
-    // Hook currently lacks client-side lock check before RPC.
-    // This test is a TODO placeholder until enforcement is added.
-    // Expected behavior:
-    // - viewPeriodId → locked period (is_locked=true)
-    // - handleForceCloseJurorEdit(jurorId) called
-    // - Should return {ok: false} early WITHOUT calling forceCloseJurorEditMode RPC
-    // - Error message should mention "locked"
+  qaTest("period-lock-enforcement.force-close-juror-edit.locked-rejected", async () => {
+    const setEvalLockError = vi.fn();
+    const opts = makeOpts({ viewPeriodId: "p-locked", setEvalLockError });
+    const { result } = renderHook(() => useManageJurors(opts));
+    await waitFor(() => expect(result.current.jurors).toBeDefined());
+
+    const forceResult = await result.current.handleForceCloseJurorEdit({ jurorId: "j1" });
+
+    expect(mockForceCloseJurorEditMode).not.toHaveBeenCalled();
+    expect(setEvalLockError).toHaveBeenCalledWith(expect.stringContaining("locked"));
   });
 
   // ─────────────────────────────────────────────────────────────

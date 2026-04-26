@@ -17,7 +17,7 @@ const baseProps = {
 };
 
 describe("CriteriaFilterPanel", () => {
-  qaTest("coverage.criteria-filter-panel.renders", () => {
+  qaTest("coverage.criteria-filter-panel.displays-filter-heading", () => {
     render(<CriteriaFilterPanel {...baseProps} />);
     expect(screen.getByText(/Filter Criteria/)).toBeInTheDocument();
   });

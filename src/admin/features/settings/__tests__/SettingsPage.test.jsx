@@ -115,7 +115,7 @@ function renderPage() {
 }
 
 describe("SettingsPage", () => {
-  qaTest("admin.settings.page.render", () => {
+  qaTest("admin.settings.page.mounts-showing-settings-heading", () => {
     renderPage();
     expect(screen.getByText("Settings")).toBeInTheDocument();
   });

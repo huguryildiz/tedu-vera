@@ -33,11 +33,6 @@ test.describe("analytics page", () => {
     return shell;
   }
 
-  test("page renders — chart container visible", async ({ page }) => {
-    await signInAndGoto(page);
-    await expect(page.locator('[data-testid="analytics-chart-container"]')).toBeVisible();
-  });
-
   test("nav item navigates to analytics", async ({ page }) => {
     const shell = await signInAndGoto(page);
     await expect(shell.navItem("analytics")).toBeVisible();

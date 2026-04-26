@@ -1926,7 +1926,7 @@
     "severity": "high"
   },
   {
-    "id": "auth.login.render",
+    "id": "auth.login.shows-login-form-fields",
     "module": "Auth / Features",
     "area": "LoginScreen",
     "story": "render smoke",
@@ -1959,7 +1959,7 @@
     "severity": "high"
   },
   {
-    "id": "auth.register.render",
+    "id": "auth.register.shows-registration-form-fields",
     "module": "Auth / Features",
     "area": "RegisterScreen",
     "story": "render smoke",
@@ -1992,7 +1992,7 @@
     "severity": "high"
   },
   {
-    "id": "auth.forgot.render",
+    "id": "auth.forgot.shows-email-field-and-send-link-button",
     "module": "Auth / Features",
     "area": "ForgotPasswordScreen",
     "story": "render smoke",
@@ -2025,7 +2025,7 @@
     "severity": "medium"
   },
   {
-    "id": "auth.reset.render",
+    "id": "auth.reset.shows-new-password-and-submit-button",
     "module": "Auth / Features",
     "area": "ResetPasswordScreen",
     "story": "render smoke",
@@ -2058,7 +2058,7 @@
     "severity": "medium"
   },
   {
-    "id": "auth.complete.render",
+    "id": "auth.complete.shows-profile-completion-fields",
     "module": "Auth / Features",
     "area": "CompleteProfileScreen",
     "story": "render smoke",
@@ -2091,7 +2091,7 @@
     "severity": "high"
   },
   {
-    "id": "auth.verify.render",
+    "id": "auth.verify.shows-error-state-when-token-absent",
     "module": "Auth / Features",
     "area": "VerifyEmailScreen",
     "story": "render smoke",
@@ -2124,7 +2124,7 @@
     "severity": "high"
   },
   {
-    "id": "auth.pending.render",
+    "id": "auth.pending.shows-waiting-ui-and-fetches-join-requests",
     "module": "Auth / Features",
     "area": "PendingReviewScreen",
     "story": "render smoke",
@@ -2157,7 +2157,7 @@
     "severity": "high"
   },
   {
-    "id": "auth.grace.render",
+    "id": "auth.grace.shows-warning-title-and-resend-email-button",
     "module": "Auth / Features",
     "area": "GraceLockScreen",
     "story": "render smoke",
@@ -2190,7 +2190,7 @@
     "severity": "medium"
   },
   {
-    "id": "auth.invite.render",
+    "id": "auth.invite.shows-password-and-confirm-fields",
     "module": "Auth / Features",
     "area": "InviteAcceptScreen",
     "story": "render smoke",
@@ -2971,7 +2971,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.jurors.page.render",
+    "id": "admin.jurors.page.mounts-without-crashing",
     "module": "Admin / Features",
     "area": "JurorsPage",
     "story": "page render smoke",
@@ -3004,7 +3004,7 @@
     "severity": "high"
   },
   {
-    "id": "admin.jurors.edit.render",
+    "id": "admin.jurors.edit.prepopulates-fields-with-juror-data",
     "module": "Admin / Features",
     "area": "EditJurorDrawer",
     "story": "edit juror pre-population",
@@ -3015,7 +3015,7 @@
     "severity": "high"
   },
   {
-    "id": "admin.jurors.hook.load",
+    "id": "admin.jurors.hook.initializes-with-empty-array-before-fetch",
     "module": "Admin / Features",
     "area": "useManageJurors",
     "story": "hook initialization",
@@ -3026,7 +3026,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.periods.page.render",
+    "id": "admin.periods.page.mounts-without-crashing",
     "module": "Admin / Features",
     "area": "PeriodsPage",
     "story": "page render smoke",
@@ -3070,7 +3070,7 @@
     "severity": "critical"
   },
   {
-    "id": "admin.periods.hook.load",
+    "id": "admin.periods.hook.initializes-with-empty-list-before-fetch",
     "module": "Admin / Features",
     "area": "useManagePeriods",
     "story": "hook initialization",
@@ -3081,7 +3081,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.projects.page.render",
+    "id": "admin.projects.page.mounts-without-crashing",
     "module": "Admin / Features",
     "area": "ProjectsPage",
     "story": "page render smoke",
@@ -3125,7 +3125,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.orgs.page.render",
+    "id": "admin.orgs.page.mounts-showing-platform-control-title",
     "module": "Admin / Features",
     "area": "OrganizationsPage",
     "story": "page render smoke",
@@ -3136,7 +3136,7 @@
     "severity": "critical"
   },
   {
-    "id": "admin.orgs.hook.load",
+    "id": "admin.orgs.hook.initializes-with-empty-list-before-fetch",
     "module": "Admin / Features",
     "area": "useManageOrganizations",
     "story": "hook initialization",
@@ -3202,7 +3202,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.reviews.page.render",
+    "id": "admin.reviews.page.mounts-with-no-active-filters",
     "module": "Admin / Reviews",
     "area": "ReviewsPage",
     "story": "ReviewsPage renders without crash",
@@ -3235,7 +3235,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.rankings.page.render",
+    "id": "admin.rankings.page.mounts-with-no-projects",
     "module": "Admin / Rankings",
     "area": "RankingsPage",
     "story": "RankingsPage renders without crash",
@@ -3246,7 +3246,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.analytics.page.render",
+    "id": "admin.analytics.page.mounts-with-empty-outcome-data",
     "module": "Admin / Analytics",
     "area": "AnalyticsPage",
     "story": "AnalyticsPage renders without crash",
@@ -3257,7 +3257,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.analytics.data.load",
+    "id": "admin.analytics.data.returns-stable-empty-state-on-mount",
     "module": "Admin / Analytics",
     "area": "useAnalyticsData",
     "story": "useAnalyticsData returns stable initial state",
@@ -3268,7 +3268,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.heatmap.page.render",
+    "id": "admin.heatmap.page.mounts-with-empty-jurors-and-groups",
     "module": "Admin / Heatmap",
     "area": "HeatmapPage",
     "story": "HeatmapPage renders without crash",
@@ -3290,7 +3290,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.overview.page.render",
+    "id": "admin.overview.page.mounts-without-crashing",
     "module": "Admin / Overview",
     "area": "OverviewPage",
     "story": "OverviewPage renders without crash",
@@ -3301,7 +3301,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.audit.page.render",
+    "id": "admin.audit.page.mounts-with-no-filters",
     "module": "Admin / Audit",
     "area": "AuditLogPage",
     "story": "AuditLogPage renders without crash",
@@ -3323,7 +3323,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.entry.page.render",
+    "id": "admin.entry.page.mounts-with-no-active-token",
     "module": "Admin / Entry Control",
     "area": "EntryControlPage",
     "story": "EntryControlPage renders without crash",
@@ -3334,7 +3334,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.pin.page.render",
+    "id": "admin.pin.page.mounts-with-no-locked-jurors",
     "module": "Admin / PIN Blocking",
     "area": "PinBlockingPage",
     "story": "PinBlockingPage renders without crash",
@@ -3345,7 +3345,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.pin.hook.load",
+    "id": "admin.pin.hook.sets-locked-jurors-state-after-api-resolves",
     "module": "Admin / PIN Blocking",
     "area": "usePinBlocking",
     "story": "usePinBlocking.loadLockedJurors calls listLockedJurors API",
@@ -3367,7 +3367,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.export.page.render",
+    "id": "admin.export.page.mounts-without-period-selection",
     "module": "Admin / Export",
     "area": "ExportPage",
     "story": "ExportPage renders without crash",
@@ -3378,7 +3378,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.criteria.page.render",
+    "id": "admin.criteria.page.mounts-with-no-criteria",
     "module": "Admin / Criteria",
     "area": "CriteriaPage",
     "story": "CriteriaPage renders without crash",
@@ -3455,7 +3455,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.outcomes.page.render",
+    "id": "admin.outcomes.page.mounts-with-no-outcomes",
     "module": "Admin / Outcomes",
     "area": "OutcomesPage",
     "story": "OutcomesPage renders without crash",
@@ -3477,7 +3477,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.settings.page.render",
+    "id": "admin.settings.page.mounts-showing-settings-heading",
     "module": "Admin / Settings",
     "area": "SettingsPage",
     "story": "SettingsPage renders without crash",
@@ -3510,7 +3510,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.setup.page.render",
+    "id": "admin.setup.page.mounts-showing-first-wizard-step",
     "module": "Admin / Setup Wizard",
     "area": "SetupWizardPage",
     "story": "SetupWizardPage renders without crash",
@@ -7094,6 +7094,39 @@
     "severity": "minor"
   },
   {
+    "id": "admin.overview.kpi.juror-count",
+    "module": "admin/features/overview/OverviewPage",
+    "area": "KPI Strip",
+    "story": "KPI total jurors count",
+    "scenario": "KPI strip displays correct total active jurors count",
+    "whyItMatters": "KPI must accurately reflect total jurors assigned to the period",
+    "risk": "low",
+    "coverageStrength": "statement",
+    "severity": "minor"
+  },
+  {
+    "id": "admin.overview.kpi.completion-percentage",
+    "module": "admin/features/overview/OverviewPage",
+    "area": "KPI Strip",
+    "story": "KPI completion percentage",
+    "scenario": "KPI strip calculates and displays correct completion percentage",
+    "whyItMatters": "Completion % must accurately reflect submitted/completed evaluations",
+    "risk": "low",
+    "coverageStrength": "statement",
+    "severity": "minor"
+  },
+  {
+    "id": "admin.overview.kpi.empty-state",
+    "module": "admin/features/overview/OverviewPage",
+    "area": "KPI Strip",
+    "story": "KPI empty state",
+    "scenario": "KPI strip shows dashes when no jurors are assigned",
+    "whyItMatters": "KPI must gracefully handle zero-juror state without rendering errors",
+    "risk": "low",
+    "coverageStrength": "branch",
+    "severity": "minor"
+  },
+  {
     "id": "admin.jurors.page.kpi-labels",
     "module": "admin/features/jurors/JurorsPage",
     "area": "JurorsPage",
@@ -7679,7 +7712,7 @@
     "severity": "critical"
   },
   {
-    "id": "coverage.landing.hero-renders",
+    "id": "coverage.landing.hero-displays-headline-text",
     "module": "landing/LandingPage",
     "area": "LandingPage",
     "story": "hero heading renders",
@@ -7690,7 +7723,7 @@
     "severity": "critical"
   },
   {
-    "id": "coverage.demo-loader.steps-render",
+    "id": "coverage.demo-loader.shows-loading-steps-on-mount",
     "module": "shared/ui/DemoAdminLoader",
     "area": "DemoAdminLoader",
     "story": "loading steps render",
@@ -7712,7 +7745,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.avg-donut.renders-value",
+    "id": "coverage.avg-donut.displays-numeric-value-in-aria-label",
     "module": "admin/shared/AvgDonut",
     "area": "AvgDonut",
     "story": "renders numeric average",
@@ -7756,7 +7789,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.chart-data-table.renders-summary",
+    "id": "coverage.chart-data-table.displays-view-data-table-toggle",
     "module": "charts/chartUtils",
     "area": "ChartDataTable",
     "story": "renders accessible summary toggle",
@@ -7767,7 +7800,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.chart-data-table.renders-rows",
+    "id": "coverage.chart-data-table.displays-cell-values-in-tbody",
     "module": "charts/chartUtils",
     "area": "ChartDataTable",
     "story": "renders data rows",
@@ -7778,7 +7811,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.stepper-bar.renders-labels",
+    "id": "coverage.stepper-bar.displays-all-five-step-labels",
     "module": "jury/shared/StepperBar",
     "area": "StepperBar",
     "story": "renders all step labels",
@@ -7822,7 +7855,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.status-pill.renders-draft",
+    "id": "coverage.status-pill.displays-draft-text-for-draft-status",
     "module": "admin/features/periods/components/StatusPill",
     "area": "StatusPill",
     "story": "renders Draft pill",
@@ -7833,7 +7866,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.status-pill.renders-live",
+    "id": "coverage.status-pill.displays-live-text-for-live-status",
     "module": "admin/features/periods/components/StatusPill",
     "area": "StatusPill",
     "story": "renders Live pill",
@@ -7844,7 +7877,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.lifecycle-bar.renders-segments",
+    "id": "coverage.lifecycle-bar.displays-segment-summary-text",
     "module": "admin/features/periods/components/LifecycleBar",
     "area": "LifecycleBar",
     "story": "renders lifecycle segment summary",
@@ -7888,7 +7921,7 @@
     "severity": "normal"
   },
   {
-    "id": "admin.periods.page.mounts",
+    "id": "admin.periods.page.exercises-full-import-graph",
     "module": "admin/features/periods/PeriodsPage",
     "area": "PeriodsPage",
     "story": "smoke mount",
@@ -7965,7 +7998,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.outcomes-table.renders-rows",
+    "id": "coverage.outcomes-table.displays-one-row-per-outcome",
     "module": "admin/features/outcomes/components/OutcomesTable",
     "area": "OutcomesTable",
     "story": "renders one row per outcome",
@@ -8119,7 +8152,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.danger-icon-button.renders",
+    "id": "coverage.danger-icon-button.renders-with-aria-label",
     "module": "admin/shared/DangerIconButton",
     "area": "DangerIconButton",
     "story": "renders the button",
@@ -8141,7 +8174,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.last-activity.renders-value",
+    "id": "coverage.last-activity.displays-formatted-timestamp",
     "module": "admin/features/settings/LastActivity",
     "area": "LastActivity",
     "story": "renders formatted timestamp",
@@ -8163,7 +8196,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.completion-strip.renders-progress",
+    "id": "coverage.completion-strip.displays-completion-fraction-text",
     "module": "admin/features/periods/CompletionStrip",
     "area": "CompletionStrip",
     "story": "renders juror completion text",
@@ -8383,7 +8416,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.demo-layout.renders-outlet",
+    "id": "coverage.demo-layout.passes-child-route-to-outlet",
     "module": "layouts/DemoLayout",
     "area": "DemoLayout",
     "story": "renders child route",
@@ -8394,7 +8427,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.auth-route-layout.renders-outlet",
+    "id": "coverage.auth-route-layout.passes-child-route-to-outlet",
     "module": "layouts/AuthRouteLayout",
     "area": "AuthRouteLayout",
     "story": "renders child route",
@@ -8416,7 +8449,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.criteria-filter-panel.renders",
+    "id": "coverage.criteria-filter-panel.displays-filter-heading",
     "module": "admin/features/criteria/components/CriteriaFilterPanel",
     "area": "CriteriaFilterPanel",
     "story": "renders filter header",
@@ -8471,7 +8504,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.tenant-search-dropdown.renders",
+    "id": "coverage.tenant-search-dropdown.displays-search-input",
     "module": "auth/features/register/TenantSearchDropdown",
     "area": "TenantSearchDropdown",
     "story": "renders search input",
@@ -8482,7 +8515,7 @@
     "severity": "high"
   },
   {
-    "id": "coverage.setup-progress-banner.renders",
+    "id": "coverage.setup-progress-banner.displays-step-count",
     "module": "admin/layout/SetupProgressBanner",
     "area": "SetupProgressBanner",
     "story": "renders setup steps",
@@ -8526,7 +8559,7 @@
     "severity": "high"
   },
   {
-    "id": "coverage.outcome-pill-selector.renders-pills",
+    "id": "coverage.outcome-pill-selector.displays-pill-for-each-outcome",
     "module": "admin/features/criteria/OutcomePillSelector",
     "area": "OutcomePillSelector",
     "story": "renders outcome pills",
@@ -8548,7 +8581,7 @@
     "severity": "high"
   },
   {
-    "id": "coverage.maintenance-gate.renders-children",
+    "id": "coverage.maintenance-gate.passes-children-when-not-in-maintenance",
     "module": "components/MaintenanceGate",
     "area": "MaintenanceGate",
     "story": "renders children when not in maintenance",
@@ -8559,7 +8592,7 @@
     "severity": "high"
   },
   {
-    "id": "coverage.segmented-bar.renders-segments",
+    "id": "coverage.segmented-bar.displays-one-segment-per-project",
     "module": "jury/features/evaluation/SegmentedBar",
     "area": "SegmentedBar",
     "story": "renders one segment per project",
@@ -8680,7 +8713,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.ui-table.renders",
+    "id": "coverage.ui-table.mounts-all-subcomponents-without-error",
     "module": "components/ui/table",
     "area": "UI Table",
     "story": "table UI components render",
@@ -8713,7 +8746,7 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.tenant-switcher.renders-multi",
+    "id": "coverage.tenant-switcher.shows-switcher-for-multi-tenant-admin",
     "module": "admin/features/organizations/TenantSwitcher",
     "area": "TenantSwitcher",
     "story": "TenantSwitcher renders for multi-tenant admin",

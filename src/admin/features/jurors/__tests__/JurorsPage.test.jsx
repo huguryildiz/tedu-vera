@@ -184,7 +184,7 @@ describe("JurorsPage", () => {
     mockGetActiveEntryTokenPlain.mockResolvedValue({});
   });
 
-  qaTest("admin.jurors.page.render", () => {
+  qaTest("admin.jurors.page.mounts-without-crashing", () => {
     renderPage();
     expect(screen.getAllByText("Jurors").length).toBeGreaterThan(0);
   });

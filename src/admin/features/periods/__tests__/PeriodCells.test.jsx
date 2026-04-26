@@ -25,19 +25,19 @@ describe("ProgressCell", () => {
 });
 
 describe("StatusPill", () => {
-  qaTest("coverage.status-pill.renders-draft", () => {
+  qaTest("coverage.status-pill.displays-draft-text-for-draft-status", () => {
     render(<StatusPill status="draft" />);
     expect(screen.getByText("Draft")).toBeInTheDocument();
   });
 
-  qaTest("coverage.status-pill.renders-live", () => {
+  qaTest("coverage.status-pill.displays-live-text-for-live-status", () => {
     render(<StatusPill status="live" />);
     expect(screen.getByText("Live")).toBeInTheDocument();
   });
 });
 
 describe("LifecycleBar", () => {
-  qaTest("coverage.lifecycle-bar.renders-segments", () => {
+  qaTest("coverage.lifecycle-bar.displays-segment-summary-text", () => {
     render(<LifecycleBar draft={2} published={1} live={3} closed={0} />);
     expect(screen.getByText(/2 draft/)).toBeInTheDocument();
     expect(screen.getByText(/3 live/)).toBeInTheDocument();

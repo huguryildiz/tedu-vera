@@ -105,7 +105,7 @@ describe("ProjectsPage", () => {
     mockProjectPeriodState.viewPeriodLabel = "—";
   });
 
-  qaTest("admin.projects.page.render", () => {
+  qaTest("admin.projects.page.mounts-without-crashing", () => {
     renderPage();
     expect(screen.getAllByText("Projects").length).toBeGreaterThan(0);
   });

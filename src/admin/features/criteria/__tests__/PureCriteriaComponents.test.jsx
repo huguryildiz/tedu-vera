@@ -17,7 +17,7 @@ describe("OutcomePillSelector", () => {
     expect(screen.getByText("No outcomes defined yet.")).toBeInTheDocument();
   });
 
-  qaTest("coverage.outcome-pill-selector.renders-pills", () => {
+  qaTest("coverage.outcome-pill-selector.displays-pill-for-each-outcome", () => {
     const outcomes = [
       { code: "PO1", label: "Engineering Design", desc_en: "Design engineering systems" },
       { code: "PO2", label: "Analysis", desc_en: "Analyze complex problems" },

@@ -13,7 +13,7 @@ vi.mock("@/admin/utils/adminUtils", () => ({
 import LastActivity from "../LastActivity";
 
 describe("LastActivity", () => {
-  qaTest("coverage.last-activity.renders-value", () => {
+  qaTest("coverage.last-activity.displays-formatted-timestamp", () => {
     render(<LastActivity value="2024-01-01T00:00:00Z" />);
     expect(screen.getByText("Jan 1, 2024")).toBeInTheDocument();
   });

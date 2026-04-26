@@ -13,7 +13,7 @@ import {
 } from "../ui/table";
 
 describe("UI Table components", () => {
-  qaTest("coverage.ui-table.renders", () => {
+  qaTest("coverage.ui-table.mounts-all-subcomponents-without-error", () => {
     const { container } = render(
       <Table>
         <TableHeader>

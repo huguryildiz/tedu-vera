@@ -124,7 +124,7 @@ describe("AuditLogPage", () => {
     mockAuditState.showAuditSkeleton = false;
   });
 
-  qaTest("admin.audit.page.render", () => {
+  qaTest("admin.audit.page.mounts-with-no-filters", () => {
     renderPage();
     expect(document.body.textContent.length).toBeGreaterThan(0);
   });

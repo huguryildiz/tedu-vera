@@ -115,7 +115,7 @@ vi.mock("../OrganizationsPage.css", () => ({}));
 import OrganizationsPage from "../OrganizationsPage";
 
 describe("OrganizationsPage", () => {
-  qaTest("admin.orgs.page.render", () => {
+  qaTest("admin.orgs.page.mounts-showing-platform-control-title", () => {
     render(
       <MemoryRouter>
         <OrganizationsPage />

@@ -25,7 +25,7 @@ vi.mock("@/assets/vera_logo_white.png", () => ({ default: "vera_logo_white.png" 
 import MaintenanceGate from "../MaintenanceGate";
 
 describe("MaintenanceGate", () => {
-  qaTest("coverage.maintenance-gate.renders-children", () => {
+  qaTest("coverage.maintenance-gate.passes-children-when-not-in-maintenance", () => {
     render(
       <MemoryRouter>
         <ThemeProvider>

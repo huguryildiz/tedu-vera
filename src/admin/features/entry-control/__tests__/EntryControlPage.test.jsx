@@ -85,7 +85,7 @@ vi.mock("@/auth/shared/lockedActions", () => ({
 import EntryControlPage from "../EntryControlPage";
 
 describe("EntryControlPage", () => {
-  qaTest("admin.entry.page.render", () => {
+  qaTest("admin.entry.page.mounts-with-no-active-token", () => {
     render(
       <MemoryRouter>
         <EntryControlPage />

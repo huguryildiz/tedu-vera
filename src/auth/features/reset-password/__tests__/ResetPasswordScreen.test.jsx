@@ -28,7 +28,7 @@ describe("ResetPasswordScreen", () => {
     window.history.pushState({}, "", "/");
   });
 
-  qaTest("auth.reset.render", () => {
+  qaTest("auth.reset.shows-new-password-and-submit-button", () => {
     renderScreen();
     expect(screen.getByPlaceholderText("Min 10 chars, upper, lower, number, symbol")).toBeInTheDocument();
   });

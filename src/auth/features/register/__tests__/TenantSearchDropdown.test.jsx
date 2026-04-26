@@ -14,7 +14,7 @@ const tenants = [
 ];
 
 describe("TenantSearchDropdown", () => {
-  qaTest("coverage.tenant-search-dropdown.renders", () => {
+  qaTest("coverage.tenant-search-dropdown.displays-search-input", () => {
     render(
       <TenantSearchDropdown
         tenants={tenants}

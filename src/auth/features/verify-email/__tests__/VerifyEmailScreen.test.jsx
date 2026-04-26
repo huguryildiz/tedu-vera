@@ -34,7 +34,7 @@ function renderScreen(search = "") {
 }
 
 describe("VerifyEmailScreen", () => {
-  qaTest("auth.verify.render", async () => {
+  qaTest("auth.verify.shows-error-state-when-token-absent", async () => {
     // No token → error state immediately
     renderScreen("");
     await waitFor(() =>

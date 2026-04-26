@@ -30,7 +30,7 @@ beforeEach(() => {
 });
 
 describe("DemoAdminLoader", () => {
-  qaTest("coverage.demo-loader.steps-render", () => {
+  qaTest("coverage.demo-loader.shows-loading-steps-on-mount", () => {
     render(<DemoAdminLoader onComplete={vi.fn()} />);
     expect(screen.getByText("Preparing your workspace")).toBeInTheDocument();
     expect(screen.getByText("Authenticating")).toBeInTheDocument();

@@ -19,7 +19,7 @@ function renderScreen(props = {}) {
 }
 
 describe("GraceLockScreen", () => {
-  qaTest("auth.grace.render", () => {
+  qaTest("auth.grace.shows-warning-title-and-resend-email-button", () => {
     renderScreen();
     expect(screen.getByText(/account pending deletion/i)).toBeInTheDocument();
   });

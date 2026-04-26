@@ -4,7 +4,7 @@ import { qaTest } from "@/test/qaTest";
 import AvgDonut from "../AvgDonut";
 
 describe("AvgDonut", () => {
-  qaTest("coverage.avg-donut.renders-value", () => {
+  qaTest("coverage.avg-donut.displays-numeric-value-in-aria-label", () => {
     render(<AvgDonut value={72.456} max={100} />);
     const el = screen.getByRole("img");
     expect(el.getAttribute("aria-label")).toContain("72.5");

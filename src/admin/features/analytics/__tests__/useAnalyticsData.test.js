@@ -15,7 +15,7 @@ vi.mock("@/admin/utils/persist", () => ({
 import { useAnalyticsData } from "../useAnalyticsData";
 
 describe("useAnalyticsData", () => {
-  qaTest("admin.analytics.data.load", () => {
+  qaTest("admin.analytics.data.returns-stable-empty-state-on-mount", () => {
     const { result } = renderHook(() =>
       useAnalyticsData({
         organizationId: "org-001",

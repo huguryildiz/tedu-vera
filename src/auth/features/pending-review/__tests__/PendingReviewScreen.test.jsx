@@ -23,7 +23,7 @@ function renderScreen(props = {}) {
 }
 
 describe("PendingReviewScreen", () => {
-  qaTest("auth.pending.render", async () => {
+  qaTest("auth.pending.shows-waiting-ui-and-fetches-join-requests", async () => {
     mockGetMyJoinRequests.mockResolvedValue([]);
     renderScreen();
     await waitFor(() =>

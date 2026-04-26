@@ -95,7 +95,7 @@ describe("OutcomesPage", () => {
     mockOutcomesState.frameworks = [];
   });
 
-  qaTest("admin.outcomes.page.render", () => {
+  qaTest("admin.outcomes.page.mounts-with-no-outcomes", () => {
     renderPage();
     expect(screen.getByText("Outcomes & Mapping")).toBeInTheDocument();
   });

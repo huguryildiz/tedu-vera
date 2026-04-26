@@ -11,7 +11,7 @@ function renderScreen(props = {}) {
 }
 
 describe("CompleteProfileScreen", () => {
-  qaTest("auth.complete.render", () => {
+  qaTest("auth.complete.shows-profile-completion-fields", () => {
     renderScreen();
     expect(screen.getByPlaceholderText("Your full name")).toBeInTheDocument();
   });

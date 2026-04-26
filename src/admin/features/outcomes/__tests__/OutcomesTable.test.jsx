@@ -103,7 +103,7 @@ describe("OutcomesTable", () => {
     ).toBeInTheDocument();
   });
 
-  qaTest("coverage.outcomes-table.renders-rows", () => {
+  qaTest("coverage.outcomes-table.displays-one-row-per-outcome", () => {
     const outcomes = [
       { id: "o1", code: "PO-01", label: "Communication", coverage: "direct" },
       { id: "o2", code: "PO-02", label: "Teamwork", coverage: "indirect" },

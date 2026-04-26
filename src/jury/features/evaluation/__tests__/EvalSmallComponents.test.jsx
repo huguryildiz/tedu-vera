@@ -19,7 +19,7 @@ describe("SegmentedBar", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  qaTest("coverage.segmented-bar.renders-segments", () => {
+  qaTest("coverage.segmented-bar.displays-one-segment-per-project", () => {
     const projects = [
       { project_id: "p1", title: "Alpha" },
       { project_id: "p2", title: "Beta" },

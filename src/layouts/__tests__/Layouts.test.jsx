@@ -7,7 +7,7 @@ import DemoLayout from "../DemoLayout";
 import AuthRouteLayout from "../AuthRouteLayout";
 
 describe("DemoLayout", () => {
-  qaTest("coverage.demo-layout.renders-outlet", () => {
+  qaTest("coverage.demo-layout.passes-child-route-to-outlet", () => {
     render(
       <MemoryRouter initialEntries={["/demo"]}>
         <Routes>
@@ -22,7 +22,7 @@ describe("DemoLayout", () => {
 });
 
 describe("AuthRouteLayout", () => {
-  qaTest("coverage.auth-route-layout.renders-outlet", () => {
+  qaTest("coverage.auth-route-layout.passes-child-route-to-outlet", () => {
     render(
       <MemoryRouter>
         <Routes>

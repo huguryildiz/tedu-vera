@@ -69,7 +69,7 @@ function renderPage() {
 }
 
 describe("RankingsPage", () => {
-  qaTest("admin.rankings.page.render", () => {
+  qaTest("admin.rankings.page.mounts-with-no-projects", () => {
     renderPage();
     expect(document.body.textContent.length).toBeGreaterThan(0);
   });

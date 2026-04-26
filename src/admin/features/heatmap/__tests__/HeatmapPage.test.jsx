@@ -76,7 +76,7 @@ function renderPage() {
 }
 
 describe("HeatmapPage", () => {
-  qaTest("admin.heatmap.page.render", () => {
+  qaTest("admin.heatmap.page.mounts-with-empty-jurors-and-groups", () => {
     renderPage();
     expect(document.body.textContent.length).toBeGreaterThan(0);
   });

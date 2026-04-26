@@ -89,7 +89,7 @@ function renderPage() {
 }
 
 describe("AnalyticsPage", () => {
-  qaTest("admin.analytics.page.render", () => {
+  qaTest("admin.analytics.page.mounts-with-empty-outcome-data", () => {
     renderPage();
     expect(document.body.textContent.length).toBeGreaterThan(0);
   });

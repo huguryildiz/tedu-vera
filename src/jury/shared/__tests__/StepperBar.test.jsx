@@ -4,7 +4,7 @@ import { qaTest } from "@/test/qaTest";
 import StepperBar from "../StepperBar";
 
 describe("StepperBar", () => {
-  qaTest("coverage.stepper-bar.renders-labels", () => {
+  qaTest("coverage.stepper-bar.displays-all-five-step-labels", () => {
     render(<StepperBar step="identity" />);
     expect(screen.getByText("Identity")).toBeInTheDocument();
     expect(screen.getByText("PIN")).toBeInTheDocument();

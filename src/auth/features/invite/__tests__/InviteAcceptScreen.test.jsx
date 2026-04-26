@@ -66,7 +66,7 @@ describe("InviteAcceptScreen", () => {
     mockUpdateUser.mockResolvedValue({ error: null });
   });
 
-  qaTest("auth.invite.render", async () => {
+  qaTest("auth.invite.shows-password-and-confirm-fields", async () => {
     renderScreen();
     // Spinner visible while loading; after no session resolves → "Invite Unavailable"
     await waitFor(() =>

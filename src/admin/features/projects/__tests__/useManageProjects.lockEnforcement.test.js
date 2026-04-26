@@ -65,76 +65,74 @@ describe("useManageProjects — lock enforcement", () => {
   // ── handleImportProjects (MISSING enforcement) ──
   // ─────────────────────────────────────────────────────────────
 
-  todo("period-lock-enforcement.import-projects.locked-rejected", async () => {
-    // Hook currently lacks client-side lock check in the import loop.
-    // Product rule: when is_locked=true, batch project import must be rejected.
-    // This test is a TODO placeholder until enforcement is added.
-    // Expected behavior:
-    // - viewPeriodId → locked period (is_locked=true)
-    // - handleImportProjects([...rows]) called with CSV data
-    // - Should return early WITHOUT calling createProject for any row
-    // - Error message should prevent batch creation
-    // Current pattern: loop calls createProject for each row unconditionally
+  qaTest("period-lock-enforcement.import-projects.locked-rejected", async () => {
+    const opts = makeOpts({ viewPeriodId: "p-locked" });
+    const { result } = renderHook(() => useManageProjects(opts));
+    await waitFor(() => expect(result.current.projects).toBeDefined());
+
+    await result.current.handleImportProjects([{ title: "Test", students: "Alice", advisor: "Dr. Smith" }]);
+
+    expect(mockCreateProject).not.toHaveBeenCalled();
   });
 
   // ─────────────────────────────────────────────────────────────
   // ── handleAddProject (MISSING enforcement) ──
   // ─────────────────────────────────────────────────────────────
 
-  todo("period-lock-enforcement.add-project.locked-rejected", async () => {
-    // Hook currently lacks client-side lock check before RPC.
-    // Product rule: when is_locked=true, createProject must be rejected.
-    // This test is a TODO placeholder until enforcement is added.
-    // Expected behavior:
-    // - viewPeriodId → locked period (is_locked=true)
-    // - handleAddProject({title, students, advisor}) called
-    // - Should return {ok: false} early WITHOUT calling createProject RPC
-    // - Error message should mention "locked" or "scoring in progress"
+  qaTest("period-lock-enforcement.add-project.locked-rejected", async () => {
+    const opts = makeOpts({ viewPeriodId: "p-locked" });
+    const { result } = renderHook(() => useManageProjects(opts));
+    await waitFor(() => expect(result.current.projects).toBeDefined());
+
+    const addResult = await result.current.handleAddProject({ title: "Test", students: "Alice", advisor: "Dr. Smith" });
+
+    expect(mockCreateProject).not.toHaveBeenCalled();
+    expect(addResult?.ok).toBe(false);
   });
 
   // ─────────────────────────────────────────────────────────────
   // ── handleEditProject (MISSING enforcement) ──
   // ─────────────────────────────────────────────────────────────
 
-  todo("period-lock-enforcement.edit-project.locked-rejected", async () => {
-    // Hook currently lacks client-side lock check before RPC.
-    // Product rule: when is_locked=true, upsertProject must be rejected.
-    // This test is a TODO placeholder until enforcement is added.
-    // Expected behavior:
-    // - viewPeriodId → locked period (is_locked=true)
-    // - handleEditProject(projectId, updates) called
-    // - Should return {ok: false} early WITHOUT calling upsertProject RPC
-    // - Error message should mention "locked"
+  qaTest("period-lock-enforcement.edit-project.locked-rejected", async () => {
+    const opts = makeOpts({ viewPeriodId: "p-locked" });
+    const { result } = renderHook(() => useManageProjects(opts));
+    await waitFor(() => expect(result.current.projects).toBeDefined());
+
+    const editResult = await result.current.handleEditProject({ id: "proj1", title: "Updated", periodId: "p-locked" });
+
+    expect(mockUpsertProject).not.toHaveBeenCalled();
+    expect(editResult?.ok).toBe(false);
   });
 
   // ─────────────────────────────────────────────────────────────
   // ── handleDeleteProject (MISSING enforcement) ──
   // ─────────────────────────────────────────────────────────────
 
-  todo("period-lock-enforcement.delete-project.locked-rejected", async () => {
-    // Hook currently lacks client-side lock check before RPC.
-    // Product rule: when is_locked=true, deleteProject must be rejected.
-    // This test is a TODO placeholder until enforcement is added.
-    // Expected behavior:
-    // - viewPeriodId → locked period (is_locked=true)
-    // - handleDeleteProject(projectId) called
-    // - Should return {ok: false} early WITHOUT calling deleteProject RPC
-    // - Error message should mention "locked"
+  qaTest("period-lock-enforcement.delete-project.locked-rejected", async () => {
+    const opts = makeOpts({ viewPeriodId: "p-locked" });
+    const { result } = renderHook(() => useManageProjects(opts));
+    await waitFor(() => expect(result.current.projects).toBeDefined());
+
+    const deleteResult = await result.current.handleDeleteProject("proj1");
+
+    expect(mockDeleteProject).not.toHaveBeenCalled();
+    expect(deleteResult?.ok).toBe(false);
   });
 
   // ─────────────────────────────────────────────────────────────
   // ── handleDuplicateProject (MISSING enforcement) ──
   // ─────────────────────────────────────────────────────────────
 
-  todo("period-lock-enforcement.duplicate-project.locked-rejected", async () => {
-    // Hook currently lacks client-side lock check before RPC.
-    // Product rule: when is_locked=true, project duplication must be rejected.
-    // This test is a TODO placeholder until enforcement is added.
-    // Expected behavior:
-    // - viewPeriodId → locked period (is_locked=true)
-    // - handleDuplicateProject(projectId) called
-    // - Should return {ok: false} early WITHOUT calling createProject RPC
-    // - Error message should mention "locked"
+  qaTest("period-lock-enforcement.duplicate-project.locked-rejected", async () => {
+    const opts = makeOpts({ viewPeriodId: "p-locked" });
+    const { result } = renderHook(() => useManageProjects(opts));
+    await waitFor(() => expect(result.current.projects).toBeDefined());
+
+    const project = { id: "proj1", title: "Project Alpha", students: "Alice, Bob" };
+    await result.current.handleDuplicateProject(project);
+
+    expect(mockCreateProject).not.toHaveBeenCalled();
   });
 
   // ─────────────────────────────────────────────────────────────

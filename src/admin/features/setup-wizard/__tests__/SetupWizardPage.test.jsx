@@ -108,7 +108,7 @@ function renderPage() {
 }
 
 describe("SetupWizardPage", () => {
-  qaTest("admin.setup.page.render", () => {
+  qaTest("admin.setup.page.mounts-showing-first-wizard-step", () => {
     renderPage();
     expect(screen.getByText("Set up your evaluation")).toBeInTheDocument();
   });

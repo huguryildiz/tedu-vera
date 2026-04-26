@@ -12,7 +12,7 @@ const steps = [
 ];
 
 describe("SetupProgressBanner", () => {
-  qaTest("coverage.setup-progress-banner.renders", () => {
+  qaTest("coverage.setup-progress-banner.displays-step-count", () => {
     render(
       <MemoryRouter>
         <SetupProgressBanner basePath="/admin" steps={steps} />

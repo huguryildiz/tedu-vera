@@ -46,7 +46,7 @@ function makeOpts(overrides = {}) {
 }
 
 describe("useManageJurors", () => {
-  qaTest("admin.jurors.hook.load", () => {
+  qaTest("admin.jurors.hook.initializes-with-empty-array-before-fetch", () => {
     const { result } = renderHook(() => useManageJurors(makeOpts()));
     expect(result.current.jurors).toEqual([]);
     expect(Array.isArray(result.current.scoreRows)).toBe(true);

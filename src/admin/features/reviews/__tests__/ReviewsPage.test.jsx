@@ -115,7 +115,7 @@ describe("ReviewsPage", () => {
     });
   });
 
-  qaTest("admin.reviews.page.render", () => {
+  qaTest("admin.reviews.page.mounts-with-no-active-filters", () => {
     renderPage();
     expect(document.body.textContent.length).toBeGreaterThan(0);
   });

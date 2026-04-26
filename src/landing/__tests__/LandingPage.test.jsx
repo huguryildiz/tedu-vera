@@ -50,7 +50,7 @@ function renderPage() {
 }
 
 describe("LandingPage", () => {
-  qaTest("coverage.landing.hero-renders", () => {
+  qaTest("coverage.landing.hero-displays-headline-text", () => {
     renderPage();
     expect(screen.getByText(/Evaluate anything/i)).toBeInTheDocument();
   });

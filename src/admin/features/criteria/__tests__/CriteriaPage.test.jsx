@@ -133,7 +133,7 @@ describe("CriteriaPage", () => {
     mockListPeriodCriterionOutcomeMaps.mockResolvedValue([]);
   });
 
-  qaTest("admin.criteria.page.render", () => {
+  qaTest("admin.criteria.page.mounts-with-no-criteria", () => {
     expect(() => render(<Wrapped />)).not.toThrow();
   });
 

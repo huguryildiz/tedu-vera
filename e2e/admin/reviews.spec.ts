@@ -45,6 +45,8 @@ test.describe("reviews page — smoke", () => {
   test("page renders — reviews table visible", async ({ page }) => {
     const reviews = await signInAndGoto(page);
     await expect(reviews.table()).toBeVisible();
+    const rowCount = await reviews.rows().count();
+    expect(rowCount).toBeGreaterThan(0);
   });
 });
 
@@ -172,5 +174,111 @@ test.describe("reviews — juror edit-mode enable (E2)", () => {
     expect(auth.edit_enabled).toBe(true);
     expect(auth.edit_reason).toBe("E2E re-open test");
     expect(auth.final_submitted_at).not.toBeNull();
+  });
+});
+
+// ── Phase 2.4 — applyFilters engine correctness ──────────────────────────────
+// These assertions invoke the production `applyFilters` function inside an
+// authenticated admin page via `page.evaluate`, so the test is coupled to the
+// real module — a regression in `filterPipeline.js` surfaces as a test failure.
+
+test.describe("reviews — applyFilters engine (Phase 2.4)", () => {
+  test.describe.configure({ mode: "serial" });
+
+  /**
+   * Synthetic enriched rows. Every row already has `jurorStatus` and
+   * `effectiveStatus` populated as `enrichRows` would compute, plus a
+   * dynamic criterion key `c_design` so score-range filters have a target.
+   */
+  const SYNTH_ROWS = [
+    {
+      jurorId: "j1", juryName: "Juror Alpha", affiliation: "Dept A",
+      projectId: "p1", title: "Project P1", students: "Alice",
+      groupNo: "1", c_design: 75, total: 75, comments: "Looks good",
+      effectiveStatus: "scored", jurorStatus: "completed", updatedAt: "2026-04-01",
+    },
+    {
+      jurorId: "j2", juryName: "Juror Beta", affiliation: "Dept B",
+      projectId: "p1", title: "Project P1", students: "Alice",
+      groupNo: "1", c_design: 50, total: 50, comments: "",
+      effectiveStatus: "scored", jurorStatus: "completed", updatedAt: "2026-04-02",
+    },
+    {
+      jurorId: "j1", juryName: "Juror Alpha", affiliation: "Dept A",
+      projectId: "p2", title: "Project P2", students: "Bob",
+      groupNo: "2", c_design: 90, total: 90, comments: "Outstanding",
+      effectiveStatus: "scored", jurorStatus: "completed", updatedAt: "2026-04-03",
+    },
+    {
+      jurorId: "j2", juryName: "Juror Beta", affiliation: "Dept B",
+      projectId: "p2", title: "Project P2", students: "Bob",
+      groupNo: "2", c_design: 60, total: 60, comments: "Average",
+      effectiveStatus: "scored", jurorStatus: "completed", updatedAt: "2026-04-04",
+    },
+  ];
+
+  const BASE_FILTERS = {
+    scoreFilters: {},
+    scoreKeys: ["c_design"],
+    filterComment: "",
+  };
+
+  async function applyFiltersIn(
+    page: Parameters<Parameters<typeof test>[1]>[0]["page"],
+    rows: typeof SYNTH_ROWS,
+    overrides: Record<string, unknown>,
+  ): Promise<typeof SYNTH_ROWS> {
+    return page.evaluate(
+      async ({ rs, base, ov }) => {
+        // @ts-expect-error Vite dev server resolves at runtime
+        const mod = await import("/src/admin/selectors/filterPipeline.js");
+        return mod.applyFilters(rs, { ...base, ...ov });
+      },
+      { rs: rows, base: BASE_FILTERS, ov: overrides },
+    );
+  }
+
+  // e2e.admin.reviews.filter.comment_only_with_text
+  test("filterComment narrows to rows whose comment contains the substring", async ({ page }) => {
+    await signInAndGoto(page);
+    const filtered = await applyFiltersIn(page, SYNTH_ROWS, {
+      filterComment: "outstanding",
+    });
+    expect(filtered.length).toBe(1);
+    expect(filtered[0].jurorId).toBe("j1");
+    expect(filtered[0].projectId).toBe("p2");
+  });
+
+  // e2e.admin.reviews.filter.score_range
+  test("scoreFilters with min=70 max=80 keeps only the c_design=75 row", async ({ page }) => {
+    await signInAndGoto(page);
+    const filtered = await applyFiltersIn(page, SYNTH_ROWS, {
+      scoreFilters: { c_design: { min: 70, max: 80 } },
+    });
+    expect(filtered.length).toBe(1);
+    expect(filtered[0].c_design).toBe(75);
+  });
+
+  // e2e.admin.reviews.filter.combined_juror_project_comment
+  test("combined juror + project + comment filters intersect to the unique row", async ({ page }) => {
+    await signInAndGoto(page);
+    const filtered = await applyFiltersIn(page, SYNTH_ROWS, {
+      filterJuror: "alpha",
+      filterProjectTitle: "P2",
+      filterComment: "outstanding",
+    });
+    expect(filtered.length).toBe(1);
+    expect(filtered[0].jurorId).toBe("j1");
+    expect(filtered[0].projectId).toBe("p2");
+    expect(filtered[0].c_design).toBe(90);
+  });
+
+  // e2e.admin.reviews.filter.empty_comment_keeps_all_rows
+  test("blank filterComment is a no-op (pipe through)", async ({ page }) => {
+    await signInAndGoto(page);
+    const filtered = await applyFiltersIn(page, SYNTH_ROWS, {
+      filterComment: "",
+    });
+    expect(filtered.length).toBe(SYNTH_ROWS.length);
   });
 });

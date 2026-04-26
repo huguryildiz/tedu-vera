@@ -36,6 +36,7 @@ const getJurorNameById = (list, jurorId) => {
  * @param {string}   opts.viewPeriodId      Controlled by useManagePeriods.
  * @param {string}   opts.viewPeriodLabel   Human-readable label for toast messages.
  * @param {Array}    opts.projects          Current project list (for total_projects count).
+ * @param {Array}    opts.periodList        Used for lock check (is_locked lookup).
  * @param {Function} opts.setMessage        Toast setter from SettingsPage.
  * @param {Function} opts.setLoading        Loading setter from SettingsPage.
  * @param {Function} opts.setPanelError     (panel, msg) → sets a panel-level error.
@@ -47,6 +48,7 @@ export function useManageJurors({
   viewPeriodId,
   viewPeriodLabel,
   projects,
+  periodList,
   setMessage,
   incLoading,
   decLoading,
@@ -73,6 +75,13 @@ export function useManageJurors({
   organizationIdRef.current = organizationId;
   const viewPeriodIdRef = useRef(viewPeriodId);
   viewPeriodIdRef.current = viewPeriodId;
+
+  // ── Lock check helper ──────────────────────────────────────
+  const isViewPeriodLocked = useCallback(() => {
+    const pid = viewPeriodIdRef.current;
+    if (!pid || !periodList) return false;
+    return (periodList || []).find((p) => p.id === pid)?.is_locked ?? false;
+  }, [periodList]);
 
   // ── Reset pinCopied when resetPinInfo changes ─────────────
   useEffect(() => {
@@ -228,6 +237,10 @@ export function useManageJurors({
 
   // ── Juror CRUD handlers ──────────────────────────────────
   const handleAddJuror = async (row) => {
+    if (isViewPeriodLocked()) {
+      setMessage?.({ type: "error", text: "Evaluation period is locked. Unlock the period to make changes." });
+      return { ok: false };
+    }
     setMessage("");
     clearPanelError("jurors");
     incLoading();
@@ -281,6 +294,13 @@ export function useManageJurors({
   };
 
   const handleImportJurors = async (rows) => {
+    if (!viewPeriodId) {
+      return;
+    }
+    if (isViewPeriodLocked()) {
+      setMessage?.({ type: "error", text: "Evaluation period is locked. Unlock the period to make changes." });
+      return;
+    }
     setMessage("");
     clearPanelError("jurors");
     incLoading();
@@ -349,6 +369,10 @@ export function useManageJurors({
 
   const handleEditJuror = async (row) => {
     if (!row?.jurorId) return;
+    if (isViewPeriodLocked()) {
+      setPanelError?.("jurors", "Evaluation period is locked. Unlock the period to make changes.");
+      return { ok: false };
+    }
     setMessage("");
     clearPanelError("jurors");
     incLoading();
@@ -516,6 +540,10 @@ export function useManageJurors({
   // ── Delete handler ────────────────────────────────────────
   const handleDeleteJuror = async (jurorId) => {
     if (!jurorId) return;
+    if (isViewPeriodLocked()) {
+      setPanelError?.("jurors", "Evaluation period is locked. Unlock the period to make changes.");
+      return { ok: false };
+    }
     setMessage("");
     clearPanelError("jurors");
     incLoading();
@@ -540,6 +568,10 @@ export function useManageJurors({
   // ── Juror edit-mode handlers ──────────────────────────────
   const handleToggleJurorEdit = async ({ jurorId, enabled, reason, durationMinutes }) => {
     if (!viewPeriodId || !jurorId) return { ok: false };
+    if (isViewPeriodLocked()) {
+      setEvalLockError?.("Evaluation period is locked. Unlock the period to make changes.");
+      return { ok: false };
+    }
     setMessage("");
     setEvalLockError?.("");
     if (!enabled) {
@@ -605,6 +637,10 @@ export function useManageJurors({
 
   const handleForceCloseJurorEdit = async ({ jurorId }) => {
     if (!viewPeriodId || !jurorId) return;
+    if (isViewPeriodLocked()) {
+      setEvalLockError?.("Evaluation period is locked. Unlock the period to make changes.");
+      return { ok: false };
+    }
     setMessage("");
     setEvalLockError?.("");
     applyJurorPatch({

@@ -111,7 +111,7 @@ describe("PeriodsPage", () => {
   // BUG CLASS: import-graph break (a refactor that renames a barrel export
   // or moves a hook so PeriodsPage no longer compiles). The test catches
   // this at vitest time, before deploy. Anything richer belongs in E2E.
-  qaTest("admin.periods.page.mounts", () => {
+  qaTest("admin.periods.page.exercises-full-import-graph", () => {
     expect(() =>
       render(
         <MemoryRouter>

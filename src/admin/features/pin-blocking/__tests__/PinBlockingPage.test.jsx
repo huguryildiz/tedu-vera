@@ -60,7 +60,7 @@ vi.mock("../UnlockPinModal", () => ({ default: () => null }));
 import PinBlockingPage from "../PinBlockingPage";
 
 describe("PinBlockingPage", () => {
-  qaTest("admin.pin.page.render", () => {
+  qaTest("admin.pin.page.mounts-with-no-locked-jurors", () => {
     render(
       <MemoryRouter>
         <PinBlockingPage />

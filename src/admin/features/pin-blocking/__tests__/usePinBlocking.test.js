@@ -16,7 +16,7 @@ vi.mock("@/shared/hooks/useToast", () => ({
 import { usePinBlocking } from "../usePinBlocking";
 
 describe("usePinBlocking", () => {
-  qaTest("admin.pin.hook.load", () => {
+  qaTest("admin.pin.hook.sets-locked-jurors-state-after-api-resolves", () => {
     const { result } = renderHook(() =>
       usePinBlocking({ periodId: "period-001" })
     );

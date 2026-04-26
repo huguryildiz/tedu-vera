@@ -23,7 +23,7 @@ function renderScreen(props = {}) {
 }
 
 describe("LoginScreen", () => {
-  qaTest("auth.login.render", () => {
+  qaTest("auth.login.shows-login-form-fields", () => {
     renderScreen();
     expect(screen.getByPlaceholderText("Enter your email address")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Enter your password")).toBeInTheDocument();

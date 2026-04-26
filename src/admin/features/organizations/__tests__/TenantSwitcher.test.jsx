@@ -16,7 +16,7 @@ describe("TenantSwitcher", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  qaTest("coverage.tenant-switcher.renders-multi", () => {
+  qaTest("coverage.tenant-switcher.shows-switcher-for-multi-tenant-admin", () => {
     const tenants = [
       { id: "t1", name: "TEDU" },
       { id: "t2", name: "METU" },

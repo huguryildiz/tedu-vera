@@ -58,7 +58,7 @@ vi.mock("@/admin/shared/ManageBackupsDrawer", () => ({ default: () => null }));
 import ExportPage from "../ExportPage";
 
 describe("ExportPage", () => {
-  qaTest("admin.export.page.render", () => {
+  qaTest("admin.export.page.mounts-without-period-selection", () => {
     render(
       <MemoryRouter>
         <ExportPage />

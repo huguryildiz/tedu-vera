@@ -19,7 +19,7 @@ function renderScreen(props = {}) {
 }
 
 describe("ForgotPasswordScreen", () => {
-  qaTest("auth.forgot.render", () => {
+  qaTest("auth.forgot.shows-email-field-and-send-link-button", () => {
     renderScreen({ onResetPassword: vi.fn() });
     expect(screen.getByPlaceholderText("you@university.edu")).toBeInTheDocument();
   });

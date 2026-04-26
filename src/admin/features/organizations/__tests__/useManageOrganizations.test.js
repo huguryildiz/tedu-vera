@@ -65,7 +65,7 @@ describe("useManageOrganizations", () => {
     mockInviteOrgAdmin.mockResolvedValue({ status: "invited" });
   });
 
-  qaTest("admin.orgs.hook.load", () => {
+  qaTest("admin.orgs.hook.initializes-with-empty-list-before-fetch", () => {
     const { result } = renderHook(() => useManageOrganizations(makeOpts()));
     expect(Array.isArray(result.current.orgList)).toBe(true);
     expect(result.current.orgList).toEqual([]);

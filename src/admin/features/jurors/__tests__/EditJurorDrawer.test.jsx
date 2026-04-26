@@ -24,7 +24,7 @@ const JUROR = {
 };
 
 describe("EditJurorDrawer", () => {
-  qaTest("admin.jurors.edit.render", () => {
+  qaTest("admin.jurors.edit.prepopulates-fields-with-juror-data", () => {
     render(
       <EditJurorDrawer
         open

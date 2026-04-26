@@ -13,12 +13,12 @@ beforeAll(() => {
 import { ChartDataTable } from "../chartUtils";
 
 describe("ChartDataTable", () => {
-  qaTest("coverage.chart-data-table.renders-summary", () => {
+  qaTest("coverage.chart-data-table.displays-view-data-table-toggle", () => {
     render(<ChartDataTable caption="Test" headers={["A", "B"]} rows={[]} />);
     expect(screen.getByText("View data table")).toBeInTheDocument();
   });
 
-  qaTest("coverage.chart-data-table.renders-rows", () => {
+  qaTest("coverage.chart-data-table.displays-cell-values-in-tbody", () => {
     render(
       <ChartDataTable
         caption="Scores"
