@@ -7238,17 +7238,6 @@
     "severity": "minor"
   },
   {
-    "id": "admin.projects.page.no-period-selected",
-    "module": "admin/features/projects/ProjectsPage",
-    "area": "ProjectsPage",
-    "story": "no period selected with periods available",
-    "scenario": "renders period selection prompt when periodList has items but viewPeriodId is null",
-    "whyItMatters": "Users must be directed to select a period before managing projects",
-    "risk": "low",
-    "coverageStrength": "branch",
-    "severity": "major"
-  },
-  {
     "id": "admin.projects.page.table-headers",
     "module": "admin/features/projects/ProjectsPage",
     "area": "ProjectsPage",

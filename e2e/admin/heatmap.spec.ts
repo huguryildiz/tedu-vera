@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { LoginPom } from "../poms/LoginPom";
 import { AdminShellPom } from "../poms/AdminShellPom";
+import { HeatmapPom } from "../poms/HeatmapPom";
 import { E2E_PERIODS_ORG_ID } from "../fixtures/seed-ids";
 import { adminClient } from "../helpers/supabaseAdmin";
 import {
@@ -125,6 +126,27 @@ test.describe("heatmap data accuracy (E3)", () => {
     const j2p2 = page.getByTestId(`heatmap-cell-${j2}-${fixture.p2Id}`);
     await expect(j2p2).toHaveAttribute("data-cell-state", "scored");
     await expect(j2p2).toHaveAttribute("data-cell-score", "185");
+  });
+
+  test("HeatmapPom firstCellScore + cellColor reflect rendered cells", async ({ page }) => {
+    await signInAndGoto(page);
+    const heatmap = new HeatmapPom(page);
+    const [j1, j2] = fixture.jurorIds;
+
+    // Document order places J1×P1 first; it's the only "scored" cell on row 1
+    // and matches the seed total of 130. firstCellScore picks the first cell
+    // carrying data-cell-score, so partial/scored both qualify but J1×P1 wins.
+    expect(await heatmap.firstCellScore()).toBe(130);
+
+    // Empty cells carry no background → computed bg is transparent.
+    // Scored/partial cells render a non-transparent color.
+    const emptyBg = await heatmap.cellColor(j2, fixture.p1Id);
+    const scoredBg = await heatmap.cellColor(j2, fixture.p2Id);
+    const partialBg = await heatmap.cellColor(j1, fixture.p2Id);
+
+    expect(emptyBg).toMatch(/rgba?\(\s*0,\s*0,\s*0,\s*0\s*\)|transparent/i);
+    expect(scoredBg).not.toMatch(/rgba?\(\s*0,\s*0,\s*0,\s*0\s*\)|transparent/i);
+    expect(partialBg).not.toMatch(/rgba?\(\s*0,\s*0,\s*0,\s*0\s*\)|transparent/i);
   });
 
   test("row/column/overall averages match expected aggregation", async ({ page }) => {

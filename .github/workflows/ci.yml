@@ -297,12 +297,9 @@ jobs:
     #   - check:rpc-tests    → every public.rpc_* has a contract test
     #   - check:edge-schema  → every Edge fn has schema.ts + Zod-parse test
     #
-    # CURRENT STATE (W1, plan § 7.4): three of the four are intentionally RED
-    # — that is the desired drive signal for windows W2 (RLS), W3–W5 (RPC),
-    # and W6 (Edge schema). Each check therefore runs with continue-on-error
-    # so the rest of CI is not blocked while the gaps are filled. After each
-    # window flips its sentinel green, REMOVE the corresponding
-    # continue-on-error and convert that step to a hard gate.
+    # CURRENT STATE (post-W5/W6, 2026-04-27): all four sentinels are hard
+    # gates. RLS (W2), RPC contracts (W3–W5), and Edge schema (W6) windows
+    # have closed; coverage is 27/27 RLS, 89/89 RPC, 21/21 Edge.
     name: Drift sentinels
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -326,7 +323,7 @@ jobs:
         # Hard gate as of W2 close-out (2026-04-26): all 27 RLS-enabled tables have isolation tests; sentinel green.
         run: npm run check:rls-tests
       - name: RPC contract coverage (P0-G2)
-        continue-on-error: true # red until W3–W5 fill the 71 missing contracts
+        # Hard gate as of W5 close-out (2026-04-27): all 89 RPCs have contract tests; sentinel green.
         run: npm run check:rpc-tests
       - name: Edge fn schema.ts coverage (P0-G3)
         # Hard gate as of W6 close-out (2026-04-26): all 21 Edge functions

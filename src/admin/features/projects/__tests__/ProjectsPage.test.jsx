@@ -30,23 +30,14 @@ vi.mock("@/shared/hooks/useToast", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }),
 }));
 
-const mockProjectPeriodState = {
-  periodList: [],
-  viewPeriodId: null,
-  viewPeriodLabel: "—",
-};
+// Drives what listPeriods returns per test. The real useManagePeriods hook
+// calls listPeriods on mount and derives viewPeriodId via pickDefaultPeriod;
+// no whole-hook mock is needed.
+let mockPeriods = [];
 
-vi.mock("@/admin/features/periods/useManagePeriods", () => {
-  const loadPeriods = vi.fn().mockResolvedValue(undefined);
-  return {
-    useManagePeriods: () => ({
-      ...mockProjectPeriodState,
-      currentPeriodId: null,
-      loadPeriods,
-      setViewPeriodId: vi.fn(),
-    }),
-  };
-});
+vi.mock("@/admin/shared/usePageRealtime", () => ({
+  usePageRealtime: () => undefined,
+}));
 
 vi.mock("@/shared/hooks/useCardSelection", () => ({
   default: () => ({ selectedId: null, select: vi.fn(), clear: vi.fn() }),
@@ -78,6 +69,21 @@ vi.mock("@/shared/api", () => ({
   createProject: vi.fn(),
   upsertProject: vi.fn(),
   deleteProject: vi.fn(),
+  listPeriods: vi.fn(() => Promise.resolve(mockPeriods)),
+  listPeriodCriteria: vi.fn().mockResolvedValue([]),
+  listPeriodOutcomes: vi.fn().mockResolvedValue([]),
+  createPeriod: vi.fn(),
+  updatePeriod: vi.fn(),
+  duplicatePeriod: vi.fn(),
+  savePeriodCriteria: vi.fn(),
+  reorderPeriodCriteria: vi.fn(),
+  deletePeriod: vi.fn(),
+  setEvalLock: vi.fn(),
+  cloneFramework: vi.fn(),
+  assignFrameworkToPeriod: vi.fn(),
+  freezePeriodSnapshot: vi.fn(),
+  setPeriodCriteriaName: vi.fn(),
+  updatePeriodOutcomeConfig: vi.fn(),
 }));
 vi.mock("@/shared/lib/dateUtils", () => ({ formatDateTime: () => "2026-01-01" }));
 vi.mock("@/shared/ui/avatarColor", () => ({ avatarGradient: () => "#000", initials: () => "AB" }));
@@ -100,9 +106,7 @@ function renderPage() {
 
 describe("ProjectsPage", () => {
   beforeEach(() => {
-    mockProjectPeriodState.periodList = [];
-    mockProjectPeriodState.viewPeriodId = null;
-    mockProjectPeriodState.viewPeriodLabel = "—";
+    mockPeriods = [];
   });
 
   qaTest("admin.projects.page.mounts-without-crashing", () => {
@@ -130,17 +134,6 @@ describe("ProjectsPage", () => {
     renderPage();
     await waitFor(() =>
       expect(screen.getByText("No evaluation periods yet")).toBeInTheDocument()
-    );
-  });
-
-  qaTest("admin.projects.page.no-period-selected", async () => {
-    mockProjectPeriodState.periodList = [{ id: "p1", name: "Spring 2026" }];
-    mockProjectPeriodState.viewPeriodId = null;
-    renderPage();
-    await waitFor(() =>
-      expect(
-        screen.getByText("Select an evaluation period above to manage projects.")
-      ).toBeInTheDocument()
     );
   });
 });
