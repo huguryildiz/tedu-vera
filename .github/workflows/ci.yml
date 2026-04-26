@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   unit-tests:
-    name: Unit tests + build
+    name: Unit & build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -65,7 +65,7 @@ jobs:
           VITE_RPC_SECRET: placeholder
 
   edge-tests:
-    name: Edge function tests (Deno)
+    name: Edge functions (Deno)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -87,7 +87,7 @@ jobs:
           --import-map=_test/import_map.json
 
   migration-test:
-    name: Migration + pgTAP
+    name: Migrations & pgTAP
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # Bootstrap is stable: auth schema shim, roles, supabase_realtime
@@ -324,7 +324,7 @@ jobs:
 
   test-report:
     # Allure + Excel reporting — heavyweight, runs only on manual dispatch.
-    name: Full report (Allure + Excel)
+    name: Reports — Allure & Excel
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20

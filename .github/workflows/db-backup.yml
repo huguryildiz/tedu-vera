@@ -1,4 +1,4 @@
-name: Database Backup
+name: Database backup
 
 on:
   schedule:
@@ -9,6 +9,7 @@ on:
 
 jobs:
   backup:
+    name: Daily backup
     runs-on: ubuntu-latest
     steps:
       - name: Install PostgreSQL 17 client

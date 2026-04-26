@@ -1,10 +1,11 @@
-name: Performance — concurrent jury
+name: Performance
 
 on:
   workflow_dispatch:
 
 jobs:
   perf:
+    name: Concurrent jury
     runs-on: ubuntu-latest
     timeout-minutes: 15
 

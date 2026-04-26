@@ -1,4 +1,4 @@
-name: Edge Function Smoke Test
+name: Edge functions smoke
 
 # Schedule: daily at 6 AM UTC
 # Also allow manual trigger via workflow_dispatch
@@ -18,7 +18,7 @@ on:
 
 jobs:
   smoke-test:
-    name: Smoke test deployed Edge Functions
+    name: Deployed Edge functions
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

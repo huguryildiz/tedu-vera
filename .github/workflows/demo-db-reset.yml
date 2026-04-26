@@ -1,4 +1,4 @@
-name: Demo DB Daily Reset
+name: Demo DB reset
 
 on:
   schedule:
@@ -7,6 +7,7 @@ on:
 
 jobs:
   reset:
+    name: Daily reset
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
