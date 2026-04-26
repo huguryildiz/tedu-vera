@@ -168,4 +168,4 @@ Disable it in **Edge Functions → [function] → Settings**.
 
 If both the client-side `writeAuditLog` call and the `on-auth-event` webhook are active,
 each login produces two rows. The client-side calls in `AuthProvider.jsx` must be removed
-once the webhook is confirmed working. See `docs/audit/audit-gaps-remaining.md`.
+once the webhook is confirmed working. See `docs/operations/audit/audit-roadmap.md`.

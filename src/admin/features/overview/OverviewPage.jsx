@@ -1,5 +1,5 @@
 // src/admin/OverviewPage.jsx — Phase 2
-// Prototype source: #page-overview (docs/concepts/vera-premium-prototype.html ~lines 11758–11982)
+// Prototype source: #page-overview (docs/design/reference/vera-premium-prototype.html ~lines 11758–11982)
 // Single-file overview page: KPIs, juror table, right stack, live feed, completion, charts, top projects.
 import "./OverviewPage.css";
 import { useMemo, useState, useEffect } from "react";
@@ -299,7 +299,16 @@ export default function OverviewPage() {
 
       {/* KPI grid */}
       <div className="kpi-grid" id="overview-kpis">
-        <div className="card kpi">
+        <div
+          className="card kpi"
+          data-testid="overview-kpi-active-jurors"
+          data-value={kpi.totalJ}
+          data-completed={kpi.completed}
+          data-editing={kpi.editing}
+          data-ready={kpi.readyToSubmit}
+          data-inprogress={kpi.inProg}
+          data-notstarted={kpi.notStarted}
+        >
           <div className="kpi-label">Active Jurors</div>
           <div className="kpi-value">{kpi.totalJ || "—"}</div>
           <div className="kpi-sub" style={{ display: "flex", flexWrap: "wrap", gap: "4px 8px" }}>
@@ -310,17 +319,17 @@ export default function OverviewPage() {
             {kpi.notStarted > 0 && <span style={{ color: "var(--text-secondary)" }}>{kpi.notStarted} not started</span>}
           </div>
         </div>
-        <div className="card kpi">
+        <div className="card kpi" data-testid="overview-kpi-projects" data-value={summaryData.length}>
           <div className="kpi-label">Projects</div>
           <div className="kpi-value">{summaryData.length || "—"}</div>
           <div className="kpi-sub">{selectedPeriod?.name || selectedPeriod?.semester_name || "—"}</div>
         </div>
-        <div className="card kpi">
+        <div className="card kpi" data-testid="overview-kpi-completion" data-value={kpi.pct} data-total={kpi.totalJ} data-completed={kpi.completed}>
           <div className="kpi-label">Completion</div>
           <div className="kpi-value">{kpi.totalJ > 0 ? `${kpi.pct}%` : "—"}</div>
           <div className="kpi-sub">{kpi.completed} of {kpi.totalJ} completed</div>
         </div>
-        <div className="card kpi">
+        <div className="card kpi" data-testid="overview-kpi-average-score" data-value={kpi.avg ?? ""}>
           <div className="kpi-label">Average Score</div>
           <div className="kpi-value kpi-value--accent">
             {kpi.avg != null ? (
@@ -491,7 +500,7 @@ export default function OverviewPage() {
               </div>
             ) : (
               <>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }} data-testid="overview-needs-attention-list" data-count={attentionItems.length}>
                   {attentionItems.map((item, i) => {
                     const bulletColor =
                       item.type === "ok"       ? "var(--success)" :
@@ -502,7 +511,7 @@ export default function OverviewPage() {
                       item.type === "unseen"   ? "#f97316" :
                                                  "var(--danger, #ef4444)";
                     return (
-                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12 }}>
+                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12 }} data-testid={`overview-needs-attention-item-${item.type}`}>
                         <span style={{ color: bulletColor, fontSize: 14, lineHeight: 1, flexShrink: 0 }}>●</span>
                         <span>{item.text}</span>
                       </div>
@@ -581,7 +590,7 @@ export default function OverviewPage() {
             </div>
             <span className="live-feed-dot" aria-hidden="true" />
           </div>
-          <div className="live-feed-list">
+          <div className="live-feed-list" data-testid="overview-live-feed" data-count={recentActivity.length}>
             {recentActivity.length === 0 ? (
               loading ? (
                 <div className="live-feed-item">
@@ -607,7 +616,7 @@ export default function OverviewPage() {
                 </div>
               )
             ) : (
-              recentActivity.map((j) => {
+              recentActivity.map((j, idx) => {
                 const status = jurorStatus(j);
                 const lastProject = j.lastScoredProject;
                 const feedText =
@@ -629,7 +638,7 @@ export default function OverviewPage() {
                   status === "editing"         ? PencilLineIcon   :
                                                  CircleSlashIcon;
                 return (
-                  <div className="live-feed-item" key={j.jurorId || j.juryName}>
+                  <div className="live-feed-item" key={j.jurorId || j.juryName} data-testid={`overview-live-feed-item-${idx}`} data-juror-id={j.jurorId || ""} data-status={status}>
                     <div className={`live-feed-icon ${iconClass}`} aria-hidden="true">
                       <FeedIcon size={14} />
                     </div>
@@ -660,7 +669,7 @@ export default function OverviewPage() {
               Completion
             </div>
           </div>
-          <div className="completion-list">
+          <div className="completion-list" data-testid="overview-completion-list" data-count={groupCompletion.length}>
             {groupCompletion.length === 0 ? (
               loading ? (
                 <div className="text-muted text-xs" style={{ padding: "16px 0" }}>Loading…</div>
@@ -683,7 +692,7 @@ export default function OverviewPage() {
               )
             ) : (
               groupCompletion.map((g) => (
-                <div className="completion-row" key={g.id}>
+                <div className="completion-row" key={g.id} data-testid={`overview-completion-row-${g.rank}`} data-project-id={g.id} data-pct={g.pct}>
                   <div className="completion-row-top">
                     <span className="completion-name">
                       <span style={{ fontFamily: "var(--font-mono, ui-monospace, monospace)", color: "var(--accent)", fontSize: "0.85em", fontWeight: 700, marginRight: 6, flexShrink: 0 }}>P{g.rank}</span>
@@ -765,7 +774,7 @@ export default function OverviewPage() {
                 <th>Highlight</th>
               </tr>
             </thead>
-            <tbody ref={topProjectsScopeRef}>
+            <tbody ref={topProjectsScopeRef} data-testid="overview-top-projects-tbody" data-count={topProjects.length}>
               {topProjects.length === 0 && !loading ? (
                 <tr className="es-row">
                   <td colSpan={5} style={{ padding: 0 }}>
@@ -789,7 +798,7 @@ export default function OverviewPage() {
               ) : (
                 topProjects.map((p, i) => {
                   return (
-                    <tr key={p.id} data-card-selectable="" className="mcard">
+                    <tr key={p.id} data-card-selectable="" className="mcard" data-testid={`overview-top-projects-row-${i + 1}`} data-project-id={p.id} data-total-avg={p.totalAvg ?? ""}>
                       <td className="col-rank text-center" data-label="Rank">
                         <span className="overview-top-rank">{i + 1}</span>
                       </td>

@@ -230,7 +230,7 @@ Session B enforces testid-only selectors. Before writing a new spec:
 Each sprint's implementation report lists the testids added. Before adding a new one, grep the reports to avoid duplicating an existing testid or naming the same thing differently:
 
 ```bash
-grep -r "data-testid" docs/superpowers/plans/session-b-e2e-test-coverage/implementation_reports/
+grep -r "data-testid" .claude/internal/plans/session-b-e2e-test-coverage/implementation_reports/
 ```
 
 ---
@@ -298,7 +298,7 @@ await page.evaluate(() => {
 
 Before writing the first line of test code:
 
-- [ ] Read `docs/superpowers/plans/session-b-e2e-test-coverage/README.md` for the current sprint scope.
+- [ ] Read `.claude/internal/plans/session-b-e2e-test-coverage/README.md` for the current sprint scope.
 - [ ] Read the previous sprint's implementation report.
 - [ ] Read this primer (you're doing it now).
 - [ ] Confirm `npm run e2e` on `main` passes with the baseline count.

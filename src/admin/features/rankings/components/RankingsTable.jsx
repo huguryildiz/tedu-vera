@@ -45,7 +45,7 @@ export default function RankingsTable({
   return (
     <div id="sub-rankings">
       <div className="table-wrap table-wrap--split">
-        <table className="ranking-table table-standard table-pill-balance">
+        <table className="ranking-table table-standard table-pill-balance" data-testid="rankings-table">
           <colgroup>
             <col style={{ width: "1px" }} />
             <col style={{ width: "24%" }} />

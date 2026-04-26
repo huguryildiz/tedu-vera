@@ -510,8 +510,8 @@ export default function ReviewsPage() {
         </div>
       </div>
       {/* KPI strip */}
-      <div className="scores-kpi-strip">
-        <div className="scores-kpi-item">
+      <div className="scores-kpi-strip" data-testid="reviews-kpi-strip">
+        <div className="scores-kpi-item" data-testid="reviews-kpi-coverage" data-completed={coverage.completed} data-total={coverage.total}>
           <div
             className="scores-kpi-item-value"
             style={{
@@ -527,11 +527,11 @@ export default function ReviewsPage() {
           </div>
           <div className="scores-kpi-item-label">Completed</div>
         </div>
-        <div className="scores-kpi-item">
+        <div className="scores-kpi-item" data-testid="reviews-kpi-avg-score" data-value={avgScore}>
           <div className="scores-kpi-item-value">{avgScore}</div>
           <div className="scores-kpi-item-label">Avg Score</div>
         </div>
-        <div className="scores-kpi-item">
+        <div className="scores-kpi-item" data-testid="reviews-kpi-high-disagreement" data-value={highDisagreementCount}>
           <div
             className="scores-kpi-item-value"
             style={{ color: highDisagreementCount > 0 ? "var(--warning)" : "var(--success)" }}
@@ -557,7 +557,7 @@ export default function ReviewsPage() {
             </div>
           </PremiumTooltip>
         </div>
-        <div className="scores-kpi-item">
+        <div className="scores-kpi-item" data-testid="reviews-kpi-outlier-reviews" data-value={outlierCount}>
           <div
             className="scores-kpi-item-value"
             style={{ color: outlierCount > 0 ? "var(--danger)" : undefined }}

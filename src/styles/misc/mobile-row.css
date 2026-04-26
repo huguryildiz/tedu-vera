@@ -126,7 +126,7 @@
    Only the border reacts — background and inner elements stay
    untouched so the "nested panel yasağı" rule is preserved.
 
-   See: docs/superpowers/specs/2026-04-18-mobile-card-tap-behavior-design.md
+   See: .claude/internal/specs/2026-04-18-mobile-card-tap-behavior-design.md
    ───────────────────────────────────────────────────────────── */
 .mcard,
 .hm-card,

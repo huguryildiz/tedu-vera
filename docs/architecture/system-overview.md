@@ -291,5 +291,5 @@ src/
 - **Run:** `npm test -- --run` (unit), `npm run e2e` (E2E).
 - **CI** — GitHub Actions runs unit tests on every push/PR.
 
-See [docs/qa/vitest-guide.md](../qa/vitest-guide.md) and
-[docs/qa/e2e-guide.md](../qa/e2e-guide.md) for full guides.
+See [docs/testing/unit-tests.md](../testing/unit-tests.md) and
+[docs/testing/e2e-tests.md](../testing/e2e-tests.md) for full guides.

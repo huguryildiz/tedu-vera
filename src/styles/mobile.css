@@ -456,7 +456,7 @@ body:not(.dark-mode) :is(
 
   /* Row highlight is driven globally by .is-selected
      (components.css) via the useCardSelection hook. See
-     docs/superpowers/specs/2026-04-18-mobile-card-tap-behavior-design.md.
+     .claude/internal/specs/2026-04-18-mobile-card-tap-behavior-design.md.
      Legacy .menu-open / .row-menu-open / row-level .is-active
      classes are deprecated — do not reintroduce them here. */
 }

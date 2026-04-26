@@ -1,6 +1,6 @@
 // src/admin/modals/CompareProjectsModal.jsx
 // Compare Projects modal — two-project radar chart + stats side-by-side.
-// Prototype reference: docs/concepts/vera-premium-prototype.html
+// Prototype reference: docs/design/reference/vera-premium-prototype.html
 //
 // Props:
 //   open          — boolean

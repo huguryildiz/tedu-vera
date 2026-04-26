@@ -9,7 +9,7 @@
 // This is intentional coverage-shape documentation, NOT regression protection.
 //
 // Real Edge Function coverage requires `deno test` against the actual files.
-// Tracked in: docs/superpowers/plans/session-d-unit-test-quality-audit/
+// Tracked in: .claude/internal/plans/session-d-unit-test-quality-audit/
 //             (follow-up: true Deno runner setup)
 
 import { describe, expect } from "vitest";
