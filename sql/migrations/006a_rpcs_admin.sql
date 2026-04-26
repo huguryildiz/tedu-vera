@@ -1102,7 +1102,8 @@ BEGIN
     RETURN jsonb_build_object(
       'ok', true,
       'already_closed', true,
-      'closed_at', v_closed_at
+      'closed_at', v_closed_at,
+      'tokens_revoked', 0
     )::JSON;
   END IF;
 

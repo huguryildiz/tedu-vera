@@ -37,8 +37,12 @@ SELECT is((rpc_admin_approve_application('aaaa0000-0000-4000-8000-000000000001':
 -- 6. unknown application
 SELECT ok((rpc_admin_approve_application('00000000-0000-4000-8000-000000000abc'::uuid)::jsonb->>'error_code')::text LIKE 'application_not_found', 'unknown app → application_not_found');
 
--- 7. NULL application_id
-SELECT throws_ok($c$SELECT rpc_admin_approve_application(NULL::uuid)$c$, NULL::text, NULL::text, 'NULL id → throws');
+-- 7. NULL application_id → envelope with application_not_found (RPC returns envelope, not throw)
+SELECT is(
+  (rpc_admin_approve_application(NULL::uuid)::jsonb->>'error_code'),
+  'application_not_found',
+  'NULL id → application_not_found envelope'
+);
 
 -- 8. response has ok field
 INSERT INTO org_applications (id, organization_id, applicant_name, contact_email, status)

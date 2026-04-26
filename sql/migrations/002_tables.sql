@@ -599,6 +599,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON profiles         TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON memberships      TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON org_applications TO authenticated;
 GRANT SELECT ON organizations    TO anon;
+GRANT SELECT ON profiles         TO anon;
 GRANT SELECT ON org_applications TO anon;
 
 -- Service role (Edge Functions bypass RLS but still need table-level grants)

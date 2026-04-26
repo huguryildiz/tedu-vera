@@ -71,7 +71,7 @@ SELECT pgtap_test.become_reset();
 INSERT INTO auth.users (id, email) VALUES
   ('ff000000-0000-4000-8000-000000000001'::uuid, 'ff@pgtap.local')
 ON CONFLICT (id) DO NOTHING;
-INSERT INTO profiles (id, full_name) VALUES
+INSERT INTO profiles (id, display_name) VALUES
   ('ff000000-0000-4000-8000-000000000001'::uuid, 'FF PgTap')
 ON CONFLICT (id) DO NOTHING;
 INSERT INTO memberships (id, user_id, organization_id, role, status, is_owner)

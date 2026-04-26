@@ -44,6 +44,7 @@ CREATE TRIGGER set_updated_at_admin_user_sessions
 -- client directly — those go through service_role Edge Functions.
 
 GRANT SELECT ON admin_user_sessions TO authenticated;
+GRANT SELECT ON admin_user_sessions TO anon;
 -- service_role needs full access so Edge Functions (admin-session-touch) can upsert rows
 GRANT SELECT, INSERT, UPDATE, DELETE ON admin_user_sessions TO service_role;
 
