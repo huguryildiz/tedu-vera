@@ -9,7 +9,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(8);
+SELECT plan(7);
 
 -- ────────── 1. signature pinned ──────────
 SELECT has_function(
@@ -29,7 +29,7 @@ SELECT function_returns(
 SELECT pgtap_test.become_anon();
 
 SELECT throws_ok(
-  $c$SELECT rpc_admin_period_unassign_framework('pgtap-period-9999'::uuid)$c$,
+  $c$SELECT rpc_admin_period_unassign_framework('00000000-0000-0000-0000-000000009999'::uuid)$c$,
   NULL::text,
   'attempted to access'
 );
@@ -41,13 +41,13 @@ SELECT pgtap_test.seed_periods();
 SELECT pgtap_test.become_a();
 
 SELECT lives_ok(
-  $c$SELECT rpc_admin_period_unassign_framework((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_a') LIMIT 1))$c$,
+  $c$SELECT rpc_admin_period_unassign_framework((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1))$c$,
   'org_a admin can unassign framework from period'
 );
 
 -- ────────__ 4. org-admin cannot unassign for other org ──────────
 SELECT throws_ok(
-  $c$SELECT rpc_admin_period_unassign_framework((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_b') LIMIT 1))$c$,
+  $c$SELECT rpc_admin_period_unassign_framework((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1))$c$,
   NULL::text,
   'attempted to access'
 );
@@ -56,13 +56,13 @@ SELECT throws_ok(
 SELECT pgtap_test.become_super();
 
 SELECT lives_ok(
-  $c$SELECT rpc_admin_period_unassign_framework((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_b') LIMIT 1))$c$,
+  $c$SELECT rpc_admin_period_unassign_framework((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1))$c$,
   'super-admin can unassign framework from any period'
 );
 
 -- ────────── 6. response has ok key ──────────
 SELECT ok(
-  (SELECT rpc_admin_period_unassign_framework((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_a') LIMIT 1))::jsonb ? 'ok'),
+  (SELECT rpc_admin_period_unassign_framework((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1))::jsonb ? 'ok'),
   'response has ok key'
 );
 

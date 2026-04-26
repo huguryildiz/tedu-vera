@@ -76,7 +76,7 @@ INSERT INTO framework_outcomes (id, framework_id, code, label, description, sort
   ('f3d660b6-6a2c-4ea0-a19f-c03c4e450073', 'a1b2c3d4-e5f6-4000-a000-000000000001', 'LO 4', 'Oral Communication',           'Ability to present technical work verbally', 4),
   ('9d802418-d562-471d-a240-9096a93f0d43', 'a1b2c3d4-e5f6-4000-a000-000000000001', 'LO 5', 'Teamwork & Collaboration',     'Ability to contribute effectively as a team member', 5),
   ('3541d166-6c58-4033-a5e9-4d4c929c0126', 'a1b2c3d4-e5f6-4000-a000-000000000001', 'LO 6', 'Professional & Ethical Conduct','Awareness of professional and ethical responsibilities', 6)
-ON CONFLICT (id) DO UPDATE SET label = EXCLUDED.label;
+ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO framework_criteria (id, framework_id, key, label, description, max_score, weight, color, rubric_bands, sort_order) VALUES
   ('fc2a0001-0000-4000-a000-000000000001', 'a1b2c3d4-e5f6-4000-a000-000000000001', 'technical', 'Technical Content',     'Technical depth and correctness', 30, 30, '#F59E0B', '[]'::jsonb, 1),

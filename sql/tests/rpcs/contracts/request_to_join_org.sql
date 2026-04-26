@@ -1,17 +1,17 @@
--- RPC: rpc_request_to_join_org(UUID) → jsonb
+-- RPC: rpc_request_to_join_org(UUID) → json
 --
 -- Pins the public contract:
---   * Signature: (p_org_id UUID) returning jsonb
---   * Authenticated required
---   * Creates join request for user
---   * Error: 'org_not_found', 'already_member'
---   * Returns {ok, request_id}
+--   * Signature: (p_org_id UUID) returning json
+--   * Authenticated required (anon has no EXECUTE grant)
+--   * Creates a 'requested' membership for the caller
+--   * Error codes: 'org_not_found', 'already_member', 'already_requested'
+--   * Returns {ok, membership_id}
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(9);
+SELECT plan(7);
 
--- ────────__ 1. signature pinned ──────────
+-- ────────── 1. signature pinned ──────────
 SELECT has_function(
   'public', 'rpc_request_to_join_org',
   ARRAY['uuid'::text],
@@ -21,65 +21,66 @@ SELECT has_function(
 SELECT function_returns(
   'public', 'rpc_request_to_join_org',
   ARRAY['uuid'::text],
-  'jsonb',
-  'returns jsonb'
+  'json',
+  'returns json'
 );
 
--- ────────__ 2. unauthenticated → cannot call ──────────
+-- ────────── 2. unauthenticated → permission denied ──────────
 SELECT pgtap_test.become_anon();
 
 SELECT throws_ok(
-  $c$SELECT rpc_request_to_join_org('pgtap-org-9999'::uuid)$c$,
+  $c$SELECT rpc_request_to_join_org('00000000-0000-0000-0000-000000009999'::uuid)$c$,
   NULL::text,
-  'attempted to access'
+  'anon cannot call rpc_request_to_join_org'
 );
 
--- ────────__ 3. authenticated can request join ──────────
+-- ────────── 3. authenticated can request join ──────────
 SELECT pgtap_test.become_reset();
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.become_a();
 
--- Create a third org to request join
-INSERT INTO organizations (id, name, created_at, updated_at)
+INSERT INTO organizations (id, code, name, created_at, updated_at)
 VALUES (
-  'pgtap-org-c'::uuid,
+  '33300000-0000-0000-0000-000000000003'::uuid,
+  'ORG3',
   'org_c',
   now(),
   now()
 );
 
 SELECT lives_ok(
-  $c$SELECT rpc_request_to_join_org('pgtap-org-c'::uuid)$c$,
+  $c$SELECT rpc_request_to_join_org('33300000-0000-0000-0000-000000000003'::uuid)$c$,
   'authenticated user can request to join org'
 );
 
--- ────────__ 4. cannot request if already member ──────────
-SELECT throws_ok(
-  $c$SELECT rpc_request_to_join_org((SELECT id FROM organizations WHERE name = 'org_a'))$c$,
-  NULL::text,
-  'already_member'
+-- ────────── 4. cannot request if already member ──────────
+SELECT results_eq(
+  $c$SELECT (rpc_request_to_join_org((SELECT id FROM organizations WHERE name = 'pgtap Org A'))::jsonb ->> 'error_code')$c$,
+  ARRAY['already_member'],
+  'already member returns already_member error code'
 );
 
--- ────────__ 5. nonexistent org ──────────
+-- ────────── 5. nonexistent org returns org_not_found ──────────
 SELECT results_eq(
-  $c$SELECT (rpc_request_to_join_org('pgtap-org-nonexist'::uuid)::jsonb ->> 'error_code')$c$,
+  $c$SELECT (rpc_request_to_join_org('00000000-0000-0000-0000-000000009996'::uuid)::jsonb ->> 'error_code')$c$,
   ARRAY['org_not_found'],
   'nonexistent org returns org_not_found'
 );
 
--- ────────__ 6. response has ok and request_id ──────────
-INSERT INTO organizations (id, name, created_at, updated_at)
+-- ────────── 6. response has ok and membership_id ──────────
+INSERT INTO organizations (id, code, name, created_at, updated_at)
 VALUES (
-  'pgtap-org-d'::uuid,
+  '33300000-0000-0000-0000-000000000004'::uuid,
+  'ORG4',
   'org_d',
   now(),
   now()
 );
 
 SELECT ok(
-  (SELECT (rpc_request_to_join_org('pgtap-org-d'::uuid)::jsonb ? 'ok')
-       AND (rpc_request_to_join_org('pgtap-org-d'::uuid)::jsonb ? 'request_id')),
-  'response has ok and request_id keys'
+  (SELECT (r ? 'ok') AND (r ? 'membership_id')
+   FROM (SELECT rpc_request_to_join_org('33300000-0000-0000-0000-000000000004'::uuid)::jsonb AS r) t),
+  'response has ok and membership_id keys'
 );
 
 SELECT pgtap_test.become_reset();

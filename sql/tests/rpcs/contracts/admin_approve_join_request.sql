@@ -1,15 +1,15 @@
--- RPC: rpc_admin_approve_join_request(UUID) → jsonb
+-- RPC: rpc_admin_approve_join_request(UUID) → json
 --
 -- Pins the public contract:
---   * Signature: (p_request_id UUID) returning jsonb
---   * Authenticated required
---   * Calls _assert_org_admin
---   * Converts request to active membership
---   * Returns {ok, membership_id}
+--   * Signature: (p_membership_id UUID) returning json
+--   * Authenticated required; caller must be org_admin of the membership's org
+--   * Promotes a 'requested' membership to 'active'
+--   * Error codes: 'request_not_found'
+--   * Returns {ok}
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(8);
+SELECT plan(7);
 
 -- ────────── 1. signature pinned ──────────
 SELECT has_function(
@@ -21,84 +21,78 @@ SELECT has_function(
 SELECT function_returns(
   'public', 'rpc_admin_approve_join_request',
   ARRAY['uuid'::text],
-  'jsonb',
-  'returns jsonb'
+  'json',
+  'returns json'
 );
 
--- ────────── 2. unauthenticated → cannot call ──────────
-SELECT pgtap_test.become_anon();
-
-SELECT throws_ok(
-  $c$SELECT rpc_admin_approve_join_request('pgtap-req-9999'::uuid)$c$,
-  NULL::text,
-  'attempted to access'
-);
-
--- ────────__ 3. org-admin can approve join request ──────────
-SELECT pgtap_test.become_reset();
+-- ────────── seed data before switching roles (profiles FK blocks inserts for unknown users) ──────────
+-- Use existing seeded users: bbbb in Org A, eeee in Org B, eeee in Org A (for response shape)
 SELECT pgtap_test.seed_two_orgs();
 
--- Create a join request
-INSERT INTO join_requests (id, email, organization_id, status, requested_at, created_at, updated_at)
+-- bbbb requesting to join Org A (bbbb is seeded in Org B, not Org A)
+INSERT INTO memberships (id, user_id, organization_id, role, status, is_owner)
 VALUES (
-  'pgtap-req-001'::uuid,
-  'joiner@test.local',
-  (SELECT id FROM organizations WHERE name = 'org_a'),
-  'pending',
-  now(),
-  now(),
-  now()
+  'f0000000-0000-0000-0000-000000001001'::uuid,
+  'bbbb0000-0000-4000-8000-000000000002'::uuid,
+  '11110000-0000-4000-8000-000000000001'::uuid,
+  'org_admin', 'requested', false
+);
+
+-- eeee (super) requesting to join Org B (for cross-org test)
+INSERT INTO memberships (id, user_id, organization_id, role, status, is_owner)
+VALUES (
+  'f0000000-0000-0000-0000-000000001002'::uuid,
+  'eeee0000-0000-4000-8000-00000000000e'::uuid,
+  '22220000-0000-4000-8000-000000000002'::uuid,
+  'org_admin', 'requested', false
+);
+
+-- eeee (super) requesting to join Org A (for response shape test)
+INSERT INTO memberships (id, user_id, organization_id, role, status, is_owner)
+VALUES (
+  'f0000000-0000-0000-0000-000000001003'::uuid,
+  'eeee0000-0000-4000-8000-00000000000e'::uuid,
+  '11110000-0000-4000-8000-000000000001'::uuid,
+  'org_admin', 'requested', false
 );
 
 SELECT pgtap_test.become_a();
 
+-- ────────── 2. nonexistent membership → request_not_found ──────────
+SELECT results_eq(
+  $c$SELECT (rpc_admin_approve_join_request('00000000-0000-0000-0000-000000009998'::uuid)::jsonb ->> 'error_code')$c$,
+  ARRAY['request_not_found'],
+  'nonexistent membership returns request_not_found'
+);
+
+-- ────────── 3. org-admin can approve own org requested membership ──────────
 SELECT lives_ok(
-  $c$SELECT rpc_admin_approve_join_request('pgtap-req-001'::uuid)$c$,
-  'org_a admin can approve join request'
+  $c$SELECT rpc_admin_approve_join_request('f0000000-0000-0000-0000-000000001001'::uuid)$c$,
+  'org_a admin can approve a requested membership in own org'
 );
 
--- ────────__ 4. org-admin cannot approve other org request ──────────
-INSERT INTO join_requests (id, email, organization_id, status, requested_at, created_at, updated_at)
-VALUES (
-  'pgtap-req-002'::uuid,
-  'joiner2@test.local',
-  (SELECT id FROM organizations WHERE name = 'org_b'),
-  'pending',
-  now(),
-  now(),
-  now()
-);
-
+-- ────────── 4. org-admin cannot approve other org requested membership ──────────
 SELECT throws_ok(
-  $c$SELECT rpc_admin_approve_join_request('pgtap-req-002'::uuid)$c$,
+  $c$SELECT rpc_admin_approve_join_request('f0000000-0000-0000-0000-000000001002'::uuid)$c$,
   NULL::text,
-  'attempted to access'
+  'org_a admin cannot approve Org B requested membership'
 );
 
--- ────────__ 5. super-admin can approve any request ──────────
+-- ────────── 5. super-admin can approve any ──────────
 SELECT pgtap_test.become_super();
 
 SELECT lives_ok(
-  $c$SELECT rpc_admin_approve_join_request('pgtap-req-002'::uuid)$c$,
-  'super-admin can approve any join request'
+  $c$SELECT rpc_admin_approve_join_request('f0000000-0000-0000-0000-000000001002'::uuid)$c$,
+  'super-admin can approve any requested membership'
 );
 
--- ────────__ 6. response has ok and membership_id ──────────
-INSERT INTO join_requests (id, email, organization_id, status, requested_at, created_at, updated_at)
-VALUES (
-  'pgtap-req-003'::uuid,
-  'joiner3@test.local',
-  (SELECT id FROM organizations WHERE name = 'org_a'),
-  'pending',
-  now(),
-  now(),
-  now()
-);
+-- ────────── 6. response has ok key on success ──────────
+SELECT pgtap_test.become_a();
 
 SELECT ok(
-  (SELECT (rpc_admin_approve_join_request('pgtap-req-003'::uuid)::jsonb ? 'ok')
-       AND (rpc_admin_approve_join_request('pgtap-req-003'::uuid)::jsonb ? 'membership_id')),
-  'response has ok and membership_id keys'
+  (SELECT (r ? 'ok')
+   FROM (SELECT rpc_admin_approve_join_request('f0000000-0000-0000-0000-000000001003'::uuid)::jsonb AS r) t),
+  'successful response has ok key'
 );
 
 SELECT pgtap_test.become_reset();

@@ -1193,13 +1193,13 @@ BEGIN
     description = EXCLUDED.description;
 
   IF NOT EXISTS (SELECT 1 FROM framework_outcomes WHERE framework_id = v_vera LIMIT 1) THEN
-    INSERT INTO framework_outcomes (framework_id, code, label, description, sort_order) VALUES
-      (v_vera, 'LO 1', 'Domain Knowledge',          'Ability to apply discipline-specific knowledge and methods to identify and solve complex real-world problems',                                                         1),
-      (v_vera, 'LO 2', 'Design & Problem Solving',  'Ability to design and implement creative, feasible solutions that address well-defined requirements and constraints',                                                  2),
-      (v_vera, 'LO 3', 'Written Communication',      'Ability to communicate technical content clearly and effectively in written and visual form for audiences with varying levels of expertise',                           3),
-      (v_vera, 'LO 4', 'Oral Communication',         'Ability to present technical work verbally, adapt to the audience, and respond to expert questioning with accuracy and clarity',                                      4),
-      (v_vera, 'LO 5', 'Teamwork & Collaboration',   'Ability to contribute effectively as a member or leader of a project team, demonstrating equal participation and shared responsibility',                             5),
-      (v_vera, 'LO 6', 'Professional & Ethical Conduct', 'Awareness of professional responsibilities, ethical obligations, and the broader societal and environmental impact of technical work',                            6);
+    INSERT INTO framework_outcomes (id, framework_id, code, label, description, sort_order) VALUES
+      ('7d3f42cc-5c0b-4069-a668-8ea0cfadb363', v_vera, 'LO 1', 'Domain Knowledge',          'Ability to apply discipline-specific knowledge and methods to identify and solve complex real-world problems',                                                         1),
+      ('b8ed8649-3893-48f0-a6f8-fa102ee94df6', v_vera, 'LO 2', 'Design & Problem Solving',  'Ability to design and implement creative, feasible solutions that address well-defined requirements and constraints',                                                  2),
+      ('3431bc18-9075-421b-ad1f-650554c87955', v_vera, 'LO 3', 'Written Communication',      'Ability to communicate technical content clearly and effectively in written and visual form for audiences with varying levels of expertise',                           3),
+      ('f3d660b6-6a2c-4ea0-a19f-c03c4e450073', v_vera, 'LO 4', 'Oral Communication',         'Ability to present technical work verbally, adapt to the audience, and respond to expert questioning with accuracy and clarity',                                      4),
+      ('9d802418-d562-471d-a240-9096a93f0d43', v_vera, 'LO 5', 'Teamwork & Collaboration',   'Ability to contribute effectively as a member or leader of a project team, demonstrating equal participation and shared responsibility',                             5),
+      ('3541d166-6c58-4033-a5e9-4d4c929c0126', v_vera, 'LO 6', 'Professional & Ethical Conduct', 'Awareness of professional responsibilities, ethical obligations, and the broader societal and environmental impact of technical work',                            6);
   END IF;
 
   -- ── VERA Standard — 4 evaluation criteria ────────────────────────────────────

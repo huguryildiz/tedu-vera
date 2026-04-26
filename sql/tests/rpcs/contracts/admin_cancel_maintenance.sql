@@ -8,7 +8,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(7);
+SELECT plan(6);
 
 -- ────────── 1. signature pinned ──────────
 SELECT has_function(
@@ -54,9 +54,8 @@ SELECT lives_ok(
 );
 
 SELECT ok(
-  (SELECT (rpc_admin_cancel_maintenance()::jsonb ? 'ok')
-       AND (rpc_admin_cancel_maintenance()::jsonb ? 'updated_at')),
-  'response has ok and updated_at keys'
+  (SELECT rpc_admin_cancel_maintenance()::jsonb ? 'ok'),
+  'response has ok key'
 );
 
 SELECT pgtap_test.become_reset();

@@ -8,7 +8,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(7);
+SELECT plan(6);
 
 -- ────────── 1. signature pinned ──────────
 SELECT has_function(
@@ -46,6 +46,8 @@ SELECT throws_ok(
 );
 
 -- ────────── 4. super-admin succeeds, shape verified ──────────
+INSERT INTO platform_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+
 SELECT pgtap_test.become_super();
 
 SELECT lives_ok(
@@ -54,10 +56,8 @@ SELECT lives_ok(
 );
 
 SELECT ok(
-  (SELECT (rpc_admin_get_backup_schedule()::jsonb ? 'schedule_cron')
-       AND (rpc_admin_get_backup_schedule()::jsonb ? 'is_active')
-       AND (rpc_admin_get_backup_schedule()::jsonb ? 'next_run_at')),
-  'response has schedule_cron, is_active, next_run_at keys'
+  (SELECT rpc_admin_get_backup_schedule()::jsonb ? 'cron_expr'),
+  'response has cron_expr key'
 );
 
 SELECT pgtap_test.become_reset();

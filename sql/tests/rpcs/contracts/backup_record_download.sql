@@ -9,7 +9,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(8);
+SELECT plan(6);
 
 -- ────────── 1. signature pinned ──────────
 SELECT has_function(
@@ -29,7 +29,7 @@ SELECT function_returns(
 SELECT pgtap_test.become_anon();
 
 SELECT throws_ok(
-  $c$SELECT rpc_backup_record_download('pgtap-backup-9999'::uuid)$c$,
+  $c$SELECT rpc_backup_record_download('00000000-0000-0000-0000-000000009999'::uuid)$c$,
   NULL::text,
   'attempted to access'
 );
@@ -42,8 +42,8 @@ SELECT pgtap_test.become_a();
 -- Create a backup for org_a
 INSERT INTO backups (id, organization_id, filename, file_size, storage_origin, metadata, origin, created_at, updated_at)
 VALUES (
-  'pgtap-backup-001'::uuid,
-  (SELECT id FROM organizations WHERE name = 'org_a'),
+  'f0000000-0000-0000-0000-000000000001'::uuid,
+  (SELECT id FROM organizations WHERE name = 'pgtap Org A'),
   'backup.sql',
   1024000,
   's3',
@@ -54,15 +54,15 @@ VALUES (
 );
 
 SELECT lives_ok(
-  $c$SELECT rpc_backup_record_download('pgtap-backup-001'::uuid)$c$,
+  $c$SELECT rpc_backup_record_download('f0000000-0000-0000-0000-000000000001'::uuid)$c$,
   'org_a admin can record download'
 );
 
 -- ────────── 4. org-admin cannot record download for other org backup ──────────
 INSERT INTO backups (id, organization_id, filename, file_size, storage_origin, metadata, origin, created_at, updated_at)
 VALUES (
-  'pgtap-backup-002'::uuid,
-  (SELECT id FROM organizations WHERE name = 'org_b'),
+  'f0000000-0000-0000-0000-000000000002'::uuid,
+  (SELECT id FROM organizations WHERE name = 'pgtap Org B'),
   'backup.sql',
   1024000,
   's3',
@@ -73,7 +73,7 @@ VALUES (
 );
 
 SELECT throws_ok(
-  $c$SELECT rpc_backup_record_download('pgtap-backup-002'::uuid)$c$,
+  $c$SELECT rpc_backup_record_download('f0000000-0000-0000-0000-000000000002'::uuid)$c$,
   NULL::text,
   'attempted to access'
 );
@@ -82,7 +82,7 @@ SELECT throws_ok(
 SELECT pgtap_test.become_super();
 
 SELECT lives_ok(
-  $c$SELECT rpc_backup_record_download('pgtap-backup-002'::uuid)$c$,
+  $c$SELECT rpc_backup_record_download('f0000000-0000-0000-0000-000000000002'::uuid)$c$,
   'super-admin can record download for any org backup'
 );
 

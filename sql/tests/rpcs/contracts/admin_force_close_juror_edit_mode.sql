@@ -9,7 +9,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(9);
+SELECT plan(8);
 
 -- ────────── 1. signature pinned ──────────
 SELECT has_function(
@@ -29,7 +29,7 @@ SELECT function_returns(
 SELECT pgtap_test.become_anon();
 
 SELECT throws_ok(
-  $c$SELECT rpc_admin_force_close_juror_edit_mode('pgtap-juror-9999'::uuid, 'pgtap-period-9999'::uuid)$c$,
+  $c$SELECT rpc_admin_force_close_juror_edit_mode('00000000-0000-0000-0000-000000009999'::uuid, '00000000-0000-0000-0000-000000009999'::uuid)$c$,
   NULL::text,
   'attempted to access'
 );
@@ -52,8 +52,8 @@ SELECT pgtap_test.seed_jurors();
 -- Get org_a's juror and period
 SELECT lives_ok(
   $c$SELECT rpc_admin_force_close_juror_edit_mode(
-    (SELECT id FROM jurors WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_a') LIMIT 1),
-    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_a') LIMIT 1)
+    (SELECT id FROM jurors WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1),
+    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1)
   )$c$,
   'org_a admin can force close edit mode'
 );
@@ -61,8 +61,8 @@ SELECT lives_ok(
 -- ────────__ 5. org-admin cannot close for other org ──────────
 SELECT throws_ok(
   $c$SELECT rpc_admin_force_close_juror_edit_mode(
-    (SELECT id FROM jurors WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_b') LIMIT 1),
-    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_b') LIMIT 1)
+    (SELECT id FROM jurors WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1),
+    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1)
   )$c$,
   NULL::text,
   'attempted to access'
@@ -73,8 +73,8 @@ SELECT pgtap_test.become_super();
 
 SELECT lives_ok(
   $c$SELECT rpc_admin_force_close_juror_edit_mode(
-    (SELECT id FROM jurors WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_b') LIMIT 1),
-    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_b') LIMIT 1)
+    (SELECT id FROM jurors WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1),
+    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1)
   )$c$,
   'super-admin can force close edit mode for any org'
 );
@@ -82,8 +82,8 @@ SELECT lives_ok(
 -- ────────__ 7. response shape ──────────
 SELECT ok(
   (SELECT rpc_admin_force_close_juror_edit_mode(
-    (SELECT id FROM jurors WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_a') LIMIT 1),
-    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_a') LIMIT 1)
+    (SELECT id FROM jurors WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1),
+    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1)
   )::jsonb ? 'ok'),
   'response has ok key'
 );

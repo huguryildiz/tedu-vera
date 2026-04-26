@@ -8,7 +8,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(8);
+SELECT plan(6);
 
 -- ────────__ 1. signature pinned ──────────
 SELECT has_function(
@@ -21,7 +21,7 @@ SELECT has_function(
 SELECT pgtap_test.become_anon();
 
 SELECT throws_ok(
-  $c$SELECT rpc_backup_list('pgtap-org-1111'::uuid)$c$,
+  $c$SELECT rpc_backup_list('11110000-0000-4000-8000-000000000001'::uuid)$c$,
   NULL::text,
   'attempted to access' -- _assert_org_admin raises
 );
@@ -32,13 +32,13 @@ SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.become_a();
 
 SELECT lives_ok(
-  $c$SELECT rpc_backup_list((SELECT id FROM organizations WHERE name = 'org_a'))$c$,
+  $c$SELECT rpc_backup_list((SELECT id FROM organizations WHERE name = 'pgtap Org A'))$c$,
   'org_a admin can list org_a backups'
 );
 
 -- ────────__ 4. org-admin for org_a cannot list org_b backups ──────────
 SELECT throws_ok(
-  $c$SELECT rpc_backup_list((SELECT id FROM organizations WHERE name = 'org_b'))$c$,
+  $c$SELECT rpc_backup_list((SELECT id FROM organizations WHERE name = 'pgtap Org B'))$c$,
   NULL::text,
   'attempted to access' -- _assert_org_admin check fails
 );
@@ -47,12 +47,12 @@ SELECT throws_ok(
 SELECT pgtap_test.become_super();
 
 SELECT lives_ok(
-  $c$SELECT rpc_backup_list((SELECT id FROM organizations WHERE name = 'org_a'))$c$,
+  $c$SELECT rpc_backup_list((SELECT id FROM organizations WHERE name = 'pgtap Org A'))$c$,
   'super-admin can list org_a backups'
 );
 
 SELECT lives_ok(
-  $c$SELECT rpc_backup_list((SELECT id FROM organizations WHERE name = 'org_b'))$c$,
+  $c$SELECT rpc_backup_list((SELECT id FROM organizations WHERE name = 'pgtap Org B'))$c$,
   'super-admin can list org_b backups'
 );
 

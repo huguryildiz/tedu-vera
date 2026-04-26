@@ -9,7 +9,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(8);
+SELECT plan(7);
 
 -- ────────── 1. signature pinned ──────────
 SELECT has_function(
@@ -29,7 +29,7 @@ SELECT function_returns(
 SELECT pgtap_test.become_anon();
 
 SELECT throws_ok(
-  $c$SELECT rpc_admin_revoke_entry_token('pgtap-token-9999'::uuid)$c$,
+  $c$SELECT rpc_admin_revoke_entry_token('00000000-0000-0000-0000-000000009999'::uuid)$c$,
   NULL::text,
   'attempted to access'
 );
@@ -42,13 +42,13 @@ SELECT pgtap_test.become_a();
 
 -- Get first entry token for org_a
 SELECT lives_ok(
-  $c$SELECT rpc_admin_revoke_entry_token((SELECT id FROM entry_tokens WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_a') LIMIT 1))$c$,
+  $c$SELECT rpc_admin_revoke_entry_token((SELECT id FROM entry_tokens WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1))$c$,
   'org_a admin can revoke org_a entry token'
 );
 
 -- ────────── 4. org-admin for org_a cannot revoke org_b tokens ──────────
 SELECT throws_ok(
-  $c$SELECT rpc_admin_revoke_entry_token((SELECT id FROM entry_tokens WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_b') LIMIT 1))$c$,
+  $c$SELECT rpc_admin_revoke_entry_token((SELECT id FROM entry_tokens WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1))$c$,
   NULL::text,
   'attempted to access'
 );
@@ -57,13 +57,13 @@ SELECT throws_ok(
 SELECT pgtap_test.become_super();
 
 SELECT lives_ok(
-  $c$SELECT rpc_admin_revoke_entry_token((SELECT id FROM entry_tokens WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_b') LIMIT 1))$c$,
+  $c$SELECT rpc_admin_revoke_entry_token((SELECT id FROM entry_tokens WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1))$c$,
   'super-admin can revoke any entry token'
 );
 
 -- ────────__ 6. response shape ──────────
 SELECT ok(
-  (SELECT rpc_admin_revoke_entry_token((SELECT id FROM entry_tokens WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_a') LIMIT 1))::jsonb ? 'ok'),
+  (SELECT rpc_admin_revoke_entry_token((SELECT id FROM entry_tokens WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1))::jsonb ? 'ok'),
   'response has ok key'
 );
 

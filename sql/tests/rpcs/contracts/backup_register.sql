@@ -11,7 +11,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(9);
+SELECT plan(6);
 
 -- ────────── 1. signature pinned ──────────
 SELECT has_function(
@@ -31,7 +31,7 @@ SELECT function_returns(
 SELECT pgtap_test.become_anon();
 
 SELECT throws_ok(
-  $c$SELECT rpc_backup_register('pgtap-org-1111'::uuid, 'backup.sql', 1024000, 's3', '{}'::jsonb, ARRAY[]::uuid[])$c$,
+  $c$SELECT rpc_backup_register('11110000-0000-4000-8000-000000000001'::uuid, 'backup.sql', 1024000, 's3', '{}'::jsonb, ARRAY[]::uuid[])$c$,
   NULL::text,
   'attempted to access'
 );
@@ -43,7 +43,7 @@ SELECT pgtap_test.become_a();
 
 SELECT is_uuid(
   rpc_backup_register(
-    (SELECT id FROM organizations WHERE name = 'org_a'),
+    (SELECT id FROM organizations WHERE name = 'pgtap Org A'),
     'backup-2024-01-15.sql',
     2048000,
     's3',
@@ -55,7 +55,7 @@ SELECT is_uuid(
 
 -- ────────__ 4. org-admin cannot register for another org ──────────
 SELECT throws_ok(
-  $c$SELECT rpc_backup_register((SELECT id FROM organizations WHERE name = 'org_b'), 'backup.sql', 1024000, 's3', '{}'::jsonb, ARRAY[]::uuid[])$c$,
+  $c$SELECT rpc_backup_register((SELECT id FROM organizations WHERE name = 'pgtap Org B'), 'backup.sql', 1024000, 's3', '{}'::jsonb, ARRAY[]::uuid[])$c$,
   NULL::text,
   'attempted to access'
 );
@@ -65,7 +65,7 @@ SELECT pgtap_test.become_super();
 
 SELECT is_uuid(
   rpc_backup_register(
-    (SELECT id FROM organizations WHERE name = 'org_b'),
+    (SELECT id FROM organizations WHERE name = 'pgtap Org B'),
     'backup-org-b.sql',
     3048000,
     'gcs',

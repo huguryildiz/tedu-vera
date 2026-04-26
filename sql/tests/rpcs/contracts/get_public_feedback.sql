@@ -7,7 +7,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(7);
+SELECT plan(6);
 
 -- ────────── 1. signature pinned ──────────
 SELECT has_function(
@@ -24,15 +24,16 @@ SELECT function_returns(
 );
 
 -- ────────── 2. anon can call ──────────
-SELECT pgtap_test.become_anon();
+-- Seed while authenticated (become_reset is the default privileged role)
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.seed_periods();
 SELECT pgtap_test.seed_projects();
+SELECT pgtap_test.become_anon();
 
 SELECT lives_ok(
   $c$SELECT rpc_get_public_feedback(
-    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_a') LIMIT 1),
-    (SELECT id FROM projects WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_a') LIMIT 1)
+    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1),
+    (SELECT id FROM projects WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1)
   )$c$,
   'anon role can call rpc_get_public_feedback'
 );
@@ -40,8 +41,8 @@ SELECT lives_ok(
 -- ────────__ 3. response is json ──────────
 SELECT ok(
   (SELECT rpc_get_public_feedback(
-    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_a') LIMIT 1),
-    (SELECT id FROM projects WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_a') LIMIT 1)
+    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1),
+    (SELECT id FROM projects WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1)
   ) IS NOT NULL),
   'response is not null'
 );
@@ -52,8 +53,8 @@ SELECT pgtap_test.become_a();
 
 SELECT lives_ok(
   $c$SELECT rpc_get_public_feedback(
-    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_a') LIMIT 1),
-    (SELECT id FROM projects WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_a') LIMIT 1)
+    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1),
+    (SELECT id FROM projects WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1)
   )$c$,
   'authenticated role can call rpc_get_public_feedback'
 );
@@ -61,8 +62,8 @@ SELECT lives_ok(
 -- ────────__ 5. returns feedback array or empty ──────────
 SELECT ok(
   (SELECT rpc_get_public_feedback(
-    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_b') LIMIT 1),
-    (SELECT id FROM projects WHERE organization_id = (SELECT id FROM organizations WHERE name = 'org_b') LIMIT 1)
+    (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1),
+    (SELECT id FROM projects WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1)
   )::jsonb IS NOT NULL),
   'returns valid jsonb for any period/project'
 );

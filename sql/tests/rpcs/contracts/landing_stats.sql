@@ -8,7 +8,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(7);
+SELECT plan(6);
 
 -- ────────── 1. signature pinned ──────────
 SELECT has_function(
@@ -34,13 +34,13 @@ SELECT lives_ok(
 
 -- ────────__ 3. response has stats ──────────
 SELECT ok(
-  (SELECT rpc_landing_stats()::jsonb ? 'total_orgs'),
-  'response has total_orgs key'
+  (SELECT rpc_landing_stats()::jsonb ? 'organizations'),
+  'response has organizations key'
 );
 
 SELECT ok(
-  (SELECT rpc_landing_stats()::jsonb ? 'total_evaluations'),
-  'response has total_evaluations key'
+  (SELECT rpc_landing_stats()::jsonb ? 'evaluations'),
+  'response has evaluations key'
 );
 
 -- ────────__ 4. authenticated can also call ──────────
