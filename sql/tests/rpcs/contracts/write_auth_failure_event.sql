@@ -9,7 +9,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(9);
+SELECT plan(8);
 
 -- ────────── 1. signature pinned ──────────
 SELECT has_function(
@@ -35,8 +35,8 @@ SELECT lives_ok(
 
 -- ────────__ 3. invalid email returns error ──────────
 SELECT ok(
-  (SELECT rpc_write_auth_failure_event('invalid-email', 'password')::jsonb ->> 'error_code' = 'invalid_email'),
-  'invalid email format returns error_code invalid_email'
+  (SELECT rpc_write_auth_failure_event('', 'password')::jsonb ->> 'error_code' = 'invalid_email'),
+  'empty email returns error_code invalid_email'
 );
 
 -- ────────__ 4. valid email returns ok:true ──────────

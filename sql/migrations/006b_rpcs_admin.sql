@@ -154,6 +154,8 @@ BEGIN
     RETURN json_build_object('ok', false, 'error', 'period_not_found');
   END IF;
 
+  PERFORM _assert_org_admin(v_period.organization_id);
+
   SELECT COUNT(*) INTO v_maps_count
   FROM period_criterion_outcome_maps
   WHERE period_id = p_period_id;

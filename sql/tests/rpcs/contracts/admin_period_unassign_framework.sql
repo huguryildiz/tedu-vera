@@ -21,8 +21,8 @@ SELECT has_function(
 SELECT function_returns(
   'public', 'rpc_admin_period_unassign_framework',
   ARRAY['uuid'::text],
-  'jsonb',
-  'returns jsonb'
+  'json',
+  'returns json'
 );
 
 -- ────────── 2. unauthenticated → cannot call ──────────

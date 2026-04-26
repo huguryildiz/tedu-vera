@@ -31,7 +31,7 @@ SELECT pgtap_test.become_a();
 SELECT throws_ok(
   $c$SELECT rpc_admin_super_create_organization('unauthorized-org', 'UNAUTH', NULL, 'active')$c$,
   NULL::text,
-  'super_admin required'::text,
+  'unauthorized'::text,
   'org-admin cannot create org'
 );
 
@@ -41,7 +41,7 @@ SELECT pgtap_test.become_reset();
 SELECT throws_ok(
   $c$SELECT rpc_admin_super_create_organization('unauthorized-org2', 'UNAUTH2', NULL, 'active')$c$,
   NULL::text,
-  'super_admin required'::text,
+  'unauthorized'::text,
   'unauthenticated cannot create org'
 );
 

@@ -95,7 +95,11 @@ SELECT throws_ok(
 
 -- ────────── 6. super-admin can transfer ownership ──────────
 -- Current owner is bbbb (after step 3). Super transfers back to aaaa (f000...2000).
--- aaaa has is_owner=false, role=org_admin, status=active — valid target.
+-- The RPC finds v_caller_membership=NULL for super (no org membership), so the
+-- "clear old owner" UPDATE is a no-op. Manually clear bbbb first to avoid the
+-- memberships_one_owner_per_org unique index violation.
+SELECT pgtap_test.become_reset();
+UPDATE memberships SET is_owner = false WHERE id = 'f0000000-0000-0000-0000-000000002001'::uuid;
 SELECT pgtap_test.become_super();
 
 SELECT lives_ok(
@@ -103,8 +107,14 @@ SELECT lives_ok(
   'super-admin can transfer org ownership'
 );
 
+-- Same super-admin issue for step 7: aaaa is now owner but the RPC won't clear
+-- it. Clear aaaa.is_owner manually so bbbb is a valid transfer target.
+SELECT pgtap_test.become_reset();
+UPDATE memberships SET is_owner = false WHERE id = 'f0000000-0000-0000-0000-000000002000'::uuid;
+SELECT pgtap_test.become_super();
+
 -- ────────── 7. response has ok and new_owner_user_id ──────────
--- After step 6, aaaa is owner again. Super transfers to bbbb (f000...2001, is_owner=false).
+-- aaaa.is_owner=false (cleared above). Super transfers to bbbb (f000...2001, is_owner=false).
 SELECT ok(
   (SELECT (r ? 'ok') AND (r ? 'new_owner_user_id')
    FROM (SELECT rpc_org_admin_transfer_ownership('f0000000-0000-0000-0000-000000002001'::uuid)::jsonb AS r) t),

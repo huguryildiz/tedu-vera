@@ -25,12 +25,12 @@ SELECT function_returns(
 );
 
 -- ────────── 2. unauthenticated → cannot call ──────────
-SELECT pgtap_test.become_anon();
-
-SELECT throws_ok(
-  $c$SELECT rpc_admin_delete_period_criterion_outcome_map('00000000-0000-0000-0000-000000009999'::uuid)$c$,
-  NULL::text,
-  'anon cannot call rpc_admin_delete_period_criterion_outcome_map'
+-- Function grants authenticated only; calling as anon raises permission-denied
+-- at the call site (before pgTAP's exception handler), crashing the connection.
+-- Verify via privilege catalog instead.
+SELECT ok(
+  NOT has_function_privilege('anon', 'public.rpc_admin_delete_period_criterion_outcome_map(uuid)', 'execute'),
+  'anon has no execute privilege on rpc_admin_delete_period_criterion_outcome_map'
 );
 
 -- ────────── seed all data before switching roles ──────────
@@ -52,13 +52,17 @@ VALUES (
 );
 
 -- mapping for locked period (step 5 asserts delete is blocked)
+-- block_pcom_on_locked trigger prevents INSERT on locked periods even as postgres,
+-- so disable it temporarily for this test-only row.
+ALTER TABLE period_criterion_outcome_maps DISABLE TRIGGER block_pcom_on_locked;
 INSERT INTO period_criterion_outcome_maps (id, period_id, period_criterion_id, period_outcome_id)
 VALUES (
   'd0000000-0000-0000-0000-000000000003'::uuid,
   'cccc0000-0000-4000-8000-000000000011'::uuid,
-  'a1110000-0000-4000-8000-000000000a01'::uuid,
-  'a2220000-0000-4000-8000-000000000a01'::uuid
+  'a1110000-0000-4000-8000-000000000b01'::uuid,
+  'a2220000-0000-4000-8000-000000000b01'::uuid
 );
+ALTER TABLE period_criterion_outcome_maps ENABLE TRIGGER block_pcom_on_locked;
 
 -- mapping for unlocked period (step 6 checks response shape)
 INSERT INTO period_criterion_outcome_maps (id, period_id, period_criterion_id, period_outcome_id)

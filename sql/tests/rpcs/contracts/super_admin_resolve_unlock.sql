@@ -45,37 +45,41 @@ SELECT results_eq(
 );
 
 -- ────────── seed data before switching to super role ──────────
--- The unlock_request INSERT runs in reset mode (before become_super) because
--- super_admin has no org and would fail the RLS INSERT policy on unlock_requests.
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.seed_periods();
 SELECT pgtap_test.seed_unlock_requests();
 
-INSERT INTO unlock_requests (id, organization_id, period_id, requested_by, reason, status, created_at, updated_at)
-SELECT
-  '99990000-0000-0000-0000-000000000099'::uuid,
-  (SELECT id FROM organizations WHERE name = 'pgtap Org A'),
-  (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') AND is_locked = true LIMIT 1),
-  (SELECT id FROM profiles WHERE id = 'aaaa0000-0000-4000-8000-000000000001'::uuid),
-  'test unlock for shape check',
-  'pending',
-  now(),
-  now()
-ON CONFLICT (id) DO NOTHING;
-
 SELECT pgtap_test.become_super();
 
 -- ────────── 4. super-admin can approve unlock request ──────────
+-- This consumes the seeded pending request for Org A locked period (cccc...0011).
 SELECT lives_ok(
   $c$SELECT rpc_super_admin_resolve_unlock('a3330000-0000-4000-8000-000000000a11'::uuid, 'approved', NULL)$c$,
   'super-admin can approve unlock request'
 );
 
 -- ────────── 5. super-admin can reject unlock request ──────────
+-- This consumes the seeded pending request for Org B locked period (dddd...0022).
 SELECT lives_ok(
   $c$SELECT rpc_super_admin_resolve_unlock('a3330000-0000-4000-8000-000000000b22'::uuid, 'rejected', NULL)$c$,
   'super-admin can reject unlock request'
 );
+
+-- Insert the shape-check request AFTER steps 4 and 5 have consumed the seeded
+-- pending requests. idx_unlock_requests_one_pending_per_period allows only one
+-- pending row per period; inserting before step 4 would violate it.
+SELECT pgtap_test.become_reset();
+INSERT INTO unlock_requests (id, organization_id, period_id, requested_by, reason, status, created_at)
+VALUES (
+  '99990000-0000-0000-0000-000000000099'::uuid,
+  '11110000-0000-4000-8000-000000000001'::uuid,
+  'cccc0000-0000-4000-8000-000000000011'::uuid,
+  'aaaa0000-0000-4000-8000-000000000001'::uuid,
+  'test unlock for shape check',
+  'pending',
+  now()
+);
+SELECT pgtap_test.become_super();
 
 -- ────────── 6. response has ok, request_id, decision ──────────
 SELECT ok(

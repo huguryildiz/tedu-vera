@@ -24,12 +24,12 @@ SELECT function_returns(
 );
 
 -- ────────── 2. unauthenticated → permission denied ──────────
-SELECT pgtap_test.become_anon();
-
-SELECT throws_ok(
-  $c$SELECT rpc_accept_invite()$c$,
-  NULL::text,
-  'anon cannot call rpc_accept_invite'
+-- Function grants authenticated only; calling as anon raises permission-denied
+-- at the call site (before pgTAP's exception handler), crashing the connection.
+-- Verify via privilege catalog instead.
+SELECT ok(
+  NOT has_function_privilege('anon', 'public.rpc_accept_invite()', 'execute'),
+  'anon has no execute privilege on rpc_accept_invite'
 );
 
 -- ────────── 3. authenticated promotes own invites ──────────

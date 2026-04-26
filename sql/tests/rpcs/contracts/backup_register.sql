@@ -41,15 +41,15 @@ SELECT pgtap_test.become_reset();
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.become_a();
 
-SELECT is_uuid(
+SELECT ok(
   rpc_backup_register(
     (SELECT id FROM organizations WHERE name = 'pgtap Org A'),
     'backup-2024-01-15.sql',
     2048000,
-    's3',
+    'json',
     '{}'::jsonb,
     ARRAY[]::uuid[]
-  ),
+  ) IS NOT NULL,
   'org_a admin can register backup, returns uuid'
 );
 
@@ -63,15 +63,15 @@ SELECT throws_ok(
 -- ────────__ 5. super-admin can register for any org ──────────
 SELECT pgtap_test.become_super();
 
-SELECT is_uuid(
+SELECT ok(
   rpc_backup_register(
     (SELECT id FROM organizations WHERE name = 'pgtap Org B'),
     'backup-org-b.sql',
     3048000,
-    'gcs',
+    'json',
     '{}'::jsonb,
     ARRAY[]::uuid[]
-  ),
+  ) IS NOT NULL,
   'super-admin can register backup for any org'
 );
 

@@ -7,7 +7,7 @@ explicitly excludes `_pending/` from its coverage scan, so files here do
 
 ## Current state
 
-5 files quarantined. See table below.
+2 files quarantined. See table below.
 
 ## When to put a file here
 
@@ -28,11 +28,8 @@ If you must quarantine:
 
 | File | Root cause | Fix recipe |
 |---|---|---|
-| `backup_list.sql` | `rpc_backup_list` is defined in `008_platform.sql`; CI caps at 007. Function and `platform_backups` table do not exist in CI. | Apply 008_platform in CI (requires pg_cron/pg_net Supabase extensions) or add skip-guard pattern. |
-| `backup_record_download.sql` | `rpc_backup_record_download` + `platform_backups` table both live in 008_platform; CI caps at 007. Also: INSERT into `platform_backups` under `become_a()` context after fix would be needed. | Same as backup_list — enable 008 in CI or add skip-guard. |
-| `backup_register.sql` | `rpc_backup_register` + `platform_backups` table live in 008_platform; CI caps at 007. | Same as backup_list — enable 008 in CI or add skip-guard. |
-| `public_platform_settings.sql` | `rpc_public_platform_settings` is in 008_platform; CI caps at 007. Function does not exist in CI. | Enable 008 in CI or add skip-guard pattern (see Re-promotion checklist §4). |
-| `org_admin_transfer_ownership.sql` | Test 5 asserts `unauthorized` for cross-tenant call but RPC raises `target_not_found` when the org lookup returns empty first. Test 6 success block INSERTs into `auth.users` under `become_super()` context (authenticated role lacks write access to auth schema). | Read 006b RPC body to confirm error order; move `auth.users` INSERT before any `become_*()` call; verify test 5 expected error code. |
+| `backup_list.sql` | `rpc_backup_list` is defined in `008_platform.sql`. CI applies all migrations 001–009, but this test's INSERT/SELECT patterns need verification against the current `platform_backups` schema. | Read 008_platform.sql `rpc_backup_list` body; rewrite test with correct table/column names. |
+| `get_period_impact.sql` | Test was written for an org-admin function, but `rpc_get_period_impact(UUID, TEXT)` is a jury RPC that takes `(p_period_id, p_session_token)` and authenticates via session token, not org JWT. All test assertions (signature, auth model, response shape) are wrong. | Rewrite test from scratch against actual jury RPC signature: `(uuid, text) → jsonb`. Tests should call with a valid session token obtained via `seed_jurors` + jury auth flow, or skip if setup is too complex. Response keys: `total_projects`, `projects`, `juror_scores`, `jurors`. |
 
 ## Re-promotion checklist
 
@@ -48,9 +45,9 @@ When fixing a quarantined test:
 3. Move all `INSERT`s for privileged tables (`memberships`, `jurors`,
    `entry_tokens`, `juror_period_auth`) BEFORE any `become_*()` call so they
    run as postgres without RLS interference.
-4. For RPCs that live in migration 009 (audit module): CI caps at 007,
-   so the test must skip cleanly when the function is absent. The
-   canonical pattern is:
+4. For RPCs that depend on optional extensions (pg_cron, pg_net): CI applies
+   all migrations 001–009 but these extensions may be absent. The test must
+   skip cleanly when the function is absent. The canonical pattern is:
 
    ```sql
    CREATE TEMP TABLE _ctx ON COMMIT DROP AS

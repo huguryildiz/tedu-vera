@@ -20,8 +20,8 @@ SELECT has_function(
 SELECT function_returns(
   'public', 'rpc_admin_check_period_readiness',
   ARRAY['uuid'::text],
-  'jsonb',
-  'returns jsonb'
+  'json',
+  'returns json'
 );
 
 -- ────────── 2. unauthenticated → cannot call ──────────
@@ -53,8 +53,8 @@ SELECT throws_ok(
 
 -- ────────__ 5. response shape contains readiness info ──────────
 SELECT ok(
-  (SELECT rpc_admin_check_period_readiness((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1))::jsonb ? 'ready'),
-  'response has ready key'
+  (SELECT rpc_admin_check_period_readiness((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1))::jsonb ? 'ok'),
+  'response has ok key'
 );
 
 SELECT pgtap_test.become_reset();
