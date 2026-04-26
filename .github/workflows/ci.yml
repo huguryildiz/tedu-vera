@@ -4,14 +4,6 @@ name: CI
 # build, and pgTAP migration tests on every PR + push to main. Complements
 # e2e.yml (Playwright) and perf.yml (concurrent jury, dispatch-only).
 #
-# Motivation: docs/qa/vera-test-audit-report.md §8 finding #1 — `if: false`
-# on both jobs meant unit tests never gated PRs. 938 unit tests were passing
-# locally but not enforced. This workflow closes that gap.
-#
-# History: migration-ci.yml was merged into this file 2026-04-25 — having two
-# push/PR-triggered workflows with identical Node setup churned the GitHub
-# Actions UI. All four jobs run in parallel by default.
-#
 # Note on migration-test: previously gated to `paths: sql/**`. After merge it
 # runs on every PR as a hard-fail check — migration failures block PRs. The
 # job takes ~5 min wall-clock in parallel with unit-tests and edge-tests.
@@ -216,6 +208,14 @@ jobs:
           END\$\$;"
           # Allow ci user to write into vera_test
           sudo -u postgres psql -d vera_test -c "GRANT ALL ON SCHEMA public, auth TO ci;"
+          # Grant RLS-exercised roles the permissions they need for pgTAP isolation tests
+          sudo -u postgres psql -d vera_test -c "
+            GRANT USAGE ON SCHEMA public, auth TO authenticated, anon, service_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated, service_role;
+            GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated, service_role;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO anon;
+            GRANT INSERT, SELECT ON auth.users TO authenticated, service_role;"
 
       - name: Wait for Postgres to accept connections
         run: |
