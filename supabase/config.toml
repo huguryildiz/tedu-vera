@@ -1,5 +1,4 @@
-[project]
-id = "vera-e2e"
+project_id = "vera-e2e"
 
 [api]
 enabled = true
