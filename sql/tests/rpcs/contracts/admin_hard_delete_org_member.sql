@@ -65,40 +65,40 @@ SELECT throws_ok(
 -- ────────── 5. super-admin success ──────────
 -- Insert a disposable membership to delete
 INSERT INTO auth.users (id, instance_id, aud, role, email) VALUES
-  ('d1sp0000-0000-4000-8000-000000000001'::uuid,
+  ('d1500000-0000-4000-8000-000000000001'::uuid,
    '00000000-0000-0000-0000-000000000000'::uuid,
    'authenticated', 'authenticated', 'pgtap_disposable@test.local')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO profiles (id, display_name) VALUES
-  ('d1sp0000-0000-4000-8000-000000000001'::uuid, 'pgtap Disposable')
+  ('d1500000-0000-4000-8000-000000000001'::uuid, 'pgtap Disposable')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO memberships (id, user_id, organization_id, role, status, is_owner)
-VALUES ('d1sp0000-0000-4000-8000-000000000001'::uuid,
-        'd1sp0000-0000-4000-8000-000000000001'::uuid,
+VALUES ('d1500000-0000-4000-8000-000000000001'::uuid,
+        'd1500000-0000-4000-8000-000000000001'::uuid,
         '11110000-0000-4000-8000-000000000001'::uuid,
         'org_admin', 'active', false)
 ON CONFLICT (id) DO NOTHING;
 
 SELECT lives_ok(
   $c$SELECT rpc_admin_hard_delete_org_member(
-    'd1sp0000-0000-4000-8000-000000000001'::uuid,
+    'd1500000-0000-4000-8000-000000000001'::uuid,
     '11110000-0000-4000-8000-000000000001'::uuid)$c$,
   'super-admin hard delete succeeds'
 );
 
 -- Re-insert and delete to verify response shape
 INSERT INTO memberships (id, user_id, organization_id, role, status, is_owner)
-VALUES ('d1sp0000-0000-4000-8000-000000000002'::uuid,
-        'd1sp0000-0000-4000-8000-000000000001'::uuid,
+VALUES ('d1500000-0000-4000-8000-000000000002'::uuid,
+        'd1500000-0000-4000-8000-000000000001'::uuid,
         '11110000-0000-4000-8000-000000000001'::uuid,
         'org_admin', 'active', false)
 ON CONFLICT (id) DO NOTHING;
 
 SELECT is(
   (SELECT rpc_admin_hard_delete_org_member(
-    'd1sp0000-0000-4000-8000-000000000001'::uuid,
+    'd1500000-0000-4000-8000-000000000001'::uuid,
     '11110000-0000-4000-8000-000000000001'::uuid
   )::jsonb->>'ok'),
   'true',

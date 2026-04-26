@@ -34,7 +34,7 @@ SELECT throws_ok(
 SELECT pgtap_test.become_a();
 
 INSERT INTO platform_backups (id, organization_id, origin, format, storage_path, size_bytes, row_counts, period_ids, created_by)
-VALUES ('bk010000-0000-4000-8000-000000000001'::uuid,
+VALUES ('b4010000-0000-4000-8000-000000000001'::uuid,
         '11110000-0000-4000-8000-000000000001'::uuid,
         'manual', 'json', 'backups/pgtap-del-test.json', 1024,
         '{"periods": 1}'::jsonb,
@@ -47,7 +47,7 @@ SELECT pgtap_test.become_reset();
 SELECT pgtap_test.become_b();
 
 SELECT throws_ok(
-  $c$SELECT * FROM rpc_backup_delete('bk010000-0000-4000-8000-000000000001'::uuid)$c$,
+  $c$SELECT * FROM rpc_backup_delete('b4010000-0000-4000-8000-000000000001'::uuid)$c$,
   NULL::text,
   'unauthorized'::text,
   'cross-tenant admin → raises unauthorized'
@@ -55,7 +55,7 @@ SELECT throws_ok(
 
 -- ────────── 4. snapshot backup → pinned, cannot delete ──────────
 INSERT INTO platform_backups (id, organization_id, origin, format, storage_path, size_bytes, row_counts, period_ids, created_by)
-VALUES ('bk020000-0000-4000-8000-000000000001'::uuid,
+VALUES ('b4020000-0000-4000-8000-000000000001'::uuid,
         '11110000-0000-4000-8000-000000000001'::uuid,
         'snapshot', 'json', 'backups/pgtap-snapshot.json', 2048,
         '{}'::jsonb,
@@ -67,7 +67,7 @@ SELECT pgtap_test.become_reset();
 SELECT pgtap_test.become_a();
 
 SELECT throws_ok(
-  $c$SELECT * FROM rpc_backup_delete('bk020000-0000-4000-8000-000000000001'::uuid)$c$,
+  $c$SELECT * FROM rpc_backup_delete('b4020000-0000-4000-8000-000000000001'::uuid)$c$,
   NULL::text,
   'snapshot backups are pinned and cannot be deleted'::text,
   'snapshot backup → raises pinned error'
@@ -75,13 +75,13 @@ SELECT throws_ok(
 
 -- ────────── 5. success: delete a manual backup ──────────
 SELECT lives_ok(
-  $c$SELECT * FROM rpc_backup_delete('bk010000-0000-4000-8000-000000000001'::uuid)$c$,
+  $c$SELECT * FROM rpc_backup_delete('b4010000-0000-4000-8000-000000000001'::uuid)$c$,
   'deleting own manual backup succeeds'
 );
 
 -- ────────── 6. result returns storage_path ──────────
 INSERT INTO platform_backups (id, organization_id, origin, format, storage_path, size_bytes, row_counts, period_ids, created_by)
-VALUES ('bk030000-0000-4000-8000-000000000001'::uuid,
+VALUES ('b4030000-0000-4000-8000-000000000001'::uuid,
         '11110000-0000-4000-8000-000000000001'::uuid,
         'manual', 'json', 'backups/pgtap-path-check.json', 512,
         '{}'::jsonb,
@@ -90,7 +90,7 @@ VALUES ('bk030000-0000-4000-8000-000000000001'::uuid,
 ON CONFLICT (id) DO NOTHING;
 
 SELECT is(
-  (SELECT storage_path FROM rpc_backup_delete('bk030000-0000-4000-8000-000000000001'::uuid)),
+  (SELECT storage_path FROM rpc_backup_delete('b4030000-0000-4000-8000-000000000001'::uuid)),
   'backups/pgtap-path-check.json',
   'delete returns the storage_path of the deleted backup'
 );

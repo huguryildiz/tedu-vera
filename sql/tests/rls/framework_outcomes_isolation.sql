@@ -27,20 +27,20 @@ INSERT INTO frameworks (id, organization_id, name) VALUES
    '11110000-0000-4000-8000-000000000001'::uuid, 'pgtap Framework A'),
   ('fb000000-0000-4000-8000-000000000002'::uuid,
    '22220000-0000-4000-8000-000000000002'::uuid, 'pgtap Framework B'),
-  ('fg000000-0000-4000-8000-000000000000'::uuid,
+  ('f0000000-0000-4000-8000-000000000000'::uuid,
    NULL, 'pgtap Global Framework')
 ON CONFLICT (id) DO NOTHING;
 
 -- One outcome per framework.
 INSERT INTO framework_outcomes (id, framework_id, code, label, sort_order) VALUES
-  ('fo000000-0000-4000-8000-000000000a01'::uuid,
+  ('f9000000-0000-4000-8000-000000000a01'::uuid,
    'fa000000-0000-4000-8000-000000000001'::uuid,
    'O_A', 'pgtap Outcome A', 1),
-  ('fo000000-0000-4000-8000-000000000b01'::uuid,
+  ('f9000000-0000-4000-8000-000000000b01'::uuid,
    'fb000000-0000-4000-8000-000000000002'::uuid,
    'O_B', 'pgtap Outcome B', 1),
-  ('fo000000-0000-4000-8000-000000000g01'::uuid,
-   'fg000000-0000-4000-8000-000000000000'::uuid,
+  ('f9000000-0000-4000-8000-000000000001'::uuid,
+   'f0000000-0000-4000-8000-000000000000'::uuid,
    'O_G', 'pgtap Global Outcome', 1)
 ON CONFLICT (id) DO NOTHING;
 
@@ -52,7 +52,7 @@ ON CONFLICT (id) DO NOTHING;
 SELECT pgtap_test.become_a();
 SELECT is(
   (SELECT count(*)::int FROM framework_outcomes
-   WHERE id = 'fo000000-0000-4000-8000-000000000a01'::uuid),
+   WHERE id = 'f9000000-0000-4000-8000-000000000a01'::uuid),
   1,
   'admin A sees org A framework_outcomes row'::text
 );
@@ -60,7 +60,7 @@ SELECT is(
 -- 2. admin A cannot see org B's outcome (silent filter).
 SELECT is(
   (SELECT count(*)::int FROM framework_outcomes
-   WHERE id = 'fo000000-0000-4000-8000-000000000b01'::uuid),
+   WHERE id = 'f9000000-0000-4000-8000-000000000b01'::uuid),
   0,
   'admin A cannot see org B framework_outcomes row (silent filter)'::text
 );
@@ -68,7 +68,7 @@ SELECT is(
 -- 3. admin A CAN see global (NULL-org) outcome.
 SELECT is(
   (SELECT count(*)::int FROM framework_outcomes
-   WHERE id = 'fo000000-0000-4000-8000-000000000g01'::uuid),
+   WHERE id = 'f9000000-0000-4000-8000-000000000001'::uuid),
   1,
   'admin A sees global (NULL-org) framework_outcomes row'::text
 );
@@ -95,7 +95,7 @@ SELECT throws_ok(
 WITH u AS (
   UPDATE framework_outcomes
      SET label = 'pgtap cross-tenant update'
-   WHERE id = 'fo000000-0000-4000-8000-000000000b01'::uuid
+   WHERE id = 'f9000000-0000-4000-8000-000000000b01'::uuid
    RETURNING 1
 )
 INSERT INTO _row_counts SELECT 'a_update_b', count(*)::int FROM u;
@@ -111,9 +111,9 @@ SELECT pgtap_test.become_super();
 SELECT is(
   (SELECT count(*)::int FROM framework_outcomes
    WHERE id = ANY(ARRAY[
-     'fo000000-0000-4000-8000-000000000a01'::uuid,
-     'fo000000-0000-4000-8000-000000000b01'::uuid,
-     'fo000000-0000-4000-8000-000000000g01'::uuid
+     'f9000000-0000-4000-8000-000000000a01'::uuid,
+     'f9000000-0000-4000-8000-000000000b01'::uuid,
+     'f9000000-0000-4000-8000-000000000001'::uuid
    ])),
   3,
   'super_admin sees all three seeded framework_outcomes rows'::text

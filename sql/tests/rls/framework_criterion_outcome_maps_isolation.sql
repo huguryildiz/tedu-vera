@@ -27,7 +27,7 @@ INSERT INTO frameworks (id, organization_id, name) VALUES
    '11110000-0000-4000-8000-000000000001'::uuid, 'pgtap Framework A'),
   ('fb000000-0000-4000-8000-000000000002'::uuid,
    '22220000-0000-4000-8000-000000000002'::uuid, 'pgtap Framework B'),
-  ('fg000000-0000-4000-8000-000000000000'::uuid,
+  ('f0000000-0000-4000-8000-000000000000'::uuid,
    NULL, 'pgtap Global Framework')
 ON CONFLICT (id) DO NOTHING;
 
@@ -36,37 +36,37 @@ INSERT INTO framework_criteria (id, framework_id, key, label, max_score, weight,
    'fa000000-0000-4000-8000-000000000001'::uuid, 'k_a', 'pgtap Criterion A', 10, 1.0, 1),
   ('fc000000-0000-4000-8000-000000000b01'::uuid,
    'fb000000-0000-4000-8000-000000000002'::uuid, 'k_b', 'pgtap Criterion B', 10, 1.0, 1),
-  ('fc000000-0000-4000-8000-000000000g01'::uuid,
-   'fg000000-0000-4000-8000-000000000000'::uuid, 'k_g', 'pgtap Global Criterion', 10, 1.0, 1)
+  ('fc000000-0000-4000-8000-000000000001'::uuid,
+   'f0000000-0000-4000-8000-000000000000'::uuid, 'k_g', 'pgtap Global Criterion', 10, 1.0, 1)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO framework_outcomes (id, framework_id, code, label, sort_order) VALUES
-  ('fo000000-0000-4000-8000-000000000a01'::uuid,
+  ('f9000000-0000-4000-8000-000000000a01'::uuid,
    'fa000000-0000-4000-8000-000000000001'::uuid, 'O_A', 'pgtap Outcome A', 1),
-  ('fo000000-0000-4000-8000-000000000b01'::uuid,
+  ('f9000000-0000-4000-8000-000000000b01'::uuid,
    'fb000000-0000-4000-8000-000000000002'::uuid, 'O_B', 'pgtap Outcome B', 1),
-  ('fo000000-0000-4000-8000-000000000g01'::uuid,
-   'fg000000-0000-4000-8000-000000000000'::uuid, 'O_G', 'pgtap Global Outcome', 1)
+  ('f9000000-0000-4000-8000-000000000001'::uuid,
+   'f0000000-0000-4000-8000-000000000000'::uuid, 'O_G', 'pgtap Global Outcome', 1)
 ON CONFLICT (id) DO NOTHING;
 
 -- One map per framework (criterion → outcome within the same framework).
 INSERT INTO framework_criterion_outcome_maps
   (id, framework_id, criterion_id, outcome_id, coverage_type)
 VALUES
-  ('fm000000-0000-4000-8000-000000000a01'::uuid,
+  ('f4000000-0000-4000-8000-000000000a01'::uuid,
    'fa000000-0000-4000-8000-000000000001'::uuid,
    'fc000000-0000-4000-8000-000000000a01'::uuid,
-   'fo000000-0000-4000-8000-000000000a01'::uuid,
+   'f9000000-0000-4000-8000-000000000a01'::uuid,
    'direct'),
-  ('fm000000-0000-4000-8000-000000000b01'::uuid,
+  ('f4000000-0000-4000-8000-000000000b01'::uuid,
    'fb000000-0000-4000-8000-000000000002'::uuid,
    'fc000000-0000-4000-8000-000000000b01'::uuid,
-   'fo000000-0000-4000-8000-000000000b01'::uuid,
+   'f9000000-0000-4000-8000-000000000b01'::uuid,
    'direct'),
-  ('fm000000-0000-4000-8000-000000000g01'::uuid,
-   'fg000000-0000-4000-8000-000000000000'::uuid,
-   'fc000000-0000-4000-8000-000000000g01'::uuid,
-   'fo000000-0000-4000-8000-000000000g01'::uuid,
+  ('f4000000-0000-4000-8000-000000000001'::uuid,
+   'f0000000-0000-4000-8000-000000000000'::uuid,
+   'fc000000-0000-4000-8000-000000000001'::uuid,
+   'f9000000-0000-4000-8000-000000000001'::uuid,
    'direct')
 ON CONFLICT (criterion_id, outcome_id) DO NOTHING;
 
@@ -78,7 +78,7 @@ ON CONFLICT (criterion_id, outcome_id) DO NOTHING;
 SELECT pgtap_test.become_a();
 SELECT is(
   (SELECT count(*)::int FROM framework_criterion_outcome_maps
-   WHERE id = 'fm000000-0000-4000-8000-000000000a01'::uuid),
+   WHERE id = 'f4000000-0000-4000-8000-000000000a01'::uuid),
   1,
   'admin A sees org A framework_criterion_outcome_maps row'::text
 );
@@ -86,7 +86,7 @@ SELECT is(
 -- 2. admin A cannot see org B's map (silent filter).
 SELECT is(
   (SELECT count(*)::int FROM framework_criterion_outcome_maps
-   WHERE id = 'fm000000-0000-4000-8000-000000000b01'::uuid),
+   WHERE id = 'f4000000-0000-4000-8000-000000000b01'::uuid),
   0,
   'admin A cannot see org B framework_criterion_outcome_maps row (silent filter)'::text
 );
@@ -94,7 +94,7 @@ SELECT is(
 -- 3. admin A CAN see global (NULL-org) map.
 SELECT is(
   (SELECT count(*)::int FROM framework_criterion_outcome_maps
-   WHERE id = 'fm000000-0000-4000-8000-000000000g01'::uuid),
+   WHERE id = 'f4000000-0000-4000-8000-000000000001'::uuid),
   1,
   'admin A sees global (NULL-org) framework_criterion_outcome_maps row'::text
 );
@@ -110,7 +110,7 @@ SELECT throws_ok(
      VALUES (
        'fb000000-0000-4000-8000-000000000002'::uuid,
        'fc000000-0000-4000-8000-000000000b01'::uuid,
-       'fo000000-0000-4000-8000-000000000b01'::uuid,
+       'f9000000-0000-4000-8000-000000000b01'::uuid,
        'indirect'
      )$i$,
   '42501',
@@ -126,7 +126,7 @@ SELECT throws_ok(
 WITH u AS (
   UPDATE framework_criterion_outcome_maps
      SET coverage_type = 'indirect'
-   WHERE id = 'fm000000-0000-4000-8000-000000000b01'::uuid
+   WHERE id = 'f4000000-0000-4000-8000-000000000b01'::uuid
    RETURNING 1
 )
 INSERT INTO _row_counts SELECT 'a_update_b', count(*)::int FROM u;
@@ -142,9 +142,9 @@ SELECT pgtap_test.become_super();
 SELECT is(
   (SELECT count(*)::int FROM framework_criterion_outcome_maps
    WHERE id = ANY(ARRAY[
-     'fm000000-0000-4000-8000-000000000a01'::uuid,
-     'fm000000-0000-4000-8000-000000000b01'::uuid,
-     'fm000000-0000-4000-8000-000000000g01'::uuid
+     'f4000000-0000-4000-8000-000000000a01'::uuid,
+     'f4000000-0000-4000-8000-000000000b01'::uuid,
+     'f4000000-0000-4000-8000-000000000001'::uuid
    ])),
   3,
   'super_admin sees all three seeded framework_criterion_outcome_maps rows'::text

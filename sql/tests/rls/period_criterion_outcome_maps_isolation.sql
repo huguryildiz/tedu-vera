@@ -32,12 +32,12 @@ GRANT SELECT, INSERT ON _row_counts TO authenticated, anon;
 INSERT INTO period_criterion_outcome_maps
   (id, period_id, period_criterion_id, period_outcome_id, coverage_type)
 VALUES
-  ('pm000000-0000-4000-8000-000000000a01'::uuid,
+  ('5c000000-0000-4000-8000-000000000a01'::uuid,
    'cccc0000-0000-4000-8000-000000000001'::uuid,
    'a1110000-0000-4000-8000-000000000a01'::uuid,
    'a2220000-0000-4000-8000-000000000a01'::uuid,
    'direct'),
-  ('pm000000-0000-4000-8000-000000000b01'::uuid,
+  ('5c000000-0000-4000-8000-000000000b01'::uuid,
    'dddd0000-0000-4000-8000-000000000002'::uuid,
    'a1110000-0000-4000-8000-000000000b01'::uuid,
    'a2220000-0000-4000-8000-000000000b01'::uuid,
@@ -52,7 +52,7 @@ ON CONFLICT (period_criterion_id, period_outcome_id) DO NOTHING;
 SELECT pgtap_test.become_a();
 SELECT is(
   (SELECT count(*)::int FROM period_criterion_outcome_maps
-   WHERE id = 'pm000000-0000-4000-8000-000000000a01'::uuid),
+   WHERE id = '5c000000-0000-4000-8000-000000000a01'::uuid),
   1,
   'admin A sees org A period_criterion_outcome_maps row (unlocked period)'::text
 );
@@ -60,7 +60,7 @@ SELECT is(
 -- 2. admin A cannot see org B's map for unlocked period (silent filter).
 SELECT is(
   (SELECT count(*)::int FROM period_criterion_outcome_maps
-   WHERE id = 'pm000000-0000-4000-8000-000000000b01'::uuid),
+   WHERE id = '5c000000-0000-4000-8000-000000000b01'::uuid),
   0,
   'admin A cannot see org B maps for unlocked period (silent filter)'::text
 );
@@ -71,8 +71,8 @@ SELECT pgtap_test.become_anon();
 SELECT is(
   (SELECT count(*)::int FROM period_criterion_outcome_maps
    WHERE id = ANY(ARRAY[
-     'pm000000-0000-4000-8000-000000000a01'::uuid,
-     'pm000000-0000-4000-8000-000000000b01'::uuid
+     '5c000000-0000-4000-8000-000000000a01'::uuid,
+     '5c000000-0000-4000-8000-000000000b01'::uuid
    ])),
   0,
   'anon cannot read maps for unlocked periods (both filtered)'::text
@@ -107,7 +107,7 @@ SELECT throws_ok(
 WITH u AS (
   UPDATE period_criterion_outcome_maps
      SET coverage_type = 'indirect'
-   WHERE id = 'pm000000-0000-4000-8000-000000000b01'::uuid
+   WHERE id = '5c000000-0000-4000-8000-000000000b01'::uuid
    RETURNING 1
 )
 INSERT INTO _row_counts SELECT 'a_update_b', count(*)::int FROM u;
@@ -127,8 +127,8 @@ SELECT pgtap_test.become_super();
 SELECT is(
   (SELECT count(*)::int FROM period_criterion_outcome_maps
    WHERE id = ANY(ARRAY[
-     'pm000000-0000-4000-8000-000000000a01'::uuid,
-     'pm000000-0000-4000-8000-000000000b01'::uuid
+     '5c000000-0000-4000-8000-000000000a01'::uuid,
+     '5c000000-0000-4000-8000-000000000b01'::uuid
    ])),
   2,
   'super_admin sees both seeded period_criterion_outcome_maps rows'::text
@@ -137,7 +137,7 @@ SELECT is(
 -- 7. super_admin can DELETE a map.
 SELECT lives_ok(
   $d$DELETE FROM period_criterion_outcome_maps
-     WHERE id = 'pm000000-0000-4000-8000-000000000b01'::uuid$d$,
+     WHERE id = '5c000000-0000-4000-8000-000000000b01'::uuid$d$,
   'super_admin DELETE on org B map succeeds'::text
 );
 

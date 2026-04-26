@@ -28,7 +28,7 @@ INSERT INTO frameworks (id, organization_id, name) VALUES
    '11110000-0000-4000-8000-000000000001'::uuid, 'pgtap Framework A'),
   ('fb000000-0000-4000-8000-000000000002'::uuid,
    '22220000-0000-4000-8000-000000000002'::uuid, 'pgtap Framework B'),
-  ('fg000000-0000-4000-8000-000000000000'::uuid,
+  ('f0000000-0000-4000-8000-000000000000'::uuid,
    NULL, 'pgtap Global Framework')
 ON CONFLICT (id) DO NOTHING;
 
@@ -40,8 +40,8 @@ INSERT INTO framework_criteria (id, framework_id, key, label, max_score, weight,
   ('fc000000-0000-4000-8000-000000000b01'::uuid,
    'fb000000-0000-4000-8000-000000000002'::uuid,
    'k_b', 'pgtap Criterion B', 10, 1.0, 1),
-  ('fc000000-0000-4000-8000-000000000g01'::uuid,
-   'fg000000-0000-4000-8000-000000000000'::uuid,
+  ('fc000000-0000-4000-8000-000000000001'::uuid,
+   'f0000000-0000-4000-8000-000000000000'::uuid,
    'k_g', 'pgtap Global Criterion', 10, 1.0, 1)
 ON CONFLICT (id) DO NOTHING;
 
@@ -69,7 +69,7 @@ SELECT is(
 -- 3. admin A CAN see global (NULL-org) criterion.
 SELECT is(
   (SELECT count(*)::int FROM framework_criteria
-   WHERE id = 'fc000000-0000-4000-8000-000000000g01'::uuid),
+   WHERE id = 'fc000000-0000-4000-8000-000000000001'::uuid),
   1,
   'admin A sees global (NULL-org) framework_criteria row'::text
 );
@@ -114,7 +114,7 @@ SELECT is(
    WHERE id = ANY(ARRAY[
      'fc000000-0000-4000-8000-000000000a01'::uuid,
      'fc000000-0000-4000-8000-000000000b01'::uuid,
-     'fc000000-0000-4000-8000-000000000g01'::uuid
+     'fc000000-0000-4000-8000-000000000001'::uuid
    ])),
   3,
   'super_admin sees all three seeded framework_criteria rows'::text
