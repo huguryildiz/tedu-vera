@@ -51,7 +51,7 @@ SELECT pgtap_test.become_super();
 SELECT throws_ok(
   $c$SELECT rpc_admin_set_backup_schedule('invalid-cron')$c$,
   NULL::text,
-  'Invalid cron expression'::text,
+  'Invalid cron expression: expected 5 fields'::text,
   'invalid cron string raises Invalid cron expression'
 );
 

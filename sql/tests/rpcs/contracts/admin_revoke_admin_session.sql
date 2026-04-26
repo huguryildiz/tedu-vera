@@ -24,13 +24,13 @@ SELECT function_returns(
   'returns json'
 );
 
--- ────────── 2. unauthenticated → unauthenticated error ──────────
-SELECT pgtap_test.become_anon();
-
-SELECT results_eq(
-  $c$SELECT rpc_admin_revoke_admin_session('00000000-0000-0000-0000-000000009999'::uuid)::jsonb ? 'error_code'$c$,
-  ARRAY[true],
-  'anon caller returns error_code field'
+-- ────────── 2. unauthenticated → cannot call ──────────
+-- Function grants authenticated only; calling as anon raises permission-denied
+-- at the call site (before pgTAP's exception handler), crashing the connection.
+-- Verify via privilege catalog instead.
+SELECT ok(
+  NOT has_function_privilege('anon', 'public.rpc_admin_revoke_admin_session(uuid)', 'execute'),
+  'anon has no execute privilege on rpc_admin_revoke_admin_session'
 );
 
 -- ────────── seed data at postgres level (authenticated has no INSERT on admin_user_sessions) ──────────
@@ -40,7 +40,7 @@ SELECT pgtap_test.seed_two_orgs();
 INSERT INTO admin_user_sessions (id, user_id, device_id, created_at, updated_at, first_seen_at, last_activity_at)
 VALUES (
   'e0000000-0000-0000-0000-000000000001'::uuid,
-  (SELECT id FROM profiles WHERE email = 'pgtap_admin_a@test.local'),
+  'aaaa0000-0000-4000-8000-000000000001'::uuid,
   'device-a',
   now(), now(), now(), now()
 );
@@ -48,7 +48,7 @@ VALUES (
 INSERT INTO admin_user_sessions (id, user_id, device_id, created_at, updated_at, first_seen_at, last_activity_at)
 VALUES (
   'e0000000-0000-0000-0000-000000000002'::uuid,
-  (SELECT id FROM profiles WHERE email = 'pgtap_admin_b@test.local'),
+  'bbbb0000-0000-4000-8000-000000000002'::uuid,
   'device-b',
   now(), now(), now(), now()
 );

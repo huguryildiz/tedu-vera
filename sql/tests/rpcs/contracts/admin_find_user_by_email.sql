@@ -19,32 +19,28 @@ SELECT has_function(
 SELECT function_returns(
   'public', 'rpc_admin_find_user_by_email',
   ARRAY['text'::text],
-  'record',
-  'returns record set'
+  'setof record',
+  'returns setof record'
 );
 
 -- ────────── 2. anon cannot call ──────────
-SELECT pgtap_test.become_anon();
-
-SELECT throws_ok(
-  $c$SELECT rpc_admin_find_user_by_email('test@example.com')$c$,
-  NULL::text,
-  'anon cannot call rpc_admin_find_user_by_email'
+-- Function grants service_role only; calling as anon or authenticated raises permission-denied
+-- at the call site (before pgTAP's exception handler), crashing the connection.
+-- Verify via privilege catalog instead.
+SELECT ok(
+  NOT has_function_privilege('anon', 'public.rpc_admin_find_user_by_email(text)', 'execute'),
+  'anon has no execute privilege on rpc_admin_find_user_by_email'
 );
 
 -- ────────── 3. authenticated (org-admin) cannot call ──────────
-SELECT pgtap_test.become_reset();
-SELECT pgtap_test.seed_two_orgs();
-SELECT pgtap_test.become_a();
-
-SELECT throws_ok(
-  $c$SELECT rpc_admin_find_user_by_email('pgtap_admin_a@test.local')$c$,
-  NULL::text,
-  'authenticated cannot call rpc_admin_find_user_by_email'
+SELECT ok(
+  NOT has_function_privilege('authenticated', 'public.rpc_admin_find_user_by_email(text)', 'execute'),
+  'authenticated has no execute privilege on rpc_admin_find_user_by_email'
 );
 
 -- ────────── 4. service_role (postgres) can call ──────────
 SELECT pgtap_test.become_reset();
+SELECT pgtap_test.seed_two_orgs();
 
 SELECT lives_ok(
   $c$SELECT rpc_admin_find_user_by_email('pgtap_admin_a@test.local')$c$,
@@ -65,12 +61,10 @@ SELECT is(
 );
 
 -- ────────── 7. super-admin (authenticated role) cannot call ──────────
-SELECT pgtap_test.become_super();
-
-SELECT throws_ok(
-  $c$SELECT rpc_admin_find_user_by_email('pgtap_admin_a@test.local')$c$,
-  NULL::text,
-  'super-admin (authenticated role) cannot call rpc_admin_find_user_by_email'
+-- Super-admin still uses the authenticated role; the catalog check covers this too.
+SELECT ok(
+  NOT has_function_privilege('authenticated', 'public.rpc_admin_find_user_by_email(text)', 'execute'),
+  'super-admin (authenticated role) has no execute privilege on rpc_admin_find_user_by_email'
 );
 
 SELECT pgtap_test.become_reset();

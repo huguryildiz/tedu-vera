@@ -1,17 +1,18 @@
--- RPC: rpc_admin_revoke_entry_token(UUID) → jsonb
+-- RPC: rpc_admin_revoke_entry_token(UUID) -> jsonb
 --
 -- Pins the public contract documented in 009_audit.sql:
---   * Signature: (p_token_id UUID) returning jsonb
+--   * Signature: (p_period_id UUID) returning jsonb
 --   * Authenticated required
 --   * Calls _assert_org_admin
---   * Error code: 'period_not_found' (token may reference closed period)
---   * Returns {ok, updated_at}
+--   * Revokes all non-revoked entry_tokens for the given period
+--   * Error: 'period_not_found' when period missing, _assert_org_admin raises for wrong tenant
+--   * Returns {ok, revoked_count, active_juror_count}
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
 SELECT plan(7);
 
--- ────────── 1. signature pinned ──────────
+-- ---------- 1. signature pinned ----------
 SELECT has_function(
   'public', 'rpc_admin_revoke_entry_token',
   ARRAY['uuid'::text],
@@ -25,46 +26,47 @@ SELECT function_returns(
   'returns jsonb'
 );
 
--- ────────── 2. unauthenticated → cannot call ──────────
-SELECT pgtap_test.become_anon();
-
-SELECT throws_ok(
-  $c$SELECT rpc_admin_revoke_entry_token('00000000-0000-0000-0000-000000009999'::uuid)$c$,
-  NULL::text,
-  'attempted to access'
+-- ---------- 2. unauthenticated cannot call ----------
+-- Function grants authenticated only; calling as anon raises permission-denied
+-- at the call site (before pgTAP's exception handler), crashing the connection.
+-- Verify via privilege catalog instead.
+SELECT ok(
+  NOT has_function_privilege('anon', 'public.rpc_admin_revoke_entry_token(uuid)', 'execute'),
+  'anon has no execute privilege on rpc_admin_revoke_entry_token'
 );
 
--- ────────__ 3. org-admin for org_a can revoke org_a tokens ──────────
+-- ---------- 3. org-admin for org_a can revoke org_a period tokens ----------
 SELECT pgtap_test.become_reset();
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.seed_periods();
 SELECT pgtap_test.seed_entry_tokens();
 SELECT pgtap_test.become_a();
 
--- Get first entry token for org_a
 SELECT lives_ok(
-  $c$SELECT rpc_admin_revoke_entry_token((SELECT id FROM entry_tokens WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1))$c$,
-  'org_a admin can revoke org_a entry token'
+  $c$SELECT rpc_admin_revoke_entry_token((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1))$c$,
+  'org_a admin can revoke entry tokens for org_a period'
 );
 
--- ────────── 4. org-admin for org_a cannot revoke org_b tokens ──────────
+-- ---------- 4. org-admin for org_a cannot revoke org_b period tokens ----------
+-- SECURITY DEFINER so function can see org_b period; _assert_org_admin then raises
 SELECT throws_ok(
-  $c$SELECT rpc_admin_revoke_entry_token((SELECT id FROM entry_tokens WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1))$c$,
+  $c$SELECT rpc_admin_revoke_entry_token((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1))$c$,
   NULL::text,
-  'attempted to access'
+  'org_a admin cannot revoke tokens for org_b period'
 );
 
--- ────────── 5. super-admin can revoke any token ──────────
+-- ---------- 5. super-admin can revoke tokens for any period ----------
 SELECT pgtap_test.become_super();
 
 SELECT lives_ok(
-  $c$SELECT rpc_admin_revoke_entry_token((SELECT id FROM entry_tokens WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1))$c$,
-  'super-admin can revoke any entry token'
+  $c$SELECT rpc_admin_revoke_entry_token((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1))$c$,
+  'super-admin can revoke entry tokens for any period'
 );
 
--- ────────__ 6. response shape ──────────
+-- ---------- 6. response has ok key ----------
+-- Calling again on an already-revoked period still returns ok=true with revoked_count=0
 SELECT ok(
-  (SELECT rpc_admin_revoke_entry_token((SELECT id FROM entry_tokens WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1))::jsonb ? 'ok'),
+  (SELECT rpc_admin_revoke_entry_token((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org A') LIMIT 1))::jsonb ? 'ok'),
   'response has ok key'
 );
 

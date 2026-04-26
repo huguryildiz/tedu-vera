@@ -28,12 +28,12 @@ SELECT function_returns(
 );
 
 -- ────────__ 2. unauthenticated → cannot call ──────────
-SELECT pgtap_test.become_anon();
-
-SELECT throws_ok(
-  $c$SELECT rpc_backup_register('11110000-0000-4000-8000-000000000001'::uuid, 'backup.sql', 1024000, 's3', '{}'::jsonb, ARRAY[]::uuid[])$c$,
-  NULL::text,
-  'attempted to access'
+-- Function grants authenticated only; calling as anon raises permission-denied
+-- at the call site (before pgTAP's exception handler), crashing the connection.
+-- Verify via privilege catalog instead.
+SELECT ok(
+  NOT has_function_privilege('anon', 'public.rpc_backup_register(uuid, text, bigint, text, jsonb, uuid[], text)', 'execute'),
+  'anon has no execute privilege on rpc_backup_register'
 );
 
 -- ────────__ 3. org-admin can register backup for their org ──────────

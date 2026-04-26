@@ -26,12 +26,12 @@ SELECT function_returns(
 );
 
 -- ────────__ 2. unauthenticated → cannot call ──────────
-SELECT pgtap_test.become_anon();
-
-SELECT throws_ok(
-  $c$SELECT rpc_admin_force_close_juror_edit_mode('00000000-0000-0000-0000-000000009999'::uuid, '00000000-0000-0000-0000-000000009999'::uuid)$c$,
-  NULL::text,
-  'attempted to access'
+-- Function grants authenticated only; calling as anon raises permission-denied
+-- at the call site (before pgTAP's exception handler), crashing the connection.
+-- Verify via privilege catalog instead.
+SELECT ok(
+  NOT has_function_privilege('anon', 'public.rpc_admin_force_close_juror_edit_mode(uuid, uuid)', 'execute'),
+  'anon has no execute privilege on rpc_admin_force_close_juror_edit_mode'
 );
 
 -- ────────__ 3. null parameters → required error ──────────

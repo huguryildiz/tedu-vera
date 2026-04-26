@@ -78,8 +78,8 @@ SELECT pgtap_test.become_a();
 -- ────────── 3. nonexistent mapping → mapping_not_found ──────────
 SELECT throws_ok(
   $c$SELECT rpc_admin_delete_period_criterion_outcome_map('00000000-0000-0000-0000-000000009998'::uuid)$c$,
-  'mapping_not_found',
   NULL::text,
+  'mapping_not_found',
   'nonexistent mapping raises mapping_not_found'
 );
 
@@ -92,8 +92,8 @@ SELECT lives_ok(
 -- ────────── 5. org-admin cannot delete for locked period ──────────
 SELECT throws_ok(
   $c$SELECT rpc_admin_delete_period_criterion_outcome_map('d0000000-0000-0000-0000-000000000003'::uuid)$c$,
-  'period_locked',
   NULL::text,
+  'period_locked',
   'cannot delete mapping when period is locked'
 );
 

@@ -26,12 +26,12 @@ SELECT function_returns(
 );
 
 -- ────────── 2. unauthenticated → cannot call ──────────
-SELECT pgtap_test.become_anon();
-
-SELECT throws_ok(
-  $c$SELECT rpc_admin_period_unassign_framework('00000000-0000-0000-0000-000000009999'::uuid)$c$,
-  NULL::text,
-  'attempted to access'
+-- Function grants authenticated only; calling as anon raises permission-denied
+-- at the call site (before pgTAP's exception handler), crashing the connection.
+-- Verify via privilege catalog instead.
+SELECT ok(
+  NOT has_function_privilege('anon', 'public.rpc_admin_period_unassign_framework(uuid)', 'execute'),
+  'anon has no execute privilege on rpc_admin_period_unassign_framework'
 );
 
 -- ────────── 3. org-admin can unassign framework ──────────
@@ -46,10 +46,11 @@ SELECT lives_ok(
 );
 
 -- ────────__ 4. org-admin cannot unassign for other org ──────────
-SELECT throws_ok(
-  $c$SELECT rpc_admin_period_unassign_framework((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1))$c$,
-  NULL::text,
-  'attempted to access'
+-- RLS hides org_b periods from org_a admin, so the function returns period_not_found (no exception)
+SELECT results_eq(
+  $c$SELECT (rpc_admin_period_unassign_framework((SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1))::jsonb ->> 'error')$c$,
+  ARRAY['period_not_found'],
+  'org_a admin cannot access org_b period (RLS hides it, returns period_not_found)'
 );
 
 -- ────────__ 5. super-admin can unassign any period framework ──────────

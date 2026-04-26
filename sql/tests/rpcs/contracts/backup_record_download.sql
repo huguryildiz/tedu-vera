@@ -26,12 +26,12 @@ SELECT function_returns(
 );
 
 -- ────────── 2. unauthenticated → cannot call ──────────
-SELECT pgtap_test.become_anon();
-
-SELECT throws_ok(
-  $c$SELECT rpc_backup_record_download('00000000-0000-0000-0000-000000009999'::uuid)$c$,
-  NULL::text,
-  'anon cannot call rpc_backup_record_download'
+-- Function grants authenticated only; calling as anon raises permission-denied
+-- at the call site (before pgTAP's exception handler), crashing the connection.
+-- Verify via privilege catalog instead.
+SELECT ok(
+  NOT has_function_privilege('anon', 'public.rpc_backup_record_download(uuid)', 'execute'),
+  'anon has no execute privilege on rpc_backup_record_download'
 );
 
 -- ────────── seed backup rows at postgres level ──────────
