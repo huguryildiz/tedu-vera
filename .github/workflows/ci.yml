@@ -239,13 +239,7 @@ jobs:
           # Grant RLS-exercised roles the permissions they need for pgTAP isolation tests
           sudo -u postgres psql -d vera_test -c "
             GRANT USAGE ON SCHEMA public, auth, storage TO authenticated, anon, service_role;
-            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated, service_role;
-            GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
-            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated, service_role;
-            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO anon;
-            GRANT INSERT, SELECT ON auth.users TO authenticated, service_role;
-            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA storage TO authenticated, service_role;
-            GRANT SELECT ON ALL TABLES IN SCHEMA storage TO anon;"
+            GRANT INSERT, SELECT ON auth.users TO authenticated, service_role;"
 
       - name: Wait for Postgres to accept connections
         run: |
@@ -261,22 +255,6 @@ jobs:
             echo "--- Applying $f.sql ---"
             psql -v ON_ERROR_STOP=1 -f sql/migrations/$f.sql || exit 1
           done
-
-      - name: Grant test roles on migrated schema
-        # The auth shim grants run BEFORE migrations, so any table created
-        # by a migration (admin_user_sessions in 007, platform_backups in 008,
-        # _ctx-style helpers, etc.) inherits no privileges for authenticated/
-        # anon/service_role. Re-apply the grant pass after migrations finish
-        # so RLS-exercised pgTAP tests can read/write the migrated tables.
-        run: |
-          sudo -u postgres psql -d vera_test -c "
-            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated, service_role;
-            GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
-            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA storage TO authenticated, service_role;
-            GRANT SELECT ON ALL TABLES IN SCHEMA storage TO anon;
-            GRANT INSERT, SELECT ON auth.users TO authenticated, service_role;
-            GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_role;
-          "
 
       - name: Load pgTAP test helpers
         run: |

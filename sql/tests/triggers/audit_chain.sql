@@ -41,6 +41,8 @@ SELECT EXISTS (
   WHERE n.nspname = 'public' AND p.proname = 'audit_logs_compute_hash'
 ) AS m009;
 
+GRANT SELECT ON _ctx TO authenticated, anon, service_role;
+
 SELECT plan(9);
 
 SELECT skip('migration 009 not applied — audit_logs_compute_hash missing', 9)

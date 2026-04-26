@@ -440,7 +440,7 @@ CREATE POLICY "jurors_delete" ON jurors FOR DELETE USING (
 ALTER TABLE juror_period_auth ENABLE ROW LEVEL SECURITY;
 
 -- Admin: guarded with auth.uid() IS NOT NULL
-CREATE POLICY "juror_period_auth_select" ON juror_period_auth FOR SELECT USING (
+CREATE POLICY "juror_period_auth_select_public" ON juror_period_auth FOR SELECT USING (
   auth.uid() IS NOT NULL AND
   juror_id IN (
     SELECT id FROM jurors WHERE (
@@ -780,6 +780,7 @@ CREATE POLICY "maintenance_mode_public_read" ON maintenance_mode
 -- =============================================================================
 
 ALTER TABLE security_policy ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON security_policy FROM PUBLIC, anon, authenticated;
 
 CREATE POLICY "security_policy_super_admin_all" ON security_policy
   FOR ALL
@@ -791,6 +792,7 @@ CREATE POLICY "security_policy_super_admin_all" ON security_policy
 -- =============================================================================
 
 ALTER TABLE jury_feedback ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON jury_feedback FROM PUBLIC, anon, authenticated;
 
 -- =============================================================================
 -- EMAIL_VERIFICATION_TOKENS (service-role only, no public access)

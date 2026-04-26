@@ -11,7 +11,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(8);
+SELECT plan(9);
 
 SELECT pgtap_test.seed_two_orgs();
 

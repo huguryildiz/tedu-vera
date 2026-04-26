@@ -65,11 +65,18 @@ SELECT throws_ok(
 );
 
 -- ────────── 5. success: cancel a real invited membership ──────────
--- seed_two_orgs() already inserts a membership for (aaaa..., 1111...);
--- conflict resolves on the unique (user_id, organization_id) key, not on id.
+-- Use a fresh user (ff00...) who has no existing membership in org 1111,
+-- so the (user_id, organization_id) unique constraint cannot conflict.
+SELECT pgtap_test.become_reset();
+INSERT INTO auth.users (id, email) VALUES
+  ('ff000000-0000-4000-8000-000000000001'::uuid, 'ff@pgtap.local')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO profiles (id, full_name) VALUES
+  ('ff000000-0000-4000-8000-000000000001'::uuid, 'FF PgTap')
+ON CONFLICT (id) DO NOTHING;
 INSERT INTO memberships (id, user_id, organization_id, role, status, is_owner)
 VALUES ('cafe0000-0000-4000-8000-000000000001'::uuid,
-        'aaaa0000-0000-4000-8000-000000000001'::uuid,
+        'ff000000-0000-4000-8000-000000000001'::uuid,
         '11110000-0000-4000-8000-000000000001'::uuid,
         'org_admin', 'invited', false)
 ON CONFLICT (user_id, organization_id) DO NOTHING;

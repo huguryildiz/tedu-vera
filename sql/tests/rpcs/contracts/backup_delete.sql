@@ -30,8 +30,8 @@ SELECT throws_ok(
 );
 
 -- ────────── 3. register a backup, then delete as non-owner → unauthorized ──────────
--- Register backup as admin A
-SELECT pgtap_test.become_a();
+-- Fixture INSERT must run as postgres (no INSERT RLS policy on platform_backups).
+SELECT pgtap_test.become_reset();
 
 INSERT INTO platform_backups (id, organization_id, origin, format, storage_path, size_bytes, row_counts, period_ids, created_by)
 VALUES ('b4010000-0000-4000-8000-000000000001'::uuid,
@@ -54,6 +54,7 @@ SELECT throws_ok(
 );
 
 -- ────────── 4. snapshot backup → pinned, cannot delete ──────────
+SELECT pgtap_test.become_reset();
 INSERT INTO platform_backups (id, organization_id, origin, format, storage_path, size_bytes, row_counts, period_ids, created_by)
 VALUES ('b4020000-0000-4000-8000-000000000001'::uuid,
         '11110000-0000-4000-8000-000000000001'::uuid,
@@ -80,6 +81,7 @@ SELECT lives_ok(
 );
 
 -- ────────── 6. result returns storage_path ──────────
+SELECT pgtap_test.become_reset();
 INSERT INTO platform_backups (id, organization_id, origin, format, storage_path, size_bytes, row_counts, period_ids, created_by)
 VALUES ('b4030000-0000-4000-8000-000000000001'::uuid,
         '11110000-0000-4000-8000-000000000001'::uuid,
@@ -88,6 +90,7 @@ VALUES ('b4030000-0000-4000-8000-000000000001'::uuid,
         ARRAY[]::uuid[],
         'aaaa0000-0000-4000-8000-000000000001'::uuid)
 ON CONFLICT (id) DO NOTHING;
+SELECT pgtap_test.become_a();
 
 SELECT is(
   (SELECT storage_path FROM rpc_backup_delete('b4030000-0000-4000-8000-000000000001'::uuid)),

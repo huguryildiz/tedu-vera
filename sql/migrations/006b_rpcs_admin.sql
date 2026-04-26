@@ -1206,7 +1206,7 @@ BEGIN
     WHERE id = p_framework_id
       AND (organization_id IS NULL OR organization_id = p_org_id)
   ) THEN
-    RAISE EXCEPTION 'source_framework_not_found';
+    RAISE EXCEPTION 'framework_not_found';
   END IF;
 
   -- 1. Clone the frameworks row

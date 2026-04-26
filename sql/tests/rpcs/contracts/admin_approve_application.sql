@@ -28,7 +28,7 @@ SELECT pgtap_test.become_a();
 SELECT is((rpc_admin_approve_application('aaaa0000-0000-4000-8000-000000000001'::uuid)::jsonb->>'error_code'), 'unauthorized', 'non-super-admin → unauthorized');
 
 -- 4. super-admin success
-SELECT pgtap_test.become_reset();
+SELECT pgtap_test.become_super();
 SELECT ok((rpc_admin_approve_application('aaaa0000-0000-4000-8000-000000000001'::uuid)::jsonb->>'ok')::boolean, 'super-admin approve → ok: true');
 
 -- 5. already-approved → invalid_status

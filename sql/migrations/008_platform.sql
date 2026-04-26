@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS platform_settings (
 INSERT INTO platform_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 
 ALTER TABLE platform_settings ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON platform_settings FROM PUBLIC, anon, authenticated;
 
 -- Super admins may read the row directly (debugging convenience).
 -- All writes go through SECURITY DEFINER RPCs; no write policy needed.
@@ -528,6 +529,7 @@ CREATE INDEX IF NOT EXISTS idx_platform_backups_storage_path
   ON public.platform_backups (storage_path);
 
 ALTER TABLE public.platform_backups ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.platform_backups FROM PUBLIC, anon, authenticated;
 
 -- Org admins can SELECT their org's backups.
 -- INSERT / UPDATE / DELETE go through SECURITY DEFINER RPCs only.

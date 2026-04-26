@@ -93,13 +93,24 @@ SELECT lives_ok(
   'super-admin hard delete succeeds'
 );
 
--- Re-insert and delete to verify response shape (fixture seed under postgres,
--- then return to super-admin for the assertion).
+-- Re-insert and delete to verify response shape. The earlier rpc_admin_hard_delete_org_member
+-- removed user d1500000-...0001 from auth.users (cascade), so seed a NEW user for this
+-- assertion. Fixture seed runs under postgres (RLS bypass), then super-admin runs the rpc.
 SELECT pgtap_test.become_reset();
+
+INSERT INTO auth.users (id, instance_id, aud, role, email) VALUES
+  ('d1500000-0000-4000-8000-000000000002'::uuid,
+   '00000000-0000-0000-0000-000000000000'::uuid,
+   'authenticated', 'authenticated', 'pgtap_disposable2@test.local')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO profiles (id, display_name) VALUES
+  ('d1500000-0000-4000-8000-000000000002'::uuid, 'pgtap Disposable Two')
+ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO memberships (id, user_id, organization_id, role, status, is_owner)
 VALUES ('d1500000-0000-4000-8000-000000000002'::uuid,
-        'd1500000-0000-4000-8000-000000000001'::uuid,
+        'd1500000-0000-4000-8000-000000000002'::uuid,
         '11110000-0000-4000-8000-000000000001'::uuid,
         'org_admin', 'active', false)
 ON CONFLICT (id) DO NOTHING;
@@ -108,7 +119,7 @@ SELECT pgtap_test.become_super();
 
 SELECT is(
   (SELECT rpc_admin_hard_delete_org_member(
-    'd1500000-0000-4000-8000-000000000001'::uuid,
+    'd1500000-0000-4000-8000-000000000002'::uuid,
     '11110000-0000-4000-8000-000000000001'::uuid
   )::jsonb->>'ok'),
   'true',
