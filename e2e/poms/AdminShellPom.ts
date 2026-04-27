@@ -26,6 +26,7 @@ export class AdminShellPom extends BasePom {
   }
 
   async clickNav(key: string): Promise<void> {
+    await this.navItem(key).waitFor({ state: "attached", timeout: 10000 });
     await this.navItem(key).click();
   }
 

@@ -22,13 +22,7 @@ export class EntryTokensPom extends BasePom {
 
   async generateToken(): Promise<void> {
     await this.generateBtn().click();
-    // Wait up to 5s for either the lock-warn modal or the copy btn.
-    // Lock-warn appears on first generate (period unlocked); subsequent generates skip it.
-    await Promise.race([
-      this.lockWarnConfirm().waitFor({ state: "visible", timeout: 5000 }).catch(() => null),
-      this.copyBtn().waitFor({ state: "visible", timeout: 5000 }).catch(() => null),
-    ]);
-    if (await this.lockWarnConfirm().isVisible()) {
+    if (await this.lockWarnConfirm().isVisible({ timeout: 1000 }).catch(() => false)) {
       await this.lockWarnConfirm().click();
     }
     await expect(this.copyBtn()).toBeVisible({ timeout: 20000 });

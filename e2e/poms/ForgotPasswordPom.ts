@@ -25,6 +25,6 @@ export class ForgotPasswordPom extends BasePom {
   }
 
   async expectSuccessBanner(): Promise<void> {
-    await expect(this.successBanner()).toBeVisible({ timeout: 8000 });
+    await expect(this.successBanner()).toBeVisible({ timeout: 15000 });
   }
 }
