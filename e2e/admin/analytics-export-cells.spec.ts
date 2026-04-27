@@ -3,6 +3,7 @@ import * as fs from "node:fs";
 import { LoginPom } from "../poms/LoginPom";
 import { AdminShellPom } from "../poms/AdminShellPom";
 import { readXLSXAllSheets, type MultiSheetXLSX } from "../helpers/parseExport";
+import { adminClient } from "../helpers/supabaseAdmin";
 import { E2E_PERIODS_ORG_ID } from "../fixtures/seed-ids";
 import {
   setupScoringFixture,
