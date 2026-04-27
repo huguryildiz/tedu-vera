@@ -244,46 +244,43 @@ test.describe("closed period score write protection (enforced)", () => {
     }
   });
 
-  // ── Deliberately-break evidence ────────────────────────────────────────────
-  // Proves the RPC guard is closed-period-scoped (not always-reject).
-  test("deliberately-break: RPC does NOT return period_closed for an open period", async () => {
-    const { data: openPeriods } = await adminClient
-      .from("periods")
-      .select("id")
-      .is("closed_at", null)
-      .limit(10);
-    expect(openPeriods?.length ?? 0, 'E2E requires at least one open period').toBeGreaterThan(0);
-    if (!openPeriods?.length) return;
+});
 
-    let authRow: { juror_id: string; period_id: string; session_token_hash: string | null } | null = null;
-    for (const p of openPeriods) {
-      const { data: rows } = await adminClient
-        .from("juror_period_auth")
-        .select("juror_id, period_id, session_token_hash, is_blocked, final_submitted_at")
-        .eq("period_id", p.id)
-        .limit(1);
-      if (rows?.length) {
-        const r = rows[0] as {
-          juror_id: string;
-          period_id: string;
-          session_token_hash: string | null;
-          is_blocked: boolean;
-          final_submitted_at: string | null;
-        };
-        if (!r.is_blocked && !r.final_submitted_at) {
-          authRow = {
-            juror_id: r.juror_id,
-            period_id: r.period_id,
-            session_token_hash: r.session_token_hash,
-          };
-          break;
-        }
-      }
-    }
-    if (!authRow) {
-      expect(authRow, 'E2E requires an unblocked juror_period_auth row for an open period').not.toBeNull();
-      return;
-    }
+// ─────────────────────────────────────────────────────────────────────────────
+// Closed-period guard control — proves period_closed is closed-period-scoped
+// ─────────────────────────────────────────────────────────────────────────────
+// Mirrors the closedFixture pattern above with an OPEN fixture period so the
+// RPC guard's negative case is verified without depending on baseline seed
+// data (the previous "scan any open period" approach silently failed when the
+// suite ran against a non-seeded database).
+
+test.describe("open period score write protection (control)", () => {
+  let openFixture: ScoringFixture | null = null;
+
+  test.beforeAll(async () => {
+    // setupScoringFixture creates a period with is_locked=true, closed_at=null.
+    openFixture = await setupScoringFixture({ namePrefix: "Open Guard" });
+  });
+
+  test.afterAll(async () => {
+    await teardownScoringFixture(openFixture);
+  });
+
+  test("deliberately-break: RPC does NOT return period_closed for an open period", async () => {
+    expect(openFixture, "open-period fixture should be initialized").not.toBeNull();
+    if (!openFixture) return;
+
+    const { data: rows } = await adminClient
+      .from("juror_period_auth")
+      .select("juror_id, period_id, session_token_hash")
+      .eq("period_id", openFixture.periodId)
+      .eq("juror_id", openFixture.jurorId)
+      .limit(1);
+    const authRow = rows?.[0] as
+      | { juror_id: string; period_id: string; session_token_hash: string | null }
+      | undefined;
+    expect(authRow, "open fixture should include juror_period_auth").toBeTruthy();
+    if (!authRow) return;
 
     const originalHash = authRow.session_token_hash;
     const knownToken = `e2e-open-guard-${Date.now()}`;
@@ -297,16 +294,16 @@ test.describe("closed period score write protection (enforced)", () => {
 
     try {
       const { data } = await adminClient.rpc("rpc_jury_upsert_score", {
-        p_period_id: authRow.period_id,
-        p_project_id: "00000000-0000-0000-0000-000000000000",
-        p_juror_id: authRow.juror_id,
+        p_period_id: openFixture.periodId,
+        p_project_id: openFixture.p1Id,
+        p_juror_id: openFixture.jurorId,
         p_session_token: knownToken,
         p_scores: [],
       });
 
       // Open period: error_code must NOT be period_closed. Any other response
-      // (ok=true or a different error like missing project) is acceptable here;
-      // we only assert the guard is scoped to closed periods.
+      // (ok=true or a different error) is acceptable; we only assert the guard
+      // is scoped to closed periods.
       const errorCode = (data as { error_code?: string } | null)?.error_code;
       expect(errorCode).not.toBe("period_closed");
     } finally {

@@ -317,7 +317,7 @@ Tüm context boş array'lerle mock'lanıyor → KPI'lar `0/0/0/0%` olarak render
 |---|------|------------|
 | 3.1 | RLS sentinel hard gate (W2 plan close) | `check:rls-tests` green; `continue-on-error` kaldırıldı |
 | 3.2 | RPC contract sentinel hard gate (W3-W5 plan close) | `check:rpc-tests` green; `continue-on-error` kaldırıldı |
-| 3.3 | E2E "critical path" hard gate | Yeni `e2e-critical.yml` job; sadece settings-save, outcome-attainment, criteria-mapping, scoring-correctness — bunlar PR merge öncesi geçmek zorunda. Diğer E2E'ler optional kalır. |
+| 3.3 | E2E "critical path" hard gate | ✅ Superseded — `e2e.yml`'in `e2e-admin` (sharded) + `e2e-other` job'ları zaten kritik specleri local Supabase stack'lerinde paralel koşuyor. Ayrı bir `e2e-critical.yml` yok. |
 | 3.4 | Coverage threshold CI'a taşı | `npm run test:coverage` ci.yml unit-tests job'ına eklenir (mevcut 53/37/57/53; ratchet plan: hooks 70 → 75, lib branches 75 → 78) |
 | 3.5 | Skip policy + ESLint rule | `it.skip()`, `test.skip()` kullanan PR'lar required reviewer onayı (CODEOWNERS pattern); CI'da aktif `test.skip` sayısı baseline'dan fazla ise warning |
 | 3.6 | period-immutability + rbac-boundary skip'leri kaldır | Phase 1.5 ile bağlantılı: setup fixture'larını yaz → 10 skip test çalışır hale gelsin |
@@ -732,7 +732,7 @@ test("review detail drawer open → close → re-open shows fresh data", async (
 |---|---|---|
 | RLS isolation coverage (`check:rls-tests`) | Soft (W2 açık) | W2 close → continue-on-error kaldır |
 | RPC contract coverage (`check:rpc-tests`) | Soft (W3-W5 açık) | W5 close → continue-on-error kaldır |
-| Critical path E2E (yeni job: settings-save, outcome-attainment, criteria-mapping, scoring-correctness) | Yok | Yeni `e2e-critical.yml` job; PR merge öncesi geçmek zorunda |
+| Critical path E2E (settings-save, outcome-attainment, criteria-mapping, scoring-correctness) | ✅ `e2e.yml` `e2e-admin` + `e2e-other` shard'ları kapsıyor (local Supabase stack) | Tamam — branch protection bu shard'ları required işaretler |
 | Migration idempotency multi-run | Single-run | Yeni step: aynı migration suite'i 2× peş peşe çalıştır, 2. run no-op olmalı |
 | Tenant isolation E2E | Soft + 3 skip | `period-immutability.spec.ts` skip'leri kaldırıldıktan sonra hard gate |
 | Coverage threshold | Local-only | `npm run test:coverage` ci.yml unit-tests'e ekle |
@@ -795,9 +795,11 @@ Behavior odaklı isimlendirme örnekleri:
 
 ## 7. CI Gate Recommendations
 
-### Yeni job: e2e-critical (hard gate)
+### ~~Yeni job: e2e-critical (hard gate)~~ — Superseded
 
-**Dosya:** `.github/workflows/e2e-critical.yml`
+**Status:** Superseded. Ayrı bir `e2e-critical.yml` workflow eklemek yerine `e2e.yml`'deki mevcut `e2e-admin` (sharded) ve `e2e-other` job'ları kritik specleri zaten kapsıyor; ikisi de izole local Supabase stack'inde çalışıyor. Branch protection rule'da `E2E / Admin panel (shard 1/2)`, `E2E / Admin panel (shard 2/2)`, `E2E / Auth, jury & security`, `E2E / Maintenance mode (serial)` required olarak işaretlenir. Aşağıdaki orijinal öneri tarihsel bağlam için bırakıldı.
+
+**Dosya (historical):** `.github/workflows/e2e-critical.yml`
 
 ```yaml
 name: E2E critical path
@@ -834,7 +836,7 @@ jobs:
             --reporter=line
 ```
 
-GitHub branch protection rule'da "e2e-critical / Critical path E2E (must pass)" required check olarak işaretlenmeli.
+~~GitHub branch protection rule'da "e2e-critical / Critical path E2E (must pass)" required check olarak işaretlenmeli.~~ Superseded — bkz. yukarıdaki Status notu.
 
 ### Coverage threshold ratchet plan
 
