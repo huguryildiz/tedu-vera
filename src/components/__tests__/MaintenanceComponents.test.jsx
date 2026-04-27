@@ -73,4 +73,30 @@ describe("MaintenanceGate", () => {
     expect(await screen.findByText("Maintenance in Progress")).toBeInTheDocument();
     expect(screen.queryByText("app content")).not.toBeInTheDocument();
   });
+
+  qaTest("coverage.maintenance-gate.allows-login-route-during-active", async () => {
+    authState.current = { user: null, isSuper: false };
+    vi.mocked(getMaintenanceStatus).mockResolvedValue({
+      is_active: true,
+      upcoming: false,
+      mode: "immediate",
+      message: "Active",
+      start_time: new Date().toISOString(),
+      end_time: null,
+      affected_org_ids: null,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <ThemeProvider>
+          <MaintenanceGate>
+            <div>login form</div>
+          </MaintenanceGate>
+        </ThemeProvider>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText("login form")).toBeInTheDocument();
+    expect(screen.queryByText("Maintenance in Progress")).not.toBeInTheDocument();
+  });
 });

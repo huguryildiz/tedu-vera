@@ -8603,6 +8603,17 @@
     "severity": "critical"
   },
   {
+    "id": "coverage.maintenance-gate.allows-login-route-during-active",
+    "module": "components/MaintenanceGate",
+    "area": "MaintenanceGate",
+    "story": "auth routes stay reachable during active maintenance",
+    "scenario": "MaintenanceGate renders /login children even when maintenance is active so super admins can sign in to deactivate it",
+    "whyItMatters": "Without this bypass the platform locks itself out — no admin can sign in to cancel maintenance.",
+    "risk": "Maintenance gate blocks /login → super admin cannot deactivate → platform stays locked.",
+    "coverageStrength": "guard",
+    "severity": "critical"
+  },
+  {
     "id": "coverage.segmented-bar.displays-one-segment-per-project",
     "module": "jury/features/evaluation/SegmentedBar",
     "area": "SegmentedBar",

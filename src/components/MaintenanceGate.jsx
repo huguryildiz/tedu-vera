@@ -116,7 +116,17 @@ export default function MaintenanceGate({ children }) {
       orgAllowed = myOrgId ? affectedOrgIds.includes(myOrgId) : true;
     }
 
-    const blocksUser = liveFromRpc && orgAllowed && (!user || !isSuper);
+    // Auth routes must remain reachable during maintenance so super admins can
+    // sign in and deactivate. Otherwise an anonymous load of /login renders
+    // MaintenancePage and the platform locks itself out.
+    const isAuthRoute =
+      pathname === "/login" ||
+      pathname === "/register" ||
+      pathname === "/forgot-password" ||
+      pathname === "/reset-password" ||
+      pathname.startsWith("/invite/");
+
+    const blocksUser = liveFromRpc && orgAllowed && (!user || !isSuper) && !isAuthRoute;
 
     return {
       isActiveNow: liveFromRpc,
@@ -124,7 +134,7 @@ export default function MaintenanceGate({ children }) {
       shouldBlock: blocksUser,
       activeForSuperAdmin: liveFromRpc && isSuper,
     };
-  }, [status, user, isSuper, activeOrganization]);
+  }, [status, user, isSuper, activeOrganization, pathname]);
 
   // Blocking path: render MaintenancePage instead of the app
   if (shouldBlock) {
