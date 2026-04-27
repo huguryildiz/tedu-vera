@@ -70,8 +70,7 @@ export default function ExportPage() {
           .filter(Boolean),
       ).size;
 
-      // Blocking pre-export audit — abort if we can't record it.
-      await logExportInitiated({
+      logExportInitiated({
         action: "export.scores",
         organizationId,
         resourceType: "score_sheets",
@@ -83,6 +82,8 @@ export default function ExportPage() {
           juror_count: jurorCount || null,
           filters: { scope: "all_periods" },
         },
+      }).catch((err) => {
+        console.warn("[export] audit log failed:", err);
       });
 
       await exportXLSX(allRows, {
@@ -129,7 +130,7 @@ export default function ExportPage() {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Groups");
 
-      await logExportInitiated({
+      logExportInitiated({
         action: "export.projects",
         organizationId,
         resourceType: "projects",
@@ -141,6 +142,8 @@ export default function ExportPage() {
           juror_count: null,
           filters: { scope: "all_periods" },
         },
+      }).catch((err) => {
+        console.warn("[export] audit log failed:", err);
       });
 
       XLSX.writeFile(wb, buildExportFilename("Projects", "all-periods", "xlsx", tenantCode));
@@ -196,7 +199,7 @@ export default function ExportPage() {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Jurors");
 
-      await logExportInitiated({
+      logExportInitiated({
         action: "export.jurors",
         organizationId,
         resourceType: "jurors",
@@ -208,6 +211,8 @@ export default function ExportPage() {
           juror_count: data.length,
           filters: { scope: "all_periods" },
         },
+      }).catch((err) => {
+        console.warn("[export] audit log failed:", err);
       });
 
       XLSX.writeFile(wb, buildExportFilename("Jurors", "all-periods", "xlsx", tenantCode));

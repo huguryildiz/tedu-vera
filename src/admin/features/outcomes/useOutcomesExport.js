@@ -69,7 +69,7 @@ export function useOutcomesExport({ outcomes, criteria, mappings, periodName }) 
 
   const handleExport = useCallback(
     async (fmt) => {
-      await logExportInitiated({
+      logExportInitiated({
         action:         "export.outcomes",
         organizationId,
         resourceType:   "outcomes",
@@ -79,6 +79,8 @@ export function useOutcomesExport({ outcomes, criteria, mappings, periodName }) 
           period_name:     periodName || null,
           filters:         { outcome_count: (outcomes || []).length },
         },
+      }).catch((err) => {
+        console.warn("[export] audit log failed:", err);
       });
       if (fmt === "xlsx") {
         await exportOutcomesXLSX(outcomes || [], criteria || [], mappings || [], { periodName, tenantCode });

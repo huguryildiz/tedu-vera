@@ -495,7 +495,7 @@ export default function ProjectsPage() {
             try {
               const header = COLUMNS.map((c) => c.key === "avg_score" && periodMaxScore != null ? `Avg Score (${periodMaxScore})` : c.label);
               const rows = sortedFilteredList.map((p) => COLUMNS.map((c) => getProjectCell(p, c.key, projectAvgMap)));
-              await logExportInitiated({
+              logExportInitiated({
                 action: "export.projects",
                 organizationId: activeOrganization?.id || null,
                 resourceType: "projects",
@@ -509,6 +509,8 @@ export default function ProjectsPage() {
                     search: search || null,
                   },
                 },
+              }).catch((err) => {
+                console.warn("[export] audit log failed:", err);
               });
               await downloadTable(fmt, {
                 filenameType: "Projects", sheetName: "Projects",

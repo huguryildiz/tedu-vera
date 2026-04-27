@@ -340,7 +340,7 @@ export default function AnalyticsPage() {
               .filter(Boolean),
           ).size
         : null;
-      await logExportInitiated({
+      logExportInitiated({
         action: "export.analytics",
         organizationId,
         resourceType: "score_sheets",
@@ -356,6 +356,8 @@ export default function AnalyticsPage() {
             trend_period_ids: trendPeriodIds || [],
           },
         },
+      }).catch((err) => {
+        console.warn("[export] audit log failed:", err);
       });
 
       const outcomeLookupMap = Object.fromEntries(

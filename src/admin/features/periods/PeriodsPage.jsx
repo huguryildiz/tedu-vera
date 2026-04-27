@@ -600,7 +600,7 @@ export default function PeriodsPage() {
           onExport={async (fmt) => {
             try {
               const rows = buildExportRows();
-              await logExportInitiated({
+              logExportInitiated({
                 action: "export.periods",
                 organizationId: activeOrganization?.id || null,
                 resourceType: "periods",
@@ -620,6 +620,8 @@ export default function PeriodsPage() {
                     setup: setupFilter !== "all" ? setupFilter : null,
                   },
                 },
+              }).catch((err) => {
+                console.warn("[export] audit log failed:", err);
               });
               await downloadTable(fmt, {
                 filenameType: "Periods", sheetName: "Evaluation Periods", periodName: "",

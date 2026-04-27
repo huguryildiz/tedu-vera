@@ -423,8 +423,7 @@ export default function ReviewsPage() {
         sorted.map((r) => r?.projectId || r?.project_id || r?.title || r?.projectName || null).filter(Boolean),
       ).size;
 
-      // Blocking pre-export audit — abort export if we can't record it.
-      await logExportInitiated({
+      logExportInitiated({
         action: "export.scores",
         organizationId: activeOrganization?.id || null,
         resourceType: "score_sheets",
@@ -442,6 +441,8 @@ export default function ReviewsPage() {
             search: multiSearchQuery || null,
           },
         },
+      }).catch((err) => {
+        console.warn("[export] audit log failed:", err);
       });
 
       await downloadTable(exportFormat, {

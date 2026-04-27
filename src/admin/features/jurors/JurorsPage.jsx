@@ -508,7 +508,7 @@ export default function JurorsPage() {
             try {
               const header = JUROR_COLUMNS.map((c) => c.label);
               const rows = sortedFilteredList.map((j) => JUROR_COLUMNS.map((c) => getJurorCell(j, c.key, jurorAvgMap)));
-              await logExportInitiated({
+              logExportInitiated({
                 action: "export.jurors",
                 organizationId: activeOrganization?.id || null,
                 resourceType: "jurors",
@@ -520,6 +520,8 @@ export default function JurorsPage() {
                   juror_count: rows.length,
                   filters: { search: search || null, status: statusFilter || null, affiliation: affilFilter || null },
                 },
+              }).catch((err) => {
+                console.warn("[export] audit log failed:", err);
               });
               await downloadTable(fmt, {
                 filenameType: "Jurors", sheetName: "Jurors",

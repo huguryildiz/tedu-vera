@@ -29,7 +29,7 @@ export async function listBackups(organizationId) {
  * @returns {Promise<{ id: string, path: string }>}
  */
 export async function createBackup(organizationId) {
-  await logExportInitiated({
+  logExportInitiated({
     action: "export.backup",
     organizationId,
     resourceType: "platform_backups",
@@ -42,6 +42,8 @@ export async function createBackup(organizationId) {
       juror_count: null,
       filters: { origin: "manual" },
     },
+  }).catch((err) => {
+    console.warn("[export] audit log failed:", err);
   });
 
   const payload = await fullExport(organizationId);

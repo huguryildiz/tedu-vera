@@ -67,7 +67,7 @@ export function useCriteriaExport({ criteria, periodName }) {
 
   const handleExport = useCallback(
     async (fmt) => {
-      await logExportInitiated({
+      logExportInitiated({
         action:         "export.criteria",
         organizationId,
         resourceType:   "criteria",
@@ -77,6 +77,8 @@ export function useCriteriaExport({ criteria, periodName }) {
           period_name:     periodName || null,
           filters:         { criterion_count: (criteria || []).length },
         },
+      }).catch((err) => {
+        console.warn("[export] audit log failed:", err);
       });
       if (fmt === "xlsx") {
         await exportCriteriaXLSX(criteria || [], { periodName, tenantCode });

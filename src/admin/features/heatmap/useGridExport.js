@@ -37,7 +37,7 @@ export function useGridExport({ buildExportRows, groups, periodName, visibleJuro
     const exportRows    = buildExportRows(visibleJurors, "all");
     const criterionTabs = buildCriterionTabs(visibleJurors);
 
-    await logExportInitiated({
+    logExportInitiated({
       action: "export.heatmap",
       organizationId,
       resourceType: "score_sheets",
@@ -49,6 +49,8 @@ export function useGridExport({ buildExportRows, groups, periodName, visibleJuro
         juror_count: exportRows.length,
         filters: { visible_jurors: visibleJurors.length, criteria_count: activeCriteria.length },
       },
+    }).catch((err) => {
+      console.warn("[export] audit log failed:", err);
     });
 
     if (format === "xlsx") {

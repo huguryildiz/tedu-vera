@@ -240,7 +240,7 @@ export default function RankingsPage() {
 
   async function handleExport() {
     try {
-      await logExportInitiated({
+      logExportInitiated({
         action: "export.rankings",
         organizationId: activeOrganization?.id || null,
         resourceType: "score_sheets",
@@ -258,6 +258,8 @@ export default function RankingsPage() {
             max_avg: avgRange[1] < 100 ? avgRange[1] : null,
           },
         },
+      }).catch((err) => {
+        console.warn("[export] audit log failed:", err);
       });
 
       const tc = activeOrganization?.code || "";

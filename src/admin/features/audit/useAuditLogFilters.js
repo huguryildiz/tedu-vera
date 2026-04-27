@@ -200,7 +200,7 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
     setAuditExporting(true);
     setAuditError("");
     try {
-      await logExportInitiated({
+      logExportInitiated({
         action: "export.audit",
         organizationId,
         resourceType: "audit_logs",
@@ -215,6 +215,8 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
             search: auditSearch || null,
           },
         },
+      }).catch((err) => {
+        console.warn("[export] audit log failed:", err);
       });
       const pageSize = 500;
       let cursor = null;
