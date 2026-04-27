@@ -111,7 +111,7 @@ test.describe("pin-blocking", () => {
     await jury.waitForArrivalStep();
     await jury.clickBeginSession();
     await jury.waitForIdentityStep();
-    await jury.fillIdentity("E2E Eval Render", "E2E Org");
+    await jury.fillIdentity("E2E Eval Render", "E2E Test Affiliation");
     await jury.submitIdentity();
     await jury.waitForPinStep();
     await jury.fillPin("9999");

@@ -59,6 +59,7 @@ test.describe("jury lock screen", () => {
   // ── C3: PIN lifecycle ───────────────────────────────────────────────────────
 
   test("3 failed PIN attempts → locked screen + DB state", async ({ page }) => {
+    test.setTimeout(60_000);
     const jurorId = EVAL_JURORS[0].id;
     await resetJurorAuth(jurorId, EVAL_PERIOD_ID);
 

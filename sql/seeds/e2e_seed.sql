@@ -213,6 +213,31 @@ ON CONFLICT DO NOTHING;
 -- ── Maintenance mode singleton ────────────────────────────────────────────────
 INSERT INTO maintenance_mode (id) VALUES (1) ON CONFLICT DO NOTHING;
 
+-- ── Seeded submitted score sheet (for reviews.spec.ts:61 filter test) ─────────
+-- The reviews admin page lists submitted score_sheets. Without at least one
+-- submitted row for the eval period, reviews:61 ("filter by juror") times out
+-- waiting for `td.col-juror .jb-name`. Seed a single complete submission by
+-- E2E Eval Submit for E2E Project Alpha. A fixed UUID with ON CONFLICT keeps
+-- this idempotent across re-applies.
+INSERT INTO score_sheets (id, period_id, project_id, juror_id, status, started_at, last_activity_at) VALUES
+  (
+    'ee000001-0001-4000-e000-000000000001',
+    'a0d6f60d-ece4-40f8-aca2-955b4abc5d88',
+    'aaaaaaaa-0001-4000-a000-000000000001',
+    'bbbbbbbb-e2e0-4000-b000-000000000002',
+    'submitted',
+    now() - interval '1 hour',
+    now() - interval '30 minutes'
+  )
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO score_sheet_items (id, score_sheet_id, period_criterion_id, score_value) VALUES
+  ('ee000001-0002-4000-e000-000000000001', 'ee000001-0001-4000-e000-000000000001', '787e905a-a2da-431e-af63-00cea2ea7bb5', 25),
+  ('ee000001-0002-4000-e000-000000000002', 'ee000001-0001-4000-e000-000000000001', '25fdf203-ff5f-4c31-ab09-3ac8bd726e65', 24),
+  ('ee000001-0002-4000-e000-000000000003', 'ee000001-0001-4000-e000-000000000001', 'ecc8c71e-2fca-4ab8-aaa9-9efbe29700c6', 26),
+  ('ee000001-0002-4000-e000-000000000004', 'ee000001-0001-4000-e000-000000000001', 'dc46db4d-fa3a-4c22-a64a-b5c07a94ebe6', 8)
+ON CONFLICT (id) DO NOTHING;
+
 -- ── Publish the eval period ──────────────────────────────────────────────────
 -- Flip a0d6f60d to is_locked: true now that all child rows (period_criteria
 -- with rubric_bands, projects, jurors, juror_period_auth, entry_tokens) are
