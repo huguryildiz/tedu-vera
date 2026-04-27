@@ -5,8 +5,14 @@
 BEGIN;
 
 -- ── Auth users ────────────────────────────────────────────────────────────────
+-- raw_user_meta_data carries `profile_completed: true` so that — even if the
+-- post-sign-in fetchMemberships() call races with the supabase-js session
+-- write and returns an empty array — AuthProvider does NOT mark the session
+-- as profileIncomplete and RootLayout does NOT redirect to /register. The
+-- membership row is still seeded below; this is just defense in depth against
+-- a transient race that has flaked the tenant-admin spec on first-touch CI runs.
 INSERT INTO auth.users (
-  instance_id, id, aud, role, email, encrypted_password,
+  instance_id, id, aud, role, email, encrypted_password, raw_user_meta_data,
   email_confirmed_at, created_at, updated_at,
   confirmation_token, email_change, email_change_token_new, recovery_token
 ) VALUES
@@ -16,6 +22,7 @@ INSERT INTO auth.users (
     'authenticated', 'authenticated',
     'demo-admin@vera-eval.app',
     extensions.crypt('E2eLocal!Admin123', extensions.gen_salt('bf')),
+    '{"profile_completed": true, "name": "Vera Platform Admin"}'::jsonb,
     now(), now(), now(), '', '', '', ''
   ),
   (
@@ -24,11 +31,13 @@ INSERT INTO auth.users (
     'authenticated', 'authenticated',
     'tenant-admin@vera-eval.app',
     extensions.crypt('TenantAdmin2026!', extensions.gen_salt('bf')),
+    '{"profile_completed": true, "name": "Tenant Admin E2E"}'::jsonb,
     now(), now(), now(), '', '', '', ''
   )
 ON CONFLICT (id) DO UPDATE
-  SET encrypted_password = EXCLUDED.encrypted_password,
-      email_confirmed_at = COALESCE(auth.users.email_confirmed_at, EXCLUDED.email_confirmed_at);
+  SET encrypted_password   = EXCLUDED.encrypted_password,
+      raw_user_meta_data   = EXCLUDED.raw_user_meta_data,
+      email_confirmed_at   = COALESCE(auth.users.email_confirmed_at, EXCLUDED.email_confirmed_at);
 
 -- Identities needed for GoTrue password login
 -- provider_id is required (NOT NULL) in Supabase CLI v2; for email provider it is the email address

@@ -104,13 +104,31 @@ test.describe("W17: analytics XLSX export — cell-level verification", () => {
   });
 
   async function signInAndDownload(page: Page): Promise<string> {
-    await page.addInitScript((orgId) => {
-      try {
-        localStorage.setItem("vera.admin_tour_done", "1");
-        localStorage.setItem("admin.remember_me", "true");
-        localStorage.setItem("admin.active_organization_id", orgId);
-      } catch {}
-    }, E2E_PERIODS_ORG_ID);
+    // E2E_PERIODS_ORG_ID also hosts the seeded Spring 2026 period (a0d6f60d…),
+    // so the org has 2 periods total once setupScoringFixture creates the W17
+    // period. The trend-period selector defaults to *all* periods on first
+    // load (useAnalyticsData line 54-56) — that would push the headers count
+    // past the conditional threshold and cause "Attainment Trend" to be
+    // included in the export, defeating the spec's "1 period → trend
+    // skipped" expectation.
+    //
+    // Pre-seed the persisted trend selection with only the fixture period
+    // so the analytics page initializes with a single-period trend and the
+    // export's conditional excludes the trend sheet.
+    await page.addInitScript(
+      ({ orgId, periodId }) => {
+        try {
+          localStorage.setItem("vera.admin_tour_done", "1");
+          localStorage.setItem("admin.remember_me", "true");
+          localStorage.setItem("admin.active_organization_id", orgId);
+          localStorage.setItem(
+            "jury_admin_ui_state_v1",
+            JSON.stringify({ trend: { periodIds: [periodId] } }),
+          );
+        } catch {}
+      },
+      { orgId: E2E_PERIODS_ORG_ID, periodId: fixture.periodId },
+    );
     const login = new LoginPom(page);
     const shell = new AdminShellPom(page);
     await login.goto();
