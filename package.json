@@ -15,6 +15,7 @@
     "check:rls-tests": "node scripts/check-rls-tests-exist.mjs",
     "check:rpc-tests": "node scripts/check-rpc-tests-exist.mjs",
     "check:edge-schema": "node scripts/check-edge-schema-exist.mjs",
+    "check:guideline-coverage": "node scripts/check-guideline-coverage.mjs",
     "check:no-skip": "node scripts/check-no-skip.js",
     "gen:db-types": "npx --yes supabase@latest gen types typescript --project-id ${SUPABASE_PROJECT_ID:-etxgvkvxvbyserhrugjw} --schema public > src/types/db.generated.ts",
     "build": "vite build",

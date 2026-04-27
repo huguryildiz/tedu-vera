@@ -329,6 +329,14 @@ jobs:
         # Hard gate as of W6 close-out (2026-04-26): all 21 Edge functions
         # have schema.ts + Schema.parse-driven tests; sentinel is green.
         run: npm run check:edge-schema
+      - name: Guideline coverage matrix (informational)
+        # Soft sentinel for `.claude/rules/test-writing.md` — reports the
+        # live coverage matrix vs the prescribed guideline. Currently
+        # informational (continue-on-error) because baseline is ~37%.
+        # Flip to hard-fail in script (HARD_FAIL = true) once sustained
+        # coverage ≥ 90%. See docs/qa/vera-test-audit-report.md.
+        continue-on-error: true
+        run: npm run check:guideline-coverage
 
   test-report:
     # Allure + Excel reporting — downloadable CI artifact, but not a hard gate.
