@@ -113,12 +113,14 @@ INSERT INTO memberships (user_id, organization_id, role, status, is_owner) VALUE
 ON CONFLICT (user_id, organization_id) DO UPDATE SET role = EXCLUDED.role, status = EXCLUDED.status;
 
 -- ── Periods ───────────────────────────────────────────────────────────────────
--- The eval period (a0d6f60d) MUST be `is_locked: true` so the jury entry flow
--- treats it as evaluable. `isEvaluablePeriod()` requires `is_locked && !closed_at`.
--- Other periods stay `is_locked: false` so the structural-immutability E2E test
--- can scan for an unlocked period.
+-- The eval period (a0d6f60d) is inserted as draft (is_locked: false) so child
+-- rows (period_criteria, projects) can be inserted without the
+-- block_period_child_on_locked trigger blocking them. After all child rows are
+-- in place, an UPDATE at the bottom of this seed flips it to is_locked: true
+-- (Published) — required for the jury entry flow's `isEvaluablePeriod()` check
+-- and the entry-tokens admin "Generate QR" publish-readiness gate.
 INSERT INTO periods (id, organization_id, framework_id, name, season, description, start_date, end_date, is_locked, criteria_name, snapshot_frozen_at, activated_at, closed_at, updated_at) VALUES
-  ('a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'b2c3d4e5-f6a7-8901-bcde-f12345678901', 'a1b2c3d4-e5f6-4000-a000-000000000001', 'Spring 2026',         'Spring', 'E2E fixture period', CURRENT_DATE, CURRENT_DATE, true,  'VERA Standard', now(), now(), NULL, now()),
+  ('a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'b2c3d4e5-f6a7-8901-bcde-f12345678901', 'a1b2c3d4-e5f6-4000-a000-000000000001', 'Spring 2026',         'Spring', 'E2E fixture period', CURRENT_DATE, CURRENT_DATE, false, 'VERA Standard', now(), now(), NULL, now()),
   ('cccccccc-0004-4000-c000-000000000004', 'f7340e37-9349-4210-8d6b-073a5616bf49', 'a1b2c3d4-e5f6-4000-a000-000000000001', 'E2E Criteria Period', 'Spring', 'E2E fixture period', CURRENT_DATE, CURRENT_DATE, false, 'VERA Standard', now(), now(), NULL, now()),
   ('cccccccc-0005-4000-c000-000000000005', 'f7340e37-9349-4210-8d6b-073a5616bf49', 'a1b2c3d4-e5f6-4000-a000-000000000001', 'E2E Outcomes Period', 'Spring', 'E2E fixture period', CURRENT_DATE, CURRENT_DATE, false, 'VERA Standard', now(), now(), NULL, now()),
   ('cccccccc-0006-4000-c000-000000000006', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'a1b2c3d4-e5f6-4000-a000-000000000001', 'E2E Token Period',    'Spring', 'E2E fixture period', CURRENT_DATE, CURRENT_DATE, false, 'VERA Standard', now(), now(), NULL, now()),
@@ -137,7 +139,7 @@ INSERT INTO period_criteria (id, period_id, source_criterion_id, key, label, des
   ('25fdf203-ff5f-4c31-ab09-3ac8bd726e65', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'fc2a0001-0000-4000-a000-000000000002', 'design',    'Written Communication', 'E2E fixture criterion', 30, 30, '#22C55E', '[{"min":27,"max":30,"label":"Excellent","description":"Outstanding work."},{"min":21,"max":26,"label":"Good","description":"Solid work."},{"min":13,"max":20,"label":"Developing","description":"Some gaps."},{"min":0,"max":12,"label":"Insufficient","description":"Major gaps."}]'::jsonb, 2),
   ('ecc8c71e-2fca-4ab8-aaa9-9efbe29700c6', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'fc2a0001-0000-4000-a000-000000000003', 'delivery',  'Oral Communication',    'E2E fixture criterion', 30, 30, '#3B82F6', '[{"min":27,"max":30,"label":"Excellent","description":"Outstanding work."},{"min":21,"max":26,"label":"Good","description":"Solid work."},{"min":13,"max":20,"label":"Developing","description":"Some gaps."},{"min":0,"max":12,"label":"Insufficient","description":"Major gaps."}]'::jsonb, 3),
   ('dc46db4d-fa3a-4c22-a64a-b5c07a94ebe6', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'fc2a0001-0000-4000-a000-000000000004', 'teamwork',  'Teamwork',              'E2E fixture criterion', 10, 10, '#EF4444', '[{"min":9,"max":10,"label":"Excellent","description":"Outstanding."},{"min":7,"max":8,"label":"Good","description":"Solid."},{"min":4,"max":6,"label":"Developing","description":"Some gaps."},{"min":0,"max":3,"label":"Insufficient","description":"Major gaps."}]'::jsonb, 4)
-ON CONFLICT (id) DO UPDATE SET rubric_bands = EXCLUDED.rubric_bands;
+ON CONFLICT (id) DO NOTHING;
 
 -- Criteria period (cccccccc-0004)
 INSERT INTO period_criteria (id, period_id, source_criterion_id, key, label, description, max_score, weight, color, rubric_bands, sort_order) VALUES
@@ -210,5 +212,16 @@ ON CONFLICT DO NOTHING;
 
 -- ── Maintenance mode singleton ────────────────────────────────────────────────
 INSERT INTO maintenance_mode (id) VALUES (1) ON CONFLICT DO NOTHING;
+
+-- ── Publish the eval period ──────────────────────────────────────────────────
+-- Flip a0d6f60d to is_locked: true now that all child rows (period_criteria
+-- with rubric_bands, projects, jurors, juror_period_auth, entry_tokens) are
+-- in place. This makes the period evaluable (isEvaluablePeriod requires
+-- is_locked && !closed_at) so the jury entry flow accepts it, and satisfies
+-- the publish-readiness gate so the entry-tokens admin page can generate a
+-- token without seeing "Cannot publish: missing rubric bands".
+UPDATE periods
+   SET is_locked = true
+ WHERE id = 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88';
 
 COMMIT;
