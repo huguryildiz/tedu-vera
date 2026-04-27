@@ -8592,6 +8592,17 @@
     "severity": "high"
   },
   {
+    "id": "coverage.maintenance-gate.blocks-anonymous-users-when-active",
+    "module": "components/MaintenanceGate",
+    "area": "MaintenanceGate",
+    "story": "blocks anonymous users during active maintenance",
+    "scenario": "MaintenanceGate renders the maintenance screen instead of child content when maintenance is active",
+    "whyItMatters": "Anonymous jury entry routes must be blocked during maintenance.",
+    "risk": "Maintenance mode active → non-admin users can still access entry flows.",
+    "coverageStrength": "guard",
+    "severity": "critical"
+  },
+  {
     "id": "coverage.segmented-bar.displays-one-segment-per-project",
     "module": "jury/features/evaluation/SegmentedBar",
     "area": "SegmentedBar",

@@ -22,7 +22,10 @@ export default defineConfig({
   globalSetup: "./e2e/global.setup.ts",
   outputDir: "test-results/playwright-artifacts",
   timeout: 30_000,
-  workers: process.env.CI ? 2 : undefined,
+  // E2E specs mutate shared local-Supabase fixture state. CI jobs are already
+  // isolated by workflow job/shard, so keep each job single-worker to avoid
+  // cross-spec races inside the same database.
+  workers: process.env.CI ? 1 : undefined,
   // PR run'da retry kapalı (hızlı feedback); main push'ta retry açık (flaky koruması)
   retries: process.env.CI
     ? (process.env.GITHUB_EVENT_NAME === "pull_request" ? 0 : 1)

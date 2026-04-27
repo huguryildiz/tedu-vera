@@ -38,7 +38,7 @@ function envKeyFromPath(pathname) {
 }
 
 export default function MaintenanceGate({ children }) {
-  const { isSuper, activeOrganization } = useAuth();
+  const { user, isSuper, activeOrganization } = useAuth();
   const { pathname } = useLocation();
   const envKey = envKeyFromPath(pathname);
 
@@ -116,7 +116,7 @@ export default function MaintenanceGate({ children }) {
       orgAllowed = myOrgId ? affectedOrgIds.includes(myOrgId) : true;
     }
 
-    const blocksUser = liveFromRpc && orgAllowed && !isSuper;
+    const blocksUser = liveFromRpc && orgAllowed && (!user || !isSuper);
 
     return {
       isActiveNow: liveFromRpc,
@@ -124,7 +124,7 @@ export default function MaintenanceGate({ children }) {
       shouldBlock: blocksUser,
       activeForSuperAdmin: liveFromRpc && isSuper,
     };
-  }, [status, isSuper, activeOrganization]);
+  }, [status, user, isSuper, activeOrganization]);
 
   // Blocking path: render MaintenancePage instead of the app
   if (shouldBlock) {

@@ -38,7 +38,18 @@ export class LoginPom extends BasePom {
   }
 
   async submit(): Promise<void> {
-    await this.submitButton().click();
+    try {
+      await this.submitButton().click();
+    } catch (error) {
+      // storageState can restore while /login is still rendering; the form then
+      // redirects to /admin and Playwright may see the submit button detach.
+      if (/\/admin/.test(this.page.url())) return;
+      try {
+        await this.page.waitForURL(/\/admin/, { timeout: 5_000 });
+        return;
+      } catch {}
+      throw error;
+    }
   }
 
   async signIn(email: string, password: string): Promise<void> {
