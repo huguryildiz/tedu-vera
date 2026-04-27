@@ -113,8 +113,12 @@ INSERT INTO memberships (user_id, organization_id, role, status, is_owner) VALUE
 ON CONFLICT (user_id, organization_id) DO UPDATE SET role = EXCLUDED.role, status = EXCLUDED.status;
 
 -- ── Periods ───────────────────────────────────────────────────────────────────
+-- The eval period (a0d6f60d) MUST be `is_locked: true` so the jury entry flow
+-- treats it as evaluable. `isEvaluablePeriod()` requires `is_locked && !closed_at`.
+-- Other periods stay `is_locked: false` so the structural-immutability E2E test
+-- can scan for an unlocked period.
 INSERT INTO periods (id, organization_id, framework_id, name, season, description, start_date, end_date, is_locked, criteria_name, snapshot_frozen_at, activated_at, closed_at, updated_at) VALUES
-  ('a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'b2c3d4e5-f6a7-8901-bcde-f12345678901', 'a1b2c3d4-e5f6-4000-a000-000000000001', 'Spring 2026',         'Spring', 'E2E fixture period', CURRENT_DATE, CURRENT_DATE, false, 'VERA Standard', now(), now(), NULL, now()),
+  ('a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'b2c3d4e5-f6a7-8901-bcde-f12345678901', 'a1b2c3d4-e5f6-4000-a000-000000000001', 'Spring 2026',         'Spring', 'E2E fixture period', CURRENT_DATE, CURRENT_DATE, true,  'VERA Standard', now(), now(), NULL, now()),
   ('cccccccc-0004-4000-c000-000000000004', 'f7340e37-9349-4210-8d6b-073a5616bf49', 'a1b2c3d4-e5f6-4000-a000-000000000001', 'E2E Criteria Period', 'Spring', 'E2E fixture period', CURRENT_DATE, CURRENT_DATE, false, 'VERA Standard', now(), now(), NULL, now()),
   ('cccccccc-0005-4000-c000-000000000005', 'f7340e37-9349-4210-8d6b-073a5616bf49', 'a1b2c3d4-e5f6-4000-a000-000000000001', 'E2E Outcomes Period', 'Spring', 'E2E fixture period', CURRENT_DATE, CURRENT_DATE, false, 'VERA Standard', now(), now(), NULL, now()),
   ('cccccccc-0006-4000-c000-000000000006', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'a1b2c3d4-e5f6-4000-a000-000000000001', 'E2E Token Period',    'Spring', 'E2E fixture period', CURRENT_DATE, CURRENT_DATE, false, 'VERA Standard', now(), now(), NULL, now()),
@@ -124,12 +128,16 @@ ON CONFLICT (id) DO NOTHING;
 
 -- ── Period criteria ───────────────────────────────────────────────────────────
 -- Eval period (a0d6f60d) — VERA Standard criteria
+-- rubric_bands MUST be populated (non-empty jsonb array) so the period passes
+-- the publish-readiness check (rpc_admin_check_period_publish_ready). Without
+-- bands the entry-tokens admin page reports "missing rubric bands" and the
+-- generate-token flow is blocked.
 INSERT INTO period_criteria (id, period_id, source_criterion_id, key, label, description, max_score, weight, color, rubric_bands, sort_order) VALUES
-  ('787e905a-a2da-431e-af63-00cea2ea7bb5', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'fc2a0001-0000-4000-a000-000000000001', 'technical', 'Technical Content',     'E2E fixture criterion', 30, 30, '#F59E0B', '[]'::jsonb, 1),
-  ('25fdf203-ff5f-4c31-ab09-3ac8bd726e65', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'fc2a0001-0000-4000-a000-000000000002', 'design',    'Written Communication', 'E2E fixture criterion', 30, 30, '#22C55E', '[]'::jsonb, 2),
-  ('ecc8c71e-2fca-4ab8-aaa9-9efbe29700c6', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'fc2a0001-0000-4000-a000-000000000003', 'delivery',  'Oral Communication',    'E2E fixture criterion', 30, 30, '#3B82F6', '[]'::jsonb, 3),
-  ('dc46db4d-fa3a-4c22-a64a-b5c07a94ebe6', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'fc2a0001-0000-4000-a000-000000000004', 'teamwork',  'Teamwork',              'E2E fixture criterion', 10, 10, '#EF4444', '[]'::jsonb, 4)
-ON CONFLICT (id) DO NOTHING;
+  ('787e905a-a2da-431e-af63-00cea2ea7bb5', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'fc2a0001-0000-4000-a000-000000000001', 'technical', 'Technical Content',     'E2E fixture criterion', 30, 30, '#F59E0B', '[{"min":27,"max":30,"label":"Excellent","description":"Outstanding work."},{"min":21,"max":26,"label":"Good","description":"Solid work."},{"min":13,"max":20,"label":"Developing","description":"Some gaps."},{"min":0,"max":12,"label":"Insufficient","description":"Major gaps."}]'::jsonb, 1),
+  ('25fdf203-ff5f-4c31-ab09-3ac8bd726e65', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'fc2a0001-0000-4000-a000-000000000002', 'design',    'Written Communication', 'E2E fixture criterion', 30, 30, '#22C55E', '[{"min":27,"max":30,"label":"Excellent","description":"Outstanding work."},{"min":21,"max":26,"label":"Good","description":"Solid work."},{"min":13,"max":20,"label":"Developing","description":"Some gaps."},{"min":0,"max":12,"label":"Insufficient","description":"Major gaps."}]'::jsonb, 2),
+  ('ecc8c71e-2fca-4ab8-aaa9-9efbe29700c6', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'fc2a0001-0000-4000-a000-000000000003', 'delivery',  'Oral Communication',    'E2E fixture criterion', 30, 30, '#3B82F6', '[{"min":27,"max":30,"label":"Excellent","description":"Outstanding work."},{"min":21,"max":26,"label":"Good","description":"Solid work."},{"min":13,"max":20,"label":"Developing","description":"Some gaps."},{"min":0,"max":12,"label":"Insufficient","description":"Major gaps."}]'::jsonb, 3),
+  ('dc46db4d-fa3a-4c22-a64a-b5c07a94ebe6', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', 'fc2a0001-0000-4000-a000-000000000004', 'teamwork',  'Teamwork',              'E2E fixture criterion', 10, 10, '#EF4444', '[{"min":9,"max":10,"label":"Excellent","description":"Outstanding."},{"min":7,"max":8,"label":"Good","description":"Solid."},{"min":4,"max":6,"label":"Developing","description":"Some gaps."},{"min":0,"max":3,"label":"Insufficient","description":"Major gaps."}]'::jsonb, 4)
+ON CONFLICT (id) DO UPDATE SET rubric_bands = EXCLUDED.rubric_bands;
 
 -- Criteria period (cccccccc-0004)
 INSERT INTO period_criteria (id, period_id, source_criterion_id, key, label, description, max_score, weight, color, rubric_bands, sort_order) VALUES

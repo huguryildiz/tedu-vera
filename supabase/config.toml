@@ -22,7 +22,10 @@ enabled = true
 enabled = false
 
 [inbucket]
-enabled = false
+# Enabled so auth.resetPasswordForEmail (forgot-password E2E) succeeds in CI.
+# Without an email sink Supabase Auth returns "name resolution failed".
+enabled = true
+port = 54324
 
 [storage]
 enabled = false
