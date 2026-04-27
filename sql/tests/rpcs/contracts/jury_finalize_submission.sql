@@ -13,7 +13,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(8);
+SELECT plan(10);
 
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.seed_periods();
@@ -124,6 +124,31 @@ SELECT ok(
      'real-session-token'
    )::jsonb ? 'ok')),
   'response envelope has ok field'
+);
+
+-- ────────── 9. state mutation: final_submitted_at written ──────────
+-- Reset so we can call the RPC and observe the DB side-effect.
+UPDATE juror_period_auth
+SET final_submitted_at = NULL
+WHERE juror_id = '55550000-0000-4000-8000-000000000001'::uuid
+  AND period_id = 'cccc0000-0000-4000-8000-000000000001'::uuid;
+
+SELECT ok(
+  (SELECT rpc_jury_finalize_submission(
+     'cccc0000-0000-4000-8000-000000000001'::uuid,
+     '55550000-0000-4000-8000-000000000001'::uuid,
+     'real-session-token'
+   )::jsonb->>'ok') = 'true',
+  'pre-condition: rpc call returned ok=true for state mutation test'
+);
+
+-- The RPC must have written final_submitted_at.
+SELECT isnt(
+  (SELECT final_submitted_at FROM juror_period_auth
+   WHERE juror_id = '55550000-0000-4000-8000-000000000001'::uuid
+     AND period_id = 'cccc0000-0000-4000-8000-000000000001'::uuid),
+  NULL::timestamptz,
+  'rpc_jury_finalize_submission writes final_submitted_at to juror_period_auth'
 );
 
 SELECT COALESCE(

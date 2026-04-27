@@ -8,7 +8,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(5);
+SELECT plan(8);
 
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.seed_periods();
@@ -103,6 +103,54 @@ SELECT is(
    )),
   7::numeric,
   'score_sheet_items row holds the submitted value'::text
+);
+
+-- ────────── post-submit lock: simulate final submission ──────────
+-- Set final_submitted_at on the juror_period_auth row. edit_enabled stays at
+-- its default (false). This mirrors what rpc_jury_finalize_submission writes.
+UPDATE juror_period_auth
+SET final_submitted_at = now()
+WHERE juror_id = (SELECT juror_id FROM _pgtap_ctx)
+  AND period_id = 'cccc0000-0000-4000-8000-000000000001'::uuid;
+
+-- ────────── 6. post-submit upsert returns final_submit_required ──────────
+SELECT is(
+  (SELECT (rpc_jury_upsert_score(
+     'cccc0000-0000-4000-8000-000000000001'::uuid,
+     '33330000-0000-4000-8000-000000000001'::uuid,
+     (SELECT juror_id FROM _pgtap_ctx),
+     (SELECT session_token FROM _pgtap_ctx),
+     '[{"key":"technical","value":9}]'::jsonb,
+     'pgtap-tampering-attempt'
+   )->>'error_code'),
+  'final_submit_required'::text,
+  'final_submitted_at set + edit_enabled=false → error_code=final_submit_required'::text
+);
+
+-- ────────── 7. score_sheet_items value unchanged (still 7, not 9) ──────────
+SELECT is(
+  (SELECT score_value FROM score_sheet_items
+   WHERE score_sheet_id IN (
+     SELECT id FROM score_sheets
+     WHERE juror_id = (SELECT juror_id FROM _pgtap_ctx)
+       AND project_id = '33330000-0000-4000-8000-000000000001'::uuid
+   )),
+  7::numeric,
+  'rejected upsert leaves score_value untouched'::text
+);
+
+-- ────────── 8. idempotent reject: second call still final_submit_required ──────────
+SELECT is(
+  (SELECT (rpc_jury_upsert_score(
+     'cccc0000-0000-4000-8000-000000000001'::uuid,
+     '33330000-0000-4000-8000-000000000001'::uuid,
+     (SELECT juror_id FROM _pgtap_ctx),
+     (SELECT session_token FROM _pgtap_ctx),
+     '[{"key":"technical","value":9}]'::jsonb,
+     NULL
+   )->>'error_code'),
+  'final_submit_required'::text,
+  'second call after final_submitted_at also rejects (idempotent)'::text
 );
 
 SELECT COALESCE(

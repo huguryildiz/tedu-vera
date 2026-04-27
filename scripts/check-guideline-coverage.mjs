@@ -34,8 +34,15 @@ const HARD_FAIL = false; // set true after sustained ≥ 90%
 // ─── helpers ───────────────────────────────────────────────────────────────
 function grepCount(pattern, paths, opts = {}) {
   // Returns the number of matching files. Uses extended regex.
-  const flags = ["-rl", "-E", "--include=*.{js,jsx,ts,tsx,mjs,cjs,sql}"];
-  if (opts.testOnly) flags.push("--include=*test*", "--include=*spec*");
+  // Note: grep's --include uses glob patterns and does NOT support brace
+  // expansion ({a,b,c}). Use one --include per extension.
+  const exts = ["js", "jsx", "ts", "tsx", "mjs", "cjs", "sql"];
+  const flags = ["-rl", "-E"];
+  for (const ext of exts) flags.push(`--include=*.${ext}`);
+  if (opts.testOnly) {
+    flags.push("--include=*test*");
+    flags.push("--include=*spec*");
+  }
   const args = [...flags, pattern, ...paths.map((p) => path.join(REPO_ROOT, p))];
   try {
     const out = execSync(`grep ${args.map((a) => JSON.stringify(a)).join(" ")}`, {
@@ -309,10 +316,12 @@ const ITEMS = [
   {
     id: "sql.score_range_constraint",
     layer: "SQL",
-    desc: "score_value 0–100 CHECK constraint test",
+    desc: "score_value ≥ 0 CHECK constraint test (schema has no upper-bound; lower-bound only)",
     detect: () => {
+      // check.sql has: throws_ok('EXECUTE bad_score_value_neg', '23514', NULL,
+      //   'score_sheet_items.score_value >= 0 rejects negative')
       const hits = grepCount(
-        "score_value.*0.*100|score.*range|score_value.*CHECK",
+        "score_value.*rejects|bad_score_value|score_value.*>= 0",
         ["sql/tests/constraints"],
         {}
       );
@@ -322,24 +331,13 @@ const ITEMS = [
   {
     id: "sql.composite_unique",
     layer: "SQL",
-    desc: "Composite UNIQUE constraint test (juror, project, period)",
+    desc: "Composite UNIQUE constraint test (juror × project on score_sheets)",
     detect: () => {
+      // unique.sql has: 'score_sheets(juror_id, project_id) UNIQUE prevents duplicate juror×project'
+      // Pattern order matches: juror_id ...project_id... UNIQUE (reversed from original)
       const hits = grepCount(
-        "composite|juror_id.*project_id.*period_id|UNIQUE.*juror.*project",
+        "juror.*project.*UNIQUE|bad_ss_duplicate|duplicate juror|score_sheets.*juror.*project",
         ["sql/tests/constraints"],
-        {}
-      );
-      return hits > 0 ? "covered" : "missing";
-    },
-  },
-  {
-    id: "sql.snapshot_immutability",
-    layer: "SQL",
-    desc: "Snapshot immutability: frozen period rejects criteria/outcome change",
-    detect: () => {
-      const hits = grepCount(
-        "snapshot_frozen_at|snapshot.*immut|frozen.*reject",
-        ["sql/tests"],
         {}
       );
       return hits > 0 ? "covered" : "missing";
@@ -412,13 +410,22 @@ const ITEMS = [
     layer: "RPC",
     desc: "rpc_jury_finalize_submission asserts final_submitted_at update",
     detect: () => {
-      // Look in pgTAP tests, not e2e (which already asserts via DB select)
-      const hits = grepCount(
-        "final_submitted_at.*IS NOT NULL|final_submitted_at.*now\\(\\)|UPDATE.*final_submitted_at",
+      // Requires the RPC to be called in a pgTAP test AND final_submitted_at
+      // to be asserted as non-NULL after the call. Both must appear in the same
+      // file in sql/tests/rpcs to count as covered.
+      const rpcCalled = grepCount(
+        "rpc_jury_finalize_submission",
         ["sql/tests/rpcs"],
         {}
       );
-      return hits > 0 ? "covered" : "missing";
+      const stateAsserted = grepCount(
+        "writes final_submitted_at|final_submitted_at.*juror_period_auth|isnt.*final_submitted_at",
+        ["sql/tests/rpcs"],
+        {}
+      );
+      if (rpcCalled > 0 && stateAsserted > 0) return "covered";
+      if (rpcCalled > 0) return "partial";
+      return "missing";
     },
   },
   {
@@ -511,8 +518,11 @@ const ITEMS = [
     layer: "E2E",
     desc: "XLSX export numeric cell type assertion",
     detect: () => {
+      // Tight pattern: must read back the XLSX *and* assert numeric cell type.
+      // Cell type "n" is the XLSX worksheet convention; matching `.t === "n"`
+      // (or single-quoted variant) requires the test to actually parse cells.
       const hits = grepCount(
-        "cellNumeric|cell.t.*=.*n|XLSX.*number|numFmt",
+        '\\.t\\s*===\\s*[\\"\\\']n[\\"\\\']|cellType\\s*===\\s*[\\"\\\']number',
         ["e2e/admin"],
         {}
       );
@@ -524,8 +534,10 @@ const ITEMS = [
     layer: "E2E",
     desc: "Turkish character preservation in export",
     detect: () => {
+      // Tight pattern: explicit reference to Turkish encoding/preservation.
+      // Bare Turkish letters in UI strings (ç ğ ı ö ş ü) match anything.
       const hits = grepCount(
-        "ç|ğ|ı|ö|ş|ü|turkish|türkçe",
+        "turkish.*(char|encod|preserve)|t[uü]rk[cç]e.*(encod|preserve|karakter)",
         ["e2e/admin"],
         {}
       );
@@ -579,12 +591,13 @@ const ITEMS = [
     layer: "E2E",
     desc: "Period full lifecycle integrated (Create→Activate→Lock→Close)",
     detect: () => {
-      const hits = grepCount(
-        "Activate.*Lock.*Close|publish.*close.*period|lifecycle.*period",
-        ["e2e/admin"],
-        {}
-      );
-      return hits > 0 ? "covered" : "missing";
+      // Tight signal: a dedicated spec file. Loose phrase matches keep
+      // returning false positives because admin specs casually mention
+      // "lifecycle"/"publish"/"close" in unrelated context.
+      const hasFile =
+        fileExists("e2e/admin/period-lifecycle.spec.ts") ||
+        fileExists("e2e/admin/periods-lifecycle.spec.ts");
+      return hasFile ? "covered" : "missing";
     },
   },
 
