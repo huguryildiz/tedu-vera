@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { randomUUID } from "node:crypto";
 import { adminClient } from "../helpers/supabaseAdmin";
 import { E2E_PERIODS_ORG_ID, E2E_PROJECTS_ORG_ID } from "../fixtures/seed-ids";
 
@@ -126,45 +127,52 @@ test.describe("deliberately-break evidence (RBAC boundary)", () => {
     const jwt = await getTenantJwt(request);
     const anonKey = process.env.VITE_DEMO_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "";
 
-    // Use adminClient to fetch an unlocked period from tenant A's own org (E2E_PERIODS_ORG_ID).
-    // Must be unlocked — trigger_block_periods_on_locked_mutate blocks name changes on locked periods.
-    const { data: periods } = await adminClient
+    // Create an isolated unlocked period instead of relying on shared seed
+    // state. Other critical-path specs legitimately lock/close seeded periods.
+    const originalName = `RBAC Own Org ${randomUUID()}`;
+    const { data: period, error: insertError } = await adminClient
       .from("periods")
+      .insert({
+        organization_id: E2E_PERIODS_ORG_ID,
+        name: originalName,
+        season: "Spring",
+        description: "RBAC own-org boundary fixture",
+        is_locked: false,
+      })
       .select("id, name")
-      .eq("organization_id", E2E_PERIODS_ORG_ID)
-      .eq("is_locked", false)
-      .limit(1);
+      .single();
 
-    expect(periods?.length ?? 0, 'E2E_PERIODS_ORG_ID must have at least one unlocked period').toBeGreaterThan(0);
-    if (!periods?.length) return;
+    expect(insertError, `RBAC fixture period insert failed: ${insertError?.message}`).toBeNull();
+    expect(period?.id, "RBAC fixture period should be created").toBeTruthy();
+    if (!period?.id) return;
 
-    const periodId = periods![0].id;
-    const originalName = periods![0].name;
+    const periodId = period.id;
     const testName = `E2E-TEST-${Date.now()}`;
 
-    // Attempt to PATCH the period with tenant A's JWT (same org)
-    const res = await request.patch(
-      `${SUPABASE_URL}/rest/v1/periods?id=eq.${periodId}`,
-      {
-        headers: {
-          apikey: anonKey,
-          Authorization: `Bearer ${jwt}`,
-          "Content-Type": "application/json",
-          Prefer: "return=representation",
+    try {
+      // Attempt to PATCH the period with tenant A's JWT (same org)
+      const res = await request.patch(
+        `${SUPABASE_URL}/rest/v1/periods?id=eq.${periodId}`,
+        {
+          headers: {
+            apikey: anonKey,
+            Authorization: `Bearer ${jwt}`,
+            "Content-Type": "application/json",
+            Prefer: "return=representation",
+          },
+          data: { name: testName },
         },
-        data: { name: testName },
-      },
-    );
+      );
 
-    expect(res.ok()).toBe(true);
-    const responseRows = await res.json();
-    expect(Array.isArray(responseRows)).toBe(true);
+      expect(res.ok()).toBe(true);
+      const responseRows = await res.json();
+      expect(Array.isArray(responseRows)).toBe(true);
 
-    // Update should succeed (at least 1 row affected)
-    expect(responseRows.length).toBeGreaterThan(0);
-    expect(responseRows[0].name).toBe(testName);
-
-    // Restore the original name
-    await adminClient.from("periods").update({ name: originalName }).eq("id", periodId);
+      // Update should succeed (at least 1 row affected)
+      expect(responseRows.length).toBeGreaterThan(0);
+      expect(responseRows[0].name).toBe(testName);
+    } finally {
+      await adminClient.from("periods").delete().eq("id", periodId);
+    }
   });
 });
