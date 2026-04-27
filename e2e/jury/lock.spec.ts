@@ -1,22 +1,57 @@
 import { test, expect } from "@playwright/test";
 import { JuryPom } from "../poms/JuryPom";
 import { readJurorAuth, resetJurorAuth } from "../helpers/supabaseAdmin";
-import { EVAL_JURORS, EVAL_PERIOD_ID } from "../fixtures/seed-ids";
+import { EVAL_JURORS, EVAL_PERIOD_ID, LOCKED_JUROR_ID } from "../fixtures/seed-ids";
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "";
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
 test.describe("jury lock screen", () => {
   test.describe.configure({ mode: "serial" });
 
-  test("blocked juror sees locked screen after PIN submit", async ({ page }) => {
+  test("blocked juror sees locked screen after PIN submit", async ({ page, request }) => {
+    // The seed pins locked_until to "now() + 1 hour" at seed time, which goes
+    // stale on long-lived databases. Force lockout into the future against the
+    // juror that the rpc_jury_authenticate lookup will actually match
+    // (name + affiliation + period's organization_id), so the test is robust
+    // to environment drift between CI's fresh stack and shared demo DBs.
+    const lookup = await request.get(
+      `${SUPABASE_URL}/rest/v1/juror_period_auth?period_id=eq.${EVAL_PERIOD_ID}&select=juror_id,jurors!inner(juror_name,affiliation)&jurors.juror_name=eq.E2E%20Locked%20Juror&jurors.affiliation=eq.E2E%20Test%20Affiliation`,
+      {
+        headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+      },
+    );
+    const lookupBody = await lookup.json();
+    const targetJurorId: string = lookupBody?.[0]?.juror_id || LOCKED_JUROR_ID;
+    const lockedUntilIso = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const lockRes = await request.patch(
+      `${SUPABASE_URL}/rest/v1/juror_period_auth?juror_id=eq.${targetJurorId}&period_id=eq.${EVAL_PERIOD_ID}`,
+      {
+        headers: {
+          apikey: SERVICE_KEY,
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+        data: {
+          failed_attempts: 3,
+          locked_until: lockedUntilIso,
+          locked_at: new Date().toISOString(),
+        },
+      },
+    );
+    expect(lockRes.ok()).toBeTruthy();
+
     const jury = new JuryPom(page);
     await jury.goto();
     await jury.waitForArrivalStep();
     await jury.clickBeginSession();
     await jury.waitForIdentityStep();
-    await jury.fillIdentity("E2E Locked Juror", "E2E Test");
+    await jury.fillIdentity("E2E Locked Juror", "E2E Test Affiliation");
     await jury.submitIdentity();
-    await jury.waitForPinStep();
-    await jury.fillPin("9999");
-    await jury.submitPin();
+    // Lockout (locked_until set in seed) is detected by rpc_jury_authenticate
+    // at identity submit time; the redirect to /jury/locked fires immediately,
+    // so the PIN entry step is never shown.
     await jury.waitForLockedStep();
     await expect(jury.lockedScreen()).toBeVisible();
   });
@@ -42,7 +77,7 @@ test.describe("jury lock screen", () => {
     await jury.waitForArrivalStep();
     await jury.clickBeginSession();
     await jury.waitForIdentityStep();
-    await jury.fillIdentity("E2E Eval Render", "E2E Org");
+    await jury.fillIdentity("E2E Eval Render", "E2E Test Affiliation");
     await jury.submitIdentity();
     await jury.waitForPinStep();
 

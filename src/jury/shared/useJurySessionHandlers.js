@@ -56,13 +56,17 @@ async function ensureDemoAnonSession() {
 }
 
 async function resolveDemoPeriod(signal) {
+  const debug = import.meta.env.VITE_E2E === "true" || import.meta.env.VITE_E2E === true;
+
   const grantedAccess = getJuryAccessGrant();
   if (grantedAccess?.period_id) {
+    if (debug) console.error("[jury][diag] resolveDemoPeriod: using grantedAccess", { period_id: grantedAccess.period_id });
     return buildTokenPeriod(grantedAccess);
   }
 
   const grantedPeriodId = getJuryAccess();
   if (grantedPeriodId) {
+    if (debug) console.error("[jury][diag] resolveDemoPeriod: using grantedPeriodId", { period_id: grantedPeriodId });
     return {
       id: grantedPeriodId,
       name: "",
@@ -74,24 +78,61 @@ async function resolveDemoPeriod(signal) {
   let tokenPeriod = null;
 
   const DEMO_ENTRY_TOKEN = import.meta.env.VITE_DEMO_ENTRY_TOKEN || "";
+  if (debug) {
+    console.error("[jury][diag] resolveDemoPeriod: env check", {
+      hasDemoToken: !!DEMO_ENTRY_TOKEN,
+      tokenPrefix: DEMO_ENTRY_TOKEN ? DEMO_ENTRY_TOKEN.slice(0, 8) + "..." : null,
+      VITE_E2E: import.meta.env.VITE_E2E,
+    });
+  }
   if (DEMO_ENTRY_TOKEN) {
     try {
       const tokenRes = await verifyEntryToken(DEMO_ENTRY_TOKEN);
+      if (debug) {
+        console.error("[jury][diag] verifyEntryToken returned", {
+          ok: tokenRes?.ok,
+          period_id: tokenRes?.period_id,
+          period_name: tokenRes?.period_name,
+          is_locked: tokenRes?.is_locked,
+          closed_at: tokenRes?.closed_at,
+          error: tokenRes?.error,
+          error_code: tokenRes?.error_code,
+        });
+      }
       if (tokenRes?.ok) tokenPeriod = buildTokenPeriod(tokenRes);
-    } catch {
-      // Non-fatal: continue with periods-table fallback.
+      else if (debug) console.error("[jury][diag] verifyEntryToken not ok — token rejected by RPC");
+    } catch (err) {
+      if (debug) {
+        console.error("[jury][diag] verifyEntryToken threw", {
+          message: err?.message,
+          code: err?.code,
+          details: err?.details,
+          hint: err?.hint,
+        });
+      }
     }
   }
 
   let allPeriods = [];
   try {
     allPeriods = await listPeriods(signal);
+    if (debug) console.error("[jury][diag] listPeriods returned", { count: allPeriods?.length || 0, ids: (allPeriods || []).map((p) => p.id) });
   } catch (e) {
     if (e?.name === "AbortError") throw e;
-    // Non-fatal: tokenPeriod may still be enough to proceed.
+    if (debug) console.error("[jury][diag] listPeriods threw", { message: e?.message, code: e?.code });
   }
 
-  return pickDemoPeriod(allPeriods, tokenPeriod);
+  const picked = pickDemoPeriod(allPeriods, tokenPeriod);
+  if (debug) {
+    console.error("[jury][diag] resolveDemoPeriod result", {
+      pickedId: picked?.id || null,
+      pickedName: picked?.name || null,
+      pickedLocked: picked?.is_locked,
+      pickedClosed: picked?.closed_at,
+      hadTokenPeriod: !!tokenPeriod,
+    });
+  }
+  return picked;
 }
 
 export function useJurySessionHandlers({ identity, session, scoring, loading, workflow, editState, autosave, stateRef }) {
@@ -408,6 +449,9 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
         }
 
         if (!demoPeriod) {
+          if (import.meta.env.VITE_E2E) {
+            console.error("[jury][diag] handleIdentitySubmit: resolveDemoPeriod returned null — demo period unavailable");
+          }
           loading.setPeriods([]);
           loading.setLoadingState(null);
           identity.setAuthError("Demo period is temporarily unavailable. Please refresh and try again.");
@@ -415,6 +459,14 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
           return;
         }
         if (!isEvaluablePeriod(demoPeriod)) {
+          if (import.meta.env.VITE_E2E) {
+            console.error("[jury][diag] handleIdentitySubmit: demo period is not evaluable", {
+              id: demoPeriod.id,
+              name: demoPeriod.name,
+              is_locked: demoPeriod.is_locked,
+              closed_at: demoPeriod.closed_at,
+            });
+          }
           loading.setPeriods([]);
           loading.setLoadingState(null);
           identity.setAuthError(

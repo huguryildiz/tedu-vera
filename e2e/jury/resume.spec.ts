@@ -17,15 +17,69 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 test.describe("jury resume", () => {
   test.describe.configure({ mode: "serial" });
 
-  test('returning juror sees "Welcome Back" on progress step', async ({
-    page,
-  }) => {
+  test('returning juror sees "Welcome Back" on progress step', async ({ page, request }) => {
+    // "Welcome Back" only renders when isInProgress = true (juror has prior
+    // score-sheet activity for the period). Seed a single placeholder
+    // score_sheet row with a comment so the progress builder sees prior
+    // progress, then reset auth so the identity+PIN flow lands cleanly.
+    //
+    // Look up juror_id at runtime via the same name + affiliation + period
+    // join the rpc_jury_authenticate uses, so the test is robust to
+    // environment drift between CI's fresh stack and shared demo DBs that
+    // may carry duplicate juror rows under different orgs.
+    const jurorLookup = await request.get(
+      `${SUPABASE_URL}/rest/v1/juror_period_auth?period_id=eq.${EVAL_PERIOD_ID}&select=juror_id,jurors!inner(juror_name,affiliation)&jurors.juror_name=eq.${encodeURIComponent(RESUME_JUROR.name)}&jurors.affiliation=eq.E2E%20Test%20Affiliation`,
+      {
+        headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+      },
+    );
+    const jurorBody = await jurorLookup.json();
+    const targetJurorId: string = jurorBody?.[0]?.juror_id || RESUME_JUROR.id;
+
+    await resetJurorAuth(targetJurorId, EVAL_PERIOD_ID);
+    await request.delete(
+      `${SUPABASE_URL}/rest/v1/score_sheets?juror_id=eq.${targetJurorId}&period_id=eq.${EVAL_PERIOD_ID}`,
+      {
+        headers: {
+          apikey: SERVICE_KEY,
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          Prefer: "return=minimal",
+        },
+      },
+    );
+    const projectsLookup = await request.get(
+      `${SUPABASE_URL}/rest/v1/projects?period_id=eq.${EVAL_PERIOD_ID}&select=id&limit=1`,
+      {
+        headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+      },
+    );
+    const projectsBody = await projectsLookup.json();
+    const seedProjectId: string | undefined = projectsBody?.[0]?.id;
+    expect(seedProjectId).toBeTruthy();
+
+    const seedRes = await request.post(`${SUPABASE_URL}/rest/v1/score_sheets`, {
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      data: {
+        juror_id: targetJurorId,
+        period_id: EVAL_PERIOD_ID,
+        project_id: seedProjectId,
+        comment: "in-progress placeholder for resume spec",
+        status: "in_progress",
+      },
+    });
+    expect(seedRes.ok()).toBeTruthy();
+
     const jury = new JuryPom(page);
     await jury.goto();
     await jury.waitForArrivalStep();
     await jury.clickBeginSession();
     await jury.waitForIdentityStep();
-    await jury.fillIdentity("E2E Juror", "E2E Test");
+    await jury.fillIdentity(RESUME_JUROR.name, "E2E Test Affiliation");
     await jury.submitIdentity();
     await jury.waitForPinStep();
     await jury.fillPin("9999");
@@ -72,7 +126,7 @@ test.describe("jury resume", () => {
       await jury.waitForArrivalStep();
       await jury.clickBeginSession();
       await jury.waitForIdentityStep();
-      await jury.fillIdentity(jurorName, "E2E Org");
+      await jury.fillIdentity(jurorName, "E2E Test Affiliation");
       await jury.submitIdentity();
       await jury.waitForPinStep();
       await jury.fillPin("9999");

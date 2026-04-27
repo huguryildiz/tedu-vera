@@ -173,14 +173,15 @@ INSERT INTO jurors (id, organization_id, juror_name, affiliation, email, avatar_
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO juror_period_auth (juror_id, period_id, pin_hash, last_seen_at, session_expires_at, final_submitted_at, edit_enabled, edit_reason, edit_expires_at, failed_attempts, locked_until, locked_at, is_blocked) VALUES
-  -- Locked juror: 3 failed attempts, locked for 1 hour
+  -- Locked juror: 3 failed attempts, locked for 1 hour. pin_hash NULL — lockout check fires before PIN check.
   ('eeeeeeee-0001-4000-e000-000000000001', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', NULL, now(), NULL, NULL, false, NULL, NULL, 3, now() + interval '1 hour', now(), false),
-  -- Eval jurors: clean state, PIN will be set on first login
-  ('b3aa250b-3049-4788-9c68-5fa0e8aec86a', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', NULL, NULL, NULL, NULL, false, NULL, NULL, 0, NULL, NULL, false),
-  ('bbbbbbbb-e2e0-4000-b000-000000000001', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', NULL, NULL, NULL, NULL, false, NULL, NULL, 0, NULL, NULL, false),
-  ('bbbbbbbb-e2e0-4000-b000-000000000002', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', NULL, NULL, NULL, NULL, false, NULL, NULL, 0, NULL, NULL, false)
+  -- Eval jurors: pre-seeded with PIN "9999" so jury specs can drive returning-juror flow deterministically.
+  ('b3aa250b-3049-4788-9c68-5fa0e8aec86a', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', extensions.crypt('9999', extensions.gen_salt('bf')), NULL, NULL, NULL, false, NULL, NULL, 0, NULL, NULL, false),
+  ('bbbbbbbb-e2e0-4000-b000-000000000001', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', extensions.crypt('9999', extensions.gen_salt('bf')), NULL, NULL, NULL, false, NULL, NULL, 0, NULL, NULL, false),
+  ('bbbbbbbb-e2e0-4000-b000-000000000002', 'a0d6f60d-ece4-40f8-aca2-955b4abc5d88', extensions.crypt('9999', extensions.gen_salt('bf')), NULL, NULL, NULL, false, NULL, NULL, 0, NULL, NULL, false)
 ON CONFLICT (juror_id, period_id) DO UPDATE
-  SET failed_attempts = EXCLUDED.failed_attempts,
+  SET pin_hash       = EXCLUDED.pin_hash,
+      failed_attempts = EXCLUDED.failed_attempts,
       locked_until    = EXCLUDED.locked_until,
       locked_at       = EXCLUDED.locked_at;
 

@@ -3286,10 +3286,13 @@ out.push(`INSERT INTO jurors (id, organization_id, juror_name, affiliation, emai
 out.push(`INSERT INTO juror_period_auth (juror_id, period_id, pin_hash, last_seen_at, session_expires_at, final_submitted_at, edit_enabled, edit_reason, edit_expires_at, failed_attempts, locked_until, locked_at, is_blocked) VALUES ('${E2E_LOCKED_JUROR}', '${E2E_EVAL_PERIOD}', NULL, now(), NULL, NULL, false, NULL, NULL, 3, now() + interval '1 hour', now(), false) ON CONFLICT (juror_id, period_id) DO UPDATE SET failed_attempts = 3, locked_until = now() + interval '1 hour', locked_at = now();`);
 out.push('');
 
-// 6) Eval jurors (3) + their juror_period_auth rows under E2E_EVAL_PERIOD
+// 6) Eval jurors (3) + their juror_period_auth rows under E2E_EVAL_PERIOD.
+// pin_hash pre-seeded with crypt('9999', bf) so jury specs can drive
+// returning-juror flow deterministically; ON CONFLICT updates pin_hash so
+// re-runs of the seed restore the canonical state.
 E2E_EVAL_JURORS.forEach(j => {
   out.push(`INSERT INTO jurors (id, organization_id, juror_name, affiliation, email, avatar_color) VALUES ('${j.id}', '${E2E_PERIODS_ORG}', '${escapeSql(j.name)}', 'E2E Test Affiliation', 'e2e-${j.id.slice(0,8)}@vera-eval.test', '#3B82F6') ON CONFLICT (id) DO NOTHING;`);
-  out.push(`INSERT INTO juror_period_auth (juror_id, period_id, pin_hash, last_seen_at, session_expires_at, final_submitted_at, edit_enabled, edit_reason, edit_expires_at, failed_attempts, locked_until, locked_at, is_blocked) VALUES ('${j.id}', '${E2E_EVAL_PERIOD}', NULL, NULL, NULL, NULL, false, NULL, NULL, 0, NULL, NULL, false) ON CONFLICT (juror_id, period_id) DO NOTHING;`);
+  out.push(`INSERT INTO juror_period_auth (juror_id, period_id, pin_hash, last_seen_at, session_expires_at, final_submitted_at, edit_enabled, edit_reason, edit_expires_at, failed_attempts, locked_until, locked_at, is_blocked) VALUES ('${j.id}', '${E2E_EVAL_PERIOD}', extensions.crypt('9999', extensions.gen_salt('bf')), NULL, NULL, NULL, false, NULL, NULL, 0, NULL, NULL, false) ON CONFLICT (juror_id, period_id) DO UPDATE SET pin_hash = EXCLUDED.pin_hash, failed_attempts = 0, locked_until = NULL, locked_at = NULL;`);
 });
 out.push('');
 

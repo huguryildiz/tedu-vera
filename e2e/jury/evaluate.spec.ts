@@ -69,7 +69,7 @@ test.describe("jury evaluate flow", () => {
     await jury.waitForArrivalStep();
     await jury.clickBeginSession();
     await jury.waitForIdentityStep();
-    await jury.fillIdentity(jurorName, "E2E Org");
+    await jury.fillIdentity(jurorName, "E2E Test Affiliation");
     await jury.submitIdentity();
     await jury.waitForPinStep();
     await jury.fillPin("9999");
