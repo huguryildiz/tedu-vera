@@ -131,8 +131,13 @@ export default function AdminHeader({
     if (!q) return popoverData;
 
     const matches = (p) => {
-      const name = (p.name || p.semester_name || "").toLowerCase();
-      return name.includes(q);
+      const searchable = [
+        p.id,
+        p.name,
+        p.semester_name,
+        p.season,
+      ].filter(Boolean).join(" ").toLowerCase();
+      return searchable.includes(q);
     };
 
     return {

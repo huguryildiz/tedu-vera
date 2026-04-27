@@ -9,6 +9,10 @@ const EMAIL = process.env.E2E_ADMIN_EMAIL || "demo-admin@vera-eval.app";
 const PASSWORD = process.env.E2E_ADMIN_PASSWORD || "";
 const BASE_URL = process.env.E2E_BASE_URL || "http://localhost:5174";
 
+function newAnonymousContext(browser: Parameters<Parameters<typeof test>[1]>[0]["browser"]) {
+  return browser.newContext({ storageState: { cookies: [], origins: [] } });
+}
+
 test.describe("maintenance mode", () => {
   test.describe.configure({ mode: "serial" });
 
@@ -154,8 +158,8 @@ test.describe("maintenance mode", () => {
     console.log("[maintenance-mode.spec.ts] E2E_SUPABASE_URL:", process.env.E2E_SUPABASE_URL);
     console.log("[maintenance-mode.spec.ts] BASE_URL:", BASE_URL);
 
-    // Create a new context without authentication (anonymous user)
-    const anonContext = await browser.newContext();
+    // Create a new context without authentication (anonymous user).
+    const anonContext = await newAnonymousContext(browser);
     const anonPage = await anonContext.newPage();
 
     // Capture console messages for debugging
@@ -239,8 +243,7 @@ test.describe("maintenance mode", () => {
   });
 
   test("anon user no longer sees maintenance page after deactivation", async ({ browser }) => {
-    // Create a new context without authentication
-    const anonContext = await browser.newContext();
+    const anonContext = await newAnonymousContext(browser);
     const anonPage = await anonContext.newPage();
 
     try {

@@ -2,7 +2,7 @@ import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { BasePom } from "./BasePom";
 
-const ENTRY_URL = "/demo/eval?t=e2e-jury-token";
+const ENTRY_URL = `/demo/eval?t=${process.env.VITE_DEMO_ENTRY_TOKEN || "demo-tedu-ee"}`;
 
 export class JuryPom extends BasePom {
   tokenInput(): Locator {
@@ -101,8 +101,7 @@ export class JuryPom extends BasePom {
   }
 
   async waitForPinRevealStep(): Promise<void> {
-    await this.page.waitForURL(/\/demo\/jury\/pin-reveal/);
-    // Wait for the "Begin Evaluation" button to be visible
+    await this.page.waitForURL(/\/demo\/jury\/pin(?:-reveal)?/);
     await expect(this.page.locator("button:has-text(\"Begin Evaluation\")")).toBeVisible();
   }
 

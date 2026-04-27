@@ -39,6 +39,7 @@ test.describe("outcomes", () => {
   test("outcomes page loads and add button is visible", async ({ page }) => {
     const { outcomes } = await signInAndGotoOutcomes(page);
     await expect(outcomes.addBtn()).toBeVisible({ timeout: 10000 });
+    await expect(outcomes.outcomeRows().first()).toBeVisible({ timeout: 10000 });
     const count = await outcomes.outcomeRows().count();
     expect(count).toBeGreaterThanOrEqual(1);
   });

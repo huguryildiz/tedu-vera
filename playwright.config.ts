@@ -54,7 +54,12 @@ export default defineConfig({
     {
       // Auth/jury/demo tests intentionally start unauthenticated.
       name: "other",
-      testIgnore: /e2e\/admin\//,
+      testIgnore: [
+        /e2e\/admin\//,
+        /e2e\/a11y\//,
+        /e2e\/perf\//,
+        /e2e\/visual\//,
+      ],
     },
     {
       // Global-state mutation specs — must run with no parallel workers because

@@ -137,23 +137,14 @@ test.describe("periods realtime — two-context state propagation", () => {
       ).toBeFalsy();
 
       // ── Context B: flip is_locked=true on the seeded period ─────────────
-      // We use the rpc_admin_publish_period RPC (rather than a direct
-      // is_locked UPDATE) so the trigger ordering and the "publish" event
-      // shape match real production traffic.
-      const { data: pubResp, error: pubErr } = await adminClient.rpc("rpc_admin_publish_period", {
-        p_period_id: periodId,
-      });
-      expect(pubErr, `publish RPC error: ${pubErr?.message}`).toBeNull();
-      // The RPC may return readiness_failed in fixture-light tenants; treat
-      // either branch as the start of the propagation race. If readiness
-      // failed, fall back to a direct DB flip so we still exercise the
-      // Realtime path the test is about.
-      if (!pubResp?.ok) {
-        await adminClient
-          .from("periods")
-          .update({ is_locked: true, activated_at: new Date().toISOString() })
-          .eq("id", periodId);
-      }
+      // Service-role clients do not have auth.uid(), so admin RPC auth guards
+      // correctly reject them. This spec is about Realtime propagation, so use
+      // a direct DB update as the second context.
+      const { error: publishErr } = await adminClient
+        .from("periods")
+        .update({ is_locked: true, activated_at: new Date().toISOString() })
+        .eq("id", periodId);
+      expect(publishErr, `period publish update failed: ${publishErr?.message}`).toBeNull();
 
       // ── Context A: status pill flips to Published WITHOUT a manual reload ──
       // The page's existing Realtime channel on `periods` should deliver the

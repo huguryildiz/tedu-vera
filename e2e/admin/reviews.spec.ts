@@ -9,7 +9,7 @@ import {
   readJurorAuth,
   resetJurorAuth,
 } from "../helpers/supabaseAdmin";
-import { EVAL_PERIOD_ID, EVAL_JURORS } from "../fixtures/seed-ids";
+import { E2E_PERIODS_ORG_ID, EVAL_PERIOD_ID, EVAL_JURORS } from "../fixtures/seed-ids";
 
 const EMAIL = process.env.E2E_ADMIN_EMAIL || "demo-admin@vera-eval.app";
 const PASSWORD = process.env.E2E_ADMIN_PASSWORD || "";
@@ -19,17 +19,19 @@ const PASSWORD = process.env.E2E_ADMIN_PASSWORD || "";
 async function signInAndGoto(
   page: Parameters<Parameters<typeof test>[1]>[0]["page"],
 ): Promise<ReviewsPom> {
-  await page.addInitScript(() => {
+  await page.addInitScript((orgId) => {
     try {
       localStorage.setItem("vera.admin_tour_done", "1");
       localStorage.setItem("admin.remember_me", "true");
+      localStorage.setItem("admin.active_organization_id", orgId);
     } catch {}
-  });
+  }, E2E_PERIODS_ORG_ID);
   const login = new LoginPom(page);
   const shell = new AdminShellPom(page);
   await login.goto();
   await login.signIn(EMAIL, PASSWORD);
   await shell.expectOnDashboard();
+  await shell.selectPeriod(EVAL_PERIOD_ID);
   await page.goto("/admin/reviews");
   const reviews = new ReviewsPom(page);
   await reviews.waitForReady();

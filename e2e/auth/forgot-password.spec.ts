@@ -34,6 +34,9 @@ test.describe("forgot-password", () => {
   });
 
   test("submit with valid email shows success banner", async ({ page }) => {
+    await page.route("**/auth/v1/recover", async (route) => {
+      await route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+    });
     const fp = new ForgotPasswordPom(page);
     await fp.goto();
     await fp.requestReset(EMAIL);

@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { LoginPom } from "../poms/LoginPom";
 import { AdminShellPom } from "../poms/AdminShellPom";
 import { adminClient } from "../helpers/supabaseAdmin";
+import { E2E_PERIODS_ORG_ID } from "../fixtures/seed-ids";
 import {
   setupScoringFixture,
   teardownScoringFixture,
@@ -60,12 +61,14 @@ test.describe("realtime score update", () => {
 
     try {
       // === Context A: Admin login and navigate to heatmap ===
-      await pageA.addInitScript(() => {
+      await pageA.addInitScript((orgId) => {
         try {
           localStorage.setItem("vera.admin_tour_done", "1");
           localStorage.setItem("admin.remember_me", "true");
+          localStorage.setItem("admin.active_organization_id", orgId);
+          (window as unknown as { __VERA_E2E_REALTIME__?: boolean }).__VERA_E2E_REALTIME__ = true;
         } catch {}
-      });
+      }, E2E_PERIODS_ORG_ID);
 
       const loginA = new LoginPom(pageA);
       const shellA = new AdminShellPom(pageA);
@@ -73,6 +76,7 @@ test.describe("realtime score update", () => {
       await loginA.goto();
       await loginA.signIn(EMAIL, PASSWORD);
       await shellA.expectOnDashboard();
+      await shellA.selectPeriod(fixture.periodId, fixture.periodName);
 
       // Navigate to heatmap page
       await pageA.goto("/admin/heatmap");

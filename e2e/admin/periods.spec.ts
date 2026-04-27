@@ -6,6 +6,7 @@ import { PeriodsPom } from "../poms/PeriodsPom";
 import { adminClient } from "../helpers/supabaseAdmin";
 import {
   setupScoringFixture,
+  teardownScoringFixture,
   writeScoresAsJuror,
   type ScoringFixture,
 } from "../helpers/scoringFixture";
@@ -104,28 +105,26 @@ test.describe("periods crud", () => {
   });
 
   test("lifecycle — live period can be closed", async ({ page }) => {
-    // One-shot: period ends up closed (re-opening requires super-admin approval).
-    // If re-running against the same DB, re-seed the E2E Lifecycle Org with a new Published period.
-    const periods = await signInAndGotoLifecycle(page);
-    const name = "E2E Lifecycle Period";
+    const fixture = await setupScoringFixture({ namePrefix: "E2E Lifecycle" });
+    try {
+      const periods = await signInAndGoto(page, E2E_PERIODS_ORG_ID);
+      const name = fixture.periodName;
 
-    await periods.expectRowVisible(name);
+      await periods.expectRowVisible(name);
+      await periods.expectStatus(name, "Published");
 
-    // Guard: skip gracefully if this test already consumed the period in a previous run
-    const alreadyClosed = await periods.statusPill(name).evaluate((el) => el.textContent?.toLowerCase().includes("closed")).catch(() => false);
-    if (alreadyClosed) { test.skip(); return; }
-    // Seeded period has no scores → status is "Published" (Live requires hasScores=true)
-    await periods.expectStatus(name, "Published");
+      await periods.clickCloseFor(name);
+      await expect(periods.closeConfirmBtn()).toBeDisabled();
+      await periods.confirmClose(name);
 
-    // Open close dialog
-    await periods.clickCloseFor(name);
-
-    // Confirm button is disabled until name is typed exactly
-    await expect(periods.closeConfirmBtn()).toBeDisabled();
-    await periods.confirmClose(name);
-
-    // Verify status changes to Closed
-    await periods.expectStatus(name, "Closed");
+      await periods.expectStatus(name, "Closed");
+    } finally {
+      await adminClient
+        .from("periods")
+        .update({ is_locked: false, closed_at: null })
+        .eq("id", fixture.periodId);
+      await teardownScoringFixture(fixture);
+    }
   });
 });
 
