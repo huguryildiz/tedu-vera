@@ -213,6 +213,15 @@ ON CONFLICT DO NOTHING;
 -- ── Maintenance mode singleton ────────────────────────────────────────────────
 INSERT INTO maintenance_mode (id) VALUES (1) ON CONFLICT DO NOTHING;
 
+-- ── Security policy: tighten PIN lockout threshold to 3 for E2E ──────────────
+-- The default is 5. lock.spec.ts:61 ("3 failed PIN attempts → locked screen")
+-- expects the lockout to fire on the 3rd attempt, so we shrink the threshold
+-- here. pin-blocking flows still validate the lockout/unlock contract, just
+-- against a 3-attempt budget instead of 5.
+UPDATE security_policy
+   SET policy = policy || jsonb_build_object('maxPinAttempts', 3)
+ WHERE id = 1;
+
 -- ── Seeded submitted score sheet (for reviews.spec.ts:61 filter test) ─────────
 -- The reviews admin page lists submitted score_sheets. Without at least one
 -- submitted row for the eval period, reviews:61 ("filter by juror") times out
