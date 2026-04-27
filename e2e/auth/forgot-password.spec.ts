@@ -35,12 +35,29 @@ test.describe("forgot-password", () => {
 
   test("submit with valid email shows success banner", async ({ page }) => {
     // CI's local Supabase stack has no SMTP wired (Mailpit auto-wiring
-     // not reliable across CLI versions), so auth.resetPasswordForEmail
-     // returns "name resolution failed". Stub the recover endpoint to
-     // simulate a successful send so the success banner renders. We test
-     // the UI contract here, not GoTrue's email delivery.
-    await page.route(/\/auth\/v1\/recover(\?|$)/, async (route) => {
-      await route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+    // unreliable across CLI versions), so auth.resetPasswordForEmail
+    // returns "name resolution failed". `page.route` did not intercept the
+    // request reliably (likely because supabase-js constructs the URL in
+    // a way the glob/regex match missed). Patch window.fetch via
+    // addInitScript instead — runs before the app boots, so the Supabase
+    // client never actually hits the network for /auth/v1/recover.
+    await page.addInitScript(() => {
+      const orig = window.fetch.bind(window);
+      window.fetch = async (input, init) => {
+        const url =
+          typeof input === "string"
+            ? input
+            : input instanceof URL
+              ? input.toString()
+              : input.url;
+        if (url.includes("/auth/v1/recover")) {
+          return new Response("{}", {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        return orig(input, init);
+      };
     });
     const fp = new ForgotPasswordPom(page);
     await fp.goto();
