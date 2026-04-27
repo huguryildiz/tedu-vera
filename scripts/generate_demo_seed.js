@@ -254,7 +254,7 @@ const tenantAdminId = '5fe4ebbf-7a95-43b0-8712-56e94d6cb5a7';
 // raw_user_meta_data has profile_completed=true so AuthProvider.profileIncomplete stays false (admin shell renders).
 out.push(`INSERT INTO auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token, raw_user_meta_data) VALUES ('00000000-0000-0000-0000-000000000000', '${tenantAdminId}', 'authenticated', 'authenticated', 'tenant-admin@vera-eval.app', extensions.crypt('TenantAdmin2026!', extensions.gen_salt('bf')), now(), now(), now(), '', '', '', '', '{"display_name":"Tenant Admin E2E","email_verified":true,"profile_completed":true}'::jsonb) ON CONFLICT (id) DO UPDATE SET encrypted_password = EXCLUDED.encrypted_password, email_confirmed_at = COALESCE(auth.users.email_confirmed_at, EXCLUDED.email_confirmed_at), raw_user_meta_data = EXCLUDED.raw_user_meta_data;`);
 out.push(`INSERT INTO profiles (id, display_name) VALUES ('${tenantAdminId}', 'Tenant Admin E2E') ON CONFLICT (id) DO UPDATE SET display_name = 'Tenant Admin E2E';`);
-out.push(`INSERT INTO memberships (user_id, organization_id, role, status, is_owner) VALUES ('${tenantAdminId}', 'b2c3d4e5-f6a7-8901-bcde-f12345678901', 'org_admin', 'active', false) ON CONFLICT (user_id, organization_id) DO UPDATE SET role = EXCLUDED.role, status = EXCLUDED.status;`);
+// NOTE: tenantAdminId membership deferred to E2E section — org b2c3d4e5... is created there
 
 let orgAdminIds = [];
 const orgAdminMap = {};
@@ -3230,6 +3230,8 @@ e2eOrgs.forEach(o => {
   const setupTs = o.setup ? 'now()' : 'NULL';
   out.push(`INSERT INTO organizations (id, name, code, status, settings, contact_email, setup_completed_at, updated_at) VALUES ('${o.id}', '${escapeSql(o.name)}', '${o.code}', 'active', '{}', 'e2e-${o.code.toLowerCase()}@vera-eval.test', ${setupTs}, now()) ON CONFLICT (id) DO UPDATE SET setup_completed_at = EXCLUDED.setup_completed_at;`);
 });
+// tenant-admin membership must come after E2E_PERIODS_ORG is created above
+out.push(`INSERT INTO memberships (user_id, organization_id, role, status, is_owner) VALUES ('${tenantAdminId}', '${E2E_PERIODS_ORG}', 'org_admin', 'active', false) ON CONFLICT (user_id, organization_id) DO UPDATE SET role = EXCLUDED.role, status = EXCLUDED.status;`);
 out.push('');
 
 // 2) Fixture periods — inserted unlocked so child INSERTs (period_criteria,
