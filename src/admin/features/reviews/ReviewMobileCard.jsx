@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, Clock } from "lucide-react";
+import { MessageSquare, Clock, ChevronDown } from "lucide-react";
 import { jurorInitials, jurorAvatarBg, jurorAvatarFg } from "@/admin/utils/jurorIdentity";
 import { TeamMembersInline } from "@/shared/ui/EntityMeta";
 import { formatTs } from "@/admin/utils/adminUtils";
@@ -96,12 +96,28 @@ function AdvisedByRow({ advisor }) {
   );
 }
 
+function critAbbrLabel(label) {
+  return (label || "").split(/\s+/).filter(w => /^[a-zA-Z]/.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+}
+
+function parseStudents(students) {
+  if (!students) return [];
+  if (Array.isArray(students)) return students.filter(Boolean);
+  return String(students).split(/[,;]/).map(s => s.trim()).filter(Boolean);
+}
+
 export default function ReviewMobileCard({ row, criteria }) {
   const totalMax = criteria.reduce((s, c) => s + (Number(c.max) || 0), 0);
   const isPartial = row.effectiveStatus === "partial";
   const [commentOpen, setCommentOpen] = useState(false);
+  const [expandOpen, setExpandOpen] = useState(false);
   const submittedTs = formatTs(row.finalSubmittedAt || row.updatedAt);
   const hasSubmittedTs = submittedTs && submittedTs !== "—";
+
+  const members = parseStudents(row.students);
+  const visibleAvatars = members.slice(0, 3);
+  const overflowCount = members.length - visibleAvatars.length;
+  const hasExpandableContent = criteria.length > 0 || members.length > 0 || !!row.advisor;
 
   return (
     <div
@@ -138,25 +154,78 @@ export default function ReviewMobileCard({ row, criteria }) {
             {row.title || row.projectName || "—"}
           </span>
         </div>
-        <MemberChips students={row.students} />
-        <AdvisedByRow advisor={row.advisor} />
       </div>
 
-      {criteria.length > 0 && (
-        <div className="rmc-crit-bars">
-          <span className="meta-chips-eyebrow rmc-crit-heading">CRITERIA SCORES</span>
-          {criteria.map((criterion, idx) => {
-            const value = row[criterion.id] ?? row[criterion.key] ?? null;
-            return (
-              <CritBar
-                key={criterion.id || criterion.key || idx}
-                criterion={criterion}
-                value={value !== undefined ? value : null}
-              />
-            );
-          })}
-        </div>
+      {hasExpandableContent && (
+        <button
+          className={`rmc-toggle-strip row-inline-control${expandOpen ? " rmc-toggle-strip--open" : ""}`}
+          onClick={(e) => { e.stopPropagation(); setExpandOpen(v => !v); }}
+          aria-label={expandOpen ? "Collapse details" : "Expand details"}
+        >
+          <div className="rmc-toggle-summary">
+            <div className="rmc-toggle-pills">
+              {criteria.map((c, i) => {
+                const value = row[c.id] ?? row[c.key] ?? null;
+                const abbr = critAbbrLabel(c.label || c.shortLabel || "");
+                const numVal = value != null && Number.isFinite(Number(value)) ? Math.round(Number(value)) : null;
+                return (
+                  <span
+                    key={c.id || i}
+                    className="rmc-xpill"
+                    style={{ color: c.color || "var(--accent)" }}
+                  >
+                    {abbr}{numVal != null ? ` ${numVal}` : ""}
+                  </span>
+                );
+              })}
+            </div>
+            {visibleAvatars.length > 0 && (
+              <div className="rmc-mini-avatars">
+                {visibleAvatars.map((name, i) => (
+                  <div
+                    key={i}
+                    className="rmc-mini-av"
+                    style={{
+                      background: jurorAvatarBg(name),
+                      color: jurorAvatarFg(name),
+                    }}
+                  >
+                    {(name || "?")[0].toUpperCase()}
+                  </div>
+                ))}
+                {overflowCount > 0 && (
+                  <div className="rmc-mini-av rmc-mini-av--overflow">+{overflowCount}</div>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="rmc-toggle-chevron">
+            <ChevronDown size={11} strokeWidth={2.5} />
+          </div>
+        </button>
       )}
+
+      <div className={`rmc-expand-body${expandOpen ? " rmc-expand-body--open" : ""}`}>
+        <div className="rmc-expand-inner">
+          <MemberChips students={row.students} />
+          <AdvisedByRow advisor={row.advisor} />
+          {criteria.length > 0 && (
+            <div className="rmc-crit-bars">
+              <span className="meta-chips-eyebrow rmc-crit-heading">CRITERIA SCORES</span>
+              {criteria.map((criterion, idx) => {
+                const value = row[criterion.id] ?? row[criterion.key] ?? null;
+                return (
+                  <CritBar
+                    key={criterion.id || criterion.key || idx}
+                    criterion={criterion}
+                    value={value !== undefined ? value : null}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="rmc-footer">
         <div className="rmc-footer-col">
