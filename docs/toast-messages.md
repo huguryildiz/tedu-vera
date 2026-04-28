@@ -363,6 +363,7 @@ Inline errors appear directly in forms, drawers, panels, and screen bodies (not 
 |---|---|
 | Periods load fail | `"Failed to load periods. Try refreshing."` |
 | Clone fail | `"Failed to clone criteria. Please try again."` |
+| Source period empty (info toast) | `"Source period has no criteria to clone"` |
 
 **Criteria Form (`useCriteriaForm`)**
 
