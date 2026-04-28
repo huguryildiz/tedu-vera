@@ -104,6 +104,16 @@ BEGIN
     DELETE FROM auth.users WHERE id = v_user_id;
   END IF;
 
+  PERFORM public._audit_write(
+    v_org_id,
+    'membership.invite.cancelled',
+    'memberships',
+    p_membership_id,
+    'access'::audit_category,
+    'low'::audit_severity,
+    jsonb_build_object('membership_id', p_membership_id)
+  );
+
   RETURN jsonb_build_object('ok', true, 'membership_id', p_membership_id);
 END;
 $$;

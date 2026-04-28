@@ -412,6 +412,16 @@ BEGIN
   SET policy = policy || p_policy, updated_by = auth.uid(), updated_at = now()
   WHERE id = 1;
 
+  PERFORM public._audit_write(
+    NULL,
+    'security.policy.updated',
+    'security_policy',
+    NULL,
+    'security'::audit_category,
+    'high'::audit_severity,
+    jsonb_build_object('updated_fields', (SELECT jsonb_agg(k) FROM jsonb_object_keys(p_policy) k))
+  );
+
   RETURN jsonb_build_object('ok', true)::JSON;
 END;
 $$;
@@ -457,8 +467,15 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, auth
 AS $$
+DECLARE
+  v_org_id UUID;
 BEGIN
   PERFORM _assert_tenant_admin('set_pin_policy');
+  SELECT organization_id INTO v_org_id
+  FROM memberships
+  WHERE user_id = auth.uid() AND status = 'active'
+  LIMIT 1;
+
   IF p_max_attempts IS NULL OR p_max_attempts < 1 THEN
     RAISE EXCEPTION 'invalid_max_attempts';
   END IF;
@@ -478,6 +495,21 @@ BEGIN
     updated_by = auth.uid(),
     updated_at = now()
   WHERE id = 1;
+
+  PERFORM public._audit_write(
+    v_org_id,
+    'security.pin_policy.updated',
+    'security_policy',
+    NULL,
+    'security'::audit_category,
+    'medium'::audit_severity,
+    jsonb_build_object(
+      'maxPinAttempts', p_max_attempts,
+      'pinLockCooldown', p_cooldown,
+      'qrTtl', p_qr_ttl
+    )
+  );
+
   RETURN jsonb_build_object('ok', true)::JSON;
 END;
 $$;
