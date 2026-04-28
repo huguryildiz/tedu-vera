@@ -9,7 +9,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(4);
+SELECT plan(5);
 
 SELECT pgtap_test.seed_two_orgs();
 
@@ -96,6 +96,16 @@ SELECT is(
    )->>'ok')::boolean),
   true,
   'super admin bypasses scores guard and unlocks'::text
+);
+
+-- ────────── 5. audit row written for period.unlock ──────────
+SELECT ok(
+  EXISTS(
+    SELECT 1 FROM audit_logs
+    WHERE action = 'period.unlock'
+      AND resource_id = 'cccc0000-0000-4000-8000-0000000000a3'::uuid
+  ),
+  'rpc_admin_set_period_lock writes period.unlock to audit_logs'::text
 );
 
 SELECT pgtap_test.become_reset();

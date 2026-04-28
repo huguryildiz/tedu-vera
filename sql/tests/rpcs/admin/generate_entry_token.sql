@@ -10,7 +10,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(5);
+SELECT plan(6);
 
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.seed_periods();  -- A1 unlocked, A2 locked, B1 unlocked, B2 locked
@@ -66,6 +66,15 @@ SELECT is(
    WHERE id = '77770000-0000-4000-8000-000000000001'::uuid),
   true,
   'previous active token on the period was revoked during generation'::text
+);
+
+-- ────────── 6. audit row written for token.generate ──────────
+SELECT ok(
+  EXISTS(
+    SELECT 1 FROM audit_logs
+    WHERE action = 'token.generate'
+  ),
+  'rpc_admin_generate_entry_token writes token.generate to audit_logs'::text
 );
 
 SELECT COALESCE(

@@ -9,7 +9,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(7);
+SELECT plan(8);
 
 -- ────────── 1. signature pinned ──────────
 SELECT has_function(
@@ -93,6 +93,15 @@ SELECT ok(
   (SELECT (r ? 'ok')
    FROM (SELECT rpc_admin_approve_join_request('f0000000-0000-0000-0000-000000001003'::uuid)::jsonb AS r) t),
   'successful response has ok key'
+);
+
+-- ────────── 8. audit row written for membership.join_approved ──────────
+SELECT ok(
+  EXISTS(
+    SELECT 1 FROM audit_logs
+    WHERE action = 'membership.join_approved'
+  ),
+  'rpc_admin_approve_join_request writes membership.join_approved to audit_logs'
 );
 
 SELECT pgtap_test.become_reset();

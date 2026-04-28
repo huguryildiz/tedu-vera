@@ -552,8 +552,12 @@ const ITEMS = [
       if (!fileExists("e2e/helpers/audit.ts") && !fileExists("e2e/helpers/audit.js")) {
         return "missing";
       }
+      // Admin specs import assertAuditEntry / findAuditEntries from auditHelpers.ts
+      // via single-line import statements. The old pattern matched multi-line
+      // query chains (audit_logs + .select on the next line) and found 0 files.
+      // This pattern detects helper usage reliably.
       const hits = grepCount(
-        "audit_logs.*select|from\\(.audit_logs.\\)\\.select",
+        "assertAuditEntry|findAuditEntries|expectAuditRow|auditHelpers",
         ["e2e/admin"],
         {}
       );
