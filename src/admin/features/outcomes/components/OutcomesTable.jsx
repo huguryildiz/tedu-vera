@@ -84,6 +84,8 @@ export default function OutcomesTable({
                 <FloatingMenu
                   trigger={
                     <button
+                      type="button"
+                      aria-label="Outcomes actions"
                       className="crt-kebab-inline"
                       onClick={() => setOpenMenuId(openMenuId === "acc-header" ? null : "acc-header")}
                     >

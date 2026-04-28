@@ -61,6 +61,8 @@ export default function CriteriaTable({
               <FloatingMenu
                 trigger={
                   <button
+                    type="button"
+                    aria-label="Criteria actions"
                     className="crt-kebab-inline"
                     onClick={() => setOpenMenuId(openMenuId === "crt-header" ? null : "crt-header")}
                   >
