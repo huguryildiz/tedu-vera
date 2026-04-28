@@ -38,21 +38,11 @@ vi.mock("@/shared/hooks/useToast", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }),
 }));
 
-vi.mock("../useAnalyticsData", () => ({
-  useAnalyticsData: () => ({
-    trendData: [],
-    trendLoading: false,
-    trendError: "",
-    outcomeTrendData: [],
-    outcomeTrendLoading: false,
-    outcomeTrendError: "",
-    trendPeriodIds: [],
-    setTrendPeriodIds: vi.fn(),
-  }),
-}));
-
+// API boundary — useAnalyticsData runs real and calls these.
 vi.mock("@/shared/api", () => ({
   logExportInitiated: vi.fn(),
+  getOutcomeTrends: vi.fn().mockResolvedValue([]),
+  getOutcomeAttainmentTrends: vi.fn().mockResolvedValue([]),
 }));
 vi.mock("@/shared/stats", () => ({ outcomeValues: () => [] }));
 vi.mock("@/admin/utils/exportXLSX", () => ({

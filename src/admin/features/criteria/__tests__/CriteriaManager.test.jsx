@@ -4,39 +4,21 @@ import { qaTest } from "@/test/qaTest";
 
 const EMPTY_ARRAY = Object.freeze([]);
 
-const MOCK_FORM = Object.freeze({
-  rows: EMPTY_ARRAY,
-  activeRows: EMPTY_ARRAY,
-  saveError: "",
-  saving: false,
-  saveAttempted: false,
-  pendingDeleteIndex: null,
-  setPendingDeleteIndex: vi.fn(),
-  errors: {},
-  rubricErrorsByCriterion: {},
-  totalMax: 100,
-  totalOk: true,
-  saveBlockReasons: EMPTY_ARRAY,
-  canSave: true,
-  fullyLocked: false,
-  outcomeByCode: new Map(),
-  sanitizeOutcomeSelection: (s) => s || EMPTY_ARRAY,
-  markTouched: vi.fn(),
-  setRow: vi.fn(),
-  addRow: vi.fn(),
-  requestRemoveRow: vi.fn(),
-  confirmRemoveRow: vi.fn(),
-  toggleRubric: vi.fn(),
-  toggleOutcome: vi.fn(),
-  toggleCriterionCard: vi.fn(),
-  sensors: EMPTY_ARRAY,
-  handleDragEnd: vi.fn(),
-  handleSave: vi.fn(),
-});
-
-vi.mock("../useCriteriaForm", () => ({
-  useCriteriaForm: () => ({ ...MOCK_FORM }),
-}));
+// Real useCriteriaForm + criteriaFormHelpers run. Template totals 100
+// so the weight summary renders the "100" text node and the "Valid"
+// badge (totalOk=true). Sub-components stay mocked to keep scope tight.
+const VALID_TEMPLATE = Object.freeze([
+  Object.freeze({
+    key: "k1",
+    label: "Criterion 1",
+    shortLabel: "C1",
+    color: "#3b82f6",
+    max: 100,
+    blurb: "blurb",
+    outcomes: [],
+    rubric: [],
+  }),
+]);
 
 vi.mock("../CriterionEditor", () => ({
   default: () => <div data-testid="criterion-editor" />,
@@ -44,15 +26,6 @@ vi.mock("../CriterionEditor", () => ({
 
 vi.mock("../CriterionDeleteDialog", () => ({
   default: () => null,
-}));
-
-vi.mock("../criteriaFormHelpers", () => ({
-  getCriterionDisplayName: () => "Criterion 1",
-  templateToRow: (c, i) => ({ ...c, _id: `row-${i}` }),
-  emptyRow: () => ({ _id: "empty-0" }),
-  clampRubricBandsToCriterionMax: (bands) => bands,
-  defaultRubricBands: [],
-  getConfigRubricSeed: () => [],
 }));
 
 vi.mock("@dnd-kit/core", () => ({
@@ -93,7 +66,7 @@ import CriteriaManager from "../CriteriaManager";
 
 describe("CriteriaManager", () => {
   qaTest("coverage.criteria-manager.weight-summary", () => {
-    render(<CriteriaManager template={EMPTY_ARRAY} outcomeConfig={EMPTY_ARRAY} />);
+    render(<CriteriaManager template={VALID_TEMPLATE} outcomeConfig={EMPTY_ARRAY} />);
     expect(screen.getByText("Total weight")).toBeInTheDocument();
     expect(screen.getByText("100")).toBeInTheDocument();
   });
@@ -101,7 +74,7 @@ describe("CriteriaManager", () => {
   qaTest("coverage.criteria-manager.locked-notice", () => {
     render(
       <CriteriaManager
-        template={EMPTY_ARRAY}
+        template={VALID_TEMPLATE}
         outcomeConfig={EMPTY_ARRAY}
         isLocked={true}
       />

@@ -36,68 +36,19 @@ vi.mock("@/shared/hooks/useToast", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }),
 }));
 
+// API boundary — useAuditLogFilters runs real and calls these.
 vi.mock("@/shared/api", () => ({
   verifyAuditChain: vi.fn(),
-}));
-
-const mockAuditState = {
-  showAuditSkeleton: false,
-};
-
-vi.mock("../useAuditLogFilters", () => ({
-  useAuditLogFilters: () => ({
-    auditLogs: [],
-    auditLoading: false,
-    auditError: "",
-    auditFilters: {},
-    setAuditFilters: vi.fn(),
-    auditSearch: "",
-    setAuditSearch: vi.fn(),
-    auditHasMore: false,
-    auditTotalCount: 0,
-    auditExporting: false,
-    showAllAuditLogs: false,
-    setShowAllAuditLogs: vi.fn(),
-    auditScrollRef: { current: null },
-    auditSentinelRef: { current: null },
-    auditCardRef: { current: null },
-    AUDIT_COMPACT_COUNT: 10,
-    visibleAuditLogs: [],
-    hasAuditFilters: false,
-    hasAuditToggle: false,
-    ...mockAuditState,
-    isAuditStaleRefresh: false,
-    auditRangeError: "",
-    handleAuditRefresh: vi.fn(),
-    handleAuditReset: vi.fn(),
-    handleAuditLoadMore: vi.fn(),
-    handleAuditExport: vi.fn(),
-    scheduleAuditRefresh: vi.fn(),
-    formatAuditTimestamp: vi.fn(() => ""),
-  }),
+  listAuditLogs: vi.fn().mockResolvedValue({ data: [], totalCount: 0 }),
+  logExportInitiated: vi.fn().mockResolvedValue({}),
 }));
 
 vi.mock("@/admin/shared/usePageRealtime", () => ({
   usePageRealtime: vi.fn(),
 }));
 
-vi.mock("@/admin/utils/auditUtils", () => ({
-  getActorInfo: vi.fn(() => ({ name: "Admin", avatar: "" })),
-  formatActionLabel: vi.fn(() => ""),
-  formatActionDetail: vi.fn(() => ""),
-  formatSentence: vi.fn(() => ""),
-  formatDiffChips: vi.fn(() => []),
-  detectAnomalies: vi.fn(() => []),
-  CATEGORY_META: {},
-  SEVERITY_META: {},
-  groupBulkEvents: vi.fn((logs) => logs),
-  formatEventMeta: vi.fn(() => ({})),
-  addDaySeparators: vi.fn((logs) => logs),
-}));
-
-vi.mock("@/admin/utils/auditColumns", () => ({
-  AUDIT_TABLE_COLUMNS: [],
-}));
+// Real auditUtils + auditColumns run — they're pure helpers; with empty
+// auditLogs = [] none of the formatters get exercised.
 
 vi.mock("@/admin/shared/ExportPanel", () => ({ default: () => null }));
 vi.mock("@/shared/ui/CustomSelect", () => ({ default: () => null }));
@@ -120,10 +71,6 @@ function renderPage() {
 }
 
 describe("AuditLogPage", () => {
-  beforeEach(() => {
-    mockAuditState.showAuditSkeleton = false;
-  });
-
   qaTest("admin.audit.page.mounts-with-no-filters", () => {
     renderPage();
     expect(document.body.textContent.length).toBeGreaterThan(0);
@@ -144,13 +91,17 @@ describe("AuditLogPage", () => {
     expect(screen.getByTestId("audit-log-search")).toBeInTheDocument();
   });
 
-  qaTest("admin.audit.page.no-events-yet", () => {
+  qaTest("admin.audit.page.no-events-yet", async () => {
     renderPage();
+    // Real hook resolves listAuditLogs → empty → renders empty state.
+    await screen.findAllByText("No audit events yet.");
     expect(screen.getAllByText("No audit events yet.").length).toBeGreaterThan(0);
   });
 
   qaTest("admin.audit.page.skeleton-shown", () => {
-    mockAuditState.showAuditSkeleton = true;
+    // Real hook sets auditLoading=true synchronously on mount before the
+    // listAuditLogs promise resolves. While auditLogs is empty + loading,
+    // the skeleton row renders.
     renderPage();
     expect(document.querySelector(".audit-skeleton-row")).not.toBeNull();
   });

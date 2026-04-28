@@ -32,9 +32,7 @@ vi.mock("@/shared/hooks/useToast", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }),
 }));
 
-vi.mock("@/admin/features/settings/useAdminTeam", () => ({
-  useAdminTeam: () => ({ team: [], loading: false, error: null }),
-}));
+// Real useAdminTeam runs — mock its API dependencies at the boundary.
 
 const { EMPTY_SESSIONS } = vi.hoisted(() => ({
   EMPTY_SESSIONS: Object.freeze([]),
@@ -42,6 +40,7 @@ const { EMPTY_SESSIONS } = vi.hoisted(() => ({
 
 vi.mock("@/shared/api", () => ({
   upsertProfile: vi.fn(),
+  listOrgAdminMembers: vi.fn().mockResolvedValue({ members: [], adminsCanInvite: false }),
   getSecurityPolicy: vi.fn().mockResolvedValue({
     googleOAuth: true,
     emailPassword: true,

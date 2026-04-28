@@ -1,154 +1,87 @@
 # Page-Test Mock-Tautology Audit
 
-**Date:** 2026-04-25  
-**Scope:** Admin page component tests (`src/admin/features/*/__tests__/*Page.test.jsx`)  
-**Total Files Audited:** 17  
-**Refactored Examples:** 1 (JurorsPage)
+**Original audit:** 2026-04-25
+**Last refreshed:** 2026-04-28
+**Scope:** Admin page component tests (`src/admin/features/*/__tests__/*Page.test.jsx`) + adjacent admin component tests
 
 ---
 
 ## Executive Summary
 
-This audit identifies test files that mock the page's own orchestration hooks (tautology pattern) vs. those that mock only the API/Supabase boundary (clean pattern). The clean pattern allows real hooks to run while controlling dependencies; tautology breaks the contract being tested.
+This audit tracks which test files mock the page's own orchestration
+hooks (the **tautology pattern** — closed-loop, no real behavior under
+test) vs. which mock only at the API or Supabase boundary (the **clean
+pattern** — hook orchestrates real logic).
 
-**Key Finding:** 9 of 17 admin page tests use the tautology pattern. Converting to the clean pattern uncovers actual behavior bugs and improves test reliability.
-
-**Example Conversion:** JurorsPage demonstrates the refactoring approach — replacing a mock of `useManageJurors` with explicit API layer mocks (`listJurorsSummary`, `getScores`, etc.), letting the hook orchestrate real logic. All 6 tests pass green after conversion.
-
----
-
-## Clean Pattern (8 files)
-
-These files mock only at the API or Supabase boundary. Orchestration hooks run real logic.
-
-1. **src/admin/features/analytics/__tests__/AnalyticsPage.test.jsx** (115 lines)
-   - Mocks: `@/shared/api` (getScores, etc.)
-   - Hook: `useAdminData` runs real
-   - Pattern: Correct
-
-2. **src/admin/features/audit/__tests__/AuditLogPage.test.jsx** (94 lines)
-   - Mocks: `@/shared/api` (getAuditLog)
-   - Hook: None mocked
-   - Pattern: Correct
-
-3. **src/admin/features/entry-control/__tests__/EntryControlPage.test.jsx** (118 lines)
-   - Mocks: `@/shared/api` (generateEntryToken, revokeEntryToken)
-   - Hook: `useAdminData` runs real
-   - Pattern: Correct
-
-4. **src/admin/features/export/__tests__/ExportPage.test.jsx** (96 lines)
-   - Mocks: `@/shared/api` (exportScoresForPeriod, etc.)
-   - Hook: None mocked
-   - Pattern: Correct
-
-5. **src/admin/features/overview/__tests__/OverviewPage.test.jsx** (98 lines)
-   - Mocks: `@/shared/api` (getScores, listPeriods, etc.)
-   - Hook: `useAdminData` runs real
-   - Pattern: Correct
-
-6. **src/admin/features/rankings/__tests__/RankingsPage.test.jsx** (103 lines)
-   - Mocks: `@/shared/api` (getScores)
-   - Hook: `useAdminData` runs real
-   - Pattern: Correct
-
-7. **src/admin/features/settings/__tests__/SettingsPage.test.jsx** (123 lines)
-   - Mocks: `@/shared/api` (getSecurityPolicy, setPinPolicy, etc.)
-   - Hook: None mocked; context mocked
-   - Pattern: Correct
-
-8. **src/admin/features/setup-wizard/__tests__/SetupWizardPage.test.jsx** (116 lines)
-   - Mocks: `@/shared/api` (createPeriod, listPeriodCriteria, etc.)
-   - Hook: `useSetupWizard` mocked (acceptable—state machine, not orchestration)
-   - Pattern: Correct
+**Current state (2026-04-28):** **Zero tautology files remain.** All
+page tests follow the clean pattern. The few remaining `vi.mock(".../use*")`
+calls are justified leaf-hook or sibling-dependency mocks documented
+in § "Justified Leaf-Hook Mocks" below.
 
 ---
 
-## Tautology Pattern (9 files)
+## Refactoring History
 
-These files mock the page's orchestration hook, making tests closed-loop and unreliable.
+### Original 9 tautology files (audit 2026-04-25)
 
-1. **src/admin/features/criteria/__tests__/CriteriaPage.test.jsx** (159 lines)
-   - Tautology: Mocks `useManagePeriods` (line 36)
-   - Hook should load periods; test never exercises real period-loading logic
-   - Impact: High—affects period selection, filtering logic
-   - Refactor: Replace mock with API mocks (listPeriods, savePeriodCriteria)
+All cleared — see commits `19330d10` (phase-4 tautology refactor),
+`465e12fc` (drop final `useManagePeriods` mock from ProjectsPage):
 
-2. **src/admin/features/heatmap/__tests__/HeatmapPage.test.jsx** (124 lines)
-   - Tautology: Mocks `useHeatmapData`, `useGridSort`, `useGridExport` (lines 16–18)
-   - All three are orchestration hooks; test doesn't exercise real data transformation
-   - Impact: Very High—heatmap is analytics-critical
-   - Refactor: Mock API (getScores); let hooks compute real grid state
+| File | Hook unmocked | Status |
+|---|---|---|
+| `JurorsPage.test.jsx` | `useManageJurors` | ✅ done |
+| `CriteriaPage.test.jsx` | `useManagePeriods` | ✅ done |
+| `HeatmapPage.test.jsx` | `useHeatmapData`, `useGridSort`, `useGridExport` | ✅ done |
+| `OrganizationsPage.test.jsx` | `useManageOrganizations` | ✅ done |
+| `OutcomesPage.test.jsx` | `usePeriodOutcomes` | ✅ done |
+| `PeriodsPage.test.jsx` | `useManagePeriods` | ✅ done |
+| `PinBlockingPage.test.jsx` | `usePinBlocking` | ✅ done |
+| `ProjectsPage.test.jsx` | `useManageProjects` | ✅ done |
+| `ReviewsPage.test.jsx` | `useReviewsFilters` | ✅ done |
 
-3. **src/admin/features/jurors/__tests__/JurorsPage.test.jsx** (230 lines, **refactored**)
-   - Former Tautology: Mocked `useManageJurors` (full state mocked)
-   - Now: Clean pattern—mocks API (listJurorsSummary, getScores, etc.)
-   - Result: 6 tests pass; hook orchestrates real CRUD logic
-   - Impact: Converted successfully
+### Tautologies discovered in second sweep (2026-04-28)
 
-4. **src/admin/features/organizations/__tests__/OrganizationsPage.test.jsx** (108 lines)
-   - Tautology: Mocks `useManageOrganizations` (line 24)
-   - Prevents testing of org creation, deletion, patching logic
-   - Impact: Medium—org management is admin-critical
-   - Refactor: Mock API (createOrganization, updateOrganization, deleteOrganization)
+These were not in the original 2026-04-25 inventory; they appeared
+between the audit and the next sweep. All cleared in the same session
+(`.claude/internal/plans/2026-04-28-remove-tautology-page-tests/`):
 
-5. **src/admin/features/outcomes/__tests__/OutcomesPage.test.jsx** (136 lines)
-   - Tautology: Mocks `usePeriodOutcomes` (line 33)
-   - Test never exercises outcome mapping, framework import, save logic
-   - Impact: Very High—outcomes drive rubric and analytics
-   - Refactor: Mock API (listPeriodOutcomes, upsertPeriodCriterionOutcomeMap)
-
-6. **src/admin/features/periods/__tests__/PeriodsPage.test.jsx** (148 lines)
-   - Tautology: Mocks `useManagePeriods` (line 36)
-   - Period CRUD, validation, publishing — all bypassed in test
-   - Impact: Critical—core admin feature
-   - Refactor: Mock API (createPeriod, updatePeriod, publishPeriod, etc.)
-
-7. **src/admin/features/pin-blocking/__tests__/PinBlockingPage.test.jsx** (96 lines)
-   - Tautology: Mocks `usePinBlocking` (line 18)
-   - PIN block logic, juror filtering, release mechanism untested
-   - Impact: High—security-adjacent feature
-   - Refactor: Mock API (getBlockedPins, releasePin, etc.)
-
-8. **src/admin/features/projects/__tests__/ProjectsPage.test.jsx** (124 lines)
-   - Tautology: Mocks `useManageProjects` (line 16)
-   - Project CRUD, team member tracking, score computation all mocked away
-   - Impact: High—project data drives scoring UI
-   - Refactor: Mock API (listProjects, createProject, updateProject, deleteProject)
-
-9. **src/admin/features/reviews/__tests__/ReviewsPage.test.jsx** (112 lines)
-   - Tautology: Mocks `useReviewsFilters` (line 19)
-   - Filter state, filtered dataset computation, jury review status all bypassed
-   - Impact: Medium—filtering logic untested
-   - Refactor: Mock API (getReviews, getScores); let hook compute filters
+| File | Hook unmocked | Boundary mocks added |
+|---|---|---|
+| `AnalyticsPage.test.jsx` | `useAnalyticsData` | `getOutcomeTrends`, `getOutcomeAttainmentTrends` |
+| `AuditLogPage.test.jsx` | `useAuditLogFilters` | `listAuditLogs`, `logExportInitiated` |
+| `CriteriaManager.test.jsx` | `useCriteriaForm` | (real `criteriaFormHelpers` + `validatePeriodCriteria` run; no API calls in this hook) |
+| `SettingsPage.test.jsx` | `useAdminTeam` | `listOrgAdminMembers` |
 
 ---
 
-## Borderline Cases (0 files)
+## Justified Leaf-Hook Mocks (NOT tautologies)
 
-No borderline files identified. All 17 files clearly fall into Clean or Tautology patterns.
+These `vi.mock("../use*", …)` calls remain by design. Each mocks
+something at a legitimate boundary, not the page's own orchestration:
 
----
+| File | Mocked hook | Reason it is justified |
+|---|---|---|
+| `JurorsPage.test.jsx` | `useAdminResponsiveTableMode` | Pure responsive utility (window.matchMedia wrapper); jsdom needs deterministic viewport mode. |
+| `JurorsPage.test.jsx` | `useManagePeriods` | **Sibling** dependency — JurorsPage's *own* orchestration is `useManageJurors` (which runs real). `useManagePeriods` only supplies the period selector dropdown data; the page is not the unit-under-test for that hook. |
+| `JurorsPage.test.jsx` | `useManageProjects` | Same: sibling dependency for the projects dropdown. |
+| `CriteriaPage.test.jsx` | `useCriteriaExport` | Single-purpose export hook (only side effect: `logExportInitiated`); not orchestration. |
+| `OutcomesPage.test.jsx` | `useOutcomesExport` | Same: single-purpose export hook. |
+| `SetupWizardPage.test.jsx` | `useSetupWizard` | State-machine hook (no API side effects); audit explicitly approved this exception. |
+| `useAdminData.test.js` | `useAdminRealtime` | This test's *unit under test* is `useAdminData`; `useAdminRealtime` is its child — boundary mock. |
+| `filterPipeline.test.js` | `useReviewsFilters` | Selector test imports only the *pure utility exports* (`buildDateRange`, `toFiniteNumber`, etc.) from the same module that exports the hook. The mock returns those utilities only, not the hook state. |
 
-## Refactoring Strategy
-
-**Immediate:** JurorsPage (completed; 6 tests green)
-
-**High Priority (Q2 2026):**
-- PeriodsPage (critical admin feature)
-- HeatmapPage (analytics cornerstone)
-- OutcomesPage (rubric/mapping critical)
-
-**Medium Priority (Q3 2026):**
-- ProjectsPage, OrganizationsPage, CriteriaPage, PinBlockingPage
-
-**Low Priority (Q3+ 2026):**
-- ReviewsPage
+**Rule of thumb:** mocking is acceptable when the mocked module is at
+a real boundary (API, network, time, third-party) OR is a sibling
+dependency of the unit-under-test rather than its own orchestration.
+Mocking the page's *own* state-and-effects hook is the tautology
+pattern this document tracks.
 
 ---
 
 ## Pattern Reference: Clean vs. Tautology
 
 **Tautology (Anti-Pattern):**
+
 ```javascript
 vi.mock("../useManageJurors", () => ({
   useManageJurors: () => ({
@@ -157,28 +90,52 @@ vi.mock("../useManageJurors", () => ({
     // ... all behavior mocked
   }),
 }));
-// Test proves nothing; hook never runs
+// Test proves nothing; hook never runs.
 ```
 
 **Clean (Best Practice):**
+
 ```javascript
-const mockListJurorsSummary = vi.fn();
-const mockGetScores = vi.fn();
-
 vi.mock("@/shared/api", () => ({
-  listJurorsSummary: (...a) => mockListJurorsSummary(...a),
-  getScores: (...a) => mockGetScores(...a),
+  listJurorsSummary: vi.fn().mockResolvedValue([]),
+  getScores: vi.fn().mockResolvedValue([]),
+  // ... boundary only
 }));
-
-beforeEach(() => {
-  mockListJurorsSummary.mockResolvedValue([]);
-  mockGetScores.mockResolvedValue([]);
-  // Hook runs real; API calls controlled
-});
+beforeEach(() => { /* per-test data overrides */ });
+// Hook runs real; API calls controlled at the boundary.
 ```
+
+---
+
+## How to keep it at zero
+
+When adding a new admin page test, follow this checklist:
+
+1. **Do NOT mock the page's own `use<X>` hook.** Mock its API
+   dependencies instead.
+2. **Mock at `@/shared/api`** (or `@/shared/lib/supabaseClient`) for
+   network calls.
+3. **Mock at `@/admin/shared/usePageRealtime`** for realtime — these
+   are E2E-tested separately.
+4. **Pre-existing leaf-hook mocks** (toast, card selection, floating,
+   responsive mode) stay — they're at module/utility boundaries.
+5. **Run** `grep -rn 'vi\.mock("\.\./use' src/` after the change. Every
+   hit should appear in the "Justified Leaf-Hook Mocks" table above.
+   If yours doesn't, you've added a tautology — refactor it before
+   merging.
+
+The audit-and-refresh cadence is on-demand: re-run the comprehensive
+scan whenever a new page test is added or a hook is extracted from a
+page (the second case is exactly how the four 2026-04-28 tautologies
+appeared).
 
 ---
 
 ## Conclusion
 
-Tautology tests create false confidence. Conversion to the clean pattern immediately uncovered real behavior; all refactored tests pass, proving the approach is sound. Systematically converting the remaining 9 files will improve test reliability and catch actual bugs during CI.
+Tautology tests create false confidence; converting them to the clean
+pattern proves the page's hook contract works against a controlled
+boundary instead of against itself. As of 2026-04-28 the entire admin
+page test suite is at zero tautology files; the rule going forward is
+"if it's a `use<X>` from the same folder as the page, do not mock it
+unless it's on the justified leaf list."
