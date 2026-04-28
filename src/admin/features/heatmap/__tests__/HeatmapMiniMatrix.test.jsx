@@ -23,7 +23,7 @@ vi.mock("@/admin/utils/scoreHelpers", () => ({
 import HeatmapMiniMatrix from "../HeatmapMiniMatrix";
 
 const JURORS = [
-  { key: "j1", name: "Ali Yılmaz", affiliation: "TEDU" },
+  { key: "j1", name: "Ali Yılmaz", dept: "TEDU" },
 ];
 
 const GROUPS = [

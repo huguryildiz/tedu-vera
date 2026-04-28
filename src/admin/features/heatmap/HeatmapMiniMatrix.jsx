@@ -81,8 +81,8 @@ export default function HeatmapMiniMatrix({
               <tr key={juror.key}>
                 <td className="hm-mm-juror-col">
                   <span className="hm-mm-juror-name">{juror.name}</span>
-                  {juror.affiliation && (
-                    <span className="hm-mm-juror-affil">{juror.affiliation}</span>
+                  {juror.dept && (
+                    <span className="hm-mm-juror-affil">{juror.dept}</span>
                   )}
                 </td>
                 {groups.map((g) => {

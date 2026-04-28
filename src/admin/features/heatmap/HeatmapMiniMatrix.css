@@ -57,9 +57,10 @@
   max-width: 36px;
   padding: 5px 2px;
   text-align: center;
-  font-size: 8px;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: var(--mono);
   border-bottom: 1px solid var(--border);
   overflow: hidden;
   white-space: nowrap;
