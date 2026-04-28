@@ -13767,5 +13767,77 @@
     "coverageStrength": "Strong",
     "severity": "high",
     "status": "completed"
+  },
+  {
+    "id": "rank.computeWeightedScore.full-score",
+    "module": "Admin / Rankings / rankingHelpers",
+    "area": "scoring",
+    "story": "computeWeightedScore — full score returns 100",
+    "scenario": "All criteria scored at max; result equals 100.",
+    "whyItMatters": "Client-side weighted score mirrors DB aggregation used for rankings.",
+    "risk": "Wrong formula produces incorrect rankings in preview mode.",
+    "coverageStrength": "Strong",
+    "severity": "normal",
+    "status": "completed"
+  },
+  {
+    "id": "rank.computeWeightedScore.partial",
+    "module": "Admin / Rankings / rankingHelpers",
+    "area": "scoring",
+    "story": "computeWeightedScore — partial score normalised correctly",
+    "scenario": "Half of max scored on one criterion, zero on the other; returns 30 for criteria with max [30,20].",
+    "whyItMatters": "Normalization must account for asymmetric criterion weights.",
+    "risk": "Linear sum without normalization inflates scores for heavy criteria.",
+    "coverageStrength": "Strong",
+    "severity": "normal",
+    "status": "completed"
+  },
+  {
+    "id": "rank.computeWeightedScore.empty",
+    "module": "Admin / Rankings / rankingHelpers",
+    "area": "scoring",
+    "story": "computeWeightedScore — empty criteria returns 0",
+    "scenario": "No criteria configured; function returns 0 without dividing by zero.",
+    "whyItMatters": "Edge case for periods without criteria must not crash.",
+    "risk": "Division by zero on empty criteria array.",
+    "coverageStrength": "Strong",
+    "severity": "normal",
+    "status": "completed"
+  },
+  {
+    "id": "rank.computeRanks.tieBreak-two-way",
+    "module": "Admin / Rankings / rankingHelpers",
+    "area": "ranking",
+    "story": "computeRanks — two-way tie shares rank and skips next",
+    "scenario": "Two projects with identical totalAvg both receive rank 1; third project receives rank 3.",
+    "whyItMatters": "Competition ranking (1,1,3,4…) is the standard used in academia.",
+    "risk": "Dense ranking (1,2,3) would misrepresent tied projects.",
+    "coverageStrength": "Strong",
+    "severity": "normal",
+    "status": "completed"
+  },
+  {
+    "id": "rank.computeRanks.no-tie",
+    "module": "Admin / Rankings / rankingHelpers",
+    "area": "ranking",
+    "story": "computeRanks — distinct scores produce sequential ranks",
+    "scenario": "Three projects with descending totalAvg receive ranks 1, 2, 3.",
+    "whyItMatters": "Baseline sanity check for the ranking function.",
+    "risk": "Off-by-one in rank counter would shift all ranks.",
+    "coverageStrength": "Strong",
+    "severity": "normal",
+    "status": "completed"
+  },
+  {
+    "id": "criteria.helpers.14",
+    "module": "Admin / Criteria / criteriaFormHelpers",
+    "area": "weight-validation",
+    "story": "rescaleRubricBandsByWeight — totalWeight preserved",
+    "scenario": "Bands rescaled to new max preserve proportional coverage; totalWeight assertion confirms sum equals newMax.",
+    "whyItMatters": "Rescale must keep full 0-to-max span intact after weight changes.",
+    "risk": "Mis-scaled bands create gaps or overlaps in the rubric.",
+    "coverageStrength": "Strong",
+    "severity": "normal",
+    "status": "completed"
   }
 ]

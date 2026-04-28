@@ -28,6 +28,7 @@ import {
   getBandRangeLabel,
   getCriterionTintStyle,
   getCriterionDisplayName,
+  rescaleRubricBandsByWeight,
 } from "../criteriaFormHelpers.js";
 
 describe("admin/features/criteria/criteriaFormHelpers", () => {
@@ -120,5 +121,18 @@ describe("admin/features/criteria/criteriaFormHelpers", () => {
     expect(getCriterionDisplayName({ label: "Technical" }, 0)).toBe("Technical");
     expect(getCriterionDisplayName({ label: "", shortLabel: "Tech" }, 0)).toBe("Tech");
     expect(getCriterionDisplayName({ label: "", shortLabel: "" }, 2)).toBe("Criterion 3");
+  });
+
+  qaTest("criteria.helpers.14", () => {
+    // rescaleRubricBandsByWeight: the highest band max must equal newMax (totalWeight).
+    const bands = [
+      { min: 0, max: 30, level: "Insufficient", desc: "" },
+      { min: 30, max: 50, level: "Developing", desc: "" },
+      { min: 50, max: 100, level: "Excellent", desc: "" },
+    ];
+    const newMax = 40;
+    const rescaled = rescaleRubricBandsByWeight(bands, newMax);
+    const totalWeight = Number(rescaled[rescaled.length - 1].max);
+    expect(totalWeight).toBe(newMax);
   });
 });

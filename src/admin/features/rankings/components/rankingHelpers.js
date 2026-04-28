@@ -1,3 +1,13 @@
+// Weighted percentage score: sum(score_i) / sum(max_i) * 100.
+// Mirrors DB-side aggregation; client-side use is for testing and preview.
+export function computeWeightedScore(scores, criteria) {
+  if (!criteria || criteria.length === 0) return 0;
+  const totalMax = criteria.reduce((s, c) => s + (c.max || 0), 0);
+  if (totalMax === 0) return 0;
+  const raw = criteria.reduce((s, c) => s + (scores[c.id] ?? 0), 0);
+  return (raw / totalMax) * 100;
+}
+
 // Tied scores share the same rank; next rank skips (1,1,3,4,…).
 export function computeRanks(sortedRows) {
   const map = {};
