@@ -15,7 +15,7 @@ For the runner, see [`sql/tests/RUNNING.md`](../../sql/tests/RUNNING.md).
 | Subdirectory | Tests |
 | --- | --- |
 | `sql/tests/rls/` | Row Level Security isolation per tenant-scoped table. Every isolated table has a paired `<table>_isolation.sql` test. |
-| `sql/tests/rpcs/admin/` | Admin RPC contract tests (positional args, return shape, raise conditions). |
+| `sql/tests/rpcs/admin/` | Admin RPC tests — two kinds in the same directory: **contract tests** (positional args, return shape, raise conditions) and **state-mutation tests** (side-effects: rows updated, audit rows written, idempotency). |
 | `sql/tests/rpcs/jury/` | Jury RPC contract tests. |
 | `sql/tests/rpcs/contracts/` | Cross-cutting RPC behavior (return-shape stability, error codes). |
 | `sql/tests/migrations/` | Migration-shape assertions (e.g. expected enum values, indexed columns). |
@@ -156,6 +156,12 @@ When adding a new test, copy the closest match:
   consistent skeleton.
 - **RPC contract:** any file in `sql/tests/rpcs/admin/` or
   `sql/tests/rpcs/jury/`.
+- **RPC state-mutation:** `sql/tests/rpcs/admin/jury_finalize_submission.sql`,
+  `sql/tests/rpcs/admin/publish_period.sql`, or
+  `sql/tests/rpcs/admin/close_period.sql`. These verify side-effects that
+  a pure contract test cannot assert: rows updated after the call
+  (`closed_at`, `final_submitted_at`, `is_locked`), entry tokens revoked,
+  audit rows written, and idempotency on a second call.
 - **Trigger:** `sql/tests/triggers/audit_logs_hash_chain.test.sql` is
   the canonical reference for assertions about derived columns.
 
