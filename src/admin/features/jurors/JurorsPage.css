@@ -360,23 +360,23 @@
     opacity: 0.35;
   }
 
-  /* ── Header ── */
-  .jc-header {
+  /* ── Row 1: avatar + [name + pill] + org + kebab ── */
+  .jc-row1 {
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 11px 12px 10px;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 10px 8px;
   }
 
   .jc-avatar {
     flex-shrink: 0;
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 800;
     letter-spacing: -0.5px;
   }
@@ -384,98 +384,79 @@
   .jc-meta {
     flex: 1;
     min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
   }
 
-  .jc-meta-name {
-    font-size: 14.5px;
+  .jc-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .jc-name {
+    font-size: 13px;
     font-weight: 800;
     color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
   }
 
-  .jc-meta-org {
-    font-size: 11px;
+  /* pill sits in .jc-name-row — flex-shrink:0 prevents wrapping */
+  .jc-name-row .pill { flex-shrink: 0; }
+
+  .jc-org {
+    font-size: 10.5px;
     color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-top: 2px;
   }
 
-  .jc-meta .jc-meta-pill {
-    align-self: flex-start;
-    margin-top: 3px;
-  }
-
-  /* Kebab button uses global .row-action-btn (components.css). */
-
-  /* ── Progress block ── */
-  .jc-prog-block {
-    padding: 9px 12px 10px;
+  /* ── Row 2: progress bar + fraction + last-active ── */
+  .jc-row2 {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 10px 8px;
     border-top: 1px solid var(--border);
   }
 
-  .jc-prog-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
-    font-size: 10.5px;
-    font-weight: 700;
-    color: var(--text-secondary);
-  }
-
-  .jc-prog-nums { font-family: var(--font-mono, ui-monospace, monospace); margin-right: 3px; }
-  .jc-prog-count.val-done    { color: #22c55e; }
-  .jc-prog-count.val-partial { color: #60a5fa; }
-  .jc-prog-count.val-zero    { color: var(--text-tertiary); }
-
-  .jc-prog-bar {
-    height: 7px;
+  .jc-bar {
+    flex: 1;
+    height: 5px;
     border-radius: 99px;
     background: var(--surface-1);
     overflow: hidden;
   }
 
-  .jc-prog-fill {
+  .jc-bar-fill {
     height: 100%;
     border-radius: 99px;
     transition: width 0.35s ease;
   }
-  .jc-prog-fill.fill-complete { background: linear-gradient(90deg, #22c55e, #86efac); }
-  .jc-prog-fill.fill-partial  { background: linear-gradient(90deg, #6c63ff, #a78bfa); }
+  .jc-bar-fill.fill-complete { background: linear-gradient(90deg, #22c55e, #86efac); }
+  .jc-bar-fill.fill-partial  { background: linear-gradient(90deg, #6c63ff, #a78bfa); }
 
-  /* ── Footer ── */
-  .jc-footer {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 7px 14px;
-    border-top: 1px solid var(--border);
-    color: var(--text-tertiary);
-    font-size: 10.5px;
-    font-weight: 500;
-    letter-spacing: 0.015em;
-  }
-  .jc-footer-label {
-    color: var(--text-tertiary);
-  }
-  .jc-footer-time {
+  .jc-frac {
     font-family: var(--font-mono, ui-monospace, monospace);
-    letter-spacing: -0.01em;
-  }
-  .jc-footer-pct {
-    margin-left: auto;
-    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 9.5px;
     font-weight: 700;
-    font-size: 11px;
+    flex-shrink: 0;
   }
-  .jc-footer-pct.val-done  { color: #22c55e; }
-  .jc-footer-pct.val-amber { color: #f59e0b; }
+  .jc-frac.frac-done    { color: #22c55e; }
+  .jc-frac.frac-partial { color: #60a5fa; }
+  .jc-frac.frac-none    { color: var(--text-tertiary); }
+
+  .jc-last {
+    font-size: 9px;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+    font-family: var(--font-mono, ui-monospace, monospace);
+  }
 
 
   /* ── Empty-state row override ──
