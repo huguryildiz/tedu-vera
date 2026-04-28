@@ -39,6 +39,7 @@ Registered actor types: `admin`, `juror`, `system`, `anonymous`
 | `auth.admin.password.changed` | Admin changed password | changed their password |
 | `auth.admin.password.reset.requested` | Password reset requested | requested password reset · *{email}* |
 | `auth.admin.email_verified` | Admin email verified | verified email address · *{email}* |
+| `auth.admin.email.changed` | Admin email address changed | changed email from *{old_email}* to *{new_email}* |
 
 ### Evaluation Flow (Juror-initiated)
 
@@ -238,6 +239,7 @@ Sentence: `{actor} exported {type}` · *{period_name if present}*
 | `notification.maintenance` | Maintenance notice sent | sent maintenance to *{recipientEmail}* |
 | `notification.juror_reminder` | Juror reminder sent | sent juror reminder to *{recipientEmail}* |
 | `notification.unlock_request` | Unlock request notification sent | sent unlock request to *{recipientEmail}* |
+| `notification.email_verification` | Email verification link sent | sent email verification to *{recipient}* |
 
 ### Security / Anomaly Detection
 

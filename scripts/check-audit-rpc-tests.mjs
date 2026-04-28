@@ -40,8 +40,13 @@ const EXCLUDED_DIRS = new Set(["_pending", "_preview", "_test"]);
 
 // Ratchet: do not let "blind" count grow. Lower this number as tests are
 // retrofitted. Audit-aware test = test file references `audit_logs`.
-// As of 2026-04-28: 45 / 48 audit-emitting RPCs have blind tests.
-const BLIND_BASELINE = 45;
+// 2026-04-28 (initial): 45 / 48 emitters had blind tests.
+// 2026-04-28 (sentinel widened to detect rpc_admin_write_audit_log wrapper):
+//   4 previously-invisible emitters surfaced (rpc_backup_register, rpc_backup_delete,
+//   rpc_backup_record_download, rpc_juror_reset_pin). Raising baseline 45 → 49 to
+//   acknowledge the now-visible state without lowering the bar — these tests were
+//   always blind, just not detected. Retrofitting them is the next reduction.
+const BLIND_BASELINE = 49;
 
 function fail(msg) {
   console.error(`✗ check-audit-rpc-tests: ${msg}`);
@@ -74,8 +79,18 @@ function extractRpcBodies(text) {
 }
 
 function rpcEmitsAudit(body) {
-  // Either explicit _audit_write call or direct INSERT INTO audit_logs.
-  return /_audit_write\s*\(/i.test(body) || /INSERT\s+INTO\s+audit_logs\b/i.test(body);
+  // Three known emitter shapes:
+  //   1. SECURITY DEFINER helper:           PERFORM _audit_write(...)
+  //   2. Direct insert:                     INSERT INTO audit_logs
+  //   3. Generic admin wrapper:             PERFORM rpc_admin_write_audit_log(...)
+  // Pattern (3) is what frontend RPCs use when they need to log an audit event
+  // without being SECURITY DEFINER themselves; missing it caused this sentinel
+  // to silently approve rpc_backup_register / rpc_backup_delete / etc.
+  return (
+    /\b_audit_write\s*\(/i.test(body) ||
+    /INSERT\s+INTO\s+audit_logs\b/i.test(body) ||
+    /\brpc_admin_write_audit_log\s*\(/i.test(body)
+  );
 }
 
 function walkTests(dir, acc) {

@@ -331,6 +331,16 @@ export const EVENT_META = {
       return { verb: "verified email address", resource: d.email || null };
     },
   },
+  "auth.admin.email.changed": {
+    label: "Admin email address changed",
+    narrative: (log) => {
+      const d = log.details || {};
+      const from = d.old_email || null;
+      const to = d.new_email || null;
+      if (from && to) return { verb: `changed email from ${from} to`, resource: to };
+      return { verb: "changed email address", resource: to || from };
+    },
+  },
   "auth.admin.password.reset.requested": {
     label: "Password reset requested",
     narrative: (log) => {
@@ -1021,6 +1031,7 @@ export const EVENT_META = {
   "notification.maintenance":    { label: "Maintenance notice sent" },
   "notification.juror_reminder": { label: "Juror reminder sent" },
   "notification.unlock_request": { label: "Unlock request notification sent" },
+  "notification.email_verification": { label: "Email verification link sent" },
 
   // ── Juror-initiated security / data requests ─────────────────
   "security.pin_reset.requested": {

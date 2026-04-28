@@ -1,9 +1,12 @@
 // supabase/functions/on-auth-event/index.ts
 // ============================================================
-// Database Webhook handler for auth.sessions INSERT / DELETE.
+// Database Webhook handler for auth.sessions and auth.users events.
 //
 // Triggered by a Supabase Database Webhook (not a user request).
-// Writes auth.admin.login.success (INSERT) or admin.logout (DELETE)
+// Writes:
+//   - auth.admin.login.success  on auth.sessions INSERT
+//   - admin.logout              on auth.sessions DELETE
+//   - auth.admin.email.changed  on auth.users UPDATE when email differs
 // to audit_logs via service role so the event is server-side durable.
 //
 // Auth: verify_jwt=false — this is called by Supabase infra, not a user JWT.
@@ -11,6 +14,12 @@
 //
 // Always returns 200 — Supabase retries on non-2xx which would create
 // duplicate audit rows. Errors are logged but not propagated.
+//
+// Operator setup (per-project, in Supabase Dashboard → Database → Webhooks):
+//   1. Create webhook on auth.sessions (events: INSERT, DELETE)
+//   2. Create webhook on auth.users    (events: UPDATE)
+//   Both point at this Edge Function URL with header X-Webhook-Secret
+//   matching the WEBHOOK_HMAC_SECRET env value.
 // ============================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -81,32 +90,66 @@ Deno.serve(async (req: Request) => {
 
   const { type, table, schema, record, old_record } = payload;
 
-  // Only handle auth.sessions events
-  if (schema !== "auth" || table !== "sessions") {
+  // Dispatch by (schema, table). auth.sessions handles login/logout;
+  // auth.users UPDATE handles email-change events.
+  if (schema !== "auth" || (table !== "sessions" && table !== "users")) {
     return json(200, { ok: true, skipped: true });
   }
 
-  // Determine action and the session record to use
+  // Resolve action + the relevant record + extra detail fields per event.
   let action: string;
-  let sessionRecord: Record<string, unknown> | null | undefined;
+  let sourceRecord: Record<string, unknown> | null | undefined;
+  let resourceType = "profiles";
+  let extraDetails: Record<string, unknown> = {};
+  let severity: "info" | "low" | "medium" | "high" | "critical" = "info";
 
-  if (type === "INSERT") {
-    action = "auth.admin.login.success";
-    sessionRecord = record;
-  } else if (type === "DELETE") {
-    action = "admin.logout";
-    sessionRecord = old_record;
+  if (table === "sessions") {
+    if (type === "INSERT") {
+      action = "auth.admin.login.success";
+      sourceRecord = record;
+      extraDetails = { method: "session", session_id: record?.id ?? null };
+    } else if (type === "DELETE") {
+      action = "admin.logout";
+      sourceRecord = old_record;
+      extraDetails = { method: "logout", session_id: old_record?.id ?? null };
+    } else {
+      // UPDATE, TRUNCATE — not relevant for sessions
+      return json(200, { ok: true, skipped: true });
+    }
   } else {
-    // UPDATE, TRUNCATE — not relevant
-    return json(200, { ok: true, skipped: true });
+    // table === "users". Only UPDATE with email change is in scope.
+    if (type !== "UPDATE") {
+      return json(200, { ok: true, skipped: true });
+    }
+    const oldEmail = (old_record?.email as string | null) ?? null;
+    const newEmail = (record?.email as string | null) ?? null;
+    if (!oldEmail || !newEmail || oldEmail === newEmail) {
+      return json(200, { ok: true, skipped: true });
+    }
+    action = "auth.admin.email.changed";
+    sourceRecord = record;
+    resourceType = "profiles";
+    severity = "medium";
+    extraDetails = {
+      old_email: oldEmail,
+      new_email: newEmail,
+      email_change_confirmed: Boolean(record?.email_confirmed_at),
+    };
   }
 
-  if (!sessionRecord?.user_id) {
-    console.error("on-auth-event: No user_id in session record");
+  // Identify the affected user. For auth.sessions the FK is `user_id`; for
+  // auth.users the row id IS the user_id. Be strict per-table — falling back
+  // from user_id to id for auth.sessions would mis-assign a session id as a
+  // user id when the webhook payload is incomplete.
+  const userIdRaw =
+    table === "users"
+      ? sourceRecord?.id
+      : sourceRecord?.user_id;
+  const userId = userIdRaw ? String(userIdRaw) : "";
+  if (!userId) {
+    console.error(`on-auth-event: No user_id resolvable for ${action}`);
     return json(200, { ok: false, error: "No user_id" });
   }
-
-  const userId = String(sessionRecord.user_id);
 
   const service = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false },
@@ -127,24 +170,22 @@ Deno.serve(async (req: Request) => {
     // Super-admin has no org membership — leave null
   }
 
-  // Extract IP/UA from session record if available (auth.sessions stores these)
-  const ipAddress = (sessionRecord.ip as string | null) ?? null;
-  const userAgent = (sessionRecord.user_agent as string | null) ?? null;
+  // Extract IP/UA from session record if available (auth.sessions stores these);
+  // auth.users payload does not carry IP/UA, so leave null.
+  const ipAddress = (sourceRecord?.ip as string | null) ?? null;
+  const userAgent = (sourceRecord?.user_agent as string | null) ?? null;
 
   try {
     const { error: insertErr } = await service.from("audit_logs").insert({
       action,
       organization_id: organizationId,
       user_id: userId,
-      resource_type: "profiles",
+      resource_type: resourceType,
       resource_id: userId,
       category: "auth",
-      severity: "info",
+      severity,
       actor_type: "admin",
-      details: {
-        method: type === "INSERT" ? "session" : "logout",
-        session_id: sessionRecord.id ?? null,
-      },
+      details: extraDetails,
       diff: null,
       ip_address: ipAddress,
       user_agent: userAgent,

@@ -199,6 +199,65 @@ Deno.test("on-auth-event — successful INSERT returns 200 with expected respons
   assertEquals(body.skipped, undefined);
 });
 
+// qa: edge.real.on-auth-event.10
+Deno.test("on-auth-event — auth.users UPDATE with email change emits auth.admin.email.changed", async () => {
+  const handler = await setup();
+  setMockConfig({
+    tables: {
+      memberships: { selectSingle: { data: null, error: null } },
+      audit_logs: { insert: { data: null, error: null } },
+    },
+  });
+  const res = await handler(makeRequest({
+    body: {
+      type: "UPDATE",
+      schema: "auth",
+      table: "users",
+      record: { id: "user-abc", email: "new@example.com", email_confirmed_at: "2026-04-28T00:00:00Z" },
+      old_record: { id: "user-abc", email: "old@example.com" },
+    },
+  }));
+  assertEquals(res.status, 200);
+  const body = await readJson(res) as { ok: boolean; action: string };
+  assertEquals(body.ok, true);
+  assertEquals(body.action, "auth.admin.email.changed");
+});
+
+// qa: edge.real.on-auth-event.11
+Deno.test("on-auth-event — auth.users UPDATE with no email change returns skipped", async () => {
+  const handler = await setup();
+  const res = await handler(makeRequest({
+    body: {
+      type: "UPDATE",
+      schema: "auth",
+      table: "users",
+      record: { id: "user-abc", email: "same@example.com", last_sign_in_at: "2026-04-28T01:00:00Z" },
+      old_record: { id: "user-abc", email: "same@example.com" },
+    },
+  }));
+  assertEquals(res.status, 200);
+  const body = await readJson(res) as { ok: boolean; skipped: boolean };
+  assertEquals(body.ok, true);
+  assertEquals(body.skipped, true);
+});
+
+// qa: edge.real.on-auth-event.12
+Deno.test("on-auth-event — auth.users non-UPDATE events are skipped", async () => {
+  const handler = await setup();
+  const res = await handler(makeRequest({
+    body: {
+      type: "INSERT",
+      schema: "auth",
+      table: "users",
+      record: { id: "user-abc", email: "new@example.com" },
+    },
+  }));
+  assertEquals(res.status, 200);
+  const body = await readJson(res) as { ok: boolean; skipped: boolean };
+  assertEquals(body.ok, true);
+  assertEquals(body.skipped, true);
+});
+
 // qa: edge.on-auth-event.schema.success
 Deno.test("on-auth-event — success response parses against SuccessResponseSchema", async () => {
   const handler = await setup();

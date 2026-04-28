@@ -185,6 +185,7 @@ the corresponding RPCs; admin-invite lifecycle by `access.admin.invited` /
 | `auth.admin.password.changed` | Edge Function (`password-changed-notify`) | medium |
 | `auth.admin.password.reset.requested` | Edge Function (`password-reset-email`) | low |
 | `auth.admin.email_verified` | Edge Function (`email-verification-confirm`, fail-closed) | low |
+| `auth.admin.email.changed` | Edge Function (`on-auth-event` Database Webhook on `auth.users` UPDATE — fires only when `old.email != new.email`, carrying `old_email`, `new_email`, and `email_change_confirmed`) | medium |
 | `admin.updated` | RPC (`rpc_admin_update_member_profile`) | info |
 | `access.admin.invited` | Edge Function (`invite-org-admin`) | low |
 | `access.admin.accepted` | RPC (`rpc_accept_invite`) — one row per activated org membership | medium |
@@ -216,7 +217,8 @@ Canonical PIN taxonomy is `juror.pin_locked` / `juror.pin_unlocked` /
 | `data.juror.auth.created` | RPC (`rpc_jury_authenticate`) — first auth per (juror, period) pair | info |
 | `data.score.submitted` | RPC (`rpc_jury_finalize_submission`) with per-criterion diff | info |
 | `data.score.edit_requested` | Edge Function (`request-score-edit`) | low |
-| `juror.pin_locked` / `juror.pin_unlocked` / `pin.reset` | RPC (juror auth) | medium |
+| `juror.pin_locked` / `juror.pin_unlocked` | RPC (juror auth) | medium |
+| `pin.reset` | RPC (`rpc_juror_reset_pin`, `rpc_juror_unlock_pin`) — emits whenever an admin resets a juror PIN, with `juror_name`, `period_id`, `reset_by` in `details` | medium |
 | `data.juror.edit_mode.granted` / `.force_closed` / `.closed` | RPC | info-medium |
 | `juror.edit_mode_enabled` / `juror.edit_mode_disabled` | RPC (`rpc_juror_toggle_edit_mode`, both paths) | info |
 | `evaluation.complete` | RPC (`rpc_jury_finalize_submission`) | info |
@@ -249,6 +251,7 @@ Canonical PIN taxonomy is `juror.pin_locked` / `juror.pin_unlocked` /
 | `notification.application` | `notify-application` |
 | `notification.maintenance` | `notify-maintenance` |
 | `notification.unlock_request` | `notify-unlock-request` |
+| `notification.email_verification` | `email-verification-send` — fires whenever an admin requests a verification link, with `recipient`, `send_result` (`sent` / `skipped_no_key`), `send_error`, and `expires_at` in `details` |
 
 Every notification row carries recipients, send result, and any error in
 `details`.
@@ -381,6 +384,8 @@ After any audit-related change, verify these produce visible rows:
 - Fail to log in -> `auth.admin.login.failure`
 - Log out -> `admin.logout`
 - Verify admin email -> `auth.admin.email_verified` (fail-closed; 500 on audit failure)
+- Request a fresh verification link -> `notification.email_verification` (fire-and-forget audit; recipient + send_result captured)
+- Change admin email address -> `auth.admin.email.changed` (Database Webhook on `auth.users` UPDATE; old_email + new_email captured)
 
 **Exports:**
 
@@ -475,6 +480,8 @@ answer them. All rows are in `audit_logs`; filter by `action` and optionally
 | When did an invited admin accept their invitation? | `access.admin.accepted` | `invitee_id`, `org_id` |
 | When did admin revoke another admin's session? | `access.admin.session.revoked` | `revoked_user_id`, `session_id` |
 | When did an admin verify their email address? | `auth.admin.email_verified` | `email`, `verified_at` |
+| When did an admin request a verification email? | `notification.email_verification` | `recipient`, `send_result`, `send_error`, `expires_at` |
+| When did an admin's email address change? | `auth.admin.email.changed` | `old_email`, `new_email`, `email_change_confirmed` |
 
 ---
 

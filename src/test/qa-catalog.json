@@ -11469,6 +11469,42 @@
     "status": "backlog"
   },
   {
+    "id": "edge.real.on-auth-event.10",
+    "module": "Edge / on-auth-event",
+    "area": "audit",
+    "story": "auth.users UPDATE with email change emits auth.admin.email.changed",
+    "scenario": "UPDATE on auth.users with old.email != new.email → 200 {ok:true, action:'auth.admin.email.changed'}",
+    "whyItMatters": "Email rotation is an account-takeover signal; admins must see it in the audit trail.",
+    "risk": "Silent email swap (e.g. attacker rotating to their own address) leaves no trace.",
+    "coverageStrength": "Strong",
+    "severity": "high",
+    "status": "backlog"
+  },
+  {
+    "id": "edge.real.on-auth-event.11",
+    "module": "Edge / on-auth-event",
+    "area": "validation",
+    "story": "auth.users UPDATE with no email change is skipped",
+    "scenario": "UPDATE on auth.users with old.email === new.email → 200 {ok:true, skipped:true}",
+    "whyItMatters": "Generic profile UPDATEs (last_sign_in_at, metadata) must not flood the audit log.",
+    "risk": "Audit-log noise from routine UPDATEs makes real email changes hard to spot.",
+    "coverageStrength": "Strong",
+    "severity": "normal",
+    "status": "backlog"
+  },
+  {
+    "id": "edge.real.on-auth-event.12",
+    "module": "Edge / on-auth-event",
+    "area": "validation",
+    "story": "auth.users non-UPDATE events are skipped",
+    "scenario": "INSERT or DELETE on auth.users → 200 {ok:true, skipped:true}",
+    "whyItMatters": "Only UPDATE carries a meaningful diff for email-change detection.",
+    "risk": "Spurious audit rows on user-creation that duplicate other auth events.",
+    "coverageStrength": "Strong",
+    "severity": "normal",
+    "status": "backlog"
+  },
+  {
     "id": "edge.real.request-score-edit.01",
     "module": "Edge / request-score-edit",
     "area": "cors",

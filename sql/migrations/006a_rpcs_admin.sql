@@ -24,12 +24,13 @@ SECURITY DEFINER
 SET search_path = public, auth, extensions
 AS $$
 DECLARE
-  v_org_id   UUID;
-  v_is_admin BOOLEAN;
-  v_pin      TEXT;
-  v_pin_hash TEXT;
+  v_org_id     UUID;
+  v_is_admin   BOOLEAN;
+  v_pin        TEXT;
+  v_pin_hash   TEXT;
+  v_juror_name TEXT;
 BEGIN
-  SELECT organization_id INTO v_org_id
+  SELECT organization_id, juror_name INTO v_org_id, v_juror_name
   FROM jurors
   WHERE id = p_juror_id;
 
@@ -61,6 +62,21 @@ BEGIN
   IF NOT FOUND THEN
     RETURN jsonb_build_object('ok', false, 'error_code', 'auth_row_not_found')::JSON;
   END IF;
+
+  -- Semantic audit: admin reset a juror's PIN. Mirrors rpc_juror_unlock_pin's
+  -- pattern (action+resource_type+details). Pin value is NOT included in
+  -- details — we only log that a reset occurred, not what the new PIN is.
+  INSERT INTO audit_logs (
+    organization_id, user_id, action, resource_type, resource_id, details
+  ) VALUES (
+    v_org_id, auth.uid(), 'pin.reset', 'juror_period_auth', p_juror_id,
+    jsonb_build_object(
+      'period_id',  p_period_id,
+      'juror_id',   p_juror_id,
+      'juror_name', v_juror_name,
+      'reset_by',   auth.uid()
+    )
+  );
 
   RETURN jsonb_build_object(
     'ok',             true,

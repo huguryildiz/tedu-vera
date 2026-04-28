@@ -3,6 +3,7 @@ import {
   SuccessResponseSchema,
   InternalErrorResponseSchema,
 } from "./schema.ts";
+import { writeEdgeAuditLog } from "../_shared/audit-log.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -175,6 +176,8 @@ Deno.serve(async (req: Request) => {
     const fromAddr = Deno.env.get("NOTIFICATION_FROM") || "VERA <noreply@vera-eval.app>";
     const logoUrl = (Deno.env.get("NOTIFICATION_LOGO_URL") || "").trim();
 
+    let sendResult: "sent" | "skipped_no_key" = "skipped_no_key";
+    let sendError: string | null = null;
     if (resendKey) {
       const subject = "Verify your VERA email address";
       const text = `Click this link to verify your email: ${verifyUrl}`;
@@ -187,7 +190,39 @@ Deno.serve(async (req: Request) => {
         logoUrl,
       });
 
-      await sendViaResend(resendKey, userEmail, subject, text, html, fromAddr);
+      try {
+        await sendViaResend(resendKey, userEmail, subject, text, html, fromAddr);
+        sendResult = "sent";
+      } catch (sendErr) {
+        sendError = (sendErr as Error).message;
+        console.error("email-verification-send: Resend failed:", sendError);
+      }
+    }
+
+    // Audit row — fire-and-forget within the same request. The token row in
+    // email_verification_tokens is the durable side-effect; this gives the
+    // sending event a forensic record consistent with other notification.*
+    // emitters (notify-juror, send-juror-pin-email, etc.).
+    try {
+      await writeEdgeAuditLog(req, {
+        action: "notification.email_verification",
+        user_id: userId,
+        resource_type: "email_verification_tokens",
+        resource_id: null,
+        category: "security",
+        severity: "low",
+        actor_type: "admin",
+        details: {
+          recipient: userEmail,
+          send_result: sendResult,
+          send_error: sendError,
+          expires_at: expiresAt,
+        },
+      });
+    } catch (auditErr) {
+      // Do NOT propagate — primary work (token created + email sent) already
+      // succeeded. Drain pass + chain verification still cover the gap.
+      console.error("email-verification-send: audit write failed:", (auditErr as Error).message);
     }
 
     return json({ ok: true });
