@@ -66,7 +66,7 @@ function formatRelativeDate(ts) {
 
 function normalizePasswordChangeError(raw) {
   const msg = String(raw?.message || raw || "").toLowerCase().trim();
-  if (!msg) return "Could not update password. Please try again.";
+  if (!msg) return "Failed to update password. Please try again.";
   if (msg.includes("current password is incorrect")) return "Current password is incorrect.";
   if (msg.includes("invalid login credentials")) return "Current password is incorrect.";
   if (msg.includes("session expired")) return "Session expired. Please sign in again.";
@@ -74,7 +74,7 @@ function normalizePasswordChangeError(raw) {
   if (msg.includes("new password should be different")) return "New password must be different from current password.";
   if (msg.includes("same password")) return "New password must be different from current password.";
   if (msg.includes("weak password")) return "Password does not meet security requirements.";
-  return String(raw?.message || raw || "Could not update password. Please try again.");
+  return "Failed to update password. Please try again.";
 }
 
 // ── Main Component ────────────────────────────────────────────
@@ -196,7 +196,7 @@ export default function SettingsPage() {
       setSecurityPolicyState(data);
       policyFetched.current = true;
     } catch (e) {
-      setSecurityPolicyError(e?.message || "Failed to load security policy.");
+      setSecurityPolicyError("Failed to load security policy.");
     }
   }, []);
 
@@ -214,7 +214,7 @@ export default function SettingsPage() {
       const data = await getPinPolicy();
       setPinPolicyState(data);
     } catch (e) {
-      setPinPolicyError(e?.message || "Failed to load PIN policy.");
+      setPinPolicyError("Failed to load PIN policy.");
     }
   }, []);
 
@@ -296,7 +296,7 @@ export default function SettingsPage() {
       await refreshMemberships();
       setEditingOrgName(false);
     } catch (err) {
-      setOrgNameError(err?.message || "Failed to update organization name.");
+      setOrgNameError("Failed to update organization name.");
     } finally {
       setOrgNameSaving(false);
     }

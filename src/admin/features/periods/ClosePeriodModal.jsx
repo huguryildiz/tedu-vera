@@ -41,7 +41,7 @@ export default function ClosePeriodModal({ open, onClose, period, onCloseAction 
       setConfirmName("");
       onClose();
     } catch (e) {
-      setError(e?.message || "Could not close the period. Try again.");
+      setError("Failed to close the period. Please try again.");
     } finally {
       setClosing(false);
     }

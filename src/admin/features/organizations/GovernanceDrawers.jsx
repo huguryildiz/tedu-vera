@@ -191,7 +191,7 @@ export function GlobalSettingsDrawer({ open, onClose }) {
       })
       .catch((e) => {
         if (cancelled) return;
-        setLoadError(e?.message || "Failed to load platform settings.");
+        setLoadError("Failed to load platform settings. Please try again.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -236,7 +236,7 @@ export function GlobalSettingsDrawer({ open, onClose }) {
       toast.success("Global settings saved");
       onClose();
     } catch (e) {
-      setSaveError(e?.message || "Failed to save platform settings.");
+      setSaveError("Failed to save platform settings. Please try again.");
     } finally {
       setSaving(false);
     }

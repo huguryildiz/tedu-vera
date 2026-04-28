@@ -72,7 +72,7 @@ export default function ConfirmDialog({
       await onConfirm?.();
       onOpenChange?.(false);
     } catch (e) {
-      setError(e?.message || "Something went wrong. Please try again.");
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

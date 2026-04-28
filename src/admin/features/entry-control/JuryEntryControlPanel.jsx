@@ -116,7 +116,7 @@ export default function JuryEntryControlPanel({
       if (e?.unauthorized) {
         setError("Session expired — please log in again.");
       } else {
-        setError("Could not load token status.");
+        setError("Failed to load token status.");
       }
     }
   }, [periodId]);
@@ -176,7 +176,7 @@ export default function JuryEntryControlPanel({
       } else if (e?.unauthorized) {
         setError("Unauthorized — check your admin password.");
       } else {
-        setError("Could not generate token.");
+        setError("Failed to generate token.");
       }
     } finally {
       setRegenerating(false);
@@ -203,7 +203,7 @@ export default function JuryEntryControlPanel({
       if (e?.unauthorized) {
         setError("Unauthorized — check your admin password.");
       } else {
-        setError("Could not revoke token.");
+        setError("Failed to revoke token.");
       }
       _toast.error("Failed to revoke access");
     } finally {
@@ -233,7 +233,7 @@ export default function JuryEntryControlPanel({
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } catch {
-        setError("Could not copy to clipboard.");
+        setError("Failed to copy to clipboard.");
       }
     }
   }
@@ -266,7 +266,7 @@ export default function JuryEntryControlPanel({
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch {
-      setError("Could not download QR.");
+      setError("Failed to download QR.");
     }
   }
 

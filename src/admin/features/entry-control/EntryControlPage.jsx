@@ -149,7 +149,7 @@ export default function EntryControlPage() {
       ));
       setTokenHistory(normalizedHistory);
     } catch (e) {
-      setError(e?.unauthorized ? "Session expired — please log in again." : "Could not load token status.");
+      setError(e?.unauthorized ? "Session expired — please log in again." : "Failed to load token status.");
     }
   }, [periodId]);
 
@@ -228,7 +228,7 @@ export default function EntryControlPage() {
       } else if (e?.unauthorized) {
         setError("Unauthorized — check your session.");
       } else {
-        setError(msg || "Could not generate token.");
+        setError("Failed to generate token.");
       }
     } finally {
       setRegenerating(false);
@@ -250,7 +250,7 @@ export default function EntryControlPage() {
       _toast.success(lockMsg);
       setRevokeModalOpen(false);
     } catch (e) {
-      setError(e?.unauthorized ? "Unauthorized — check your session." : "Could not revoke token.");
+      setError(e?.unauthorized ? "Unauthorized — check your session." : "Failed to revoke token.");
       _toast.error("Failed to revoke jury access — try again");
     } finally {
       setRevoking(false);
@@ -275,7 +275,7 @@ export default function EntryControlPage() {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } catch {
-        setError("Could not copy to clipboard.");
+        setError("Failed to copy to clipboard.");
       }
     }
   }
@@ -402,7 +402,7 @@ export default function EntryControlPage() {
         }
       });
       if (delivered === 0) {
-        throw new Error("Could not send email.");
+        throw new Error("Failed to send email.");
       }
       _toast.success(`Access link sent to ${delivered} recipient${delivered === 1 ? "" : "s"}`);
       if (failed > 0) {
@@ -412,7 +412,7 @@ export default function EntryControlPage() {
       setNewUserInputValue("");
       setNewUserModalOpen(false);
     } catch (err) {
-      setNewUserError(err?.message || "Could not send email.");
+      setNewUserError("Failed to send email.");
     } finally {
       setNewUserSending(false);
     }

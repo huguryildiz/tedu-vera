@@ -323,12 +323,12 @@ export function useCriteriaForm({ template, outcomeConfig, onSave, onDirtyChange
       });
       const result = await onSave(normalized);
       if (!result?.ok) {
-        setSaveError(result?.error || "Could not save criteria template. Try again.");
+        setSaveError(result?.error || "Failed to save criteria template. Please try again.");
       } else {
         onDirtyChange?.(false);
       }
     } catch (e) {
-      setSaveError(e?.message || "Could not save criteria template. Try again.");
+      setSaveError("Failed to save criteria template. Please try again.");
     } finally {
       setSaving(false);
     }

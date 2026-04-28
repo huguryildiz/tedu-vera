@@ -47,7 +47,7 @@ export default function DeletePeriodModal({ open, onClose, period, onDelete }) {
       setConfirmName("");
       onClose();
     } catch (e) {
-      setError(e?.message || "Could not delete the period. Try again.");
+      setError("Failed to delete the period. Please try again.");
     } finally {
       setDeleting(false);
     }

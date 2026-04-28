@@ -33,7 +33,7 @@ function mapErrorCode(code) {
     case "period_not_found":
       return "Period not found.";
     default:
-      return "Could not submit the request. Try again.";
+      return "Failed to submit the request. Please try again.";
   }
 }
 
@@ -71,7 +71,7 @@ export default function RequestRevertModal({ open, onClose, period, onRequest })
       setReason("");
       onClose();
     } catch (e) {
-      setError(e?.message || "Could not submit the request. Try again.");
+      setError("Failed to submit the request. Please try again.");
     } finally {
       setSubmitting(false);
     }

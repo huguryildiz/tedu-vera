@@ -165,7 +165,7 @@ export default function ProjectsPage() {
   useEffect(() => {
     incLoading();
     periods.loadPeriods()
-      .catch(() => setPanelError("period", "Could not load periods."))
+      .catch(() => setPanelError("period", "Failed to load periods."))
       .finally(() => decLoading());
   }, [periods.loadPeriods]);
 
@@ -173,7 +173,7 @@ export default function ProjectsPage() {
     if (!periods.viewPeriodId) return;
     incLoading();
     projects.loadProjects()
-      .catch(() => setPanelError("project", "Could not load projects."))
+      .catch(() => setPanelError("project", "Failed to load projects."))
       .finally(() => decLoading());
   }, [periods.viewPeriodId, projects.loadProjects]);
 
@@ -328,7 +328,7 @@ export default function ProjectsPage() {
       group_no: project?.group_no,
       members: data.members,
     });
-    if (result?.ok === false) throw new Error(result.message || "Could not save project.");
+    if (result?.ok === false) throw new Error(result.message || "Failed to save project.");
   }
 
   async function handleAddSave(data) {
@@ -341,7 +341,7 @@ export default function ProjectsPage() {
     });
     if (result?.ok === false) {
       const fieldErr = result.fieldErrors?.group_no;
-      throw new Error(fieldErr || result.message || "Could not add project.");
+      throw new Error(fieldErr || result.message || "Failed to add project.");
     }
   }
 

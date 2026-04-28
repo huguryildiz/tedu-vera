@@ -124,7 +124,7 @@ export default function PeriodsPage() {
   useEffect(() => {
     incLoading();
     periods.loadPeriods()
-      .catch(() => setPanelError("period", "Could not load periods."))
+      .catch(() => setPanelError("period", "Failed to load periods."))
       .finally(() => decLoading());
   }, [periods.loadPeriods]);
 

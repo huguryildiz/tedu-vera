@@ -48,7 +48,7 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
       });
       onClose();
     } catch (e) {
-      setSaveError(e?.message || "Something went wrong.");
+      setSaveError("Failed to create organization. Please try again.");
     } finally {
       setSaving(false);
     }

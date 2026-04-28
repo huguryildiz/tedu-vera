@@ -284,7 +284,7 @@ export function useManageJurors({
       } else {
         setPanelError(
           "jurors",
-          msg || "Could not add juror. Try again or check admin password."
+          "Failed to add juror. Please try again."
         );
         return { ok: false };
       }
@@ -359,7 +359,7 @@ export function useManageJurors({
       } else {
         return {
           ok: false,
-          formError: msg || "Could not import jurors. Check the CSV format and try again.",
+          formError: "Failed to import jurors. Check the CSV format and try again.",
         };
       }
     } finally {
@@ -392,7 +392,7 @@ export function useManageJurors({
       const msg = String(e?.message || "");
       const friendly = msg.includes("period_locked")
         ? "Evaluation period is locked. Unlock the period to make changes."
-        : msg || "Could not update juror. Try again or check admin password.";
+        : "Failed to update juror. Please try again.";
       setPanelError("jurors", friendly);
       return { ok: false, message: friendly };
     } finally {
@@ -470,7 +470,7 @@ export function useManageJurors({
       } else {
         setPanelError(
           "jurors",
-          e?.message || "Could not reset PIN. Try again or check admin password."
+          "Failed to reset PIN. Please try again."
         );
       }
       return { ok: false };
@@ -558,7 +558,7 @@ export function useManageJurors({
         "jurors",
         msg.includes("period_locked")
           ? "Evaluation period is locked. Unlock the period to make changes."
-          : msg || "Could not delete juror. Try again."
+          : "Failed to delete juror. Please try again."
       );
     } finally {
       decLoading();
@@ -626,10 +626,10 @@ export function useManageJurors({
         setEvalLockError?.("Admin password is invalid. Please re-login.");
       } else {
         setEvalLockError?.(
-          e?.message || "Could not update edit mode. Try again or check admin password."
+          "Failed to update edit mode. Please try again."
         );
       }
-      return { ok: false, message: e?.message || "Could not enable editing mode." };
+      return { ok: false, message: "Failed to enable editing mode." };
     } finally {
       decLoading();
     }
@@ -675,7 +675,7 @@ export function useManageJurors({
         setEvalLockError?.("Admin password is invalid. Please re-login.");
       } else {
         setEvalLockError?.(
-          e?.message || "Could not lock editing. Try again or check admin password."
+          "Failed to lock editing. Please try again."
         );
       }
     } finally {

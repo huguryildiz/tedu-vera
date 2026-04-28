@@ -215,7 +215,7 @@ export function useAdminData({
         setAuthError("Incorrect password.");
         return;
       }
-      setError("Could not load data — check your connection and try refreshing.");
+      setError("Failed to load data. Check your connection and try refreshing.");
       setRawScores([]);
       setSummaryData([]);
       if (!initialLoadFiredRef.current) {

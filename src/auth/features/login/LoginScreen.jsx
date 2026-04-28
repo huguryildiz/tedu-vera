@@ -35,8 +35,8 @@ const normalizeError = (raw) => {
   if (msg.includes("captcha")) return "Captcha is required to sign in. Please complete the captcha.";
   if (msg.includes("invalid login credentials")) return "Invalid email or password.";
   if (msg.includes("email not confirmed")) return "Your email is not confirmed yet. Please check your inbox.";
-  if (msg.includes("database error querying schema")) return "Could not sign in right now. Please try again in a moment.";
-  return String(raw);
+  if (msg.includes("database error querying schema")) return "Failed to sign in. Please try again.";
+  return "Login failed. Please try again.";
 };
 
 const extractErrorText = (err) => {

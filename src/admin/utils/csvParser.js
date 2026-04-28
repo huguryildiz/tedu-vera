@@ -184,7 +184,7 @@ export async function parseProjectsCsv(file, existingProjects = []) {
           rows: [],
           stats: { valid: 0, duplicate: 0, error: 0, total: 0 },
           detectedColumns: [],
-          warningMessage: { title: "Parse error", desc: "Could not parse the CSV file." },
+          warningMessage: { title: "Parse error", desc: "Failed to parse the CSV file." },
           file: { name: file.name, sizeLabel: sizeLabel(file) },
         });
       },
@@ -291,7 +291,7 @@ export async function parseJurorsCsv(file, existingJurors = []) {
           rows: [],
           stats: { valid: 0, duplicate: 0, error: 0, total: 0 },
           detectedColumns: [],
-          warningMessage: { title: "Parse error", desc: "Could not parse the CSV file." },
+          warningMessage: { title: "Parse error", desc: "Failed to parse the CSV file." },
           file: { name: file.name, sizeLabel: sizeLabel(file) },
         });
       },

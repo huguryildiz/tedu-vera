@@ -128,7 +128,7 @@ export function useDeleteConfirm({
     if (msg.includes("project_has_scored_data")) {
       return "Cannot delete: project has scored data.";
     }
-    return "Could not delete. Please try again.";
+    return "Failed to delete. Please try again.";
   };
 
   const handleConfirmDelete = async () => {

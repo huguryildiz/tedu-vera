@@ -211,7 +211,7 @@ export default function SecurityPolicyDrawer({ open, onClose, policy, onSave, er
       await onSave?.({ ...form });
       onClose();
     } catch (e) {
-      setSaveError(e?.message || "Something went wrong.");
+      setSaveError("Failed to save security policy. Please try again.");
       throw e;
     } finally {
       setSaving(false);

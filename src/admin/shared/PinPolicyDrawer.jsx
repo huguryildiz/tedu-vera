@@ -61,7 +61,7 @@ export default function PinPolicyDrawer({ open, onClose, policy, onSave, error }
       await onSave?.({ ...form });
       onClose();
     } catch (e) {
-      setSaveError(e?.message || "Something went wrong.");
+      setSaveError("Failed to save PIN policy. Please try again.");
     } finally {
       setSaving(false);
     }

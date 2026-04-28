@@ -36,7 +36,7 @@ export default function PublishPeriodModal({ open, onClose, period, onPublish })
       await onPublish?.();
       onClose();
     } catch (e) {
-      setError(e?.message || "Could not publish the period. Try again.");
+      setError("Failed to publish the period. Please try again.");
     } finally {
       setPublishing(false);
     }

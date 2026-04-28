@@ -62,7 +62,7 @@ export default function EditJurorDrawer({ open, onClose, juror, onSave, onResetP
       });
       onClose();
     } catch (e) {
-      setSaveError(e?.message || "Something went wrong.");
+      setSaveError("Failed to save juror. Please try again.");
     } finally {
       setSaving(false);
     }

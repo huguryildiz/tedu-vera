@@ -407,14 +407,14 @@ export default function OutcomeEditor({
       const normalized = outcomeRowsToTemplate(rows);
       const result = await onSave(normalized);
       if (!result?.ok) {
-        setSaveError(result?.error || "Could not save outcome template. Try again.");
+        setSaveError(result?.error || "Failed to save outcome template. Please try again.");
       } else {
         setTouched(new Set());
         setSaveAttempted(false);
         onDirtyChange?.(false);
       }
     } catch (e) {
-      setSaveError(e?.message || "Could not save outcome template. Try again.");
+      setSaveError("Failed to save outcome template. Please try again.");
     } finally {
       setSaving(false);
     }

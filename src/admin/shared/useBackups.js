@@ -32,7 +32,7 @@ export function useBackups(organizationId) {
       const rows = await listBackups(organizationId);
       setBackups(rows);
     } catch (e) {
-      setError(e?.message || "Failed to load backups");
+      setError("Failed to load backups. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ export function useBackups(organizationId) {
       await createBackup(organizationId);
       await refresh();
     } catch (e) {
-      setError(e?.message || "Failed to create backup");
+      setError("Failed to create backup. Please try again.");
       throw e;
     } finally {
       setCreating(false);
@@ -81,7 +81,7 @@ export function useBackups(organizationId) {
         await deleteBackup(backupId);
         await refresh();
       } catch (e) {
-        setError(e?.message || "Failed to delete backup");
+        setError("Failed to delete backup. Please try again.");
         throw e;
       } finally {
         setDeletingId(null);

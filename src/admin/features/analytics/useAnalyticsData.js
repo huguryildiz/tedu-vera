@@ -86,7 +86,7 @@ export function useAnalyticsData({ organizationId, periodList, sortedPeriods, la
       .then((data) => { if (!cancelled) setTrendData(data); })
       .catch((e) => {
         if (cancelled) return;
-        setTrendError(e?.unauthorized ? "Unauthorized. Please re-login." : "Could not load trend data.");
+        setTrendError(e?.unauthorized ? "Unauthorized. Please re-login." : "Failed to load trend data.");
       })
       .finally(() => { if (!cancelled) setTrendLoading(false); });
     return () => { cancelled = true; };
@@ -106,7 +106,7 @@ export function useAnalyticsData({ organizationId, periodList, sortedPeriods, la
       .then((data) => { if (!cancelled) setOutcomeTrendData(data); })
       .catch((e) => {
         if (cancelled) return;
-        setOutcomeTrendError(e?.unauthorized ? "Unauthorized. Please re-login." : "Could not load outcome trend data.");
+        setOutcomeTrendError(e?.unauthorized ? "Unauthorized. Please re-login." : "Failed to load outcome trend data.");
       })
       .finally(() => { if (!cancelled) setOutcomeTrendLoading(false); });
     return () => { cancelled = true; };

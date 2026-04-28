@@ -43,7 +43,7 @@ export function useAdminTeam(orgId) {
       setMembers(mapMembers(raw));
       setAdminsCanInviteState(flag);
     } catch (e) {
-      setError(e.message || "Failed to load team");
+      setError("Failed to load team members. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -89,7 +89,7 @@ export function useAdminTeam(orgId) {
         ? "This email is already a member of this organization."
         : raw.includes("already_exists_in_auth")
         ? "This email is already registered in VERA. The user must sign in and request access."
-        : raw || "Failed to send invite";
+        : "Failed to send invite. Please try again.";
       setInviteForm((f) => ({ ...f, submitting: false, error }));
     }
   }, [orgId, inviteForm.email, toast, refetch]);

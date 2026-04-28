@@ -78,7 +78,7 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
       });
       onClose();
     } catch (e) {
-      setSaveError(e?.message || "Something went wrong.");
+      setSaveError("Failed to add project. Please try again.");
     } finally {
       setSaving(false);
     }

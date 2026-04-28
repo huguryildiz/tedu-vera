@@ -54,7 +54,7 @@ function FallbackLoginForm({ onLogin, initialEmail = "", initialPassword = "" })
     try {
       await onLogin(email.trim(), password, false, "");
     } catch (err) {
-      setError(err?.message || "Login failed. Please try again.");
+      setError("Login failed. Please try again.");
     } finally {
       setLoading(false);
     }

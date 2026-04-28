@@ -58,7 +58,7 @@ export default function OutcomeDetailDrawer({ open, onClose, outcome, criteria =
       });
       onClose();
     } catch (e) {
-      setSaveError(e?.message || "Something went wrong.");
+      setSaveError("Failed to save outcome. Please try again.");
     } finally {
       setSaving(false);
     }

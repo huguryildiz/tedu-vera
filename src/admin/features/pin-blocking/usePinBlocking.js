@@ -56,7 +56,7 @@ export function usePinBlocking({ periodId }) {
       if (!silent) {
         setLockedJurors([]);
         setTodayLockEvents(0);
-        setError(e?.message || "Could not load locked jurors.");
+        setError("Failed to load locked jurors.");
       }
     } finally {
       if (!silent) setLoading(false);

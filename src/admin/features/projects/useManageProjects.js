@@ -107,8 +107,7 @@ export function useManageProjects({
         const rows = await adminListProjects(pid);
         setProjects(rows || []);
       } catch (e) {
-        const msg = e?.message || "Could not load groups. Check your session or refresh.";
-        setPanelErrorRef.current("projects", msg);
+        setPanelErrorRef.current("projects", "Failed to load projects. Please try again.");
       }
     },
     [] // stable identity — reads from refs
@@ -153,7 +152,7 @@ export function useManageProjects({
     } catch (e) {
       return {
         ok: false,
-        formError: e?.message || "Could not import projects. Check the CSV format and try again.",
+        formError: "Failed to import projects. Check the CSV format and try again.",
       };
     } finally {
       decLoading();
@@ -181,7 +180,7 @@ export function useManageProjects({
         { ...row, members: membersJsonb, periodId: targetPeriodId }
       );
       if (!res?.id) {
-        throw new Error("Could not create project. Please refresh and try again.");
+        throw new Error("Failed to create project. Please refresh and try again.");
       }
       if (targetPeriodId === viewPeriodId) {
         await loadProjects(targetPeriodId);
@@ -194,8 +193,7 @@ export function useManageProjects({
       );
       return { ok: true };
     } catch (e) {
-      const msg = e?.message || "Could not save project. Try again or check your session.";
-      setPanelError("projects", msg);
+      setPanelError("projects", "Failed to save project. Please try again.");
       return { ok: false };
     } finally {
       decLoading();
@@ -226,8 +224,7 @@ export function useManageProjects({
       setMessage(`Project updated`);
       return { ok: true };
     } catch (e) {
-      const msg = e?.message || "Could not update project. Try again or check your session.";
-      return { ok: false, message: msg };
+      return { ok: false, message: "Failed to update project. Please try again." };
     } finally {
       decLoading();
     }
@@ -248,7 +245,7 @@ export function useManageProjects({
       removeProject(projectId);
       setMessage(project?.group_no ? `Group ${project.group_no} deleted` : "Project deleted");
     } catch (e) {
-      setPanelError("projects", e?.message || "Could not delete project. Try again.");
+      setPanelError("projects", "Failed to delete project. Please try again.");
     } finally {
       decLoading();
     }
@@ -269,12 +266,12 @@ export function useManageProjects({
         members: Array.isArray(project.members) ? project.members : [],
         periodId: viewPeriodId,
       });
-      if (!res?.id) throw new Error("Could not duplicate project.");
+      if (!res?.id) throw new Error("Failed to duplicate project.");
       await loadProjects(viewPeriodId);
       setMessage(`Project duplicated as P${res.project_no}`);
       return { ok: true };
     } catch (e) {
-      setPanelError("projects", e?.message || "Could not duplicate project.");
+      setPanelError("projects", "Failed to duplicate project.");
       return { ok: false };
     } finally {
       decLoading();

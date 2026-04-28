@@ -70,7 +70,7 @@ export default function AddOutcomeDrawer({
       });
       onClose();
     } catch (e) {
-      setSaveError(e?.message || "Something went wrong.");
+      setSaveError("Failed to add outcome. Please try again.");
     } finally {
       setSaving(false);
     }

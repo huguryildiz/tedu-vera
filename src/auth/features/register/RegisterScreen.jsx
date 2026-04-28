@@ -17,14 +17,14 @@ import {
 
 function normalizeError(raw) {
   const m = String(raw || "").toLowerCase();
-  if (!m) return "Could not complete registration. Please try again.";
+  if (!m) return "Failed to complete registration. Please try again.";
   if (m.includes("email_already_registered") || m.includes("user already")) return "This email is already registered. Please sign in.";
   if (m.includes("email_required")) return "Your email is required.";
   if (m.includes("name_required")) return "Full name is required.";
   if (m.includes("org_name_required")) return "Organization name is required.";
   if (m.includes("org_name_taken")) return "An organization with that name already exists. Please use a different name.";
-  if (m.includes("org_creation_failed")) return "We couldn't set up your organization. Retry?";
-  return String(raw);
+  if (m.includes("org_creation_failed")) return "Failed to set up your organization. Please try again.";
+  return "Failed to complete registration. Please try again.";
 }
 
 function PwdCheckIcon() {

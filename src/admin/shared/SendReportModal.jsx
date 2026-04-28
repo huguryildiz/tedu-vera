@@ -150,7 +150,7 @@ export default function SendReportModal({
       setCcMyself(false);
       onClose();
     } catch (err) {
-      setError(err?.message || "Failed to send report");
+      setError("Failed to send report. Please try again.");
     } finally {
       setSending(false);
     }

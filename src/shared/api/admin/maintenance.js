@@ -74,7 +74,7 @@ export async function setMaintenance({ mode, startTime, durationMin, message, af
  */
 export async function sendTestMaintenanceEmail({ mode, startTime, message }) {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.email) throw new Error("Could not determine your email address");
+  if (!user?.email) throw new Error("Failed to determine your email address");
 
   const { data, error } = await invokeEdgeFunction("notify-maintenance", {
     body: {

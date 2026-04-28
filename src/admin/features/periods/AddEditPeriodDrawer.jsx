@@ -68,7 +68,7 @@ export default function AddEditPeriodDrawer({
       });
       onClose();
     } catch (e) {
-      setSaveError(e?.message || "Something went wrong.");
+      setSaveError("Failed to save period. Please try again.");
     } finally {
       setSaving(false);
     }

@@ -232,9 +232,8 @@ export default function OutcomesPage() {
       setDeleteConfirmText("");
       toast.success("Outcome removed");
     } catch (e) {
-      const msg = e?.message || "Failed to remove outcome";
-      setPanelError(msg);
-      toast.error(msg);
+      setPanelError("Failed to remove outcome. Please try again.");
+      toast.error("Failed to remove outcome. Please try again.");
       setDeleteTarget(null);
       setDeleteConfirmText("");
     } finally {

@@ -128,7 +128,7 @@ export function usePeriodOutcomes({ periodId }) {
         }
       } catch (err) {
         if (!alive) return;
-        setError(err?.message || "Failed to load outcomes data");
+        setError("Failed to load outcomes data. Please try again.");
       } finally {
         if (alive) setLoading(false);
       }
@@ -167,7 +167,7 @@ export function usePeriodOutcomes({ periodId }) {
       setPendingFrameworkImportState(null);
     } catch (err) {
       if (!mountedRef.current) return;
-      setError(err?.message || "Failed to load outcomes data");
+      setError("Failed to load outcomes data. Please try again.");
     } finally {
       if (mountedRef.current) setLoading(false);
     }

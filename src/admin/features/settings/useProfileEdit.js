@@ -103,7 +103,7 @@ export function useProfileEdit() {
       initialRef.current = { displayName: trimmedName, email: form.email.trim() };
       setModalOpen(false);
     } catch (err) {
-      setErrors({ _general: err?.message || "Could not save profile." });
+      setErrors({ _general: "Failed to save profile." });
     } finally {
       setSaving(false);
     }
@@ -141,7 +141,7 @@ export function useProfileEdit() {
       setPasswordErrors({});
       setModalView("profile");
     } catch (err) {
-      setPasswordErrors({ _general: err?.message || "Could not update password." });
+      setPasswordErrors({ _general: "Failed to update password." });
     } finally {
       setPasswordSaving(false);
     }

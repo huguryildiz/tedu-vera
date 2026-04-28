@@ -53,7 +53,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
       setDetected(parsed.detectedColumns ?? []);
       setWarning(parsed.warningMessage);
     } catch {
-      setImportError("Could not parse file. Make sure it is a valid CSV.");
+      setImportError("Failed to parse file. Make sure it is a valid CSV.");
     } finally {
       setParsing(false);
     }
@@ -81,7 +81,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
       });
       setPhase("result");
     } catch (e) {
-      setImportError(e?.message || "Import failed.");
+      setImportError("Import failed. Please try again.");
     } finally {
       setImporting(false);
     }

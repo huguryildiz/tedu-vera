@@ -48,13 +48,13 @@ const EMPTY_CREATE_ERRORS = { shortLabel: "", contact_email: "" };
 const normalizeAdminInviteError = (raw) => {
   const msg = String(raw || "").trim();
   const lower = msg.toLowerCase();
-  if (!lower) return "Could not send invite.";
+  if (!lower) return "Failed to send invite.";
   if (lower.includes("already_member")) return "This email is already a member of this organization.";
   if (lower.includes("already_exists_in_auth")) return "This email is already registered in VERA. The user must sign in and request access.";
   if (lower.includes("invalid_email")) return "Please enter a valid email address.";
   if (lower.includes("rate_limit_exceeded")) return "Too many invites sent recently. Please try again later.";
   if (lower.includes("organization_not_found")) return "Organization not found.";
-  return msg;
+  return "Failed to send invite. Please try again.";
 };
 
 /**
@@ -101,7 +101,7 @@ export function useManageOrganizations({
       const data = await listOrganizations();
       setOrgList(data);
     } catch (e) {
-      setError(e?.message || "Could not load organizations.");
+      setError("Failed to load organizations.");
     }
   }, [enabled]);
 
@@ -289,7 +289,7 @@ export function useManageOrganizations({
       if (msg.toLowerCase().includes("duplicate") || msg.toLowerCase().includes("unique")) {
         setCreateError("An organization with this code already exists.");
       } else {
-        setCreateError(msg || "Could not create organization.");
+        setCreateError("Failed to create organization.");
       }
     } finally {
       decLoading();
@@ -326,7 +326,7 @@ export function useManageOrganizations({
       if (msg.includes("organization_not_found")) {
         setEditError("Organization not found. It may have been removed.");
       } else {
-        setEditError(msg || "Could not update organization.");
+        setEditError("Failed to update organization.");
       }
     } finally {
       decLoading();
@@ -351,7 +351,7 @@ export function useManageOrganizations({
       return true;
     } catch (e) {
       const msg = String(e?.message || "");
-      setError(msg || "Could not update admin.");
+      setError("Failed to update admin.");
       return false;
     } finally {
       decLoading();
@@ -369,7 +369,7 @@ export function useManageOrganizations({
       return true;
     } catch (e) {
       const msg = String(e?.message || "");
-      setError(msg || "Could not delete admin.");
+      setError("Failed to delete admin.");
       return false;
     } finally {
       decLoading();
@@ -408,7 +408,7 @@ export function useManageOrganizations({
       await loadOrgs();
       setMessage?.("Invite cancelled.");
     } catch (e) {
-      setError(e?.message || "Could not cancel invite.");
+      setError("Failed to cancel invite.");
     } finally {
       setInviteLoading(false);
     }
@@ -425,7 +425,7 @@ export function useManageOrganizations({
       await loadOrgs();
       setMessage?.("Join request approved.");
     } catch (e) {
-      setError(e?.message || "Could not approve join request.");
+      setError("Failed to approve join request.");
     } finally {
       setJoinRequestLoading(false);
     }
@@ -439,7 +439,7 @@ export function useManageOrganizations({
       await loadOrgs();
       setMessage?.("Join request rejected.");
     } catch (e) {
-      setError(e?.message || "Could not reject join request.");
+      setError("Failed to reject join request.");
     } finally {
       setJoinRequestLoading(false);
     }
@@ -456,7 +456,7 @@ export function useManageOrganizations({
       await loadOrgs();
       setMessage?.("Application approved.");
     } catch (e) {
-      setError(e?.message || "Could not approve application.");
+      setError("Failed to approve application.");
     } finally {
       setApplicationLoading(false);
     }
@@ -470,7 +470,7 @@ export function useManageOrganizations({
       await loadOrgs();
       setMessage?.("Application rejected.");
     } catch (e) {
-      setError(e?.message || "Could not reject application.");
+      setError("Failed to reject application.");
     } finally {
       setApplicationLoading(false);
     }

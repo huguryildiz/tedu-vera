@@ -61,7 +61,7 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, onCa
       await onSave?.({ displayName: displayName.trim(), email: email.trim(), avatarFile });
       onClose();
     } catch (e) {
-      setSaveError(e?.message || "Something went wrong.");
+      setSaveError("Failed to save profile. Please try again.");
     } finally {
       setSaving(false);
     }

@@ -24,7 +24,7 @@ export default function VerifyEmailScreen() {
   useEffect(() => {
     let cancelled = false;
     const token = search.get("token");
-    if (!token) { setState("error"); setErrorMsg("Missing token."); return; }
+    if (!token) { setState("error"); setErrorMsg("Verification link is invalid or missing."); return; }
     confirmEmailVerification(token)
       .then(() => {
         if (cancelled) return;
@@ -52,7 +52,7 @@ export default function VerifyEmailScreen() {
       setResendState("sent");
     } catch (e) {
       setResendState("error");
-      setErrorMsg(String(e?.message || "Failed to send. Try again."));
+      setErrorMsg("Failed to resend verification email.");
     }
   }
 
@@ -156,5 +156,5 @@ function normalize(raw) {
   if (m.includes("expired"))      return "This verification link has expired. Request a new one from the banner in your dashboard.";
   if (m.includes("already_used")) return "This link has already been used.";
   if (m.includes("not_found"))    return "This link is invalid or has already expired.";
-  return "Could not verify your email. Please request a new link.";
+  return "Failed to verify your email. Please request a new link.";
 }

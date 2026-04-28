@@ -384,7 +384,7 @@ export function useManagePeriods({
       } else if (msg.includes("period_name_required")) {
         return { ok: false, fieldErrors: { name: "Period name is required." } };
       } else {
-        setPanelError("period", msg || "Could not create period. Try again or check your session.");
+        setPanelError("period", "Failed to create period. Please try again.");
         return { ok: false };
       }
     } finally {
@@ -426,7 +426,7 @@ export function useManagePeriods({
       } else if (msg.includes("period_name_required")) {
         return { ok: false, fieldErrors: { name: "Period name is required." } };
       } else {
-        setPanelError("period", msg || "Could not update period. Try again or check your session.");
+        setPanelError("period", "Failed to update period. Please try again.");
         return { ok: false };
       }
     } finally {
@@ -465,7 +465,7 @@ export function useManagePeriods({
       return { ok: true };
     } catch (e) {
       const msg = String(e?.message || "");
-      setPanelError("period", msg || "Could not update criteria config. Try again or check your session.");
+      setPanelError("period", "Failed to update criteria config. Please try again.");
       return { ok: false, error: msg };
     } finally {
       decLoading();
@@ -499,7 +499,7 @@ export function useManagePeriods({
       return { ok: true };
     } catch (e) {
       const msg = String(e?.message || "");
-      setPanelError("period", msg || "Could not update outcome config. Try again or check your session.");
+      setPanelError("period", "Failed to update outcome config. Please try again.");
       return { ok: false, error: msg };
     } finally {
       decLoading();
@@ -577,7 +577,7 @@ export function useManagePeriods({
       setMessage("Criteria saved successfully.");
     } catch (e) {
       const raw = String(e?.message || e?.details || "");
-      let msg = raw || "Could not save criteria. Try again or check your session.";
+      let msg = "Failed to save criteria. Please try again.";
       if (raw.includes("foreign key") && raw.includes("score_sheet_items")) {
         msg = "Cannot modify criteria while scores exist for this evaluation period. Lock the period first, or clear existing scores before making structural changes.";
       } else if (raw.includes("foreign key")) {
@@ -678,7 +678,7 @@ export function useManagePeriods({
       setMessage(`Duplicated ${label} — new period ready to configure.`);
       return { ok: true, id: newId };
     } catch (e) {
-      setPanelError("period", e?.message || "Could not duplicate period. Try again.");
+      setPanelError("period", "Failed to duplicate period. Please try again.");
       return { ok: false };
     } finally {
       decLoading();
@@ -697,7 +697,7 @@ export function useManagePeriods({
       removePeriod(periodId);
       setMessage(deletedPeriodName ? `Period "${deletedPeriodName}" deleted` : "Period deleted");
     } catch (e) {
-      setPanelError("period", e?.message || "Could not delete period. Try again.");
+      setPanelError("period", "Failed to delete period. Please try again.");
     } finally {
       decLoading();
     }
@@ -734,7 +734,7 @@ export function useManagePeriods({
       } else if (msg.includes("unauthorized")) {
         setEvalLockError("Session is invalid. Please re-login.");
       } else {
-        setEvalLockError(e?.message || "Could not save settings. Try again or check your session.");
+        setEvalLockError("Failed to save settings. Please try again.");
       }
     } finally {
       decLoading();

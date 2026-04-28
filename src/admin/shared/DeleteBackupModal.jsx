@@ -49,7 +49,7 @@ export default function DeleteBackupModal({ open, onClose, backup, onDelete }) {
       await onDelete?.();
       setConfirmText("");
     } catch (e) {
-      setDeleteError(e?.message || "Delete failed");
+      setDeleteError("Failed to delete. Please try again.");
     } finally {
       setDeleting(false);
     }

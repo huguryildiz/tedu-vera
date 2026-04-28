@@ -41,7 +41,7 @@ export default function RevertToDraftModal({ open, onClose, period, onRevert }) 
       setConfirmName("");
       onClose();
     } catch (e) {
-      setError(e?.message || "Could not revert the period. Try again.");
+      setError("Failed to revert the period. Please try again.");
     } finally {
       setReverting(false);
     }

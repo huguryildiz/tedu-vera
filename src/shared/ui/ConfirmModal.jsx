@@ -83,7 +83,7 @@ export default function ConfirmModal({
       await onConfirm?.();
       onClose();
     } catch (e) {
-      setError(e?.message || "Something went wrong.");
+      setError("Something went wrong. Please try again.");
     } finally {
       setConfirming(false);
     }

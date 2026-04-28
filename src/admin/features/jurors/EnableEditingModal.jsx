@@ -49,7 +49,7 @@ export default function EnableEditingModal({ open, onClose, juror, onEnable }) {
       await onEnable({ reason: reason.trim(), durationMinutes });
       // Success — parent closes modal via setEditModeJuror(null)
     } catch (e) {
-      setError(e?.message || "Could not reopen evaluation. Please try again.");
+      setError("Failed to reopen evaluation. Please try again.");
     } finally {
       setEnabling(false);
     }

@@ -61,7 +61,7 @@ export default function PinResultModal({ open, onClose, juror, newPin, onSendEma
       }
     } catch (e) {
       setSendResult("error");
-      setSendError(e?.context?.error || e?.message || "Unexpected error.");
+      setSendError("Failed to send PIN email. Please try again.");
     } finally {
       setSending(false);
     }

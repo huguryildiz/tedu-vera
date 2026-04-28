@@ -39,7 +39,7 @@ export default function AddJurorDrawer({ open, onClose, onSave, periodName, erro
       });
       onClose();
     } catch (e) {
-      setSaveError(e?.message || "Something went wrong.");
+      setSaveError("Failed to add juror. Please try again.");
     } finally {
       setSaving(false);
     }

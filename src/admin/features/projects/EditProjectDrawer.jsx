@@ -86,7 +86,7 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
       });
       onClose();
     } catch (e) {
-      setSaveError(e?.message || "Something went wrong.");
+      setSaveError("Failed to save project. Please try again.");
     } finally {
       setSaving(false);
     }

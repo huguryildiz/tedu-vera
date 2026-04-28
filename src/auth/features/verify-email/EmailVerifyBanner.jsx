@@ -34,7 +34,7 @@ export default function EmailVerifyBanner() {
       setState("sent");
     } catch (e) {
       setState("error");
-      setErrorMsg(String(e?.message || "Failed to send. Try again."));
+      setErrorMsg("Failed to resend verification email.");
     }
   }
 

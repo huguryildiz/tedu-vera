@@ -258,7 +258,7 @@ export default function ManageOrganizationsPanel({
     });
     setAdminEditSaving(false);
     if (ok) { setAdminEditOpen(false); return; }
-    setAdminEditError("Could not update admin.");
+    setAdminEditError("Failed to update admin.");
   };
 
   const confirmAdminDelete = async () => {

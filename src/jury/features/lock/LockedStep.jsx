@@ -57,7 +57,7 @@ export default function LockedStep({ state, onBack }) {
       });
       setSent(true);
     } catch (e) {
-      setSendError(e?.message || "Could not send request. Please try again.");
+      setSendError("Failed to send request. Please try again.");
     } finally {
       setSending(false);
     }

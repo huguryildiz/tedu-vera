@@ -132,7 +132,7 @@ export default function ChangePasswordDrawer({ open, onClose, onSave, error }) {
       await onSave?.({ currentPassword: current, newPassword: newPwd });
       onClose();
     } catch (err) {
-      setSaveError(err?.message || "Something went wrong.");
+      setSaveError("Failed to update password. Please try again.");
     } finally {
       setSaving(false);
     }

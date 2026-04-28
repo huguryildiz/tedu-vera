@@ -216,7 +216,7 @@ export default function DemoAdminLoader({ onComplete }) {
             fontSize: "13px",
             textAlign: "center",
           }}>
-            <div style={{ fontWeight: 600, marginBottom: "8px" }}>Could not connect to demo</div>
+            <div style={{ fontWeight: 600, marginBottom: "8px" }}>Failed to connect to demo</div>
             <div style={{ opacity: 0.8, marginBottom: "12px" }}>
               Authentication failed. This may be a temporary issue.
             </div>

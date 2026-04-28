@@ -272,12 +272,12 @@ export default function EditSingleCriterionDrawer({
 
       const result = await onSave(newTemplate);
       if (!result?.ok) {
-        setSaveError(result?.error || "Could not save. Try again.");
+        setSaveError(result?.error || "Failed to save. Please try again.");
       } else {
         onClose();
       }
     } catch (e) {
-      setSaveError(e?.message || "Could not save. Try again.");
+      setSaveError("Failed to save. Please try again.");
     } finally {
       setSaving(false);
     }

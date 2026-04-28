@@ -304,7 +304,7 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
       if (e?.name === "AbortError") return; // superseded by a newer load — ignore
       loading.periodSelectLockRef.current = false;
       loading.setLoadingState(null);
-      identity.setAuthError("Could not load projects. Please try again.");
+      identity.setAuthError("Failed to load projects. Please try again.");
       workflow.setStep("identity");
     }
   };
@@ -403,7 +403,7 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
         if (String(e?.message || "").includes("period_inactive")) {
           identity.setAuthError("This period is no longer active. Please try again.");
         } else {
-          identity.setAuthError("Could not start the evaluation. Please try again.");
+          identity.setAuthError("Failed to start the evaluation. Please try again.");
         }
         workflow.setStep("identity");
       }
@@ -518,7 +518,7 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
         return;
       }
       loading.setLoadingState(null);
-      identity.setAuthError("Could not load periods. Please try again.");
+      identity.setAuthError("Failed to load periods. Please try again.");
     }
   // _loadPeriod (via handlePeriodSelect) intentionally omitted from deps:
   // it is a plain async function and would cause an infinite loop if included.

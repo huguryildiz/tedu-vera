@@ -76,10 +76,10 @@ export function useJuryLifecycleHandlers({ identity, session, scoring, loading, 
           editState.setEditLockActive(true);
           setSubmitError("Evaluations are locked for this period.");
         } else {
-          setSubmitError("Could not save all scores. Please check your connection and try again.");
+          setSubmitError("Failed to save all scores. Please check your connection and try again.");
         }
       } catch {
-        setSubmitError("Could not save all scores. Please check your connection and try again.");
+        setSubmitError("Failed to save all scores. Please check your connection and try again.");
       }
       workflow.submitPendingRef.current = false;
       return;
@@ -116,7 +116,7 @@ export function useJuryLifecycleHandlers({ identity, session, scoring, loading, 
     }
     if (!allSaved) {
       loading.setLoadingState(null);
-      setSubmitError("Could not save all scores. Please check your connection and try again.");
+      setSubmitError("Failed to save all scores. Please check your connection and try again.");
       workflow.submitPendingRef.current = false;
       return;
     }
@@ -183,7 +183,7 @@ export function useJuryLifecycleHandlers({ identity, session, scoring, loading, 
         editState.setEditLockActive(true);
         setSubmitError("This juror has been blocked. Please contact the coordinators.");
       } else {
-        setSubmitError(`Final submission failed (${msg || "unknown"}). Please try again.`);
+        setSubmitError("Final submission failed. Please try again.");
       }
     } finally {
       loading.setLoadingState(null);

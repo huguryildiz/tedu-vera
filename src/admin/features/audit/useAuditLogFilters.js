@@ -117,7 +117,7 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
         setAuditCursor({ beforeAt: last.created_at, beforeId: last.id });
       }
     } catch (e) {
-      setAuditError(e?.message || "Could not load audit logs. Try again or adjust filters.");
+      setAuditError("Failed to load audit logs. Please try again or adjust filters.");
     } finally {
       setAuditLoading(false);
     }
@@ -253,7 +253,7 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
       });
       setMessage(`${all.length} audit event${all.length !== 1 ? "s" : ""} exported`);
     } catch (e) {
-      setAuditError(e?.message || "Could not export audit logs.");
+      setAuditError("Failed to export audit logs.");
     } finally {
       setAuditExporting(false);
     }

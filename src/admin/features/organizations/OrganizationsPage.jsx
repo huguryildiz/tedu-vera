@@ -222,7 +222,7 @@ export default function OrganizationsPage() {
       const data = await listUnlockRequests(status);
       setUnlockRows(Array.isArray(data) ? data : []);
     } catch (e) {
-      setUnlockError(e?.message || "Could not load unlock requests.");
+      setUnlockError("Failed to load unlock requests.");
       setUnlockRows([]);
     } finally {
       setUnlockLoading(false);
@@ -369,7 +369,7 @@ export default function OrganizationsPage() {
       if (fresh) setManageAdminsOrg(fresh);
       return;
     }
-    setAdminInviteError(result?.error || "Could not invite admin.");
+    setAdminInviteError(result?.error || "Failed to invite admin.");
   }, [adminInviteEmail, manageAdminsOrg, hookHandleInviteAdmin, orgList]);
 
   const handleRemoveAdmin = useCallback(async (orgId, userId) => {
@@ -398,7 +398,7 @@ export default function OrganizationsPage() {
       await loadOrgs();
       refreshMemberships().catch(() => {});
     } catch (e) {
-      setToggleError(e?.message || "Could not update organization status.");
+      setToggleError("Failed to update organization status.");
     } finally {
       setToggleSaving(false);
     }
@@ -415,7 +415,7 @@ export default function OrganizationsPage() {
       await loadOrgs();
       refreshMemberships().catch(() => {});
     } catch (e) {
-      setDeleteError(e?.message || "Could not delete organization.");
+      setDeleteError("Failed to delete organization.");
     } finally {
       setDeleteLoading(false);
     }

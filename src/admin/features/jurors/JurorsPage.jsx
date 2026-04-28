@@ -139,7 +139,7 @@ export default function JurorsPage() {
   useEffect(() => {
     incLoading();
     periods.loadPeriods()
-      .catch(() => setPanelError("period", "Could not load periods."))
+      .catch(() => setPanelError("period", "Failed to load periods."))
       .finally(() => decLoading());
   }, [periods.loadPeriods]);
 
@@ -147,7 +147,7 @@ export default function JurorsPage() {
     if (!periods.viewPeriodId) return;
     incLoading();
     projectsHook.loadProjects()
-      .catch(() => setPanelError("project", "Could not load projects."))
+      .catch(() => setPanelError("project", "Failed to load projects."))
       .finally(() => decLoading());
   }, [periods.viewPeriodId, projectsHook.loadProjects]);
 
@@ -155,7 +155,7 @@ export default function JurorsPage() {
     if (!periods.viewPeriodId) return;
     incLoading();
     jurorsHook.loadJurorsAndEnrich()
-      .catch(() => setPanelError("juror", "Could not load jurors."))
+      .catch(() => setPanelError("juror", "Failed to load jurors."))
       .finally(() => decLoading());
   }, [periods.viewPeriodId, jurorsHook.loadJurorsAndEnrich]);
 
@@ -307,12 +307,12 @@ export default function JurorsPage() {
   }
   async function handleSaveEditJuror(jurorId, { name, affiliation, email }) {
     const result = await jurorsHook.handleEditJuror({ jurorId, juror_name: name, affiliation, email });
-    if (!result?.ok) throw new Error(result?.message || "Could not update juror.");
+    if (!result?.ok) throw new Error(result?.message || "Failed to update juror.");
   }
   const handleEnableEditMode = async ({ reason, durationMinutes }) => {
     const jurorId = editModeJuror?.juror_id || editModeJuror?.jurorId;
     const result = await jurorsHook.handleToggleJurorEdit({ jurorId, enabled: true, reason, durationMinutes });
-    if (!result?.ok) throw new Error(result?.message || "Could not enable editing mode.");
+    if (!result?.ok) throw new Error(result?.message || "Failed to enable editing mode.");
     setEditModeJuror(null);
   };
   function openPinResetModal(juror) { setPinResetJuror(juror); setOpenMenuId(null); }

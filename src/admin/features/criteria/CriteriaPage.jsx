@@ -68,7 +68,7 @@ export default function CriteriaPage() {
   useEffect(() => {
     incLoading();
     periods.loadPeriods()
-      .catch(() => setPanelError("period", "Could not load periods. Try refreshing."))
+      .catch(() => setPanelError("period", "Failed to load periods. Try refreshing."))
       .finally(() => decLoading());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periods.loadPeriods]);
@@ -257,8 +257,6 @@ export default function CriteriaPage() {
         msg = "A criterion with that label already exists. Please use a unique name for each criterion.";
       } else if (raw.includes("permission") || raw.includes("denied") || raw.includes("RLS")) {
         msg = "You don't have permission to modify criteria for this period. Contact your organization admin.";
-      } else if (raw) {
-        msg = `Failed to save criteria: ${raw}`;
       }
       setPanelError("criteria", msg);
       _toast.error(msg);
@@ -347,7 +345,7 @@ export default function CriteriaPage() {
         _toast.info("Source period has no criteria to clone");
       }
     } catch (err) {
-      setPanelError("criteria", err?.message || "Failed to clone criteria");
+      setPanelError("criteria", "Failed to clone criteria. Please try again.");
     } finally {
       setCloneLoading(false);
     }
