@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *'  # nightly at 02:00 UTC — visual + a11y sweep
 
 # Each job uses an isolated local Supabase stack, so there is no shared DB
 # state to protect. Keeping the concurrency group only prevents runaway queues
@@ -258,7 +260,7 @@ jobs:
     name: Accessibility smoke
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
 
     steps:
       - name: Checkout
@@ -331,7 +333,7 @@ jobs:
     name: Visual regression
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
 
     steps:
       - name: Checkout
