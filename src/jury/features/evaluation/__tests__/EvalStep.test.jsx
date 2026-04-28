@@ -70,4 +70,13 @@ describe("EvalStep", () => {
     render(<EvalStep state={state} onBack={vi.fn()} />);
     expect(screen.getByText("Loading...")).toBeInTheDocument();
   });
+
+  qaTest("component.jury-eval.post-submit-lock", () => {
+    // edit_enabled false disabled: when final_submitted_at is set (editLockActive=true),
+    // score inputs must be disabled to prevent post-submit modifications.
+    const state = makeState({ editLockActive: true, allComplete: true });
+    render(<EvalStep state={state} onBack={vi.fn()} />);
+    expect(screen.getByTestId("jury-eval-score-technical")).toBeDisabled();
+    expect(screen.getByTestId("jury-eval-submit")).toBeDisabled();
+  });
 });

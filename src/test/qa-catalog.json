@@ -13863,5 +13863,17 @@
     "coverageStrength": "Strong",
     "severity": "normal",
     "status": "completed"
+  },
+  {
+    "id": "component.jury-eval.post-submit-lock",
+    "module": "Jury / Evaluation / EvalStep",
+    "area": "score-lock",
+    "story": "EvalStep — score inputs disabled when edit_enabled=false after final submit",
+    "scenario": "When editLockActive=true (edit_enabled false / final_submitted_at set), score inputs and submit button are disabled.",
+    "whyItMatters": "Post-submit immutability prevents jurors from altering scores after final submission.",
+    "risk": "Enabled inputs after submit allow unauthorised score changes.",
+    "coverageStrength": "Strong",
+    "severity": "high",
+    "status": "completed"
   }
 ]
