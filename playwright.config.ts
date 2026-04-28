@@ -69,6 +69,18 @@ export default defineConfig({
       use: { storageState: "e2e/.auth/admin.json" },
       fullyParallel: false,
     },
+    {
+      // Accessibility smoke — nightly only via the e2e.yml schedule cron.
+      name: "a11y",
+      testMatch: /e2e\/a11y\//,
+      use: { storageState: "e2e/.auth/admin.json" },
+    },
+    {
+      // Visual regression — nightly only via the e2e.yml schedule cron.
+      name: "visual",
+      testMatch: /e2e\/visual\//,
+      use: { storageState: "e2e/.auth/admin.json" },
+    },
   ],
   webServer: {
     // Port 5174 keeps the E2E server isolated from the dev server (5173),

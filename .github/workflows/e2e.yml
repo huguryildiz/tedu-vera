@@ -299,7 +299,7 @@ jobs:
         uses: ./.github/actions/start-local-supabase
 
       - name: Run accessibility smoke tests
-        run: npm run e2e -- e2e/a11y/smoke.spec.ts --reporter=line,json
+        run: npm run e2e -- --project=a11y --reporter=line,json
         env:
           CI: true
           PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/playwright-results.json
@@ -372,7 +372,7 @@ jobs:
         uses: ./.github/actions/start-local-supabase
 
       - name: Run visual regression tests
-        run: npm run e2e -- e2e/visual/admin-routes.spec.ts --reporter=line,json
+        run: npm run e2e -- --project=visual --reporter=line,json
         env:
           CI: true
           PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/playwright-results.json
