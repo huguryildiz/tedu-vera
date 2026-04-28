@@ -13923,5 +13923,38 @@
     "coverageStrength": "Strong",
     "severity": "normal",
     "status": "completed"
+  },
+  {
+    "id": "coverage.heatmap-mini-matrix.renders-score-cells",
+    "module": "Admin / Heatmap",
+    "area": "heatmap-mobile",
+    "story": "HeatmapMiniMatrix — score cells",
+    "scenario": "renders a colored cell with score number for each juror×project combination",
+    "whyItMatters": "Admins need to read exact scores at a glance on mobile portrait.",
+    "risk": "Missing cells would hide scoring gaps from the admin.",
+    "coverageStrength": "Strong",
+    "severity": "high"
+  },
+  {
+    "id": "coverage.heatmap-mini-matrix.empty-cell",
+    "module": "Admin / Heatmap",
+    "area": "heatmap-mobile",
+    "story": "HeatmapMiniMatrix — empty cell",
+    "scenario": "renders a dash for a juror×project pair with no score",
+    "whyItMatters": "Unscored projects must be visually distinct from scored ones.",
+    "risk": "A missing dash could make an unscored project look like a zero.",
+    "coverageStrength": "Strong",
+    "severity": "medium"
+  },
+  {
+    "id": "coverage.heatmap-mini-matrix.tfoot-averages",
+    "module": "Admin / Heatmap",
+    "area": "heatmap-mobile",
+    "story": "HeatmapMiniMatrix — footer averages",
+    "scenario": "renders a tfoot row with per-project averages",
+    "whyItMatters": "Project averages give admins a column-level summary without scrolling.",
+    "risk": "Missing averages would require switching to the desktop view for per-project summaries.",
+    "coverageStrength": "Strong",
+    "severity": "medium"
   }
 ]
