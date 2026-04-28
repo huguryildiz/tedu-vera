@@ -142,8 +142,6 @@ environment. Simulates the full procedure without touching production
 data. The drill establishes muscle memory and surfaces gaps in the
 checklist before they bite during a real event.
 
-Document drill results in `.claude/internal/post-mortems/drills/`.
-
 ---
 
 ## Anti-patterns (don't do this)
@@ -166,7 +164,3 @@ Document drill results in `.claude/internal/post-mortems/drills/`.
 - [../walkthroughs/jury-day-end-to-end.md](../walkthroughs/jury-day-end-to-end.md)
 - [../operations/backup-and-recovery.md](../operations/backup-and-recovery.md)
 - [README.md](README.md)
-
----
-
-> *Last updated: 2026-04-24*

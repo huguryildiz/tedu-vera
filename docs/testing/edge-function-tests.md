@@ -178,7 +178,3 @@ function actually works end-to-end:
 - [../architecture/edge-functions-kong-jwt.md](../architecture/edge-functions-kong-jwt.md)
 - [../decisions/0003-jwt-admin-auth.md](../decisions/0003-jwt-admin-auth.md)
 - [../deployment/migrations.md](../deployment/migrations.md)
-
----
-
-> *Last updated: 2026-04-24*

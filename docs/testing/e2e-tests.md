@@ -113,19 +113,19 @@ inline `page.fill('input[name=email]', ...)` in a spec.
 
 ## Skip policy
 
-Skipped tests must include a reason comment and a tracking issue or
-plan reference.
+Skipped tests must include a reason comment + tracking issue. The
+`scripts/check-no-skip.js` sentinel maintains a baseline at
+`docs/qa/skip-baseline.json`; a new skip in CI requires updating the
+baseline + a PR justification.
 
 ```typescript
 test.skip("score-edit unlock flow", async ({ page }) => {
   // SKIP: rpc_admin_unlock_score not implemented yet.
-  // Tracked in premium-saas-test-upgrade-plan.md § 5.
+  // Tracked in <issue-or-link>.
 });
 ```
 
-`.skip()` without context rots silently; the audit at
-[e2e-security-skip-audit.md](e2e-security-skip-audit.md) reviews skips
-and either reactivates or formally excludes them.
+`.skip()` without context rots silently — fix or delete.
 
 ---
 
@@ -168,7 +168,7 @@ Default: parallel workers, sharded in CI.
 Some specs cannot run in parallel:
 
 - **Maintenance-mode E2E** runs in a dedicated CI job after admin specs
-  complete (see commits `a4a6d3b6`, `a852cb0d`).
+  complete (its own Playwright project with a serial worker).
 - **Tenant isolation specs** assume specific seeded UUIDs and cannot
   share a worker with specs that mutate the same entities.
 
@@ -180,9 +180,8 @@ file or add a serial marker.
 
 ## Anti-patterns
 
-- **Selector inline in spec.** Always extract to PoM. The 11-file
-  helper rewrite mid-2026 was directly caused by selectors scattered
-  across specs.
+- **Selector inline in spec.** Always extract to PoM. A UI refactor
+  should break one PoM, not 30 specs.
 - **Fixed sleeps** (`await page.waitForTimeout(1000)`). Use
   `await expect(...).toBeVisible({ timeout: ... })` or `waitFor`.
 - **Hardcoded URLs.** Use `playwright.config.ts` baseURL; specs use
@@ -238,11 +237,6 @@ file or add a serial marker.
 - [README.md](README.md)
 - [../architecture/e2e-testing-primer.md](../architecture/e2e-testing-primer.md)
 - [target-test-architecture.md](target-test-architecture.md)
-- [premium-saas-test-upgrade-plan.md](premium-saas-test-upgrade-plan.md)
 - [periods-test-pattern.md](periods-test-pattern.md) (reference pattern
   for E2E specs that need DB fixtures)
 - [smoke-checklist.md](smoke-checklist.md) (pre-jury-day procedure)
-
----
-
-> *Last updated: 2026-04-28*

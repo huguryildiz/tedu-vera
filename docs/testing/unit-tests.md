@@ -96,9 +96,7 @@ Defined in [`vite.config.js`](../../vite.config.js):
 | Storage (per-folder) | 80 | — |
 
 CI fails when any metric drops below threshold. Thresholds **ratchet up**
-as coverage grows — never lower a threshold. The audit at
-[premium-saas-test-upgrade-plan.md](premium-saas-test-upgrade-plan.md)
-proposes 60/50/65 as the next stretch target.
+as coverage grows — never lower a threshold.
 
 ---
 
@@ -123,10 +121,9 @@ in E2E. See [e2e-tests.md](e2e-tests.md).
 ## Anti-patterns
 
 - **Tautology mocks.** A test that mocks the orchestrator hook to return
-  X and then asserts the hook returned X. The page-test mock audit at
-  [page-test-mock-audit.md](page-test-mock-audit.md) catalogs 9 admin
-  pages with this issue. Refactor target: mock the *data* (RPCs), not
-  the *logic* (hooks).
+  X and then asserts the hook returned X. Mock the *data* (RPCs), not
+  the *logic* (hooks). Discipline guide:
+  [page-test-mock-audit.md](page-test-mock-audit.md).
 - **Real network fetches.** If a test reaches an actual Supabase URL,
   the mock is missing or wrong. Test will be flaky and slow.
 - **Sleeps / `setTimeout`.** Use vitest's fake timers
@@ -168,12 +165,5 @@ The canonical "what should our tests look like" doc is
 
 - [README.md](README.md)
 - [target-test-architecture.md](target-test-architecture.md)
-- [premium-saas-test-upgrade-plan.md](premium-saas-test-upgrade-plan.md)
-  (current quality assessment + roadmap)
-- [page-test-mock-audit.md](page-test-mock-audit.md) (tautology audit)
-- [page-test-coverage-map.md](page-test-coverage-map.md) (per-page test
-  inventory)
-
----
-
-> *Last updated: 2026-04-24*
+- [page-test-mock-audit.md](page-test-mock-audit.md) (mock discipline)
+- [page-test-coverage-map.md](page-test-coverage-map.md) (per-feature test inventory)

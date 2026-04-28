@@ -197,7 +197,3 @@ asserted from pgTAP alone — even if the data layer is the bottleneck.
 - [../decisions/0005-snapshot-migrations.md](../decisions/0005-snapshot-migrations.md)
 - [../architecture/security-model.md](../architecture/security-model.md) — RLS
   guarantees enforced by this suite
-
----
-
-> *Last updated: 2026-04-24*

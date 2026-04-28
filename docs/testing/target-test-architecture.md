@@ -194,10 +194,8 @@ short of Realtime and IntersectionObserver edge cases (those go to E2E).
 > (wrong arg name, wrong return-field destructure). Tautology subset
 > (mock returns X, test asserts X) is treated under § 6 anti-pattern #1.
 >
-> See `.claude/internal/plans/test-reclassification/test-reclassification-plan.md`
-> § 0a for the full reasoning. The remainder of this section describes
-> what an integration layer **would** look like in a project that adopted
-> it; VERA does not.
+> The remainder of this section describes what an integration layer
+> **would** look like in a project that adopted it; VERA does not.
 
 ~~This is the layer most React projects skip. VERA needs it.~~ (Superseded
 by the decision above.)
@@ -717,8 +715,8 @@ between tests — that serializes the suite and balloons runtime.
 
 - Hard fail on any spec failure.
 - Hard fail on any new `test.skip` or `test.fixme` introduced in the PR
-  (lint rule); skipping must be a deliberate, reviewed action documented
-  in `docs/testing/e2e-security-skip-audit.md` (the existing pattern).
+  (lint rule); skipping must be a deliberate, reviewed action with a
+  reason comment + tracking issue + skip-baseline update.
 - Soft report on visual diffs and axe violations (see § 3.7).
 
 #### Examples of bugs only E2E catches
@@ -1065,8 +1063,8 @@ helper layer's job is to *impersonate* roles, not to *escape* them.
   layer would have, this document is wrong; open a PR to update it
   rather than retrofitting an ad hoc test.
 - **New tool proposal?** Justify against § 6 anti-pattern #12.
-- **New "skip"?** Justify in `docs/testing/e2e-security-skip-audit.md`-style
-  audit and link from the PR.
+- **New "skip"?** Add a reason comment, link a tracking issue, and
+  update `docs/qa/skip-baseline.json`.
 
 The architecture is correct when a contributor can read § 7 and know,
 within five seconds and without asking, where their next test goes.
