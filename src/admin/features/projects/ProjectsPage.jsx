@@ -356,9 +356,9 @@ export default function ProjectsPage() {
       members: membersToArray(project.members),
     });
     if (result?.ok === false) {
-      _toast.error(result.message || "Could not duplicate project.");
+      _toast.error("Failed to duplicate project");
     } else {
-      _toast.success("Project duplicated.");
+      _toast.success("Project duplicated");
     }
   }
 
@@ -522,7 +522,7 @@ export default function ProjectsPage() {
               const fmtLabel = fmt === "pdf" ? "PDF" : fmt === "csv" ? "CSV" : "Excel";
               _toast.success(`${filteredList.length} project${filteredList.length !== 1 ? "s" : ""} exported · ${fmtLabel}`);
             } catch (e) {
-              _toast.error(e?.message || "Projects export failed — please try again");
+              _toast.error("Projects export failed — try again");
             }
           }}
         />

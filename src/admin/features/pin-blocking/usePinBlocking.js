@@ -77,7 +77,7 @@ export function usePinBlocking({ periodId }) {
         email: juror?.email || "",
       });
     } catch (e) {
-      _toast.error(e?.message || "Could not unlock juror.");
+      _toast.error("Failed to unlock juror");
     }
   }, [periodId, lockedJurors, _toast]);
 
@@ -96,7 +96,7 @@ export function usePinBlocking({ periodId }) {
     if (failed === 0) {
       _toast.success(`Unlocked ${toUnlock.length} juror${toUnlock.length !== 1 ? "s" : ""}`);
     } else {
-      _toast.error(`Unlocked ${toUnlock.length - failed}, failed ${failed}`);
+      _toast.error(`Unlocked ${toUnlock.length - failed} of ${toUnlock.length} jurors — ${failed} failed`);
     }
   }, [periodId, lockedJurors, _toast]);
 

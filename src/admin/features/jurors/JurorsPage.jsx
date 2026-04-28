@@ -353,7 +353,7 @@ export default function JurorsPage() {
       await jurorsHook.handleDeleteJuror(removeJuror.juror_id || removeJuror.jurorId);
       setRemoveJuror(null);
     } catch (e) {
-      _toast.error(e?.message || "Could not remove juror.");
+      _toast.error("Failed to remove juror");
     }
   }
 
@@ -533,7 +533,7 @@ export default function JurorsPage() {
               const fmtLabel = fmt === "pdf" ? "PDF" : fmt === "csv" ? "CSV" : "Excel";
               _toast.success(`${filteredList.length} juror${filteredList.length !== 1 ? "s" : ""} exported · ${fmtLabel}`);
             } catch (e) {
-              _toast.error(e?.message || "Jurors export failed — please try again");
+              _toast.error("Jurors export failed — try again");
             }
           }}
         />
