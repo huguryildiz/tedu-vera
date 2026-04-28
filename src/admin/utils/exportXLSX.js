@@ -301,7 +301,7 @@ export async function exportGridXLSX(exportRows, groups, { periodName = "", tena
   }
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, makeSheet(exportRows), "All Criteria");
+  XLSX.utils.book_append_sheet(wb, makeSheet(exportRows, false), "All Criteria");
   criterionTabs.forEach((tab) => {
     const safeName = tab.label.replace(/[\/\\*?\[\]:]/g, "-").slice(0, 31);
     XLSX.utils.book_append_sheet(wb, makeSheet(tab.rows, false), safeName);

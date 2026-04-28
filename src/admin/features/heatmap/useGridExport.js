@@ -62,7 +62,7 @@ export function useGridExport({ buildExportRows, groups, periodName, visibleJuro
     const groupHeaders = (groups || []).map((g) =>
       g.group_no != null ? [`P${g.group_no}`, g.title || ""].filter(Boolean).join(" — ") : (g.title || String(g.id))
     );
-    const allHeader = ["Juror", "Affiliation", "Juror Progress", ...groupHeaders];
+    const allHeader = ["Juror", "Affiliation", ...groupHeaders];
     const makeDataRows = (tabRows, includeStatus) =>
       tabRows.map((r) => [
         r.name,
@@ -97,8 +97,8 @@ export function useGridExport({ buildExportRows, groups, periodName, visibleJuro
       pdfTitle: "VERA — Heatmap",
       pdfSubtitle,
       header: allHeader,
-      rows: makeDataRows(exportRows, true),
-      colWidths: [28, 20, 14, ...(groups || []).map(() => 10)],
+      rows: makeDataRows(exportRows, false),
+      colWidths: [28, 20, ...(groups || []).map(() => 10)],
       extraSections,
     });
   }, [buildExportRows, visibleJurors, groups, periodName, tenantCode, orgName, deptName, lookup, activeCriteria, organizationId]);
