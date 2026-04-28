@@ -214,6 +214,9 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.3px;
     white-space: nowrap;
+    padding: 2px 5px;
+    border-radius: 5px;
+    background: color-mix(in srgb, currentColor 12%, transparent);
   }
 
   .rmc-mini-avatars {
