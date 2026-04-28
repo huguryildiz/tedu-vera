@@ -115,7 +115,7 @@ WHERE juror_id = (SELECT juror_id FROM _pgtap_ctx)
 
 -- ────────── 6. post-submit upsert returns final_submit_required ──────────
 SELECT is(
-  (SELECT (rpc_jury_upsert_score(
+  (SELECT rpc_jury_upsert_score(
      'cccc0000-0000-4000-8000-000000000001'::uuid,
      '33330000-0000-4000-8000-000000000001'::uuid,
      (SELECT juror_id FROM _pgtap_ctx),
@@ -141,7 +141,7 @@ SELECT is(
 
 -- ────────── 8. idempotent reject: second call still final_submit_required ──────────
 SELECT is(
-  (SELECT (rpc_jury_upsert_score(
+  (SELECT rpc_jury_upsert_score(
      'cccc0000-0000-4000-8000-000000000001'::uuid,
      '33330000-0000-4000-8000-000000000001'::uuid,
      (SELECT juror_id FROM _pgtap_ctx),

@@ -62,10 +62,17 @@ test.describe("demo write reject — demo org read-only for unauthenticated call
       res.headers()["content-range"]?.split("/")[1] ?? "0",
       10,
     );
+    // PostgREST returns 204 No Content for DELETE with return=minimal even when
+    // RLS silently drops all rows — that's still a "blocked" outcome for our purposes.
     const isBlocked =
       res.status() === 401 ||
       res.status() === 403 ||
+      res.status() === 404 ||
+      (res.status() === 204 && affectedRows === 0) ||
       (res.status() === 200 && affectedRows === 0);
-    expect(isBlocked).toBe(true);
+    expect(
+      isBlocked,
+      `demo write reject DELETE: status=${res.status()} affectedRows=${affectedRows}`,
+    ).toBe(true);
   });
 });

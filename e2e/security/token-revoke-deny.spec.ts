@@ -43,9 +43,14 @@ test.describe("token revoke deny — revoked entry token rejected at eval gate",
 
     // revoke token reject: gate must surface a denial — not proceed to identity step
     await expect(
-      page.getByText(/revoked|access denied|invalid/i),
-      "revoked entry must show denial message",
+      page.getByText("Access Denied"),
+      "revoked entry must show Access Denied heading",
     ).toBeVisible({ timeout: 15_000 });
+    // is_revoked deny: error code chip identifies the specific denial reason
+    await expect(
+      page.getByText("token_revoked").first(),
+      "revoke token reject: error code chip must show token_revoked",
+    ).toBeVisible();
 
     // Cleanup
     await adminClient.from("entry_tokens").delete().eq("id", inserted!.id);

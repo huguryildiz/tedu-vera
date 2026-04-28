@@ -178,11 +178,16 @@ test.describe("Turkish character preservation in CSV export", () => {
       namePrefix: "TurkishChar",
     });
     await writeScoresAsJuror(fixture, { p1: { a: 25, b: 60 }, p2: { a: 15, b: 50 } });
-    // Overwrite p1 title with a Turkish-character-rich string
-    await adminClient
+    // setupScoringFixture locks the period — the block_projects_on_locked_period
+    // trigger silently rejects project updates while locked. Unlock briefly to
+    // overwrite p1 title with a Turkish-character-rich string, then re-lock.
+    await adminClient.from("periods").update({ is_locked: false }).eq("id", fixture.periodId);
+    const { error: updErr } = await adminClient
       .from("projects")
       .update({ title: TURKISH_TITLE })
       .eq("id", fixture.p1Id);
+    if (updErr) throw new Error(`Turkish title update failed: ${updErr.message}`);
+    await adminClient.from("periods").update({ is_locked: true }).eq("id", fixture.periodId);
   });
 
   test.afterAll(async () => {
