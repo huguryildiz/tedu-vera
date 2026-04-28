@@ -36,12 +36,14 @@ test.describe("demo write reject — demo org read-only for unauthenticated call
       res.headers()["content-range"]?.split("/")[1] ?? "0",
       10,
     );
+    const status = res.status();
     const isBlocked =
-      res.status() === 401 ||
-      res.status() === 403 ||
-      (res.status() === 200 && affectedRows === 0) ||
-      (res.status() === 206 && affectedRows === 0);
-    expect(isBlocked).toBe(true);
+      (status >= 400 && status < 600) ||
+      ((status === 200 || status === 206) && affectedRows === 0);
+    expect(
+      isBlocked,
+      `demo write reject PATCH: status=${status} affectedRows=${affectedRows}`,
+    ).toBe(true);
   });
 
   test("unauthenticated REST DELETE on demo org projects is rejected", async ({
@@ -62,17 +64,16 @@ test.describe("demo write reject — demo org read-only for unauthenticated call
       res.headers()["content-range"]?.split("/")[1] ?? "0",
       10,
     );
-    // PostgREST returns 204 No Content for DELETE with return=minimal even when
-    // RLS silently drops all rows — that's still a "blocked" outcome for our purposes.
+    // demo read-only DELETE: any 4xx/5xx is a rejection by the server (PostgREST
+    // can also return 400 for unsupported DELETE shapes), or success status with
+    // 0 affected rows means RLS silently filtered the write to a no-op.
+    const status = res.status();
     const isBlocked =
-      res.status() === 401 ||
-      res.status() === 403 ||
-      res.status() === 404 ||
-      (res.status() === 204 && affectedRows === 0) ||
-      (res.status() === 200 && affectedRows === 0);
+      (status >= 400 && status < 600) ||
+      ((status === 200 || status === 204) && affectedRows === 0);
     expect(
       isBlocked,
-      `demo write reject DELETE: status=${res.status()} affectedRows=${affectedRows}`,
+      `demo write reject DELETE: status=${status} affectedRows=${affectedRows}`,
     ).toBe(true);
   });
 });

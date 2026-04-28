@@ -223,9 +223,15 @@ test.describe("Turkish character preservation in CSV export", () => {
     ).toBeDefined();
 
     const projectTitle = matchingRow!["Project Title"] ?? "";
-    // Verify key turkish characters preserved (ü, ç, ğ, ı, ö, ş)
-    expect(projectTitle, "ü must be preserved").toContain("ü");
-    expect(projectTitle, "ç must be preserved").toContain("ç");
-    expect(projectTitle, "ğ must be preserved").toContain("ğ");
+    // Verify key turkish characters preserved (case-insensitive — title contains
+    // a mix of upper- and lowercase Turkish letters; we care about byte
+    // preservation per character, not exact case in the seed string).
+    const lower = projectTitle.toLowerCase();
+    expect(lower, "ü must be preserved").toContain("ü");
+    expect(lower, "ç must be preserved").toContain("ç");
+    expect(lower, "ğ must be preserved").toContain("ğ");
+    expect(lower, "ı must be preserved").toContain("ı");
+    expect(lower, "ş must be preserved").toContain("ş");
+    expect(lower, "ö must be preserved").toContain("ö");
   });
 });
