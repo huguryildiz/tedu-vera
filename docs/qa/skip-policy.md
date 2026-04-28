@@ -52,4 +52,4 @@ See [skip-baseline.json](skip-baseline.json).
 | `e2e/admin/export-content-parity.spec.ts` | 1 | PDF export option not in current build |
 | `e2e/admin/periods.spec.ts` | 1 | Conditional guard (already-closed period state) |
 
-Note: 8 former `test.skip()` data guards in the two security specs were converted to `expect()` assertions in Phase 3.6 (2026-04-26), reducing the baseline from 13 → 5.
+Note: 8 former `test.skip()` data guards in the two security specs were converted to `expect()` assertions on 2026-04-26, reducing the baseline from 13 → 5.

@@ -395,13 +395,13 @@ After any audit-related change, verify these produce visible rows:
 
 - `actor_name` is populated (not NULL)
 - `actor_type` is `'admin'` for user-initiated actions (not `'system'`)
-- `ip_address` is populated (incl. trigger-emitted rows — P0.3)
+- `ip_address` is populated (incl. trigger-emitted rows)
 - `user_agent` is populated (incl. trigger-emitted rows)
-- `diff` carries only the changed keys, not full row snapshots (P1.5)
-- `synced_to_ext` flips to `true` once forwarded to the external sink (P2.11);
+- `diff` carries only the changed keys, not full row snapshots
+- `synced_to_ext` flips to `true` once forwarded to the external sink;
   rows older than 5 minutes with `false` get retried by the next sweep
 - For each hourly sweep window: `security.chain.root.signed` row exists
-  (P2.10) and the HMAC signature recomputes to its stored value
+  and the HMAC signature recomputes to its stored value
 
 ---
 
