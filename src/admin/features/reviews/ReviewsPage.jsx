@@ -208,7 +208,7 @@ function SortIcon({ colKey, sortKey, sortDir }) {
 }
 
 function abbrLabel(label) {
-  return label.split(/\s+/).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+  return label.split(/\s+/).filter(w => /^[a-zA-Z]/.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join('');
 }
 
 // ── Main component ────────────────────────────────────────────
