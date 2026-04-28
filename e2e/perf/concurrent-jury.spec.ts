@@ -17,8 +17,8 @@ const SCORE_WINDOW_MS = 60_000; // 60s SLO regardless of N (event-day budget)
  * Concurrent jury — event-day workload performance test
  *
  * Validates VERA's ability to handle simultaneous jury sessions during live
- * evaluation days. SLO: N_JURORS = 4 jurors × 2 projects × 2 criteria = 16
- * score_sheet_items written within 90 seconds, with zero RPC failures and
+ * evaluation days. SLO: N_JURORS = 8 jurors × 2 projects × 2 criteria = 32
+ * score_sheet_items written within 60 seconds, with zero RPC failures and
  * fixture integrity preserved.
  *
  * Pattern:
