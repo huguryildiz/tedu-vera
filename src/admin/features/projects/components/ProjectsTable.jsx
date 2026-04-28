@@ -278,6 +278,7 @@ export default function ProjectsTable({
                     </PremiumTooltip>
                     <MemberChips members={project.members} />
                     <span className="proj-chips-spacer" />
+                    <span className="proj-chips-sep" />
                     <span className="proj-compact-stats">
                       <strong>{projectEvalCountMap.get(project.id) ?? 0}</strong>
                       {" eval"}
