@@ -76,7 +76,7 @@ export default function UnlockPinModal({
       setSent(true);
       _toast.success(`PIN sent to ${recipientEmail}`);
     } catch (e) {
-      _toast.error(e?.message || "Could not send email.");
+      _toast.error("Failed to send email");
     } finally {
       setSending(false);
     }

@@ -225,7 +225,7 @@ export default function HeatmapPage() {
       const fmtLabel = exportFormat === "pdf" ? "PDF" : exportFormat === "csv" ? "CSV" : "Excel";
       toast.success(`Heatmap exported · ${fmtLabel}`);
     } catch (e) {
-      toast.error(e?.message || "Heatmap export failed — please try again");
+      toast.error("Heatmap export failed — try again");
     }
   }
 

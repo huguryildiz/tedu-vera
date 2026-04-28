@@ -101,7 +101,7 @@ export function useAdminTeam(orgId) {
         toast.success("Invite resent");
         await refetch();
       } catch (e) {
-        toast.error(e.message || "Failed to resend");
+        toast.error("Failed to resend invite");
       }
     },
     [orgId, toast, refetch]
@@ -114,7 +114,7 @@ export function useAdminTeam(orgId) {
         toast.success("Invite cancelled");
         await refetch();
       } catch (e) {
-        toast.error(e.message || "Failed to cancel");
+        toast.error("Failed to cancel invite");
       }
     },
     [toast, refetch]
@@ -130,7 +130,7 @@ export function useAdminTeam(orgId) {
         toast.success("Ownership transferred");
         await refetch();
       } catch (e) {
-        toast.error(e.message || "Failed to transfer ownership");
+        toast.error("Failed to transfer ownership");
       }
     },
     [toast, refetch]
@@ -143,7 +143,7 @@ export function useAdminTeam(orgId) {
         toast.success("Admin removed");
         await refetch();
       } catch (e) {
-        toast.error(e.message || "Failed to remove admin");
+        toast.error("Failed to remove admin");
       }
     },
     [toast, refetch]
@@ -159,7 +159,7 @@ export function useAdminTeam(orgId) {
         toast.success(enabled ? "Admins can now invite" : "Only owner can invite now");
       } catch (e) {
         setAdminsCanInviteState(prev); // revert
-        toast.error(e.message || "Failed to update setting");
+        toast.error("Failed to update invite setting");
       }
     },
     [orgId, adminsCanInvite, toast]

@@ -426,7 +426,7 @@ export default function AuthProvider({ children }) {
       sessionExpiredHandledRef.current = true;
       toastStore.emit({
         type: "warning",
-        message: "Session expired. Please sign in again.",
+        message: "Session expired — please sign in again",
       });
       try {
         await supabase.auth.signOut({ scope: "local" });

@@ -390,7 +390,7 @@ export default function JurorsPage() {
               <input
                 className="search-input"
                 type="text"
-                placeholder="Search jurors..."
+                placeholder="Search juror or affiliation..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />

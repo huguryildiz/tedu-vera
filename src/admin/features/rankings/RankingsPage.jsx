@@ -279,7 +279,7 @@ export default function RankingsPage() {
       });
       _toast.success("Rankings exported");
     } catch (e) {
-      _toast.error(e?.message || "Export failed");
+      _toast.error("Rankings export failed — try again");
     }
   }
 

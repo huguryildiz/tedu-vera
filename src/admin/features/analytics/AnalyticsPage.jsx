@@ -392,7 +392,7 @@ export default function AnalyticsPage() {
       const fmtLabel = format === "pdf" ? "PDF" : "Excel";
       _toast.success(`Analytics exported · ${fmtLabel}${periodName ? ` · ${periodName}` : ""}`);
     } catch (e) {
-      _toast.error(e?.message || "Analytics export failed — please try again");
+      _toast.error("Analytics export failed — try again");
     }
   }
 

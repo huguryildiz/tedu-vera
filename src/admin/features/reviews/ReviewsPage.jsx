@@ -461,7 +461,7 @@ export default function ReviewsPage() {
       const fmtLabel = exportFormat === "pdf" ? "PDF" : exportFormat === "csv" ? "CSV" : "Excel";
       toast.success(`${sorted.length} review${sorted.length !== 1 ? "s" : ""} · ${uniqueJurors} juror${uniqueJurors !== 1 ? "s" : ""} exported · ${fmtLabel}`);
     } catch (e) {
-      toast.error(e?.message || "Reviews export failed — please try again");
+      toast.error("Reviews export failed — try again");
     }
   }
 

@@ -156,7 +156,7 @@ export default function SettingsPage() {
       setAdminSessions(rows);
     } catch (e) {
       if (!silent) {
-        _toast.error(e?.message || "Failed to load session history.");
+        _toast.error("Failed to load session history");
       }
     } finally {
       setAdminSessionsLoading(false);
@@ -183,7 +183,7 @@ export default function SettingsPage() {
       setAdminSessions(rows);
       _toast.success("Session revoked");
     } catch (e) {
-      _toast.error(e?.message || "Failed to revoke session.");
+      _toast.error("Failed to revoke session");
     }
   }, [_toast]);
 
@@ -236,7 +236,7 @@ export default function SettingsPage() {
     if (trimmedEmail && trimmedEmail !== user?.email) {
       const { error: emailError } = await supabase.auth.updateUser({ email: trimmedEmail });
       if (emailError) throw emailError;
-      _toast.success("Confirmation link sent to your new email address.");
+      _toast.success("Confirmation link sent to your new email address");
     }
 
     if (avatarFile) {
@@ -266,9 +266,9 @@ export default function SettingsPage() {
     const { error } = await supabase.auth.updateUser({ email: user?.email });
     if (error) {
       await refreshUser();
-      _toast.error("Could not cancel email change.");
+      _toast.error("Failed to cancel email change");
     } else {
-      _toast.success("Email change cancelled.");
+      _toast.success("Email change cancelled");
     }
   }, [user, _toast, refreshUser, clearPendingEmail]);
 

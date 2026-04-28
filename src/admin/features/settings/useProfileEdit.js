@@ -93,7 +93,7 @@ export function useProfileEdit() {
       if (emailChanged) {
         const { error } = await supabase.auth.updateUser({ email: form.email.trim() });
         if (error) throw error;
-        toast.success("Confirmation link sent to your new email address.");
+        toast.success("Confirmation link sent to your new email address");
       }
 
       if (nameChanged && !emailChanged) {
