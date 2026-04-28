@@ -8,7 +8,7 @@ import { formatDateTime as formatFull } from "@/shared/lib/dateUtils";
 import { COLUMNS, membersToArray, formatRelative, scoreBandToken } from "./projectHelpers";
 import MemberChips from "./MemberChips";
 import SortIcon from "./SortIcon";
-import { avatarGradient, initials } from "@/shared/ui/avatarColor";
+import { jurorAvatarBg, jurorAvatarFg, jurorInitials } from "@/admin/utils/jurorIdentity";
 
 export default function ProjectsTable({
   pagedList,
@@ -263,8 +263,8 @@ export default function ProjectsTable({
                           <span className="proj-adv-chips">
                             {advisors.slice(0, 2).map((name, i) => (
                               <PremiumTooltip key={i} text={name}>
-                                <span className="proj-adv-chip" style={{ background: avatarGradient(name) }}>
-                                  {initials(name)}
+                                <span className="proj-adv-chip" style={{ background: jurorAvatarBg(name), color: jurorAvatarFg(name) }}>
+                                  {jurorInitials(name)}
                                 </span>
                               </PremiumTooltip>
                             ))}
