@@ -29,6 +29,7 @@ import {
   buildJurorEditMap,
   buildJurorFinalMap,
   deriveGroupNoOptions,
+  computeActiveFilterCount,
 } from "../filterPipeline.js";
 
 describe("selectors/filterPipeline — buildProjectMetaMap", () => {
@@ -109,5 +110,21 @@ describe("selectors/filterPipeline — deriveGroupNoOptions", () => {
     // Single entry
     const opts = deriveGroupNoOptions([{ groupNo: "A1" }]);
     expect(opts).toEqual(["A1"]);
+  });
+});
+
+describe("selectors/filterPipeline — computeActiveFilterCount", () => {
+  qaTest("filter.pipe.export-column-count", () => {
+    // filter count export: active filter count determines which rows appear in export output
+    expect(computeActiveFilterCount({})).toBe(0);
+    // Two filters active: juror name + status array → exportColumn row count reduced to matching subset
+    expect(
+      computeActiveFilterCount({
+        filterJuror: "Alice",
+        filterStatus: ["completed"],
+      })
+    ).toBe(2);
+    // Only group filter → count = 1
+    expect(computeActiveFilterCount({ filterGroupNo: ["G01"] })).toBe(1);
   });
 });

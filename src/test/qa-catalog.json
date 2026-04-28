@@ -13875,5 +13875,17 @@
     "coverageStrength": "Strong",
     "severity": "high",
     "status": "completed"
+  },
+  {
+    "id": "filter.pipe.export-column-count",
+    "module": "Admin / Selectors / filterPipeline",
+    "area": "export-filter",
+    "story": "computeActiveFilterCount — filter count determines exported rows",
+    "scenario": "Active filter count is 0 with no filters, 2 with juror + status filters, 1 with group-only filter.",
+    "whyItMatters": "Export row count must match what the user sees in the filtered table view.",
+    "risk": "Wrong active filter count causes export/visible column parity bugs.",
+    "coverageStrength": "Strong",
+    "severity": "normal",
+    "status": "completed"
   }
 ]
