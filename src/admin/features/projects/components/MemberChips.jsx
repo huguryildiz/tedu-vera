@@ -1,6 +1,9 @@
-import { initials } from "@/shared/ui/avatarColor";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import { membersToArray } from "./projectHelpers";
+
+function getInitial(name) {
+  return (name || "").trim().charAt(0).toLocaleUpperCase("tr-TR") || "?";
+}
 
 export default function MemberChips({ members }) {
   const arr = membersToArray(members);
@@ -13,8 +16,8 @@ export default function MemberChips({ members }) {
     <span className="member-chips">
       {visible.map((name) => (
         <PremiumTooltip key={name} text={name}>
-          <span className="member-chip">
-            {initials(name)}
+          <span className="member-chip team-member-avatar">
+            {getInitial(name)}
           </span>
         </PremiumTooltip>
       ))}
