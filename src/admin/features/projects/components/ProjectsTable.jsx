@@ -249,6 +249,33 @@ export default function ProjectsTable({
                     <span className="members-chips-label">Team</span>
                     <MemberChips members={project.members} />
                   </span>
+                  {/* Mobile portrait compact row: advisor chips · member chips · stats */}
+                  <div className="proj-compact-row2">
+                    {project.advisor && (() => {
+                      const advisors = project.advisor.split(",").map((s) => s.trim()).filter(Boolean);
+                      if (!advisors.length) return null;
+                      return (
+                        <>
+                          <span className="proj-adv-chips">
+                            {advisors.slice(0, 2).map((name, i) => (
+                              <span key={i} className="proj-adv-chip" title={name}>
+                                {name.trim().split(/\s+/).filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+                              </span>
+                            ))}
+                          </span>
+                          <span className="proj-chips-sep" />
+                        </>
+                      );
+                    })()}
+                    <MemberChips members={project.members} />
+                    <span className="proj-chips-spacer" />
+                    <span className="proj-compact-stats">
+                      <strong>{projectEvalCountMap.get(project.id) ?? 0}</strong>
+                      {" eval"}
+                      <span className="proj-dot">·</span>
+                      <span className="vera-datetime-text">{formatRelative(project.updated_at)}</span>
+                    </span>
+                  </div>
                 </td>
                 <td className="text-center avg-score-cell" data-label="Avg Score">
                   {projectAvgMap.has(project.id)

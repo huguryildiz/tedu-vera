@@ -62,7 +62,8 @@
 #projects-main-table .mobile-rank-ring,
 #projects-main-table .mobile-eyebrow,
 #projects-main-table .members-chips-wrap,
-#projects-main-table .advisor-mobile-line { display: none; }
+#projects-main-table .advisor-mobile-line,
+#projects-main-table .proj-compact-row2 { display: none; }
 
 /* ─── Manage team members modal list ─────────────────────── */
 .manage-student-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px }
@@ -101,12 +102,11 @@
     display: grid;
     grid-template-columns: auto 1fr auto;
     grid-template-areas:
-      "ring title   actions"
-      "members members members"
-      "footer  footer  footer";
-    gap: 0 12px;
+      "ring  title  actions"
+      "chips chips  chips";
+    gap: 0 10px;
     width: 100%;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     padding: 0;
   }
 
@@ -123,7 +123,7 @@
   /* Rank ring cell (No) */
   #projects-main-table td.col-no {
     grid-area: ring;
-    padding: 14px 0 14px 14px;
+    padding: 9px 0 9px 12px;
     align-self: center;
     z-index: 1;
     text-align: left !important;
@@ -131,14 +131,14 @@
   #projects-main-table td.col-no .project-no-badge { display: none; }
   #projects-main-table .mobile-rank-ring {
     display: block;
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
   }
   #projects-main-table .mobile-rank-ring-fill {
     position: relative;
     display: block;
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: conic-gradient(var(--ring, var(--text-tertiary)) var(--pct, 0deg), var(--border) 0);
   }
@@ -160,42 +160,42 @@
     z-index: 1;
   }
   #projects-main-table .mobile-rank-ring-num {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--ring, var(--text-tertiary));
     font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
     font-variant-numeric: tabular-nums;
   }
   #projects-main-table .mobile-rank-ring-lbl {
-    font-size: 7px;
+    font-size: 6.5px;
     color: var(--text-tertiary);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     margin-top: 1px;
     font-weight: 600;
     font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
   }
 
-  /* Mobile: hide plain-text line, keep JurorBadge advisor block */
+  /* Mobile: hide plain-text advisor lines — compact row2 shows chips instead */
   #projects-main-table .advisor-mobile-line { display: none; }
+  #projects-main-table .meta-chips-block.proj-advisors { display: none; }
 
   /* Title cell */
   #projects-main-table td.col-title {
     grid-area: title;
-    padding: 14px 0 0 0;
+    padding: 9px 0 8px 0;
     min-width: 0;
     z-index: 1;
   }
   #projects-main-table td.col-title > div:first-of-type {
-    font-size: 13.5px;
+    font-size: 13px;
     font-weight: 650;
-    line-height: 1.3;
-    letter-spacing: -0.2px;
+    line-height: 1.25;
+    letter-spacing: -0.15px;
     color: var(--text-primary);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
   }
   #projects-main-table .mobile-eyebrow {
     display: block;
@@ -209,34 +209,21 @@
   /* Actions (kebab) cell — top-right */
   #projects-main-table td.col-actions {
     grid-area: actions;
-    padding: 12px 12px 0 0;
+    padding: 10px 10px 0 0;
     align-self: start;
     text-align: right !important;
     z-index: 1;
   }
 
-  /* Members cell — hide text, show chips */
+  /* Members cell → chips row */
   #projects-main-table td.col-members {
-    grid-area: members;
-    padding: 10px 14px 12px;
+    grid-area: chips;
+    padding: 6px 12px;
     background: var(--bg-card);
     border-top: 1px solid var(--border);
   }
   #projects-main-table td.col-members .members-chips-wrap { display: none; }
-  #projects-main-table td.col-members .members-text {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 10px;
-  }
-  #projects-main-table td.col-members .members-chips-label {
-    font-size: 9.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: var(--text-tertiary);
-    font-weight: 600;
-    flex-shrink: 0;
-  }
+  #projects-main-table td.col-members .members-text { display: none; }
   #projects-main-table .member-chips {
     display: flex;
     align-items: center;
@@ -276,31 +263,56 @@
     font-size: 10px;
   }
 
-  /* Footer cell — show on mobile */
-  #projects-main-table td.col-footer {
-    grid-area: footer;
-    display: flex !important;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 14px;
-    border-top: 1px solid var(--border);
-    font-size: 10.5px;
-    color: var(--text-tertiary);
-    gap: 10px;
-  }
-  #projects-main-table td.col-footer > * {
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  #projects-main-table td.col-footer strong {
-    color: var(--text-secondary);
-    font-weight: 600;
-  }
+  /* Footer cell — stats now live in compact row2; hide footer on mobile */
+  #projects-main-table td.col-footer { display: none !important; }
 
-  /* Hide cells that are no longer used directly on mobile (avg + updated columns)
-     — their data is represented by the rank ring and footer */
+  /* Hide cells not used on mobile */
   #projects-main-table td.avg-score-cell,
   #projects-main-table td.col-updated { display: none; }
+
+  /* ── Compact row 2: advisor initials · member chips · stats ── */
+  #projects-main-table .proj-compact-row2 {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  #projects-main-table .proj-adv-chips { display: flex; align-items: center; flex-shrink: 0; }
+  #projects-main-table .proj-adv-chip {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #1e293b; color: #fff;
+    font-size: 7.5px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--bg-card);
+    margin-left: -4px; letter-spacing: 0.1px;
+    flex-shrink: 0;
+  }
+  #projects-main-table .proj-adv-chip:first-child { margin-left: 0; }
+  #projects-main-table .proj-chips-sep {
+    width: 1px; height: 14px; background: rgba(15,23,42,0.13);
+    margin: 0 8px; flex-shrink: 0; border-radius: 1px;
+  }
+  #projects-main-table .proj-chips-spacer { flex: 1; min-width: 4px; }
+  #projects-main-table .proj-compact-stats {
+    font-size: 10px; color: var(--text-tertiary);
+    white-space: nowrap; flex-shrink: 0;
+    display: flex; align-items: center; gap: 4px;
+  }
+  #projects-main-table .proj-compact-stats strong {
+    color: var(--text-secondary); font-weight: 600; font-size: 10.5px;
+  }
+  #projects-main-table .proj-dot { color: rgba(15,23,42,0.13); font-size: 10px; }
+  /* Size down member-chips when inside compact row2 */
+  #projects-main-table .proj-compact-row2 .member-chips { display: flex; align-items: center; }
+  #projects-main-table .proj-compact-row2 .member-chip {
+    width: 22px; height: 22px;
+    font-size: 7.5px; font-weight: 700;
+    margin-left: -5px;
+  }
+  #projects-main-table .proj-compact-row2 .member-chip:first-child { margin-left: 0; }
+  #projects-main-table .proj-compact-row2 .member-chip-more { font-size: 7px; }
+  #projects-main-table .proj-compact-row2 .member-chips-empty {
+    height: 22px; padding: 0 8px; font-size: 10px;
+  }
 
   /* ── Empty-state row override ──
      .es-row must not inherit the grid layout meant for data rows.
@@ -344,6 +356,14 @@
  * class on the wrapper is retained for legacy selectors only — do not add
  * typography rules here. */
 
+
+/* ─── Dark mode: compact row2 ─────────────────────────────── */
+.dark-mode #projects-main-table .proj-adv-chip {
+  background: #2d3f5c;
+  border-color: var(--bg-card);
+}
+.dark-mode #projects-main-table .proj-chips-sep { background: rgba(127,153,205,0.28); }
+.dark-mode #projects-main-table .proj-dot { color: rgba(127,153,205,0.28); }
 
 /* ─── Filter clear link ───────────────────────────────────── */
 .filter-clear-link {
