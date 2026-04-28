@@ -13,25 +13,34 @@ For the current quality assessment + improvement roadmap, see
 ## The pyramid
 
 ```
-                ┌──────────────────────┐
-                │   Smoke checklist    │  manual, pre-jury, ~20 min
-                └──────────┬───────────┘
-                ┌──────────┴───────────┐
-                │   E2E (Playwright)   │  real browser, ~280 tests, 1.5–3 min
-                └──────────┬───────────┘
-                ┌──────────┴───────────┐
-                │  pgTAP (SQL layer)   │  ephemeral Postgres, ~50 tests, <1 min
-                └──────────┬───────────┘
-                ┌──────────┴───────────┐
-                │  Edge Fn (Deno)      │  ~190 tests, harness-mocked
-                └──────────┬───────────┘
-                ┌──────────┴───────────┐
-                │  Unit (Vitest)       │  jsdom + mocks, ~1500 tests, <30s
-                └──────────────────────┘
+                ┌────────────────────────────┐
+                │    Smoke checklist         │  manual, pre-jury, ~20 min
+                └─────────────┬──────────────┘
+                ┌─────────────┴──────────────┐
+                │  Visual + a11y (nightly)   │  cron 02:00 UTC, e2e.yml
+                └─────────────┬──────────────┘
+                ┌─────────────┴──────────────┐
+                │  Perf (concurrent jury)    │  workflow_dispatch only
+                └─────────────┬──────────────┘
+                ┌─────────────┴──────────────┐
+                │  E2E (Playwright)          │  6 projects, ~285 tests
+                └─────────────┬──────────────┘
+                ┌─────────────┴──────────────┐
+                │  pgTAP (SQL layer)         │  RLS + RPC + triggers
+                └─────────────┬──────────────┘
+                ┌─────────────┴──────────────┐
+                │  Edge Fn (Deno)            │  ~190 tests, harness-mocked
+                └─────────────┬──────────────┘
+                ┌─────────────┴──────────────┐
+                │  Unit (Vitest)             │  jsdom + mocks, ~1500 tests
+                └────────────────────────────┘
 ```
 
-The base of the pyramid runs in seconds, the top runs in minutes. CI
-runs everything on every PR; the smoke checklist is a manual procedure
+The base of the pyramid runs in seconds, the top runs in minutes. PR
+CI runs unit + Edge + pgTAP + admin/other/maintenance E2E projects.
+Visual + a11y projects run nightly via cron (and on `workflow_dispatch`).
+Perf is workflow_dispatch only — manually triggered before
+load-sensitive releases. The smoke checklist is a manual procedure
 before live evaluation events.
 
 ---
@@ -41,7 +50,7 @@ before live evaluation events.
 | Guide | Scope |
 | --- | --- |
 | [unit-tests.md](unit-tests.md) | Vitest, `qaTest()`, `qa-catalog.json`, mock-Supabase pattern, coverage thresholds. |
-| [e2e-tests.md](e2e-tests.md) | Playwright, Page Object Models, fixtures, auth helpers, skip policy. |
+| [e2e-tests.md](e2e-tests.md) | Playwright, Page Object Models, fixtures, auth helpers, skip policy. **6 projects:** `admin`, `other`, `maintenance`, `a11y`, `visual`, `perf`. |
 | [sql-tests.md](sql-tests.md) | pgTAP suite — RLS isolation, RPC contracts, trigger behavior. |
 | [edge-function-tests.md](edge-function-tests.md) | Deno test runner + harness for Edge Functions. |
 | [smoke-checklist.md](smoke-checklist.md) | Pre-jury-day manual checklist. |
@@ -71,8 +80,12 @@ npm test                          # watch mode
 npm test -- --run                 # CI-style single run
 npm run test:coverage             # with coverage HTML
 
-# E2E
-npm run e2e                       # full suite, headless
+# E2E (Playwright projects: admin / other / maintenance / a11y / visual / perf)
+npm run e2e                       # admin + other + maintenance (default)
+npm run e2e -- --project=admin    # admin shard only
+npm run e2e -- --project=a11y     # accessibility smoke (nightly cron job)
+npm run e2e -- --project=visual   # visual regression  (nightly cron job)
+npm run e2e -- --project=perf     # concurrent-jury load (manual only)
 npm run e2e -- --headed --workers=1 --grep "Login"
 
 # SQL (pgTAP)
@@ -81,11 +94,12 @@ npm run e2e -- --headed --workers=1 --grep "Login"
 # Edge Functions
 npm run test:edge                 # Deno test runner
 
-# Drift sentinels
+# Drift / coverage sentinels
 npm run check:db-types
 npm run check:rls-tests
 npm run check:rpc-tests
 npm run check:edge-schema
+npm run check:guideline-coverage  # 40-item test-writing.md sentinel (currently 95%)
 npm run check:no-native-select
 npm run check:no-nested-panels
 ```
@@ -132,4 +146,22 @@ for the current sprint target.
 
 ---
 
-> *Last updated: 2026-04-24*
+## CI / nightly schedule
+
+| Workflow | Trigger | Includes | Reports |
+| --- | --- | --- | --- |
+| `ci.yml` | every push + PR | unit, build, edge, migrations, pgTAP, drift sentinels | `allure-report-NNN`, `excel-report-NNN`, `test-results-raw-NNN` |
+| `e2e.yml` | every push + PR | admin (sharded), other, maintenance | `excel-e2e-<job>-NNN`, `playwright-results-*` |
+| `e2e.yml` (cron) | nightly 02:00 UTC | a11y, visual (in addition to PR matrix) | `excel-e2e-a11y-NNN`, `excel-e2e-visual-NNN` |
+| `perf.yml` | `workflow_dispatch` | concurrent-jury load test | `excel-perf-NNN`, `perf-results-NNN` |
+| `edge-fn-smoke.yml` | daily 06:00 UTC | smokes deployed Edge Fns against vera-demo | `edge-fn-smoke-NNN` |
+| `demo-db-reset.yml` | daily 04:00 UTC | regenerate demo seed + 5 post-seed assertions | `demo-db-reset-NNN` |
+| `db-backup.yml` | monthly | pg_dump of vera-prod | `db-backup-NNN` |
+
+Schedule cron runs unblock the visual + a11y suite without paying the
+cost on every push. Most CI artifacts retain for 30 days; raw playwright
+bundles for 14.
+
+---
+
+> *Last updated: 2026-04-28*

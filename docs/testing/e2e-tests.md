@@ -14,14 +14,28 @@ For the **why** of specific patterns, see
 ## Commands
 
 ```bash
-npm run e2e                            # full suite, headless
+npm run e2e                            # default: admin + other + maintenance
 npm run e2e -- --headed                # watch in a real browser
 npm run e2e -- --grep "Login"          # filter by spec/test name
 npm run e2e -- --workers=1             # single worker (debugging)
-npm run e2e -- --project=chromium      # one browser only
+npm run e2e -- --project=admin         # one project only
+npm run e2e -- --project=a11y          # accessibility smoke (nightly job)
+npm run e2e -- --project=visual        # visual regression  (nightly job)
+npm run e2e -- --project=perf          # concurrent-jury load (manual only)
 npm run e2e:report                     # open HTML report from last run
 npm run e2e:excel                      # generate xlsx report
 ```
+
+Six Playwright projects defined in `playwright.config.ts`:
+
+| Project | Scope | When it runs |
+| --- | --- | --- |
+| `admin` | `e2e/admin/` (excl. maintenance-mode) | every push + PR |
+| `other` | everything outside admin/a11y/visual/perf | every push + PR |
+| `maintenance` | `e2e/admin/maintenance-mode.spec.ts` | every push + PR (serial worker) |
+| `a11y` | `e2e/a11y/` | nightly cron (02:00 UTC) + workflow_dispatch |
+| `visual` | `e2e/visual/` | nightly cron + workflow_dispatch |
+| `perf` | `e2e/perf/` | workflow_dispatch only (`perf.yml`) |
 
 First-time setup: `npx playwright install` (downloads browser binaries).
 
@@ -123,12 +137,27 @@ Playwright produces three artifacts after a run:
   (`npm run e2e:report` to open).
 - `test-results/playwright-results.json` — machine-readable results;
   parsed by CI to fail on regressions.
-- xlsx report — `npm run e2e:excel` generates an xlsx summary, useful
-  for sharing with non-technical stakeholders.
+- `test-results/e2e-report-*.xlsx` — xlsx summary (`npm run e2e:excel`),
+  useful for sharing with non-technical stakeholders.
 
-Allure reporter slot exists (`test-results/allure-results`) but is not
-yet wired up — tracked in
-[premium-saas-test-upgrade-plan.md](premium-saas-test-upgrade-plan.md).
+CI uploads each as a **separate named artifact** so the Excel summary
+is one click away without having to download the whole test-results
+bundle:
+
+| Workflow / job | Excel artifact | Bundle artifact |
+| --- | --- | --- |
+| `e2e.yml` admin shard 1 | `excel-e2e-admin-shard1-NNN` | `playwright-results-admin-NNN-shard1` |
+| `e2e.yml` admin shard 2 | `excel-e2e-admin-shard2-NNN` | `playwright-results-admin-NNN-shard2` |
+| `e2e.yml` other | `excel-e2e-other-NNN` | `playwright-results-other-NNN` |
+| `e2e.yml` maintenance | `excel-e2e-maintenance-NNN` | `playwright-results-maintenance-NNN` |
+| `e2e.yml` a11y (nightly) | `excel-e2e-a11y-NNN` | `a11y-results-NNN` |
+| `e2e.yml` visual (nightly) | `excel-e2e-visual-NNN` | `visual-regression-results-NNN` |
+| `perf.yml` | `excel-perf-NNN` | `perf-results-NNN` |
+
+Allure reporter is wired up for the unit-test side (`ci.yml`):
+`allure-report-NNN` is the ready-to-open HTML, `excel-report-NNN` is
+the xlsx, `test-results-raw-NNN` is the JSON + raw allure-results
+(debug fodder). Run `npm run allure:open` locally to view the HTML.
 
 ---
 
@@ -158,9 +187,14 @@ file or add a serial marker.
   `await expect(...).toBeVisible({ timeout: ... })` or `waitFor`.
 - **Hardcoded URLs.** Use `playwright.config.ts` baseURL; specs use
   relative paths.
-- **Direct DB writes from a spec.** Use the application's RPCs. If you
-  need to set up state that the UI cannot reach (e.g., simulating an
-  expired session), do it in a fixture or `global.setup.ts`.
+- **Direct DB writes from a spec for the *behavior* under test.** Use
+  the application's RPCs / UI for the thing the test is verifying. The
+  exception is *fixture setup and cleanup*: `e2e/helpers/scoringFixture.ts`
+  and `adminClient` are deliberate — they give you a deterministic seed
+  faster than driving the UI through wizard + period + criteria
+  manually. The rule of thumb: arrange via DB if the UI path is not
+  what you're testing; act + assert via the UI when the user-visible
+  behavior is the property under test.
 - **Snapshot bloat.** Visual specs in `e2e/visual/` have a per-page
   snapshot. Don't over-snapshot — text-content assertions usually
   suffice.
@@ -185,8 +219,15 @@ file or add a serial marker.
 | Admin CRUD with drawer | `e2e/admin/jurors-crud.spec.ts` |
 | Admin RPC + DB verify | `e2e/admin/settings-save.spec.ts` |
 | Jury full happy path | `e2e/jury/happy-path.spec.ts` |
+| Mobile portrait jury | `e2e/jury/mobile-viewport.spec.ts` |
 | Tenant isolation | `e2e/security/tenant-isolation.spec.ts` |
+| Token revoke deny | `e2e/security/token-revoke-deny.spec.ts` |
+| Multi-org context switch | `e2e/security/multi-org-switch.spec.ts` |
+| Period lifecycle (publish→close) | `e2e/admin/period-lifecycle.spec.ts` |
+| Export filter parity + XLSX numeric + Turkish chars | `e2e/admin/export-advanced-assertions.spec.ts` |
+| Demo read-only enforcement | `e2e/demo/read-only.spec.ts` |
 | OAuth | `e2e/auth/google-oauth.spec.ts` |
+| Accessibility smoke | `e2e/a11y/smoke.spec.ts` |
 | Visual regression | `e2e/visual/admin-routes.spec.ts` |
 | Concurrent juror load | `e2e/perf/concurrent-jury.spec.ts` |
 
@@ -204,4 +245,4 @@ file or add a serial marker.
 
 ---
 
-> *Last updated: 2026-04-24*
+> *Last updated: 2026-04-28*
