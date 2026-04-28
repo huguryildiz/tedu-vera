@@ -61,16 +61,10 @@ export default function DisableAuthMethodModal({
       </div>
 
       <div className="fs-modal-body" style={{ paddingTop: 2 }}>
-        <div className="fs-alert danger" style={{ margin: 0, textAlign: "left" }}>
-          <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-          <div className="fs-alert-body">
-            <div className="fs-alert-title">Admins who rely on {disabledMethod} will lose access</div>
-            <div className="fs-alert-desc">
-              Make sure every active admin can sign in with {remainingMethod} before you
-              continue. You can re-enable {disabledMethod} later from this drawer.
-            </div>
-          </div>
-        </div>
+        <FbAlert variant="danger" title={`Admins who rely on ${disabledMethod} will lose access`} style={{ margin: 0 }}>
+          Make sure every active admin can sign in with {remainingMethod} before you
+          continue. You can re-enable {disabledMethod} later from this drawer.
+        </FbAlert>
 
         <div style={{ marginTop: 14 }}>
           <label

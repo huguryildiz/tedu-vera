@@ -107,10 +107,7 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, onCa
       </div>
       <div className="fs-drawer-body" style={{ gap: 16 }}>
         {displayError && (
-          <div className="fs-alert danger" style={{ marginBottom: 4 }}>
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{displayError}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 4 }}>{displayError}</FbAlert>
         )}
 
         {/* Avatar edit */}

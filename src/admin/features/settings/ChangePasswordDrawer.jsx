@@ -200,10 +200,7 @@ export default function ChangePasswordDrawer({ open, onClose, onSave, error }) {
 
       <div className="fs-drawer-body" style={{ gap: 16 }}>
         {showGlobalError && (
-          <div className="fs-alert danger" style={{ marginBottom: 4 }}>
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{errorText}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 4 }}>{errorText}</FbAlert>
         )}
 
         <PasswordField
