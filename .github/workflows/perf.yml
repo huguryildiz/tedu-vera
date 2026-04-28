@@ -59,6 +59,9 @@ jobs:
           VITE_DEMO_ENTRY_TOKEN: ${{ secrets.E2E_DEMO_ENTRY_TOKEN }}
           # E2E flag — disables Supabase realtime to prevent race conditions
           VITE_E2E: "true"
+          # globalSetup auth credentials (also reused as fixture identity)
+          E2E_ADMIN_EMAIL: "demo-admin@vera-eval.app"
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
           # Demo entry token PIN for fixture jurors
           E2E_JUROR_PIN: "9999"
 
