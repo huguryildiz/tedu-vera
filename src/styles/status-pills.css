@@ -26,10 +26,10 @@
   --pill-not-started-text: #94a3b8;
   --pill-not-started-border: #e2e8f0;
 
-  /* Cell/score states — SECONDARY (softer, muted) */
-  --pill-scored-bg: #dcfce7;
-  --pill-scored-text: #166534;
-  --pill-scored-border: #4ade80;
+  /* Cell/score states — SECONDARY (softer, muted) — emerald/teal tone vs completed's lime */
+  --pill-scored-bg: #d1fae5;
+  --pill-scored-text: #065f46;
+  --pill-scored-border: #6ee7b7;
 
   --pill-partial-bg: #fffbeb;
   --pill-partial-text: #d97706;
@@ -62,9 +62,9 @@
   --pill-not-started-text: #64748b;
   --pill-not-started-border: rgba(255,255,255,0.08);
 
-  --pill-scored-bg: rgba(34,197,94,0.08);
-  --pill-scored-text: rgba(134,239,172,0.7);
-  --pill-scored-border: rgba(74,222,128,0.15);
+  --pill-scored-bg: rgba(16,185,129,0.1);
+  --pill-scored-text: #6ee7b7;
+  --pill-scored-border: rgba(52,211,153,0.22);
 
   --pill-partial-bg: rgba(245,158,11,0.08);
   --pill-partial-text: rgba(251,191,36,0.7);

@@ -375,7 +375,7 @@ body:not(.dark-mode) .m-score-l4 { background: rgba(5,150,105,0.12);   box-shado
   display: flex;
   align-items: center;
   gap: 10px;
-  padding-bottom: 10px;
+  padding-bottom: 6px;
 }
 .hm-card-head-left {
   display: flex;
@@ -393,8 +393,8 @@ body:not(.dark-mode) .m-score-l4 { background: rgba(5,150,105,0.12);   box-shado
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-top: 10px;
-  margin-top: 10px;
+  padding-top: 6px;
+  margin-top: 6px;
   border-top: 1px solid var(--border-subtle, var(--border));
   font-size: 11px;
   color: var(--text-tertiary);
