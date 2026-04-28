@@ -433,24 +433,17 @@
   height: 13px;
 }
 
-/* Score Status colors */
-.reviews-legend-icon-wrap.scored { background: rgba(34, 197, 94, 0.1); color: var(--success); }
-.reviews-legend-icon-wrap.partial { background: rgba(217, 119, 6, 0.1); color: var(--warning); }
-.reviews-legend-icon-wrap.empty { background: rgba(148, 163, 184, 0.08); color: var(--text-tertiary); }
+/* Score Status colors — sourced from pill CSS variables for consistency */
+.reviews-legend-icon-wrap.scored    { background: var(--pill-scored-bg);      color: var(--pill-scored-text); }
+.reviews-legend-icon-wrap.partial   { background: var(--pill-partial-bg);     color: var(--pill-partial-text); }
+.reviews-legend-icon-wrap.empty     { background: var(--pill-empty-bg);       color: var(--pill-empty-text); }
 
-/* Juror Progress colors */
-.reviews-legend-icon-wrap.completed { background: rgba(34, 197, 94, 0.1); color: var(--success); }
-.reviews-legend-icon-wrap.ready { background: rgba(59, 130, 246, 0.1); color: var(--accent); }
-.reviews-legend-icon-wrap.progress { background: rgba(217, 119, 6, 0.1); color: var(--warning); }
-.reviews-legend-icon-wrap.not-started { background: rgba(148, 163, 184, 0.08); color: var(--text-tertiary); }
-.reviews-legend-icon-wrap.editing { background: rgba(168, 85, 247, 0.1); color: #a78bfa; }
-
-.dark-mode .reviews-legend-icon-wrap.scored { background: rgba(34, 197, 94, 0.14); color: #4ade80; }
-.dark-mode .reviews-legend-icon-wrap.partial { background: rgba(251, 191, 36, 0.12); color: #fbbf24; }
-.dark-mode .reviews-legend-icon-wrap.completed { background: rgba(34, 197, 94, 0.14); color: #4ade80; }
-.dark-mode .reviews-legend-icon-wrap.ready { background: rgba(96, 165, 250, 0.12); color: #60a5fa; }
-.dark-mode .reviews-legend-icon-wrap.progress { background: rgba(251, 191, 36, 0.12); color: #fbbf24; }
-.dark-mode .reviews-legend-icon-wrap.editing { background: rgba(168, 85, 247, 0.12); color: #c084fc; }
+/* Juror Progress colors — sourced from pill CSS variables for consistency */
+.reviews-legend-icon-wrap.completed  { background: var(--pill-completed-bg);   color: var(--pill-completed-text); }
+.reviews-legend-icon-wrap.ready      { background: var(--pill-ready-bg);       color: var(--pill-ready-text); }
+.reviews-legend-icon-wrap.progress   { background: var(--pill-progress-bg);    color: var(--pill-progress-text); }
+.reviews-legend-icon-wrap.not-started{ background: var(--pill-not-started-bg); color: var(--pill-not-started-text); }
+.reviews-legend-icon-wrap.editing    { background: var(--pill-editing-bg);     color: var(--pill-editing-text); }
 
 .reviews-legend-label {
   font-size: 11.5px;
@@ -458,21 +451,14 @@
   margin-bottom: 2px;
 }
 
-.reviews-legend-label.scored { color: var(--success); }
-.reviews-legend-label.partial { color: var(--warning); }
-.reviews-legend-label.empty { color: var(--text-tertiary); }
-.reviews-legend-label.completed { color: var(--success); }
-.reviews-legend-label.ready { color: var(--accent); }
-.reviews-legend-label.progress { color: var(--warning); }
-.reviews-legend-label.not-started { color: var(--text-tertiary); }
-.reviews-legend-label.editing { color: #a78bfa; }
-
-.dark-mode .reviews-legend-label.scored { color: #4ade80; }
-.dark-mode .reviews-legend-label.partial { color: #fbbf24; }
-.dark-mode .reviews-legend-label.completed { color: #4ade80; }
-.dark-mode .reviews-legend-label.ready { color: #60a5fa; }
-.dark-mode .reviews-legend-label.progress { color: #fbbf24; }
-.dark-mode .reviews-legend-label.editing { color: #c084fc; }
+.reviews-legend-label.scored      { color: var(--pill-scored-text); }
+.reviews-legend-label.partial     { color: var(--pill-partial-text); }
+.reviews-legend-label.empty       { color: var(--pill-empty-text); }
+.reviews-legend-label.completed   { color: var(--pill-completed-text); }
+.reviews-legend-label.ready       { color: var(--pill-ready-text); }
+.reviews-legend-label.progress    { color: var(--pill-progress-text); }
+.reviews-legend-label.not-started { color: var(--pill-not-started-text); }
+.reviews-legend-label.editing     { color: var(--pill-editing-text); }
 
 .reviews-legend-desc {
   font-size: 10.5px;
