@@ -20,12 +20,12 @@ function makeXAxisTick(nameMap) {
     const label = payload.value;
     const fullName = nameMap[label] || label;
     const isCode = /^P\d+$/.test(label);
-    // Wrap title into ~14-char chunks for up to 2 lines
+    // Wrap title into ~20-char chunks, no truncation
     const words = fullName.split(" ");
     const lines = [];
     let current = "";
     for (const w of words) {
-      if ((current + " " + w).trim().length > 14 && current) {
+      if ((current + " " + w).trim().length > 20 && current) {
         lines.push(current);
         current = w;
       } else {
@@ -33,8 +33,7 @@ function makeXAxisTick(nameMap) {
       }
     }
     if (current) lines.push(current);
-    const displayLines = lines.slice(0, 2);
-    if (lines.length > 2) displayLines[1] = displayLines[1] + "…";
+    const displayLines = lines;
 
     return (
       <g transform={`translate(${x},${y})`}>
@@ -99,16 +98,16 @@ export function OutcomeByGroupChart({ dashboardStats = [], criteria = [], thresh
   );
 
   const CustomTick = makeXAxisTick(nameMap);
-  // Estimate height needed for tick: code line + up to 2 title lines × 11px + padding
-  const tickHeight = 55;
-  // Minimum chart width: 100px per group so bars don't crowd on narrow screens
-  const minChartWidth = Math.max(data.length * 100, 320);
+  // Estimate height needed for tick: code line + all title lines × 11px + padding
+  const tickHeight = 90;
+  // Minimum chart width: 130px per group so long titles have room
+  const minChartWidth = Math.max(data.length * 130, 400);
 
   return (
     <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
     <div style={{ minWidth: minChartWidth }}>
     <ResponsiveContainer width="100%" height={260 + tickHeight}>
-      <BarChart data={data} margin={{ top: 4, right: 8, left: -10, bottom: tickHeight }}>
+      <BarChart data={data} margin={{ top: 4, right: 8, left: -10, bottom: tickHeight + 10 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
         <XAxis
           dataKey="name"

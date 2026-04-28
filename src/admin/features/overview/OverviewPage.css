@@ -21,7 +21,12 @@
   padding:0;
   cursor:pointer;
   font:inherit;
-  color:inherit;
+  color:#3b82f6;
+  font-size:11px;
+}
+.overview-juror-toggle:hover{
+  color:#2563eb;
+  text-decoration:underline;
 }
 
 

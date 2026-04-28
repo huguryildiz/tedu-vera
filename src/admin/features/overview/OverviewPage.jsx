@@ -457,7 +457,7 @@ export default function OverviewPage() {
             <div style={{ padding: "10px 16px", borderTop: "1px solid var(--border)" }}>
               <button
                 type="button"
-                className="form-link text-xs overview-juror-toggle"
+                className="overview-juror-toggle"
                 onClick={() => setJurorTableExpanded((v) => !v)}
               >
                 {jurorTableExpanded ? (
