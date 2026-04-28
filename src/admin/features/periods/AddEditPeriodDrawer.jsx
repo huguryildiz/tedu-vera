@@ -101,10 +101,7 @@ export default function AddEditPeriodDrawer({
       {/* ── Body ── */}
       <div className="fs-drawer-body">
         {saveError && (
-          <div className="fs-alert danger" style={{ marginBottom: 14 }}>
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{saveError}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 14 }}>{saveError}</FbAlert>
         )}
 
         {/* ── PERIOD DETAILS ── */}

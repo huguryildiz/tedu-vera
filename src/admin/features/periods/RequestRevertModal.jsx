@@ -11,7 +11,7 @@
 //   onRequest — (reason: string) => Promise<{ ok, error_code? }>
 
 import { useState, useEffect } from "react";
-import { AlertCircle, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
@@ -96,10 +96,7 @@ export default function RequestRevertModal({ open, onClose, period, onRequest })
         </FbAlert>
 
         {error && (
-          <div className="fs-alert danger" style={{ textAlign: "left" }}>
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{error}</div>
-          </div>
+          <FbAlert variant="danger">{error}</FbAlert>
         )}
 
         <div>

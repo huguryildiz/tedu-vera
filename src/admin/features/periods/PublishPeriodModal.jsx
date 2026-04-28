@@ -10,7 +10,7 @@
 //   onPublish — () => Promise<void>
 
 import { useState, useEffect } from "react";
-import { AlertCircle, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
@@ -58,10 +58,7 @@ export default function PublishPeriodModal({ open, onClose, period, onPublish })
 
       <div className="fs-modal-body" style={{ paddingTop: 2 }}>
         {error && (
-          <div className="fs-alert danger" style={{ marginBottom: 12, textAlign: "left" }}>
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{error}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 12 }}>{error}</FbAlert>
         )}
         <FbAlert variant="info" title="What changes on publish">
           <ul className="fs-modal-info-list">

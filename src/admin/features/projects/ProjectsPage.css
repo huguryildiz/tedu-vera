@@ -304,6 +304,8 @@
     color: var(--text-secondary); font-weight: 600; font-size: 10.5px;
   }
   #projects-main-table .proj-dot { color: rgba(15,23,42,0.13); font-size: 10px; }
+  /* Ensure tooltip wrappers don't break vertical centering in flex row */
+  #projects-main-table .proj-compact-row2 .premium-tooltip-wrap { display: inline-flex; align-items: center; }
   /* Size down member-chips when inside compact row2 */
   #projects-main-table .proj-compact-row2 .member-chips { display: flex; align-items: center; }
   #projects-main-table .proj-compact-row2 .member-chip {

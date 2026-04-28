@@ -11,7 +11,7 @@
 //   onCloseAction — () => Promise<void>
 
 import { useState, useEffect } from "react";
-import { AlertCircle, Archive } from "lucide-react";
+import { Archive } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
@@ -69,10 +69,7 @@ export default function ClosePeriodModal({ open, onClose, period, onCloseAction 
         </FbAlert>
 
         {error && (
-          <div className="fs-alert danger" style={{ marginBottom: 12, textAlign: "left" }}>
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{error}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 12 }}>{error}</FbAlert>
         )}
         <div>
           <label style={{ display: "block", fontSize: 12, color: "var(--text-secondary)", marginBottom: 6 }}>

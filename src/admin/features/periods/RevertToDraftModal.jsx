@@ -11,7 +11,7 @@
 //   onRevert — () => Promise<void>
 
 import { useState, useEffect } from "react";
-import { AlertCircle, LockOpen } from "lucide-react";
+import { LockOpen } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
@@ -69,10 +69,7 @@ export default function RevertToDraftModal({ open, onClose, period, onRevert }) 
         </FbAlert>
 
         {error && (
-          <div className="fs-alert danger" style={{ marginBottom: 12, textAlign: "left" }}>
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{error}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 12 }}>{error}</FbAlert>
         )}
 
         <div>
