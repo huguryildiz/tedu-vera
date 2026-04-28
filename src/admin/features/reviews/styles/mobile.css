@@ -219,6 +219,11 @@
     background: color-mix(in srgb, currentColor 12%, transparent);
   }
 
+  .rmc-pills-icon {
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+  }
+
   .rmc-mini-avatars {
     display: flex;
     align-items: center;

@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { MessageSquare, Clock, ChevronDown, Users } from "lucide-react";
+import { MessageSquare, Clock, ChevronDown, Users, BarChart2 } from "lucide-react";
 import { jurorInitials, jurorAvatarBg, jurorAvatarFg } from "@/admin/utils/jurorIdentity";
 import { TeamMembersInline } from "@/shared/ui/EntityMeta";
 import { formatTs } from "@/admin/utils/adminUtils";
+import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import ScoreStatusPill from "@/admin/shared/ScoreStatusPill";
 import JurorStatusPill from "@/admin/shared/JurorStatusPill";
 import JurorBadge from "@/admin/shared/JurorBadge";
@@ -164,18 +165,21 @@ export default function ReviewMobileCard({ row, criteria }) {
         >
           <div className="rmc-toggle-summary">
             <div className="rmc-toggle-pills">
+              <BarChart2 size={10} strokeWidth={2} className="rmc-pills-icon" />
               {criteria.map((c, i) => {
                 const value = row[c.id] ?? row[c.key] ?? null;
                 const abbr = critAbbrLabel(c.label || c.shortLabel || "");
                 const numVal = value != null && Number.isFinite(Number(value)) ? Math.round(Number(value)) : null;
+                const fullLabel = c.label || c.shortLabel || abbr;
                 return (
-                  <span
-                    key={c.id || i}
-                    className="rmc-xpill"
-                    style={{ color: c.color || "var(--accent)" }}
-                  >
-                    {abbr}{numVal != null ? ` ${numVal}` : ""}
-                  </span>
+                  <PremiumTooltip key={c.id || i} text={fullLabel}>
+                    <span
+                      className="rmc-xpill"
+                      style={{ color: c.color || "var(--accent)" }}
+                    >
+                      {abbr}{numVal != null ? ` ${numVal}` : ""}
+                    </span>
+                  </PremiumTooltip>
                 );
               })}
             </div>
