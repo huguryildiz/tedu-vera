@@ -320,9 +320,9 @@ export default function PeriodsPage() {
     const result = await publishPeriod(target.id);
     if (result && result.ok === false) {
       if (result.error_code === "readiness_failed") {
-        _toast.error(`${target.name || "Period"} is not ready to publish. Review the readiness panel.`);
+        _toast.error(`${target.name || "Period"} is not ready to publish — review the readiness panel`);
       } else {
-        _toast.error(`Could not publish ${target.name || "period"}.`);
+        _toast.error(`Failed to publish ${target.name || "period"}`);
       }
       throw new Error(result.error_code || "publish_failed");
     }
@@ -358,8 +358,8 @@ export default function PeriodsPage() {
 
     _toast.success(
       result?.already_published
-        ? `${target.name || "Period"} was already published.`
-        : `${target.name || "Period"} published.${tokenToastSuffix}`
+        ? `${target.name || "Period"} was already published`
+        : `${target.name || "Period"} published${tokenToastSuffix}`
     );
     setPublishTarget(null);
   }
@@ -368,7 +368,7 @@ export default function PeriodsPage() {
     try {
       const token = storageGetRawToken(period.id) || await getActiveEntryTokenPlain(period.id);
       if (!token) {
-        _toast.error("No active QR token. Open Entry Control to generate one.");
+        _toast.error("No active QR token — open Entry Control to generate one");
         return;
       }
       const basePath = isDemoMode ? "/demo" : "";
@@ -383,9 +383,9 @@ export default function PeriodsPage() {
         try { document.execCommand("copy"); } catch { /* noop */ }
         document.body.removeChild(ta);
       }
-      _toast.success("Entry link copied to clipboard.");
+      _toast.success("Entry link copied to clipboard");
     } catch {
-      _toast.error("Could not copy entry link. Try Entry Control.");
+      _toast.error("Failed to copy entry link — try Entry Control");
     }
   }
 
@@ -402,7 +402,7 @@ export default function PeriodsPage() {
         setRequestRevertTarget(target);
         return;
       }
-      _toast.error(`Could not revert ${target.name || "period"}.`);
+      _toast.error(`Failed to revert ${target.name || "period"}`);
       setRevertTarget(null);
       return;
     }
@@ -410,7 +410,7 @@ export default function PeriodsPage() {
     // Server-side RPCs revoke entry_tokens on revert; mirror that on the
     // client so Entry Control doesn't display a stale plaintext QR.
     storageClearRawToken(target.id);
-    _toast.success(`${target.name || "Period"} reverted to Draft — structural editing re-enabled.`);
+    _toast.success(`${target.name || "Period"} reverted to Draft — structural editing re-enabled`);
     setRevertTarget(null);
   }
 
@@ -418,7 +418,7 @@ export default function PeriodsPage() {
     if (!requestRevertTarget) return { ok: false };
     const result = await requestPeriodUnlock(requestRevertTarget.id, reason);
     if (result?.ok) {
-      _toast.success(`Revert request submitted for ${requestRevertTarget.name || "period"}.`);
+      _toast.success(`Revert request submitted for ${requestRevertTarget.name || "period"}`);
       reloadPendingRequests();
     }
     return result;
@@ -430,9 +430,9 @@ export default function PeriodsPage() {
     const result = await closePeriod(target.id);
     if (result && result.ok === false) {
       if (result.error_code === "period_not_published") {
-        _toast.error("Publish the period before closing it.");
+        _toast.error("Publish the period before closing it");
       } else {
-        _toast.error(`Could not close ${target.name || "period"}.`);
+        _toast.error(`Failed to close ${target.name || "period"}`);
       }
       throw new Error(result.error_code || "close_failed");
     }
@@ -442,8 +442,8 @@ export default function PeriodsPage() {
     });
     _toast.success(
       result?.already_closed
-        ? `${target.name || "Period"} was already closed.`
-        : `${target.name || "Period"} closed — rankings archived.`
+        ? `${target.name || "Period"} was already closed`
+        : `${target.name || "Period"} closed — rankings archived`
     );
     setCloseTarget(null);
   }
@@ -452,7 +452,7 @@ export default function PeriodsPage() {
     if (!deletePeriodTarget) return;
     await deletePeriod(deletePeriodTarget.id);
     periods.removePeriod(deletePeriodTarget.id);
-    _toast.success(`${deletePeriodTarget.name || "Period"} deleted.`);
+    _toast.success(`${deletePeriodTarget.name || "Period"} deleted`);
     setDeletePeriodTarget(null);
   }
 
@@ -632,7 +632,7 @@ export default function PeriodsPage() {
               const fmtLabel = fmt === "pdf" ? "PDF" : fmt === "csv" ? "CSV" : "Excel";
               _toast.success(`${filteredList.length} period${filteredList.length !== 1 ? "s" : ""} exported · ${fmtLabel}`);
             } catch (e) {
-              _toast.error(e?.message || "Periods export failed — please try again");
+              _toast.error("Periods export failed — try again");
             }
           }}
         />

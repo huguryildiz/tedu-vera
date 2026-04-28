@@ -101,7 +101,7 @@ export default function ProjectsStep({ periodId, onContinue, onBack, loading }) 
       onContinue();
       await fetchData();
     } catch (err) {
-      toast.error("Failed to add projects: " + err.message);
+      toast.error("Failed to add projects");
     }
   };
 

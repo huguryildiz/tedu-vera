@@ -138,8 +138,8 @@ export default function SendReportModal({
 
     _toast.promise(promise, {
       loading: "Sending report\u2026",
-      success: (n) => `Report sent — email delivered to ${n} recipient${n > 1 ? "s" : ""}.`,
-      error: (err) => err?.message || "Failed to send report.",
+      success: (n) => `Report sent — email delivered to ${n} recipient${n > 1 ? "s" : ""}`,
+      error: () => "Failed to send report",
     });
 
     try {

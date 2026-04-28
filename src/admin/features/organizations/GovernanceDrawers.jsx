@@ -425,7 +425,7 @@ export function ExportBackupDrawer({ open, onClose }) {
     setScoresLoading(true);
     try {
       const periods = (await listPeriods(organizationId)) || [];
-      if (!periods.length) { toast.error("No evaluation periods found."); return; }
+      if (!periods.length) { toast.error("No evaluation periods found"); return; }
       const ordered = sortPeriods(periods);
       const results = await Promise.all(
         ordered.map(async (period) => {
@@ -475,7 +475,7 @@ export function ExportBackupDrawer({ open, onClose }) {
       });
       toast.success(`Score report downloaded · ${ordered.length} period${ordered.length !== 1 ? "s" : ""} · Excel`);
     } catch (e) {
-      toast.error(e?.message || "Score report export failed");
+      toast.error("Score report export failed — try again");
     } finally {
       setScoresLoading(false);
     }
@@ -486,7 +486,7 @@ export function ExportBackupDrawer({ open, onClose }) {
     setProjectsLoading(true);
     try {
       const periods = (await listPeriods(organizationId)) || [];
-      if (!periods.length) { toast.error("No evaluation periods found."); return; }
+      if (!periods.length) { toast.error("No evaluation periods found"); return; }
       const ordered = sortPeriods(periods);
       const projectsByPeriod = await Promise.all(
         ordered.map(async (period) => ({
@@ -523,7 +523,7 @@ export function ExportBackupDrawer({ open, onClose }) {
       XLSX.writeFile(wb, buildExportFilename("Projects", "all-periods", "xlsx", tenantCode));
       toast.success(`${data.length} project${data.length !== 1 ? "s" : ""} exported · Excel`);
     } catch (e) {
-      toast.error(e?.message || "Projects export failed");
+      toast.error("Projects export failed — try again");
     } finally {
       setProjectsLoading(false);
     }
@@ -534,7 +534,7 @@ export function ExportBackupDrawer({ open, onClose }) {
     setJurorsLoading(true);
     try {
       const periods = (await listPeriods(organizationId)) || [];
-      if (!periods.length) { toast.error("No evaluation periods found."); return; }
+      if (!periods.length) { toast.error("No evaluation periods found"); return; }
       const ordered = sortPeriods(periods);
       const jurorsByPeriod = await Promise.all(
         ordered.map(async (period) => ({
@@ -585,7 +585,7 @@ export function ExportBackupDrawer({ open, onClose }) {
       XLSX.writeFile(wb, buildExportFilename("Jurors", "all-periods", "xlsx", tenantCode));
       toast.success(`${data.length} juror${data.length !== 1 ? "s" : ""} exported · Excel`);
     } catch (e) {
-      toast.error(e?.message || "Jurors export failed");
+      toast.error("Jurors export failed — try again");
     } finally {
       setJurorsLoading(false);
     }
@@ -753,7 +753,7 @@ export function MaintenanceDrawer({ open, onClose }) {
       }
       onClose();
     } catch (err) {
-      toast.error(err?.message || "Failed to set maintenance mode");
+      toast.error("Failed to set maintenance mode");
     } finally {
       setSaving(false);
     }
@@ -769,7 +769,7 @@ export function MaintenanceDrawer({ open, onClose }) {
       });
       toast.success("Test email sent to your inbox");
     } catch (err) {
-      toast.error(err?.message || "Failed to send test email");
+      toast.error("Failed to send test email");
     } finally {
       setSendingTest(false);
     }
@@ -782,7 +782,7 @@ export function MaintenanceDrawer({ open, onClose }) {
       toast.success("Maintenance cancelled");
       onClose();
     } catch (err) {
-      toast.error(err?.message || "Failed to cancel maintenance");
+      toast.error("Failed to cancel maintenance");
     } finally {
       setCancelling(false);
     }

@@ -346,13 +346,13 @@ export default function AuditLogPage() {
       const result = await verifyAuditChain(organizationId);
       const broken = Array.isArray(result) ? result : (result?.broken_links ?? result?.broken ?? []);
       if (!broken.length) {
-        _toast.success("No tampering detected — all records are intact.");
+        _toast.success("No tampering detected — all records are intact");
       } else {
         const earliest = broken[0]?.id ?? broken[0]?.created_at ?? broken[0]?.seq ?? JSON.stringify(broken[0]);
         _toast.error(`Chain broken at ${broken.length} point(s). Earliest: ${earliest}`);
       }
     } catch (e) {
-      _toast.error(`Integrity check failed: ${e?.message || "Unknown error"}`);
+      _toast.error("Integrity check failed — try again");
     } finally {
       setVerifying(false);
     }

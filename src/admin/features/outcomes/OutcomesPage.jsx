@@ -111,7 +111,7 @@ export default function OutcomesPage() {
 
   const requireOrg = () => {
     if (!organizationId) {
-      toast.error("No active organization selected. Switch to a tenant from the org switcher.");
+      toast.error("No active organization — switch tenant from the org switcher");
       return false;
     }
     return true;
@@ -197,9 +197,9 @@ export default function OutcomesPage() {
     setPanelError("");
     try {
       await fw.addOutcome({ code, shortLabel, description, criterionIds });
-      toast.success("Outcome added successfully");
+      toast.success("Outcome added");
     } catch (e) {
-      toast.error(e?.message || "Failed to add outcome");
+      toast.error("Failed to add outcome");
       throw e;
     }
   };
@@ -215,9 +215,9 @@ export default function OutcomesPage() {
         criterionIds,
         coverageType: coverageType || "direct",
       });
-      toast.success("Outcome updated successfully");
+      toast.success("Outcome updated");
     } catch (e) {
-      toast.error(e?.message || "Failed to update outcome");
+      toast.error("Failed to update outcome");
       throw e;
     }
   };
@@ -254,7 +254,7 @@ export default function OutcomesPage() {
       });
       toast.success("Outcome duplicated");
     } catch (e) {
-      toast.error(e?.message || "Failed to duplicate outcome");
+      toast.error("Failed to duplicate outcome");
     }
   };
 
@@ -262,7 +262,7 @@ export default function OutcomesPage() {
     try {
       await fw.removeMapping(criterionId, outcomeId);
     } catch (e) {
-      toast.error(e?.message || "Failed to remove mapping");
+      toast.error("Failed to remove mapping");
     }
   };
 
@@ -270,7 +270,7 @@ export default function OutcomesPage() {
     try {
       await fw.cycleCoverage(outcomeId);
     } catch (e) {
-      toast.error(e?.message || "Failed to update coverage");
+      toast.error("Failed to update coverage");
     }
   };
 
@@ -384,7 +384,7 @@ export default function OutcomesPage() {
 
       toast.success("Outcomes saved");
     } catch (e) {
-      toast.error(e?.message || "Failed to save outcomes");
+      toast.error("Failed to save outcomes");
     }
   };
 

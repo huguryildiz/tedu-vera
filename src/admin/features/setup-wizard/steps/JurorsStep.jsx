@@ -79,7 +79,7 @@ export default function JurorsStep({ periodId, onContinue, onBack, onLaunch, loa
       onContinue();
       await fetchData();
     } catch (err) {
-      toast.error("Failed to add jurors: " + err.message);
+      toast.error("Failed to add jurors");
     }
   };
 

@@ -45,7 +45,7 @@ export default function ExportPage() {
     setScoresLoading(true);
     try {
       const periods = (await listPeriods(organizationId)) || [];
-      if (!periods.length) { _toast.error("No evaluation periods found."); return; }
+      if (!periods.length) { _toast.error("No evaluation periods found"); return; }
       const orderedPeriods = sortPeriods(periods);
       const results = await Promise.all(
         orderedPeriods.map(async (period) => {
@@ -93,7 +93,7 @@ export default function ExportPage() {
       });
       _toast.success(`Score report downloaded · ${orderedPeriods.length} period${orderedPeriods.length !== 1 ? "s" : ""} · Excel`);
     } catch (e) {
-      _toast.error(e?.message || "Score report export failed — please try again");
+      _toast.error("Score report export failed — try again");
     } finally {
       setScoresLoading(false);
     }
@@ -104,7 +104,7 @@ export default function ExportPage() {
     setProjectsLoading(true);
     try {
       const periods = (await listPeriods(organizationId)) || [];
-      if (!periods.length) { _toast.error("No evaluation periods found."); return; }
+      if (!periods.length) { _toast.error("No evaluation periods found"); return; }
       const orderedPeriods = sortPeriods(periods);
       const projectsByPeriod = await Promise.all(
         orderedPeriods.map(async (period) => {
@@ -149,7 +149,7 @@ export default function ExportPage() {
       XLSX.writeFile(wb, buildExportFilename("Projects", "all-periods", "xlsx", tenantCode));
       _toast.success(`${data.length} project${data.length !== 1 ? "s" : ""} exported · all periods · Excel`);
     } catch (e) {
-      _toast.error(e?.message || "Projects export failed — please try again");
+      _toast.error("Projects export failed — try again");
     } finally {
       setProjectsLoading(false);
     }
@@ -160,7 +160,7 @@ export default function ExportPage() {
     setJurorsLoading(true);
     try {
       const sems = (await listPeriods(organizationId)) || [];
-      if (!sems.length) { _toast.error("No evaluation periods found."); return; }
+      if (!sems.length) { _toast.error("No evaluation periods found"); return; }
       const orderedPeriods = sortPeriods(sems);
       const jurorsByPeriod = await Promise.all(
         orderedPeriods.map(async (sem) => ({
@@ -218,7 +218,7 @@ export default function ExportPage() {
       XLSX.writeFile(wb, buildExportFilename("Jurors", "all-periods", "xlsx", tenantCode));
       _toast.success(`${data.length} juror${data.length !== 1 ? "s" : ""} exported · all periods · Excel`);
     } catch (e) {
-      _toast.error(e?.message || "Jurors export failed — please try again");
+      _toast.error("Jurors export failed — try again");
     } finally {
       setJurorsLoading(false);
     }

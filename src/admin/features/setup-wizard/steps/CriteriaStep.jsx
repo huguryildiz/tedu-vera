@@ -189,7 +189,7 @@ function FrameworkPhase({ periodId, frameworks = [], onContinue, onBack }) {
       onContinue(fw.id);
       await Promise.all([fetchData?.(), reloadCriteriaAndOutcomes?.()]);
     } catch (err) {
-      toast.error("Failed to assign framework: " + (err?.message || String(err)));
+      toast.error("Failed to assign framework");
       setSelected(null);
     } finally {
       setSaving(false);
@@ -386,7 +386,7 @@ function CriteriaPhase({ periodId, onContinue, onBack, loading }) {
       onContinue();
       await Promise.all([fetchData(), reloadCriteriaAndOutcomes?.()]);
     } catch (err) {
-      toast.error("Failed to apply criteria: " + err.message);
+      toast.error("Failed to apply criteria");
     }
   };
 
@@ -482,7 +482,7 @@ function CriteriaPhase({ periodId, onContinue, onBack, loading }) {
                   await setPeriodCriteriaName(periodId, trimmed);
                   await fetchData();
                 } catch (err) {
-                  toast.error("Could not save name: " + err.message);
+                  toast.error("Failed to save name");
                   setSavingName(false);
                   return;
                 }

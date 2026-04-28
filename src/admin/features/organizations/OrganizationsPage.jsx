@@ -305,12 +305,12 @@ export default function OrganizationsPage() {
       } else {
         _toast.error(
           result?.error_code === "request_not_pending"
-            ? "This request was already resolved."
-            : "Could not resolve the request."
+            ? "This request was already resolved"
+            : "Failed to resolve the request"
         );
       }
     } catch (e) {
-      _toast.error(e?.message || "Could not resolve the request.");
+      _toast.error("Failed to resolve the request");
     } finally {
       setResolveSubmitting(false);
     }
@@ -378,7 +378,7 @@ export default function OrganizationsPage() {
     const ok = await handleDeleteTenantAdmin({ organizationId: orgId, userId });
     setAdminRemoveLoadingId("");
     if (!ok) {
-      _toast.error("Could not remove admin.");
+      _toast.error("Failed to remove admin");
     }
   }, [handleDeleteTenantAdmin, _toast]);
 

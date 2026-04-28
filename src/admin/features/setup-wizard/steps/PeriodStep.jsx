@@ -50,7 +50,7 @@ export default function PeriodStep({ onContinue, onBack, onCreateNew, existingPe
       return;
     }
     if (!activeOrganization?.id) {
-      toast.error("No organization selected. Please select an organization first.");
+      toast.error("No organization selected — select one from the org switcher");
       return;
     }
 
@@ -68,7 +68,7 @@ export default function PeriodStep({ onContinue, onBack, onCreateNew, existingPe
       try { await fetchData(); } catch { /* non-fatal */ }
       onContinue(result.id);
     } catch (err) {
-      toast.error("Failed to create period: " + (err?.message || String(err)));
+      toast.error("Failed to create period");
     } finally {
       setSaving(false);
     }

@@ -175,7 +175,7 @@ export default function ManageBackupsDrawer({ open, onClose, organizationId }) {
       await create();
       toast.success("Backup created");
     } catch (e) {
-      toast.error(e?.message || "Backup failed");
+      toast.error("Backup creation failed");
     }
   };
 
@@ -183,7 +183,7 @@ export default function ManageBackupsDrawer({ open, onClose, organizationId }) {
     try {
       await download(backup);
     } catch (e) {
-      toast.error(e?.message || "Download failed");
+      toast.error("Failed to download backup");
     }
   };
 
@@ -208,7 +208,7 @@ export default function ManageBackupsDrawer({ open, onClose, organizationId }) {
       setEditingSchedule(false);
       toast.success("Schedule updated");
     } catch (e) {
-      toast.error(e?.message || "Failed to update schedule");
+      toast.error("Failed to update schedule");
     }
   };
 

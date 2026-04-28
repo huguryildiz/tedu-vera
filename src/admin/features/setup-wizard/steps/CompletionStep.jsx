@@ -195,12 +195,12 @@ export default function CompletionStep({ periodId, organizationId, isDemoMode, o
           .filter((i) => i.severity === "required")
           .map((i) => i.msg)
           .join(" · ");
-        toast.error(blockers ? `Cannot publish: ${blockers}` : "Period is not ready to publish.");
+        toast.error(blockers ? `Cannot publish — ${blockers}` : "Period is not ready to publish");
         return;
       }
       const publishResult = await publishPeriod(periodId);
       if (publishResult && publishResult.ok === false) {
-        toast.error("Failed to publish period.");
+        toast.error("Failed to publish period");
         return;
       }
       const token = await generateEntryToken(periodId);
@@ -214,14 +214,14 @@ export default function CompletionStep({ periodId, organizationId, isDemoMode, o
           console.warn("markSetupComplete failed (non-blocking):", e);
         }
       }
-      toast.success("Period published — entry token ready.");
+      toast.success("Period published — entry token ready");
       onPublished?.();
     } catch (err) {
       const msg = String(err?.message || "");
       if (msg.includes("period_not_published")) {
-        toast.error("Period must be published before generating a token.");
+        toast.error("Period must be published before generating a token");
       } else {
-        toast.error("Failed to generate token: " + msg);
+        toast.error("Failed to generate entry token");
       }
     } finally {
       setGenerating(false);

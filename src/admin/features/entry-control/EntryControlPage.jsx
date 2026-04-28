@@ -251,7 +251,7 @@ export default function EntryControlPage() {
       setRevokeModalOpen(false);
     } catch (e) {
       setError(e?.unauthorized ? "Unauthorized — check your session." : "Could not revoke token.");
-      _toast.error("Could not revoke jury access — please try again");
+      _toast.error("Failed to revoke jury access — try again");
     } finally {
       setRevoking(false);
     }
@@ -308,7 +308,7 @@ export default function EntryControlPage() {
 
   function openSendModal() {
     if (!entryUrl) {
-      _toast.error("Generate an active QR token first.");
+      _toast.error("Generate an active QR token first");
       return;
     }
     initializeRecipients();
@@ -334,7 +334,7 @@ export default function EntryControlPage() {
   async function handleSendTestToMe() {
     if (!entryUrl) return;
     if (!currentUserEmail) {
-      _toast.error("Could not determine your account email.");
+      _toast.error("Failed to load your account email");
       return;
     }
     setTestSending(true);
@@ -353,7 +353,7 @@ export default function EntryControlPage() {
       }
       _toast.success(`Test sent to ${currentUserEmail}`);
     } catch (err) {
-      _toast.error(err?.message || "Could not send test email.");
+      _toast.error("Failed to send test email");
     } finally {
       setTestSending(false);
     }
@@ -406,7 +406,7 @@ export default function EntryControlPage() {
       }
       _toast.success(`Access link sent to ${delivered} recipient${delivered === 1 ? "" : "s"}`);
       if (failed > 0) {
-        _toast.error(`${failed} email${failed === 1 ? "" : "s"} failed to send.`);
+        _toast.error(`${failed} email${failed === 1 ? "" : "s"} failed to send`);
       }
       setNewUserRecipients([]);
       setNewUserInputValue("");
@@ -464,13 +464,13 @@ export default function EntryControlPage() {
       setSendModalOpen(false);
       setSendSuccessOpen(true);
       if (delivered > 0) {
-        _toast.success(`Sent to ${delivered} juror${delivered === 1 ? "" : "s"}.`);
+        _toast.success(`Sent to ${delivered} juror${delivered === 1 ? "" : "s"}`);
       }
       if (failed > 0) {
-        _toast.error(`${failed} email${failed === 1 ? "" : "s"} failed to send.`);
+        _toast.error(`${failed} email${failed === 1 ? "" : "s"} failed to send`);
       }
     } catch (err) {
-      _toast.error(err?.message || "Bulk send failed.");
+      _toast.error("Bulk send failed");
     } finally {
       setBulkSending(false);
     }
@@ -503,7 +503,7 @@ export default function EntryControlPage() {
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch (err) {
-      _toast.error(err?.message || "Could not download QR.");
+      _toast.error("Failed to download QR code");
     }
   }
 
