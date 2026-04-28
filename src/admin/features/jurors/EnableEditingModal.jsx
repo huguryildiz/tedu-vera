@@ -135,11 +135,7 @@ export default function EnableEditingModal({ open, onClose, juror, onEnable }) {
         </div>
 
         {error && (
-          <div className="fs-alert danger eem-error" data-testid="eem-error">
-            <div className="fs-alert-body">
-              <div className="fs-alert-desc">{error}</div>
-            </div>
-          </div>
+          <FbAlert variant="danger" style={{ margin: 0, marginTop: 8 }} data-testid="eem-error">{error}</FbAlert>
         )}
       </div>
 

@@ -10,8 +10,9 @@
 //   error        — string | null
 
 import { useState, useEffect } from "react";
-import { AlertCircle, Info, UserPlus, X } from "lucide-react";
+import { Info, UserPlus, X } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
+import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
 
@@ -70,10 +71,7 @@ export default function AddJurorDrawer({ open, onClose, onSave, periodName, erro
 
       <div className="fs-drawer-body">
         {displayError && (
-          <div className="fs-alert danger" style={{ marginBottom: 14 }} data-testid="jurors-drawer-error">
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{displayError}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 14 }} data-testid="jurors-drawer-error">{displayError}</FbAlert>
         )}
 
         {/* Identity section */}
@@ -144,13 +142,9 @@ export default function AddJurorDrawer({ open, onClose, onSave, periodName, erro
           <div className="fs-section-header">
             <span className="fs-section-title">Access</span>
           </div>
-          <div className="fs-alert info" style={{ marginBottom: 0 }}>
-            <div className="fs-alert-icon"><Info size={15} /></div>
-            <div className="fs-alert-body">
-              <div className="fs-alert-title">PIN auto-generated</div>
-              <div className="fs-alert-desc">A unique 4-digit PIN will be assigned automatically. You can reset it later from the juror profile.</div>
-            </div>
-          </div>
+          <FbAlert variant="info" title="PIN auto-generated" style={{ marginBottom: 0 }}>
+            A unique 4-digit PIN will be assigned automatically. You can reset it later from the juror profile.
+          </FbAlert>
         </div>
       </div>
 

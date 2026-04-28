@@ -10,8 +10,9 @@
 //   error      — string | null
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { AlertCircle, Icon } from "lucide-react";
+import { Icon } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
+import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
 
@@ -158,10 +159,7 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
       </div>
       <div className="fs-drawer-body">
         {displayError && (
-          <div className="fs-alert danger" style={{ marginBottom: 14 }}>
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{displayError}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 14 }}>{displayError}</FbAlert>
         )}
 
         {/* ── Project Details ── */}

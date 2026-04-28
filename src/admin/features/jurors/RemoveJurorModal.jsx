@@ -10,8 +10,9 @@
 //   onRemove — () => Promise<void>
 
 import { useState } from "react";
-import { AlertCircle, Icon } from "lucide-react";
+import { Icon } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
+import FbAlert from "@/shared/ui/FbAlert";
 import JurorBadge from "@/admin/shared/JurorBadge";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 
@@ -90,16 +91,10 @@ export default function RemoveJurorModal({ open, onClose, juror, impact = {}, on
           </div>
         </div>
 
-        <div className="fs-alert danger" style={{ margin: 0, textAlign: "left" }}>
-          <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-          <div className="fs-alert-body">
-            <div className="fs-alert-title">All scores will be permanently deleted</div>
-            <div className="fs-alert-desc">
-              This juror's evaluations for all {impact.groupsAffected ?? 0} project groups will be removed.
-              Rankings and analytics for these groups will be recalculated without this juror's input.
-            </div>
-          </div>
-        </div>
+        <FbAlert variant="danger" title="All scores will be permanently deleted" style={{ margin: 0 }}>
+          This juror's evaluations for all {impact.groupsAffected ?? 0} project groups will be removed.
+          Rankings and analytics for these groups will be recalculated without this juror's input.
+        </FbAlert>
 
         <div style={{ marginTop: 14 }}>
           <label

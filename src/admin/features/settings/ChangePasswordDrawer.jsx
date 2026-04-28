@@ -9,8 +9,9 @@
 //   error   — string | null
 
 import { useState, useEffect } from "react";
-import { AlertCircle, Icon } from "lucide-react";
+import { Icon } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
+import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import InlineError from "@/shared/ui/InlineError";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";

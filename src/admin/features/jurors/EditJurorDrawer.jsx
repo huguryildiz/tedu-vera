@@ -12,8 +12,9 @@
 //   error          — string | null
 
 import { useState, useEffect } from "react";
-import { AlertCircle, Icon } from "lucide-react";
+import { Icon } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
+import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
 
@@ -111,10 +112,7 @@ export default function EditJurorDrawer({ open, onClose, juror, onSave, onResetP
       </div>
       <div className="fs-drawer-body">
         {displayError && (
-          <div className="fs-alert danger" style={{ marginBottom: 14 }} data-testid="jurors-edit-drawer-error">
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{displayError}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 14 }} data-testid="jurors-edit-drawer-error">{displayError}</FbAlert>
         )}
 
         {/* ── Identity ── */}

@@ -20,8 +20,9 @@
 //   isSuper      — boolean
 
 import { useState, useEffect } from "react";
-import { AlertCircle, CheckCircle2, Clock, X, Icon } from "lucide-react";
+import { CheckCircle2, Clock, X, Icon } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
+import FbAlert from "@/shared/ui/FbAlert";
 import Avatar from "@/shared/ui/Avatar";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";

@@ -8,7 +8,8 @@
 //   error      — string | null
 
 import { useState, useEffect, useRef } from "react";
-import { AlertCircle, Icon } from "lucide-react";
+import { Icon } from "lucide-react";
+import FbAlert from "@/shared/ui/FbAlert";
 
 const HANDLE_SVG = (
   <Icon
@@ -119,10 +120,7 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
       </div>
       <div className="fs-drawer-body">
         {displayError && (
-          <div className="fs-alert danger" style={{ marginBottom: 14 }}>
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{displayError}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 14 }}>{displayError}</FbAlert>
         )}
 
         <div className="fs-field">

@@ -334,7 +334,7 @@ export default function ReviewsPage() {
     ...scoreCols.filter(c => c.key !== 'total').map(c => ({
       key: c.key, label: c.label, sortKey: c.key, thClass: 'text-right', getValue: r => r[c.key] ?? '—',
     })),
-    { key: 'total',       label: `Total (${maxTotal})`, sortKey: 'total',            thClass: 'text-right', getValue: r => r.total ?? '—' },
+    { key: 'total',       label: `Total (${maxTotal})`, thLabel: 'Total', sortKey: 'total', thClass: 'text-right', getValue: r => r.total ?? '—' },
     { key: 'status',      label: 'Score Status',        sortKey: 'effectiveStatus',  thClass: 'text-center', getValue: r => r.effectiveStatus ?? '—' },
     { key: 'progress',    label: 'Juror Progress',      sortKey: 'jurorStatus',      thClass: 'text-center', getValue: r => r.jurorStatus ?? '—' },
     { key: 'comment',     label: 'Comment',             exportOnly: true,            getValue: r => r.comments ?? '' },
@@ -831,11 +831,11 @@ export default function ReviewsPage() {
                         col.sortKey ? `sortable${sortKey === col.sortKey ? ' sorted' : ''}` : '',
                         col.thClass || '',
                       ].filter(Boolean).join(' ') || undefined}
-                      title={isScoreCol ? col.label : undefined}
+                      title={col.thLabel ? col.label : (isScoreCol ? col.label : undefined)}
                       style={col.style}
                       onClick={col.sortKey ? () => handleSort(col.sortKey) : undefined}
                     >
-                      {isScoreCol ? abbrLabel(col.label) : col.label}
+                      {col.thLabel ?? (isScoreCol ? abbrLabel(col.label) : col.label)}
                       {col.sortKey && <SortIcon colKey={col.sortKey} sortKey={sortKey} sortDir={sortDir} />}
                     </th>
                   );

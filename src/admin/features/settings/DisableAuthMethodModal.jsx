@@ -11,8 +11,9 @@
 //   onConfirm       — () => Promise<void>
 
 import { useState } from "react";
-import { AlertCircle, ShieldOff } from "lucide-react";
+import { ShieldOff } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
+import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 
 export default function DisableAuthMethodModal({

@@ -9,8 +9,9 @@
 //   onDelete  — () => Promise<void>
 
 import { useState, useEffect } from "react";
-import { AlertCircle, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
+import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import { getPeriodCounts } from "@/shared/api";
 
@@ -70,10 +71,7 @@ export default function DeletePeriodModal({ open, onClose, period, onDelete }) {
       </div>
       <div className="fs-modal-body" style={{ paddingTop: 2 }}>
         {error && (
-          <div className="fs-alert danger" style={{ marginBottom: 12, textAlign: "left" }}>
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{error}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 12 }}>{error}</FbAlert>
         )}
 
         <div className="fs-impact">
@@ -91,15 +89,9 @@ export default function DeletePeriodModal({ open, onClose, period, onDelete }) {
           </div>
         </div>
 
-        <div className="fs-alert danger" style={{ margin: 0, textAlign: "left" }}>
-          <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-          <div className="fs-alert-body">
-            <div className="fs-alert-title">This action cannot be undone</div>
-            <div className="fs-alert-desc">
-              All projects, juror assignments, scores, and analytics data for this period will be permanently removed.
-            </div>
-          </div>
-        </div>
+        <FbAlert variant="danger" title="This action cannot be undone" style={{ margin: 0 }}>
+          All projects, juror assignments, scores, and analytics data for this period will be permanently removed.
+        </FbAlert>
 
         <div style={{ marginTop: 14 }}>
           <label
