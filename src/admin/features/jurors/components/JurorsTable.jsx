@@ -220,6 +220,7 @@ function JurorRow({
           </div>
 
           <div className="jc-row2">
+            <span className="jc-prog-label">PROG</span>
             <div className="jc-bar">
               {total > 0 && (
                 <div
