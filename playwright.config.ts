@@ -81,6 +81,11 @@ export default defineConfig({
       testMatch: /e2e\/visual\//,
       use: { storageState: "e2e/.auth/admin.json" },
     },
+    {
+      // Performance — concurrent-jury load test, manual via perf.yml dispatch.
+      name: "perf",
+      testMatch: /e2e\/perf\//,
+    },
   ],
   webServer: {
     // Port 5174 keeps the E2E server isolated from the dev server (5173),

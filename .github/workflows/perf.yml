@@ -42,7 +42,7 @@ jobs:
         run: npx playwright install-deps chromium
 
       - name: Run concurrent-jury perf test (4 parallel jurors, 90s SLO)
-        run: npx playwright test e2e/perf/concurrent-jury.spec.ts --reporter=line,json
+        run: npx playwright test --project=perf --reporter=line,json
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/playwright-results.json
           CI: true
