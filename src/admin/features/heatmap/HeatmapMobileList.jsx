@@ -1,31 +1,8 @@
 import { useMemo, useState } from "react";
 import { Users } from "lucide-react";
 import CustomSelect from "@/shared/ui/CustomSelect";
-import useCardSelection from "@/shared/hooks/useCardSelection";
 import { sortMobileJurors, MOBILE_SORT_KEYS } from "./mobileSort.js";
-import JurorHeatmapCard from "@/admin/shared/JurorHeatmapCard.jsx";
-import ProjectAveragesCard from "@/admin/shared/ProjectAveragesCard.jsx";
-
-function buildRows(juror, groups, lookup, activeTab, activeCriteria, getCellDisplay) {
-  return groups.map(g => {
-    const entry = lookup[juror.key]?.[g.id];
-    const cell = getCellDisplay(entry, activeTab, activeCriteria);
-    const label = g.group_no != null ? `P${g.group_no}` : (g.title || g.id);
-    const title = g.title || g.id;
-    if (!cell) {
-      return { groupId: g.id, label, title, empty: true, partial: false, score: null, max: null };
-    }
-    return {
-      groupId: g.id,
-      label,
-      title,
-      empty: false,
-      partial: !!cell.partial,
-      score: cell.score,
-      max: cell.max,
-    };
-  });
-}
+import HeatmapMiniMatrix from "./HeatmapMiniMatrix.jsx";
 
 export default function HeatmapMobileList({
   visibleJurors,
@@ -33,7 +10,6 @@ export default function HeatmapMobileList({
   lookup,
   activeTab,
   activeCriteria,
-  tabLabel,
   tabMax,
   jurorRowAvgs,
   visibleAverages,
@@ -42,9 +18,8 @@ export default function HeatmapMobileList({
   getCellDisplay,
 }) {
   const [sortKey, setSortKey] = useState("avg_desc");
-  const cardListRef = useCardSelection();
 
-  const rowAvgMap = useMemo(() => {
+  const jurorRowAvgMap = useMemo(() => {
     const m = new Map();
     visibleJurors.forEach((j, i) => m.set(j.key, jurorRowAvgs[i]));
     return m;
@@ -52,10 +27,10 @@ export default function HeatmapMobileList({
 
   const sortedJurors = useMemo(
     () => sortMobileJurors(visibleJurors, sortKey, {
-      rowAvgs: rowAvgMap,
+      rowAvgs: jurorRowAvgMap,
       workflow: jurorWorkflowMap,
     }),
-    [visibleJurors, sortKey, rowAvgMap, jurorWorkflowMap]
+    [visibleJurors, sortKey, jurorRowAvgMap, jurorWorkflowMap]
   );
 
   return (
@@ -73,37 +48,26 @@ export default function HeatmapMobileList({
         <div className="card" style={{ marginBottom: 12 }}>
           <div className="vera-es-page-prompt">
             <div className="vera-es-icon">
-              <Users size={22} strokeWidth={1.8}/>
+              <Users size={22} strokeWidth={1.8} />
             </div>
             <p className="vera-es-page-prompt-title">No Jurors to Display</p>
             <p className="vera-es-page-prompt-desc">Juror score data will appear here once jurors are assigned and evaluations begin.</p>
           </div>
         </div>
       ) : (
-        <div className="hm-card-list" ref={cardListRef}>
-          {sortedJurors.map(juror => {
-            const originalIdx = visibleJurors.findIndex(j => j.key === juror.key);
-            const rows = buildRows(juror, groups, lookup, activeTab, activeCriteria, getCellDisplay);
-            return (
-              <JurorHeatmapCard
-                key={juror.key}
-                juror={juror}
-                avg={jurorRowAvgs[originalIdx]}
-                tabMax={tabMax}
-                tabLabel={tabLabel}
-                rows={rows}
-              />
-            );
-          })}
-        </div>
+        <HeatmapMiniMatrix
+          sortedJurors={sortedJurors}
+          groups={groups}
+          lookup={lookup}
+          activeTab={activeTab}
+          activeCriteria={activeCriteria}
+          tabMax={tabMax}
+          jurorRowAvgMap={jurorRowAvgMap}
+          visibleAverages={visibleAverages}
+          overallAvg={overallAvg}
+          getCellDisplay={getCellDisplay}
+        />
       )}
-
-      <ProjectAveragesCard
-        groups={groups}
-        averages={visibleAverages}
-        overall={overallAvg}
-        tabMax={tabMax}
-      />
     </section>
   );
 }
