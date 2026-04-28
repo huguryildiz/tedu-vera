@@ -79,7 +79,7 @@ function JurorRow({
       </button>
       {status !== "editing" && (
         status === "completed" ? (
-          <button className="floating-menu-item" onMouseDown={() => { setOpenMenuId(null); onEnableEdit(juror); }}>
+          <button className="floating-menu-item" onMouseDown={() => { setOpenMenuId(null); onEnableEdit(juror); }} data-testid={`jurors-row-reopen-${jid}`}>
             <RotateCcw size={13} />
             Reopen Evaluation
           </button>

@@ -77,6 +77,24 @@ export class JurorsPom extends BasePom {
     await this.byTestId(`jurors-row-delete-${id}`).first().click();
   }
 
+  async clickReopenForJuror(name: string): Promise<void> {
+    const id = await this.jurorIdForRow(name);
+    await this.page
+      .locator("tr")
+      .filter({ hasText: name })
+      .locator("[data-testid^='jurors-row-kebab-']")
+      .first()
+      .click();
+    await this.byTestId(`jurors-row-reopen-${id}`).first().click();
+  }
+
+  // EnableEditingModal locators
+  eemDurationInput(): Locator { return this.byTestId("eem-duration-input"); }
+  eemReasonTextarea(): Locator { return this.byTestId("eem-reason-textarea"); }
+  eemCancelBtn(): Locator { return this.byTestId("eem-cancel-btn"); }
+  eemEnableBtn(): Locator { return this.byTestId("eem-enable-btn"); }
+  eemError(): Locator { return this.byTestId("eem-error"); }
+
   async fillEditName(name: string): Promise<void> {
     const input = this.editDrawerName();
     await input.clear();

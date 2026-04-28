@@ -91,6 +91,7 @@ export default function EnableEditingModal({ open, onClose, juror, onEnable }) {
               value={durationValue}
               onChange={(e) => setDurationValue(e.target.value)}
               disabled={enabling}
+              data-testid="eem-duration-input"
             />
             <CustomSelect
               className="eem-duration-unit"
@@ -126,6 +127,7 @@ export default function EnableEditingModal({ open, onClose, juror, onEnable }) {
             onChange={(e) => setReason(e.target.value)}
             placeholder="e.g., Correcting accidental criterion mismatch"
             disabled={enabling}
+            data-testid="eem-reason-textarea"
           />
           <div className="eem-helper">
             Minimum 5 characters
@@ -133,7 +135,7 @@ export default function EnableEditingModal({ open, onClose, juror, onEnable }) {
         </div>
 
         {error && (
-          <div className="fs-alert danger eem-error">
+          <div className="fs-alert danger eem-error" data-testid="eem-error">
             <div className="fs-alert-body">
               <div className="fs-alert-desc">{error}</div>
             </div>
@@ -148,6 +150,7 @@ export default function EnableEditingModal({ open, onClose, juror, onEnable }) {
           onClick={handleClose}
           disabled={enabling}
           style={{ flex: 1, minHeight: 40 }}
+          data-testid="eem-cancel-btn"
         >
           Cancel
         </button>
@@ -157,6 +160,7 @@ export default function EnableEditingModal({ open, onClose, juror, onEnable }) {
           onClick={handleEnable}
           disabled={!canEnable}
           style={{ flex: 1, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+          data-testid="eem-enable-btn"
         >
           <span className="btn-loading-content">
             <AsyncButtonContent loading={enabling} loadingText="Reopening…">
