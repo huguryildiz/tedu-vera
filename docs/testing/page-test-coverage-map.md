@@ -38,17 +38,16 @@ Cross-cutting tests that don't map to a single UI page.
 |---|---|---|---|
 | Admin RPCs — auth gate, tenant gate, return shape | `rpcs/contracts/admin_*.sql` | 🟢 | — |
 | Jury RPCs — auth gate, tenant gate, return shape | `rpcs/contracts/jury_*.sql` | 🟢 | — |
-| State mutation (side effects, audit rows) | `rpcs/jury/upsert_score.sql` `rpcs/jury/authenticate.sql` `rpcs/jury/verify_pin.sql` `rpcs/admin/set_period_lock.sql` `rpcs/admin/generate_entry_token.sql` `rpcs/admin/log_period_lock.sql` | 🟡 | ~70% of admin RPCs lack mutation tests |
+| State mutation (side effects, audit rows) | `rpcs/jury/upsert_score.sql` `rpcs/jury/authenticate.sql` `rpcs/jury/verify_pin.sql` `rpcs/admin/set_period_lock.sql` `rpcs/admin/generate_entry_token.sql` `rpcs/admin/log_period_lock.sql` `rpcs/admin/period_freeze_snapshot.sql` | 🟡 | ~70% of admin RPCs lack mutation tests |
 
 ### 1d. Triggers
 
 | Trigger | DB / SQL | Status | Top Gap |
 |---|---|---|---|
 | `audit_chain` — hash chain integrity, append-only | `triggers/audit_chain.sql` | 🟢 | — |
-| `period_lock` — locked period mutation rejected | `triggers/period_lock.sql` | 🟢 | — |
+| `period_lock` — locked period mutation rejected (covers period_criteria / period_outcomes / period_criterion_outcome_maps when `is_locked=true`) | `triggers/period_lock.sql` | 🟢 | — |
 | `updated_at` auto-update | `triggers/updated_at.sql` | 🟢 | — |
 | Email verify grace clear | `triggers/clear_grace_on_email_verify.sql` | 🟢 | — |
-| Snapshot immutability (`period_criteria` / `period_outcomes` once frozen) | — | 🔴 | No trigger test exists |
 
 ---
 
@@ -96,8 +95,8 @@ Cross-cutting tests that don't map to a single UI page.
 | **Unlock request** (tenant → super-admin) | — | `rpcs/contracts/admin_request_unlock.sql` `rpcs/contracts/admin_resolve_unlock_request.sql` | `unlock-request.spec.ts` | 🟢 | — |
 | **Projects** CRUD + CSV import | `ProjectsPage.test` `lockEnforcement.test` (×6 files) | — | `projects.spec.ts` `projects-import.spec.ts` | 🟡 | Project-juror assignment matrix, advisor field rules |
 | **Jurors** CRUD + batch import + reopen eval | `JurorsPage.test` `lockEnforcement.test` (×10 files) | `rpcs/contracts/juror_reset_pin.sql` `rpcs/contracts/juror_toggle_edit_mode.sql` | `jurors-crud.spec.ts` `juror-batch-import.spec.ts` `score-edit-request.spec.ts` | 🟢 | Juror→project assignment; audit trail for reopen |
-| **Criteria** CRUD + weight + rubric bands | `CriteriaManager.test` (×12 files) | `rpcs/contracts/admin_save_period_criteria.sql` | `criteria.spec.ts` `criteria-validation.spec.ts` `criteria-mapping.spec.ts` | 🟡 | Weight redistribution math E2E; rubric band CRUD; mapping persist |
-| **Outcomes** CRUD + mapping | `OutcomesPage.test` (×6 files) | `rpcs/contracts/admin_create_period_outcome.sql` `rpcs/contracts/admin_upsert_period_criterion_outcome_map.sql` | `outcomes.spec.ts` `outcomes-mapping.spec.ts` | 🟡 | Mapping persist + cascade attainment recompute E2E |
+| **Criteria** CRUD + weight + rubric bands | `CriteriaManager.test` (×12 files) | `rpcs/contracts/admin_save_period_criteria.sql` | `criteria.spec.ts` `criteria-validation.spec.ts` `criteria-mapping.spec.ts` (4 tests: assign/remove mapping + cascade attainment + weight redistribution) | 🟢 | Rubric band CRUD E2E |
+| **Outcomes** CRUD + mapping | `OutcomesPage.test` (×6 files) | `rpcs/contracts/admin_create_period_outcome.sql` `rpcs/contracts/admin_upsert_period_criterion_outcome_map.sql` | `outcomes.spec.ts` `outcomes-mapping.spec.ts` (5 tests: create/edit/delete cascade + mapping persist + cascade attainment) | 🟢 | — |
 | **Organizations** CRUD | `OrganizationsPage.test` (×4 files) | `rpcs/contracts/admin_create_org_and_membership.sql` `rpcs/contracts/admin_delete_organization.sql` | `organizations-crud.spec.ts` | 🟡 | Membership role assignment; owner transfer |
 
 ---
@@ -112,7 +111,7 @@ Cross-cutting tests that don't map to a single UI page.
 | **Analytics** — period comparison | — | — | `analytics-period-comparison.spec.ts` | 🟢 | — |
 | **Heatmap** | `HeatmapPage.test` (×6 files) | — | `heatmap.spec.ts` `heatmap-export.spec.ts` | 🟢 | XLSX cell numerical values |
 | **Rankings** + export | `RankingsPage.test` | — | `rankings-export.spec.ts` `scoring-correctness.spec.ts` `export-content-parity.spec.ts` `export-advanced-assertions.spec.ts` | 🟢 | Tie-breaker rules with missing scores |
-| **Reviews** — filters + KPIs | `ReviewsPage.test` `useReviewsFilters.test` | — | `reviews.spec.ts` `analytics-bias-outlier.spec.ts` `reviews-edit-persist.spec.ts` | 🟡 | Feedback submit E2E; combined score+comment filter |
+| **Reviews** — filters + KPIs + feedback submit | `ReviewsPage.test` `useReviewsFilters.test` | — | `reviews.spec.ts` (incl. `rpc_submit_jury_feedback` DB write) `analytics-bias-outlier.spec.ts` `reviews-edit-persist.spec.ts` | 🟢 | Combined score+comment filter |
 | **Audit Log** — UI + content | `AuditLogPage.test` (×2 files) | — | `audit-log.spec.ts` `audit-event-coverage.spec.ts` (12 event types) | 🟢 | Hash chain verification; pagination; export |
 
 ---
@@ -124,7 +123,7 @@ Cross-cutting tests that don't map to a single UI page.
 | **Entry Control** (token generate / revoke) | `JuryEntryControlPanel.test` (×2 files) | `rpcs/contracts/admin_generate_entry_token.sql` `rpcs/contracts/admin_revoke_entry_token.sql` | `entry-tokens.spec.ts` | 🟡 | Token expiry; multi-period token management |
 | **PIN Blocking** (admin unlock) | `PinBlockingPage.test` (×3 files) | `rpcs/contracts/juror_unlock_pin.sql` | `pin-blocking.spec.ts` | 🟢 | Bulk unlock; audit trail |
 | **Settings** — security policy, PIN policy, team, password | `AdminSettings.test` (×5 files) | `rpcs/contracts/admin_set_security_policy.sql` `rpcs/contracts/admin_set_pin_policy.sql` | `settings.spec.ts` `settings-save.spec.ts` (8 RPC tests) | 🟢 | Organization config save; audit row for settings change (known backlog) |
-| **Setup Wizard** | `SetupWizard.test` (×2 files) | `rpcs/contracts/mark_setup_complete.sql` | `setup-wizard.spec.ts` (step nav) `setup-wizard-submit.spec.ts` (full submit) | 🟡 | Step-by-step DB persistence (org create, framework assign, criteria save) |
+| **Setup Wizard** | `SetupWizard.test` (×2 files) | `rpcs/contracts/mark_setup_complete.sql` | `setup-wizard.spec.ts` (step nav) `setup-wizard-submit.spec.ts` (full submit) `setup-wizard-steps.spec.ts` (4 tests: step 2/3/4/5 DB writes) | 🟢 | Framework assign step write (via UI) |
 | **Maintenance Mode** | — | `rpcs/contracts/admin_set_maintenance.sql` `rpcs/contracts/admin_cancel_maintenance.sql` | `maintenance-mode.spec.ts` | 🟢 | — |
 | **Tenant Admin role** | — | — | `tenant-admin.spec.ts` | 🟡 | Nav restriction enforcement per route |
 
@@ -156,17 +155,19 @@ Cross-cutting tests that don't map to a single UI page.
 
 | Layer | 🟢 Solid | 🟡 Partial | 🔴 Weak |
 |---|---|---|---|
-| DB / SQL (migrations, constraints, RLS, RPCs, triggers) | Constraints, RLS (27 tables), RPC contracts (~90), 4 triggers | RPC state mutation (~30%) | Snapshot immutability trigger |
+| DB / SQL (migrations, constraints, RLS, RPCs, triggers) | Constraints, RLS (27 tables), RPC contracts (~90), all 4 triggers | RPC state mutation (~30%) | — |
 | Unit (Vitest) | Jury flow, Periods, Criteria, Jurors | Auth screens, Admin analytics hooks | Landing, VerifyEmail, CompleteProfile |
-| E2E (Playwright) | Jury (all), Periods, Security (all), Overview KPI, Analytics, Rankings, Heatmap, Audit Log, Settings | Projects, Organizations, Reviews, Entry Control, Setup Wizard | Criteria (mapping), Outcomes (mapping), VerifyEmail |
+| E2E (Playwright) | Jury (all), Periods, Security (all), Overview KPI, Analytics, Rankings, Heatmap, Audit Log, Settings, Criteria (mapping + cascade), Outcomes (mapping + cascade), Reviews (feedback submit), Setup Wizard (step writes) | Projects, Organizations, Entry Control | VerifyEmail |
 
 ### Priority gaps (implementation order)
 
-1. **Criteria mapping E2E** — outcome↔criterion save → cascade attainment recompute *(~2 days)*
-2. **Outcomes mapping E2E** — mapping persist + DB assertion *(~1 day)*
-3. **Reviews feedback submit E2E** — `rpc_submit_jury_feedback` DB assertion; combined filter engine *(~1 day)*
-4. **Setup wizard step persistence** — each step really writes to DB *(~2 days)*
-5. **Snapshot immutability trigger** — pgTAP test for `period_criteria` / `period_outcomes` frozen once `snapshot_frozen_at` is set *(~0.5 days)*
+1. **Rubric band CRUD E2E** — drawer add / remove / reorder bands → DB assertion on `period_criteria.rubric_bands` JSONB *(~1 day)*
+2. **Reviews combined-filter engine E2E** — score range + comment text + juror filter applied together → row count matches *(~0.5 days)*
+3. **Projects → juror assignment matrix E2E** — assign juror to project → DB row in junction table; remove → row gone *(~1 day)*
+4. **Organizations: owner transfer E2E** — transfer ownership → membership.is_owner moves; old owner becomes plain admin *(~0.5 days)*
+5. **RPC state-mutation backfill** — extend admin state-mutation tests from ~30% toward 60% (target: framework CRUD, juror reset PIN, force-close edit-mode side effects) *(~3 days)*
+
+> **Coverage notes (2026-04-28):** Earlier priority list was based on a stale read of `e2e/admin/`. The mapping / cascade / feedback / setup-wizard gaps are already covered by `criteria-mapping.spec.ts`, `outcomes-mapping.spec.ts`, `reviews.spec.ts`, and `setup-wizard-steps.spec.ts`. The "snapshot immutability trigger" gap was misframed — actual immutability is `is_locked`-based and tested in `triggers/period_lock.sql`; the snapshot lifecycle (idempotency + force re-freeze) is now covered by `rpcs/admin/period_freeze_snapshot.sql` instead.
 
 ---
 
