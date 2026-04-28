@@ -12,6 +12,7 @@ import {
   coverageBadgeClass,
   coverageLabel,
   naturalCodeSort,
+  COVERAGE_LEGEND,
 } from "../components/outcomeHelpers.js";
 
 describe("outcomeHelpers — coverageBadgeClass, coverageLabel, naturalCodeSort", () => {
@@ -66,5 +67,15 @@ describe("outcomeHelpers — coverageBadgeClass, coverageLabel, naturalCodeSort"
     const equal = [{ code: "PO1" }, { code: "PO1" }];
     const eqSorted = [...equal].sort(naturalCodeSort);
     expect(eqSorted[0].code).toBe("PO1");
+  });
+
+  qaTest("component.outcome-legend.unmapped-outcome-warning", () => {
+    // unmapped outcome warning: COVERAGE_LEGEND must include a 'none' entry
+    const unmappedEntry = COVERAGE_LEGEND.find((e) => e.key === "none");
+    expect(unmappedEntry).toBeDefined();
+    expect(unmappedEntry.label).toBe("Unmapped");
+    // coverageLabel returns "Unmapped" for any unrecognised coverage type (unmapped outcome)
+    expect(coverageLabel("none")).toBe("Unmapped");
+    expect(coverageLabel(undefined)).toBe("Unmapped");
   });
 });

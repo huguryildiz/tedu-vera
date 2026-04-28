@@ -18,4 +18,12 @@ describe("SaveBar", () => {
     expect(screen.getByText(/Unsaved changes/)).toBeInTheDocument();
     expect(screen.getByText("Save Changes")).toBeInTheDocument();
   });
+
+  qaTest("component.save-bar.disabled-when-weight-not-100", () => {
+    // Save disabled when weight !== 100: canSave=false when total weight is not 100
+    render(
+      <SaveBar isDirty={true} canSave={false} total={80} onSave={vi.fn()} onDiscard={vi.fn()} />
+    );
+    expect(screen.getByText("Save Changes")).toBeDisabled();
+  });
 });

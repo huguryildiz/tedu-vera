@@ -13839,5 +13839,29 @@
     "coverageStrength": "Strong",
     "severity": "normal",
     "status": "completed"
+  },
+  {
+    "id": "component.save-bar.disabled-when-weight-not-100",
+    "module": "Admin / Criteria / SaveBar",
+    "area": "weight-validation",
+    "story": "SaveBar — Save disabled when weight !== 100",
+    "scenario": "When total weight is not 100 (canSave=false), the Save Changes button renders as disabled.",
+    "whyItMatters": "Prevents saving criteria with invalid total weight, enforcing the 100-point rule.",
+    "risk": "Submitting invalid weight configuration corrupts scoring for all jurors.",
+    "coverageStrength": "Strong",
+    "severity": "high",
+    "status": "completed"
+  },
+  {
+    "id": "component.outcome-legend.unmapped-outcome-warning",
+    "module": "Admin / Outcomes / outcomeHelpers",
+    "area": "outcome-mapping",
+    "story": "COVERAGE_LEGEND — unmapped outcome warning entry present",
+    "scenario": "COVERAGE_LEGEND contains a 'none' key entry representing the unmapped outcome warning with correct label and description.",
+    "whyItMatters": "Unmapped outcomes are a data-quality warning; users must be informed when an outcome has no assessment method.",
+    "risk": "Missing unmapped outcome warning leaves outcomes silently unassessed at accreditation time.",
+    "coverageStrength": "Strong",
+    "severity": "normal",
+    "status": "completed"
   }
 ]
