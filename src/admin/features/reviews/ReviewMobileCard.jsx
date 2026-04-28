@@ -182,14 +182,7 @@ export default function ReviewMobileCard({ row, criteria }) {
             {visibleAvatars.length > 0 && (
               <div className="rmc-mini-avatars">
                 {visibleAvatars.map((name, i) => (
-                  <div
-                    key={i}
-                    className="rmc-mini-av"
-                    style={{
-                      background: jurorAvatarBg(name),
-                      color: jurorAvatarFg(name),
-                    }}
-                  >
+                  <div key={i} className="rmc-mini-av">
                     {(name || "?")[0].toUpperCase()}
                   </div>
                 ))}
