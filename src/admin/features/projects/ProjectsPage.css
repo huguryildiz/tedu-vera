@@ -115,6 +115,7 @@
     display: block;
     border-bottom: none;
     padding: 0;
+    min-height: 0;
     box-sizing: border-box;
   }
   /* Hide desktop data-label micro-labels — this layout has explicit structure */
