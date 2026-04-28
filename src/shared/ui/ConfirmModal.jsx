@@ -15,8 +15,9 @@
 //   children          — ReactNode (rendered inside modal body, below description)
 
 import { useState, useEffect } from "react";
-import { AlertCircle, Icon } from "lucide-react";
+import { Icon } from "lucide-react";
 import Modal from "./Modal";
+import FbAlert from "./FbAlert";
 
 const ICONS = {
   danger: (
@@ -107,10 +108,7 @@ export default function ConfirmModal({
 
       <div className="fs-modal-body" style={{ paddingTop: children || typedConfirmation || error ? 4 : 0 }}>
         {error && (
-          <div className="fs-alert danger" style={{ marginBottom: 12 }}>
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{error}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 12 }}>{error}</FbAlert>
         )}
 
         {children}

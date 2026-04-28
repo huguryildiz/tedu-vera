@@ -3,7 +3,8 @@
 // Writes maxPinAttempts, pinLockCooldown, and qrTtl; other policy fields are untouched.
 
 import { useState, useEffect } from "react";
-import { AlertCircle, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
+import FbAlert from "@/shared/ui/FbAlert";
 import Drawer from "@/shared/ui/Drawer";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import CustomSelect from "@/shared/ui/CustomSelect";
@@ -101,10 +102,7 @@ export default function PinPolicyDrawer({ open, onClose, policy, onSave, error }
 
       <div className="fs-drawer-body" style={{ gap: 16 }}>
         {displayError && (
-          <div className="fs-alert danger" style={{ marginBottom: 4 }}>
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{displayError}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 4 }}>{displayError}</FbAlert>
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

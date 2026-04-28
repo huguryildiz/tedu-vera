@@ -17,9 +17,10 @@
 // ============================================================
 
 import { useState } from "react";
-import { LockOpen, Send, Copy, Check, AlertTriangle } from "lucide-react";
+import { LockOpen, Send, Copy, Check } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
+import FbAlert from "@/shared/ui/FbAlert";
 import { sendJurorPinEmail } from "@/shared/api/admin/notifications";
 import { useToast } from "@/shared/hooks/useToast";
 
@@ -216,17 +217,9 @@ export default function UnlockPinModal({
         </div>
 
         {/* Warning note */}
-        <div className="fs-alert warning" style={{ marginTop: 14 }}>
-          <div className="fs-alert-icon">
-            <AlertTriangle size={15} />
-          </div>
-          <div className="fs-alert-body">
-            <div className="fs-alert-title">This PIN is shown once</div>
-            <div className="fs-alert-desc">
-              Copy or send it now. It will not be displayed again after closing this dialog.
-            </div>
-          </div>
-        </div>
+        <FbAlert variant="warning" title="This PIN is shown once" style={{ marginTop: 14 }}>
+          Copy or send it now. It will not be displayed again after closing this dialog.
+        </FbAlert>
       </div>
 
       <div

@@ -10,7 +10,8 @@
 //   onSendEmail — ({ email, includeQr }) => Promise<void>
 
 import { useState, useEffect } from "react";
-import { CheckCircle, AlertCircle, Info, Icon } from "lucide-react";
+import { CheckCircle, AlertCircle, Icon } from "lucide-react";
+import FbAlert from "@/shared/ui/FbAlert";
 import Modal from "@/shared/ui/Modal";
 import JurorBadge from "@/admin/shared/JurorBadge";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
@@ -286,13 +287,9 @@ export default function PinResultModal({ open, onClose, juror, newPin, onSendEma
           </label>
         </div>
 
-        <div className="fs-alert info" style={{ marginTop: 10, marginBottom: 0 }}>
-          <div className="fs-alert-icon"><Info size={15} /></div>
-          <div className="fs-alert-body">
-            <div className="fs-alert-title">No email on file?</div>
-            <div className="fs-alert-desc">Add the juror's email in their profile to enable PIN delivery.</div>
-          </div>
-        </div>
+        <FbAlert variant="info" title="No email on file?" style={{ marginTop: 10, marginBottom: 0 }}>
+          Add the juror's email in their profile to enable PIN delivery.
+        </FbAlert>
       </div>
       <div className="fs-modal-footer">
         <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose}>

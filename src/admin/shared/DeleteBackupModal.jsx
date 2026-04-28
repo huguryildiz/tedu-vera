@@ -9,7 +9,8 @@
 //   onDelete — () => Promise<void>
 
 import { useState } from "react";
-import { AlertCircle, Database } from "lucide-react";
+import { Database } from "lucide-react";
+import FbAlert from "@/shared/ui/FbAlert";
 import Modal from "@/shared/ui/Modal";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import { formatDateTime as formatDate } from "@/shared/lib/dateUtils";
@@ -135,16 +136,10 @@ export default function DeleteBackupModal({ open, onClose, backup, onDelete }) {
         </div>
 
         {/* Danger alert */}
-        <div className="fs-alert danger" style={{ margin: 0, textAlign: "left" }}>
-          <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-          <div className="fs-alert-body">
-            <div className="fs-alert-title">This action cannot be undone</div>
-            <div className="fs-alert-desc">
-              The backup file will be removed from storage and cannot be recovered.
-              Automatic backups are not affected.
-            </div>
-          </div>
-        </div>
+        <FbAlert variant="danger" title="This action cannot be undone" style={{ margin: 0 }}>
+          The backup file will be removed from storage and cannot be recovered.
+          Automatic backups are not affected.
+        </FbAlert>
 
         {/* Typed confirmation */}
         <div style={{ marginTop: 14 }}>

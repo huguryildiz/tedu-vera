@@ -1,6 +1,7 @@
-import { Trash2, AlertCircle, Icon } from "lucide-react";
+import { Trash2, Icon } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
+import FbAlert from "@/shared/ui/FbAlert";
 
 export function ClearAllCriteriaModal({
   open,
@@ -29,16 +30,10 @@ export function ClearAllCriteriaModal({
         </div>
       </div>
       <div className="fs-modal-body" style={{ paddingTop: 2 }}>
-        <div className="fs-alert danger" style={{ margin: 0, textAlign: "left" }}>
-          <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-          <div className="fs-alert-body">
-            <div className="fs-alert-title">This action cannot be undone</div>
-            <div className="fs-alert-desc">
-              All rubric bands, weights, and outcome mappings for every criterion will be permanently removed.
-              Scores already submitted will not be affected.
-            </div>
-          </div>
-        </div>
+        <FbAlert variant="danger" title="This action cannot be undone" style={{ margin: 0 }}>
+          All rubric bands, weights, and outcome mappings for every criterion will be permanently removed.
+          Scores already submitted will not be affected.
+        </FbAlert>
         <div style={{ marginTop: 14 }}>
           <label style={{ display: "block", fontSize: 12, color: "var(--text-secondary)", marginBottom: 6 }}>
             Type <strong style={{ color: "var(--text-primary)" }}>{displayName}</strong> to confirm
@@ -124,16 +119,10 @@ export function DeleteCriterionModal({
       </div>
 
       <div className="fs-modal-body" style={{ paddingTop: 2 }}>
-        <div className="fs-alert danger" style={{ margin: 0, textAlign: "left" }}>
-          <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-          <div className="fs-alert-body">
-            <div className="fs-alert-title">This action cannot be undone</div>
-            <div className="fs-alert-desc">
-              All rubric bands and outcome mappings for this criterion will be permanently removed.
-              Scores already submitted will not be affected.
-            </div>
-          </div>
-        </div>
+        <FbAlert variant="danger" title="This action cannot be undone" style={{ margin: 0 }}>
+          All rubric bands and outcome mappings for this criterion will be permanently removed.
+          Scores already submitted will not be affected.
+        </FbAlert>
 
         <div style={{ marginTop: 14 }}>
           <label

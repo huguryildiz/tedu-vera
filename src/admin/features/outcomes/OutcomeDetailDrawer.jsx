@@ -11,7 +11,7 @@
 //   error        — string | null
 
 import { useState, useEffect } from "react";
-import { AlertCircle, Info, X, Check, CheckCircle2, Lock } from "lucide-react";
+import { X, Check, CheckCircle2, Lock } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
@@ -88,19 +88,12 @@ export default function OutcomeDetailDrawer({ open, onClose, outcome, criteria =
       </div>
       <div className="fs-drawer-body" style={{ padding: "18px 20px" }}>
         {isLocked && (
-          <div className="fs-alert warning" style={{ marginBottom: 14 }}>
-            <div className="fs-alert-icon"><Lock size={15} /></div>
-            <div className="fs-alert-body">
-              <div className="fs-alert-title">Evaluation active — outcome locked</div>
-              <div className="fs-alert-desc">This outcome cannot be edited while the evaluation period is locked. Unlock the period to make changes.</div>
-            </div>
-          </div>
+          <FbAlert variant="warning" title="Evaluation active — outcome locked" icon={Lock} style={{ marginBottom: 14 }}>
+            This outcome cannot be edited while the evaluation period is locked. Unlock the period to make changes.
+          </FbAlert>
         )}
         {displayError && (
-          <div className="fs-alert danger" style={{ marginBottom: 14 }}>
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{displayError}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 14 }}>{displayError}</FbAlert>
         )}
 
         {/* Identity */}
@@ -147,14 +140,11 @@ export default function OutcomeDetailDrawer({ open, onClose, outcome, criteria =
         </div>
 
         <div className="acc-detail-section-label" style={{ marginTop: 18 }}>Criterion Mapping</div>
-        <div className="fs-alert info" style={{ marginBottom: 10, padding: "10px 12px" }}>
-          <div className="fs-alert-icon" style={{ width: 24, height: 24 }}><Info size={15} /></div>
-          <div className="fs-alert-body">
-            <div className="fs-alert-desc" style={{ fontSize: 11 }}>
-              Select criteria that explicitly assess this outcome. Mapped criteria contribute to <strong style={{ color: "var(--success)" }}>Direct</strong> coverage. Outcomes with no selected criteria remain <strong style={{ color: "var(--warning)" }}>Indirect</strong> or <strong>Unmapped</strong>.
-            </div>
-          </div>
-        </div>
+        <FbAlert variant="info" style={{ marginBottom: 10, padding: "10px 12px" }} iconSize={15}>
+          <span style={{ fontSize: 11 }}>
+            Select criteria that explicitly assess this outcome. Mapped criteria contribute to <strong style={{ color: "var(--success)" }}>Direct</strong> coverage. Outcomes with no selected criteria remain <strong style={{ color: "var(--warning)" }}>Indirect</strong> or <strong>Unmapped</strong>.
+          </span>
+        </FbAlert>
         {criteria.length > 0 && (
           <div className="acc-drawer-criteria-grid">
             {criteria.map((c) => (

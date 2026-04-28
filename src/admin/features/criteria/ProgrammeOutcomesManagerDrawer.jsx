@@ -14,9 +14,10 @@
 //   onSave          — () => Promise<void>
 
 import { useState } from "react";
-import { Info, Icon } from "lucide-react";
+import { Icon } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
+import FbAlert from "@/shared/ui/FbAlert";
 
 export default function ProgrammeOutcomesManagerDrawer({
   open,
@@ -107,15 +108,9 @@ export default function ProgrammeOutcomesManagerDrawer({
         </div>
       </div>
       <div className="fs-drawer-body">
-        <div className="fs-alert info" style={{ marginBottom: 14 }}>
-          <div className="fs-alert-icon"><Info size={15} /></div>
-          <div className="fs-alert-body">
-            <div className="fs-alert-title">Shared outcome template</div>
-            <div className="fs-alert-desc">
-              These outcomes belong to the selected accreditation framework and are available for mapping across all criteria in this evaluation period. Hover any row to edit or delete.
-            </div>
-          </div>
-        </div>
+        <FbAlert variant="info" title="Shared outcome template" style={{ marginBottom: 14 }}>
+          These outcomes belong to the selected accreditation framework and are available for mapping across all criteria in this evaluation period. Hover any row to edit or delete.
+        </FbAlert>
 
         <div className="acc-outcomes-list">
           {outcomes.length === 0 && (

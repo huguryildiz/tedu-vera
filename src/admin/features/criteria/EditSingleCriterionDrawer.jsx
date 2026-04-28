@@ -8,6 +8,7 @@ import AutoTextarea from "@/shared/ui/AutoTextarea";
 import Drawer from "@/shared/ui/Drawer";
 import AlertCard from "@/shared/ui/AlertCard";
 import InlineError from "@/shared/ui/InlineError";
+import FbAlert from "@/shared/ui/FbAlert";
 import { RUBRIC_EDITOR_TEXT } from "@/shared/constants";
 import { validateCriterion } from "@/shared/criteriaValidation";
 import { criterionToConfig } from "@/shared/criteria/criteriaHelpers";
@@ -367,13 +368,9 @@ export default function EditSingleCriterionDrawer({
       {/* ── Body ────────────────────────────────────────── */}
       <div className="fs-drawer-body">
         {isLocked && (
-          <div className="fs-alert warning" style={{ marginBottom: 14 }}>
-            <div className="fs-alert-icon"><Lock size={15} /></div>
-            <div className="fs-alert-body">
-              <div className="fs-alert-title">Evaluation active — criterion locked</div>
-              <div className="fs-alert-desc">This criterion cannot be edited while the evaluation period is locked. Unlock the period to make changes.</div>
-            </div>
-          </div>
+          <FbAlert variant="warning" title="Evaluation active — criterion locked" icon={Lock} style={{ marginBottom: 14 }}>
+            This criterion cannot be edited while the evaluation period is locked. Unlock the period to make changes.
+          </FbAlert>
         )}
         {/* Details Tab */}
         {activeTab === "details" && (

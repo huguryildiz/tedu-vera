@@ -9,10 +9,11 @@
 //   error   — string | null
 
 import { useState, useEffect } from "react";
-import { AlertCircle, Icon } from "lucide-react";
+import { Icon } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
+import FbAlert from "@/shared/ui/FbAlert";
 
 const EMPTY = {
   name: "",
@@ -101,10 +102,7 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
       </div>
       <div className="fs-drawer-body" style={{ gap: 16 }}>
         {displayError && (
-          <div className="fs-alert danger" style={{ marginBottom: 4 }}>
-            <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-            <div className="fs-alert-body">{displayError}</div>
-          </div>
+          <FbAlert variant="danger" style={{ marginBottom: 4 }}>{displayError}</FbAlert>
         )}
 
         <div className="fs-field">

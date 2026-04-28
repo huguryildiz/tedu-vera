@@ -9,9 +9,10 @@
 //   onConfirm    — () => Promise<void>
 
 import { useState } from "react";
-import { LockOpen, AlertTriangle } from "lucide-react";
+import { LockOpen } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
+import FbAlert from "@/shared/ui/FbAlert";
 
 export default function UnlockAllModal({
   open,
@@ -53,18 +54,9 @@ export default function UnlockAllModal({
       </div>
 
       <div className="fs-modal-body" style={{ paddingTop: 2 }}>
-        <div className="fs-alert warning" style={{ margin: 0, textAlign: "left" }}>
-          <div className="fs-alert-icon">
-            <AlertTriangle size={15} />
-          </div>
-          <div className="fs-alert-body">
-            <div className="fs-alert-title">Actions will be logged</div>
-            <div className="fs-alert-desc">
-              Each unlock is recorded in the Audit Log with your admin
-              identity and timestamp.
-            </div>
-          </div>
-        </div>
+        <FbAlert variant="warning" title="Actions will be logged" style={{ margin: 0 }}>
+          Each unlock is recorded in the Audit Log with your admin identity and timestamp.
+        </FbAlert>
       </div>
 
       <div

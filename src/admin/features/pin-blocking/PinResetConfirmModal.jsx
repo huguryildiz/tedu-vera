@@ -9,10 +9,11 @@
 //   loading — boolean
 //   onConfirm — () => void
 
-import { AlertTriangle, KeyRound, Icon } from "lucide-react";
+import { KeyRound, Icon } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import JurorBadge from "@/admin/shared/JurorBadge";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
+import FbAlert from "@/shared/ui/FbAlert";
 
 export default function PinResetConfirmModal({ open, onClose, juror, loading, onConfirm }) {
   const name = juror?.juryName || juror?.juror_name || "";
@@ -74,13 +75,9 @@ export default function PinResetConfirmModal({ open, onClose, juror, loading, on
         )}
 
         {/* Warning banner */}
-        <div className="fs-alert warning" style={{ marginBottom: 0 }}>
-          <div className="fs-alert-icon"><AlertTriangle size={15} /></div>
-          <div className="fs-alert-body">
-            <div className="fs-alert-title">Current PIN will stop working</div>
-            <div className="fs-alert-desc">The juror must use the new PIN to continue scoring.</div>
-          </div>
-        </div>
+        <FbAlert variant="warning" title="Current PIN will stop working" style={{ marginBottom: 0 }}>
+          The juror must use the new PIN to continue scoring.
+        </FbAlert>
       </div>
       <div className="fs-modal-footer">
         <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose} disabled={loading}>

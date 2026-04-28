@@ -1,6 +1,7 @@
-import { AlertCircle, Check, Send, X } from "lucide-react";
+import { Check, Send, X } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
+import FbAlert from "@/shared/ui/FbAlert";
 
 export default function SendQrModal({
   open,
@@ -83,15 +84,9 @@ export default function SendQrModal({
           })}
         </div>
         {noEmailCount > 0 && (
-          <div className="fs-alert warning" style={{ margin: "14px 0 0" }}>
-            <div className="fs-alert-icon">
-              <AlertCircle size={16} />
-            </div>
-            <div className="fs-alert-body">
-              <div className="fs-alert-title">{noEmailCount} juror{noEmailCount === 1 ? "" : "s"} without email addresses</div>
-              <div className="fs-alert-desc">They will be skipped. You can add their emails in the Jurors page.</div>
-            </div>
-          </div>
+          <FbAlert variant="warning" title={`${noEmailCount} juror${noEmailCount === 1 ? "" : "s"} without email addresses`} style={{ margin: "14px 0 0" }}>
+            They will be skipped. You can add their emails in the Jurors page.
+          </FbAlert>
         )}
       </div>
       <div className="fs-modal-footer ec-send-footer">

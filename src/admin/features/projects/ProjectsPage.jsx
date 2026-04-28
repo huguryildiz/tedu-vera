@@ -425,16 +425,14 @@ export default function ProjectsPage() {
           <div className="scores-kpi-item-label">Evaluated</div>
         </div>
       </div>
-      <PremiumTooltip text={lockedTooltip} position="bottom">
-        <button
-          className="btn btn-primary btn-sm mobile-primary-below-kpi"
-          onClick={() => !isLocked && setAddDrawerOpen(true)}
-          disabled={isLocked}
-        >
-          <Plus size={13} strokeWidth={2.2} />
-          Add Project
-        </button>
-      </PremiumTooltip>
+      <button
+        className="btn btn-primary btn-sm mobile-primary-below-kpi"
+        onClick={() => !isLocked && setAddDrawerOpen(true)}
+        disabled={isLocked}
+      >
+        <Plus size={13} strokeWidth={2.2} />
+        Add Project
+      </button>
       {/* Lock banner */}
       {isLocked && periods.viewPeriodId && (
         <div className="lock-notice">

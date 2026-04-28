@@ -9,9 +9,10 @@
 //   onRevoke    — () => Promise<void>
 
 import { useState } from "react";
-import { AlertTriangle, Icon } from "lucide-react";
+import { Icon } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
+import FbAlert from "@/shared/ui/FbAlert";
 
 export default function RevokeTokenModal({ open, onClose, activeCount = 0, onRevoke }) {
   const [revoking, setRevoking] = useState(false);
@@ -47,15 +48,9 @@ export default function RevokeTokenModal({ open, onClose, activeCount = 0, onRev
       </div>
       <div className="fs-modal-body" style={{ paddingTop: 4 }}>
         {activeCount > 0 && (
-          <div className="fs-alert warning" style={{ margin: 0, textAlign: "left" }}>
-            <div className="fs-alert-icon"><AlertTriangle size={15} /></div>
-            <div className="fs-alert-body">
-              <div className="fs-alert-title">
-                {activeCount} juror{activeCount !== 1 ? "s are" : " is"} currently scoring
-              </div>
-              <div className="fs-alert-desc">Their active sessions will end. Unsaved scores will be lost.</div>
-            </div>
-          </div>
+          <FbAlert variant="warning" title={`${activeCount} juror${activeCount !== 1 ? "s are" : " is"} currently scoring`} style={{ margin: 0 }}>
+            Their active sessions will end. Unsaved scores will be lost.
+          </FbAlert>
         )}
       </div>
       <div

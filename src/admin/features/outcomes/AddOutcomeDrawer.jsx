@@ -16,12 +16,13 @@
 //   error                      — string | null
 
 import { useState, useEffect } from "react";
-import { AlertCircle, BadgeCheck, Info, PlusCircle, X, Check } from "lucide-react";
+import { BadgeCheck, PlusCircle, X, Check } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
 import AutoTextarea from "@/shared/ui/AutoTextarea";
 import InlineError from "@/shared/ui/InlineError";
+import FbAlert from "@/shared/ui/FbAlert";
 
 const EMPTY = { code: "", shortLabel: "", description: "", criterionIds: [] };
 
@@ -160,10 +161,7 @@ export default function AddOutcomeDrawer({
           /* ── Step 2: Framework assigned — add the outcome ── */
           <>
             {displayError && (
-              <div className="fs-alert danger" style={{ marginBottom: 14 }}>
-                <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-                <div className="fs-alert-body">{displayError}</div>
-              </div>
+              <FbAlert variant="danger" style={{ marginBottom: 14 }}>{displayError}</FbAlert>
             )}
 
             {/* Outcome Identity */}
@@ -226,14 +224,11 @@ export default function AddOutcomeDrawer({
                 <div className="acc-detail-section-label" style={{ marginTop: 18 }}>
                   Criterion Mapping <span style={{ fontSize: 10, color: "var(--text-quaternary)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional)</span>
                 </div>
-                <div className="fs-alert info" style={{ marginBottom: 10, padding: "10px 12px" }}>
-                  <div className="fs-alert-icon" style={{ width: 24, height: 24 }}><Info size={15} /></div>
-                  <div className="fs-alert-body">
-                    <div className="fs-alert-desc" style={{ fontSize: 11 }}>
-                      Select criteria that explicitly assess this outcome. Mapped criteria give <strong style={{ color: "var(--success)" }}>Direct</strong> coverage.
-                    </div>
-                  </div>
-                </div>
+                <FbAlert variant="info" style={{ marginBottom: 10, padding: "10px 12px" }} iconSize={15}>
+                  <span style={{ fontSize: 11 }}>
+                    Select criteria that explicitly assess this outcome. Mapped criteria give <strong style={{ color: "var(--success)" }}>Direct</strong> coverage.
+                  </span>
+                </FbAlert>
                 <div className="acc-drawer-criteria-grid">
                   {criteria.map((c) => (
                     <label

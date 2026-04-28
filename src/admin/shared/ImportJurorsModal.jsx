@@ -8,7 +8,8 @@
 //   onImport   — async (rows) => void   (receives valid rows)
 
 import { useCallback, useRef, useState } from "react";
-import { AlertCircle, CheckCircle, Info, Icon } from "lucide-react";
+import { CheckCircle, Icon } from "lucide-react";
+import FbAlert from "@/shared/ui/FbAlert";
 import Modal from "@/shared/ui/Modal";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 
@@ -130,10 +131,7 @@ export default function ImportJurorsModal({ open, onClose, parseFile, onImport }
         <>
           <div className="fs-modal-body">
             {importError && (
-              <div className="fs-alert danger" style={{ marginBottom: 12 }}>
-                <div className="fs-alert-icon"><AlertCircle size={15} /></div>
-                <div className="fs-alert-body">{importError}</div>
-              </div>
+              <FbAlert variant="danger" style={{ marginBottom: 12 }}>{importError}</FbAlert>
             )}
 
             {/* Drop zone — shown when no file selected */}
@@ -338,15 +336,9 @@ export default function ImportJurorsModal({ open, onClose, parseFile, onImport }
               </div>
             </div>
             {(resultData.skipped > 0 || resultData.failed > 0) && (
-              <div className="fs-alert info" style={{ marginTop: 12, textAlign: "left" }}>
-                <div className="fs-alert-icon"><Info size={15} /></div>
-                <div className="fs-alert-body">
-                  <div className="fs-alert-title">What to do next</div>
-                  <div className="fs-alert-desc">
-                    Skipped rows already exist for this period. Fix any failed rows manually or re-import a corrected CSV.
-                  </div>
-                </div>
-              </div>
+              <FbAlert variant="info" title="What to do next" style={{ marginTop: 12 }}>
+                Skipped rows already exist for this period. Fix any failed rows manually or re-import a corrected CSV.
+              </FbAlert>
             )}
           </div>
           <div className="fs-modal-footer" style={{ justifyContent: "center", borderTop: "none", background: "transparent", paddingTop: 0 }}>
