@@ -78,23 +78,26 @@ on a user-facing critical path must use one of the four blocking mechanisms abov
 
 ```sql
 CREATE TABLE audit_logs (
-  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at      timestamptz      DEFAULT now(),
-  organization_id uuid REFERENCES organizations(id),
-  user_id         uuid REFERENCES auth.users(id),
-  actor_type      text,     -- 'admin' | 'juror' | 'system' | 'anonymous'
-  actor_name      text,     -- snapshot of display name at write time
-  action          text NOT NULL,
-  resource_type   text,
-  resource_id     uuid,
-  category        text,     -- 'auth' | 'access' | 'data' | 'config' | 'security'
-  severity        text,     -- 'info' | 'low' | 'medium' | 'high' | 'critical'
-  details         jsonb DEFAULT '{}',
-  diff            jsonb,    -- { before: {...}, after: {...} } for updates
-  ip_address      inet,
-  user_agent      text,
-  row_hash        text,     -- sha256 chain for tamper evidence
-  correlation_id  uuid      -- groups related events from the same operation
+  id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at        timestamptz      DEFAULT now(),
+  organization_id   uuid REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id           uuid REFERENCES profiles(id)      ON DELETE SET NULL,
+  actor_type        text,        -- 'admin' | 'juror' | 'system' | 'anonymous'
+  actor_name        text,        -- snapshot of display name at write time
+  action            text NOT NULL,
+  resource_type     text,
+  resource_id       uuid,
+  category          text,        -- 'auth' | 'access' | 'data' | 'config' | 'security'
+  severity          text,        -- 'info' | 'low' | 'medium' | 'high' | 'critical'
+  details           jsonb DEFAULT '{}',
+  diff              jsonb,       -- { before: {...}, after: {...} } — only changed keys
+  ip_address        inet,
+  user_agent        text,
+  row_hash          text,        -- sha256 chain for tamper evidence
+  chain_seq         bigserial,   -- monotonic insert-order counter (chain ordering)
+  correlation_id    uuid,        -- groups related events from the same operation
+  synced_to_ext     boolean NOT NULL DEFAULT false,  -- external sink delivery flag
+  synced_to_ext_at  timestamptz                       -- when sink confirmed delivery
 );
 ```
 
@@ -105,11 +108,22 @@ CREATE TABLE audit_logs (
 - **`actor_type`** -- `'admin'` when `auth.uid()` is present (triggers and RPCs),
   `'system'` for cron/backend, `'juror'` for jury-side RPCs, `'anonymous'` for
   unauthenticated callers.
-- **`diff`** -- `{ before, after }` with only changed keys for RPC-level diffs.
-  Trigger-level diffs include full row snapshots. `score_sheets` excluded to
-  avoid bloat.
+- **`diff`** -- `{ before, after }` with **only the changed keys** (selective
+  diff via `_jsonb_diff`). Noisy keys (`updated_at`, `last_seen_at`,
+  `last_activity_at`) are stripped. `score_sheets` is excluded entirely to
+  avoid score-sheet-volume bloat.
+- **`chain_seq`** -- BIGSERIAL on every insert. Hash chain ordering uses this
+  (not `created_at`) so a row inserted with a backdated `created_at` cannot
+  silently slip into the past.
 - **`ip_address` / `user_agent`** -- extracted from `request.headers` GUC
-  (PostgREST path) or request headers (Edge Function path). No manual passing.
+  (PostgREST path) or request headers (Edge Function path) by the
+  trusted-proxy-depth-aware parser. No manual passing.
+- **`synced_to_ext` / `synced_to_ext_at`** -- delivery flags managed by the
+  `audit-log-sink` Edge Function and the hourly drain pass. Rows that fail to
+  forward stay `false` and are retried until they succeed.
+- **`user_id`** -- FK to `profiles` with `ON DELETE SET NULL`. Deleting an
+  admin keeps the historical rows intact (the snapshot in `actor_name` still
+  identifies who acted) without blocking the deletion on FK violations.
 - **`correlation_id`** -- groups related events from a single logical operation.
   `rpc_jury_finalize_submission` generates one UUID per call and stamps it on
   all three rows it writes (`evaluation.complete`, `data.score.submitted` × N,
@@ -120,14 +134,15 @@ CREATE TABLE audit_logs (
 
 ## Tracked Tables (DB Trigger)
 
-14 tables have `trigger_audit_log` attached. Every INSERT, UPDATE, and DELETE
-on these tables produces an audit row automatically. Trigger-emitted rows now
-also carry `ip_address` and `user_agent` (extracted from the PostgREST
+15 tables have `trigger_audit_log` attached. Every INSERT, UPDATE, and DELETE
+on these tables produces an audit row automatically. Trigger-emitted rows
+carry `ip_address` and `user_agent` (extracted from the PostgREST
 `request.headers` GUC, mirroring `_audit_write`'s logic).
 
 The diff column stores **only the changed keys** (per `_jsonb_diff` helper),
 not full row snapshots — `updated_at`, `last_seen_at`, `last_activity_at` are
-stripped as noise.
+stripped as noise. UPDATEs whose only changes are noisy keys produce no audit
+row at all (the trigger early-returns), preventing heartbeat-traffic flood.
 
 | Table | Org resolution | Category |
 | --- | --- | --- |
@@ -145,9 +160,10 @@ stripped as noise.
 | `profiles` | NULL (global) | data |
 | `security_policy` | NULL (global) | config |
 | `unlock_requests` | `organization_id` column | data |
+| `juror_period_auth` | via `jurors.organization_id` | data (composite PK; resource_id=juror_id) |
 
 Trigger actions follow the pattern `<table_name>.<operation>`, e.g.,
-`periods.insert`, `jurors.update`, `projects.delete`.
+`periods.insert`, `jurors.update`, `juror_period_auth.update`.
 
 **Note:** `org_applications` and `admin_invites` were previously listed here in
 error — they have no trigger attached. Org-application lifecycle is captured by
@@ -215,6 +231,8 @@ Canonical PIN taxonomy is `juror.pin_locked` / `juror.pin_unlocked` /
 | `security.pin_reset.requested` | Edge Function (`request-pin-reset`) | medium |
 | `security.anomaly.detected` | Edge Function cron (`audit-anomaly-sweep`) | high |
 | `security.chain.broken` | Edge Function cron (auto chain verify) | critical |
+| `security.chain.root.signed` | Edge Function cron (`audit-anomaly-sweep`) — HMAC-SHA256 signed snapshot of the latest chain root, forwarded to the external sink each sweep | info |
+| `system.migration_applied` | RPC (`rpc_admin_log_migration`, service_role only) — paper trail for manual `apply_migration` calls (label + actor + commit/migrations details) | high |
 | `backup.*` | RPC (`rpc_platform_backups_*`) | info |
 | `maintenance.set` / `maintenance.cancelled` | RPC (`rpc_admin_set_maintenance` / `rpc_admin_cancel_maintenance`) | high / medium |
 | `access.admin.session.revoked` | RPC (`rpc_admin_revoke_admin_session`) | high |
@@ -268,6 +286,21 @@ The `audit-anomaly-sweep` Edge Function runs hourly via cron. It scans the last
 Each sweep also runs `_audit_verify_chain_internal(null)` (service_role-only helper,
 no auth check). Broken links write a `security.chain.broken` row (severity=critical).
 
+The same sweep performs two additional passes after anomaly detection:
+
+1. **External-sink drain** — fetches up to 500 audit rows whose `synced_to_ext`
+   flag is `false` and whose `created_at` is older than 5 minutes, re-POSTs each
+   to `AUDIT_SINK_WEBHOOK_URL`, and marks `synced_to_ext = true` on success.
+   This guarantees eventual delivery even when the Database Webhook fires faster
+   than the sink can ingest.
+
+2. **Root anchoring** — if `AUDIT_ROOT_SIGNING_SECRET` is set, the sweep computes
+   `HMAC-SHA256(id|chain_seq|row_hash|signed_at)` on the latest chain row and
+   writes it as a `security.chain.root.signed` audit event. The signed root is
+   then forwarded externally by the sink, creating an off-site copy of the chain
+   tip that a compromised database administrator cannot tamper with without
+   detection.
+
 ### Client-side (UI feedback only)
 
 `detectAnomalies()` in `src/admin/utils/auditUtils.js` runs 6 rules on loaded
@@ -279,16 +312,43 @@ authoritative anomaly writer.
 
 ## Tamper Evidence
 
-Three layers protect audit integrity:
+Five layers protect audit integrity:
 
 1. **Hash chain.** Each row's `row_hash` = `sha256(id || action || org_id ||
-   created_at || prev_hash)`. Verified by `rpc_admin_verify_audit_chain` (UI
-   button for super-admins + automatic check in every anomaly sweep).
+   created_at || prev_hash)`, ordered by the `chain_seq` `BIGSERIAL` so a row
+   inserted with a backdated `created_at` cannot break the order. Verified by
+   `rpc_admin_verify_audit_chain` (UI button for super-admins + automatic check
+   in every anomaly sweep).
 2. **Append-only RLS.** `FOR DELETE USING (false)` prevents any deletion.
-3. **External log sink.** Every `audit_logs` INSERT is forwarded via the
-   `audit-log-sink` Edge Function (Database Webhook) to an external
-   observability platform (Axiom `vera-audit-logs` dataset). Offsite copy
-   independent of the Supabase DB.
+3. **`user_id` decoupled from rows.** `audit_logs.user_id` references
+   `profiles(id) ON DELETE SET NULL`. Deleting an admin clears the FK pointer
+   but the audit row survives — `actor_name` snapshot keeps the record readable
+   without the live profile.
+4. **External log sink with retry.** Every `audit_logs` INSERT is forwarded via
+   the `audit-log-sink` Edge Function (Database Webhook) to an external
+   observability platform (Axiom `vera-audit-logs` dataset). On success the
+   row's `synced_to_ext` flag flips to `true`. Failed forwards stay `false` and
+   are picked up by the hourly drain pass. No silent drops.
+5. **Off-site signed roots.** When `AUDIT_ROOT_SIGNING_SECRET` is set, the
+   hourly sweep emits a `security.chain.root.signed` event with an HMAC-SHA256
+   signature of the latest chain tip. The sink forwards it externally; a DB
+   admin who tampers with the in-DB chain cannot also forge the off-site
+   signed roots without the secret.
+
+### Trusted-proxy IP extraction
+
+Both `_audit_write` (SQL) and the Edge-Function `extractClientIp` honor a
+deployment-configurable trusted-proxy depth so spoofed `X-Forwarded-For`
+entries can be rejected:
+
+- SQL: `ALTER DATABASE postgres SET app.audit_proxy_depth = '1';`
+- Edge: env `AUDIT_TRUSTED_PROXY_DEPTH=1`
+
+When set to `N`, the parser walks the XFF chain from the right, skipping `N`
+trusted hops (Supabase Edge, optional CDN). When unset, behavior falls back to
+the legacy "trust XFF[0]" mode for backwards compatibility — but production
+deployments should set both values explicitly. See `_audit_extract_client_ip`
+in `003_helpers_and_triggers.sql` and `_shared/audit-log.ts:extractClientIp`.
 
 ---
 
@@ -311,12 +371,16 @@ After any audit-related change, verify these produce visible rows:
 - Force-close juror edit mode -> `data.juror.edit_mode.force_closed`
 - Submit jury scores -> `data.score.submitted` (with diff)
 - Update security policy -> `security_policy.update` (with diff, actor_type=admin)
+- Accept admin invitation -> `access.admin.accepted` (one row per activated org membership)
+- Toggle juror edit mode (admin) -> `juror.edit_mode_enabled` / `juror.edit_mode_disabled` (symmetric pair)
+- Apply a manual migration via `rpc_admin_log_migration` -> `system.migration_applied`
 
 **Auth:**
 
 - Log in -> `auth.admin.login.success`
 - Fail to log in -> `auth.admin.login.failure`
 - Log out -> `admin.logout`
+- Verify admin email -> `auth.admin.email_verified` (fail-closed; 500 on audit failure)
 
 **Exports:**
 
@@ -326,9 +390,13 @@ After any audit-related change, verify these produce visible rows:
 
 - `actor_name` is populated (not NULL)
 - `actor_type` is `'admin'` for user-initiated actions (not `'system'`)
-- `ip_address` is populated
-- `user_agent` is populated
-- `diff` is populated for update events
+- `ip_address` is populated (incl. trigger-emitted rows — P0.3)
+- `user_agent` is populated (incl. trigger-emitted rows)
+- `diff` carries only the changed keys, not full row snapshots (P1.5)
+- `synced_to_ext` flips to `true` once forwarded to the external sink (P2.11);
+  rows older than 5 minutes with `false` get retried by the next sweep
+- For each hourly sweep window: `security.chain.root.signed` row exists
+  (P2.10) and the HMAC signature recomputes to its stored value
 
 ---
 
@@ -406,6 +474,28 @@ answer them. All rows are in `audit_logs`; filter by `action` and optionally
 | When was an admin invited to an organization? | `access.admin.invited` | `invitee_email`, `org_id` |
 | When did an invited admin accept their invitation? | `access.admin.accepted` | `invitee_id`, `org_id` |
 | When did admin revoke another admin's session? | `access.admin.session.revoked` | `revoked_user_id`, `session_id` |
+| When did an admin verify their email address? | `auth.admin.email_verified` | `email`, `verified_at` |
+
+---
+
+### Admin — Juror Edit Mode (Symmetric Pair)
+
+| Question | Action(s) to query | Key `details` fields |
+| --- | --- | --- |
+| When did admin grant a juror an edit window? | `juror.edit_mode_enabled` | `juror_id`, `juror_name`, `reason`, `duration_minutes`, `expires_at` |
+| When did admin manually close a juror's edit window? | `juror.edit_mode_disabled` | `juror_id`, `previous_reason`, `previous_expires_at`, `close_source='admin_manual'` |
+| When did admin force-close a juror's edit window? | `data.juror.edit_mode.force_closed` | `juror_id`, `close_source='admin_force'`, `closed_at` |
+
+---
+
+### Operations — Migrations & Chain Integrity
+
+| Question | Action(s) to query | Key `details` fields |
+| --- | --- | --- |
+| What manual migrations were applied recently? | `system.migration_applied` | `label`, `actor`, `migrations[]`, `plan` |
+| Has the audit chain been verified recently? | `security.chain.broken` (only on failure) + `security.chain.root.signed` (every sweep) | `broken_count`, `earliest_break` / `chain_seq`, `row_hash`, `signature` |
+| Did an audit row fail to forward to the external sink? | Query `audit_logs` with `synced_to_ext = false AND created_at < now() - interval '1 minute'` | (none — flag itself is the signal) |
+| Was the latest off-site root signed? | `security.chain.root.signed` ordered DESC LIMIT 1 | `chain_seq`, `row_hash`, `signed_at`, `signature_alg`, `signature` |
 
 ---
 

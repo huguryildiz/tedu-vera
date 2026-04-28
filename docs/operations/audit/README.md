@@ -37,12 +37,14 @@ This directory contains comprehensive documentation for VERA's audit logging sys
   notifications, security anomalies). See [audit-coverage.md](./audit-coverage.md)
   for the full catalog.
 
-- **14 trigger-based CRUD tables:** Automatic logging on INSERT/UPDATE/DELETE.
-  Trigger-emitted rows now carry `ip_address` and `user_agent` and use a selective
-  diff (only changed keys, noisy timestamps stripped):
+- **15 trigger-based CRUD tables:** Automatic logging on INSERT/UPDATE/DELETE.
+  Trigger-emitted rows carry `ip_address` and `user_agent` and use a selective
+  diff (only changed keys, noisy timestamps stripped). UPDATEs whose only
+  changes are noisy keys produce no audit row at all (heartbeat-traffic safe):
   - organizations, periods, projects, jurors, score_sheets (diff: NULL),
     memberships, entry_tokens, period_criteria, period_criterion_outcome_maps,
-    framework_outcomes, frameworks, profiles, security_policy, unlock_requests
+    framework_outcomes, frameworks, profiles, security_policy, unlock_requests,
+    juror_period_auth (composite PK; resource_id = juror_id)
 
 ## Key Concepts
 

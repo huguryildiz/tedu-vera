@@ -38,6 +38,7 @@ Registered actor types: `admin`, `juror`, `system`, `anonymous`
 | `admin.logout` | Admin signed out | signed out *(globally if present)* |
 | `auth.admin.password.changed` | Admin changed password | changed their password |
 | `auth.admin.password.reset.requested` | Password reset requested | requested password reset · *{email}* |
+| `auth.admin.email_verified` | Admin email verified | verified email address · *{email}* |
 
 ### Evaluation Flow (Juror-initiated)
 
@@ -60,6 +61,7 @@ Registered actor types: `admin`, `juror`, `system`, `anonymous`
 | `data.juror.pin.unlocked` *(legacy)* | Juror unlocked by admin | unlocked *{juror_name}* |
 | `data.juror.pin.reset` *(legacy)* | Juror PIN reset by admin | reset PIN for *{juror_name}* |
 | `juror.edit_mode_enabled` | Edit mode granted | granted edit mode to *{juror_name}* |
+| `juror.edit_mode_disabled` | Edit mode closed (admin) | closed edit mode for *{juror_name}* |
 | `juror.edit_enabled` *(legacy)* | Edit mode granted | granted edit mode to *{juror_name}* |
 | `juror.blocked` | Juror blocked | blocked juror *{juror_name}* |
 | `juror.import` | Jurors imported | imported jurors *{count} jurors* |
@@ -234,6 +236,8 @@ Sentence: `{actor} exported {type}` · *{period_name if present}*
 | `notification.export_report` | Report shared via email | sent export report to *{recipientEmail}* |
 | `notification.password_reset` | Password reset email sent | sent password reset to *{recipientEmail}* |
 | `notification.maintenance` | Maintenance notice sent | sent maintenance to *{recipientEmail}* |
+| `notification.juror_reminder` | Juror reminder sent | sent juror reminder to *{recipientEmail}* |
+| `notification.unlock_request` | Unlock request notification sent | sent unlock request to *{recipientEmail}* |
 
 ### Security / Anomaly Detection
 
@@ -243,6 +247,21 @@ Sentence: `{actor} exported {type}` · *{period_name if present}*
 | `data.score.edit_requested` | Score edit requested | requested score edit for juror *{jurorName}* |
 | `security.anomaly.detected` | Anomaly Detected | flagged *{anomaly_type}* |
 | `security.chain.broken` | Hash Chain Broken | detected tampering in *audit chain ({N} break(s))* |
+| `security.chain.root.signed` | Audit chain root signed | signed audit chain root · *seq={chain_seq}* |
+
+### Access (Admin Membership)
+
+| Action | Label | Sentence |
+|--------|-------|---------|
+| `access.admin.invited` | Admin invited | invited admin · *{invitee_email}* |
+| `access.admin.accepted` | Admin invitation accepted | accepted admin invitation · *{role}* |
+| `access.admin.session.revoked` | Admin session revoked | revoked admin session *{device_id \| browser}* |
+
+### System / Operations
+
+| Action | Label | Sentence |
+|--------|-------|---------|
+| `system.migration_applied` | Database migration applied | applied database migration · *{label}* |
 
 ---
 
