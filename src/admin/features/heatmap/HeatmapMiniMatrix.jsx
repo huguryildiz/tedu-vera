@@ -55,13 +55,28 @@ export default function HeatmapMiniMatrix({
   visibleAverages,
   overallAvg,
   getCellDisplay,
+  sortKey,
+  onSortChange,
 }) {
+  const nameArrow = sortKey === "name_asc" ? " ↑" : sortKey === "name_desc" ? " ↓" : "";
+  const isNameSort = sortKey === "name_asc" || sortKey === "name_desc";
+
+  function handleNameSort() {
+    onSortChange(sortKey === "name_asc" ? "name_desc" : "name_asc");
+  }
+
   return (
     <div className="hm-mini-matrix-wrap">
       <table className="hm-mini-matrix">
         <thead>
           <tr>
-            <th className="hm-mm-juror-col" />
+            <th
+              className={`hm-mm-juror-col hm-mm-th-juror${isNameSort ? " hm-mm-th-juror--active" : ""}`}
+              onClick={handleNameSort}
+              title="Sort by name"
+            >
+              Juror{nameArrow || <span className="hm-mm-sort-hint"> ↕</span>}
+            </th>
             {groups.map((g) => (
               <th
                 key={g.id}

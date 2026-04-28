@@ -15,6 +15,29 @@
   table-layout: fixed;
 }
 
+/* ── Sortable juror header ── */
+.hm-mini-matrix th.hm-mm-th-juror {
+  cursor: pointer;
+  user-select: none;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.hm-mini-matrix th.hm-mm-th-juror--active {
+  color: var(--accent);
+}
+
+.hm-mini-matrix th.hm-mm-th-juror:hover {
+  color: var(--accent);
+}
+
+.hm-mm-sort-hint {
+  opacity: 0.35;
+  font-size: 8px;
+}
+
 /* ── Sticky juror column ── */
 .hm-mini-matrix th.hm-mm-juror-col,
 .hm-mini-matrix td.hm-mm-juror-col {

@@ -66,6 +66,8 @@ export default function HeatmapMobileList({
           visibleAverages={visibleAverages}
           overallAvg={overallAvg}
           getCellDisplay={getCellDisplay}
+          sortKey={sortKey}
+          onSortChange={setSortKey}
         />
       )}
     </section>
