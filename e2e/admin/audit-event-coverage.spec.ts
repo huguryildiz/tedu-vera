@@ -502,8 +502,8 @@ test.describe("audit event_type coverage (Phase 2.5)", () => {
   test("rpc_admin_set_pin_policy writes security.pin_policy.updated", async () => {
     const { data, error } = await adminAuthClient.rpc("rpc_admin_set_pin_policy", {
       p_max_attempts: 5,
-      p_cooldown: "30 minutes",
-      p_qr_ttl: "24 hours",
+      p_cooldown: "30m",
+      p_qr_ttl: "24h",
     });
     expect(error, `set_pin_policy error: ${error?.message}`).toBeNull();
     expect(data).toBeTruthy();
@@ -519,45 +519,69 @@ test.describe("audit event_type coverage (Phase 2.5)", () => {
   // ── 15. membership.invite.cancelled ────────────────────────────────────
   // e2e.admin.audit.membership_invite_cancelled
   test("rpc_org_admin_cancel_invite writes membership.invite.cancelled", async () => {
-    // Create a temp invitee + invited membership; the RPC will clean up the
-    // orphaned auth user automatically when it cancels the last membership.
-    const inviteeEmail = `e2e-audit-invitee-${Date.now().toString(36)}@vera-eval.app`;
-    await deleteUserByEmail(inviteeEmail).catch(() => {});
-    const { data: inv, error: invErr } = await adminClient.auth.admin.createUser({
-      email: inviteeEmail,
-      password: PASS,
-      email_confirm: true,
-    });
-    expect(invErr, `createUser invitee: ${invErr?.message}`).toBeNull();
-
-    const { data: mem, error: memErr } = await adminClient
-      .from("memberships")
-      .insert({
-        user_id: inv!.user!.id,
-        organization_id: E2E_PERIODS_ORG_ID,
-        status: "invited",
-        role: "org_admin",
-        is_owner: false,
-      })
-      .select("id")
+    // _assert_can_invite() requires owner / super / delegated-admin. The test
+    // admin is plain org_admin (is_owner=false), so enable the
+    // organizations.settings.admins_can_invite delegation flag for the
+    // duration of this test, then restore it.
+    const { data: orgRow, error: orgErr } = await adminClient
+      .from("organizations")
+      .select("settings")
+      .eq("id", E2E_PERIODS_ORG_ID)
       .single();
-    expect(memErr, `insert invited membership: ${memErr?.message}`).toBeNull();
-    const membershipId = mem!.id as string;
+    expect(orgErr, `fetch org settings: ${orgErr?.message}`).toBeNull();
+    const originalSettings = (orgRow?.settings as Record<string, unknown>) ?? {};
+    await adminClient
+      .from("organizations")
+      .update({ settings: { ...originalSettings, admins_can_invite: true } })
+      .eq("id", E2E_PERIODS_ORG_ID);
 
-    const { data, error } = await adminAuthClient.rpc("rpc_org_admin_cancel_invite", {
-      p_membership_id: membershipId,
-    });
-    expect(error, `cancel_invite error: ${error?.message}`).toBeNull();
-    expect(data?.ok).toBe(true);
+    try {
+      // Create a temp invitee + invited membership; the RPC will clean up the
+      // orphaned auth user automatically when it cancels the last membership.
+      const inviteeEmail = `e2e-audit-invitee-${Date.now().toString(36)}@vera-eval.app`;
+      await deleteUserByEmail(inviteeEmail).catch(() => {});
+      const { data: inv, error: invErr } = await adminClient.auth.admin.createUser({
+        email: inviteeEmail,
+        password: PASS,
+        email_confirm: true,
+      });
+      expect(invErr, `createUser invitee: ${invErr?.message}`).toBeNull();
 
-    await assertAuditEntry({
-      eventType: "membership.invite.cancelled",
-      targetId: membershipId,
-      actorId: adminUserId,
-      orgId: E2E_PERIODS_ORG_ID,
-      withinSeconds: 60,
-    });
-    // No afterAll cleanup needed: RPC deletes the orphaned invitee auth user
+      const { data: mem, error: memErr } = await adminClient
+        .from("memberships")
+        .insert({
+          user_id: inv!.user!.id,
+          organization_id: E2E_PERIODS_ORG_ID,
+          status: "invited",
+          role: "org_admin",
+          is_owner: false,
+        })
+        .select("id")
+        .single();
+      expect(memErr, `insert invited membership: ${memErr?.message}`).toBeNull();
+      const membershipId = mem!.id as string;
+
+      const { data, error } = await adminAuthClient.rpc("rpc_org_admin_cancel_invite", {
+        p_membership_id: membershipId,
+      });
+      expect(error, `cancel_invite error: ${error?.message}`).toBeNull();
+      expect(data?.ok).toBe(true);
+
+      await assertAuditEntry({
+        eventType: "membership.invite.cancelled",
+        targetId: membershipId,
+        actorId: adminUserId,
+        orgId: E2E_PERIODS_ORG_ID,
+        withinSeconds: 60,
+      });
+      // No afterAll cleanup needed: RPC deletes the orphaned invitee auth user
+    } finally {
+      // Restore the original settings flag.
+      await adminClient
+        .from("organizations")
+        .update({ settings: originalSettings })
+        .eq("id", E2E_PERIODS_ORG_ID);
+    }
   });
 
   // ── 16. coverage matrix sanity check ────────────────────────────────────

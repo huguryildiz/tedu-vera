@@ -113,12 +113,150 @@ CREATE TRIGGER set_updated_at_security_policy BEFORE UPDATE ON security_policy
   FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
 
 -- =============================================================================
+-- HELPER: _jsonb_diff(old jsonb, new jsonb) -> jsonb
+-- =============================================================================
+-- Returns { before: { changed_keys_only }, after: { changed_keys_only } }.
+-- Keys present in only one side appear only in that side. Always-noisy keys
+-- (updated_at, last_seen_at) are stripped to keep the diff focused.
+-- IMMUTABLE so PostgreSQL can inline the call inside the trigger hot-path.
+
+CREATE OR REPLACE FUNCTION public._jsonb_diff(p_old JSONB, p_new JSONB)
+RETURNS JSONB
+LANGUAGE plpgsql
+IMMUTABLE
+AS $$
+DECLARE
+  v_before JSONB := '{}'::jsonb;
+  v_after  JSONB := '{}'::jsonb;
+  k TEXT;
+  noisy CONSTANT TEXT[] := ARRAY['updated_at','last_seen_at','last_activity_at'];
+BEGIN
+  IF p_old IS NULL AND p_new IS NULL THEN RETURN NULL; END IF;
+  IF p_old IS NULL THEN
+    RETURN jsonb_build_object('after', p_new - noisy);
+  END IF;
+  IF p_new IS NULL THEN
+    RETURN jsonb_build_object('before', p_old - noisy);
+  END IF;
+
+  -- jsonb_object_keys() is a set-returning function; PG forbids using it in
+  -- WHERE directly, so iterate via a derived table.
+  FOR k IN SELECT key FROM jsonb_object_keys(p_old) AS key WHERE key <> ALL (noisy) LOOP
+    IF (p_new ? k) THEN
+      IF (p_old -> k) IS DISTINCT FROM (p_new -> k) THEN
+        v_before := v_before || jsonb_build_object(k, p_old -> k);
+        v_after  := v_after  || jsonb_build_object(k, p_new -> k);
+      END IF;
+    ELSE
+      v_before := v_before || jsonb_build_object(k, p_old -> k);
+    END IF;
+  END LOOP;
+
+  FOR k IN SELECT key FROM jsonb_object_keys(p_new) AS key WHERE key <> ALL (noisy) LOOP
+    IF NOT (p_old ? k) THEN
+      v_after := v_after || jsonb_build_object(k, p_new -> k);
+    END IF;
+  END LOOP;
+
+  IF v_before = '{}'::jsonb AND v_after = '{}'::jsonb THEN
+    RETURN NULL;
+  END IF;
+
+  RETURN jsonb_build_object('before', v_before, 'after', v_after);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public._jsonb_diff(JSONB, JSONB) TO authenticated;
+
+-- =============================================================================
+-- HELPER: _audit_extract_client_ip(xff_header, real_ip_header) -> INET
+-- =============================================================================
+-- Picks the real client IP out of a comma-separated X-Forwarded-For chain.
+-- (P2.12 — trusted proxy depth.)
+--
+-- Default behavior (no GUC): trust the leftmost XFF element (legacy compat).
+--
+-- Hardened behavior: set
+--     ALTER DATABASE postgres SET app.audit_proxy_depth = '1';
+-- to indicate that 1 trusted proxy (Supabase Edge) sits between the user and
+-- PostgREST. The function then returns the (length - 1 - depth)-th element of
+-- the chain — anything to its left is treated as user-injected/untrustworthy
+-- and ignored.
+--
+-- Returns NULL if no IP can be extracted or the candidate is not a valid INET.
+CREATE OR REPLACE FUNCTION public._audit_extract_client_ip(
+  p_xff      TEXT,
+  p_real_ip  TEXT
+)
+RETURNS INET
+LANGUAGE plpgsql
+IMMUTABLE
+AS $$
+DECLARE
+  v_chain      TEXT[];
+  v_depth_raw  TEXT;
+  v_depth      INT;
+  v_idx        INT;
+  v_candidate  TEXT;
+  v_ip         INET;
+BEGIN
+  IF p_xff IS NULL OR length(trim(p_xff)) = 0 THEN
+    IF p_real_ip IS NULL OR length(trim(p_real_ip)) = 0 THEN
+      RETURN NULL;
+    END IF;
+    BEGIN RETURN trim(p_real_ip)::INET; EXCEPTION WHEN OTHERS THEN RETURN NULL; END;
+  END IF;
+
+  v_chain := string_to_array(p_xff, ',');
+  -- Trim each element
+  FOR v_idx IN 1 .. array_length(v_chain, 1) LOOP
+    v_chain[v_idx] := trim(v_chain[v_idx]);
+  END LOOP;
+
+  -- Read trusted-proxy depth from custom GUC (missing GUC must not abort).
+  BEGIN
+    v_depth_raw := current_setting('app.audit_proxy_depth', true);
+  EXCEPTION WHEN OTHERS THEN
+    v_depth_raw := NULL;
+  END;
+
+  IF v_depth_raw IS NOT NULL AND length(trim(v_depth_raw)) > 0 THEN
+    BEGIN
+      v_depth := v_depth_raw::INT;
+    EXCEPTION WHEN OTHERS THEN
+      v_depth := 0;
+    END;
+    IF v_depth IS NULL OR v_depth < 0 THEN v_depth := 0; END IF;
+    -- Pick xff[len - depth] (1-indexed); clamp to 1 if depth ≥ chain length.
+    v_idx := GREATEST(1, array_length(v_chain, 1) - v_depth);
+    v_candidate := v_chain[v_idx];
+  ELSE
+    -- Legacy: leftmost element.
+    v_candidate := v_chain[1];
+  END IF;
+
+  IF v_candidate IS NULL OR length(trim(v_candidate)) = 0 THEN
+    RETURN NULL;
+  END IF;
+
+  BEGIN
+    v_ip := trim(v_candidate)::INET;
+  EXCEPTION WHEN OTHERS THEN
+    v_ip := NULL;
+  END;
+  RETURN v_ip;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public._audit_extract_client_ip(TEXT, TEXT) TO authenticated;
+
+-- =============================================================================
 -- TRIGGER FUNCTION: trigger_audit_log
 -- =============================================================================
 -- Final state: category='data', severity by table+op, actor_type='system',
--- full before/after diff (score_sheets excluded to avoid row bloat).
+-- selective diff via _jsonb_diff (score_sheets excluded to avoid row bloat).
 -- Absorbed from: 014_audit_trigger_expansion, 015_audit_trigger_phase3,
---                045_audit_trigger_diff
+--                045_audit_trigger_diff, audit-hardening-2026-04-28 (IP/UA, jsonb_diff)
 
 CREATE OR REPLACE FUNCTION public.trigger_audit_log()
 RETURNS TRIGGER
@@ -133,12 +271,19 @@ DECLARE
   v_severity    audit_severity;
   v_diff        JSONB;
   v_actor_name  TEXT;
+  v_ip          INET;
+  v_ua          TEXT;
+  v_req_headers JSON;
+  v_ip_raw      TEXT;
 BEGIN
   v_action := TG_TABLE_NAME || '.' || lower(TG_OP);
 
   -- ── Resource ID — NULL for tables with non-UUID pk ────────────────────
   IF TG_TABLE_NAME = 'security_policy' THEN
     v_resource_id := NULL;
+  ELSIF TG_TABLE_NAME = 'juror_period_auth' THEN
+    -- Composite PK (juror_id, period_id) — use juror_id as primary subject.
+    v_resource_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.juror_id ELSE NEW.juror_id END;
   ELSE
     v_resource_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.id ELSE NEW.id END;
   END IF;
@@ -148,6 +293,24 @@ BEGIN
     SELECT display_name INTO v_actor_name
     FROM public.profiles
     WHERE id = auth.uid();
+  END IF;
+
+  -- ── Extract IP / user-agent from PostgREST request.headers GUC ────────
+  -- Mirrors _audit_write logic so trigger-emitted rows are forensic-equivalent
+  -- to RPC-emitted rows. Missing/non-JSON GUC must not abort the caller.
+  BEGIN
+    v_req_headers := current_setting('request.headers', true)::JSON;
+  EXCEPTION WHEN OTHERS THEN
+    v_req_headers := NULL;
+  END;
+
+  IF v_req_headers IS NOT NULL THEN
+    v_ua := NULLIF(v_req_headers->>'user-agent', '');
+    -- Use trusted-proxy-depth aware extractor (P2.12).
+    v_ip := public._audit_extract_client_ip(
+      v_req_headers->>'x-forwarded-for',
+      v_req_headers->>'x-real-ip'
+    );
   END IF;
 
   -- ── Severity by table + operation ──────────────────────────────────────
@@ -161,15 +324,28 @@ BEGIN
     ELSE 'info'
   END::audit_severity;
 
-  -- ── Diff (before/after) — skip score_sheets to avoid row bloat ────────
+  -- ── Selective diff via _jsonb_diff — skip score_sheets to avoid bloat ──
+  -- INSERT: full row in `after` (no `before` baseline). DELETE: full row in `before`.
+  -- UPDATE: only the changed keys in both sides (huge storage win on 50+ col tables).
   IF TG_TABLE_NAME <> 'score_sheets' THEN
-    v_diff := CASE
-      WHEN TG_OP = 'INSERT' THEN jsonb_build_object('after',  to_jsonb(NEW))
-      WHEN TG_OP = 'UPDATE' THEN jsonb_build_object('before', to_jsonb(OLD), 'after', to_jsonb(NEW))
-      WHEN TG_OP = 'DELETE' THEN jsonb_build_object('before', to_jsonb(OLD))
-    END;
+    IF TG_OP = 'INSERT' THEN
+      v_diff := public._jsonb_diff(NULL, to_jsonb(NEW));
+    ELSIF TG_OP = 'UPDATE' THEN
+      v_diff := public._jsonb_diff(to_jsonb(OLD), to_jsonb(NEW));
+    ELSIF TG_OP = 'DELETE' THEN
+      v_diff := public._jsonb_diff(to_jsonb(OLD), NULL);
+    END IF;
   ELSE
     v_diff := NULL;
+  END IF;
+
+  -- Skip no-op UPDATEs whose only changes were stripped as noisy (updated_at,
+  -- last_seen_at, last_activity_at). Without this, the new juror_period_auth
+  -- trigger would emit thousands of empty-diff rows on jury days from
+  -- heartbeat updates. score_sheets keeps NULL diff but is intentionally not
+  -- skipped — score writes are an information-bearing event even without diff.
+  IF TG_OP = 'UPDATE' AND TG_TABLE_NAME <> 'score_sheets' AND v_diff IS NULL THEN
+    RETURN NEW;
   END IF;
 
   -- ── Organization resolution ─────────────────────────────────────────
@@ -226,6 +402,14 @@ BEGIN
     v_org_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.organization_id
                                             ELSE NEW.organization_id END;
 
+  ELSIF TG_TABLE_NAME = 'juror_period_auth' THEN
+    -- Org resolved via jurors.organization_id.
+    IF TG_OP = 'DELETE' THEN
+      SELECT j.organization_id INTO v_org_id FROM jurors j WHERE j.id = OLD.juror_id;
+    ELSE
+      SELECT j.organization_id INTO v_org_id FROM jurors j WHERE j.id = NEW.juror_id;
+    END IF;
+
   ELSIF TG_TABLE_NAME IN ('profiles', 'security_policy') THEN
     v_org_id := NULL;
 
@@ -244,6 +428,7 @@ BEGIN
     organization_id, user_id,
     action, resource_type, resource_id,
     category, severity, actor_type, actor_name,
+    ip_address, user_agent,
     details, diff
   ) VALUES (
     v_org_id,
@@ -255,6 +440,7 @@ BEGIN
     v_severity,
     CASE WHEN auth.uid() IS NOT NULL THEN 'admin' ELSE 'system' END::audit_actor_type,
     v_actor_name,
+    v_ip, v_ua,
     jsonb_build_object('operation', TG_OP, 'table', TG_TABLE_NAME),
     v_diff
   );
@@ -324,6 +510,14 @@ CREATE TRIGGER audit_log_trigger
 
 CREATE TRIGGER audit_log_trigger
   AFTER INSERT OR UPDATE OR DELETE ON unlock_requests
+  FOR EACH ROW EXECUTE FUNCTION trigger_audit_log();
+
+-- juror_period_auth: PIN counter, edit-window grants, lock state, final-submit.
+-- Composite PK (juror_id, period_id) handled inside the function.
+-- Heartbeat-only updates (last_seen_at) are stripped by _jsonb_diff and skipped
+-- by the no-op UPDATE check, so high-frequency writes don't flood audit_logs.
+CREATE TRIGGER audit_log_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON juror_period_auth
   FOR EACH ROW EXECUTE FUNCTION trigger_audit_log();
 
 -- =============================================================================

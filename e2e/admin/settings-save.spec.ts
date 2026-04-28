@@ -442,40 +442,23 @@ test.describe("settings-save flows", () => {
     });
   });
 
-  // ── Test 8: Audit-write integration probe (negative — backlog gap) ────────
-  // Phase 1 finding: rpc_admin_set_security_policy / rpc_admin_set_pin_policy /
-  // rpc_org_admin_cancel_invite do NOT call _audit_write. This test asserts
-  // the current (incorrect) behavior so when those RPCs gain audit integration
-  // the test fails and forces reviewers to flip the expectation.
-  // Tracked in: docs/superpowers/plans/test-quality-upgrade/phase-1-completion-report.md
-  test("audit gap: security_policy.update writes no audit row today (BACKLOG flip when fixed)", async () => {
+  // ── Test 8: Audit-write integration probe (positive — gap closed) ────────
+  // Phase 1 finding: rpc_admin_set_security_policy historically did NOT call
+  // _audit_write. The gap was closed in commit a245306a (security.policy.updated
+  // wired). This test now asserts the row IS written with the canonical
+  // event_type, replacing the previous BACKLOG sentinel.
+  test("audit: security_policy.update writes security.policy.updated row", async () => {
     const sinceIso = new Date(Date.now() - 60_000).toISOString();
-    await superClient.rpc("rpc_admin_set_security_policy", {
+    const { error } = await superClient.rpc("rpc_admin_set_security_policy", {
       p_policy: { maxPinAttempts: (originalPolicy.maxPinAttempts as number) ?? 5 },
     });
+    expect(error, `set_security_policy error: ${error?.message}`).toBeNull();
 
-    // Probe several plausible action names — none should match today.
-    const actions = [
-      "security.policy.updated",
-      "security.policy.update",
-      "config.security_policy.updated",
-      "settings.security.update",
-    ];
-    for (const action of actions) {
-      const row = await findLatestAuditEntry({
-        eventType: action,
-        withinSeconds: 60,
-      });
-      // We assert the row was NOT freshly written by this RPC. If a future
-      // migration wires _audit_write into rpc_admin_set_security_policy with
-      // any of these action names, this test fails and the assertion must be
-      // flipped to `>` to verify the row exists.
-      if (row && row.created_at >= sinceIso) {
-        throw new Error(
-          `Audit gap closed: ${action} now writes an audit row. Update this test ` +
-            `to assert the row's payload, then enable Phase 1 audit assertions.`,
-        );
-      }
-    }
+    const row = await findLatestAuditEntry({
+      eventType: "security.policy.updated",
+      withinSeconds: 60,
+    });
+    expect(row, "expected security.policy.updated audit row").not.toBeNull();
+    expect(row!.created_at >= sinceIso).toBe(true);
   });
 });
