@@ -8,9 +8,9 @@
 // Data: filterPipeline selectors (pure functions)
 // ============================================================
 
-import { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
-import { Check, CheckCircle2, ChevronDown, ChevronUp, Circle, CircleCheck, CircleDotDashed, CircleSlash, Clock, Download, Filter, Icon, Info, MessageSquare, PencilLine, Search, Send, X, XCircle } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, ChevronDown, ChevronUp, Circle, CircleCheck, CircleDotDashed, CircleSlash, Clock, Download, Filter, Icon, Info, MessageSquare, PencilLine, Search, Send, X, XCircle } from "lucide-react";
 import JurorStatusPill from "@/admin/shared/JurorStatusPill";
 import ScoreStatusPill from "@/admin/shared/ScoreStatusPill";
 import ReviewMobileCard from "@/admin/features/reviews/ReviewMobileCard";
@@ -207,6 +207,10 @@ function SortIcon({ colKey, sortKey, sortDir }) {
   );
 }
 
+function abbrLabel(label) {
+  return label.split(/\s+/).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+}
+
 // ── Main component ────────────────────────────────────────────
 export default function ReviewsPage() {
   const {
@@ -251,7 +255,17 @@ export default function ReviewsPage() {
   const [showExport, setShowExport] = useState(false);
   const [exportFormat, setExportFormat] = useState("csv");
   const [sendOpen, setSendOpen] = useState(false);
+  const [expandedRows, setExpandedRows] = useState(new Set());
   const isMobilePortrait = useMobilePortrait();
+
+  const toggleExpand = (rowKey) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(rowKey)) next.delete(rowKey);
+      else next.add(rowKey);
+      return next;
+    });
+  };
 
   // ── Data pipeline ─────────────────────────────────────────
   const projectMeta = useMemo(() => buildProjectMetaMap(summaryData), [summaryData]);
@@ -315,15 +329,15 @@ export default function ReviewsPage() {
   const columns = useMemo(() => [
     { key: 'juror',       label: 'Juror',              sortKey: 'juryName',          getValue: r => r.juryName ?? '' },
     { key: 'project',     label: 'Project Title',      sortKey: 'title',             getValue: r => r.groupNo != null ? `P${r.groupNo} — ${r.title || r.projectName || '—'}` : (r.title || r.projectName || '—') },
-    { key: 'members',     label: 'Team Members',                                     getValue: r => Array.isArray(r.students) ? r.students.join('; ') : (r.students ?? '—') },
-    { key: 'advisor',     label: 'Advised By',                                        getValue: r => r.advisor ? r.advisor.split(',').map(s => s.trim()).filter(Boolean).join('; ') : '—' },
+    { key: 'members',     label: 'Team Members',       exportOnly: true,             getValue: r => Array.isArray(r.students) ? r.students.join('; ') : (r.students ?? '—') },
+    { key: 'advisor',     label: 'Advised By',         exportOnly: true,             getValue: r => r.advisor ? r.advisor.split(',').map(s => s.trim()).filter(Boolean).join('; ') : '—' },
     ...scoreCols.filter(c => c.key !== 'total').map(c => ({
       key: c.key, label: c.label, sortKey: c.key, thClass: 'text-right', getValue: r => r[c.key] ?? '—',
     })),
     { key: 'total',       label: `Total (${maxTotal})`, sortKey: 'total',            thClass: 'text-right', getValue: r => r.total ?? '—' },
     { key: 'status',      label: 'Score Status',        sortKey: 'effectiveStatus',  thClass: 'text-center', getValue: r => r.effectiveStatus ?? '—' },
     { key: 'progress',    label: 'Juror Progress',      sortKey: 'jurorStatus',      thClass: 'text-center', getValue: r => r.jurorStatus ?? '—' },
-    { key: 'comment',     label: 'Comment',                                          getValue: r => r.comments ?? '' },
+    { key: 'comment',     label: 'Comment',             exportOnly: true,            getValue: r => r.comments ?? '' },
     { key: 'submittedAt', label: 'Submitted At',        sortKey: 'finalSubmittedMs', thClass: 'text-right', getValue: r => formatTs(r.finalSubmittedAt || r.updatedAt) },
   ], [scoreCols, maxTotal]);
 
@@ -794,41 +808,44 @@ export default function ReviewsPage() {
         <div className="table-wrap table-wrap--split">
           <table className="reviews-table table-standard table-pill-balance" data-testid="reviews-table" style={{ tableLayout: "fixed", width: "100%" }}>
             <colgroup>
-              <col style={{ width: 192 }} />{/* Juror */}
+              <col style={{ width: 32 }} />{/* Expand toggle */}
+              <col style={{ width: 170 }} />{/* Juror */}
               <col />{/* Project — flexible */}
-              <col style={{ width: 110 }} />{/* Team Members */}
-              <col style={{ width: 110 }} />{/* Advised By */}
               {scoreCols.filter(c => c.key !== "total").map(c => (
-                <col key={c.key} style={{ width: 60 }} />
+                <col key={c.key} style={{ width: 50 }} />
               ))}{/* Each criterion score */}
-              <col style={{ width: 64 }} />{/* Total */}
-              <col style={{ width: 72 }} />{/* Status */}
-              <col style={{ width: 60 }} />{/* Progress */}
-              <col style={{ width: 72 }} />{/* Comment */}
-              <col style={{ width: 76 }} />{/* Submitted At */}
+              <col style={{ width: 62 }} />{/* Total */}
+              <col style={{ width: 82 }} />{/* Score status */}
+              <col style={{ width: 90 }} />{/* Juror progress */}
+              <col style={{ width: 72 }} />{/* Submitted At */}
             </colgroup>
             <thead>
               <tr>
-                {columns.filter(col => !col.exportOnly).map(col => (
-                  <th
-                    key={col.key}
-                    className={[
-                      col.sortKey ? `sortable${sortKey === col.sortKey ? ' sorted' : ''}` : '',
-                      col.thClass || '',
-                    ].filter(Boolean).join(' ') || undefined}
-                    style={col.style}
-                    onClick={col.sortKey ? () => handleSort(col.sortKey) : undefined}
-                  >
-                    {col.label}
-                    {col.sortKey && <SortIcon colKey={col.sortKey} sortKey={sortKey} sortDir={sortDir} />}
-                  </th>
-                ))}
+                <th className="col-expand-toggle" aria-label="Expand" />
+                {columns.filter(col => !col.exportOnly).map(col => {
+                  const isScoreCol = scoreCols.some(s => s.key === col.key && col.key !== 'total');
+                  return (
+                    <th
+                      key={col.key}
+                      className={[
+                        col.sortKey ? `sortable${sortKey === col.sortKey ? ' sorted' : ''}` : '',
+                        col.thClass || '',
+                      ].filter(Boolean).join(' ') || undefined}
+                      title={isScoreCol ? col.label : undefined}
+                      style={col.style}
+                      onClick={col.sortKey ? () => handleSort(col.sortKey) : undefined}
+                    >
+                      {isScoreCol ? abbrLabel(col.label) : col.label}
+                      {col.sortKey && <SortIcon colKey={col.sortKey} sortKey={sortKey} sortDir={sortDir} />}
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
               {pageRows.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} style={{ padding: 0, textAlign: "center" }}>
+                  <td colSpan={columns.filter(c => !c.exportOnly).length + 1} style={{ padding: 0, textAlign: "center" }}>
                     <div className="vera-es-no-data">
                       <div className="vera-es-ghost-rows" aria-hidden="true">
                         <div className="vera-es-ghost-row">
@@ -851,66 +868,140 @@ export default function ReviewsPage() {
                 </tr>
               ) : (
                 pageRows.map((row, i) => {
+                  const rowKey = `${row.jurorId ?? row.juryName}__${row.projectId ?? row.title}__${i}`;
                   const isPartialRow = row.effectiveStatus === "partial";
+                  const isOpen = expandedRows.has(rowKey);
                   const submittedTs = formatTs(row.finalSubmittedAt);
+                  const visibleColCount = columns.filter(c => !c.exportOnly).length + 1;
                   return (
-                    <tr key={`${row.jurorId ?? row.juryName}__${row.projectId ?? row.title}__${i}`} className={isPartialRow ? "partial-row" : ""}>
-                      <td className="col-juror">
-                        <JurorBadge name={row.juryName} affiliation={row.affiliation} size="sm" />
-                      </td>
-                      <td className="col-project">
-                        {row.groupNo != null && (
-                          <span className="project-no-badge" style={{ marginRight: 6 }}>P{row.groupNo}</span>
-                        )}
-                        <span className="proj-title-text">{row.title || row.projectName || "—"}</span>
-                      </td>
-                      <td className="col-members text-xs text-muted">
-                        <TeamMemberNames names={row.students} />
-                        {!row.students ? "—" : null}
-                      </td>
-                      <td className="col-advisor">
-                        {row.advisor
-                          ? row.advisor.split(',').map(s => s.trim()).filter(Boolean).map((name, i) => (
-                              <JurorBadge key={`${name}-${i}`} name={name} size="sm" nameOnly variant="advisor" />
-                            ))
-                          : <span className="text-xs text-muted">—</span>}
-                      </td>
-                      {scoreCols.filter((c) => c.key !== "total").map((col) => {
-                        const val = row[col.key];
-                        const missing = val === null || val === undefined;
-                        return (
-                          <td key={col.key} className={`col-score${missing ? " missing" : ""}`} data-label={col.label.split(" / ")[0]}>
-                            {missing ? "—" : <span style={{ color: col.color }}>{Number.isFinite(Number(val)) ? Number(val).toFixed(1) : val}</span>}
+                    <React.Fragment key={rowKey}>
+                      <tr
+                        className={[isPartialRow ? "partial-row" : "", isOpen ? "expand-open" : ""].filter(Boolean).join(" ") || undefined}
+                        onClick={() => toggleExpand(rowKey)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <td className="col-expand-toggle">
+                          <button
+                            type="button"
+                            className={`expand-btn${isOpen ? " open" : ""}`}
+                            aria-label={isOpen ? "Collapse" : "Expand"}
+                            tabIndex={-1}
+                          >
+                            {isOpen ? "−" : "+"}
+                          </button>
+                        </td>
+                        <td className="col-juror">
+                          <JurorBadge name={row.juryName} affiliation={row.affiliation} size="sm" />
+                        </td>
+                        <td className="col-project">
+                          {row.groupNo != null && (
+                            <span className="project-no-badge" style={{ marginRight: 6 }}>P{row.groupNo}</span>
+                          )}
+                          <span className="proj-title-text">{row.title || row.projectName || "—"}</span>
+                        </td>
+                        {scoreCols.filter((c) => c.key !== "total").map((col) => {
+                          const val = row[col.key];
+                          const missing = val === null || val === undefined;
+                          return (
+                            <td key={col.key} className={`col-score${missing ? " missing" : ""}`} data-label={col.label.split(" / ")[0]}>
+                              {missing ? "—" : <span style={{ color: col.color }}>{Number.isFinite(Number(val)) ? Number(val).toFixed(1) : val}</span>}
+                            </td>
+                          );
+                        })}
+                        <td className="col-total">
+                          {row.total != null ? (
+                            <>
+                              <span className="total-score-value">{Number.isFinite(Number(row.total)) ? Number(row.total).toFixed(1) : row.total}</span>
+                              {isPartialRow && (
+                                <AlertTriangle size={12} strokeWidth={2} style={{ marginLeft: 3, color: "var(--warning)", verticalAlign: "-1px", flexShrink: 0 }} />
+                              )}
+                            </>
+                          ) : "—"}
+                        </td>
+                        <td className="col-status text-center">
+                          <ScoreStatusPill status={row.effectiveStatus} />
+                        </td>
+                        <td className="col-progress text-center">
+                          <JurorPill status={row.jurorStatus} submittedTs={submittedTs} />
+                        </td>
+                        <td className="col-submitted text-right vera-datetime-text">
+                          {submittedTs && submittedTs !== "—" ? submittedTs : "—"}
+                        </td>
+                      </tr>
+                      {isOpen && (
+                        <tr className="reviews-expand-row">
+                          <td colSpan={visibleColCount} className="reviews-expand-cell">
+                            <div className="reviews-expand-inner">
+                              <div className="reviews-expand-crit">
+                                <div className="reviews-expand-section-label">Criteria Scores</div>
+                                {scoreCols.filter(c => c.key !== 'total').map(col => {
+                                  const val = row[col.key];
+                                  const max = scoreMaxByKey?.[col.key] ?? 100;
+                                  const pct = (val != null && Number.isFinite(Number(val))) ? Math.round((Number(val) / max) * 100) : 0;
+                                  const missing = val === null || val === undefined;
+                                  return (
+                                    <div key={col.key} className="reviews-expand-bar-row">
+                                      <div className="reviews-expand-bar-label">
+                                        <span>{col.label}</span>
+                                        <span className="reviews-expand-bar-val vera-datetime-text">
+                                          {missing ? <em className="text-muted">not scored</em> : `${Number(val).toFixed(1)} / ${max}`}
+                                        </span>
+                                      </div>
+                                      <div className="reviews-expand-bar-track">
+                                        <div
+                                          className="reviews-expand-bar-fill"
+                                          style={{ width: `${pct}%`, background: col.color || 'var(--accent)' }}
+                                        />
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <div className="reviews-expand-people">
+                                <div className="reviews-expand-section-label">Team Members</div>
+                                <div className="reviews-expand-member-list">
+                                  {Array.isArray(row.students) && row.students.length > 0
+                                    ? row.students.map((name, idx) => (
+                                        <span key={idx} className="reviews-expand-member-pill">
+                                          <span className="reviews-expand-avatar reviews-expand-avatar--member">
+                                            {name.trim().charAt(0).toUpperCase()}
+                                          </span>
+                                          {name.trim()}
+                                        </span>
+                                      ))
+                                    : <span className="text-xs text-muted">—</span>
+                                  }
+                                </div>
+                                {row.advisor && (
+                                  <>
+                                    <div className="reviews-expand-section-label" style={{ marginTop: 10 }}>Advised By</div>
+                                    <div className="reviews-expand-member-list">
+                                      {row.advisor.split(',').map(s => s.trim()).filter(Boolean).map((name, idx) => (
+                                        <span key={idx} className="reviews-expand-member-pill reviews-expand-member-pill--advisor">
+                                          <span className="reviews-expand-avatar reviews-expand-avatar--advisor">
+                                            {name.charAt(0).toUpperCase()}
+                                          </span>
+                                          {name}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                              <div className="reviews-expand-comment">
+                                <div className="reviews-expand-section-label">Comment</div>
+                                <div className="reviews-expand-comment-box">
+                                  {row.comments
+                                    ? <span style={{ textAlign: 'justify', textJustify: 'inter-word' }}>{row.comments}</span>
+                                    : <em className="text-muted">No comment yet.</em>
+                                  }
+                                </div>
+                              </div>
+                            </div>
                           </td>
-                        );
-                      })}
-                      <td className="col-total">
-                        {row.total != null ? (
-                          <>
-                            <span className="total-score-value">{Number.isFinite(Number(row.total)) ? Number(row.total).toFixed(1) : row.total}</span>
-                            {isPartialRow && (
-                              <span style={{ marginLeft: 2, width: 12, height: 12, borderRadius: "50%", background: "rgba(217,119,6,0.12)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 7, color: "var(--warning)", fontWeight: 700 }}>!</span>
-                            )}
-                          </>
-                        ) : "—"}
-                      </td>
-                      <td className="col-status text-center">
-                        <ScoreStatusPill status={row.effectiveStatus} />
-                      </td>
-                      <td className="col-progress text-center">
-                        <JurorPill status={row.jurorStatus} submittedTs={submittedTs} />
-                      </td>
-                      <td className="col-comment">
-                        {row.comments ? (
-                          <span className="col-comment-inner">
-                            {row.comments}
-                          </span>
-                        ) : "—"}
-                      </td>
-                      <td className="col-submitted text-right vera-datetime-text">
-                        {submittedTs && submittedTs !== "—" ? submittedTs : "—"}
-                      </td>
-                    </tr>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   );
                 })
               )}
