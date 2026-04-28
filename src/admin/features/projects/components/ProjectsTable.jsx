@@ -281,7 +281,7 @@ export default function ProjectsTable({
                     <span className="proj-compact-stats">
                       <strong>{projectEvalCountMap.get(project.id) ?? 0}</strong>
                       {" eval"}
-                      <span className="proj-dot">·</span>
+                      <span className="proj-chips-sep" />
                       <span className="vera-datetime-text">{formatRelative(project.updated_at)}</span>
                     </span>
                   </div>
