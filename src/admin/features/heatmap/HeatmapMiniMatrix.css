@@ -21,16 +21,12 @@
   user-select: none;
   font-size: 9px;
   font-weight: 700;
-  color: var(--text-muted);
+  color: var(--accent);
   white-space: nowrap;
 }
 
-.hm-mini-matrix th.hm-mm-th-juror--active {
-  color: var(--accent);
-}
-
 .hm-mini-matrix th.hm-mm-th-juror:hover {
-  color: var(--accent);
+  opacity: 0.75;
 }
 
 .hm-mm-sort-hint {
