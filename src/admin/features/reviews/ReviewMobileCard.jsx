@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, Clock, ChevronDown } from "lucide-react";
+import { MessageSquare, Clock, ChevronDown, Users } from "lucide-react";
 import { jurorInitials, jurorAvatarBg, jurorAvatarFg } from "@/admin/utils/jurorIdentity";
 import { TeamMembersInline } from "@/shared/ui/EntityMeta";
 import { formatTs } from "@/admin/utils/adminUtils";
@@ -181,6 +181,7 @@ export default function ReviewMobileCard({ row, criteria }) {
             </div>
             {visibleAvatars.length > 0 && (
               <div className="rmc-mini-avatars">
+                <Users size={10} strokeWidth={2} className="rmc-mini-avatars-icon" />
                 {visibleAvatars.map((name, i) => (
                   <div key={i} className="rmc-mini-av">
                     {(name || "?")[0].toUpperCase()}

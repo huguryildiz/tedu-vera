@@ -222,6 +222,12 @@
   .rmc-mini-avatars {
     display: flex;
     align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .rmc-mini-avatars-icon {
+    color: var(--text-tertiary);
     flex-shrink: 0;
   }
 
