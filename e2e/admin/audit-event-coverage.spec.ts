@@ -9,7 +9,7 @@
  * audit-log.spec.ts (5 more), the total distinct event_types under E2E
  * coverage exceeds 20. The plan target was ≥ 15.
  *
- *   Phase 2.5 (this file) — 11 event_types:
+ *   Phase 2.5 (this file) — 14 event_types:
  *     1. period.lock
  *     2. period.unlock
  *     3. config.outcome.created
@@ -21,6 +21,9 @@
  *     9. juror.edit_mode_enabled
  *    10. juror.pin_unlocked_and_reset
  *    11. admin.updated
+ *    12. security.policy.updated
+ *    13. security.pin_policy.updated
+ *    14. membership.invite.cancelled
  *
  *   Phase 1 (already covered):
  *     12. data.juror.edit_mode.force_closed (reviews-edit-persist.spec.ts)
@@ -36,10 +39,6 @@
  *     20. projects.insert
  *     21. auth.admin.login.failure
  *
- * Backlog (RPC missing or audit not wired — see phase-1 report §3.1):
- *   - security.policy.updated     (rpc_admin_set_security_policy)
- *   - security.pin_policy.updated (rpc_admin_set_pin_policy)
- *   - membership.invite.cancelled (rpc_org_admin_cancel_invite)
  */
 
 import { test, expect } from "@playwright/test";
@@ -77,6 +76,7 @@ function makeUserClient(accessToken: string): SupabaseClient {
 }
 
 const ADMIN_EMAIL = "e2e-audit-coverage@vera-eval.app";
+const SUPER_EMAIL = "e2e-audit-coverage-super@vera-eval.app";
 const PASS = "E2eAuditCoverage!2026";
 
 interface FixtureRefs {
@@ -92,6 +92,8 @@ test.describe("audit event_type coverage (Phase 2.5)", () => {
 
   let adminAuthClient: SupabaseClient;
   let adminUserId: string;
+  let superAuthClient: SupabaseClient;
+  let superUserId: string;
   let refs: FixtureRefs;
 
   test.beforeAll(async () => {
@@ -113,6 +115,25 @@ test.describe("audit event_type coverage (Phase 2.5)", () => {
     });
     const adminToken = await signInWithPassword(ADMIN_EMAIL, PASS);
     adminAuthClient = makeUserClient(adminToken);
+
+    // Fresh super-admin user (no org) for rpc_admin_set_security_policy
+    await deleteUserByEmail(SUPER_EMAIL).catch(() => {});
+    const { data: s, error: sErr } = await adminClient.auth.admin.createUser({
+      email: SUPER_EMAIL,
+      password: PASS,
+      email_confirm: true,
+    });
+    expect(sErr, `createUser super: ${sErr?.message}`).toBeNull();
+    superUserId = s!.user!.id;
+    await adminClient.from("memberships").insert({
+      user_id: superUserId,
+      organization_id: null,
+      status: "active",
+      role: "super_admin",
+      is_owner: false,
+    });
+    const superToken = await signInWithPassword(SUPER_EMAIL, PASS);
+    superAuthClient = makeUserClient(superToken);
 
     // Build a clean period + criterion + juror to act on. Keep period UNLOCKED
     // so child INSERTs and lock/unlock toggles all work.
@@ -193,6 +214,7 @@ test.describe("audit event_type coverage (Phase 2.5)", () => {
       } catch { /* swallow */ }
     }
     await deleteUserByEmail(ADMIN_EMAIL).catch(() => {});
+    await deleteUserByEmail(SUPER_EMAIL).catch(() => {});
   });
 
   // ── 1. period.lock ──────────────────────────────────────────────────────
@@ -459,22 +481,101 @@ test.describe("audit event_type coverage (Phase 2.5)", () => {
     });
   });
 
-  // ── 13. coverage matrix sanity check ────────────────────────────────────
-  // Confirms the spec authored 11 NEW event_types this run by querying the
-  // distinct `action` values written by adminUserId in the lookback window.
+  // ── 13. security.policy.updated ────────────────────────────────────────
+  // e2e.admin.audit.security_policy_updated
+  test("rpc_admin_set_security_policy writes security.policy.updated", async () => {
+    const { data, error } = await superAuthClient.rpc("rpc_admin_set_security_policy", {
+      p_policy: { rememberMe: true },
+    });
+    expect(error, `set_security_policy error: ${error?.message}`).toBeNull();
+    expect(data?.ok).toBe(true);
+
+    await assertAuditEntry({
+      eventType: "security.policy.updated",
+      actorId: superUserId,
+      withinSeconds: 60,
+    });
+  });
+
+  // ── 14. security.pin_policy.updated ────────────────────────────────────
+  // e2e.admin.audit.security_pin_policy_updated
+  test("rpc_admin_set_pin_policy writes security.pin_policy.updated", async () => {
+    const { data, error } = await adminAuthClient.rpc("rpc_admin_set_pin_policy", {
+      p_max_attempts: 5,
+      p_cooldown: "30 minutes",
+      p_qr_ttl: "24 hours",
+    });
+    expect(error, `set_pin_policy error: ${error?.message}`).toBeNull();
+    expect(data).toBeTruthy();
+
+    await assertAuditEntry({
+      eventType: "security.pin_policy.updated",
+      actorId: adminUserId,
+      orgId: E2E_PERIODS_ORG_ID,
+      withinSeconds: 60,
+    });
+  });
+
+  // ── 15. membership.invite.cancelled ────────────────────────────────────
+  // e2e.admin.audit.membership_invite_cancelled
+  test("rpc_org_admin_cancel_invite writes membership.invite.cancelled", async () => {
+    // Create a temp invitee + invited membership; the RPC will clean up the
+    // orphaned auth user automatically when it cancels the last membership.
+    const inviteeEmail = `e2e-audit-invitee-${Date.now().toString(36)}@vera-eval.app`;
+    await deleteUserByEmail(inviteeEmail).catch(() => {});
+    const { data: inv, error: invErr } = await adminClient.auth.admin.createUser({
+      email: inviteeEmail,
+      password: PASS,
+      email_confirm: true,
+    });
+    expect(invErr, `createUser invitee: ${invErr?.message}`).toBeNull();
+
+    const { data: mem, error: memErr } = await adminClient
+      .from("memberships")
+      .insert({
+        user_id: inv!.user!.id,
+        organization_id: E2E_PERIODS_ORG_ID,
+        status: "invited",
+        role: "org_admin",
+        is_owner: false,
+      })
+      .select("id")
+      .single();
+    expect(memErr, `insert invited membership: ${memErr?.message}`).toBeNull();
+    const membershipId = mem!.id as string;
+
+    const { data, error } = await adminAuthClient.rpc("rpc_org_admin_cancel_invite", {
+      p_membership_id: membershipId,
+    });
+    expect(error, `cancel_invite error: ${error?.message}`).toBeNull();
+    expect(data?.ok).toBe(true);
+
+    await assertAuditEntry({
+      eventType: "membership.invite.cancelled",
+      targetId: membershipId,
+      actorId: adminUserId,
+      orgId: E2E_PERIODS_ORG_ID,
+      withinSeconds: 60,
+    });
+    // No afterAll cleanup needed: RPC deletes the orphaned invitee auth user
+  });
+
+  // ── 16. coverage matrix sanity check ────────────────────────────────────
+  // Confirms the spec authored 14 NEW event_types this run by querying the
+  // distinct `action` values written by adminUserId + superUserId in the
+  // lookback window.
   // e2e.admin.audit.coverage_matrix_count
-  test("11 distinct event_types written by this admin in this run", async () => {
+  test("14 distinct event_types written by this spec in this run", async () => {
     const since = new Date(Date.now() - 120 * 1000).toISOString();
     const { data, error } = await adminClient
       .from("audit_logs")
       .select("action")
-      .eq("user_id", adminUserId)
+      .in("user_id", [adminUserId, superUserId])
       .gte("created_at", since);
     expect(error).toBeNull();
     const distinct = new Set((data ?? []).map((r: { action: string }) => r.action));
-    // Phase 2.5 exercises 11 distinct new event_types; period.close + a few
-    // helper triggers (e.g. periods.update) may also fire, so the assertion
-    // floors at 11 not equals.
-    expect(distinct.size).toBeGreaterThanOrEqual(11);
+    // Phase 2.5 exercises 14 distinct event_types; helper triggers (e.g.
+    // periods.update) may also fire, so the assertion floors at 14 not equals.
+    expect(distinct.size).toBeGreaterThanOrEqual(14);
   });
 });
