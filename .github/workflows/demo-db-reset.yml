@@ -29,13 +29,18 @@ jobs:
       - name: Apply demo seed
         env:
           DEMO_DATABASE_URL: ${{ secrets.DEMO_DATABASE_URL }}
-        run: psql "$DEMO_DATABASE_URL" --no-psqlrc -v ON_ERROR_STOP=1 < sql/seeds/demo_seed.sql
+        run: |
+          mkdir -p reset-results
+          psql "$DEMO_DATABASE_URL" --no-psqlrc -v ON_ERROR_STOP=1 < sql/seeds/demo_seed.sql \
+            2>&1 | tee reset-results/seed-apply-${{ github.run_number }}.log
 
       - name: Post-seed smoke
         env:
           DEMO_DATABASE_URL: ${{ secrets.DEMO_DATABASE_URL }}
         run: |
-          psql "$DEMO_DATABASE_URL" --no-psqlrc -v ON_ERROR_STOP=1 <<'SQL'
+          mkdir -p reset-results
+          set -o pipefail
+          psql "$DEMO_DATABASE_URL" --no-psqlrc -v ON_ERROR_STOP=1 <<'SQL' 2>&1 | tee reset-results/post-seed-smoke-${{ github.run_number }}.log
             DO $$
             DECLARE
               v_org_count           INT;
@@ -92,3 +97,12 @@ jobs:
               RAISE NOTICE 'Post-seed smoke: all 5 assertions passed ✓';
             END $$;
           SQL
+
+      - name: Upload reset logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-db-reset-${{ github.run_number }}
+          path: reset-results/
+          retention-days: 30
+          if-no-files-found: warn

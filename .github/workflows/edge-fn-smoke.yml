@@ -31,4 +31,16 @@ jobs:
           node-version: 20
 
       - name: Run Edge Function smoke test
-        run: node scripts/smoke-edge-functions.mjs ${{ inputs.environment || 'vera-demo' }}
+        run: |
+          mkdir -p smoke-results
+          node scripts/smoke-edge-functions.mjs ${{ inputs.environment || 'vera-demo' }} \
+            2>&1 | tee smoke-results/edge-fn-smoke-${{ github.run_number }}.log
+
+      - name: Upload smoke log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: edge-fn-smoke-${{ github.run_number }}
+          path: smoke-results/
+          retention-days: 30
+          if-no-files-found: warn

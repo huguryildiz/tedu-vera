@@ -42,8 +42,9 @@ jobs:
         run: npx playwright install-deps chromium
 
       - name: Run concurrent-jury perf test (4 parallel jurors, 90s SLO)
-        run: npx playwright test e2e/perf/concurrent-jury.spec.ts --reporter=list
+        run: npx playwright test e2e/perf/concurrent-jury.spec.ts --reporter=line,json
         env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/playwright-results.json
           CI: true
           # Demo Supabase project — NEVER run against vera-prod
           VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
@@ -60,6 +61,20 @@ jobs:
           VITE_E2E: "true"
           # Demo entry token PIN for fixture jurors
           E2E_JUROR_PIN: "9999"
+
+      - name: Generate Excel perf report
+        if: always()
+        run: npm run e2e:excel
+        continue-on-error: true
+
+      - name: Upload Excel perf report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: excel-perf-${{ github.run_number }}
+          path: test-results/e2e-report-*.xlsx
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Upload test results
         if: always()
