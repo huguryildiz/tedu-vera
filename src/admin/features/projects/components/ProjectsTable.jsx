@@ -1,5 +1,5 @@
 import Pagination from "@/shared/ui/Pagination";
-import { ClipboardList, MoreVertical, Pencil, Copy, Trash2, FolderOpen, Upload, Plus, Info, Search, XCircle, UserRound } from "lucide-react";
+import { ClipboardList, MoreVertical, Pencil, Copy, Trash2, FolderOpen, Upload, Plus, Info, Search, XCircle, UserRound, GraduationCap, Users } from "lucide-react";
 import { TeamMemberNames } from "@/shared/ui/EntityMeta";
 import JurorBadge from "@/admin/shared/JurorBadge";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
@@ -8,6 +8,7 @@ import { formatDateTime as formatFull } from "@/shared/lib/dateUtils";
 import { COLUMNS, membersToArray, formatRelative, scoreBandToken } from "./projectHelpers";
 import MemberChips from "./MemberChips";
 import SortIcon from "./SortIcon";
+import { avatarGradient, initials } from "@/shared/ui/avatarColor";
 
 export default function ProjectsTable({
   pagedList,
@@ -256,17 +257,25 @@ export default function ProjectsTable({
                       if (!advisors.length) return null;
                       return (
                         <>
+                          <PremiumTooltip text="Advised By">
+                            <span className="proj-row2-icon"><GraduationCap size={11} strokeWidth={2} /></span>
+                          </PremiumTooltip>
                           <span className="proj-adv-chips">
                             {advisors.slice(0, 2).map((name, i) => (
-                              <span key={i} className="proj-adv-chip" title={name}>
-                                {name.trim().split(/\s+/).filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
-                              </span>
+                              <PremiumTooltip key={i} text={name}>
+                                <span className="proj-adv-chip" style={{ background: avatarGradient(name) }}>
+                                  {initials(name)}
+                                </span>
+                              </PremiumTooltip>
                             ))}
                           </span>
                           <span className="proj-chips-sep" />
                         </>
                       );
                     })()}
+                    <PremiumTooltip text="Team Members">
+                      <span className="proj-row2-icon"><Users size={11} strokeWidth={2} /></span>
+                    </PremiumTooltip>
                     <MemberChips members={project.members} />
                     <span className="proj-chips-spacer" />
                     <span className="proj-compact-stats">
