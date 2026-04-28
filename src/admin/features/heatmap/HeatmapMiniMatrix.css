@@ -22,12 +22,39 @@
   left: 0;
   z-index: 2;
   background: var(--bg-card);
-  width: 120px;
-  min-width: 120px;
-  max-width: 120px;
-  padding: 6px 8px;
+  width: 136px;
+  min-width: 136px;
+  max-width: 136px;
+  padding: 5px 8px;
   text-align: left;
   border-right: 1px solid var(--border);
+}
+
+.hm-mini-matrix td.hm-mm-juror-col {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hm-mm-juror-avatar {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  line-height: 1;
+}
+
+.hm-mm-juror-info {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .hm-mm-juror-name {
@@ -154,6 +181,7 @@
 }
 
 .hm-mini-matrix tfoot td.hm-mm-juror-col {
+  display: table-cell;
   font-size: 10px;
   font-weight: 600;
   color: var(--text-secondary);

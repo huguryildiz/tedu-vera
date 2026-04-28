@@ -1,6 +1,7 @@
 // src/admin/features/heatmap/HeatmapMiniMatrix.jsx
 import { useTheme } from "@/shared/theme/ThemeProvider";
 import { scoreCellClass, scoreCellStyle } from "@/admin/utils/scoreHelpers";
+import { jurorInitials, jurorAvatarBg, jurorAvatarFg } from "@/admin/utils/jurorIdentity";
 import "./HeatmapMiniMatrix.css";
 
 function ScoreCell({ cell, tabMax }) {
@@ -80,10 +81,21 @@ export default function HeatmapMiniMatrix({
             return (
               <tr key={juror.key}>
                 <td className="hm-mm-juror-col">
-                  <span className="hm-mm-juror-name">{juror.name}</span>
-                  {juror.dept && (
-                    <span className="hm-mm-juror-affil">{juror.dept}</span>
-                  )}
+                  <span
+                    className="hm-mm-juror-avatar"
+                    style={{
+                      background: jurorAvatarBg(juror.name),
+                      color: jurorAvatarFg(juror.name),
+                    }}
+                  >
+                    {jurorInitials(juror.name)}
+                  </span>
+                  <span className="hm-mm-juror-info">
+                    <span className="hm-mm-juror-name">{juror.name}</span>
+                    {juror.dept && (
+                      <span className="hm-mm-juror-affil">{juror.dept}</span>
+                    )}
+                  </span>
                 </td>
                 {groups.map((g) => {
                   const entry = rowLookup[g.id] || null;
