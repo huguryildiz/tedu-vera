@@ -1,7 +1,5 @@
 # URL Routing Architecture
 
-Last updated: 2026-04-22
-
 ## Overview
 
 VERA uses **React Router v6** (`createBrowserRouter`) with fully path-based routing.

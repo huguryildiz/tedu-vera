@@ -184,8 +184,7 @@ A backup that has never been restored is theoretical. To test:
 3. Restore from the snapshot using the Scenario 1 procedure.
 4. Verify all expected rows return; spot-check audit log integrity
    (`row_hash` chain still validates from start to recovery).
-5. Time the operation. Document in `.claude/internal/post-mortems/`
-   even though it's a drill — sets a baseline.
+5. Time the operation. Document the result — sets a baseline for RTO expectations.
 
 Run this once per quarter at minimum.
 
@@ -234,5 +233,3 @@ These are tracked items for a future operations sprint.
 - `supabase/functions/auto-backup/index.ts` (the backup function itself)
 
 ---
-
-> *Last updated: 2026-04-24*

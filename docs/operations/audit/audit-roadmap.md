@@ -1,44 +1,67 @@
-# VERA Audit Log Improvement Roadmap
+# Audit Log Improvement Roadmap
 
-Bu rapor, VERA'nın mevcut audit logging yapısını kurumsal seviyeye (Premium SaaS) taşımak ve tespit edilen mimari zayıf noktaları gidermek için gereken 5 kritik adımı özetler.
+Five improvements needed to bring VERA's audit logging to enterprise-grade
+reliability. Each item is referenced from [known-limitations.md](../../known-limitations.md)
+under "Audit and tamper evidence".
 
 ---
 
-## 1. Selective JSONB Diffing (Depolama Optimizasyonu)
+## 1. Selective JSONB Diffing (storage optimisation)
 
 > [!WARNING]
-> Mevcut trigger yapısı (`057_audit_trigger_hardening.sql`), her `UPDATE` işleminde satırın hem eski hem de yeni halini tam JSON dump olarak kaydeder. Bu, veritabanının logaritmik olarak şişmesine neden olur.
+> The current trigger writes a full JSON snapshot of both the old and new
+> row on every UPDATE — even when only one column changes.
 
-- **Sorun:** 100 kolonluk bir tabloda tek bir kolon değişse bile 200 kolonluk JSON verisi loglanır.
-- **Çözüm:** `trigger_audit_log` fonksiyonuna bir `jsonb_diff` helper eklenerek sadece **değişen (delta)** alanların kaydedilmesi.
-- **Etki:** Depolama maliyetlerinde %80-%95 tasarruf ve UI'da daha okunabilir "Değişiklik Geçmişi".
+- **Problem:** a 100-column table emits 200 columns of JSON per update.
+  Storage grows aggressively over long-lived tenants.
+- **Solution:** add a `jsonb_diff` helper to `trigger_audit_log` so only the
+  **delta** (changed fields) is stored.
+- **Impact:** 80–95% storage reduction; diff chips in the Audit Log UI become
+  genuinely readable.
 
-## 2. Foreign Key & Deletion Hardening (Operasyonel Esneklik)
+## 2. Foreign Key & Deletion Hardening (operational flexibility)
 
 > [!CAUTION]
-> `audit_logs.user_id` alanı `profiles` tablosuna katı bir Foreign Key ile bağlıdır. Bu, audited bir işlemi olan adminin hesabının silinmesini engeller (Circular Dependency).
+> `audit_logs.user_id` has a hard FK to `profiles`. This blocks deletion of
+> any admin who has audit rows (circular dependency with append-only logs).
 
-- **Sorun:** Bir admini sistemden silmek istediğinizde "audit_logs tablosunda referansı var" hatası alınır. Logu silemezsiniz (append-only), admini de silemezsiniz. Sistem kilitlenir.
-- **Çözüm:** `user_id` alanını `ON DELETE SET NULL` yapmak veya admin verisini tamamen snapshot (metadata) üzerinden takip edip Foreign Key bağımlılığını kaldırmak.
-- **Etki:** Sorunsuz kullanıcı yönetimi ve regülasyonlara uygun (Right to be Forgotten) hesap silme süreçleri.
+- **Problem:** deleting an admin raises a FK violation. The log cannot be
+  deleted (append-only) and neither can the user. The system deadlocks.
+- **Solution:** change `user_id` to `ON DELETE SET NULL`, or snapshot admin
+  metadata entirely and drop the FK dependency.
+- **Impact:** clean user-management workflows and GDPR Right-to-be-Forgotten
+  compliance.
 
-## 3. Proxy & IP Trust Integrity (Güvenlik Doğrulaması)
+## 3. Proxy & IP Trust Integrity (security hardening)
 
 > [!IMPORTANT]
-> Mevcut IP yakalama mantığı (`_audit_write`), `X-Forwarded-For` header'ındaki ilk değere körü körüne güvenir.
+> The current `_audit_write` IP logic trusts the first value in
+> `X-Forwarded-For` unconditionally.
 
-- **Sorun:** Kötü niyetli bir kullanıcı, HTTP header'ını manipüle ederek logda kendini farklı bir IP'den (örneğin localhost) geliyormuş gibi gösterebilir (IP Spoofing).
-- **Çözüm:** Sistemin önündeki trusted proxy (Supabase Edge, Cloudflare vb.) listesinin doğrulanması ve header zincirinin güvenli bir şekilde çözümlenmesi.
-- **Etki:** Logların adli bilişim (forensics) açısından "inkar edilemez" (non-repudiation) hale gelmesi.
+- **Problem:** a malicious user can spoof the header and appear to originate
+  from a different IP (e.g. localhost).
+- **Solution:** validate the trusted-proxy list (Supabase Edge, Cloudflare,
+  etc.) and resolve the header chain safely.
+- **Impact:** audit records become non-repudiable for forensic purposes.
 
-## 4. External Root Anchoring (Tamper Evidence Güçlendirme)
+## 4. External Root Anchoring (tamper-evidence hardening)
 
-- **Sorun:** Mevcut hash chain veritabanı içinde yaşar. Veritabanına sızan bir saldırgan, tüm zinciri kendi manipülasyonuna göre yeniden hesaplayıp (re-key) "Chain OK" sonucu üretebilir.
-- **Çözüm:** Her saat başı veya her N satırda bir, zincirin son halkasının (root hash) imzalanarak harici bir sisteme (Axiom, AWS CloudWatch veya harici bir webhook) gönderilmesi.
-- **Etki:** Veritabanı admininin bile logları fark edilmeden değiştiremeyeceği gerçek bir "immutable ledger" yapısı.
+- **Problem:** the hash chain lives entirely inside the database. A DB admin
+  with write access could re-key the entire chain to produce a "Chain OK"
+  result after tampering.
+- **Solution:** periodically emit the chain's latest root hash to an external
+  system (Axiom, AWS CloudWatch, or an external webhook), cryptographically
+  signed.
+- **Impact:** true immutable-ledger guarantee — even a compromised DB admin
+  cannot alter logs without detection.
 
-## 5. Reliable Sinking & Failure Recovery (Sistem Güvenirliği)
+## 5. Reliable Sinking & Failure Recovery (system reliability)
 
-- **Sorun:** `audit-log-sink` Edge Function'ı şu an "fire and forget" mantığında çalışır. Axiom veya harici sink hata verirse, log harici kopyaya hiç gitmez ve bir daha retry edilmez.
-- **Çözüm:** Başarısız olan sink denemelerini `audit_logs` üzerinde bir flag (örn. `synced_to_ext: false`) ile işaretleyip, periyodik bir job ile senkronizasyonu tamamlayan bir sistemin kurulması.
-- **Etki:** "No silent drops" (hiçbir kayıt sessizce kaybolmaz) sözünün hem DB hem de offsite yedekler için garanti altına alınması.
+- **Problem:** the `audit-log-sink` Edge Function is fire-and-forget. If the
+  external sink (Axiom etc.) is unavailable, the log entry is silently lost
+  and never retried.
+- **Solution:** mark failed sink attempts with a flag (e.g.
+  `synced_to_ext: false`) on the `audit_logs` row and drain them via a
+  periodic job.
+- **Impact:** "no silent drops" guarantee for both the DB copy and the offsite
+  backup.

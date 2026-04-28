@@ -111,5 +111,3 @@ The full ruleset lives in `CLAUDE.md` at the repo root.
   [design/reference/](design/reference/) in the PR description.
 
 ---
-
-> *Last updated: 2026-04-24*

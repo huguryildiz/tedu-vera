@@ -38,5 +38,3 @@ to predict what they would see in the database, in the audit log, and on
 their screen if they performed the same workflow themselves.
 
 ---
-
-> *Last updated: 2026-04-24*

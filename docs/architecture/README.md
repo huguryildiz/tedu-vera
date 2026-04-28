@@ -25,5 +25,3 @@ For database-side architecture (canonical data model, migration module
 structure, RPC catalog, RLS patterns) see [`sql/README.md`](../../sql/README.md).
 
 ---
-
-> *Last updated: 2026-04-24*

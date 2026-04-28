@@ -2,10 +2,10 @@
 
 Source: [src/admin/utils/auditUtils.js](../../src/admin/utils/auditUtils.js)
 
-Her audit log satırı iki satırdan oluşur:
+Each audit log row renders as two lines:
 
-1. **Sentence satırı** — `{ActorName} {verb} {resource}` formatında. `formatSentence()` fonksiyonu, `EVENT_META[action].narrative(log)` ile `{ verb, resource }` döner; önce aktör adı eklenir.
-2. **Meta satırı** — `{action code} · {extra context}` formatında. `formatEventMeta()` tarafından üretilir.
+1. **Sentence line** — `{ActorName} {verb} {resource}` format. `formatSentence()` calls `EVENT_META[action].narrative(log)` to get `{ verb, resource }`, then prepends the actor name.
+2. **Meta line** — `{action code} · {extra context}` format, produced by `formatEventMeta()`.
 
 ---
 
@@ -20,22 +20,22 @@ audit_logs row
   → detectAnomalies(logs)    → banner object | null
 ```
 
-Görüntülenen cümle: **`{actor.name} {verb} {resource}`**
+Rendered sentence: **`{actor.name} {verb} {resource}`**
 
-Kayıtlı actör türleri: `admin`, `juror`, `system`, `anonymous`
+Registered actor types: `admin`, `juror`, `system`, `anonymous`
 
 ---
 
-## Tüm Event Türleri ve Mesajları
+## All Event Types and Messages
 
 ### Auth
 
 | Action | Label | Sentence (verb · resource) |
 |--------|-------|---------------------------|
-| `admin.login` | Admin login | signed in *(via {method} varsa)* |
-| `auth.admin.login.success` | Admin signed in | signed in *(via {method} varsa)* |
+| `admin.login` | Admin login | signed in *(via {method} if present)* |
+| `auth.admin.login.success` | Admin signed in | signed in *(via {method} if present)* |
 | `auth.admin.login.failure` | Failed sign-in attempt | failed sign-in attempt · *for {email}* |
-| `admin.logout` | Admin signed out | signed out *(globally varsa)* |
+| `admin.logout` | Admin signed out | signed out *(globally if present)* |
 | `auth.admin.password.changed` | Admin changed password | changed their password |
 | `auth.admin.password.reset.requested` | Password reset requested | requested password reset · *{email}* |
 
@@ -44,7 +44,7 @@ Kayıtlı actör türleri: `admin`, `juror`, `system`, `anonymous`
 | Action | Label | Sentence |
 |--------|-------|---------|
 | `data.juror.auth.created` | Juror authentication started | started evaluation authentication for *{affiliation}* |
-| `evaluation.complete` | Evaluation completed | completed all evaluations *(for {periodName} varsa)* |
+| `evaluation.complete` | Evaluation completed | completed all evaluations *(for {periodName} if present)* |
 | `data.score.submitted` | Score sheet submitted | submitted scores for *{project_title}* |
 | `juror.pin_locked` | Juror locked (too many PIN attempts) | was locked out (failed PIN attempts) on *{periodName}* |
 | `juror.edit_mode_closed_on_resubmit` | Edit mode closed (resubmit) | edit window closed on resubmit for *{periodName}* |
@@ -221,7 +221,7 @@ Kayıtlı actör türleri: `admin`, `juror`, `system`, `anonymous`
 | `export.jurors` | Jurors exported | same pattern |
 | `export.backup` | Backup exported | same pattern |
 
-Sentence: `{actor} exported {type}` · *{period_name varsa}*
+Sentence: `{actor} exported {type}` · *{period_name if present}*
 
 ### Notifications (prefix-matched)
 
@@ -277,7 +277,7 @@ Tablodaki ikinci satır, her zaman raw action code ile başlar ve şu kurallara 
 
 ## Bulk Event Grouping
 
-Aynı aktörün aynı `resource_type` üzerinde 5 dakika içinde ≥3 event'i varsa, bunlar tek bir bulk item olarak gösterilir:
+Aynı aktörün aynı `resource_type` üzerinde 5 dakika içinde ≥3 event'i if present, bunlar tek bir bulk item olarak gösterilir:
 
 > `{Actor} performed {N} {resource_type} operations within {M} min`
 

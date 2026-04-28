@@ -24,5 +24,3 @@ projects in each.
   owner; never push it from CI or scripts.
 
 ---
-
-> *Last updated: 2026-04-24*

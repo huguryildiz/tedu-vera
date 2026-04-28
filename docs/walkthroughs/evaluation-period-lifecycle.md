@@ -186,5 +186,3 @@ remain queryable; they do not appear in default Periods page filters.
 - [audit-trail-walkthrough.md](audit-trail-walkthrough.md)
 
 ---
-
-> *Last updated: 2026-04-24*

@@ -26,26 +26,3 @@ source of truth for architecture, deployment, testing, and design decisions.
 | [deployment/](deployment/README.md) | Environment variables, Supabase setup, Vercel deployment, migrations operational guide. |
 | [testing/](testing/README.md) | Unit, E2E, SQL (pgTAP), Edge Function tests; smoke checklist; current quality assessment. |
 | [design/](design/README.md) | UI reference prototypes and archived mockups. |
-
----
-
-## Planned
-
-| Section | Status |
-| --- | --- |
-| (none currently outstanding) | All planned doc sections from the original restructure plan have shipped. |
-
-These land in subsequent restructure sessions; the plan lives in
-`.claude/internal/plans/docs-restructure/`.
-
----
-
-## Internal-only content
-
-Plans, specs, and Claude-agent implementation reports live in
-`.claude/internal/` (gitignored). Not part of the user-facing documentation
-set; tracked locally for context only.
-
----
-
-> *Last updated: 2026-04-24*

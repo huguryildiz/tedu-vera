@@ -173,5 +173,3 @@ How to confirm migrations are applied correctly:
   — demo seed recovery.
 
 ---
-
-> *Last updated: 2026-04-24*

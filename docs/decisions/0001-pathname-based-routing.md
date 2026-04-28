@@ -76,5 +76,3 @@ How we know this decision is still in force:
   network panel shows the two different `*.supabase.co` hosts.
 
 ---
-
-> *Last updated: 2026-04-24*

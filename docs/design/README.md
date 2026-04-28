@@ -35,22 +35,10 @@ When adding a new dated archive group (`2026-05/`, etc.), update this table.
 
 ## Adding a new mockup
 
-1. **One-off feature exploration** → `archive/YYYY-MM/<date>-<slug>.html`. Match
-   the date prefix used by the corresponding spec in `.claude/internal/specs/`.
+1. **One-off feature exploration** → `archive/YYYY-MM/<date>-<slug>.html`.
 2. **Replaces or updates a canonical reference** → discuss before editing
    `reference/`. The prototype is the source of truth for many components.
 3. **Never edit a file in `archive/`.** Create a new dated version instead so
    the design history stays intact.
 
-## Linking from internal specs
-
-Internal design specs (`.claude/internal/specs/YYYY-MM-DD-*.md`) reference
-archive mockups by relative path:
-
-```markdown
-![mockup](../../docs/design/archive/2026-04/verify-email-screen-mockup.html)
-```
-
 ---
-
-> *Last updated: 2026-04-24*

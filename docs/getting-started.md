@@ -99,5 +99,3 @@ both prod and demo projects must receive the same change in the same step.
 | Supabase RPC returns "Invalid JWT" | The Kong gate may have rejected an ES256 token — see [architecture/edge-functions-kong-jwt.md](architecture/edge-functions-kong-jwt.md). |
 
 ---
-
-> *Last updated: 2026-04-24*

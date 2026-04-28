@@ -138,7 +138,7 @@ fields would break the `row_hash` integrity check.
 **Current policy:** when a deletion request requires modifying historical
 audit rows, the integrity break is a deliberate cost. The procedure is:
 
-1. Document the request in `.claude/internal/post-mortems/privacy-requests/`.
+1. Document the request in a post-mortem note linked from the relevant issue or PR.
 2. Record the decision in an audit event of type `privacy.deletion`
    (planned event type — not yet implemented).
 3. Apply the requested redaction.
@@ -247,5 +247,3 @@ this document against their own compliance requirements before signing.
 - [known-limitations.md](known-limitations.md) — broader gap list.
 
 ---
-
-> *Last updated: 2026-04-24*

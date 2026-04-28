@@ -196,5 +196,3 @@ human-readable rendering is documented in
   the application layer.
 
 ---
-
-> *Last updated: 2026-04-24*

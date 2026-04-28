@@ -95,5 +95,3 @@ How we know this decision is still in force:
   `npm run check:db-types` — fail CI if RLS/RPC/type contracts drift.
 
 ---
-
-> *Last updated: 2026-04-24*

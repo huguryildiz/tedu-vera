@@ -77,5 +77,3 @@ How we know this decision is still in force:
   inspection during incident review.
 
 ---
-
-> *Last updated: 2026-04-24*

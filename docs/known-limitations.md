@@ -80,12 +80,10 @@ Categories:
 
 | Item | Status | Tracked in |
 | --- | --- | --- |
-| Tautology-mock pages refactored | **Planned (in progress)** | 1/9 admin page tests refactored. See [testing/page-test-mock-audit.md](testing/page-test-mock-audit.md). |
-| Score-edit / unlock E2E | **Skipped** | RPC not yet implemented. See [testing/premium-saas-test-upgrade-plan.md](testing/premium-saas-test-upgrade-plan.md). |
-| Lock-enforcement integration tests | **Skipped** | 12 placeholder `todo()` tests in `useManageJurors.lockEnforcement.test.js` and `useManageProjects.lockEnforcement.test.js`. |
+| Tautology-mock pages refactored | **Planned (in progress)** | Some admin page tests still mock the orchestrator hook instead of the API boundary. See [testing/page-test-mock-audit.md](testing/page-test-mock-audit.md). |
+| Lock-enforcement integration tests | **Planned** | Placeholder `todo()` tests in `useManageJurors.lockEnforcement.test.js` and `useManageProjects.lockEnforcement.test.js`. |
 | Allure report wiring | **Planned** | Reporter slot exists; not wired up. |
 | Tenant-isolation E2E in CI hard gate | **Planned** | Currently runs as part of suite but not as a separate hard gate. |
-| Coverage threshold ratchet to 60/50/65 | **Planned** | Current 53/38/57/53 thresholds are post-S33 levels. |
 
 ---
 
@@ -98,20 +96,6 @@ Categories:
 | Inline juror chat / messaging | **Out of scope** | No in-app communication channel. |
 | Mobile-native apps | **Out of scope** | Responsive web only; no React Native / iOS / Android. |
 | Per-juror reminders / nudges | **Operational gap** | Tenant-admin manually nudges jurors via venue channel; no automated reminders. |
-
----
-
-## Documentation
-
-| Item | Status |
-| --- | --- |
-| Testing rewrite against current test reality | ✅ Complete (S6) |
-| Glossary | ✅ Complete (S5) |
-| Security model | ✅ Complete (S5) |
-| Known limitations (this page) | ✅ Complete (S6) |
-| Walkthroughs | ✅ Complete (S3) |
-| ADRs | ✅ Complete (S3) |
-| CLAUDE.md "Key Files" path audit | **Planned** | Some paths in CLAUDE.md drifted from actual codebase locations; tracked as a small follow-up. |
 
 ---
 
@@ -151,8 +135,3 @@ Categories:
 - [architecture/security-model.md](architecture/security-model.md)
 - [operations/audit/audit-roadmap.md](operations/audit/audit-roadmap.md)
 - [operations/backup-and-recovery.md](operations/backup-and-recovery.md)
-- [testing/premium-saas-test-upgrade-plan.md](testing/premium-saas-test-upgrade-plan.md)
-
----
-
-> *Last updated: 2026-04-24*

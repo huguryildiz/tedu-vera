@@ -178,8 +178,8 @@ If the incident affects more than one juror at the venue:
 ## Post-incident
 
 1. **Write a one-page post-mortem** — what happened, who was affected,
-   what the root cause was, what would prevent recurrence. Save it to
-   `.claude/internal/post-mortems/YYYY-MM-DD-<slug>.md`.
+   what the root cause was, what would prevent recurrence. File it in a post-mortem
+   note linked from the relevant issue or PR.
 2. **Update audit roadmap** if the incident exposed a logging gap —
    [../audit/audit-roadmap.md](../audit/audit-roadmap.md).
 3. **Add a regression test** — every incident should produce one new
@@ -195,5 +195,3 @@ If the incident affects more than one juror at the venue:
 - [audit/audit-coverage.md](../audit/audit-coverage.md)
 
 ---
-
-> *Last updated: 2026-04-24*

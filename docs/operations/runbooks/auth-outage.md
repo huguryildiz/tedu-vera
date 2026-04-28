@@ -173,7 +173,7 @@ If only Google OAuth is failing while email+password works:
 1. **Audit log review.** Use the Audit Log page to see what fired and
    what didn't during the outage window. `auth.admin.login.failure`
    counts spike during outages.
-2. **Post-mortem.** Save to `.claude/internal/post-mortems/`.
+2. **Post-mortem.** Write a summary and link it from the relevant issue or PR.
 3. **Add monitoring** if the incident exposed a blind spot — see
    [audit/audit-roadmap.md](../audit/audit-roadmap.md) for the queued
    improvements (external root anchoring, sink reliability).
@@ -188,5 +188,3 @@ If only Google OAuth is failing while email+password works:
 - [walkthroughs/tenant-onboarding.md](../../walkthroughs/tenant-onboarding.md)
 
 ---
-
-> *Last updated: 2026-04-24*

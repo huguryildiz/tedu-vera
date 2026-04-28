@@ -115,5 +115,3 @@ How we know this decision is still in force:
   tracked as future work.
 
 ---
-
-> *Last updated: 2026-04-24*

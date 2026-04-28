@@ -92,5 +92,3 @@ How we know this decision is still in force:
   per-organization scoping at the RLS layer.
 
 ---
-
-> *Last updated: 2026-04-24*

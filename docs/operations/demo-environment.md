@@ -206,5 +206,3 @@ If any of these fails, see [runbooks/demo-seed-broken.md](runbooks/demo-seed-bro
 - `sql/README.md` — Seed Data section
 
 ---
-
-> *Last updated: 2026-04-24*

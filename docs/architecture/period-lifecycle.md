@@ -2,8 +2,6 @@
 
 This document describes how a period moves from creation to completion in VERA — the five lifecycle states, the transitions between them, the readiness checklist gating publish, and the admin journey through each stage.
 
-**Last updated:** 2026-04-16
-
 ---
 
 ## 1. Five Lifecycle States

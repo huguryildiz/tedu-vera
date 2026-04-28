@@ -163,5 +163,3 @@ A consolidated incident response playbook will live in
 - [audit-trail-walkthrough.md](audit-trail-walkthrough.md)
 
 ---
-
-> *Last updated: 2026-04-24*

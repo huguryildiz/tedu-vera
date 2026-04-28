@@ -127,7 +127,7 @@ test juror "John Doe" entries:
    - If only added: delete by demo organization id.
    - If overwritten: this is a data loss incident; restore from the most
      recent backup.
-5. Document in `.claude/internal/post-mortems/`.
+5. Document in a post-mortem note linked from the relevant issue or PR.
 
 The CLAUDE.md rule "do not push demo_seed.sql to any DB" exists to
 prevent this. If a process change made it possible, that's the real
@@ -144,5 +144,3 @@ fix.
   (the flow the demo simulates)
 
 ---
-
-> *Last updated: 2026-04-24*

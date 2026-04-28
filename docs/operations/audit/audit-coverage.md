@@ -387,5 +387,3 @@ answer them. All rows are in `audit_logs`; filter by `action` and optionally
 | Historical rows (pre-migration 048) | `actor_name`, `ip_address`, `user_agent` are NULL. | UI shows "(unknown)" |
 
 ---
-
-Last updated: 2026-04-12

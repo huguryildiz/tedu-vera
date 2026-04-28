@@ -83,5 +83,3 @@ Events emitted from UI code:
 - Admin context automatically resolved from auth session
 
 ---
-
-Last updated: 2026-04-09 (added `organization.status_changed`, `period.set_current`, `admin.updated`)

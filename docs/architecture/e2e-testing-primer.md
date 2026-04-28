@@ -1,45 +1,8 @@
-Ara not — devam etmeden önce oku:
-
-docs/architecture/e2e-testing-primer.md
-
-Özellikle şu üç bölüm senin şu anki çıkmazını karşılıyor:
-
-- Bölüm 2 (Auth lifecycle + hook guard pattern) — isSuper state'i ne zaman
-  true oluyor ve useManageOrganizations'ın enabled guard'ı nasıl devrede.
-
-- Bölüm 3 (RPC invocation path, "What the logs show and how to read them") —
-  "anon + permission denied" = timing bug, "authenticated + unauthorized" =
-  function check. İki şüpheli RPC'nin loglarını bu tabloya göre sınıflandır;
-  ikisi aynı kategoride mi, farklı mı? GRANT anon asla çözüm değil.
-
-- Bölüm 4 Race B — senin gözlemlediğin semptomla birebir aynı: "page mount
-  before auth ready". Önerilen mitigation: useAuth().loading bitene kadar
-  hook'un RPC atmaması.
-
-Sonra şu sırayla ilerle:
-
-1. İki RPC'nin Supabase loglarında role alanını doğrula (anon/authenticated).
-   mcp__claude_ai_Supabase__get_logs kullan.
-
-2. Eğer her ikisi de anon → OrganizationsPage'in enabled guard'ı doğru ama
-   sayfa ilk mount'ta isSuper=false iken bir şekilde çağrı tetikleniyor.
-   loadOrgs çağrı zincirini izle (useEffect, useMemo, doğrudan useState init).
-
-3. Eğer list=anon, create=authenticated → iki ayrı bug. List'i guard ekleyerek
-   çöz, create için function body'sini tekrar oku (current_user_is_super_admin
-   içeriği primer bölüm 3'te, memberships.organization_id IS NULL koşuluyla
-   — E2E kullanıcının bu kriterde bir satırı olmalı, önceki sprint DB
-   doğrulamasında vardı).
-
-Devam et, ama primer'ı ilk adımında oku — 10 dk, sonraki bütün sprintte de
-geçerli yatırım.
 # E2E Testing Primer — Auth, RPCs, Timing, and Known Traps
 
 **Audience:** Any engineer (or agent) about to write or modify an E2E spec in this repo.
 **Purpose:** Capture the implicit architectural rules that E2E tests keep re-discovering sprint after sprint, so you don't waste a window relearning them.
-**Last updated:** 2026-04-24 (after B1, B2 bug fixes; B3 in progress)
-
-**Read this primer end-to-end before your first spec.** It's ~15 minutes. It will save you at least one 5-hour window on your first sprint and every sprint thereafter.
+**Read this primer end-to-end before your first spec.** It's ~15 minutes and will save you significant debugging time.
 
 ---
 
@@ -76,7 +39,7 @@ The app is a React SPA backed by Supabase. Admin auth is JWT-based via `supabase
 
 **The first network call that requires a JWT must happen AFTER step 3 completes, not between step 1 and step 3.** Supabase-js attaches the JWT from its in-memory session, which is populated when `SIGNED_IN` fires. If a `supabase.rpc()` fires before the session is in the client's memory, the request goes out with the anon key only — even if localStorage has the token.
 
-### Hook-level guard pattern (learned in B3)
+### Hook-level guard pattern
 
 Every admin page that reads data on mount must gate its load on `!authLoading && isSuper` (or `hasActiveOrganization`, depending on the domain):
 
@@ -151,17 +114,17 @@ Supabase logs record the role that made each query: `anon`, `authenticated`, `se
 
 ## 4. The three race conditions we know about
 
-### Race A — clearPersistedSession() vs supabase-js bootstrap (B2, FIXED)
+### Race A — clearPersistedSession() vs supabase-js bootstrap
 
 **Symptom:** user signs in, URL briefly goes to `/admin`, then redirects to `/register`. DB logs show `getSession()` membership query returning 0 rows for a user whose membership row exists and whose RLS policy allows the read.
 
 **Root cause:** `AuthProvider.signIn()` used to call `clearPersistedSession()` right after `signInWithPassword()` succeeded, before supabase-js had finished writing its session to its own in-memory cache. The wipe removed localStorage entries supabase-js was about to read; the next `supabase.from('memberships').select()` went out with anon credentials; RLS correctly returned nothing; AuthProvider saw empty `organizationList` and redirected to `/register`.
 
-**Fix (committed `b55c5b6`):** removed the premature `clearPersistedSession()`. The equivalent clear still runs at the end of `handleAuthChange` (the session-only persistence mode for remember-me-off users), but only AFTER bootstrap is complete.
+**Fix:** removed the premature `clearPersistedSession()`. The equivalent clear still runs at the end of `handleAuthChange` (the session-only persistence mode for remember-me-off users), but only AFTER bootstrap is complete.
 
 **Lesson:** Never mutate persistence state between `signIn*()` returning and the `SIGNED_IN` handler finishing.
 
-### Race B — page mount before auth ready (B3, ongoing)
+### Race B — page mount before auth ready
 
 **Symptom:** RPC logs show `role: anon` on admin-page loads even though sign-in completed. Specifically `rpc_admin_list_organizations` returns `permission denied` because the first call happens before `isSuper` is true.
 
@@ -211,9 +174,9 @@ E2E runs against **vera-demo only**. Never point E2E at vera-prod. Seed changes 
 
 ---
 
-## 6. Data-testid contract (Session B rule)
+## 6. Data-testid contract
 
-Session B enforces testid-only selectors. Before writing a new spec:
+Before writing a new spec:
 
 1. **Every interactive element the spec touches must have `data-testid` already.** If it doesn't, add the attribute first — do not fall back to text/role/placeholder.
 2. **Naming convention:** `{scope}-{component}-{element}`, lowercase, hyphen-separated.
@@ -221,16 +184,16 @@ Session B enforces testid-only selectors. Before writing a new spec:
     - `admin-shell-nav-overview`, `admin-shell-signout`
     - `orgs-drawer-name`, `orgs-row-kebab`, `orgs-delete-confirm-yes`
     - `jury-identity-name`, `jury-pin-digit-0`
-3. **Shared UI primitives accept testid as a prop.** `FbAlert` already does (B2). `Modal`, `Drawer`, `ConfirmDialog`, `CustomSelect` may need the same passthrough — add it on first use, following FbAlert's pattern.
-4. **Testid additions must not change behaviour.** Only add the attribute. Do not rename props, restructure JSX, or move markup. Session A (unit tests) runs in parallel; non-testid DOM changes break their assertions.
+3. **Shared UI primitives accept testid as a prop.** `FbAlert` already does. `Modal`, `Drawer`, `ConfirmDialog`, `CustomSelect` may need the same passthrough — add it on first use, following FbAlert's pattern.
+4. **Testid additions must not change behaviour.** Only add the attribute. Do not rename props, restructure JSX, or move markup. Non-testid DOM changes can break unit test assertions.
 5. **BasePom.byTestId(id)** is the only accessor in new POMs. No `getByRole`, `getByPlaceholder`, `locator(':has-text(...)')`.
 
-### Testid inventory registry
+### Testid inventory
 
-Each sprint's implementation report lists the testids added. Before adding a new one, grep the reports to avoid duplicating an existing testid or naming the same thing differently:
+Before adding a new testid, grep the codebase to avoid duplicating an existing one or naming the same element differently:
 
 ```bash
-grep -r "data-testid" .claude/internal/plans/session-b-e2e-test-coverage/implementation_reports/
+grep -r "data-testid" src/ e2e/
 ```
 
 ---
@@ -290,21 +253,16 @@ await page.evaluate(() => {
 | Add `await page.waitForTimeout(500)` to "fix flake" | Masks timing bugs. Breaks on slower/faster machines. | Identify the event the test is racing (navigation, hook-ready, network-idle) and wait for that specifically. |
 | Retry a failing RPC at the client level | Hides race conditions; turns a deterministic bug into a flaky test. | Gate the RPC on the state it needs. |
 | Use `any`-typed helpers to dodge type errors in POMs | Gives up the one real advantage of TypeScript specs. | Model the types. They're usually 2 lines. |
-| Copy a selector from `e2e/legacy/` into a rewrite spec | Legacy selectors are why we're rewriting. | Copy the **flow** (what the test does, in what order), then rewrite selectors as testids. |
+| Use fragile CSS/text selectors instead of testids | Selector-based tests break on every refactor. | Use `data-testid` and `BasePom.byTestId()`. |
 
 ---
 
-## 9. Starting a new sprint — opening checklist
+## 9. Before writing a new spec — checklist
 
-Before writing the first line of test code:
-
-- [ ] Read `.claude/internal/plans/session-b-e2e-test-coverage/README.md` for the current sprint scope.
-- [ ] Read the previous sprint's implementation report.
 - [ ] Read this primer (you're doing it now).
-- [ ] Confirm `npm run e2e` on `main` passes with the baseline count.
-- [ ] For each flow the sprint will cover, open the corresponding `e2e/legacy/**/*.spec.ts` and read what it was trying to do. Ignore the selectors.
+- [ ] Confirm `npm run e2e` on `main` passes.
 - [ ] Check the relevant page/hook for the `enabled: !authLoading && <role>` guard (Section 2). If missing, that's your first fix, not a new spec.
-- [ ] List the UI primitives the sprint will touch (Modal/Drawer/ConfirmDialog/CustomSelect) and check whether they already accept `data-testid` as a prop. If not, note them as prerequisites.
+- [ ] List the UI primitives the spec will touch (Modal/Drawer/ConfirmDialog/CustomSelect) and check whether they already accept `data-testid` as a prop. If not, note them as prerequisites.
 - [ ] Have `mcp__claude_ai_Supabase__execute_sql` handy for verifying function definitions and membership rows when a test fails.
 
 ---
@@ -332,4 +290,4 @@ This document is a living artifact. Update it when:
 - A hook, RPC, or auth flow changes shape.
 - A piece of "tribal knowledge" emerges from a sprint report that would save another agent time.
 
-Every sprint's implementation report should end with "Primer updates needed?" as a prompt. If yes, open a PR that touches this file alongside the sprint's code changes.
+When updating, open a PR that touches this file alongside the code changes that motivated the update.

@@ -320,5 +320,3 @@ phone numbers, GPA, academic transcripts, credit card information.
 - [walkthroughs/multi-tenant-data-flow.md](../walkthroughs/multi-tenant-data-flow.md)
 
 ---
-
-> *Last updated: 2026-04-24*

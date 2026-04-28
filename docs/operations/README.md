@@ -41,5 +41,3 @@ to Vercel. If a new on-call person joins, their first task is to confirm
 those two access paths work.
 
 ---
-
-> *Last updated: 2026-04-24*

@@ -2,8 +2,6 @@
 
 This document defines VERA's browser storage architecture: what lives in `localStorage`, what lives in `sessionStorage`, what stays server-side only, and why.
 
-**Last updated:** 2026-04-12
-
 ---
 
 ## Guiding Principles

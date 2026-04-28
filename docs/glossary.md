@@ -432,5 +432,3 @@ once migration is complete. See
 [decisions/0003-jwt-admin-auth.md](decisions/0003-jwt-admin-auth.md).
 
 ---
-
-> *Last updated: 2026-04-24*

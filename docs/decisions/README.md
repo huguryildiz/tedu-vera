@@ -55,5 +55,3 @@ historical ADRs in place — supersede with a new ADR if a decision changes.
 | [0005](0005-snapshot-migrations.md) | Snapshot-based database migrations | Accepted |
 
 ---
-
-> *Last updated: 2026-04-24*
