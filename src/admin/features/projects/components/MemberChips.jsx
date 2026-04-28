@@ -1,4 +1,4 @@
-import { avatarGradient, initials } from "@/shared/ui/avatarColor";
+import { initials } from "@/shared/ui/avatarColor";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import { membersToArray } from "./projectHelpers";
 
@@ -13,7 +13,7 @@ export default function MemberChips({ members }) {
     <span className="member-chips">
       {visible.map((name) => (
         <PremiumTooltip key={name} text={name}>
-          <span className="member-chip" style={{ background: avatarGradient(name) }}>
+          <span className="member-chip">
             {initials(name)}
           </span>
         </PremiumTooltip>
