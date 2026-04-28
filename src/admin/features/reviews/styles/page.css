@@ -606,11 +606,8 @@
 .reviews-expand-bar-track{height:6px;border-radius:3px;background:var(--border);overflow:hidden}
 .reviews-expand-bar-fill{height:100%;border-radius:3px;transition:width .2s ease}
 
-/* People column */
+/* People column — TeamMembersInline + JurorBadge nameOnly, no custom pill styles needed */
 .reviews-expand-people{padding:0 18px;border-right:1px solid var(--border)}
-.reviews-expand-member-list{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
-.reviews-expand-member-pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-primary);background:var(--bg-card);border:1px solid var(--border);border-radius:999px;padding:2px 8px 2px 3px}
-.reviews-expand-avatar{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
 
 /* Comment column */
 .reviews-expand-comment{padding-left:18px}

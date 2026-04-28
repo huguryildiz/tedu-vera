@@ -34,11 +34,10 @@ import {
 } from "@/admin/selectors/filterPipeline";
 import { formatTs } from "@/admin/utils/adminUtils";
 import { downloadTable, generateTableBlob } from "@/admin/utils/downloadTable";
-import { jurorAvatarBg, jurorAvatarFg } from "@/admin/utils/jurorIdentity";
 import JurorBadge from "@/admin/shared/JurorBadge";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import CustomSelect from "@/shared/ui/CustomSelect";
-import { TeamMemberNames } from "@/shared/ui/EntityMeta";
+import { TeamMemberNames, TeamMembersInline } from "@/shared/ui/EntityMeta";
 import { computeCoverage, computeHighDisagreement, computeOutlierReviews } from "@/admin/utils/reviewsKpiHelpers";
 import "./styles/index.css";
 
@@ -960,35 +959,16 @@ export default function ReviewsPage() {
                               </div>
                               <div className="reviews-expand-people">
                                 <div className="reviews-expand-section-label">Team Members</div>
-                                <div className="reviews-expand-member-list">
-                                  {(() => {
-                                    const names = (Array.isArray(row.students)
-                                      ? row.students
-                                      : String(row.students ?? "").split(/,\s*/)
-                                    ).map(s => s.trim()).filter(Boolean);
-                                    return names.length > 0
-                                      ? names.map((name, idx) => (
-                                          <span key={idx} className="reviews-expand-member-pill">
-                                            <span className="reviews-expand-avatar" style={{ background: jurorAvatarBg(name), color: jurorAvatarFg(name) }}>
-                                              {name.charAt(0).toUpperCase()}
-                                            </span>
-                                            {name}
-                                          </span>
-                                        ))
-                                      : <span className="text-xs text-muted">—</span>;
-                                  })()}
-                                </div>
+                                {row.students
+                                  ? <TeamMembersInline names={row.students} />
+                                  : <span className="text-xs text-muted">—</span>
+                                }
                                 {row.advisor && (
                                   <>
                                     <div className="reviews-expand-section-label" style={{ marginTop: 10 }}>Advised By</div>
-                                    <div className="reviews-expand-member-list">
+                                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                                       {row.advisor.split(',').map(s => s.trim()).filter(Boolean).map((name, idx) => (
-                                        <span key={idx} className="reviews-expand-member-pill reviews-expand-member-pill--advisor">
-                                          <span className="reviews-expand-avatar" style={{ background: jurorAvatarBg(name), color: jurorAvatarFg(name) }}>
-                                            {name.charAt(0).toUpperCase()}
-                                          </span>
-                                          {name}
-                                        </span>
+                                        <JurorBadge key={idx} name={name} nameOnly size="sm" variant="advisor" />
                                       ))}
                                     </div>
                                   </>
