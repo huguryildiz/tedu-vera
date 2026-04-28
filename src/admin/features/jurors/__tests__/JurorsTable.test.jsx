@@ -77,10 +77,11 @@ describe("JurorsTable mobile card", () => {
     expect(screen.queryByText("ASSIGNED")).toBeNull();
     expect(screen.queryByText("DONE")).toBeNull();
 
-    // Footer label present
-    expect(screen.getByText("Last active:")).toBeDefined();
+    // Old footer label and percentage are gone in the compact two-row layout
+    expect(screen.queryByText("Last active:")).toBeNull();
+    expect(screen.queryByText("60%")).toBeNull();
 
-    // Percentage shown for partial juror
-    expect(screen.getByText("60%")).toBeDefined();
+    // Compact fraction (scored/total) visible in row 2
+    expect(screen.getByText("3/5")).toBeDefined();
   });
 });

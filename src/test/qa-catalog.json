@@ -6581,9 +6581,9 @@
     "module": "Admin / Features",
     "area": "JurorsPage",
     "story": "mobile card layout",
-    "scenario": "Mobile portrait card shows progress block and Last active footer; stats strip is absent",
-    "whyItMatters": "Removing the redundant stats strip is the sole purpose of this change — verifying it stays gone prevents regressions.",
-    "risk": "Stats strip creeps back in a future merge; layout regresses silently.",
+    "scenario": "Compact two-row mobile portrait card: stats strip absent, fraction visible, old footer/percentage gone",
+    "whyItMatters": "The compact card restructure removed the stats strip, progress-block label, and percentage footer — verifying they stay gone and the fraction renders correctly prevents regressions.",
+    "risk": "Stats strip or old footer creeps back in a future merge; fraction not rendered; layout regresses silently.",
     "coverageStrength": "Unit",
     "severity": "medium"
   },

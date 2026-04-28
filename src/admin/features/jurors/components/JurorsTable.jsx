@@ -5,7 +5,6 @@ import {
   KeyRound,
   ClipboardList,
   Trash2,
-  Clock,
   MoreVertical,
   Pencil,
   Users,
@@ -184,7 +183,7 @@ function JurorRow({
       {/* Mobile card — hidden on desktop, shown at ≤768px portrait */}
       <td className="col-mobile-card">
         <div className="jc">
-          <div className="jc-header">
+          <div className="jc-row1">
             <div
               className="jc-avatar"
               style={{ background: jurorAvatarBg(name), color: jurorAvatarFg(name) }}
@@ -192,11 +191,13 @@ function JurorRow({
               {jurorInitials(name)}
             </div>
             <div className="jc-meta">
-              <span className="jc-meta-name">{name}</span>
+              <div className="jc-name-row">
+                <span className="jc-name">{name}</span>
+                <JurorStatusPill status={status} />
+              </div>
               {juror.affiliation && (
-                <span className="jc-meta-org">{juror.affiliation}</span>
+                <span className="jc-org">{juror.affiliation}</span>
               )}
-              <JurorStatusPill status={status} className="jc-meta-pill" />
             </div>
             <FloatingMenu
               isOpen={openMenuId === jid && shouldUseCardLayout}
@@ -218,32 +219,19 @@ function JurorRow({
             </FloatingMenu>
           </div>
 
-          <div className="jc-prog-block">
-            <div className="jc-prog-header">
-              <span>Progress</span>
-              <span className={`jc-prog-count${total === 0 ? " val-zero" : scored >= total ? " val-done" : " val-partial"}`}>
-                <span className="jc-prog-nums">{scored} / {total}</span> projects
-              </span>
-            </div>
-            <div className="jc-prog-bar">
+          <div className="jc-row2">
+            <div className="jc-bar">
               {total > 0 && (
                 <div
-                  className={`jc-prog-fill${scored >= total ? " fill-complete" : " fill-partial"}`}
+                  className={`jc-bar-fill${scored >= total ? " fill-complete" : " fill-partial"}`}
                   style={{ width: `${Math.min(100, Math.round((scored / total) * 100))}%` }}
                 />
               )}
             </div>
-          </div>
-
-          <div className="jc-footer">
-            <Clock size={11} strokeWidth={2} style={{ opacity: 0.7 }} />
-            <span className="jc-footer-label">Last active:</span>
-            <span className="jc-footer-time">{lastActive ? formatRelative(lastActive) : "Never"}</span>
-            {total > 0 && (
-              <span className={`jc-footer-pct${scored >= total ? " val-done" : " val-amber"}`}>
-                {pct}%
-              </span>
-            )}
+            <span className={`jc-frac${total === 0 ? " frac-none" : scored >= total ? " frac-done" : " frac-partial"}`}>
+              {scored}/{total}
+            </span>
+            <span className="jc-last">{lastActive ? formatRelative(lastActive) : "—"}</span>
           </div>
         </div>
       </td>
