@@ -324,6 +324,13 @@ export const EVENT_META = {
     label: "Admin changed password",
     narrative: () => ({ verb: "changed their password", resource: null }),
   },
+  "auth.admin.email_verified": {
+    label: "Admin email verified",
+    narrative: (log) => {
+      const d = log.details || {};
+      return { verb: "verified email address", resource: d.email || null };
+    },
+  },
   "auth.admin.password.reset.requested": {
     label: "Password reset requested",
     narrative: (log) => {
@@ -442,6 +449,13 @@ export const EVENT_META = {
     narrative: (log) => {
       const d = log.details || {};
       return { verb: "granted edit mode to", resource: d.juror_name || null };
+    },
+  },
+  "juror.edit_mode_disabled": {
+    label: "Edit mode closed (admin)",
+    narrative: (log) => {
+      const d = log.details || {};
+      return { verb: "closed edit mode for", resource: d.juror_name || null };
     },
   },
   "juror.edit_enabled": {
@@ -918,6 +932,16 @@ export const EVENT_META = {
       };
     },
   },
+  "access.admin.accepted": {
+    label: "Admin invitation accepted",
+    narrative: (log) => {
+      const d = log.details || {};
+      return {
+        verb: "accepted admin invitation",
+        resource: d.role || null,
+      };
+    },
+  },
   "maintenance.set": {
     label: "Maintenance scheduled",
     narrative: (log) => {
@@ -995,6 +1019,8 @@ export const EVENT_META = {
   "notification.export_report":  { label: "Report shared via email" },
   "notification.password_reset": { label: "Password reset email sent" },
   "notification.maintenance":    { label: "Maintenance notice sent" },
+  "notification.juror_reminder": { label: "Juror reminder sent" },
+  "notification.unlock_request": { label: "Unlock request notification sent" },
 
   // ── Juror-initiated security / data requests ─────────────────
   "security.pin_reset.requested": {
@@ -1009,6 +1035,27 @@ export const EVENT_META = {
     narrative: (log) => {
       const d = log.details || {};
       return { verb: "requested score edit for juror", resource: d.jurorName || null };
+    },
+  },
+
+  "system.migration_applied": {
+    label: "Database migration applied",
+    narrative: (log) => {
+      const d = log.details || {};
+      return {
+        verb: "applied database migration",
+        resource: d.label || null,
+      };
+    },
+  },
+  "security.chain.root.signed": {
+    label: "Audit chain root signed",
+    narrative: (log) => {
+      const d = log.details || {};
+      return {
+        verb: "signed audit chain root",
+        resource: d.chain_seq != null ? `seq=${d.chain_seq}` : null,
+      };
     },
   },
 

@@ -355,6 +355,63 @@ $$;
 GRANT EXECUTE ON FUNCTION public._audit_verify_chain_internal(UUID) TO service_role;
 
 -- -----------------------------------------------------------------------------
+-- 3b. rpc_admin_log_migration — leaves a paper trail for manual schema changes
+-- (P3.15)
+--
+-- VERA applies migrations via the Supabase MCP `apply_migration` tool, which
+-- runs DDL/DML directly through the management API. PostgREST does not see
+-- those calls so the trigger-based audit catches nothing.
+--
+-- This RPC is a service-role-only helper that any migration script (or any
+-- automation around `apply_migration`) can call to leave a `system.migration_applied`
+-- audit row. The row is org-NULL (global), category=config, severity=high.
+-- Hash chain + sink forwarding still apply, so a tampered or skipped migration
+-- becomes visible during the next chain verification.
+--
+-- Usage from a CI/automation step:
+--   SELECT public.rpc_admin_log_migration(
+--     'audit_xff_trusted_proxy_depth',
+--     jsonb_build_object('actor', 'github-actions', 'sha', '<commit>')
+--   );
+-- -----------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION public.rpc_admin_log_migration(
+  p_label   TEXT,
+  p_details JSONB DEFAULT '{}'::jsonb
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF p_label IS NULL OR length(trim(p_label)) = 0 THEN
+    RAISE EXCEPTION 'rpc_admin_log_migration: p_label is required';
+  END IF;
+
+  INSERT INTO audit_logs (
+    organization_id, user_id, actor_type, actor_name,
+    action, resource_type, resource_id,
+    category, severity, details, ip_address, user_agent
+  ) VALUES (
+    NULL, auth.uid(),
+    CASE WHEN auth.uid() IS NOT NULL THEN 'admin'::audit_actor_type
+                                     ELSE 'system'::audit_actor_type END,
+    COALESCE(p_details->>'actor', 'CI/automation'),
+    'system.migration_applied',
+    'migration',
+    NULL,
+    'config'::audit_category,
+    'high'::audit_severity,
+    jsonb_build_object('label', p_label) || COALESCE(p_details, '{}'::jsonb),
+    NULL, NULL
+  );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.rpc_admin_log_migration(TEXT, JSONB) TO service_role;
+
+-- -----------------------------------------------------------------------------
 -- 3c. rpc_admin_verify_audit_chain — thin authenticated wrapper
 -- Delegates to _audit_verify_chain_internal after auth + role check.
 -- Returns [] (empty array) when chain is intact; returns broken-link objects otherwise.

@@ -582,17 +582,11 @@ BEGIN
 
   IF v_req_headers IS NOT NULL THEN
     v_ua := NULLIF(v_req_headers->>'user-agent', '');
-    v_ip_raw := NULLIF(trim(split_part(COALESCE(v_req_headers->>'x-forwarded-for', ''), ',', 1)), '');
-    IF v_ip_raw IS NULL THEN
-      v_ip_raw := NULLIF(trim(COALESCE(v_req_headers->>'x-real-ip', '')), '');
-    END IF;
-    IF v_ip_raw IS NOT NULL THEN
-      BEGIN
-        v_ip := v_ip_raw::INET;
-      EXCEPTION WHEN OTHERS THEN
-        v_ip := NULL;
-      END;
-    END IF;
+    -- Use trusted-proxy-depth aware extractor (P2.12).
+    v_ip := public._audit_extract_client_ip(
+      v_req_headers->>'x-forwarded-for',
+      v_req_headers->>'x-real-ip'
+    );
   END IF;
 
   INSERT INTO audit_logs (

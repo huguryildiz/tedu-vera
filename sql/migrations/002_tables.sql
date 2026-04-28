@@ -346,7 +346,11 @@ CREATE TYPE audit_actor_type AS ENUM ('admin', 'juror', 'system', 'anonymous');
 CREATE TABLE audit_logs (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id  UUID REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id          UUID REFERENCES profiles(id),
+  -- ON DELETE SET NULL: deleting an admin clears the FK pointer but keeps the
+  -- audit row (actor_name snapshot survives). Without this, profile deletion
+  -- raises FK violation against append-only audit rows. GDPR right-to-be-
+  -- forgotten compliance + clean admin offboarding workflow.
+  user_id          UUID REFERENCES profiles(id) ON DELETE SET NULL,
   action           TEXT NOT NULL,
   resource_type    TEXT,
   resource_id      UUID,
@@ -365,6 +369,11 @@ CREATE TABLE audit_logs (
   row_hash         TEXT,
   -- true insertion-order counter; avoids backdated created_at breaking the chain
   chain_seq        BIGSERIAL,
+  -- Set to TRUE by audit-log-sink Edge Function after successful forward to the
+  -- external observability platform. Drain job (audit-anomaly-sweep retry pass)
+  -- re-attempts rows older than 5 min where synced_to_ext = FALSE. (P2.11)
+  synced_to_ext    BOOLEAN     DEFAULT false NOT NULL,
+  synced_to_ext_at TIMESTAMPTZ,
   created_at       TIMESTAMPTZ DEFAULT now()
 );
 

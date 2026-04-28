@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { RequestPayloadSchema } from "./schema.ts";
+import { writeEdgeAuditLog } from "../_shared/audit-log.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -100,6 +101,27 @@ Deno.serve(async (req: Request) => {
 
     if (tokenUpdateErr) {
       return json({ error: tokenUpdateErr.message }, 500);
+    }
+
+    // Audit row — account activation is access-control critical.
+    // Fail-closed: if audit insert fails, surface 500 (no silent verifications).
+    try {
+      await writeEdgeAuditLog(req, {
+        action: "auth.admin.email_verified",
+        user_id: tokenRow.user_id,
+        resource_type: "profiles",
+        resource_id: tokenRow.user_id,
+        category: "auth",
+        severity: "low",
+        actor_type: "admin",
+        details: {
+          email: tokenRow.email,
+          verified_at: now,
+        },
+      });
+    } catch (auditErr) {
+      console.error("email-verification-confirm audit write failed:", (auditErr as Error).message);
+      return json({ error: "audit_failed" }, 500);
     }
 
     return json({ ok: true });

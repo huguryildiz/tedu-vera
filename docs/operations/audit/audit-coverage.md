@@ -55,6 +55,23 @@ Every row is written by exactly one of these four mechanisms.
 **Banned pattern:** `writeAuditLog(...).catch(...)` fire-and-forget calls. All audit
 writes are either transactional (RPC), trigger-automatic, or Edge Function server-side.
 
+**One documented exception — login failure audit.** `writeAuthFailureEvent()` in
+`src/auth/shared/AuthProvider.jsx` is intentionally fire-and-forget on the *client*
+because:
+
+1. The actual audit insert happens inside the SECURITY DEFINER RPC
+   `rpc_write_auth_failure_event` (009_audit.sql), which runs server-side and is
+   the only blocking write. The "fire-and-forget" is the *RPC invocation*, not the
+   audit insert itself.
+2. Failing the login UX over an audit write would create a worse outcome than a
+   missed audit row: a user who entered the right password on the second try would
+   see a confusing error on the first attempt.
+3. The RPC is rate-limited (20 failures per 5 minutes per email) and severity-
+   escalating, so a momentary client→DB hiccup is recoverable on the next attempt.
+
+This exception applies *only* to authentication failure events. Any new audit write
+on a user-facing critical path must use one of the four blocking mechanisms above.
+
 ---
 
 ## Row Schema
@@ -103,8 +120,14 @@ CREATE TABLE audit_logs (
 
 ## Tracked Tables (DB Trigger)
 
-15 tables have `trigger_audit_log` attached. Every INSERT, UPDATE, and DELETE
-on these tables produces an audit row automatically.
+14 tables have `trigger_audit_log` attached. Every INSERT, UPDATE, and DELETE
+on these tables produces an audit row automatically. Trigger-emitted rows now
+also carry `ip_address` and `user_agent` (extracted from the PostgREST
+`request.headers` GUC, mirroring `_audit_write`'s logic).
+
+The diff column stores **only the changed keys** (per `_jsonb_diff` helper),
+not full row snapshots — `updated_at`, `last_seen_at`, `last_activity_at` are
+stripped as noise.
 
 | Table | Org resolution | Category |
 | --- | --- | --- |
@@ -112,20 +135,25 @@ on these tables produces an audit row automatically.
 | `periods` | `organization_id` column | data |
 | `projects` | via `periods.organization_id` | data |
 | `jurors` | `organization_id` column | data |
-| `score_sheets` | via `periods.organization_id` | data |
+| `score_sheets` | via `periods.organization_id` | data (diff: NULL — score volume) |
 | `memberships` | `organization_id` column | data |
 | `entry_tokens` | via `periods.organization_id` | data |
 | `period_criteria` | via `periods.organization_id` | data |
 | `period_criterion_outcome_maps` | via `periods.organization_id` | data |
-| `org_applications` | `organization_id` column | data |
 | `framework_outcomes` | via `frameworks.organization_id` | data |
-| `admin_invites` | `org_id` column | data |
 | `frameworks` | `organization_id` column | data |
 | `profiles` | NULL (global) | data |
 | `security_policy` | NULL (global) | config |
+| `unlock_requests` | `organization_id` column | data |
 
 Trigger actions follow the pattern `<table_name>.<operation>`, e.g.,
 `periods.insert`, `jurors.update`, `projects.delete`.
+
+**Note:** `org_applications` and `admin_invites` were previously listed here in
+error — they have no trigger attached. Org-application lifecycle is captured by
+the `application.approved` / `application.rejected` semantic events emitted from
+the corresponding RPCs; admin-invite lifecycle by `access.admin.invited` /
+`access.admin.accepted`.
 
 ---
 
@@ -140,8 +168,10 @@ Trigger actions follow the pattern `<table_name>.<operation>`, e.g.,
 | `admin.logout` | Edge Function (Database Webhook on `auth.sessions` DELETE) | info |
 | `auth.admin.password.changed` | Edge Function (`password-changed-notify`) | medium |
 | `auth.admin.password.reset.requested` | Edge Function (`password-reset-email`) | low |
+| `auth.admin.email_verified` | Edge Function (`email-verification-confirm`, fail-closed) | low |
 | `admin.updated` | RPC (`rpc_admin_update_member_profile`) | info |
-| `access.admin.invited` / `.accepted` | RPC (`rpc_accept_invite`) | low |
+| `access.admin.invited` | Edge Function (`invite-org-admin`) | low |
+| `access.admin.accepted` | RPC (`rpc_accept_invite`) — one row per activated org membership | medium |
 
 ### Configuration
 
@@ -172,6 +202,7 @@ Canonical PIN taxonomy is `juror.pin_locked` / `juror.pin_unlocked` /
 | `data.score.edit_requested` | Edge Function (`request-score-edit`) | low |
 | `juror.pin_locked` / `juror.pin_unlocked` / `pin.reset` | RPC (juror auth) | medium |
 | `data.juror.edit_mode.granted` / `.force_closed` / `.closed` | RPC | info-medium |
+| `juror.edit_mode_enabled` / `juror.edit_mode_disabled` | RPC (`rpc_juror_toggle_edit_mode`, both paths) | info |
 | `evaluation.complete` | RPC (`rpc_jury_finalize_submission`) | info |
 | CRUD on tracked tables (`<table>.insert/update/delete`) | DB trigger | info-medium |
 
@@ -194,10 +225,12 @@ Canonical PIN taxonomy is `juror.pin_locked` / `juror.pin_unlocked` /
 | --- | --- |
 | `notification.entry_token` | `send-entry-token-email` |
 | `notification.juror_pin` | `send-juror-pin-email` |
+| `notification.juror_reminder` | `notify-juror` |
 | `notification.export_report` | `send-export-report` |
 | `notification.admin_invite` | `invite-org-admin` |
 | `notification.application` | `notify-application` |
 | `notification.maintenance` | `notify-maintenance` |
+| `notification.unlock_request` | `notify-unlock-request` |
 
 Every notification row carries recipients, send result, and any error in
 `details`.

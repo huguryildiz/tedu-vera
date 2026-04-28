@@ -9,16 +9,22 @@
 // Compatible with any sink that accepts a JSON POST body:
 //   Axiom, Logtail, Logflare, or a generic webhook.
 //
-// Auth: verify_jwt=false — called by Supabase infra, not a user.
-// Request is authenticated by HMAC-SHA256 in X-Supabase-Signature.
+// On successful forward, marks audit_logs.synced_to_ext = true so the
+// drain pass in audit-anomaly-sweep does not retry already-forwarded rows.
 //
-// Always returns 200 — Supabase retries on non-2xx which would
-// create duplicate sink entries. Errors are logged only.
+// Auth: verify_jwt=false — called by Supabase infra, not a user.
+// Request is authenticated by HMAC-SHA256 in X-Webhook-Secret header.
+//
+// Always returns 200 — Supabase retries on non-2xx which would create
+// duplicate sink entries. Errors are logged only; rows that fail forward
+// keep synced_to_ext = false and are picked up by the drain pass.
 // ============================================================
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-signature",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-signature, x-webhook-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -29,7 +35,6 @@ function json(status: number, body: unknown) {
   });
 }
 
-/** Constant-time string comparison to prevent timing attacks. */
 function constantTimeEqual(a: string, b: string): boolean {
   const enc = new TextEncoder();
   const ab = enc.encode(a);
@@ -40,6 +45,25 @@ function constantTimeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+async function markSynced(rowId: string): Promise<void> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  if (!supabaseUrl || !serviceKey) {
+    console.warn("audit-log-sink: cannot mark synced — service env missing");
+    return;
+  }
+  const service = createClient(supabaseUrl, serviceKey, {
+    auth: { persistSession: false },
+  });
+  const { error } = await service
+    .from("audit_logs")
+    .update({ synced_to_ext: true, synced_to_ext_at: new Date().toISOString() })
+    .eq("id", rowId);
+  if (error) {
+    console.error(`audit-log-sink: failed to mark row ${rowId} synced:`, error.message);
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json(405, { error: "Method not allowed" });
@@ -48,7 +72,6 @@ Deno.serve(async (req: Request) => {
   const sinkUrl = Deno.env.get("AUDIT_SINK_WEBHOOK_URL") || "";
   const sinkApiKey = Deno.env.get("AUDIT_SINK_API_KEY") || "";
 
-  // Verify shared secret header
   if (webhookSecret) {
     const incoming = req.headers.get("x-webhook-secret") || "";
     if (!constantTimeEqual(incoming, webhookSecret)) {
@@ -58,7 +81,6 @@ Deno.serve(async (req: Request) => {
   }
 
   if (!sinkUrl) {
-    // Sink not configured — log and return ok so webhook doesn't retry
     console.warn("audit-log-sink: AUDIT_SINK_WEBHOOK_URL not set, skipping forward");
     return json(200, { ok: true, skipped: true, reason: "sink not configured" });
   }
@@ -79,7 +101,6 @@ Deno.serve(async (req: Request) => {
     return json(200, { ok: false, error: "Invalid JSON" });
   }
 
-  // Only forward INSERT events on audit_logs
   if (payload.type !== "INSERT" || payload.table !== "audit_logs") {
     return json(200, { ok: true, skipped: true });
   }
@@ -89,7 +110,6 @@ Deno.serve(async (req: Request) => {
     return json(200, { ok: true, skipped: true, reason: "no record" });
   }
 
-  // Forward to external sink
   try {
     const sinkHeaders: Record<string, string> = {
       "Content-Type": "application/json",
@@ -98,8 +118,6 @@ Deno.serve(async (req: Request) => {
       sinkHeaders["Authorization"] = `Bearer ${sinkApiKey}`;
     }
 
-    // Axiom ingest API requires a JSON array; other sinks (Logtail, generic
-    // webhooks) also accept arrays, so wrapping is universally safe.
     const sinkRes = await fetch(sinkUrl, {
       method: "POST",
       headers: sinkHeaders,
@@ -109,8 +127,13 @@ Deno.serve(async (req: Request) => {
     if (!sinkRes.ok) {
       const text = await sinkRes.text().catch(() => "");
       console.error(`audit-log-sink: sink returned ${sinkRes.status}: ${text}`);
-      // Still return 200 — don't let a sink failure block audit inserts
       return json(200, { ok: false, sink_status: sinkRes.status, error: text });
+    }
+
+    // Mark synced — best-effort, do NOT block on this UPDATE.
+    const rowId = typeof record.id === "string" ? record.id : null;
+    if (rowId) {
+      await markSynced(rowId);
     }
 
     return json(200, { ok: true, sink_status: sinkRes.status });

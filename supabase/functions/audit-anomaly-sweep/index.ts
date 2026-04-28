@@ -17,8 +17,17 @@
 // Chain verification: _audit_verify_chain_internal(null) runs each sweep;
 //   broken links write a security.chain.broken row (severity=critical).
 //
+// External-sink retry pass (P2.11): unsynced audit_logs rows older than 5 min
+//   are re-POSTed to AUDIT_SINK_WEBHOOK_URL. Marks synced_to_ext=true on success.
+//
+// Root anchoring (P2.10): emits a `security.chain.root.signed` audit row each
+//   sweep with the latest chain_seq's row_hash + HMAC-SHA256 signature using
+//   AUDIT_ROOT_SIGNING_SECRET. The audit-log-sink forwards this row externally,
+//   creating a signed off-site copy of the chain root. A DB-admin who tampers
+//   with the chain cannot also forge the signed roots stored externally.
+//
 // Writes via service role (actor_type=system, user_id=null).
-// Returns { checked: true, anomalies: N, chain_ok: bool }.
+// Returns { checked: true, anomalies: N, chain_ok: bool, drained: N, root_signed: bool }.
 // ============================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -299,10 +308,124 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  // ── External-sink drain pass (P2.11) ─────────────────────────────────────
+  // Re-forward audit_logs rows whose synced_to_ext = false and that are older
+  // than 5 minutes (gives the Database Webhook a chance to fire first). On
+  // success, mark the row synced_to_ext = true so the next sweep skips it.
+  let drained = 0;
+  let drainErrors = 0;
+  const sinkUrl = Deno.env.get("AUDIT_SINK_WEBHOOK_URL") || "";
+  const sinkApiKey = Deno.env.get("AUDIT_SINK_API_KEY") || "";
+
+  if (sinkUrl) {
+    const drainCutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const { data: unsyncedRows, error: drainFetchErr } = await service
+      .from("audit_logs")
+      .select("*")
+      .eq("synced_to_ext", false)
+      .lt("created_at", drainCutoff)
+      .order("chain_seq", { ascending: true })
+      .limit(500);
+
+    if (drainFetchErr) {
+      console.error("audit-anomaly-sweep: drain fetch failed:", drainFetchErr);
+    } else if (unsyncedRows && unsyncedRows.length > 0) {
+      for (const row of unsyncedRows) {
+        try {
+          const sinkHeaders: Record<string, string> = { "Content-Type": "application/json" };
+          if (sinkApiKey) sinkHeaders["Authorization"] = `Bearer ${sinkApiKey}`;
+          const res = await fetch(sinkUrl, {
+            method: "POST",
+            headers: sinkHeaders,
+            body: JSON.stringify([row]),
+          });
+          if (res.ok) {
+            await service
+              .from("audit_logs")
+              .update({ synced_to_ext: true, synced_to_ext_at: new Date().toISOString() })
+              .eq("id", row.id);
+            drained++;
+          } else {
+            drainErrors++;
+            console.warn(`audit-anomaly-sweep: drain row ${row.id} sink returned ${res.status}`);
+          }
+        } catch (err) {
+          drainErrors++;
+          console.warn(`audit-anomaly-sweep: drain row ${row.id} failed:`, err);
+        }
+      }
+    }
+  }
+
+  // ── Root anchoring pass (P2.10) ──────────────────────────────────────────
+  // Emit a signed snapshot of the latest chain root each sweep. The audit-log-sink
+  // forwards this row externally; a DB-admin who tampers with the in-DB chain
+  // cannot also alter the off-site signed roots without detection.
+  let rootSigned = false;
+  const rootSecret = Deno.env.get("AUDIT_ROOT_SIGNING_SECRET") || "";
+  if (rootSecret) {
+    try {
+      const { data: latestRows } = await service
+        .from("audit_logs")
+        .select("id, row_hash, chain_seq, created_at")
+        .order("chain_seq", { ascending: false })
+        .limit(1);
+
+      if (latestRows && latestRows.length > 0) {
+        const latest = latestRows[0];
+        const ts = new Date().toISOString();
+        const message = `${latest.id}|${latest.chain_seq}|${latest.row_hash}|${ts}`;
+
+        const enc = new TextEncoder();
+        const key = await crypto.subtle.importKey(
+          "raw",
+          enc.encode(rootSecret),
+          { name: "HMAC", hash: "SHA-256" },
+          false,
+          ["sign"],
+        );
+        const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));
+        const sigHex = Array.from(new Uint8Array(sig))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+
+        const { error: rootWriteErr } = await service.from("audit_logs").insert({
+          action: "security.chain.root.signed",
+          organization_id: null,
+          user_id: null,
+          resource_type: "audit_logs",
+          resource_id: latest.id,
+          category: "security",
+          severity: "info",
+          actor_type: "system",
+          details: {
+            chain_seq: latest.chain_seq,
+            row_hash: latest.row_hash,
+            signed_at: ts,
+            signature_alg: "HMAC-SHA256",
+            signature: sigHex,
+            // Reproducer message format so a verifier can recompute:
+            message_format: "id|chain_seq|row_hash|signed_at",
+          },
+          diff: null,
+          ip_address: null,
+          user_agent: null,
+        });
+        if (rootWriteErr) {
+          console.error("audit-anomaly-sweep: root signing write failed:", rootWriteErr);
+        } else {
+          rootSigned = true;
+        }
+      }
+    } catch (err) {
+      console.error("audit-anomaly-sweep: root signing failed:", err);
+    }
+  }
+
   console.log(
     `audit-anomaly-sweep: scanned ${logs.length} rows, ` +
     `detected ${anomalies.length} anomalies (${skipped} deduped, ${writeErrors} write errors), ` +
-    `chain_ok=${chainOk}`
+    `chain_ok=${chainOk}, drained=${drained} (errors=${drainErrors}), root_signed=${rootSigned}`
   );
 
   return json(200, {
@@ -314,5 +437,8 @@ Deno.serve(async (req: Request) => {
     write_errors: writeErrors,
     chain_ok: chainOk,
     chain_error: chainErr ? (chainErr.message || String(chainErr)) : null,
+    drained,
+    drain_errors: drainErrors,
+    root_signed: rootSigned,
   });
 });

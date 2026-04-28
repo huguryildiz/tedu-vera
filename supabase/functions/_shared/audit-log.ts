@@ -54,11 +54,40 @@ export async function getUserIdFromAuthHeader(
   }
 }
 
+/**
+ * Extract the real client IP from an Edge Function request.
+ *
+ * Default behavior (no env): trust the leftmost XFF element. This is fine when
+ * the function is reached only through Supabase's edge layer, but breaks if
+ * the Edge Function is exposed behind another proxy or if a user injects an
+ * X-Forwarded-For header in their own request body.
+ *
+ * Hardened behavior: set `AUDIT_TRUSTED_PROXY_DEPTH = "N"` to indicate that
+ * N trusted proxies sit between the user and the Edge Function. The function
+ * then returns `xff[len - 1 - N]` (counting from the right past N trusted
+ * hops). Spoofed left-side entries are ignored. (P2.12)
+ *
+ * Reference: https://datatracker.ietf.org/doc/html/rfc7239 + Express trust-proxy.
+ */
 function extractClientIp(req: Request): string | null {
   const xff = req.headers.get("x-forwarded-for") || "";
-  const first = xff.split(",")[0]?.trim();
-  if (first) return first;
-  return req.headers.get("x-real-ip") || null;
+  const chain = xff.split(",").map((s) => s.trim()).filter(Boolean);
+
+  if (chain.length === 0) {
+    return req.headers.get("x-real-ip") || null;
+  }
+
+  const depthRaw = Deno.env.get("AUDIT_TRUSTED_PROXY_DEPTH");
+  if (depthRaw) {
+    const depth = parseInt(depthRaw, 10);
+    if (Number.isFinite(depth) && depth >= 0) {
+      // (chain.length - 1 - depth) is the client position; clamp to 0 if depth ≥ chain length.
+      const idx = Math.max(0, chain.length - 1 - depth);
+      return chain[idx] || req.headers.get("x-real-ip") || null;
+    }
+  }
+
+  return chain[0] || req.headers.get("x-real-ip") || null;
 }
 
 function defaultCategory(action: string): Category {

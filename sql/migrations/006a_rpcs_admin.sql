@@ -160,6 +160,19 @@ BEGIN
   SET edit_enabled = false, edit_reason = NULL, edit_expires_at = NULL
   WHERE juror_id = p_juror_id AND period_id = p_period_id;
 
+  INSERT INTO audit_logs (organization_id, user_id, action, resource_type, resource_id, details)
+  VALUES (
+    v_org_id, auth.uid(), 'juror.edit_mode_disabled', 'juror_period_auth', p_juror_id,
+    jsonb_build_object(
+      'period_id',           p_period_id,
+      'juror_id',            p_juror_id,
+      'juror_name',          v_juror_name,
+      'previous_reason',     v_auth_row.edit_reason,
+      'previous_expires_at', v_auth_row.edit_expires_at,
+      'close_source',        'admin_manual'
+    )
+  );
+
   RETURN jsonb_build_object('ok', true)::JSON;
 END;
 $$;

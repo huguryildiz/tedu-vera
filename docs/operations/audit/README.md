@@ -32,22 +32,17 @@ This directory contains comprehensive documentation for VERA's audit logging sys
 
 ## Coverage Summary
 
-**Total Audited Operations: 48/48 (100%)**
+- **30+ explicit semantic actions:** User-initiated and RPC- or Edge-Function-emitted
+  events (auth, access, evaluation flow, period/criteria/outcome management, exports,
+  notifications, security anomalies). See [audit-coverage.md](./audit-coverage.md)
+  for the full catalog.
 
-- **27 explicit actions:** User-initiated and RPC-emitted semantic events
-  - 3 juror-initiated (evaluation submit, PIN lockout, edit mode close)
-  - 5 admin-initiated juror actions (PIN unlock/reset, edit mode grant)
-  - 6 period/framework management (criteria save, period lock/unlock, outcomes)
-  - 2 token management (generate, revoke)
-  - 2 snapshot & login (freeze, admin login)
-  - 6 data exports (scores, rankings, heatmap, analytics, audit, backup)
-  - 1 application rejection
-  - 1 organization lifecycle state change
-  - 1 active period assignment
-  - 1 admin record update
-
-- **7 trigger-based CRUD tables:** Automatic logging on INSERT/UPDATE/DELETE
-  - organizations, periods, projects, jurors, score_sheets, memberships, entry_tokens
+- **14 trigger-based CRUD tables:** Automatic logging on INSERT/UPDATE/DELETE.
+  Trigger-emitted rows now carry `ip_address` and `user_agent` and use a selective
+  diff (only changed keys, noisy timestamps stripped):
+  - organizations, periods, projects, jurors, score_sheets (diff: NULL),
+    memberships, entry_tokens, period_criteria, period_criterion_outcome_maps,
+    framework_outcomes, frameworks, profiles, security_policy, unlock_requests
 
 ## Key Concepts
 

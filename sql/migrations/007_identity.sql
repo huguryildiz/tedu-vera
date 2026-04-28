@@ -126,6 +126,7 @@ GRANT EXECUTE ON FUNCTION public.rpc_org_admin_cancel_invite(UUID) TO authentica
 -- Called from InviteAcceptScreen after the user completes password setup.
 -- SECURITY DEFINER bypasses the super-admin-only UPDATE RLS on memberships.
 -- Intentionally narrow: can only promote the caller's own rows, invited → active.
+-- Emits 'access.admin.accepted' audit row per activated org membership.
 -- -----------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION public.rpc_accept_invite()
@@ -134,11 +135,42 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, auth
 AS $$
+DECLARE
+  r RECORD;
+  v_actor_name TEXT;
 BEGIN
-  UPDATE memberships
-  SET status = 'active'
-  WHERE user_id = auth.uid()
-    AND status = 'invited';
+  IF auth.uid() IS NULL THEN
+    RETURN;
+  END IF;
+
+  SELECT display_name INTO v_actor_name FROM profiles WHERE id = auth.uid();
+
+  FOR r IN
+    UPDATE memberships
+    SET status = 'active'
+    WHERE user_id = auth.uid()
+      AND status = 'invited'
+    RETURNING id, organization_id, role
+  LOOP
+    PERFORM public._audit_write(
+      r.organization_id,
+      'access.admin.accepted',
+      'memberships',
+      r.id,
+      'access'::audit_category,
+      'medium'::audit_severity,
+      jsonb_build_object(
+        'membership_id',  r.id,
+        'organization_id', r.organization_id,
+        'role',            r.role,
+        'invitee_id',      auth.uid(),
+        'actor_name',      COALESCE(v_actor_name, 'New admin')
+      ),
+      NULL,
+      'admin'::audit_actor_type,
+      NULL
+    );
+  END LOOP;
 END;
 $$;
 
