@@ -343,12 +343,11 @@ export default function OutcomesTable({
                   </div>
                   {isExpanded && (
                     <div className="acc-mobile-card-body">
-                      <div className="acc-mobile-outcome-content">
-                        <div className="acc-mobile-outcome-label">{outcome.label}</div>
-                        {outcome.description && (
+                      {outcome.description && (
+                        <div className="acc-mobile-outcome-content">
                           <div className="acc-mobile-outcome-desc">{outcome.description}</div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                       {mappedCriteria.length > 0 && (
                         <div className="acc-mobile-criteria-section">
                           <div className="acc-mobile-section-label">Mapped Criteria</div>
