@@ -248,7 +248,10 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                 </div>
 
                 {warningMessage && (
-                  <FbAlert variant="warning" style={{ marginTop: 10 }}>{warningMessage}</FbAlert>
+                  <FbAlert variant="warning" style={{ marginTop: 10 }}>
+                    {warningMessage.title && <strong>{warningMessage.title}: </strong>}
+                    {warningMessage.desc ?? warningMessage}
+                  </FbAlert>
                 )}
               </>
             )}

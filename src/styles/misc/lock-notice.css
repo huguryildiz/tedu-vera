@@ -4,8 +4,8 @@
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--bg-card);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  background: rgba(254, 243, 199, 0.6);
   display: grid;
   grid-template-columns: auto 1fr;
   box-shadow: var(--shadow-sm);
@@ -137,6 +137,11 @@
 }
 
 /* ── Dark mode ── */
+
+.dark-mode .lock-notice {
+  background: rgba(251, 191, 36, 0.08);
+  border-color: rgba(251, 191, 36, 0.22);
+}
 
 .dark-mode .lock-notice-left {
   background: var(--surface-1);
