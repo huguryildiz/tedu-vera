@@ -1,8 +1,11 @@
-import { BadgeCheck, LockKeyhole, Lock, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { BadgeCheck, ChevronDown, Copy, LockKeyhole, Lock, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import FloatingMenu from "@/shared/ui/FloatingMenu";
 import Pagination from "@/shared/ui/Pagination";
+import PremiumTooltip from "@/shared/ui/PremiumTooltip";
+import useCardSelection from "@/shared/hooks/useCardSelection";
 import OutcomeRow from "./OutcomeRow";
-import { COVERAGE_LEGEND } from "./outcomeHelpers";
+import { COVERAGE_LEGEND, coverageBadgeClass, coverageLabel } from "./outcomeHelpers";
 
 export default function OutcomesTable({
   isLocked,
@@ -51,6 +54,19 @@ export default function OutcomesTable({
   setCoverageFilter,
   setCriterionFilter,
 }) {
+  const mobileScopeRef = useCardSelection();
+  const lockedTooltip = isLocked ? "Evaluation period is locked. Unlock the period to make changes." : null;
+
+  const [expandedCards, setExpandedCards] = useState(new Set());
+  const toggleExpand = (id) => {
+    setExpandedCards((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   return (
     <>
       {/* Lock banner */}
@@ -238,6 +254,121 @@ export default function OutcomesTable({
             </table>
           )}
         </div>
+
+        {/* Mobile portrait accordion card list */}
+        {fw.outcomes.length > 0 && pageRows.length > 0 && (
+          <div className="acc-mobile-list" ref={mobileScopeRef}>
+            {pageRows.map((outcome) => {
+              const mappedCriteria = fw.getMappedCriteria(outcome.id);
+              const coverage = fw.getCoverage(outcome.id);
+              const isExpanded = expandedCards.has(outcome.id);
+              const prefixMatch = outcome.code.match(/^([A-Za-z]+)\s+(.+)$/);
+              const codePrefix = prefixMatch ? prefixMatch[1] : "";
+              const codeNum = prefixMatch ? prefixMatch[2] : outcome.code;
+              const coverageClass = coverage === "direct" ? "direct" : coverage === "indirect" ? "indirect" : "unmapped";
+              const menuKey = `acc-mobile-${outcome.id}`;
+              const isMenuOpen = openMenuId === menuKey;
+              return (
+                <div
+                  key={outcome.id}
+                  data-card-selectable=""
+                  className={`acc-mobile-card${isExpanded ? " acc-mobile-card--expanded" : ""}`}
+                >
+                  <div className="acc-mobile-card-header">
+                    <button
+                      className="acc-mobile-card-header-tap row-inline-control"
+                      onClick={() => toggleExpand(outcome.id)}
+                      aria-expanded={isExpanded}
+                      aria-label={`${outcome.code} — ${isExpanded ? "collapse" : "expand"}`}
+                    >
+                      <span className={`acc-code-badge ${coverageClass}`}>
+                        {codePrefix && <span className="acc-code-prefix">{codePrefix}</span>}
+                        {codeNum}
+                      </span>
+                      <span className="acc-mobile-card-spacer" />
+                      <span className={coverageBadgeClass(coverage)}>
+                        <span className="acc-cov-dot" />
+                        {coverageLabel(coverage)}
+                      </span>
+                      <ChevronDown
+                        size={16}
+                        strokeWidth={2}
+                        className={`acc-mobile-card-chevron${isExpanded ? " expanded" : ""}`}
+                      />
+                    </button>
+                    <FloatingMenu
+                      trigger={
+                        <button
+                          className="row-action-btn"
+                          aria-label="Actions"
+                          onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : menuKey); }}
+                        >
+                          <MoreVertical size={18} strokeWidth={2} />
+                        </button>
+                      }
+                      isOpen={isMenuOpen}
+                      onClose={() => setOpenMenuId(null)}
+                      placement="bottom-end"
+                    >
+                      <button
+                        className="floating-menu-item"
+                        onMouseDown={() => { setOpenMenuId(null); onEditOutcome(outcome); }}
+                      >
+                        <Pencil size={13} strokeWidth={2} />
+                        Edit Outcome
+                      </button>
+                      <PremiumTooltip text={lockedTooltip} position="left">
+                        <button
+                          className={`floating-menu-item${isLocked ? " disabled" : ""}`}
+                          onMouseDown={() => { setOpenMenuId(null); if (!isLocked) onDuplicate(outcome); }}
+                          disabled={isLocked}
+                        >
+                          <Copy size={13} strokeWidth={2} />
+                          Duplicate
+                        </button>
+                      </PremiumTooltip>
+                      <div className="floating-menu-divider" />
+                      <PremiumTooltip text={lockedTooltip} position="left">
+                        <button
+                          className={`floating-menu-item danger${isLocked ? " disabled" : ""}`}
+                          onMouseDown={() => { setOpenMenuId(null); if (!isLocked) onDeleteOutcome(outcome); }}
+                          disabled={isLocked}
+                        >
+                          <Trash2 size={13} strokeWidth={2} />
+                          Delete Outcome
+                        </button>
+                      </PremiumTooltip>
+                    </FloatingMenu>
+                  </div>
+                  {isExpanded && (
+                    <div className="acc-mobile-card-body">
+                      <div className="acc-mobile-outcome-content">
+                        <div className="acc-mobile-outcome-label">{outcome.label}</div>
+                        {outcome.description && (
+                          <div className="acc-mobile-outcome-desc">{outcome.description}</div>
+                        )}
+                      </div>
+                      {mappedCriteria.length > 0 && (
+                        <div className="acc-mobile-criteria-section">
+                          <div className="acc-mobile-section-label">Mapped Criteria</div>
+                          <div className="acc-mobile-criteria-chips">
+                            {mappedCriteria.map((c) => (
+                              <span key={c.id} className="acc-chip">
+                                <span className="acc-crit-dot" style={{ background: c.color || "var(--accent)" }} />
+                                {c.label}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {fw.outcomes.length > 0 && (
           <div className="acc-legend-strip">
             {COVERAGE_LEGEND.map((item) => (
