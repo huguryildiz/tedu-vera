@@ -4716,6 +4716,17 @@
     "severity": "normal"
   },
   {
+    "id": "criteria.helpers.02b",
+    "module": "Admin / Criteria",
+    "area": "criteriaFormHelpers",
+    "story": "nextCriterionColor compares used colors case-insensitively",
+    "scenario": "rows with uppercase hex (e.g. #3B82F6) still mark the lowercase palette entry as used",
+    "whyItMatters": "DB stores arbitrary hex casing; without case-insensitive matching every newly added criterion gets the same first palette color (blue).",
+    "risk": "Newly added criteria duplicate an existing row's color and become visually indistinguishable in heatmaps and charts.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
     "id": "criteria.helpers.03",
     "module": "Admin / Criteria",
     "area": "criteriaFormHelpers",

@@ -185,8 +185,8 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                 }}>
                   <div style={{ color: "var(--text-tertiary)", marginBottom: 6, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase", fontSize: 10 }}>Format</div>
                   <div style={{ color: "var(--text-primary)", marginBottom: 8 }}>
-                    <span className="mono" style={{ fontSize: 11 }}>Project Title, Team Members, Advisor</span>
-                    <span style={{ color: "var(--text-tertiary)", marginLeft: 6, fontSize: 10 }}>Advisor optional · use <span className="mono">;</span> to separate multiple values</span>
+                    <span className="mono" style={{ fontSize: 11 }}>Project Title, Team Members, Advisor (optional)</span>
+                    <span style={{ color: "var(--text-tertiary)", marginLeft: 6, fontSize: 10 }}>Use <span className="mono">;</span> to separate multiple values</span>
                   </div>
                   <div style={{ color: "var(--text-tertiary)", marginBottom: 4, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase", fontSize: 10 }}>Examples</div>
                   <div className="mono" style={{ color: "var(--text-secondary)", fontSize: 10.5, marginBottom: 2 }}>Smart Grid Monitor, Ali Yıldız; Zeynep Kaya, Prof. Dr. Hasan Göktaş</div>

@@ -17,8 +17,12 @@ export const CRITERION_COLORS = [
 ];
 
 export function nextCriterionColor(existingRows = []) {
-  const used = new Set(existingRows.map((r) => r.color));
-  const unused = CRITERION_COLORS.find((c) => !used.has(c));
+  const used = new Set(
+    existingRows
+      .map((r) => String(r?.color ?? "").trim().toLowerCase())
+      .filter(Boolean)
+  );
+  const unused = CRITERION_COLORS.find((c) => !used.has(c.toLowerCase()));
   return unused ?? CRITERION_COLORS[existingRows.length % CRITERION_COLORS.length];
 }
 

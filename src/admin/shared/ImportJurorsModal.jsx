@@ -211,8 +211,7 @@ export default function ImportJurorsModal({ open, onClose, parseFile, onImport }
                 }}>
                   <div style={{ color: "var(--text-tertiary)", marginBottom: 6, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase", fontSize: 10 }}>Format</div>
                   <div style={{ color: "var(--text-primary)", marginBottom: 8 }}>
-                    <span className="mono" style={{ fontSize: 11 }}>Juror Name, Affiliation, Email</span>
-                    <span style={{ color: "var(--text-tertiary)", marginLeft: 6, fontSize: 10 }}>Email optional</span>
+                    <span className="mono" style={{ fontSize: 11 }}>Juror Name, Affiliation, Email (optional)</span>
                   </div>
                   <div style={{ color: "var(--text-tertiary)", marginBottom: 4, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase", fontSize: 10 }}>Example</div>
                   <div className="mono" style={{ color: "var(--text-secondary)", fontSize: 10.5 }}>Prof. Dr. Hasan Göktaş, TED University / EE</div>

@@ -46,6 +46,16 @@ describe("admin/features/criteria/criteriaFormHelpers", () => {
     expect(next).toBe(CRITERION_COLORS[existingRows.length % CRITERION_COLORS.length]);
   });
 
+  qaTest("criteria.helpers.02b", () => {
+    // DB-stored colors with uppercase hex must still mark the lowercase palette entry as used
+    const existingRows = [
+      { color: "#3B82F6" }, // blue (uppercase) — palette[0]
+      { color: "#8B5CF6" }, // violet (uppercase) — palette[1]
+    ];
+    const next = nextCriterionColor(existingRows);
+    expect(next).toBe("#f59e0b"); // 3rd palette color, not blue again
+  });
+
   qaTest("criteria.helpers.03", () => {
     const bands = defaultRubricBands(30);
     expect(bands).toHaveLength(4);
