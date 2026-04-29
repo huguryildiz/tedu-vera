@@ -161,6 +161,10 @@
     white-space: nowrap;
     font-family: var(--mono);
   }
+  .sem-meta-inline .periods-date-sep {
+    opacity: 0.5;
+    margin: 0 1px;
+  }
 
   /* ── Actions (kebab) cell — top right ── */
   .sem-table td.col-actions {
