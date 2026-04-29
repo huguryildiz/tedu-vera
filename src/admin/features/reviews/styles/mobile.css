@@ -227,24 +227,24 @@
   .rmc-mini-avatars {
     display: flex;
     align-items: center;
-    gap: 4px;
     flex-shrink: 0;
   }
 
   .rmc-mini-avatars-icon {
     color: var(--text-tertiary);
     flex-shrink: 0;
+    margin-right: 4px;
   }
 
   .rmc-mini-av {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    border: 1.5px solid var(--bg-card);
+    border: 1px solid rgba(99, 102, 241, 0.22);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 8px;
+    font-size: 7.5px;
     font-weight: 700;
     line-height: 1;
     margin-left: -5px;
