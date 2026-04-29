@@ -171,18 +171,32 @@ function PeriodRow({
       <td className="periods-mobile-footer">
         <div className="periods-mobile-footer-chips">
           {period.criteria_name && (
-            <span className="periods-mchip periods-mchip--criteria">
+            <button
+              className="periods-mchip periods-mchip--criteria row-inline-control"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCurrentPeriodChange?.(period.id);
+                onNavigate?.("criteria");
+              }}
+            >
               <ListChecks size={10} strokeWidth={2} />
               {period.criteria_name}
-            </span>
+            </button>
           )}
           {(() => {
             const fw = frameworks.find((f) => f.id === period.framework_id);
             return fw ? (
-              <span className="periods-mchip periods-mchip--outcome">
+              <button
+                className="periods-mchip periods-mchip--outcome row-inline-control"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCurrentPeriodChange?.(period.id);
+                  onNavigate?.("outcomes");
+                }}
+              >
                 <BadgeCheck size={10} strokeWidth={2} />
                 {fw.name}
-              </span>
+              </button>
             ) : null;
           })()}
         </div>

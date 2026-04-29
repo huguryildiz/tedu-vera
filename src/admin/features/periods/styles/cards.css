@@ -223,6 +223,12 @@
     max-width: 140px;
     overflow: hidden;
     text-overflow: ellipsis;
+    cursor: pointer;
+    transition: filter 0.15s;
+    background-clip: padding-box;
+  }
+  .periods-mchip:hover {
+    filter: brightness(0.93);
   }
   .periods-mchip--criteria {
     background: rgba(99, 102, 241, 0.06);
