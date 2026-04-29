@@ -196,7 +196,7 @@ export default function ImportJurorsModal({ open, onClose, parseFile, onImport }
                   marginTop: 14, padding: "8px 12px",
                   display: "inline-block", fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.6,
                 }}>
-                  <strong>Format:</strong> Name, Affiliation
+                  <strong>Format:</strong> Juror Name, Juror Affiliation
                   <br />
                   <strong>Example:</strong> Prof. Dr. Hasan Göktaş, TED University / EE
                 </div>
