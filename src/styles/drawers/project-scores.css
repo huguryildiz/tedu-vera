@@ -319,8 +319,6 @@
   font-weight: 400;
   margin-top: 2px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .jsd-proj-right {
   display: flex;
