@@ -420,6 +420,8 @@
   border-color: rgba(0,0,0,0.06);
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
+.crt-inline-weight-edit-icon { opacity: 0; transition: opacity 0.15s; flex-shrink: 0; }
+.crt-inline-weight-badge:hover .crt-inline-weight-edit-icon { opacity: 0.55; }
 .crt-inline-weight-input {
   width: 56px; height: 32px; text-align: center;
   border: 2px solid var(--accent); border-radius: var(--radius-sm, 6px);
