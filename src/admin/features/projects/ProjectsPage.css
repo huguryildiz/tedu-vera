@@ -1,5 +1,10 @@
 /* Projects page*/
 
+/* ─── Desktop header layout ─── */
+.sem-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.sem-header-left{flex:1;min-width:0}
+.sem-header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
 /* ─── Mobile portrait: title → KPI → Add → toolbar (match Jurors page) ── */
 @media (max-width: 768px) and (orientation: portrait) {
   #page-projects {
