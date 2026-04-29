@@ -403,28 +403,34 @@
     color: var(--text-tertiary);
   }
 
-  /* ── Footer ── */
-  .rmc-footer {
+  /* ── Bottom row: Score Status + Juror Progress + Submitted At ── */
+  .rmc-bottom-row {
     border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 9px 16px;
+    padding: 9px 16px 12px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    align-items: flex-start;
+    gap: 6px;
   }
 
-  .rmc-footer-col {
+  .rmc-bottom-col {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    flex: 1;
   }
 
-  .rmc-footer-col--right {
+  .rmc-bottom-col--center {
+    align-items: center;
+  }
+
+  .rmc-bottom-col--right {
     align-items: flex-end;
   }
 
   .rmc-footer-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
     font-size: 9px;
     font-weight: 600;
     color: var(--text-tertiary);
@@ -480,24 +486,6 @@
     text-align: left;
   }
 
-  /* ── Submitted At row ── */
-  .rmc-submitted {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 8px 16px 12px;
-  }
-  .rmc-submitted-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 9px;
-    font-weight: 600;
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
   .rmc-submitted-value {
     display: inline-flex;
     align-items: center;

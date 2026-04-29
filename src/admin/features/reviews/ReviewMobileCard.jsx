@@ -233,8 +233,8 @@ export default function ReviewMobileCard({ row, criteria }) {
         </div>
       </div>
 
-      <div className="rmc-footer">
-        <div className="rmc-footer-col">
+      <div className="rmc-bottom-row">
+        <div className="rmc-bottom-col">
           <span className="rmc-footer-label">Score Status</span>
           <div className="rmc-footer-left">
             {row.comments && (
@@ -249,9 +249,23 @@ export default function ReviewMobileCard({ row, criteria }) {
             <ScoreStatusPill status={row.effectiveStatus} />
           </div>
         </div>
-        <div className="rmc-footer-col rmc-footer-col--right">
+        <div className="rmc-bottom-col rmc-bottom-col--center">
           <span className="rmc-footer-label">Juror Progress</span>
           <JurorStatusPill status={row.jurorStatus} />
+        </div>
+        <div className="rmc-bottom-col rmc-bottom-col--right">
+          <span className="rmc-footer-label">
+            <Clock size={9} strokeWidth={2} />
+            Submitted At
+          </span>
+          <span className="rmc-submitted-value vera-datetime-text">
+            {hasSubmittedTs ? (
+              <>
+                <span>{submittedTs.split(" ")[0]}</span>
+                <span className="rmc-submitted-time">{submittedTs.split(" ")[1]}</span>
+              </>
+            ) : "—"}
+          </span>
         </div>
       </div>
 
@@ -261,21 +275,6 @@ export default function ReviewMobileCard({ row, criteria }) {
           <p className="rmc-comment-panel-text">{row.comments}</p>
         </div>
       )}
-
-      <div className="rmc-submitted">
-        <span className="rmc-submitted-label">
-          <Clock size={11} strokeWidth={2} />
-          Submitted At
-        </span>
-        <span className="rmc-submitted-value vera-datetime-text">
-          {hasSubmittedTs ? (
-            <>
-              <span>{submittedTs.split(" ")[0]}</span>
-              <span className="rmc-submitted-time">{submittedTs.split(" ")[1]}</span>
-            </>
-          ) : "—"}
-        </span>
-      </div>
     </div>
   );
 }
