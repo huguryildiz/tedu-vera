@@ -283,6 +283,9 @@ export default function OutcomesTable({
                         {codePrefix && <span className="acc-code-prefix">{codePrefix}</span>}
                         {codeNum}
                       </span>
+                      {outcome.label && (
+                        <span className="acc-mobile-card-title">{outcome.label}</span>
+                      )}
                       <span className="acc-mobile-card-spacer" />
                       <span className={coverageBadgeClass(coverage)}>
                         <span className="acc-cov-dot" />

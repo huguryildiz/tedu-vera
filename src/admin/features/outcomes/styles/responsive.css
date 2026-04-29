@@ -214,8 +214,21 @@
   cursor: pointer;
 }
 
-.acc-mobile-card-spacer {
+.acc-mobile-card-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.acc-mobile-card-spacer {
+  flex-shrink: 0;
+  width: 8px;
 }
 
 .acc-mobile-card-chevron {

@@ -20,8 +20,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--surface-1);
-  border-right: 1px solid var(--border);
+  background: rgba(254, 243, 199, 0.8);
+  border-right: 1px solid rgba(245, 158, 11, 0.22);
   min-width: 72px;
 }
 
@@ -144,8 +144,8 @@
 }
 
 .dark-mode .lock-notice-left {
-  background: var(--surface-1);
-  border-right-color: var(--border);
+  background: rgba(251, 191, 36, 0.12);
+  border-right-color: rgba(251, 191, 36, 0.22);
 }
 
 .dark-mode .lock-notice-icon-wrap {
