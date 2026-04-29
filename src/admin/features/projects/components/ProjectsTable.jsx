@@ -343,7 +343,7 @@ export default function ProjectsTable({
                       </button>
                     </PremiumTooltip>
                     <button
-                      className={`floating-menu-item${isLocked ? " floating-menu-item--highlight" : ""}`}
+                      className="floating-menu-item floating-menu-item--highlight"
                       onMouseDown={() => { setOpenMenuId(null); onViewScores(project); }}
                     >
                       <ClipboardList size={13} />
