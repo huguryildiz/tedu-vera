@@ -15,6 +15,10 @@ import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 
 const STATUS_LABELS = { ok: "Valid", skip: "Duplicate", err: "Error" };
 
+function hasEmail(rows) {
+  return rows.some((r) => r.email);
+}
+
 export default function ImportJurorsModal({ open, onClose, parseFile, onImport }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
@@ -265,6 +269,7 @@ export default function ImportJurorsModal({ open, onClose, parseFile, onImport }
                           <th style={{ width: 36 }}>Row</th>
                           <th>Name</th>
                           <th>Affiliation</th>
+                          {hasEmail(rows) && <th>Email</th>}
                           <th style={{ width: 76 }}>Status</th>
                         </tr>
                       </thead>
@@ -274,6 +279,7 @@ export default function ImportJurorsModal({ open, onClose, parseFile, onImport }
                             <td className="mono table-secondary">{row.rowNum}</td>
                             <td>{row.name ?? "—"}</td>
                             <td style={{ color: row.status === "ok" ? "var(--text-secondary)" : undefined }}>{row.affiliation}</td>
+                            {hasEmail(rows) && <td style={{ color: "var(--text-secondary)" }}>{row.email || "—"}</td>}
                             <td>
                               <span className={`row-status ${row.status}`}>
                                 {row.statusLabel || STATUS_LABELS[row.status] || row.status}
