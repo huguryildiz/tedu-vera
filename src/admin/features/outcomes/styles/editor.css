@@ -7,7 +7,7 @@
 }
 
 .acc-outcome-desc {
-  font-size: var(--table-header-size);
+  font-size: 11.5px;
   color: var(--text-tertiary);
   line-height: 1.45;
   text-align: justify;
