@@ -282,10 +282,6 @@ export default function ProjectsTable({
                     <span className="proj-chips-spacer" />
                     <span className="proj-chips-sep" />
                     <span className="proj-compact-stats">
-                      <ClipboardList size={9} strokeWidth={2} className="proj-stat-icon" />
-                      <strong>{projectEvalCountMap.get(project.id) ?? 0}</strong>
-                      {" eval"}
-                      <span className="proj-chips-sep" />
                       <PremiumTooltip text="Last Updated">
                         <Clock size={9} strokeWidth={2} className="proj-stat-icon" />
                       </PremiumTooltip>
