@@ -210,7 +210,6 @@ export default function ProjectsTable({
                             ? Number(projectAvgMap.get(project.id)).toFixed(1)
                             : "—"}
                         </span>
-                        <span className="mobile-rank-ring-lbl">AVG</span>
                       </span>
                     </span>
                   </span>
