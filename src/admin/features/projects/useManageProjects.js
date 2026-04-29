@@ -121,7 +121,7 @@ export function useManageProjects({
     }
     if (isViewPeriodLocked()) {
       setPanelError?.("projects", "Evaluation period is locked. Unlock the period to make changes.");
-      return;
+      return { ok: false };
     }
     setMessage("");
     clearPanelError("projects");

@@ -8,7 +8,7 @@
 //   onImport   — async (rows) => void   (receives valid rows)
 
 import { useCallback, useRef, useState } from "react";
-import { CheckCircle, Icon } from "lucide-react";
+import { CheckCircle, FileText, Upload, X } from "lucide-react";
 import FbAlert from "@/shared/ui/FbAlert";
 import Modal from "@/shared/ui/Modal";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
@@ -98,16 +98,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
         <div className="fs-modal-header-row">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div className="fs-icon accent">
-              <Icon
-                iconNode={[]}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </Icon>
+              <Upload size={20} strokeWidth={2} />
             </div>
             <div className="fs-title-group">
               <div className="fs-title">Import Project Groups</div>
@@ -115,14 +106,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
             </div>
           </div>
           <button className="fs-close" type="button" onClick={handleClose} aria-label="Close">
-            <Icon
-              iconNode={[]}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </Icon>
+            <X size={18} strokeWidth={2} />
           </button>
         </div>
       </div>
@@ -163,21 +147,12 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                   margin: "0 auto 12px",
                   transition: "background .15s",
                 }}>
-                  <Icon
-                    iconNode={[]}
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke={dragging ? "var(--accent)" : "var(--text-tertiary)"}
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{ transition: "stroke .15s" }}>
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </Icon>
+                  <Upload
+                    size={20}
+                    strokeWidth={1.8}
+                    color={dragging ? "var(--accent)" : "var(--text-tertiary)"}
+                    style={{ transition: "color .15s" }}
+                  />
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}>
                   {parsing ? "Parsing…" : dragging ? "Release to upload" : "Drop CSV file here"}
@@ -206,15 +181,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
             {file && (
               <div className="fs-upload-file" style={{ marginBottom: 14 }}>
                 <div className="fs-upload-file-icon">
-                  <Icon
-                    iconNode={[]}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2">
-                    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-                    <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-                  </Icon>
+                  <FileText size={20} strokeWidth={2} />
                 </div>
                 <div className="fs-upload-file-info">
                   <div className="fs-upload-file-name">{file.name}</div>
@@ -280,6 +247,9 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                   )}
                 </div>
 
+                {warningMessage && (
+                  <FbAlert variant="warning" style={{ marginTop: 10 }}>{warningMessage}</FbAlert>
+                )}
               </>
             )}
           </div>
