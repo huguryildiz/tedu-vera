@@ -89,7 +89,7 @@ export default function WeightBudgetBar({ criteria, onDistribute, onAutoFill, lo
   };
 
   return (
-    <div className={`crt-budget-card${isOver ? " crt-budget-over" : ""}${locked ? " crt-budget-card--locked" : ""}`}>
+    <div className={`crt-budget-card${isOver ? " crt-budget-over" : isValid ? " crt-budget-valid" : ""}${locked ? " crt-budget-card--locked" : ""}`}>
       <div className="crt-budget-header">
         <div className="crt-budget-left">
           <div className="crt-budget-label">WEIGHT BUDGET</div>

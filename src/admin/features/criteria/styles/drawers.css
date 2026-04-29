@@ -135,6 +135,7 @@
 /* ── Weight Budget Bar ──────────────────────────────────────── */
 
 .crt-budget-card{padding:14px 18px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card);box-shadow:var(--shadow-card);margin-bottom:16px;transition:all .3s}
+.crt-budget-card.crt-budget-valid{border-color:rgba(22,163,74,0.25);background:#f0fdf4}
 .crt-budget-card.crt-budget-over{border-color:rgba(225,29,72,0.2);background:#fff8f8}
 
 .crt-budget-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:12px}
@@ -207,6 +208,7 @@
 
 .crt-budget-legend-weight{font-family:var(--mono);font-weight:600;color:var(--text-primary)}
 
+.dark-mode .crt-budget-card.crt-budget-valid{border-color:rgba(74,222,128,0.2);background:rgba(22,163,74,0.05)}
 .dark-mode .crt-budget-card.crt-budget-over{border-color:rgba(225,29,72,0.2);background:rgba(225,29,72,0.03)}
 
 /* ── Budget bar — locked (amber) variant ─────────────────────── */
