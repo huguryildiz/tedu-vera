@@ -498,10 +498,6 @@ body:not(.dark-mode) .ga-cv-poor{background:rgba(220,38,38,0.12);box-shadow:inse
 .filter-tag button:hover{opacity:1}
 .active-filters-bar{display:none;align-items:center;gap:10px;padding:10px 16px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.12);border-radius:10px;margin-bottom:12px;font-size:12px;font-weight:500;color:var(--accent)}
 .active-filters-bar.show{display:flex}
-.filter-toggle-group{display:flex;gap:4px;flex-wrap:wrap;align-items:center;min-height:38px}
-.filter-toggle-btn{padding:4px 11px;border-radius:20px;border:1px solid var(--border);background:var(--surface-1);color:var(--text-secondary);font-size:11.5px;font-weight:500;cursor:pointer;transition:all .12s;white-space:nowrap}
-.filter-toggle-btn:hover{background:var(--surface-2);border-color:var(--border-strong)}
-.filter-toggle-btn--active{background:var(--accent);border-color:var(--accent);color:#fff}
 .active-filters-bar .clear-link{margin-left:auto;font-size:11px;cursor:pointer;text-decoration:none;opacity:0.6;transition:opacity .12s;font-weight:500}
 .active-filters-bar .clear-link:hover{opacity:1;text-decoration:underline}
 
