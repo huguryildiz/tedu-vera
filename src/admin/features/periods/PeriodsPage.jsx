@@ -679,7 +679,6 @@ export default function PeriodsPage() {
       {/* Table */}
       <div className="periods-table-card">
         <div className="periods-table-card-header">
-          <div className="periods-table-card-title">All Evaluation Periods</div>
         </div>
         <PeriodsTable
           rows={filteredList}

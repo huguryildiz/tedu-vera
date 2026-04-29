@@ -249,6 +249,9 @@
   }
   .periods-m-stat .val.zero { color: var(--text-quaternary); }
   .periods-mobile-footer-updated {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 10.5px;
     color: var(--text-tertiary);
   }

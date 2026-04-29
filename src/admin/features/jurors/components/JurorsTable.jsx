@@ -260,7 +260,7 @@ function JurorRow({
             </span>
             <span className="jc-last-divider" aria-hidden="true" />
             <span className="jc-last">
-              <PremiumTooltip text="Last active" position="top">
+              <PremiumTooltip text="Last Active" position="top">
                 <Clock size={10} strokeWidth={2} className="jc-last-clock" />
               </PremiumTooltip>
               {lastActive ? formatRelative(lastActive) : "—"}

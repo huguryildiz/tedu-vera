@@ -17,6 +17,7 @@ import {
   Link as LinkIcon,
   XCircle,
   Search,
+  Clock,
 } from "lucide-react";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import FloatingMenu from "@/shared/ui/FloatingMenu";
@@ -197,7 +198,12 @@ function PeriodRow({
             </span> jurors
           </span>
         </div>
-        <span className="periods-mobile-footer-updated">{formatRelative(period.updated_at)}</span>
+        <PremiumTooltip text="Updated At">
+          <span className="periods-mobile-footer-updated">
+            <Clock size={12} strokeWidth={2} />
+            {formatRelative(period.updated_at)}
+          </span>
+        </PremiumTooltip>
       </td>
 
       {/* Criteria Set */}
