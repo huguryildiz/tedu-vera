@@ -6,6 +6,7 @@ import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import ScoreStatusPill from "@/admin/shared/ScoreStatusPill";
 import JurorStatusPill from "@/admin/shared/JurorStatusPill";
 import JurorBadge from "@/admin/shared/JurorBadge";
+import { jurorInitials, jurorAvatarBg, jurorAvatarFg } from "@/admin/utils/jurorIdentity";
 
 function scoreBandColor(total, totalMax) {
   if (total == null || !Number.isFinite(Number(total))) return "var(--text-tertiary)";
@@ -126,8 +127,18 @@ export default function ReviewMobileCard({ row, criteria }) {
     >
       <div className="rmc-header">
         <div className="rmc-juror">
-          <div className="rmc-juror-avatar">
-            {(row.juryName || "?")[0].toUpperCase()}
+          <div
+            className="jb-avatar"
+            style={{
+              width: 40, height: 40, borderRadius: "50%",
+              background: jurorAvatarBg(row.juryName),
+              color: jurorAvatarFg(row.juryName),
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              fontSize: 13, fontWeight: 700, letterSpacing: "-0.3px",
+              flexShrink: 0, lineHeight: 1,
+            }}
+          >
+            {jurorInitials(row.juryName)}
           </div>
           <div className="rmc-juror-info">
             <div className="rmc-juror-name">{row.juryName}</div>
