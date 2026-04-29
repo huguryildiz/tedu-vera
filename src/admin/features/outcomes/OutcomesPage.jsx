@@ -2,7 +2,7 @@
 // Outcomes & Mapping page — period-scoped outcome CRUD + criterion mapping.
 
 import { useState, useRef, useEffect } from "react";
-import { Download, Filter, Lock, Search, XCircle } from "lucide-react";
+import { Download, Filter, Lock, Plus, Search, XCircle } from "lucide-react";
 import { FilterButton } from "@/shared/ui/FilterButton";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import { updateFramework, cloneFramework, assignFrameworkToPeriod, unassignPeriodFramework, listFrameworks } from "@/shared/api";
@@ -464,7 +464,8 @@ export default function OutcomesPage() {
                 className="btn btn-primary btn-sm mobile-toolbar-primary"
                 onClick={() => setAddDrawerOpen(true)}
               >
-                + Add Outcome
+                <Plus size={13} strokeWidth={2.2} />
+                Add Outcome
               </button>
             )}
           </div>
@@ -629,7 +630,8 @@ export default function OutcomesPage() {
               onClick={() => !isLocked && setAddDrawerOpen(true)}
               disabled={isLocked}
             >
-              + Add Outcome
+              <Plus size={13} strokeWidth={2.2} />
+              Add Outcome
             </button>
           </PremiumTooltip>
 
