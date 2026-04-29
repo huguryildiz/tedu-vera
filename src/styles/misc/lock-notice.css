@@ -4,68 +4,14 @@
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  background: linear-gradient(
-    135deg,
-    rgba(254, 243, 199, 0.60) 0%,
-    rgba(255, 251, 235, 0.45) 50%,
-    rgba(254, 252, 232, 0.55) 100%
-  );
+  border: 1px solid var(--border);
+  background: var(--bg-card);
   display: grid;
   grid-template-columns: auto 1fr;
-  box-shadow:
-    0 0 0 1px rgba(245, 158, 11, 0.12),
-    0 4px 20px rgba(245, 158, 11, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.70);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 20px;
 }
 
-/* Sweeping shimmer */
-.lock-notice::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.35) 45%,
-    rgba(255, 255, 255, 0.55) 50%,
-    rgba(255, 255, 255, 0.35) 55%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: ln-shimmer 3.5s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes ln-shimmer {
-  0%   { background-position: -100% 0; opacity: 0; }
-  15%  { opacity: 1; }
-  85%  { opacity: 1; }
-  100% { background-position: 200% 0; opacity: 0; }
-}
-
-/* Glowing bottom bar */
-.lock-notice::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(245, 158, 11, 0.50) 25%,
-    rgba(251, 191, 36, 0.80) 50%,
-    rgba(245, 158, 11, 0.50) 75%,
-    transparent 100%
-  );
-  animation: ln-glow-bar 2.8s ease-in-out infinite;
-}
-
-@keyframes ln-glow-bar {
-  0%, 100% { opacity: 0.5; }
-  50%       { opacity: 1;   }
-}
 
 .lock-notice-left {
   padding: 18px 16px 18px 20px;
@@ -74,8 +20,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.03));
-  border-right: 1px solid rgba(245, 158, 11, 0.13);
+  background: var(--surface-1);
+  border-right: 1px solid var(--border);
   min-width: 72px;
 }
 
@@ -192,46 +138,9 @@
 
 /* ── Dark mode ── */
 
-.dark-mode .lock-notice {
-  border-color: rgba(251, 191, 36, 0.20);
-  background: linear-gradient(
-    135deg,
-    rgba(251, 191, 36, 0.07) 0%,
-    rgba(30, 24, 10, 0.50)   50%,
-    rgba(251, 191, 36, 0.05) 100%
-  );
-  box-shadow:
-    0 0 0 1px rgba(251, 191, 36, 0.12),
-    0 4px 24px rgba(251, 191, 36, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-.dark-mode .lock-notice::before {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.04) 45%,
-    rgba(255, 255, 255, 0.07) 50%,
-    rgba(255, 255, 255, 0.04) 55%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-}
-
-.dark-mode .lock-notice::after {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(251, 191, 36, 0.35) 25%,
-    rgba(252, 211, 77,  0.65) 50%,
-    rgba(251, 191, 36, 0.35) 75%,
-    transparent 100%
-  );
-}
-
 .dark-mode .lock-notice-left {
-  background: linear-gradient(180deg, rgba(251, 191, 36, 0.09), rgba(251, 191, 36, 0.03));
-  border-right-color: rgba(251, 191, 36, 0.12);
+  background: var(--surface-1);
+  border-right-color: var(--border);
 }
 
 .dark-mode .lock-notice-icon-wrap {
