@@ -22,6 +22,7 @@ import {
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import FloatingMenu from "@/shared/ui/FloatingMenu";
 import { formatDateTime as formatFull } from "@/shared/lib/dateUtils";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
 import StatusPill from "./StatusPill";
 import ReadinessPopover from "./ReadinessPopover";
 import SortIcon from "./SortIcon";
@@ -50,6 +51,7 @@ function PeriodRow({
   const isDraft = state === "draft_ready" || state === "draft_incomplete";
   const periodStats = stats[period.id] || {};
   const periodReadiness = readiness[period.id];
+  const isMobile = useIsMobile();
 
   return (
     <tr
@@ -96,7 +98,7 @@ function PeriodRow({
         </div>
         <div className="sem-meta-inline">
           <StatusPill status={state} />
-          {isDraft && (
+          {isDraft && isMobile && (
             <ReadinessPopover
               readiness={periodReadiness}
               onFix={(target) => {
@@ -123,7 +125,7 @@ function PeriodRow({
       <td data-label="Status">
         <div className="periods-status-cell" data-testid="period-status-pill">
           <StatusPill status={state} />
-          {isDraft && (
+          {isDraft && !isMobile && (
             <ReadinessPopover
               readiness={periodReadiness}
               onFix={(target) => {
