@@ -58,7 +58,7 @@ function relativeTime(ms) {
 
 function formatAbsoluteTime(ms) {
   if (!ms) return null;
-  return new Date(ms).toLocaleString("tr-TR", {
+  return new Date(ms).toLocaleString("en-GB", {
     day: "2-digit", month: "short", year: "numeric",
     hour: "2-digit", minute: "2-digit",
   });
