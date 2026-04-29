@@ -126,13 +126,16 @@ export default function ReviewMobileCard({ row, criteria }) {
     >
       <div className="rmc-header">
         <div className="rmc-juror">
-          <RingDonut total={row.total} totalMax={totalMax} />
+          <div className="rmc-juror-avatar">
+            {(row.juryName || "?")[0].toUpperCase()}
+          </div>
           <div className="rmc-juror-info">
             <div className="rmc-juror-name">{row.juryName}</div>
             {row.affiliation && (
               <div className="rmc-juror-affil">{row.affiliation}</div>
             )}
           </div>
+          <RingDonut total={row.total} totalMax={totalMax} />
         </div>
       </div>
 
