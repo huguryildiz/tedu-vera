@@ -182,7 +182,7 @@ export default function ProjectsPage() {
   const distinctAdvisors = useMemo(() => {
     const set = new Set();
     for (const p of projectList) {
-      (p.advisor || "").split(",").map((s) => s.trim()).filter(Boolean).forEach((a) => set.add(a));
+      (p.advisor || "").split(/[,;]/).map((s) => s.trim()).filter(Boolean).forEach((a) => set.add(a));
     }
     return [...set].sort((a, b) => a.localeCompare(b, "tr"));
   }, [projectList]);
@@ -212,7 +212,7 @@ export default function ProjectsPage() {
       if (filters.evalStatus === "not_evaluated" && projectAvgMap.has(p.id)) return false;
 
       if (filters.advisor) {
-        const advisors = (p.advisor || "").split(",").map((s) => s.trim());
+        const advisors = (p.advisor || "").split(/[,;]/).map((s) => s.trim());
         if (!advisors.includes(filters.advisor)) return false;
       }
 

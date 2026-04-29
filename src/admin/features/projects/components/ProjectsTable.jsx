@@ -226,7 +226,7 @@ export default function ProjectsTable({
                     {project.title}
                   </div>
                   {project.advisor && (() => {
-                    const advisors = project.advisor.split(",").map((s) => s.trim()).filter(Boolean);
+                    const advisors = project.advisor.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
                     if (!advisors.length) return null;
                     return (
                       <>
@@ -255,7 +255,7 @@ export default function ProjectsTable({
                   {/* Mobile portrait compact row: advisor chips · member chips · stats */}
                   <div className="proj-compact-row2">
                     {project.advisor && (() => {
-                      const advisors = project.advisor.split(",").map((s) => s.trim()).filter(Boolean);
+                      const advisors = project.advisor.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
                       if (!advisors.length) return null;
                       return (
                         <>

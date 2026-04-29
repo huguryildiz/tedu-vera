@@ -174,7 +174,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                   marginTop: 14,
                   fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.6,
                 }}>
-                  <strong>Format:</strong> Project Title, Team Members, Advisor <span style={{ opacity: 0.6 }}>(Advisor optional)</span>
+                  <strong>Format:</strong> <span className="mono">Project Title, Team Members, Advisor</span> <span style={{ opacity: 0.6 }}>(Advisor optional — use <span className="mono">;</span> to separate multiple values)</span>
                   <br />
                   <strong>Examples:</strong>
                   <br />
