@@ -210,6 +210,7 @@ function JurorRow({
                       <span className="jc-ring-num" style={{ color: ringColor }}>
                         {hasAvg ? Number(avgNum).toFixed(1) : "—"}
                       </span>
+                      <span className="jc-ring-denom">/{maxScore}</span>
                     </span>
                   </span>
                 </div>

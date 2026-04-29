@@ -493,8 +493,10 @@
     position: absolute;
     inset: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    line-height: 1;
     z-index: 1;
   }
 
@@ -504,6 +506,15 @@
     font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
     font-variant-numeric: tabular-nums;
     line-height: 1;
+  }
+
+  .jc-ring-denom {
+    font-size: 7px;
+    color: var(--text-tertiary);
+    line-height: 1;
+    margin-top: 1px;
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
+    font-variant-numeric: tabular-nums;
   }
 
   /* ── Empty-state row override ──
