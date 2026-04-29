@@ -193,12 +193,25 @@ export default function ImportJurorsModal({ open, onClose, parseFile, onImport }
                   </div>
                 )}
                 <div style={{
-                  marginTop: 14, padding: "8px 12px",
-                  display: "inline-block", fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.6,
+                  marginTop: 16,
+                  background: "var(--surface-2, var(--bg-card))",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--radius-sm, 6px)",
+                  padding: "10px 14px",
+                  display: "inline-block",
+                  fontSize: 11,
+                  lineHeight: 1.7,
+                  textAlign: "left",
+                  width: "100%",
+                  boxSizing: "border-box",
                 }}>
-                  <strong>Format:</strong> Juror Name, Juror Affiliation
-                  <br />
-                  <strong>Example:</strong> Prof. Dr. Hasan Göktaş, TED University / EE
+                  <div style={{ color: "var(--text-tertiary)", marginBottom: 6, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase", fontSize: 10 }}>Format</div>
+                  <div style={{ color: "var(--text-primary)", marginBottom: 8 }}>
+                    <span className="mono" style={{ fontSize: 11 }}>Juror Name, Affiliation, Email</span>
+                    <span style={{ color: "var(--text-tertiary)", marginLeft: 6, fontSize: 10 }}>Email optional</span>
+                  </div>
+                  <div style={{ color: "var(--text-tertiary)", marginBottom: 4, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase", fontSize: 10 }}>Example</div>
+                  <div className="mono" style={{ color: "var(--text-secondary)", fontSize: 10.5 }}>Prof. Dr. Hasan Göktaş, TED University / EE</div>
                 </div>
               </div>
             )}
