@@ -93,11 +93,29 @@ function PeriodRow({
         <div className="sem-name" style={period.is_locked ? { color: "var(--text-secondary)" } : undefined}>
           {period.name}
         </div>
-        {(state === "live" || isDraft) && (
-          <div className="sem-name-sub">
-            {state === "live" ? "Evaluation in progress" : "Setup in progress"}
-          </div>
-        )}
+        <div className="sem-meta-inline">
+          <StatusPill status={state} />
+          {isDraft && (
+            <ReadinessPopover
+              readiness={periodReadiness}
+              onFix={(target) => {
+                onCurrentPeriodChange?.(period.id);
+                onNavigate?.(target);
+              }}
+            />
+          )}
+          {(period.start_date || period.end_date) && (
+            <span className="periods-date-range">
+              {period.start_date
+                ? new Date(period.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                : "—"}
+              <span className="periods-date-sep">→</span>
+              {period.end_date
+                ? new Date(period.end_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" })
+                : "—"}
+            </span>
+          )}
+        </div>
       </td>
 
       {/* Status */}
@@ -150,9 +168,34 @@ function PeriodRow({
 
       {/* Mobile footer (stats + updated) */}
       <td className="periods-mobile-footer">
+        <div className="periods-mobile-footer-chips">
+          {period.criteria_name && (
+            <span className="periods-mchip periods-mchip--criteria">
+              <ListChecks size={10} strokeWidth={2} />
+              {period.criteria_name}
+            </span>
+          )}
+          {(() => {
+            const fw = frameworks.find((f) => f.id === period.framework_id);
+            return fw ? (
+              <span className="periods-mchip periods-mchip--outcome">
+                <BadgeCheck size={10} strokeWidth={2} />
+                {fw.name}
+              </span>
+            ) : null;
+          })()}
+        </div>
         <div className="periods-mobile-footer-stats">
-          <span className="periods-m-stat"><span className={`val${(periodStats.projectCount || 0) === 0 ? " zero" : ""}`}>{periodStats.projectCount ?? "—"}</span> projects</span>
-          <span className="periods-m-stat"><span className={`val${(periodStats.jurorCount || 0) === 0 ? " zero" : ""}`}>{periodStats.jurorCount ?? "—"}</span> jurors</span>
+          <span className="periods-m-stat">
+            <span className={`val${(periodStats.projectCount || 0) === 0 ? " zero" : ""}`}>
+              {periodStats.projectCount ?? "—"}
+            </span> projects
+          </span>
+          <span className="periods-m-stat">
+            <span className={`val${(periodStats.jurorCount || 0) === 0 ? " zero" : ""}`}>
+              {periodStats.jurorCount ?? "—"}
+            </span> jurors
+          </span>
         </div>
         <span className="periods-mobile-footer-updated">{formatRelative(period.updated_at)}</span>
       </td>
