@@ -271,7 +271,7 @@ const PALETTE_DARK = [
   { bg: "rgba(251,146,60,0.14)",  border: "rgba(251,146,60,0.28)",  text: "#fb923c"  }, // orange
   { bg: "rgba(250,204,21,0.14)",  border: "rgba(250,204,21,0.28)",  text: "#fbbf24"  }, // yellow
   { bg: "rgba(163,230,53,0.12)",  border: "rgba(163,230,53,0.22)",  text: "#86efac"  }, // lime
-  { bg: "rgba(16,185,129,0.16)",  border: "rgba(16,185,129,0.28)",  text: "#34d399"  }, // emerald
+  { bg: "rgba(74,222,128,0.14)",  border: "rgba(74,222,128,0.26)",  text: "#4ade80"  }, // green
 ];
 
 function _scoreLevel(score, max) {
