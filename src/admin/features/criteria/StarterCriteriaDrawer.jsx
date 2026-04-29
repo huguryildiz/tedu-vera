@@ -57,7 +57,7 @@ export const STARTER_CRITERIA = [
     key:        "teamwork",
     label:      "Teamwork",
     shortLabel: "Teamwork",
-    color:      "#22c55e",
+    color:      "#4ade80",
     max:        10,
     blurb: "Evaluates visible evidence of equal and effective team participation during the evaluation session, as well as the group's professional and ethical conduct in interacting with jurors.",
     outcomes:   [],

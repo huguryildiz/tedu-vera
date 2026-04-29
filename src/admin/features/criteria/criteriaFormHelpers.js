@@ -9,7 +9,7 @@ export const CRITERION_COLORS = [
   "#3b82f6", // blue
   "#8b5cf6", // violet
   "#f59e0b", // amber
-  "#22c55e", // green
+  "#4ade80", // green
   "#ec4899", // pink
   "#06b6d4", // cyan
   "#f97316", // orange
