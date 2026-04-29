@@ -99,7 +99,7 @@
   }
   .periods-mring-fill::after {
     content:""; position:absolute; inset:3px; border-radius:50%;
-    background: transparent;
+    background: var(--bg-card);
   }
   .periods-mring-inner {
     position: absolute; inset: 0;
