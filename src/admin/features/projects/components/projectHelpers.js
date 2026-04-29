@@ -1,15 +1,13 @@
 import { formatDateTime as formatFull } from "@/shared/lib/dateUtils";
 
 export const COLUMNS = [
-  { key: "group_no",   label: "No",            colWidth: "4%",  exportWidth: 8  },
-  { key: "title",      label: "Project Title",  colWidth: "38%", exportWidth: 36 },
+  { key: "title",      label: "Project Title",  colWidth: "42%", exportWidth: 44 },
   { key: "members",    label: "Team Members",   colWidth: "28%", exportWidth: 42, colClass: "col-members" },
   { key: "avg_score",  label: "Avg Score",      colWidth: "9%",  exportWidth: 10 },
   { key: "updated_at", label: "Last Updated",   colWidth: "13%", exportWidth: 18, colClass: "col-updated" },
 ];
 
 export function getProjectCell(p, key, avgMap) {
-  if (key === "group_no")   return p.group_no ?? "";
   if (key === "title")      return p.group_no != null ? `P${p.group_no} — ${p.title ?? ""}` : (p.title ?? "");
   if (key === "members")    return membersToString(p.members);
   if (key === "avg_score")  return avgMap?.get(p.id) ?? "—";
