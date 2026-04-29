@@ -325,7 +325,7 @@ button.periods-cset-badge:hover svg {
 }
 
 .periods-date-sep {
-  color: var(--text-quaternary);
+  color: var(--text-secondary);
   margin: 0 3px;
 }
 
