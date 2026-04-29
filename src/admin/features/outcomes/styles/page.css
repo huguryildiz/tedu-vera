@@ -401,6 +401,12 @@
   transition: width 0.4s ease;
 }
 
+.acc-coverage-bar-track--full .acc-coverage-bar-direct,
+.acc-coverage-bar-track--full .acc-coverage-bar-indirect {
+  background: var(--success);
+  border-radius: 999px;
+}
+
 .acc-coverage-bar-legend {
   display: flex;
   gap: 16px;

@@ -643,7 +643,7 @@ export default function OutcomesPage() {
                   {totalOutcomes > 0 ? Math.round(((directCount + indirectCount) / totalOutcomes) * 100) : 0}% covered
                 </span>
               </div>
-              <div className="acc-coverage-bar-track">
+              <div className={`acc-coverage-bar-track${unmappedCount === 0 && totalOutcomes > 0 ? " acc-coverage-bar-track--full" : ""}`}>
                 <div className="acc-coverage-bar-direct" style={{ width: `${totalOutcomes > 0 ? (directCount / totalOutcomes) * 100 : 0}%` }} />
                 <div className="acc-coverage-bar-indirect" style={{ width: `${totalOutcomes > 0 ? (indirectCount / totalOutcomes) * 100 : 0}%` }} />
               </div>
