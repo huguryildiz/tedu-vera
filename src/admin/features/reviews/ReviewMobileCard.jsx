@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { MessageSquare, Clock, ChevronDown, Users, BarChart2 } from "lucide-react";
-import { jurorInitials, jurorAvatarBg, jurorAvatarFg } from "@/admin/utils/jurorIdentity";
 import { TeamMembersInline } from "@/shared/ui/EntityMeta";
 import { formatTs } from "@/admin/utils/adminUtils";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
@@ -127,15 +126,7 @@ export default function ReviewMobileCard({ row, criteria }) {
     >
       <div className="rmc-header">
         <div className="rmc-juror">
-          <div
-            className="rmc-juror-av"
-            style={{
-              background: jurorAvatarBg(row.juryName),
-              color: jurorAvatarFg(row.juryName),
-            }}
-          >
-            {jurorInitials(row.juryName)}
-          </div>
+          <RingDonut total={row.total} totalMax={totalMax} />
           <div className="rmc-juror-info">
             <div className="rmc-juror-name">{row.juryName}</div>
             {row.affiliation && (
@@ -143,7 +134,6 @@ export default function ReviewMobileCard({ row, criteria }) {
             )}
           </div>
         </div>
-        <RingDonut total={row.total} totalMax={totalMax} />
       </div>
 
       <div className="rmc-project-block">
