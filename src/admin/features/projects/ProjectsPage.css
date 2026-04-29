@@ -222,6 +222,8 @@
     padding: 5px 12px 4px;
     background: var(--bg-card);
     border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
   }
   #projects-main-table td.col-members .members-chips-wrap { display: none; }
   #projects-main-table td.col-members .members-text { display: none; }
@@ -276,6 +278,7 @@
     display: flex;
     align-items: center;
     gap: 0;
+    width: 100%;
   }
   #projects-main-table .proj-row2-icon {
     display: inline-flex; align-items: center;
