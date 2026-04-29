@@ -178,9 +178,9 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                   <br />
                   <strong>Examples:</strong>
                   <br />
-                  Smart Grid Monitor, Ali Yıldız; Zeynep Kaya, Prof. Dr. Hasan Göktaş
+                  <span className="mono">Smart Grid Monitor, Ali Yıldız; Zeynep Kaya, Prof. Dr. Hasan Göktaş</span>
                   <br />
-                  Drone Navigation System, Burak Şahin; Mert Can; Selin Arslan, Prof. Dr. Hasan Göktaş; Dr. Ayşe Kara
+                  <span className="mono">Drone Navigation System, Burak Şahin; Mert Can; Selin Arslan, Prof. Dr. Hasan Göktaş; Dr. Ayşe Kara</span>
                 </div>
               </div>
             )}
