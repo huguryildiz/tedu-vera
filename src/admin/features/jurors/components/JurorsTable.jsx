@@ -14,6 +14,7 @@ import {
   Info,
   XCircle,
   Bell,
+  Clock,
 } from "lucide-react";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import FloatingMenu from "@/shared/ui/FloatingMenu";
@@ -232,7 +233,11 @@ function JurorRow({
             <span className={`jc-frac${total === 0 ? " frac-none" : scored >= total ? " frac-done" : " frac-partial"}`}>
               {scored}/{total}
             </span>
-            <span className="jc-last">{lastActive ? formatRelative(lastActive) : "—"}</span>
+            <span className="jc-last-divider" aria-hidden="true" />
+            <span className="jc-last">
+              <Clock size={10} strokeWidth={2} className="jc-last-clock" />
+              {lastActive ? formatRelative(lastActive) : "—"}
+            </span>
           </div>
         </div>
       </td>
