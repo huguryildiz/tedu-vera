@@ -207,7 +207,7 @@ export default function ProjectsTable({
                       <span className="mobile-rank-ring-inner">
                         <span className="mobile-rank-ring-num">
                           {projectAvgMap.has(project.id)
-                            ? Math.round(Number(projectAvgMap.get(project.id)))
+                            ? Number(projectAvgMap.get(project.id)).toFixed(1)
                             : "—"}
                         </span>
                         <span className="mobile-rank-ring-lbl">AVG</span>

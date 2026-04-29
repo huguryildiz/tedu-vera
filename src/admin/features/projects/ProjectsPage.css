@@ -161,7 +161,7 @@
     z-index: 1;
   }
   #projects-main-table .mobile-rank-ring-num {
-    font-size: 12px;
+    font-size: 9px;
     font-weight: 700;
     color: var(--ring, var(--text-tertiary));
     font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
