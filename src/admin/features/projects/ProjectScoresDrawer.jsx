@@ -373,11 +373,9 @@ export default function ProjectScoresDrawer({
                 <div className="jsd-proj-content">
                   <div className="jsd-proj-header">
                     <div className="jsd-proj-name">
-                      {j.name}
+                      <span>{j.name}</span>
                       {j.affiliation && (
-                        <span style={{ color: "var(--text-tertiary)", fontWeight: 400, marginLeft: 6, fontSize: 11 }}>
-                          {j.affiliation}
-                        </span>
+                        <span className="jsd-proj-affiliation">{j.affiliation}</span>
                       )}
                     </div>
                     <div className="jsd-proj-right">

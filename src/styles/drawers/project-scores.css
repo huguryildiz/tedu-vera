@@ -296,7 +296,7 @@
 }
 .jsd-proj-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
   min-width: 0;
@@ -311,6 +311,13 @@
   line-height: 1.35;
   flex: 1;
   min-width: 0;
+}
+.jsd-proj-affiliation {
+  display: block;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 400;
+  margin-top: 2px;
 }
 .jsd-proj-right {
   display: flex;
