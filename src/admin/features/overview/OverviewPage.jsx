@@ -400,25 +400,24 @@ export default function OverviewPage() {
                         <JurorBadge name={j.juryName} affiliation={j.affiliation} size="sm" />
 
                         <div className="oja-pill-mobile">
-                          <div className="oja-pill-left">
+                          <div className="oja-pill-col">
                             <span className="oja-field-label">Juror Progress</span>
                             <JurorStatusPill status={status} />
                           </div>
-                          <div className="oja-pill-right">
+                          <div className="oja-pill-col">
                             <span className="oja-field-label oja-eval-label">Eval. Progress</span>
                             <div className="oja-prog-frac">{done} / {total}</div>
                           </div>
-                        </div>
-                        <div className="oja-last-active">
-                          <ClockIcon size={10} strokeWidth={2} className="oja-last-icon" />
-                          <span className="oja-field-label">Last Active</span>
-                          <span className="oja-last-time vera-datetime-text">
-                            {j.lastSeenMs && formatAbsoluteTime(j.lastSeenMs) ? (
-                              <PremiumTooltip text={formatAbsoluteTime(j.lastSeenMs)} position="top">
-                                <span style={{ cursor: "default" }}>{relativeTime(j.lastSeenMs)}</span>
-                              </PremiumTooltip>
-                            ) : (j.lastSeenMs ? relativeTime(j.lastSeenMs) : "Never seen")}
-                          </span>
+                          <div className="oja-pill-col">
+                            <span className="oja-field-label">Last Active</span>
+                            <span className="oja-last-time vera-datetime-text">
+                              {j.lastSeenMs && formatAbsoluteTime(j.lastSeenMs) ? (
+                                <PremiumTooltip text={formatAbsoluteTime(j.lastSeenMs)} position="top">
+                                  <span style={{ cursor: "default" }}>{relativeTime(j.lastSeenMs)}</span>
+                                </PremiumTooltip>
+                              ) : (j.lastSeenMs ? relativeTime(j.lastSeenMs) : "Never seen")}
+                            </span>
+                          </div>
                         </div>
                       </td>
                       <td><JurorStatusPill status={status} /></td>

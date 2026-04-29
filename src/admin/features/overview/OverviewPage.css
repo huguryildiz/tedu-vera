@@ -108,12 +108,11 @@
   margin-bottom: 2px;
 }
 
-/* ── Juror Activity: pill + last-active below name (mobile only) ── */
+/* ── Juror Activity: pill below name (mobile only) ── */
 .oja-pill-mobile {
   display: none;
   margin-top: 6px;
 }
-.oja-last-active { display: none; }
 
 @media (max-width: 768px) {
   #page-overview{padding-top:0}
@@ -125,38 +124,28 @@
   .oja-donut-col        { display: flex; }
   .oja-field-label      { display: block; }
   .oja-bar-desktop      { display: none !important; }
-  .oja-last-active      { display: flex; }
   .oja-pill-mobile {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    gap: 16px;
+    gap: 10px;
     border-top: 1px solid var(--border);
     padding-top: 8px;
     margin-top: 8px;
   }
-  .oja-pill-left,
-  .oja-pill-right {
+  .oja-pill-col {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
+    flex: 1;
+    min-width: 0;
   }
-  .oja-pill-right .oja-prog-frac {
+  .oja-pill-col .oja-prog-frac {
     font-size: 13px;
     font-weight: 800;
     color: var(--text-primary);
   }
-  .oja-last-active {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    border-top: 1px solid var(--border);
-    padding-top: 8px;
-    margin-top: 8px;
-  }
-  .oja-last-icon { color: var(--text-tertiary); flex-shrink: 0; }
-  .oja-last-active .oja-field-label { margin-bottom: 0; }
   .oja-last-time {
     font-size: 11px;
     font-weight: 600;
