@@ -157,6 +157,15 @@
   .oja-donut-avg        { font-size: 10px; letter-spacing: -0.3px; }
   .oja-donut-avg--empty { font-size: 13px; }
   .oja-donut-label      { font-size: 6px; letter-spacing: 0.4px; }
+
+  /* Compact AvgDonut inside the juror table on mobile portrait */
+  #overview-juror-table .avg-donut,
+  #overview-juror-table .avg-donut-fill {
+    width: 40px;
+    height: 40px;
+  }
+  #overview-juror-table .avg-donut-value { font-size: 11px; }
+  #overview-juror-table .avg-donut-label { font-size: 6px; margin-top: 0; }
 }
 
 /* ── Kill tap-flash on touch devices (sticky-hover iOS fix) ── */
