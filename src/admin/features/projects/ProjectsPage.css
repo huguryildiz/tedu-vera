@@ -103,7 +103,7 @@
     grid-template-columns: auto 1fr auto;
     grid-template-areas:
       "ring  title  actions"
-      "chips chips  chips";
+      "ring  chips  chips";
     gap: 0 10px;
     width: 100%;
     margin-bottom: 10px;
