@@ -201,7 +201,7 @@ function PeriodRow({
         <PremiumTooltip text="Updated At">
           <span className="periods-mobile-footer-updated">
             <Clock size={12} strokeWidth={2} />
-            {formatRelative(period.updated_at)}
+            <span className="vera-datetime-text">{formatRelative(period.updated_at)}</span>
           </span>
         </PremiumTooltip>
       </td>
