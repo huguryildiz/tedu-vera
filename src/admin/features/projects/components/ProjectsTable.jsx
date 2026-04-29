@@ -281,12 +281,12 @@ export default function ProjectsTable({
                     <MemberChips members={project.members} />
                     <span className="proj-chips-spacer" />
                     <span className="proj-chips-sep" />
-                    <span className="proj-compact-stats">
-                      <PremiumTooltip text="Last Updated">
+                    <PremiumTooltip text={formatFull(project.updated_at)}>
+                      <span className="proj-compact-stats">
                         <Clock size={9} strokeWidth={2} className="proj-stat-icon" />
-                      </PremiumTooltip>
-                      <span className="vera-datetime-text">{formatRelative(project.updated_at)}</span>
-                    </span>
+                        <span className="vera-datetime-text">{formatRelative(project.updated_at)}</span>
+                      </span>
+                    </PremiumTooltip>
                   </div>
                 </td>
                 <td className="text-center avg-score-cell" data-label="Avg Score">

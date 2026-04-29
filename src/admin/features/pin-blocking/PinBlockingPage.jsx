@@ -14,6 +14,7 @@ import { usePinBlocking } from "./usePinBlocking";
 import useCardSelection from "@/shared/hooks/useCardSelection";
 import { useSecurityPolicy } from "@/auth/shared/SecurityPolicyContext";
 import { formatTs } from "@/admin/utils/adminUtils";
+import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import FbAlert from "@/shared/ui/FbAlert";
 import JurorBadge from "@/admin/shared/JurorBadge";
 import UnlockAllModal from "./UnlockAllModal";
@@ -259,7 +260,9 @@ export default function PinBlockingPage() {
                           <span className="lock-desktop vera-datetime-text">{formatTs(j.lockedAt)}</span>
                           <span className="lock-mobile">
                             <Clock size={10} strokeWidth={2} />
-                            Locked {formatAgo(j.lockedAt)}
+                            <PremiumTooltip text={formatTs(j.lockedAt)} position="top">
+                              <span style={{ cursor: "default" }}>Locked {formatAgo(j.lockedAt)}</span>
+                            </PremiumTooltip>
                           </span>
                         </td>
                         <td data-label="Unlock ETA">
