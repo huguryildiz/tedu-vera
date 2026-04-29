@@ -116,6 +116,7 @@ export default function CriteriaPage() {
 
   const viewPeriod = periods.periodList.find((s) => s.id === periods.viewPeriodId);
   const draftCriteria = periods.draftCriteria || [];
+  const savedCriteria = periods.savedCriteria || [];
   const outcomeConfig = periods.outcomeConfig || [];
   const isLocked = !!(viewPeriod?.is_locked);
   const [saving, setSaving] = useState(false);
@@ -144,7 +145,7 @@ export default function CriteriaPage() {
     ? { kind: periods.pendingCriteriaPreviewKind, sourceLabel: periods.pendingCriteriaPreviewSource }
     : null;
 
-  const filteredCriteria = draftCriteria.filter((c) => {
+  const filteredCriteria = savedCriteria.filter((c) => {
     if (searchText.trim()) {
       const q = searchText.toLowerCase();
       const match =

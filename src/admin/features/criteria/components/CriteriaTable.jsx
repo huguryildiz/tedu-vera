@@ -171,7 +171,7 @@ export default function CriteriaTable({
             </tr>
           )}
           {pageRows.map((criterion) => {
-            const i = draftCriteria.indexOf(criterion);
+            const i = draftCriteria.findIndex((c) => c.key === criterion.key);
             const rubric = Array.isArray(criterion.rubric) ? criterion.rubric : [];
             const menuKey = `crt-row-${i}`;
             const isMenuOpen = openMenuId === menuKey;
@@ -315,7 +315,7 @@ export default function CriteriaTable({
       {draftCriteria.length > 0 && (
         <div className="crt-mobile-list" ref={mobileScopeRef}>
           {pageRows.map((criterion) => {
-            const i = draftCriteria.indexOf(criterion);
+            const i = draftCriteria.findIndex((c) => c.key === criterion.key);
             const rubric = Array.isArray(criterion.rubric) ? criterion.rubric : [];
             const outcomes = criterion.outcomes || [];
             const cardKey = criterion.key || `crt-card-${i}`;
