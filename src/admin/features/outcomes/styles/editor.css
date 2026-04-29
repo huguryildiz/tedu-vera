@@ -9,11 +9,12 @@
 .acc-outcome-desc {
   font-size: var(--table-header-size);
   color: var(--text-tertiary);
-  line-height: 1.5;
-  max-width: 420px;
+  line-height: 1.45;
   text-align: justify;
   text-justify: inter-word;
   text-align-last: left;
+  hyphens: auto;
+  overflow-wrap: anywhere;
 }
 
 /* ── Floating menu item description ─────────────────────────── */
