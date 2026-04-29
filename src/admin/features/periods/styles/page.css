@@ -317,6 +317,14 @@ button.periods-cset-badge:hover svg {
 }
 
 /* ─── Date range ─────────────────────────────────────────── */
+.sem-meta-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+
 .periods-date-range {
   font-size: 11px;
   color: var(--text-tertiary);
