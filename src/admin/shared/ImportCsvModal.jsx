@@ -174,9 +174,13 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                   marginTop: 14,
                   fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.6,
                 }}>
-                  <strong>Format:</strong> Project Title, Team Members[, Advisor]
+                  <strong>Format:</strong> Project Title, Team Members, Advisor <span style={{ opacity: 0.6 }}>(Advisor optional)</span>
                   <br />
-                  <strong>Example:</strong> Smart Grid Monitor, Ali Yıldız; Zeynep Kaya, Prof. Dr. Hasan Göktaş
+                  <strong>Examples:</strong>
+                  <br />
+                  Smart Grid Monitor, Ali Yıldız; Zeynep Kaya, Prof. Dr. Hasan Göktaş
+                  <br />
+                  Drone Navigation System, Burak Şahin; Mert Can, Dr. Ayşe Kara
                 </div>
               </div>
             )}
