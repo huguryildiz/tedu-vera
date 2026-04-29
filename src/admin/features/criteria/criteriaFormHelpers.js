@@ -55,8 +55,13 @@ export function getConfigRubricSeed(row, criteria = []) {
 
 // ── View-model row shape ──────────────────────────────────────
 
+const SENTINEL_COLORS = new Set(["#94a3b8", "#94A3B8", "#6b7280", "#6B7280"]);
+
 export function templateToRow(c, idx) {
   const n = normalizeCriterion(c);
+  const color = SENTINEL_COLORS.has(n.color)
+    ? CRITERION_COLORS[idx % CRITERION_COLORS.length]
+    : n.color;
   const boundedRubric = clampRubricBandsToCriterionMax(
     n.rubric.length > 0 ? n.rubric : defaultRubricBands(n.max),
     n.max
@@ -66,7 +71,7 @@ export function templateToRow(c, idx) {
     _key:       n.key,                          // hidden stable key
     label:      n.label,
     shortLabel: n.shortLabel,
-    color:      n.color,
+    color,
     max:        String(n.max),
     blurb:      n.blurb,
     outcomes:   n.outcomes,                     // display codes only
