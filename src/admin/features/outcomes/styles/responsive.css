@@ -157,6 +157,14 @@
     display: none !important;
   }
 
+  /* Header: compact column layout above accordion list */
+  #page-accreditation .acc-table-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+
   /* Hide desktop table; show dedicated mobile card list */
   #page-accreditation .acc-table-card .acc-table {
     display: none !important;
