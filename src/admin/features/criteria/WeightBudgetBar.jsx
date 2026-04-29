@@ -93,7 +93,7 @@ export default function WeightBudgetBar({ criteria, onDistribute, onAutoFill, lo
       <div className="crt-budget-header">
         <div className="crt-budget-left">
           <div className="crt-budget-label">WEIGHT BUDGET</div>
-          <div className={`crt-budget-value ${isOver ? "crt-budget-value-over" : isValid ? "crt-budget-value-valid" : ""}`}>
+          <div className={`crt-budget-value ${isOver ? "crt-budget-value-over" : isValid ? "crt-budget-value-valid" : "crt-budget-value-under"}`}>
             {total} / 100
           </div>
           <div className={`crt-budget-status ${isOver ? "crt-budget-status-over" : isUnder ? "crt-budget-status-under" : "crt-budget-status-valid"}`}>

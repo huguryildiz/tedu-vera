@@ -146,6 +146,7 @@
 
 .crt-budget-value{font-size:15px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums}
 .crt-budget-value.crt-budget-value-valid,.crt-budget-card.crt-budget-valid .crt-budget-value{color:var(--success)}
+.crt-budget-value.crt-budget-value-under{color:var(--warning)}
 .crt-budget-value.crt-budget-value-over{color:var(--danger)}
 
 .crt-budget-status{font-size:11px;font-weight:500;display:flex;align-items:center;gap:6px}
