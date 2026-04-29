@@ -70,7 +70,7 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas: "identity donut";
-    align-items: center;
+    align-items: start;
     column-gap: 14px;
     padding: 12px 14px;
     border-bottom: 1px solid var(--border);
