@@ -168,13 +168,12 @@
     font-variant-numeric: tabular-nums;
   }
   #projects-main-table .mobile-rank-ring-lbl {
-    font-size: 6.5px;
+    font-size: 7px;
     color: var(--text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
     margin-top: 1px;
-    font-weight: 600;
+    line-height: 1;
     font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
+    font-variant-numeric: tabular-nums;
   }
 
   /* Mobile: hide plain-text advisor lines — compact row2 shows chips instead */
@@ -219,7 +218,7 @@
   /* Members cell → chips row */
   #projects-main-table td.col-members {
     grid-area: chips;
-    padding: 5px 12px 4px;
+    padding: 5px 12px 0;
     background: var(--bg-card);
     border-top: 1px solid var(--border);
     display: flex;
