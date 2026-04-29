@@ -30,6 +30,14 @@ import {
   groupTextClass,
 } from "./jurorHelpers";
 
+function scoreBandColor(score, maxScore) {
+  if (score == null || !Number.isFinite(Number(score))) return "var(--text-tertiary)";
+  const pct = (Number(score) / (maxScore || 100)) * 100;
+  if (pct >= 85) return "var(--success)";
+  if (pct >= 70) return "var(--warning)";
+  return "var(--danger)";
+}
+
 function JurorRow({
   juror,
   editWindowNowMs,
@@ -200,6 +208,28 @@ function JurorRow({
                 <span className="jc-org">{juror.affiliation}</span>
               )}
             </div>
+            {(() => {
+              const avgRaw = jurorAvgMap.get(String(jid));
+              const avgNum = avgRaw != null ? Number(avgRaw) : null;
+              const maxScore = periodMaxScore || 100;
+              const hasAvg = avgNum != null && Number.isFinite(avgNum);
+              const ringColor = scoreBandColor(avgNum, maxScore);
+              const ringDeg = hasAvg ? Math.min(360, (avgNum / maxScore) * 360) : 0;
+              return (
+                <div className="jc-ring-wrap">
+                  <span
+                    className="jc-ring-fill"
+                    style={{ "--pct": `${ringDeg}deg`, "--ring": ringColor }}
+                  >
+                    <span className="jc-ring-inner">
+                      <span className="jc-ring-num" style={{ color: ringColor }}>
+                        {hasAvg ? Number(avgNum).toFixed(1) : "—"}
+                      </span>
+                    </span>
+                  </span>
+                </div>
+              );
+            })()}
             <FloatingMenu
               isOpen={openMenuId === jid && shouldUseCardLayout}
               onClose={() => setOpenMenuId(null)}
