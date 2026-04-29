@@ -180,7 +180,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                   <br />
                   Smart Grid Monitor, Ali Yıldız; Zeynep Kaya, Prof. Dr. Hasan Göktaş
                   <br />
-                  Drone Navigation System, Burak Şahin; Mert Can; Selin Arslan, Dr. Ayşe Kara
+                  Drone Navigation System, Burak Şahin; Mert Can; Selin Arslan, Prof. Dr. Hasan Göktaş; Dr. Ayşe Kara
                 </div>
               </div>
             )}
