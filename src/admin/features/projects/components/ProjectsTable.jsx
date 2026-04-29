@@ -286,7 +286,9 @@ export default function ProjectsTable({
                       <strong>{projectEvalCountMap.get(project.id) ?? 0}</strong>
                       {" eval"}
                       <span className="proj-chips-sep" />
-                      <Clock size={9} strokeWidth={2} className="proj-stat-icon" />
+                      <PremiumTooltip text="Last Updated">
+                        <Clock size={9} strokeWidth={2} className="proj-stat-icon" />
+                      </PremiumTooltip>
                       <span className="vera-datetime-text">{formatRelative(project.updated_at)}</span>
                     </span>
                   </div>
