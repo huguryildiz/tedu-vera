@@ -66,7 +66,7 @@ export function useBackups(organizationId) {
       await createBackup(organizationId);
       await refresh();
     } catch (e) {
-      setError("Failed to create backup. Please try again.");
+      setError(e?.message || "Failed to create backup. Please try again.");
       throw e;
     } finally {
       setCreating(false);

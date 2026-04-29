@@ -97,7 +97,7 @@ export default function ResetPasswordScreen({ onUpdatePassword, onBackToLogin })
       await doUpdatePassword(password);
       setDone(true);
     } catch (err) {
-      setError("Failed to update password. Please try again.");
+      setError(err?.message || "Failed to update password. Please try again.");
     } finally {
       setLoading(false);
     }

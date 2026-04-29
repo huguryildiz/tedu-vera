@@ -35,7 +35,7 @@ export default function ForgotPasswordScreen({ onResetPassword, onBackToLogin })
       await doResetPassword(email.trim());
       setSent(true);
     } catch (err) {
-      setError("Failed to send reset link. Please try again.");
+      setError(err?.message || "Failed to send reset link. Please try again.");
     } finally {
       setLoading(false);
     }

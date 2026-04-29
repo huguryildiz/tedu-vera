@@ -182,8 +182,9 @@ export default function LoginScreen({
     } catch (err) { setError(extractErrorText(err) || "Google sign-in failed. Please try again."); }
   }
 
-  const rawDisplayError = (externalError || error || "").trim();
-  const displayError = rawDisplayError ? normalizeError(rawDisplayError) : "";
+  const internalError = (error || "").trim();
+  const externalNormalized = externalError ? normalizeError(String(externalError).trim()) : "";
+  const displayError = internalError || externalNormalized;
   const submitBtnRef = useShakeOnError(displayError);
 
   return (

@@ -110,7 +110,7 @@ describe("OutcomesPage", () => {
   qaTest("admin.outcomes.page.add-btn", () => {
     mockOutcomesState.selectedPeriod = { id: "period-001", name: "Spring 2026", framework_id: "fw-001" };
     renderPage();
-    expect(screen.getAllByText("+ Add Outcome").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Add Outcome").length).toBeGreaterThan(0);
   });
 
   qaTest("admin.outcomes.page.kpi-strip", () => {

@@ -159,7 +159,7 @@ export function useAdminTeam(orgId) {
         toast.success(enabled ? "Admins can now invite" : "Only owner can invite now");
       } catch (e) {
         setAdminsCanInviteState(prev); // revert
-        toast.error("Failed to update invite setting");
+        toast.error(e?.message || "Failed to update invite setting");
       }
     },
     [orgId, adminsCanInvite, toast]

@@ -22,7 +22,7 @@ export default function CompleteProfileScreen({ user, onComplete, onSignOut }) {
     try {
       await onComplete({ name: fullName.trim(), orgName: orgName.trim() });
     } catch (err) {
-      setError("Failed to complete profile. Please try again.");
+      setError(err?.message || "Failed to complete profile. Please try again.");
     } finally {
       setLoading(false);
     }

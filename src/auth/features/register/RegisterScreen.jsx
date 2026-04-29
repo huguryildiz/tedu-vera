@@ -140,7 +140,9 @@ export default function RegisterScreen({ onSwitchToLogin, onReturnHome, error: e
     }
   }
 
-  const displayError = (error || externalError || "").trim() ? normalizeError(error || externalError) : "";
+  const internalError = (error || "").trim();
+  const externalNormalized = externalError ? normalizeError(String(externalError).trim()) : "";
+  const displayError = internalError || externalNormalized;
   const submitBtnRef = useShakeOnError(displayError);
 
   return (

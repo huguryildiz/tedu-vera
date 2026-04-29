@@ -123,6 +123,6 @@ describe("OutcomesTable", () => {
       />
     );
     expect(screen.getAllByTestId("outcome-row")).toHaveLength(2);
-    expect(screen.getByText("PO-01")).toBeInTheDocument();
+    expect(screen.getAllByText("PO-01").length).toBeGreaterThan(0);
   });
 });

@@ -16,7 +16,7 @@ export default function GraceLockScreen({ user, onSignOut }) {
       setState("sent");
     } catch (e) {
       setState("error");
-      setErrorMsg("Failed to send verification email. Please try again.");
+      setErrorMsg(e?.message || "Failed to send verification email. Please try again.");
     }
   }
 

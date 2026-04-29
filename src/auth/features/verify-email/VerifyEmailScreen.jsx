@@ -24,7 +24,7 @@ export default function VerifyEmailScreen() {
   useEffect(() => {
     let cancelled = false;
     const token = search.get("token");
-    if (!token) { setState("error"); setErrorMsg("Verification link is invalid or missing."); return; }
+    if (!token) { setState("error"); setErrorMsg("Verification link is missing token. Please request a new link."); return; }
     confirmEmailVerification(token)
       .then(() => {
         if (cancelled) return;

@@ -186,7 +186,7 @@ export default function InviteAcceptScreen() {
 
         setDone(true);
       } catch (err) {
-        setSubmitError("Failed to complete account setup. Please try again.");
+        setSubmitError(err?.message || "Failed to complete account setup. Please try again.");
       } finally {
         setSubmitting(false);
       }
