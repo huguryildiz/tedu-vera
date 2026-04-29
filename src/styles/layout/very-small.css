@@ -4,11 +4,13 @@
 
 @media (max-width: 480px) {
 
-  /* ── Tables: tighter card padding ── */
+  /* ── Tables: tighter card padding ──
+     Projects table excluded: its mobile portrait card uses a custom CSS Grid
+     with explicit per-cell padding, so tr-level padding/row-gap leaves an
+     empty band below the chips footer. */
   .ranking-table tbody tr,
   .reviews-table tbody tr,
   #jurors-main-table tbody tr,
-  #projects-main-table tbody tr,
   .sem-table tbody tr {
     padding: 8px 10px;
   }
@@ -210,19 +212,11 @@
     grid-column: 1 / -1;
     min-height: 35px;
   }
-  #page-projects #projects-main-table tbody tr {
-    padding: 11px 12px;
-    row-gap: 8px;
-    column-gap: 9px;
-  }
-  #page-projects #projects-main-table td:nth-child(2) > div:first-child {
-    font-size: 13px;
-    line-height: 1.36;
-  }
-  #page-projects #projects-main-table td:nth-child(2) > div:last-child {
-    font-size: 10px !important;
-    line-height: 1.4;
-  }
+  /* Projects mobile portrait card layout owns its own padding/gap via the
+     grid in ProjectsPage.css. Legacy tr-padding + row-gap rule removed
+     because it added an empty band below the chips footer.
+     Title-cell font-size rules also removed: they targeted the old
+     two-line layout (title + subtitle) which no longer exists. */
 
   /* ── Chart cards: tighter ── */
   .chart-card-v2 .chart-header { padding: 8px 10px 6px; }
