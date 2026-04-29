@@ -15,6 +15,10 @@ import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 
 const STATUS_LABELS = { ok: "Valid", skip: "Duplicate", err: "Error" };
 
+function hasAdvisor(rows) {
+  return rows.some((r) => r.advisor);
+}
+
 export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
@@ -170,9 +174,9 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                   marginTop: 14,
                   fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.6,
                 }}>
-                  <strong>Format:</strong> Project Title, Team Members
+                  <strong>Format:</strong> Project Title, Team Members[, Advisor]
                   <br />
-                  <strong>Example:</strong> Smart Grid Monitor, Ali Yıldız; Zeynep Kaya
+                  <strong>Example:</strong> Smart Grid Monitor, Ali Yıldız; Zeynep Kaya, Prof. Dr. Hasan Göktaş
                 </div>
               </div>
             )}
@@ -218,6 +222,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                           <th style={{ width: 36 }}>Row</th>
                           <th>Title</th>
                           <th>Team Members</th>
+                          {hasAdvisor(rows) && <th>Advisor</th>}
                           <th style={{ width: 76 }}>Status</th>
                         </tr>
                       </thead>
@@ -227,6 +232,7 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                             <td className="mono table-secondary">{row.rowNum}</td>
                             <td>{row.title}</td>
                             <td style={{ color: row.status === "ok" ? "var(--text-secondary)" : undefined }}>{row.members}</td>
+                            {hasAdvisor(rows) && <td style={{ color: "var(--text-secondary)" }}>{row.advisor || "—"}</td>}
                             <td>
                               <span className={`row-status ${row.status}`}>
                                 {row.statusLabel || STATUS_LABELS[row.status] || row.status}

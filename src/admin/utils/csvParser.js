@@ -23,6 +23,7 @@ function normalizeHeader(h) {
 const PROJECT_COL_MAP = {
   title:    ["title", "project_title", "project_name", "name", "baslik", "başlık"],
   members:  ["members", "students", "team_members", "team", "student_names", "uyeler", "üyeler"],
+  advisor:  ["advisor", "adviser", "supervisor", "danisман", "danışman", "advisor_name", "adviser_name"],
 };
 
 const JUROR_COL_MAP = {
@@ -32,7 +33,7 @@ const JUROR_COL_MAP = {
 };
 
 // Positional order — used when a field has no header match
-const PROJECT_POSITIONAL = ["title", "members"];
+const PROJECT_POSITIONAL = ["title", "members", "advisor"];
 const JUROR_POSITIONAL   = ["juror_name", "affiliation", "email"];
 
 /**
@@ -120,6 +121,7 @@ export async function parseProjectsCsv(file, existingProjects = []) {
           const rowNum = i + rowOffset;
           const title   = (raw[colIndices.title]   ?? "").toString().trim();
           const members = (raw[colIndices.members] ?? "").toString().trim();
+          const advisor = colIndices.advisor >= 0 ? (raw[colIndices.advisor] ?? "").toString().trim() : "";
 
           const hasTitle = title.length > 0;
           const normTitle = normName(title);
@@ -145,6 +147,7 @@ export async function parseProjectsCsv(file, existingProjects = []) {
             rowNum,
             title: title || "—",
             members,
+            advisor: advisor || null,
             status,
             statusLabel,
           });

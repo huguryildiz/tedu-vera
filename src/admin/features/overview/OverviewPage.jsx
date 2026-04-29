@@ -413,7 +413,11 @@ export default function OverviewPage() {
                           <ClockIcon size={10} strokeWidth={2} className="oja-last-icon" />
                           <span className="oja-field-label">Last Active</span>
                           <span className="oja-last-time vera-datetime-text">
-                            {j.lastSeenMs ? relativeTime(j.lastSeenMs) : "Never seen"}
+                            {j.lastSeenMs && formatAbsoluteTime(j.lastSeenMs) ? (
+                              <PremiumTooltip text={formatAbsoluteTime(j.lastSeenMs)} position="top">
+                                <span style={{ cursor: "default" }}>{relativeTime(j.lastSeenMs)}</span>
+                              </PremiumTooltip>
+                            ) : (j.lastSeenMs ? relativeTime(j.lastSeenMs) : "Never seen")}
                           </span>
                         </div>
                       </td>
