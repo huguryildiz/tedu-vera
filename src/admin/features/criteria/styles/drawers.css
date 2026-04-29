@@ -145,11 +145,11 @@
 .crt-budget-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-tertiary)}
 
 .crt-budget-value{font-size:15px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums}
-.crt-budget-value.crt-budget-value-valid{color:var(--success)}
+.crt-budget-value.crt-budget-value-valid,.crt-budget-card.crt-budget-valid .crt-budget-value{color:var(--success)}
 .crt-budget-value.crt-budget-value-over{color:var(--danger)}
 
 .crt-budget-status{font-size:11px;font-weight:500;display:flex;align-items:center;gap:6px}
-.crt-budget-status.crt-budget-status-valid{color:var(--success)}
+.crt-budget-status.crt-budget-status-valid,.crt-budget-card.crt-budget-valid .crt-budget-status{color:var(--success)}
 .crt-budget-status.crt-budget-status-under{color:var(--warning)}
 .crt-budget-status.crt-budget-status-over{color:var(--danger)}
 
@@ -209,6 +209,7 @@
 .crt-budget-legend-weight{font-family:var(--mono);font-weight:600;color:var(--text-primary)}
 
 .dark-mode .crt-budget-card.crt-budget-valid{border-color:rgba(74,222,128,0.2);background:rgba(22,163,74,0.05)}
+.dark-mode .crt-budget-card.crt-budget-valid .crt-budget-value,.dark-mode .crt-budget-card.crt-budget-valid .crt-budget-status{color:#4ade80}
 .dark-mode .crt-budget-card.crt-budget-over{border-color:rgba(225,29,72,0.2);background:rgba(225,29,72,0.03)}
 
 /* ── Budget bar — locked (amber) variant ─────────────────────── */
