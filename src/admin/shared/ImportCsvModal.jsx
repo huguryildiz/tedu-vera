@@ -170,9 +170,9 @@ export default function ImportCsvModal({ open, onClose, parseFile, onImport }) {
                   marginTop: 14,
                   fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.6,
                 }}>
-                  <strong>Format:</strong> Group, Title, Team Members
+                  <strong>Format:</strong> Project Title, Team Members
                   <br />
-                  <strong>Example:</strong> G01, Smart Grid Monitor, Ali Yıldız; Zeynep Kaya
+                  <strong>Example:</strong> Smart Grid Monitor, Ali Yıldız; Zeynep Kaya
                 </div>
               </div>
             )}
