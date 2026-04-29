@@ -91,7 +91,6 @@
 .admin-main .btn-outline:disabled{
   opacity:0.45;
   cursor:not-allowed;
-  pointer-events:none;
 }
 .admin-main #page-criteria .crt-add-btn{
   min-height:34px;
