@@ -2,7 +2,7 @@
 // Outcomes & Mapping page — period-scoped outcome CRUD + criterion mapping.
 
 import { useState, useRef, useEffect } from "react";
-import { CheckCircle, Download, Filter, Lock, Plus, Search, XCircle } from "lucide-react";
+import { Download, Filter, Lock, Plus, Search, XCircle } from "lucide-react";
 import { FilterButton } from "@/shared/ui/FilterButton";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import { updateFramework, cloneFramework, assignFrameworkToPeriod, unassignPeriodFramework, listFrameworks } from "@/shared/api";
@@ -640,8 +640,9 @@ export default function OutcomesPage() {
               <div className="acc-coverage-progress-top">
                 <span className="acc-coverage-progress-label">Overall Coverage</span>
                 <span className={`acc-coverage-progress-pct${unmappedCount === 0 && totalOutcomes > 0 ? " acc-coverage-progress-pct--full" : ""}`}>
-                  {unmappedCount === 0 && totalOutcomes > 0 && <CheckCircle size={13} strokeWidth={2.5} />}
-                  {totalOutcomes > 0 ? Math.round(((directCount + indirectCount) / totalOutcomes) * 100) : 0}% covered
+                  {unmappedCount === 0 && totalOutcomes > 0
+                    ? `✓ ${Math.round(((directCount + indirectCount) / totalOutcomes) * 100)}% covered`
+                    : `${totalOutcomes > 0 ? Math.round(((directCount + indirectCount) / totalOutcomes) * 100) : 0}% covered`}
                 </span>
               </div>
               <div className={`acc-coverage-bar-track${unmappedCount === 0 && totalOutcomes > 0 ? " acc-coverage-bar-track--full" : ""}`}>
