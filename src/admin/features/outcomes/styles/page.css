@@ -11,6 +11,7 @@
   background: var(--bg-card);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
+  overflow-x: hidden;
   min-width: 0;
   margin-bottom: 16px;
 }
@@ -71,19 +72,6 @@
   flex-shrink: 0;
 }
 
-/* ── Locked table card tint ──────────────────────────────────── */
-
-.acc-table-card.locked-card {
-  border-color: rgba(245, 158, 11, 0.18);
-}
-
-.acc-table-card.locked-card .acc-table-card-header {
-  border-bottom-color: rgba(245, 158, 11, 0.12);
-}
-
-.dark-mode .acc-table-card.locked-card {
-  border-color: rgba(251, 191, 36, 0.18);
-}
 
 /* ── Expand button ───────────────────────────────────────────── */
 
