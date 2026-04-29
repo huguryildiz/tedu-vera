@@ -317,7 +317,6 @@
 .crt-card-toggle.open svg{transform:rotate(90deg)}
 .crt-field-grid{display:grid;grid-template-columns:1fr 80px 80px;gap:10px;margin-bottom:4px}
 .crt-field{display:flex;flex-direction:column;gap:4px}
-.crt-field-label{font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.2px;display:flex;align-items:center;gap:4px}
 .crt-field-label .crt-opt{font-size:10px;font-weight:500;color:var(--text-quaternary)}
 .crt-req{color:var(--danger);font-size:11px}
 .crt-field-hint{font-size:10.5px;color:var(--text-tertiary);margin-top:4px}
