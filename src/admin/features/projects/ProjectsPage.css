@@ -279,6 +279,7 @@
     align-items: center;
     gap: 0;
     width: 100%;
+    min-height: 26px;
   }
   #projects-main-table .proj-row2-icon {
     display: inline-flex; align-items: center;
@@ -286,6 +287,7 @@
   }
   #projects-main-table .proj-adv-chips { display: flex; align-items: center; flex-shrink: 0; }
   #projects-main-table .proj-adv-chip {
+    box-sizing: border-box;
     width: 22px; height: 22px; border-radius: 50%;
     font-size: 7.5px; font-weight: 800;
     display: flex; align-items: center; justify-content: center;
@@ -297,12 +299,14 @@
   #projects-main-table .proj-chips-sep {
     width: 1px; height: 14px; background: rgba(15,23,42,0.13);
     margin: 0 8px; flex-shrink: 0; border-radius: 1px;
+    align-self: center;
   }
-  #projects-main-table .proj-chips-spacer { flex: 1; min-width: 4px; }
+  #projects-main-table .proj-chips-spacer { flex: 1; min-width: 4px; align-self: center; }
   #projects-main-table .proj-compact-stats {
     font-size: 10px; color: var(--text-tertiary);
     white-space: nowrap; flex-shrink: 0;
     display: flex; align-items: center; gap: 4px;
+    line-height: 1;
   }
   #projects-main-table .proj-compact-stats strong {
     color: var(--text-secondary); font-weight: 600; font-size: 10.5px;
@@ -315,6 +319,7 @@
   /* Size down member-chips when inside compact row2 */
   #projects-main-table .proj-compact-row2 .member-chips { display: flex; align-items: center; }
   #projects-main-table .proj-compact-row2 .member-chip {
+    box-sizing: border-box;
     width: 22px; height: 22px;
     background: rgba(99, 102, 241, 0.12);
     color: var(--accent);
