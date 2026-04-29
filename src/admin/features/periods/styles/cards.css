@@ -95,11 +95,11 @@
   .periods-mring { position: relative; width: 44px; height: 44px; }
   .periods-mring-fill {
     position: relative; width: 44px; height: 44px; border-radius: 50%;
-    background: conic-gradient(var(--ring-color, var(--accent)) var(--pct, 0deg), rgba(15,23,42,0.08) 0);
+    background: conic-gradient(var(--ring-color, var(--accent)) var(--pct, 0deg), transparent 0);
   }
   .periods-mring-fill::after {
     content:""; position:absolute; inset:3px; border-radius:50%;
-    background: var(--bg-page);
+    background: transparent;
   }
   .periods-mring-inner {
     position: absolute; inset: 0;
@@ -281,7 +281,7 @@
 
   /* ── Dark mode — repaint ring track ── */
   .dark-mode .periods-mring-fill {
-    background: conic-gradient(var(--ring-color, var(--accent)) var(--pct, 0deg), rgba(255, 255, 255, 0.07) 0);
+    background: conic-gradient(var(--ring-color, var(--accent)) var(--pct, 0deg), transparent 0);
   }
   .dark-mode .periods-mring.ring-draft     { --ring-color: #818cf8; }
   .dark-mode .periods-mring.ring-live      { --ring-color: #34d399; }
