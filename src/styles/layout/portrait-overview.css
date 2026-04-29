@@ -67,19 +67,14 @@
   #overview-juror-table thead { display: none; }
   #overview-juror-table tbody { display: flex; flex-direction: column; }
   #overview-juror-table tbody tr {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "identity donut";
-    align-items: start;
-    column-gap: 14px;
+    display: block;
     padding: 12px 14px;
     border-bottom: 1px solid var(--border);
   }
   #overview-juror-table tbody tr:last-child { border-bottom: none; }
   #overview-juror-table td { display: block; padding: 0; border: none; }
-  #overview-juror-table td:nth-child(1) { grid-area: identity; min-width: 0; }
   #overview-juror-table td:nth-child(2) { display: none; }
-  #overview-juror-table td:nth-child(3) { grid-area: donut; justify-self: end; }
+  #overview-juror-table td:nth-child(3) { display: none; }
   #overview-juror-table td:nth-child(4) { display: none; }
   #overview-juror-table td:nth-child(5) { display: none; }
   #overview-juror-table td:nth-child(1) .j-row { align-items: flex-start; gap: 10px; }

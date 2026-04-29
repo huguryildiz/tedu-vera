@@ -114,6 +114,9 @@
   margin-top: 6px;
 }
 
+/* Mobile-only donut placed inline with JurorBadge */
+.oja-donut-mobile { display: none; }
+
 @media (max-width: 768px) {
   #page-overview{padding-top:0}
   #page-overview .overview-heading-row{padding-top:0}
@@ -121,9 +124,18 @@
 
 @media (max-width: 900px) and (orientation: portrait) {
   /* ── Juror Activity: show mobile donut layout, hide desktop bar ── */
-  .oja-donut-col        { display: flex; }
   .oja-field-label      { display: block; }
   .oja-bar-desktop      { display: none !important; }
+  .oja-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+  .oja-donut-mobile {
+    display: flex;
+    flex-shrink: 0;
+  }
   .oja-pill-mobile {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;

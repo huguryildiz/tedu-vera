@@ -397,7 +397,12 @@ export default function OverviewPage() {
                   return (
                     <tr key={j.jurorId || j.juryName}>
                       <td>
-                        <JurorBadge name={j.juryName} affiliation={j.affiliation} size="sm" />
+                        <div className="oja-header-row">
+                          <JurorBadge name={j.juryName} affiliation={j.affiliation} size="sm" />
+                          <div className="oja-donut-mobile">
+                            <AvgDonut value={avg != null ? parseFloat(avg) : null} max={totalMax || 100} />
+                          </div>
+                        </div>
 
                         <div className="oja-pill-mobile">
                           <div className="oja-pill-col">
