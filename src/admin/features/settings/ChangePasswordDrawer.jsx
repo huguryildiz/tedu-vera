@@ -79,7 +79,7 @@ function PasswordField({ label, value, onChange, placeholder, disabled, id, name
           id={id}
           name={name}
           autoComplete={autoComplete}
-          className={`fs-input${error ? " input-error" : ""}`}
+          className={`fs-input${error ? " error" : ""}`}
           type={show ? "text" : "password"}
           placeholder={placeholder}
           value={value}
@@ -311,7 +311,7 @@ function NewPasswordField({ value, onChange, disabled, error }) {
         id="cp-new"
         name="newPassword"
         autoComplete="new-password"
-        className={`fs-input${error ? " input-error" : ""}`}
+        className={`fs-input${error ? " error" : ""}`}
         type={show ? "text" : "password"}
         placeholder={PASSWORD_POLICY_PLACEHOLDER}
         value={value}
@@ -340,7 +340,7 @@ function ConfirmPasswordField({ value, onChange, disabled, error = false }) {
         id="cp-confirm"
         name="confirmPassword"
         autoComplete="new-password"
-        className={`fs-input${error ? " input-error" : ""}`}
+        className={`fs-input${error ? " error" : ""}`}
         type={show ? "text" : "password"}
         placeholder="Re-enter new password"
         value={value}

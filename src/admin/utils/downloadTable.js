@@ -126,7 +126,7 @@ export async function generateTableBlob(format, opts) {
     let logoData = null;
     try { logoData = await loadLogoBase64(); } catch { /* continue without logo */ }
 
-    const tableStyles = { font: "Inter", fontSize: 7, cellPadding: 1.5, overflow: "linebreak" };
+    const tableStyles = { font: "Inter", fontSize: 7, cellPadding: 1.5, overflow: "linebreak", valign: "middle" };
     const headStyles = { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: "normal", fontSize: 7, valign: "middle" };
 
     function renderPageHeader(sectionTitle) {

@@ -1,7 +1,3 @@
-/* ── Field Validation ── */
-.field-error .form-input,.field-error .crud-form-group input,.field-error .crud-form-group select,.field-error .crud-form-group textarea,input.input-error,select.input-error,textarea.input-error,input.input-error:focus,select.input-error:focus,textarea.input-error:focus{border-color:#f43f5e !important;box-shadow:0 0 0 4px rgba(244,63,94,0.18) !important}
-.field-success .form-input{border-color:rgba(34,197,94,0.35) !important;box-shadow:0 0 0 3px rgba(34,197,94,0.06) !important}
-
 /* ── Interactive Validation Showcase ── */
 .vld-field.state-error .vld-icon.error{display:block;color:var(--fb-danger-text)}
 .vld-field.state-success .vld-icon.success{display:block;color:var(--fb-success-text)}

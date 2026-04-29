@@ -269,7 +269,7 @@ export function GlobalSettingsDrawer({ open, onClose }) {
         <div className="fs-field">
           <label className="fs-field-label">Platform Name</label>
           <input
-            className={`fs-input${nameError && form.platform_name !== initial.platform_name ? " fs-input-error" : ""}`}
+            className={`fs-input${nameError && form.platform_name !== initial.platform_name ? " error" : ""}`}
             type="text"
             maxLength={100}
             value={form.platform_name}
@@ -282,7 +282,7 @@ export function GlobalSettingsDrawer({ open, onClose }) {
         <div className="fs-field">
           <label className="fs-field-label">Support Email</label>
           <input
-            className={`fs-input${emailError && form.support_email !== initial.support_email ? " fs-input-error" : ""}`}
+            className={`fs-input${emailError && form.support_email !== initial.support_email ? " error" : ""}`}
             type="email"
             value={form.support_email}
             onChange={(e) => set("support_email", e.target.value)}

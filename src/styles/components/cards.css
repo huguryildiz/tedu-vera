@@ -166,6 +166,10 @@
 .scores-kpi-item-sub .sub-accent{color:var(--accent)}
 .kpi-range-triple{font-size:14px !important;letter-spacing:-0.2px}
 .kpi-range-sep{color:var(--text-tertiary);font-weight:400}
+.scores-kpi-item-value .accent,
+.scores-kpi-item-value .success,
+.scores-kpi-item-value .warning,
+.scores-kpi-item-value .danger{font-family:var(--mono)}
 .scores-kpi-item-value .accent{color:var(--accent)}
 .scores-kpi-item-value .success{color:var(--success)}
 .scores-kpi-item-value .warning{color:var(--warning)}

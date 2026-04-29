@@ -222,7 +222,7 @@ export async function buildAnalyticsPDF(params, { periodName = "", organization 
   const dateStr = `${String(now.getDate()).padStart(2, "0")}.${String(now.getMonth() + 1).padStart(2, "0")}.${now.getFullYear()}`;
 
   const metaParts = [organization, department, periodName].filter(Boolean);
-  const tableFont = { font: "Inter", fontSize: 7, cellPadding: 1.5, overflow: "linebreak" };
+  const tableFont = { font: "Inter", fontSize: 7, cellPadding: 1.5, overflow: "linebreak", valign: "middle" };
   const headFont = { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: "normal", fontSize: 7, valign: "middle" };
   const pdfHeader = (h) => String(h).replace(/\s*(\(\d+\))$/, "\n$1");
   const margin = 14;

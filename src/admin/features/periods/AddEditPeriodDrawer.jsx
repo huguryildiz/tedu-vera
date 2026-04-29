@@ -115,7 +115,7 @@ export default function AddEditPeriodDrawer({
               Period Name <span className="fs-field-req">*</span>
             </label>
             <input
-              className={`fs-input${nameError ? " fs-input-error" : ""}`}
+              className={`fs-input${nameError ? " error" : ""}`}
               type="text"
               placeholder="e.g., Spring 2026"
               value={formName}

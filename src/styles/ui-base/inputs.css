@@ -76,14 +76,26 @@ textarea:disabled {
   cursor: not-allowed;
 }
 
-/* ── Global .error state for all inputs & textareas ─────────
+/* ── Global .error state for all form fields ─────────────────
    Single source of truth — do not redefine per-component.
-   Use the .error class on any <input> or <textarea> to apply.
+   Add the .error class to any <input>, <textarea>, or <select>
+   to apply the canonical red border + ring.
    ─────────────────────────────────────────────────────────── */
 input.error,
+input.error:hover,
 input.error:focus,
+input.error:focus-visible,
+input.error:active,
 textarea.error,
-textarea.error:focus {
+textarea.error:hover,
+textarea.error:focus,
+textarea.error:focus-visible,
+textarea.error:active,
+select.error,
+select.error:hover,
+select.error:focus,
+select.error:focus-visible,
+select.error:active {
   border-color: var(--danger) !important;
   box-shadow: var(--field-error-ring) !important;
 }

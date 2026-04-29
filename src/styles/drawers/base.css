@@ -537,13 +537,3 @@ textarea.crt-field-input { height: auto; padding: 8px 10px; }
 .dark-mode .fs-card.crt-expanded { border-color: rgba(96, 165, 250, 0.16); }
 .dark-mode .crt-card.crt-card-error { background: rgba(248, 113, 113, 0.02); }
 
-/* Error state for fs-input fields (legacy compound; new code should use input.error) */
-.fs-input.input-error,
-.fs-input.input-error:hover,
-.fs-input.input-error:focus,
-.fs-input.input-error:focus-visible,
-.fs-input.input-error:active {
-  border-color: #f43f5e !important;
-  box-shadow: 0 0 0 4px rgba(244,63,94,0.18) !important;
-}
-
