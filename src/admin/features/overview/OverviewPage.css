@@ -125,9 +125,9 @@
   .oja-field-label      { display: block; }
   .oja-bar-desktop      { display: none !important; }
   .oja-pill-mobile {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: start;
     gap: 18px;
     border-top: 1px solid var(--border);
     padding-top: 8px;
@@ -136,11 +136,12 @@
   .oja-pill-col {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     gap: 4px;
-    flex: 1;
     min-width: 0;
   }
+  .oja-pill-col:nth-child(1) { align-items: flex-start; }
+  .oja-pill-col:nth-child(2) { align-items: center; }
+  .oja-pill-col:nth-child(3) { align-items: flex-end; }
   .oja-pill-col .oja-prog-frac {
     font-size: 13px;
     font-weight: 800;
