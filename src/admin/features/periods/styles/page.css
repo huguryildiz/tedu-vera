@@ -317,12 +317,13 @@ button.periods-cset-badge:hover svg {
 }
 
 /* ─── Date range ─────────────────────────────────────────── */
+/* .sem-meta-inline is a mobile-portrait–only consolidated meta block
+ * (StatusPill + ReadinessPopover + date range). On desktop the Status
+ * and Date Range columns render those values separately, so the inline
+ * block is hidden to avoid duplicates (which also broke E2E strict-mode
+ * locators that resolved .periods-readiness-badge.ready to 2 elements). */
 .sem-meta-inline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 2px;
-  flex-wrap: wrap;
+  display: none;
 }
 
 .periods-date-range {
