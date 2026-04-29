@@ -1,5 +1,5 @@
 import Pagination from "@/shared/ui/Pagination";
-import { ClipboardList, MoreVertical, Pencil, Copy, Trash2, FolderOpen, Upload, Plus, Info, Search, XCircle, UserRound, GraduationCap, Users } from "lucide-react";
+import { ClipboardList, MoreVertical, Pencil, Copy, Trash2, FolderOpen, Upload, Plus, Info, Search, XCircle, UserRound, GraduationCap, Users, Clock } from "lucide-react";
 import { TeamMemberNames } from "@/shared/ui/EntityMeta";
 import JurorBadge from "@/admin/shared/JurorBadge";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
@@ -219,10 +219,12 @@ export default function ProjectsTable({
                     : <span style={{ color: "var(--text-tertiary)", fontSize: 11 }}>—</span>}
                 </td>
                 <td data-label="Project Title" className="col-title">
-                  <span className="mobile-eyebrow">
-                    {project.group_no != null ? `P${project.group_no}` : ""}
-                  </span>
-                  <div className="proj-title-text">{project.title}</div>
+                  <div className="proj-title-text">
+                    {project.group_no != null && (
+                      <span className="mobile-eyebrow">P{project.group_no}{" "}</span>
+                    )}
+                    {project.title}
+                  </div>
                   {project.advisor && (() => {
                     const advisors = project.advisor.split(",").map((s) => s.trim()).filter(Boolean);
                     if (!advisors.length) return null;
@@ -280,9 +282,11 @@ export default function ProjectsTable({
                     <span className="proj-chips-spacer" />
                     <span className="proj-chips-sep" />
                     <span className="proj-compact-stats">
+                      <ClipboardList size={9} strokeWidth={2} className="proj-stat-icon" />
                       <strong>{projectEvalCountMap.get(project.id) ?? 0}</strong>
                       {" eval"}
                       <span className="proj-chips-sep" />
+                      <Clock size={9} strokeWidth={2} className="proj-stat-icon" />
                       <span className="vera-datetime-text">{formatRelative(project.updated_at)}</span>
                     </span>
                   </div>

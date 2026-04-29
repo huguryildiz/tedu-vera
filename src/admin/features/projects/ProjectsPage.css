@@ -306,6 +306,7 @@
   }
   #projects-main-table .proj-dot { color: rgba(15,23,42,0.13); font-size: 10px; }
   #projects-main-table .proj-compact-stats .proj-chips-sep { margin: 0; }
+  #projects-main-table .proj-stat-icon { flex-shrink: 0; color: var(--text-tertiary); }
   /* Ensure tooltip wrappers don't break vertical centering in flex row */
   #projects-main-table .proj-compact-row2 .premium-tooltip-wrap { display: inline-flex; align-items: center; }
   /* Size down member-chips when inside compact row2 */
