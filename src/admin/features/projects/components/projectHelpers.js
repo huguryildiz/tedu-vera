@@ -8,6 +8,8 @@ export const COLUMNS = [
   { key: "updated_at", label: "Last Updated",   colWidth: "13%", exportWidth: 18, colClass: "col-updated" },
 ];
 
+export const EXPORT_COLUMNS = COLUMNS.filter((c) => c.key !== "group_no");
+
 export function getProjectCell(p, key, avgMap) {
   if (key === "group_no")   return p.group_no ?? "";
   if (key === "title")      return p.group_no != null ? `P${p.group_no} — ${p.title ?? ""}` : (p.title ?? "");
