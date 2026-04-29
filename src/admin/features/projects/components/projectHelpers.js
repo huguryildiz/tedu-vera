@@ -8,12 +8,21 @@ export const COLUMNS = [
   { key: "updated_at", label: "Last Updated",   colWidth: "13%", exportWidth: 18, colClass: "col-updated" },
 ];
 
-export const EXPORT_COLUMNS = COLUMNS.filter((c) => c.key !== "group_no");
+const ADVISOR_COLUMN = { key: "advisor", label: "Advisor", exportWidth: 30 };
+
+export function buildExportColumns(projects) {
+  const hasAdvisor = projects.some((p) => p.advisor && p.advisor.trim());
+  const base = COLUMNS.filter((c) => c.key !== "group_no");
+  if (!hasAdvisor) return base;
+  const membersIdx = base.findIndex((c) => c.key === "members");
+  return [...base.slice(0, membersIdx + 1), ADVISOR_COLUMN, ...base.slice(membersIdx + 1)];
+}
 
 export function getProjectCell(p, key, avgMap) {
   if (key === "group_no")   return p.group_no ?? "";
   if (key === "title")      return p.group_no != null ? `P${p.group_no} — ${p.title ?? ""}` : (p.title ?? "");
   if (key === "members")    return membersToString(p.members);
+  if (key === "advisor")    return (p.advisor || "").trim();
   if (key === "avg_score")  return avgMap?.get(p.id) ?? "—";
   if (key === "updated_at") return formatFull(p.updated_at) || "—";
   return "";

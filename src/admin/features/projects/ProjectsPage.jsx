@@ -20,7 +20,7 @@ import ProjectScoresDrawer from "./ProjectScoresDrawer";
 import { downloadTable, generateTableBlob } from "@/admin/utils/downloadTable";
 import useCardSelection from "@/shared/hooks/useCardSelection";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
-import { COLUMNS, EXPORT_COLUMNS, getProjectCell, membersToArray, membersToString } from "./components/projectHelpers";
+import { COLUMNS, buildExportColumns, getProjectCell, membersToArray, membersToString } from "./components/projectHelpers";
 import ProjectsFilterPanel from "./components/ProjectsFilterPanel";
 import ProjectsTable from "./components/ProjectsTable";
 import "./ProjectsPage.css";
@@ -477,20 +477,22 @@ export default function ProjectsPage() {
           department=""
           onClose={() => setExportOpen(false)}
           generateFile={async (fmt) => {
-            const header = EXPORT_COLUMNS.map((c) => c.key === "avg_score" && periodMaxScore != null ? `Avg Score (${periodMaxScore})` : c.label);
-            const rows = sortedFilteredList.map((p) => EXPORT_COLUMNS.map((c) => getProjectCell(p, c.key, projectAvgMap)));
+            const expCols = buildExportColumns(sortedFilteredList);
+            const header = expCols.map((c) => c.key === "avg_score" && periodMaxScore != null ? `Avg Score (${periodMaxScore})` : c.label);
+            const rows = sortedFilteredList.map((p) => expCols.map((c) => getProjectCell(p, c.key, projectAvgMap)));
             return generateTableBlob(fmt, {
               filenameType: "Projects", sheetName: "Projects",
               periodName: periods.viewPeriodLabel, tenantCode: activeOrganization?.code || "",
               organization: activeOrganization?.name || "", department: "",
               pdfTitle: "VERA — Projects", header, rows,
-              colWidths: EXPORT_COLUMNS.map((c) => c.exportWidth),
+              colWidths: expCols.map((c) => c.exportWidth),
             });
           }}
           onExport={async (fmt) => {
             try {
-              const header = EXPORT_COLUMNS.map((c) => c.key === "avg_score" && periodMaxScore != null ? `Avg Score (${periodMaxScore})` : c.label);
-              const rows = sortedFilteredList.map((p) => EXPORT_COLUMNS.map((c) => getProjectCell(p, c.key, projectAvgMap)));
+              const expCols = buildExportColumns(sortedFilteredList);
+              const header = expCols.map((c) => c.key === "avg_score" && periodMaxScore != null ? `Avg Score (${periodMaxScore})` : c.label);
+              const rows = sortedFilteredList.map((p) => expCols.map((c) => getProjectCell(p, c.key, projectAvgMap)));
               logExportInitiated({
                 action: "export.projects",
                 organizationId: activeOrganization?.id || null,
@@ -513,7 +515,7 @@ export default function ProjectsPage() {
                 periodName: periods.viewPeriodLabel, tenantCode: activeOrganization?.code || "",
                 organization: activeOrganization?.name || "", department: "",
                 pdfTitle: "VERA — Projects", header, rows,
-                colWidths: EXPORT_COLUMNS.map((c) => c.exportWidth),
+                colWidths: expCols.map((c) => c.exportWidth),
               });
               const fmtLabel = fmt === "pdf" ? "PDF" : fmt === "csv" ? "CSV" : "Excel";
               _toast.success(`${filteredList.length} project${filteredList.length !== 1 ? "s" : ""} exported · ${fmtLabel}`);
