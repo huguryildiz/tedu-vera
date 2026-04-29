@@ -92,8 +92,8 @@ export default function OutcomesTable({
         </div>
       )}
 
-      <div className={`card acc-table-card${isLocked ? " locked-card" : ""}`}>
-        <div className="card-header">
+      <div className={`acc-table-card${isLocked ? " locked-card" : ""}`}>
+        <div className="acc-table-card-header">
           <div className="acc-card-title-group">
             <div className="crt-title-row">
               {!isLocked && (
@@ -188,7 +188,6 @@ export default function OutcomesTable({
             </div>
           </div>
         </div>
-        <div className="table-wrap" style={{ border: "none" }}>
           {fw.loading && fw.outcomes.length === 0 ? (
             <div className="acc-empty-state" style={{ padding: "32px 24px" }}>
               <div className="acc-empty-desc">Loading outcomes…</div>
@@ -253,7 +252,6 @@ export default function OutcomesTable({
               </tbody>
             </table>
           )}
-        </div>
 
         {/* Mobile portrait accordion card list */}
         {fw.outcomes.length > 0 && pageRows.length > 0 && (

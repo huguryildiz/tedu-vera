@@ -47,15 +47,6 @@
 
   /* ── Table → premium card layout ──────────────────────────── */
 
-  #page-accreditation .table-wrap {
-    overflow: hidden;
-    border: none;
-    background: none;
-    box-shadow: none;
-    border-radius: 0;
-    padding: 0;
-  }
-
   .acc-table {
     display: block !important;
     width: 100% !important;
@@ -167,7 +158,7 @@
   }
 
   /* Hide desktop table; show dedicated mobile card list */
-  #page-accreditation .acc-table-card .table-wrap .acc-table {
+  #page-accreditation .acc-table-card .acc-table {
     display: none !important;
   }
 
