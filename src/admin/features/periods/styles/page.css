@@ -319,13 +319,14 @@ button.periods-cset-badge:hover svg {
 /* ─── Date range ─────────────────────────────────────────── */
 .periods-date-range {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   font-weight: 500;
   white-space: nowrap;
+  font-family: var(--mono);
 }
 
 .periods-date-sep {
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   margin: 0 3px;
 }
 

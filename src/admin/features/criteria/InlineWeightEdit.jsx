@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Pencil } from "lucide-react";
 
 export default function InlineWeightEdit({ value, color, otherTotal, onChange, disabled }) {
   const [editing, setEditing] = useState(false);
@@ -83,7 +84,7 @@ export default function InlineWeightEdit({ value, color, otherTotal, onChange, d
   return (
     <div className="crt-inline-weight">
       <div
-        className="crt-inline-weight-badge"
+        className={`crt-inline-weight-badge${disabled ? " crt-inline-weight-badge--locked" : ""}`}
         onClick={handleBadgeClick}
         style={{
           backgroundColor: bgColorLight,
@@ -91,6 +92,7 @@ export default function InlineWeightEdit({ value, color, otherTotal, onChange, d
         }}
       >
         {value} pts
+        {!disabled && <Pencil size={9} strokeWidth={2.5} className="crt-inline-weight-edit-icon" />}
       </div>
     </div>
   );
