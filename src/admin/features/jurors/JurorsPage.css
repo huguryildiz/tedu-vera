@@ -360,25 +360,12 @@
     opacity: 0.35;
   }
 
-  /* ── Row 1: avatar + [name + pill] + org + kebab ── */
+  /* ── Row 1: ring (left) + [name + pill] + org + kebab ── */
   .jc-row1 {
     display: flex;
     align-items: center;
     gap: 9px;
     padding: 9px 10px 8px;
-  }
-
-  .jc-avatar {
-    flex-shrink: 0;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
   }
 
   .jc-meta {

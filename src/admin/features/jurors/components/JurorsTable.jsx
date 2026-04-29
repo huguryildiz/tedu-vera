@@ -193,21 +193,6 @@ function JurorRow({
       <td className="col-mobile-card">
         <div className="jc">
           <div className="jc-row1">
-            <div
-              className="jc-avatar"
-              style={{ background: jurorAvatarBg(name), color: jurorAvatarFg(name) }}
-            >
-              {jurorInitials(name)}
-            </div>
-            <div className="jc-meta">
-              <div className="jc-name-row">
-                <span className="jc-name">{name}</span>
-                <JurorStatusPill status={status} />
-              </div>
-              {juror.affiliation && (
-                <span className="jc-org">{juror.affiliation}</span>
-              )}
-            </div>
             {(() => {
               const avgRaw = jurorAvgMap.get(String(jid));
               const avgNum = avgRaw != null ? Number(avgRaw) : null;
@@ -230,6 +215,15 @@ function JurorRow({
                 </div>
               );
             })()}
+            <div className="jc-meta">
+              <div className="jc-name-row">
+                <span className="jc-name">{name}</span>
+                <JurorStatusPill status={status} />
+              </div>
+              {juror.affiliation && (
+                <span className="jc-org">{juror.affiliation}</span>
+              )}
+            </div>
             <FloatingMenu
               isOpen={openMenuId === jid && shouldUseCardLayout}
               onClose={() => setOpenMenuId(null)}
