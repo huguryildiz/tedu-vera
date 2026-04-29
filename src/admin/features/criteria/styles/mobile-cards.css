@@ -440,6 +440,46 @@
   border-color: rgba(251,191,36,0.32);
 }
 
+/* ── Accordion chevron ───────────────────────────────────────── */
+
+.crt-mobile-card-chevron {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  transition: transform 0.2s ease;
+}
+
+.crt-mobile-card-chevron.expanded {
+  transform: rotate(180deg);
+}
+
+/* ── Collapsed outcomes sub-row ──────────────────────────────── */
+
+.crt-mobile-card-collapsed-outcomes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 0 16px 10px;
+}
+
+/* ── Expanded body ───────────────────────────────────────────── */
+
+.crt-mobile-card-body {
+  border-top: 1px solid var(--border);
+}
+
+.crt-mobile-card-body .crt-mobile-card-blurb {
+  padding-top: 10px;
+}
+
+.crt-mobile-card-body .crt-mobile-bands {
+  border-top: 1px solid var(--border);
+}
+
+.crt-mobile-card-body .crt-mobile-bands:first-child {
+  border-top: none;
+}
+
 /* ── Lock badge (replaces Add button header chip on mobile) ───── */
 
 .crt-lock-badge {

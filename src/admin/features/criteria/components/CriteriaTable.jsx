@@ -1,5 +1,7 @@
+import { useState } from "react";
 import {
   ClipboardList,
+  ChevronDown,
   Pencil,
   MoreVertical,
   Copy,
@@ -51,6 +53,16 @@ export default function CriteriaTable({
   const desktopScopeRef = useCardSelection();
   const mobileScopeRef = useCardSelection();
   const lockedTooltip = isLocked ? "Evaluation period is locked. Unlock the period to make changes." : null;
+
+  const [expandedCards, setExpandedCards] = useState(new Set());
+  const toggleExpand = (key) => {
+    setExpandedCards((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   return (
     <div className="crt-table-card">
@@ -306,24 +318,26 @@ export default function CriteriaTable({
             const i = draftCriteria.indexOf(criterion);
             const rubric = Array.isArray(criterion.rubric) ? criterion.rubric : [];
             const outcomes = criterion.outcomes || [];
-            const visibleOutcomes = outcomes.slice(0, 4);
-            const overflowCount = outcomes.length - visibleOutcomes.length;
+            const cardKey = criterion.key || `crt-card-${i}`;
+            const isExpanded = expandedCards.has(cardKey);
+            const collapsedOutcomes = outcomes.slice(0, 3);
+            const collapsedOverflow = outcomes.length - collapsedOutcomes.length;
             const menuKey = `crt-mobile-${i}`;
             const isMenuOpen = openMenuId === menuKey;
             const color = criterion.color || CRITERION_COLORS[i % CRITERION_COLORS.length];
             return (
               <div
-                key={criterion.key || i}
+                key={cardKey}
                 data-card-selectable=""
-                className={`crt-mobile-card${isLocked ? " crt-mobile-card--locked" : ""}`}
+                className={`crt-mobile-card${isLocked ? " crt-mobile-card--locked" : ""}${isExpanded ? " crt-mobile-card--expanded" : ""}`}
               >
                 <div className="crt-mobile-card-header">
                   <button
                     className="crt-mobile-card-header-tap row-inline-control"
-                    onClick={() => !isLocked && onOpenEditor(i)}
-                    style={{ cursor: isLocked ? "default" : "pointer" }}
-                    tabIndex={isLocked ? -1 : 0}
-                    aria-label={`Edit ${criterion.label || `Criterion ${i + 1}`}`}
+                    onClick={() => toggleExpand(cardKey)}
+                    style={{ cursor: "pointer" }}
+                    aria-expanded={isExpanded}
+                    aria-label={`${criterion.label || `Criterion ${i + 1}`} — ${isExpanded ? "collapse" : "expand"}`}
                   >
                     <span
                       className="crt-mobile-card-color-dot"
@@ -342,6 +356,11 @@ export default function CriteriaTable({
                     >
                       {criterion.max != null ? `${criterion.max} pts` : "—"}
                     </span>
+                    <ChevronDown
+                      size={16}
+                      strokeWidth={2}
+                      className={`crt-mobile-card-chevron${isExpanded ? " expanded" : ""}`}
+                    />
                   </button>
                   <FloatingMenu
                     trigger={
@@ -410,52 +429,69 @@ export default function CriteriaTable({
                     </PremiumTooltip>
                   </FloatingMenu>
                 </div>
-                {criterion.blurb && (
-                  <div className="crt-mobile-card-blurb">
-                    {criterion.blurb}
+                {!isExpanded && outcomes.length > 0 && (
+                  <div className="crt-mobile-card-collapsed-outcomes">
+                    {collapsedOutcomes.map((code) => {
+                      const isIndirect = criterion.outcomeTypes?.[code] === "indirect";
+                      return (
+                        <span
+                          key={code}
+                          className={`crt-mobile-outcome-pill${isIndirect ? " indirect" : ""}`}
+                        >
+                          {code}
+                        </span>
+                      );
+                    })}
+                    {collapsedOverflow > 0 && (
+                      <span className="crt-mobile-outcome-overflow">+{collapsedOverflow}</span>
+                    )}
                   </div>
                 )}
-                {rubric.length > 0 && (
-                  <div className="crt-mobile-bands">
-                    <div className="crt-mobile-section-label">Rubric Bands</div>
-                    {rubric.map((band, bi) => (
-                      <div
-                        key={bi}
-                        className={`crt-mobile-band-row ${rubricBandClass(band.level || band.label)}`}
-                      >
-                        <span className="crt-mobile-band-name">
-                          {band.level || band.label}
-                        </span>
-                        {bandRangeText(band) && (
-                          <span className="crt-mobile-band-range">
-                            {bandRangeText(band)} pts
-                          </span>
-                        )}
+                {isExpanded && (
+                  <div className="crt-mobile-card-body">
+                    {criterion.blurb && (
+                      <div className="crt-mobile-card-blurb">
+                        {criterion.blurb}
                       </div>
-                    ))}
-                  </div>
-                )}
-                {outcomes.length > 0 && (
-                  <div className="crt-mobile-outcomes">
-                    <div className="crt-mobile-section-label">Outcomes</div>
-                    <div className="crt-mobile-outcomes-pills">
-                      {visibleOutcomes.map((code) => {
-                        const isIndirect = criterion.outcomeTypes?.[code] === "indirect";
-                        return (
-                          <span
-                            key={code}
-                            className={`crt-mobile-outcome-pill${isIndirect ? " indirect" : ""}`}
+                    )}
+                    {rubric.length > 0 && (
+                      <div className="crt-mobile-bands">
+                        <div className="crt-mobile-section-label">Rubric Bands</div>
+                        {rubric.map((band, bi) => (
+                          <div
+                            key={bi}
+                            className={`crt-mobile-band-row ${rubricBandClass(band.level || band.label)}`}
                           >
-                            {code}
-                          </span>
-                        );
-                      })}
-                      {overflowCount > 0 && (
-                        <span className="crt-mobile-outcome-overflow">
-                          +{overflowCount}
-                        </span>
-                      )}
-                    </div>
+                            <span className="crt-mobile-band-name">
+                              {band.level || band.label}
+                            </span>
+                            {bandRangeText(band) && (
+                              <span className="crt-mobile-band-range">
+                                {bandRangeText(band)} pts
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {outcomes.length > 0 && (
+                      <div className="crt-mobile-outcomes">
+                        <div className="crt-mobile-section-label">Outcomes</div>
+                        <div className="crt-mobile-outcomes-pills">
+                          {outcomes.map((code) => {
+                            const isIndirect = criterion.outcomeTypes?.[code] === "indirect";
+                            return (
+                              <span
+                                key={code}
+                                className={`crt-mobile-outcome-pill${isIndirect ? " indirect" : ""}`}
+                              >
+                                {code}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

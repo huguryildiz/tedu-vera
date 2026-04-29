@@ -24,6 +24,7 @@
   .export-footer-meta { font-size: 10px; }
 
   /* ── 5C. Filter groups: full-width stack ── */
+  .filter-row { flex-wrap: wrap; }
   .filter-group {
     min-width: 0; flex: 1 1 100%;
   }
@@ -31,7 +32,9 @@
   .filter-group input {
     height: 34px; font-size: 11px; padding: 0 10px;
   }
-  .filter-clear-btn { width: 100%; justify-content: center; }
+  .filter-toggle-group { gap: 4px; flex-wrap: wrap; min-height: auto; }
+  .filter-toggle-btn { height: 28px; padding: 0 10px; font-size: 11px; }
+  .filter-clear-btn { width: 100%; justify-content: center; height: 34px; }
 
   /* ── 5D. Filter panel: compact ── */
   .filter-panel-header { padding: 12px 14px; }
