@@ -187,12 +187,16 @@ export default function ReviewMobileCard({ row, criteria }) {
               <div className="rmc-mini-avatars">
                 <Users size={10} strokeWidth={2} className="rmc-mini-avatars-icon" />
                 {visibleAvatars.map((name, i) => (
-                  <div key={i} className="rmc-mini-av">
-                    {(name || "?")[0].toUpperCase()}
-                  </div>
+                  <PremiumTooltip key={i} text={name || "?"}>
+                    <div className="rmc-mini-av">
+                      {(name || "?")[0].toUpperCase()}
+                    </div>
+                  </PremiumTooltip>
                 ))}
                 {overflowCount > 0 && (
-                  <div className="rmc-mini-av rmc-mini-av--overflow">+{overflowCount}</div>
+                  <PremiumTooltip text={members.slice(3).join(", ")}>
+                    <div className="rmc-mini-av rmc-mini-av--overflow">+{overflowCount}</div>
+                  </PremiumTooltip>
                 )}
               </div>
             )}
