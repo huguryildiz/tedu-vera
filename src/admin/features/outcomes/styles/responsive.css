@@ -228,6 +228,16 @@
   width: 8px;
 }
 
+.acc-mobile-coverage-row {
+  padding: 10px 14px 0;
+}
+
+.acc-mobile-card-header-tap .acc-code-badge {
+  min-width: 68px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .acc-mobile-card-chevron {
   flex-shrink: 0;
   color: var(--text-tertiary);

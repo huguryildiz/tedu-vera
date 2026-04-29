@@ -286,11 +286,6 @@ export default function OutcomesTable({
                       {outcome.label && (
                         <span className="acc-mobile-card-title">{outcome.label}</span>
                       )}
-                      <span className="acc-mobile-card-spacer" />
-                      <span className={coverageBadgeClass(coverage)}>
-                        <span className="acc-cov-dot" />
-                        {coverageLabel(coverage)}
-                      </span>
                       <ChevronDown
                         size={16}
                         strokeWidth={2}
@@ -343,6 +338,12 @@ export default function OutcomesTable({
                   </div>
                   {isExpanded && (
                     <div className="acc-mobile-card-body">
+                      <div className="acc-mobile-coverage-row">
+                        <span className={coverageBadgeClass(coverage)}>
+                          <span className="acc-cov-dot" />
+                          {coverageLabel(coverage)}
+                        </span>
+                      </div>
                       {outcome.description && (
                         <div className="acc-mobile-outcome-content">
                           <div className="acc-mobile-outcome-desc">{outcome.description}</div>

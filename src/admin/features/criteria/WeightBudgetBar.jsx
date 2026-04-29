@@ -2,6 +2,18 @@ import { useState, useRef, useEffect } from "react";
 import { Equal, Sparkles } from "lucide-react";
 import { CRITERION_COLORS } from "./criteriaFormHelpers";
 
+const DARK_COLOR_MAP = { "#22c55e": "#4ade80", "#16a34a": "#4ade80" };
+
+function useDarkMode() {
+  const [dark, setDark] = useState(() => document.body.classList.contains("dark-mode"));
+  useEffect(() => {
+    const obs = new MutationObserver(() => setDark(document.body.classList.contains("dark-mode")));
+    obs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+  return dark;
+}
+
 const BUBBLE_COLORS = ['#60a5fa','#f472b6','#34d399','#fbbf24','#a78bfa','#fb923c','#38bdf8','#e879f9','#4ade80','#f87171'];
 
 function spawnBubbles(iconRef, wrapRef, setParticles) {
@@ -35,6 +47,8 @@ function spawnBubbles(iconRef, wrapRef, setParticles) {
 }
 
 export default function WeightBudgetBar({ criteria, onDistribute, onAutoFill, locked }) {
+  const isDark = useDarkMode();
+  const resolveColor = (hex) => (isDark && hex ? (DARK_COLOR_MAP[hex.toLowerCase()] ?? hex) : hex);
   const [autoFillOpen, setAutoFillOpen] = useState(false);
   const popoverRef = useRef(null);
 
@@ -186,7 +200,7 @@ export default function WeightBudgetBar({ criteria, onDistribute, onAutoFill, lo
       <div className="crt-budget-bar-container">
         <div className={`crt-budget-bar${locked ? " crt-budget-bar--locked" : ""}`}>
           {criteria.map((crit, idx) => {
-            const color = crit.color || CRITERION_COLORS[idx % CRITERION_COLORS.length];
+            const color = resolveColor(crit.color || CRITERION_COLORS[idx % CRITERION_COLORS.length]);
             return (
               <div
                 key={crit.id || crit.key || idx}
@@ -209,7 +223,7 @@ export default function WeightBudgetBar({ criteria, onDistribute, onAutoFill, lo
 
       <div className="crt-budget-legend">
         {criteria.map((crit, idx) => {
-          const color = crit.color || CRITERION_COLORS[idx % CRITERION_COLORS.length];
+          const color = resolveColor(crit.color || CRITERION_COLORS[idx % CRITERION_COLORS.length]);
           return (
             <div key={crit.id || crit.key || idx} className="crt-budget-legend-item">
               <div className="crt-budget-legend-dot" style={{ backgroundColor: color }} />
