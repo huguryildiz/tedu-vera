@@ -592,7 +592,7 @@
 /* ── Expand panel row ── */
 .reviews-expand-row > td{padding:0;border-top:none}
 .reviews-expand-cell{padding:0 !important}
-.reviews-expand-inner{display:grid;grid-template-columns:repeat(3,1fr);padding:12px 16px 14px;background:var(--surface-2,var(--bg-sidebar));border-bottom:1px solid var(--border)}
+.reviews-expand-inner{display:grid;grid-template-columns:repeat(3,1fr);max-width:960px;padding:12px 16px 14px;background:var(--surface-2,var(--bg-sidebar));border-bottom:1px solid var(--border)}
 
 /* Section label */
 .reviews-expand-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-tertiary);margin-bottom:7px}
