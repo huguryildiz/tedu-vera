@@ -56,6 +56,14 @@ function relativeTime(ms) {
   return `${years}y ${remMonths}mo ago`;
 }
 
+function formatAbsoluteTime(ms) {
+  if (!ms) return null;
+  return new Date(ms).toLocaleString("tr-TR", {
+    day: "2-digit", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
+
 function jurorStatus(j) {
   if (j.finalSubmitted && !j.editEnabled) return "completed";
   if (j.editEnabled) return "editing";
@@ -424,7 +432,13 @@ export default function OverviewPage() {
                       <td className="mono text-right">
                         {avg != null ? <span className="vera-score-num">{avg}</span> : <span className="text-muted">—</span>}
                       </td>
-                      <td className="text-right vera-datetime-text">{relativeTime(j.lastSeenMs)}</td>
+                      <td className="text-right vera-datetime-text">
+                        {formatAbsoluteTime(j.lastSeenMs) ? (
+                          <PremiumTooltip text={formatAbsoluteTime(j.lastSeenMs)} position="top">
+                            <span style={{ cursor: "default" }}>{relativeTime(j.lastSeenMs)}</span>
+                          </PremiumTooltip>
+                        ) : relativeTime(j.lastSeenMs)}
+                      </td>
                     </tr>
                   );
                 })}
@@ -647,7 +661,11 @@ export default function OverviewPage() {
                         <strong>{j.juryName}</strong>{" "}{feedText}
                       </div>
                       <div className="live-feed-time vera-datetime-text">
-                        {j.lastSeenMs ? relativeTime(j.lastSeenMs) : "Never seen"}
+                        {j.lastSeenMs && formatAbsoluteTime(j.lastSeenMs) ? (
+                          <PremiumTooltip text={formatAbsoluteTime(j.lastSeenMs)} position="top">
+                            <span style={{ cursor: "default" }}>{relativeTime(j.lastSeenMs)}</span>
+                          </PremiumTooltip>
+                        ) : (j.lastSeenMs ? relativeTime(j.lastSeenMs) : "Never seen")}
                         {j.failedAttempts > 0 && (
                           <span style={{ marginLeft: 8, color: "var(--danger)", fontWeight: 600 }}>
                             · failed PIN {j.failedAttempts}×
