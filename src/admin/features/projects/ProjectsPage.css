@@ -199,12 +199,12 @@
     text-overflow: ellipsis;
   }
   #projects-main-table .mobile-eyebrow {
-    display: block;
+    display: inline;
     font-size: 10px;
     font-weight: 700;
     color: var(--accent);
     letter-spacing: 0.6px;
-    margin-bottom: 2px;
+    margin-right: 3px;
   }
 
   /* Actions (kebab) cell — top-right */
