@@ -1,9 +1,4 @@
-/* Audit Log page*/
-
-/* ── From vera.css 6153-6244: Audit log ── */
-/* ═══════════════════════════════════════════════════
-   AUDIT LOG — Premium Operations Console
-   ═══════════════════════════════════════════════════ */
+/* Audit Log page — Premium Operations Console */
 
 /* Toolbar */
 .audit-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
@@ -807,11 +802,6 @@
 /* Severity overrides (take precedence over category) */
 .amc[data-sev="high"]     { --amc-accent: var(--danger, #dc2626); border-color: rgba(239,68,68,0.22); }
 .amc[data-sev="critical"] { --amc-accent: #7f1d1d; border-color: rgba(127,29,29,0.4); }
-
-/* ═══════════════════════════════════════════════════
-   PIN-SCREEN GLOBAL PREMIUM ENHANCEMENT PASS
-   Deeper atmosphere · richer glass · refined glow
-   ═══════════════════════════════════════════════════ */
 
 /* ── Severity column cell ───────────────────────────────────── */
 .audit-sev-cell {
