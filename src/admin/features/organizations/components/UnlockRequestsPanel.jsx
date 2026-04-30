@@ -1,9 +1,11 @@
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import FbAlert from "@/shared/ui/FbAlert";
 import Pagination from "@/shared/ui/Pagination";
+import Avatar from "@/shared/ui/Avatar";
 import { formatDateTime } from "@/shared/lib/dateUtils";
 import SortIcon from "./SortIcon";
 import TenantStatusPill from "./TenantStatusPill";
+import { getInitials, getAvatarColor } from "./organizationHelpers";
 
 const UNLOCK_TABS = [
   { key: "pending",  label: "Pending",  icon: Clock },
@@ -102,9 +104,18 @@ export default function UnlockRequestsPanel({
               )}
               {!unlockLoading && pagedUnlockRows.map((r) => (
                 <tr key={r.id} data-status={r.status}>
-                  <td data-label="Organization">{r.organization_name || "—"}</td>
-                  <td data-label="Period"><strong>{r.period_name || "—"}</strong></td>
-                  <td data-label="Requester">{r.requester_name || "—"}</td>
+                  <td data-label="Organization"><strong>{r.organization_name || "—"}</strong></td>
+                  <td data-label="Period">{r.period_name || "—"}</td>
+                  <td data-label="Requester">
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                      <Avatar
+                        initials={getInitials(r.requester_name, r.requester_email)}
+                        bg={getAvatarColor(r.requester_name || r.requester_email)}
+                        size={28}
+                      />
+                      {r.requester_name || "—"}
+                    </span>
+                  </td>
                   <td data-label="Reason" style={{ maxWidth: 320, whiteSpace: "normal" }}>
                     <span style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                       {r.reason}
