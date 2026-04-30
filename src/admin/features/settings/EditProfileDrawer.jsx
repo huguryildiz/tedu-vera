@@ -20,7 +20,7 @@
 //   isSuper      — boolean
 
 import { useState, useEffect } from "react";
-import { CheckCircle2, Clock, X, Icon } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, X, Icon } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import FbAlert from "@/shared/ui/FbAlert";
 import Avatar from "@/shared/ui/Avatar";
@@ -225,16 +225,20 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, onCa
           ) : (
             <>
               <input
-                className="fs-input"
+                className={`fs-input${!email.trim() ? " error" : ""}`}
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={saving}
                 placeholder="your.email@institution.edu"
               />
-              <div className="fs-field-helper hint">
-                A confirmation link will be sent to your new email address.
-              </div>
+              {!email.trim() ? (
+                <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Email is required.</p>
+              ) : (
+                <div className="fs-field-helper hint">
+                  A confirmation link will be sent to your new email address.
+                </div>
+              )}
             </>
           )}
         </div>
@@ -291,7 +295,7 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, onCa
           className="fs-btn fs-btn-primary"
           type="button"
           onClick={handleSave}
-          disabled={saving || !isDirty || !displayName.trim()}
+          disabled={saving || !isDirty || !displayName.trim() || (!pendingEmail && !email.trim())}
         >
           <span className="btn-loading-content">
             <AsyncButtonContent loading={saving} loadingText="Saving…">Save Changes</AsyncButtonContent>
