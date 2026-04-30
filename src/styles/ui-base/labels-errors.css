@@ -18,7 +18,8 @@
 
 /* ── Inline field error (mini-alert style) ─────────────────── */
 
-.vera-inline-error {
+.vera-inline-error,
+.crt-field-error {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -30,7 +31,8 @@
   animation: veraErrorFadeIn 0.2s ease-out;
 }
 
-.dark-mode .vera-inline-error {
+.dark-mode .vera-inline-error,
+.dark-mode .crt-field-error {
   color: #fca5a5;
 }
 
