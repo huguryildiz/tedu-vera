@@ -184,6 +184,11 @@ export default function PeriodsPage() {
   const livePeriods = periodList.filter((p) => p.is_locked && !p.closed_at && periodStats[p.id]?.hasScores).length;
   const closedPeriods = periodList.filter((p) => !!p.closed_at).length;
 
+  const livePeriod = periodList.find((p) => p.is_locked && !p.closed_at && periodStats[p.id]?.hasScores) || null;
+  const liveStats = livePeriod && periodStats[livePeriod.id] ? periodStats[livePeriod.id] : null;
+  const liveProgress = liveStats?.progress ?? null;
+  const livePending = liveStats ? (liveStats.totalSheets - liveStats.submittedSheets) : null;
+
   // Helper to pull the canonical state label for a period inside filter/sort
   // callbacks. Filter maps "draft" → both draft_ready and draft_incomplete.
   const getState = useCallback((p) => getPeriodState(
@@ -638,25 +643,42 @@ export default function PeriodsPage() {
         />
       )}
       {/* KPI strip */}
-      <div className="scores-kpi-strip">
+      <div className="scores-kpi-strip periods-kpi-strip">
+        <div className="scores-kpi-item periods-kpi-item--name">
+          <div className="scores-kpi-item-value scores-kpi-item-value--text">
+            {livePeriod ? (
+              <span className="kpi-live-indicator">
+                <span className="kpi-live-dot" />
+                {livePeriod.name}
+              </span>
+            ) : (
+              <span className="kpi-no-live">None</span>
+            )}
+          </div>
+          <div className="scores-kpi-item-label">Active Period</div>
+        </div>
+        <div className="scores-kpi-item">
+          <div className="scores-kpi-item-value">
+            {liveProgress !== null
+              ? <span className={liveProgress === 100 ? "success" : "accent"}>{liveProgress}%</span>
+              : <span className="kpi-dash">—</span>}
+          </div>
+          <div className="scores-kpi-item-label">Completion</div>
+        </div>
+        <div className="scores-kpi-item">
+          <div className="scores-kpi-item-value">
+            {livePending !== null
+              ? <span className={livePending === 0 ? "success" : "warning"}>{livePending}</span>
+              : <span className="kpi-dash">—</span>}
+          </div>
+          <div className="scores-kpi-item-label">Pending</div>
+        </div>
         <div className="scores-kpi-item">
           <div className="scores-kpi-item-value">{totalPeriods}</div>
-          <div className="scores-kpi-item-label">Periods</div>
+          <div className="scores-kpi-item-label">Total</div>
         </div>
         <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value" style={{ color: "#4f46e5" }}>{draftPeriods}</div>
-          <div className="scores-kpi-item-label">Draft</div>
-        </div>
-        <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value" style={{ color: "#2563eb" }}>{publishedPeriods}</div>
-          <div className="scores-kpi-item-label">Published</div>
-        </div>
-        <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value"><span className="success">{livePeriods}</span></div>
-          <div className="scores-kpi-item-label">Live</div>
-        </div>
-        <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value" style={{ color: "#64748b" }}>{closedPeriods}</div>
+          <div className="scores-kpi-item-value muted">{closedPeriods}</div>
           <div className="scores-kpi-item-label">Closed</div>
         </div>
       </div>

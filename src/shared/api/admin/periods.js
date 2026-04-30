@@ -341,7 +341,7 @@ export async function listPeriodStats(organizationId) {
 
   // Initialize all periods with 0 counts and null progress
   for (const periodId of periodIds) {
-    stats[periodId] = { projectCount: 0, jurorCount: 0, criteriaCount: 0, criteriaLabels: [], progress: null, hasScores: false };
+    stats[periodId] = { projectCount: 0, jurorCount: 0, criteriaCount: 0, criteriaLabels: [], progress: null, hasScores: false, submittedSheets: 0, totalSheets: 0 };
   }
 
   // Count projects
@@ -378,6 +378,8 @@ export async function listPeriodStats(organizationId) {
     if (sheetsByPeriod[periodId]) {
       const { submitted, total } = sheetsByPeriod[periodId];
       stats[periodId].progress = Math.round((submitted / total) * 100);
+      stats[periodId].submittedSheets = submitted;
+      stats[periodId].totalSheets = total;
     }
   }
 
