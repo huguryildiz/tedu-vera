@@ -186,6 +186,10 @@ export default function OutcomesPage() {
   const indirectCount = fw.outcomes.filter((o) => fw.getCoverage(o.id) === "indirect").length;
   const unmappedCount = totalOutcomes - directCount - indirectCount;
   const incompleteCount = unmappedCount + indirectCount;
+  const directPct = totalOutcomes > 0 ? Math.round((directCount / totalOutcomes) * 100) : 0;
+  const meetsThreshold = directPct >= savedFrameworkThreshold;
+  const totalMappings = fw.outcomes.reduce((sum, o) => sum + fw.getMappedCriteria(o.id).length, 0);
+  const avgMappingsPerOutcome = totalOutcomes > 0 ? (totalMappings / totalOutcomes).toFixed(1) : "—";
 
   const drawerCriteria = fw.criteria.map((c) => ({
     id: c.id,

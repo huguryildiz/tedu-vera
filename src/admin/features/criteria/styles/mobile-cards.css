@@ -266,6 +266,20 @@
 
 .crt-mobile-card-header .crt-inline-weight { flex-shrink: 0; }
 
+.crt-mobile-card-chevron-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text-tertiary);
+}
+
 /* ── Section label (Rubric Bands / Outcomes) ─────────────────── */
 
 .crt-mobile-section-label {

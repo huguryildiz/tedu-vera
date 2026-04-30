@@ -346,11 +346,6 @@ export default function CriteriaTable({
                     <span className="crt-mobile-card-name">
                       {criterion.label || criterion.shortLabel || `Criterion ${i + 1}`}
                     </span>
-                    <ChevronDown
-                      size={16}
-                      strokeWidth={2}
-                      className={`crt-mobile-card-chevron${isExpanded ? " expanded" : ""}`}
-                    />
                   </button>
                   <InlineWeightEdit
                     value={criterion.max || 0}
@@ -359,6 +354,17 @@ export default function CriteriaTable({
                     onChange={(v) => onWeightChange(i, v)}
                     disabled={isLocked}
                   />
+                  <button
+                    className="crt-mobile-card-chevron-btn row-inline-control"
+                    onClick={() => toggleExpand(cardKey)}
+                    aria-label={isExpanded ? "Collapse" : "Expand"}
+                  >
+                    <ChevronDown
+                      size={16}
+                      strokeWidth={2}
+                      className={`crt-mobile-card-chevron${isExpanded ? " expanded" : ""}`}
+                    />
+                  </button>
                   <FloatingMenu
                     trigger={
                       <button
