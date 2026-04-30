@@ -1431,7 +1431,8 @@ orgs.forEach(o => {
     const fwId = uuid(`fw-${o.code}-${idx}`);
     const fwName = d.frameworkName || `${o.frameworkName} — ${d.name}`;
     const criteriaName = fwName.replace(/-O$/, '-R');
-    out.push(`INSERT INTO frameworks (id, organization_id, name, description) VALUES ('${fwId}', '${o.id}', '${escapeSql(fwName)}', '${escapeSql(o.frameworkDesc || '')}') ON CONFLICT DO NOTHING;`);
+    const fwCreatedAt = sqlTs(evalDay, -168);
+    out.push(`INSERT INTO frameworks (id, organization_id, name, description, created_at) VALUES ('${fwId}', '${o.id}', '${escapeSql(fwName)}', '${escapeSql(o.frameworkDesc || '')}', ${fwCreatedAt}) ON CONFLICT DO NOTHING;`);
 
     // framework_outcomes — one set per period framework, keyed by outcome code.
     const fwOutIdByCode = {};
@@ -1884,7 +1885,8 @@ periodData.forEach(pd => {
     }
     const mem = genMembers(randInt(3, 5), o.lang);
     const desc = entry.desc || '';
-    out.push(`INSERT INTO projects (id, period_id, title, project_no, members, advisor_name, advisor_affiliation, description) VALUES ('${pjId}', '${pd.id}', '${escapeSql(title)}', ${i+1}, '${mem}', '${escapeSql(advisorName)}', '${escapeSql(advisorAff)}', '${escapeSql(desc)}') ON CONFLICT DO NOTHING;`);
+    const projCreatedAt = sqlTs(pd.evalDay, -(randInt(14, 28) * 24));
+    out.push(`INSERT INTO projects (id, period_id, title, project_no, members, advisor_name, advisor_affiliation, description, created_at) VALUES ('${pjId}', '${pd.id}', '${escapeSql(title)}', ${i+1}, '${mem}', '${escapeSql(advisorName)}', '${escapeSql(advisorAff)}', '${escapeSql(desc)}', ${projCreatedAt}) ON CONFLICT DO NOTHING;`);
     projList.push({id: pjId, pId: pd.id, org: pd.org, isCur: pd.isCur, arch, title});
   }
 });
@@ -1961,7 +1963,8 @@ let jurorIdList = [];
 orgs.forEach(o => {
   (orgJurors[o.code] || []).forEach((j, i) => {
     const jId = uuid(`juror-${o.code}-${i}`);
-    out.push(`INSERT INTO jurors (id, organization_id, juror_name, affiliation, email, avatar_color) VALUES ('${jId}', '${o.id}', '${escapeSql(j.n)}', '${escapeSql(j.aff)}', '${jurorEmail(j.n)}', '${palette[i % palette.length]}') ON CONFLICT DO NOTHING;`);
+    const jurorCreatedAt = sqlTs(orgCreatedDates[o.code], i * 2 + randInt(1, 8));
+    out.push(`INSERT INTO jurors (id, organization_id, juror_name, affiliation, email, avatar_color, created_at) VALUES ('${jId}', '${o.id}', '${escapeSql(j.n)}', '${escapeSql(j.aff)}', '${jurorEmail(j.n)}', '${palette[i % palette.length]}', ${jurorCreatedAt}) ON CONFLICT DO NOTHING;`);
     jurorIdList.push({id: jId, org: o.code, n: j.n, idx: i});
   });
 });
@@ -1977,7 +1980,7 @@ let authList = [];
 const PERIOD_SLOTS = ['InProgress', 'Editing', 'ReadyToSubmit', 'NotStarted'];
 
 // Normalized fixed-column batcher for juror_period_auth (avoids variable-column INSERTs)
-const jpaColumns = 'juror_id, period_id, pin_hash, last_seen_at, session_expires_at, final_submitted_at, edit_enabled, edit_reason, edit_expires_at, failed_attempts, locked_until, locked_at, is_blocked';
+const jpaColumns = 'juror_id, period_id, pin_hash, last_seen_at, session_expires_at, final_submitted_at, edit_enabled, edit_reason, edit_expires_at, failed_attempts, locked_until, locked_at, is_blocked, created_at';
 const jpaBatcher = makeBatcher('juror_period_auth', jpaColumns);
 
 periodData.forEach(pd => {
@@ -2063,7 +2066,8 @@ periodData.forEach(pd => {
       authObj.lockedAt = lockedAt;
     }
 
-    jpaBatcher.push(`('${j.id}', '${pd.id}', '${pinHash}', ${lastSeenAt}, ${sessionExpiresAt}, ${finalSubmittedAt}, ${editEnabled}, ${editReason}, ${editExpiresAt}, ${failedAttempts}, ${lockedUntil}, ${lockedAt}, ${isBlocked})`);
+    const jpaCreatedAt = sqlTs(pd.evalDay, -randInt(1, 24));
+    jpaBatcher.push(`('${j.id}', '${pd.id}', '${pinHash}', ${lastSeenAt}, ${sessionExpiresAt}, ${finalSubmittedAt}, ${editEnabled}, ${editReason}, ${editExpiresAt}, ${failedAttempts}, ${lockedUntil}, ${lockedAt}, ${isBlocked}, ${jpaCreatedAt})`);
     authList.push(authObj);
   });
 });
@@ -3664,6 +3668,24 @@ out.push(`UPDATE audit_logs al SET created_at = COALESCE(ss.last_activity_at, ss
 // unlock_requests.insert/update → unlock_requests.created_at (insert) or reviewed_at (update)
 out.push(`UPDATE audit_logs al SET created_at = ur.created_at FROM unlock_requests ur WHERE al.resource_type='unlock_requests' AND al.action='unlock_requests.insert' AND al.resource_id = ur.id AND al.actor_type='system';`);
 out.push(`UPDATE audit_logs al SET created_at = COALESCE(ur.reviewed_at, ur.created_at) FROM unlock_requests ur WHERE al.resource_type='unlock_requests' AND al.action='unlock_requests.update' AND al.resource_id = ur.id AND al.actor_type='system';`);
+
+// frameworks.insert → frameworks.created_at
+out.push(`UPDATE audit_logs al SET created_at = f.created_at FROM frameworks f WHERE al.resource_type='frameworks' AND al.resource_id = f.id AND al.actor_type='system' AND f.created_at IS NOT NULL;`);
+
+// Re-attribute trigger-emitted 'system' rows to the owning org's primary admin.
+// Service-role seed has no auth.uid() context → trigger writes actor_type='system'.
+// We fix this post-insert using the org's is_owner=true org_admin membership.
+out.push(`UPDATE audit_logs al
+SET  user_id    = m.user_id,
+     actor_type = 'admin'::audit_actor_type,
+     actor_name = p.display_name
+FROM memberships m
+JOIN profiles p ON p.id = m.user_id
+WHERE al.actor_type = 'system'
+  AND al.organization_id IS NOT NULL
+  AND al.organization_id = m.organization_id
+  AND m.role = 'org_admin'
+  AND m.is_owner = true;`);
 
 // Rebuild row_hash for every audit_logs row in chain_seq order, scoped per organization.
 // The hash chain trigger fires only BEFORE INSERT, so updating created_at after the
