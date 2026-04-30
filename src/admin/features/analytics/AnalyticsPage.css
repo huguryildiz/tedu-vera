@@ -336,7 +336,7 @@ body:not(.dark-mode) .ga-cv-poor{background:rgba(220,38,38,0.12);box-shadow:inse
 .lollipop-val{position:absolute;bottom:calc(50% + 5px);transform:translateX(-50%);font-family:var(--mono);font-size:10px;font-weight:700;white-space:nowrap}
 .lollipop-val.positive{color:var(--success)}
 .lollipop-val.negative{color:var(--danger)}
-.lollipop-axis-labels{display:flex;justify-content:space-between;margin-left:90px;font-size:9px;color:var(--text-tertiary);font-family:var(--mono);font-weight:500;padding-top:4px}
+.lollipop-axis-labels{display:flex;justify-content:space-between;margin-left:140px;font-size:9px;color:var(--text-tertiary);font-family:var(--mono);font-weight:500;padding-top:4px}
 
 /* Project attainment heatmap */
 .ga-heatmap{width:100%;border-collapse:separate;border-spacing:2px}
