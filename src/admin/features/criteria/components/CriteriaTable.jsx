@@ -362,6 +362,15 @@ export default function CriteriaTable({
                       className={`crt-mobile-card-chevron${isExpanded ? " expanded" : ""}`}
                     />
                   </button>
+                  {!isLocked && (
+                    <button
+                      className="row-action-btn"
+                      aria-label="Edit criterion"
+                      onClick={(e) => { e.stopPropagation(); onEditIndex(i); }}
+                    >
+                      <Pencil size={16} strokeWidth={2} />
+                    </button>
+                  )}
                   <FloatingMenu
                     trigger={
                       <button
