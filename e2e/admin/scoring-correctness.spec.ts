@@ -7,6 +7,7 @@ import { E2E_PERIODS_ORG_ID } from "../fixtures/seed-ids";
 import {
   setupScoringFixture,
   writeScoresAsJuror,
+  finalizeJurors,
   reweightFixture,
   teardownScoringFixture,
   type ScoringFixture,
@@ -36,6 +37,7 @@ test.describe("scoring correctness — criteria weight → ranking math", () => 
       p1: { a: 30, b: 3 },
       p2: { a: 3, b: 70 },
     });
+    await finalizeJurors(fixture);
   });
 
   test.afterAll(async () => {

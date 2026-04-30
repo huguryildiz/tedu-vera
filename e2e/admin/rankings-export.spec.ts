@@ -7,6 +7,7 @@ import { E2E_PERIODS_ORG_ID } from "../fixtures/seed-ids";
 import {
   setupScoringFixture,
   writeScoresAsJuror,
+  finalizeJurors,
   teardownScoringFixture,
   type ScoringFixture,
 } from "../helpers/scoringFixture";
@@ -123,6 +124,7 @@ test.describe("export row integrity", () => {
   test.beforeAll(async () => {
     e4Fixture = await setupScoringFixture({ aMax: 30, bMax: 70, namePrefix: "E4 Export" });
     await writeScoresAsJuror(e4Fixture, { p1: { a: 25, b: 40 }, p2: { a: 10, b: 20 } });
+    await finalizeJurors(e4Fixture);
   });
 
   test.afterAll(async () => {

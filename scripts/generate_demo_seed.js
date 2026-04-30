@@ -2436,7 +2436,7 @@ periodData.forEach(pd => {
     const resetTimeStr = pd.isCur
       ? `(now() - interval '${Math.max(0, (a.lockedElapsedMins || 15) - randInt(3, 7))} minutes')`
       : randSqlTs(ev, evD*12+1, evD*12+3);
-    auditObjList.push({ action:'security.pin_reset.requested', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, actorType:'juror', details:`{"jurorName":"${escapeSql(a.name)}","periodName":"${escapeSql(pd.name)}","orgName":"${escapeSql(o.name)}","sent":true}`, timeStr:resetTimeStr });
+    auditObjList.push({ action:'security.pin_reset.requested', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, actorType:'juror', actorName:a.name, details:`{"jurorName":"${escapeSql(a.name)}","periodName":"${escapeSql(pd.name)}","orgName":"${escapeSql(o.name)}","sent":true}`, timeStr:resetTimeStr });
   });
 
   // data.juror.pin.unlocked — admin action; skipped for current-period (juror is still locked)
@@ -2463,7 +2463,7 @@ periodData.forEach(pd => {
   // data.score.edit_requested — completed juror requests edit mode after submitting (current + histIdx<=1)
   if (pd.isCur || pd.histIdx <= 1) {
     myAuths.filter(a => a.semanticState==='Completed').slice(0, 1).forEach(a => {
-      auditObjList.push({ action:'data.score.edit_requested', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, actorType:'juror', details:`{"jurorName":"${escapeSql(a.name)}","periodName":"${escapeSql(pd.name)}","orgName":"${escapeSql(o.name)}","sent":true}`, timeStr:randSqlTs(ev, evD*14+1, evD*16) });
+      auditObjList.push({ action:'data.score.edit_requested', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, actorType:'juror', actorName:a.name, details:`{"jurorName":"${escapeSql(a.name)}","periodName":"${escapeSql(pd.name)}","orgName":"${escapeSql(o.name)}","sent":true}`, timeStr:randSqlTs(ev, evD*14+1, evD*16) });
     });
   }
 

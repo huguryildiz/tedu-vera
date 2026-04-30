@@ -17,6 +17,7 @@ import { E2E_PERIODS_ORG_ID } from "../fixtures/seed-ids";
 import {
   setupScoringFixture,
   writeScoresAsJuror,
+  finalizeJurors,
   teardownScoringFixture,
   type ScoringFixture,
 } from "../helpers/scoringFixture";
@@ -60,6 +61,7 @@ test.describe("export filter parity — filtered export row count matches filter
       namePrefix: "ExportFilter",
     });
     await writeScoresAsJuror(fixture, { p1: { a: 15, b: 60 }, p2: { a: 10, b: 40 } });
+    await finalizeJurors(fixture);
   });
 
   test.afterAll(async () => {
@@ -112,6 +114,7 @@ test.describe("XLSX export numeric cell type assertion", () => {
       namePrefix: "XlsxNumeric",
     });
     await writeScoresAsJuror(fixture, { p1: { a: 20, b: 50 }, p2: { a: 5, b: 30 } });
+    await finalizeJurors(fixture);
   });
 
   test.afterAll(async () => {
@@ -178,6 +181,7 @@ test.describe("Turkish character preservation in CSV export", () => {
       namePrefix: "TurkishChar",
     });
     await writeScoresAsJuror(fixture, { p1: { a: 25, b: 60 }, p2: { a: 15, b: 50 } });
+    await finalizeJurors(fixture);
     // setupScoringFixture locks the period — the block_projects_on_locked_period
     // trigger silently rejects project updates while locked. Unlock briefly to
     // overwrite p1 title with a Turkish-character-rich string, then re-lock.
