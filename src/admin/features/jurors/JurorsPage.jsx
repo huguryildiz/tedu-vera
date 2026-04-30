@@ -438,12 +438,12 @@ export default function JurorsPage() {
           <div className="scores-kpi-item-sub"><span className="sub-muted">{completedJurors}/{totalJurors} jurors</span></div>
         </div>
         <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value vera-datetime-text">{avgEvalPerProject}</div>
+          <div className="scores-kpi-item-value">{avgEvalPerProject}</div>
           <div className="scores-kpi-item-label">Avg Evals / Project</div>
           <div className="scores-kpi-item-sub"><span className="sub-muted">{kpiUniqueProjects > 0 ? `across ${kpiUniqueProjects} projects` : "no data yet"}</span></div>
         </div>
         <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value vera-datetime-text">
+          <div className="scores-kpi-item-value">
             {avgScore !== "—" ? (
               <span className="accent">{avgScore}<span className="vera-score-denom">/{periodMaxScore ?? 100}</span></span>
             ) : "—"}
