@@ -210,7 +210,6 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
     background: none;
     box-shadow: none;
     border-radius: 0;
-    padding: 0 16px;
   }
 
   .pin-lock-table { display: contents; }
