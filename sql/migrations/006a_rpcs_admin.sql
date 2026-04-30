@@ -1691,9 +1691,14 @@ BEGIN
     RAISE EXCEPTION 'unauthorized';
   END IF;
 
+  -- CTE column names are intentionally aliased away from the RETURNS TABLE
+  -- column names (pmax/p_total_pct/p_total_avg) so PostgreSQL doesn't raise
+  -- "column reference X is ambiguous" when a sub-select like
+  -- `(SELECT total_max FROM period_max)` lives inside the final SELECT list
+  -- of a RETURNS TABLE function whose own column is also named total_max.
   RETURN QUERY
   WITH period_max AS (
-    SELECT COALESCE(SUM(max_score), 0)::numeric AS total_max
+    SELECT COALESCE(SUM(max_score), 0)::numeric AS pmax
     FROM period_criteria
     WHERE period_id = p_period_id
   ),
@@ -1718,14 +1723,14 @@ BEGIN
     SELECT
       jt.project_id, jt.juror_id, jt.juror_total,
       CASE
-        WHEN (SELECT total_max FROM period_max) > 0
-          THEN jt.juror_total / (SELECT total_max FROM period_max) * 100
+        WHEN (SELECT pmax FROM period_max) > 0
+          THEN jt.juror_total / (SELECT pmax FROM period_max) * 100
         ELSE NULL
       END AS pct
     FROM juror_totals jt
   ),
   project_pct AS (
-    SELECT project_id, AVG(pct) AS total_pct, AVG(juror_total) AS total_avg
+    SELECT project_id, AVG(pct) AS p_total_pct, AVG(juror_total) AS p_total_avg
     FROM juror_pct
     GROUP BY project_id
   ),
@@ -1735,14 +1740,14 @@ BEGIN
     GROUP BY juror_id
   )
   SELECT
-    (SELECT total_max FROM period_max)::numeric                      AS total_max,
-    (SELECT COUNT(*)::int FROM projects WHERE period_id = p_period_id) AS total_projects,
-    (SELECT COUNT(*)::int FROM project_pct WHERE total_avg IS NOT NULL) AS ranked_count,
-    (SELECT COUNT(*)::int FROM juror_period_auth WHERE period_id = p_period_id) AS total_jurors,
+    (SELECT pmax FROM period_max)::numeric                                       AS total_max,
+    (SELECT COUNT(*)::int FROM projects WHERE period_id = p_period_id)           AS total_projects,
+    (SELECT COUNT(*)::int FROM project_pct WHERE p_total_avg IS NOT NULL)        AS ranked_count,
+    (SELECT COUNT(*)::int FROM juror_period_auth WHERE period_id = p_period_id)  AS total_jurors,
     (SELECT COUNT(*)::int FROM juror_period_auth
-       WHERE period_id = p_period_id AND final_submitted_at IS NOT NULL)        AS finalized_jurors,
-    (SELECT AVG(total_pct) FROM project_pct)::numeric                AS avg_total_pct,
-    (SELECT AVG(avg_pct) FROM juror_avg_pct)::numeric                AS avg_juror_pct;
+       WHERE period_id = p_period_id AND final_submitted_at IS NOT NULL)         AS finalized_jurors,
+    (SELECT AVG(p_total_pct) FROM project_pct)::numeric                          AS avg_total_pct,
+    (SELECT AVG(avg_pct) FROM juror_avg_pct)::numeric                            AS avg_juror_pct;
 END;
 $$;
 
