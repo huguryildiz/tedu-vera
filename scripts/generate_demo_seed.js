@@ -1993,12 +1993,18 @@ periodData.forEach(pd => {
       failedAttempts = String(randInt(3, 5));
       if (pd.isCur) {
         const elapsedMins = randInt(10, 30);
+        const unlockHours = randInt(16, 20);
         lockedAt = `(now() - interval '${elapsedMins} minutes')`;
-        lockedUntil = `(now() + interval '${randInt(16, 20)} hours')`;
+        lockedUntil = `(now() + interval '${unlockHours} hours')`;
+        authObj.lockedElapsedMins = elapsedMins;
+        authObj.lockedUntilIso = new Date(Date.now() + unlockHours * 3600000).toISOString();
       } else {
-        const lt = randSqlTs(pd.evalDay, 2, pd.evalDays * 12);
-        lockedUntil = `${lt} + interval '30 minutes'`;
-        lockedAt = lt;
+        const lh = randInt(2, pd.evalDays * 12);
+        const lm = randInt(0, 59);
+        lockedAt = `(timestamp '${pd.evalDay}' + interval '${lh} hours ${lm} minutes')`;
+        lockedUntil = `(timestamp '${pd.evalDay}' + interval '${lh} hours ${lm} minutes') + interval '30 minutes'`;
+        const evalDayMs = new Date(pd.evalDay).getTime();
+        authObj.lockedUntilIso = new Date(evalDayMs + (lh * 60 + lm + 30) * 60000).toISOString();
       }
       authObj.lockedAt = lockedAt;
     }
@@ -2409,36 +2415,36 @@ periodData.forEach(pd => {
     auditObjList.push({ action:'security.entry_token.revoked', resType:'entry_tokens', resId:tok.id, orgId:o.id, userId:adminId, details:`{"tokenId":"${tok.id}","periodId":"${pd.id}"}`, timeStr:randSqlTs(ev, -48, evD*12) });
   });
 
-  // evaluation.complete — juror-initiated (user_id=NULL)
+  // evaluation.complete + data.score.submitted — Completed AND Editing jurors both submitted at some point
   // timestamp and correlation_id match final_submitted_at on juror_period_auth (mirrors production rpc_jury_finalize_submission)
-  myAuths.filter(a => a.semanticState==='Completed').forEach((a) => {
+  myAuths.filter(a => a.semanticState==='Completed' || a.semanticState==='Editing').forEach((a) => {
     if (myProjs.length === 0) return;
     const corrId = uuid(`finalize-${a.jId}-${pd.id}`);
     auditObjList.push({ action:'evaluation.complete', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}"}`, timeStr:a.finalTs, correlationId:corrId });
-  });
-
-  // data.score.submitted — one event per project per completed juror (mirrors production rpc_jury_finalize_submission loop)
-  // same timestamp + correlation_id as evaluation.complete for the same juror
-  myAuths.filter(a => a.semanticState==='Completed').forEach((a) => {
-    if (myProjs.length === 0) return;
-    const corrId = uuid(`finalize-${a.jId}-${pd.id}`);
     myProjs.forEach(proj => {
       auditObjList.push({ action:'data.score.submitted', resType:'score_sheets', resId:proj.id, orgId:o.id, userId:null, actorName:a.name, details:`{"juror_name":"${escapeSql(a.name)}","project_title":"${escapeSql(proj.title)}","period_name":"${escapeSql(pd.name)}","period_id":"${pd.id}"}`, timeStr:a.finalTs, correlationId:corrId, _salt:`${a.jId}-${proj.id}` });
     });
   });
 
   // data.juror.pin.locked — juror-initiated (user_id=NULL)
-  // timestamp matches locked_at on juror_period_auth row
+  // timestamp matches locked_at on juror_period_auth row; locked_until mirrors actual JPA value
   myAuths.filter(a => a.semanticState==='Locked').slice(0, 1).forEach(a => {
-    auditObjList.push({ action:'data.juror.pin.locked', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}","failed_attempts":3,"locked_until":"${new Date(new Date().getTime() + 5 * 60000).toISOString()}"}`, timeStr:a.lockedAt || randSqlTs(ev, 2, evD*12) });
-    // security.pin_reset.requested — same juror requests PIN reset after being locked
-    auditObjList.push({ action:'security.pin_reset.requested', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, actorType:'juror', details:`{"jurorName":"${escapeSql(a.name)}","periodName":"${escapeSql(pd.name)}","orgName":"${escapeSql(o.name)}","sent":true}`, timeStr:randSqlTs(ev, evD*12+1, evD*12+3) });
+    const lockedUntilIso = a.lockedUntilIso || new Date(Date.now() + 20 * 3600000).toISOString();
+    auditObjList.push({ action:'data.juror.pin.locked', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}","failed_attempts":3,"locked_until":"${lockedUntilIso}"}`, timeStr:a.lockedAt || randSqlTs(ev, 2, evD*12) });
+    // security.pin_reset.requested — same juror requests PIN reset shortly after being locked
+    // for current-period: use now()-relative timestamp; for historical: use eval-day-relative
+    const resetTimeStr = pd.isCur
+      ? `(now() - interval '${Math.max(0, (a.lockedElapsedMins || 15) - randInt(3, 7))} minutes')`
+      : randSqlTs(ev, evD*12+1, evD*12+3);
+    auditObjList.push({ action:'security.pin_reset.requested', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, actorType:'juror', details:`{"jurorName":"${escapeSql(a.name)}","periodName":"${escapeSql(pd.name)}","orgName":"${escapeSql(o.name)}","sent":true}`, timeStr:resetTimeStr });
   });
 
-  // data.juror.pin.unlocked — admin action
-  myAuths.filter(a => a.semanticState==='Locked').slice(0, 1).forEach(a => {
-    auditObjList.push({ action:'data.juror.pin.unlocked', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:adminId, details:`{"juror_id":"${a.jId}","juror_name":"${escapeSql(a.name)}"}`, timeStr:randSqlTs(ev, evD*12+1, evD*14) });
-  });
+  // data.juror.pin.unlocked — admin action; skipped for current-period (juror is still locked)
+  if (!pd.isCur) {
+    myAuths.filter(a => a.semanticState==='Locked').slice(0, 1).forEach(a => {
+      auditObjList.push({ action:'data.juror.pin.unlocked', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:adminId, details:`{"juror_id":"${a.jId}","juror_name":"${escapeSql(a.name)}"}`, timeStr:randSqlTs(ev, evD*12+1, evD*14) });
+    });
+  }
 
   // data.juror.edit_mode.granted — for Editing-state jurors
   myAuths.filter(a => a.semanticState==='Editing').forEach(a => {
