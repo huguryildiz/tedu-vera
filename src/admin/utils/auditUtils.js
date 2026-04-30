@@ -208,6 +208,15 @@ export const buildAuditParams = (filters, limit, cursor, searchText, excludeActi
   const search = String(searchText || "").trim();
   const searchDate = parseSearchDateParts(search);
 
+  // Find raw action keys whose formatted labels match the search term so the
+  // server OR query also covers the human-readable ACTION column text.
+  const searchLower = search.toLowerCase();
+  const searchActionKeys = search
+    ? Object.entries(ACTION_LABELS)
+        .filter(([, label]) => String(label).toLowerCase().includes(searchLower))
+        .map(([key]) => key)
+    : [];
+
   return {
     startAt: startAt ? startAt.toISOString() : null,
     endAt: endAt ? endAt.toISOString() : null,
@@ -222,6 +231,7 @@ export const buildAuditParams = (filters, limit, cursor, searchText, excludeActi
     searchDay: searchDate?.day || null,
     searchMonth: searchDate?.month || null,
     searchYear: searchDate?.year || null,
+    searchActionKeys: searchActionKeys.length ? searchActionKeys : null,
     excludeActions: excludeActions?.length ? excludeActions : null,
     excludeActorTypes: excludeActorTypes?.length ? excludeActorTypes : null,
   };

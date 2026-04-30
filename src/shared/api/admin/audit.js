@@ -75,17 +75,19 @@ function applyAuditFilters(query, filters) {
   if (filters.search) {
     const s = filters.search.replace(/[%,()]/g, "");
     const term = `%${s}%`;
-    query = query.or(
-      [
-        `action.ilike.${term}`,
-        `resource_type.ilike.${term}`,
-        `actor_name.ilike.${term}`,
-        `details->>applicant_email.ilike.${term}`,
-        `details->>applicant_name.ilike.${term}`,
-        `details->>actor_name.ilike.${term}`,
-        `details->>juror_name.ilike.${term}`,
-      ].join(",")
-    );
+    const orClauses = [
+      `action.ilike.${term}`,
+      `resource_type.ilike.${term}`,
+      `actor_name.ilike.${term}`,
+      `details->>applicant_email.ilike.${term}`,
+      `details->>applicant_name.ilike.${term}`,
+      `details->>actor_name.ilike.${term}`,
+      `details->>juror_name.ilike.${term}`,
+    ];
+    if (filters.searchActionKeys?.length) {
+      orClauses.push(`action.in.(${filters.searchActionKeys.join(",")})`);
+    }
+    query = query.or(orClauses.join(","));
   }
   return query;
 }

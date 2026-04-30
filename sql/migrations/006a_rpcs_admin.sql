@@ -24,11 +24,12 @@ SECURITY DEFINER
 SET search_path = public, auth, extensions
 AS $$
 DECLARE
-  v_org_id     UUID;
-  v_is_admin   BOOLEAN;
-  v_pin        TEXT;
-  v_pin_hash   TEXT;
-  v_juror_name TEXT;
+  v_org_id      UUID;
+  v_is_admin    BOOLEAN;
+  v_pin         TEXT;
+  v_pin_hash    TEXT;
+  v_juror_name  TEXT;
+  v_period_name TEXT;
 BEGIN
   SELECT organization_id, juror_name INTO v_org_id, v_juror_name
   FROM jurors
@@ -47,6 +48,8 @@ BEGIN
   IF NOT v_is_admin THEN
     RETURN jsonb_build_object('ok', false, 'error_code', 'unauthorized')::JSON;
   END IF;
+
+  SELECT name INTO v_period_name FROM periods WHERE id = p_period_id;
 
   v_pin      := lpad(floor(random() * 10000)::TEXT, 4, '0');
   v_pin_hash := crypt(v_pin, gen_salt('bf'));
@@ -71,10 +74,11 @@ BEGIN
   ) VALUES (
     v_org_id, auth.uid(), 'pin.reset', 'juror_period_auth', p_juror_id,
     jsonb_build_object(
-      'period_id',  p_period_id,
-      'juror_id',   p_juror_id,
-      'juror_name', v_juror_name,
-      'reset_by',   auth.uid()
+      'period_id',   p_period_id,
+      'juror_id',    p_juror_id,
+      'juror_name',  v_juror_name,
+      'periodName',  v_period_name,
+      'reset_by',    auth.uid()
     )
   );
 
