@@ -349,7 +349,7 @@ export default function RankingsPage() {
             <div className="scores-kpi-item-label">Jurors</div>
           </div>
           <div className="scores-kpi-item">
-            <div className="scores-kpi-item-value accent">{avgScore}</div>
+            <div className="scores-kpi-item-value accent">{avgScore}<span className="kpi-denom">/100</span></div>
             <div className="scores-kpi-item-label">Avg. Score</div>
           </div>
           <div className="scores-kpi-item">
