@@ -245,19 +245,26 @@ Deno.serve(async (req: Request) => {
       return json(500, { error: "Supabase environment is not configured." });
     }
 
-    // Verify caller is super_admin
-    const caller = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
+    // Verify caller identity via auth.getUser (safe with ES256 JWTs)
+    const authClient = createClient(supabaseUrl, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
     });
-    const { data: isSuperAdmin, error: authErr } = await caller.rpc("current_user_is_super_admin");
-    if (authErr || !isSuperAdmin) {
-      return json(403, { error: "super_admin required" });
-    }
+    const { data: { user }, error: userErr } = await authClient.auth.getUser(token);
+    if (userErr || !user) return json(401, { error: "Unauthorized" });
+
+    // Verify caller is super_admin via service role (organization_id IS NULL = super_admin)
+    const service = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+    const { data: membership } = await service
+      .from("memberships")
+      .select("organization_id")
+      .eq("user_id", user.id)
+      .is("organization_id", null)
+      .maybeSingle();
+    if (!membership) return json(403, { error: "super_admin required" });
 
     // ── Test mode: send a single email to the caller, no DB changes ──────────
     if (payload.testRecipient) {
-      const { data: callerData } = await caller.auth.getUser();
-      const callerEmail = callerData?.user?.email || "";
+      const callerEmail = user.email || "";
       if (!callerEmail || callerEmail !== payload.testRecipient) {
         return json(400, { error: "testRecipient must match the authenticated caller's email" });
       }
@@ -282,8 +289,6 @@ Deno.serve(async (req: Request) => {
     }
 
     // Use service client to get org_admin memberships + emails
-    const service = createClient(supabaseUrl, serviceKey);
-
     const { data: members, error: membersErr } = await service
       .from("memberships")
       .select("user_id, organization_id, organizations(id, name, status)")

@@ -12,8 +12,10 @@ import {
   listJurorsSummary,
   getScores,
   getProjectSummary,
+  listPeriodCriteria,
   logExportInitiated,
 } from "@/shared/api";
+import { getActiveCriteria } from "@/shared/criteria/criteriaHelpers";
 import { exportXLSX, buildExportFilename } from "@/admin/utils/exportXLSX";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import ManageBackupsDrawer from "@/admin/shared/ManageBackupsDrawer";
@@ -49,9 +51,11 @@ export default function ExportPage() {
       const orderedPeriods = sortPeriods(periods);
       const results = await Promise.all(
         orderedPeriods.map(async (period) => {
-          const [rows, summary] = await Promise.all([
+          const [rows, summary, jurors, criteriaRows] = await Promise.all([
             getScores(period.id),
             getProjectSummary(period.id).catch(() => []),
+            listJurorsSummary(period.id).catch(() => []),
+            listPeriodCriteria(period.id).catch(() => []),
           ]);
           const summaryMap = new Map((summary || []).map((p) => [p.id, p]));
           const mappedRows = (rows || []).map((r) => ({
@@ -59,11 +63,19 @@ export default function ExportPage() {
             period: period?.name || period?.period_name || "",
             students: summaryMap.get(r.projectId)?.students ?? "",
           }));
-          return { rows: mappedRows, summary: summary || [] };
+          return { rows: mappedRows, summary: summary || [], jurors: jurors || [], criteriaRows: criteriaRows || [] };
         }),
       );
       const allRows = results.flatMap((x) => x.rows);
       const allSummary = results.flatMap((x) => x.summary);
+      const allJurors = results.flatMap((x) => x.jurors);
+      const criteriaByKey = new Map();
+      results.forEach(({ criteriaRows }) =>
+        getActiveCriteria(criteriaRows).forEach((c) => {
+          if (!criteriaByKey.has(c.key)) criteriaByKey.set(c.key, c);
+        }),
+      );
+      const allCriteria = [...criteriaByKey.values()];
       const jurorCount = new Set(
         allRows
           .map((r) => r?.jurorId || r?.juror_id || r?.juryName || r?.juror_name || null)
@@ -89,6 +101,8 @@ export default function ExportPage() {
       await exportXLSX(allRows, {
         periodName: "all-periods",
         summaryData: allSummary,
+        jurors: allJurors,
+        criteria: allCriteria,
         tenantCode,
       });
       _toast.success(`Score report downloaded · ${orderedPeriods.length} period${orderedPeriods.length !== 1 ? "s" : ""} · Excel`);
