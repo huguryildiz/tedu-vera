@@ -1096,7 +1096,7 @@ export const EVENT_META = {
     label: "Unlock request submitted",
     narrative: (log) => {
       const d = log.details || {};
-      return { verb: "submitted an unlock request for", resource: d.period_name || null };
+      return { verb: "submitted an unlock request", resource: null };
     },
   },
 
@@ -1105,7 +1105,7 @@ export const EVENT_META = {
     label: "PIN reset requested",
     narrative: (log) => {
       const d = log.details || {};
-      return { verb: "requested PIN reset for juror", resource: d.jurorName || null };
+      return { verb: "requested PIN reset", resource: null };
     },
   },
   "data.score.edit_requested": {
