@@ -507,8 +507,6 @@ export default function OrganizationsPage() {
         open={!!toggleOrg}
         onClose={() => setToggleOrg(null)}
         toggleOrg={toggleOrg}
-        toggleStatus={toggleStatus}
-        setToggleStatus={setToggleStatus}
         toggleReason={toggleReason}
         setToggleReason={setToggleReason}
         toggleError={toggleError}
