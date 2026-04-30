@@ -74,12 +74,36 @@ function computeEvalWindow(start, _end, orgType, evalDaysOverride) {
 }
 
 // SQL timestamp helpers — all dates derive from period event windows, not a global BASE_TIME
-function sqlTs(dateStr, offsetHours = 0) {
+//
+// IMPORTANT: every emitted timestamp is wrapped in LEAST(<expr>, now() - interval '1 hour')
+// so seed data NEVER produces dates in the future (relative to seed-execution time).
+// Computed offsets that would land past `now()` (e.g. an unlock request +120h after a recent
+// eval day) get silently clamped to "1 hour ago" instead of leaking into the future, which
+// would otherwise show up as nonsensical "tomorrow" entries in admin lists.
+//
+// Direct future timestamps (token expires_at, session_expires_at, locked_until, etc.)
+// don't go through these helpers — they use raw `now() + interval ...` expressions.
+// Internal: raw timestamp expression without past-clamp. Use only for columns
+// that intentionally hold a future value (session_expires_at, locked_until,
+// token.expires_at for the active-window QR token).
+function _sqlTsExpr(dateStr, offsetHours = 0) {
   if (offsetHours === 0) return `timestamp '${dateStr} 09:00:00'`;
   const sign = offsetHours >= 0 ? '+' : '-';
   const absH = Math.abs(Math.floor(offsetHours));
   const absM = Math.abs(Math.round((offsetHours % 1) * 60));
   return `(timestamp '${dateStr} 09:00:00' ${sign} interval '${absH} hours ${absM} minutes')`;
+}
+
+function sqlTs(dateStr, offsetHours = 0) {
+  return `LEAST(${_sqlTsExpr(dateStr, offsetHours)}, now() - interval '1 hour')`;
+}
+
+// Same anchoring as sqlTs but without the past-clamp — for columns whose
+// semantic is "expires in the future for active state" (session_expires_at,
+// token.expires_at for active QR, locked_until). For historical periods
+// these still resolve to a past value, which is fine semantically.
+function sqlTsFuture(dateStr, offsetHours = 0) {
+  return _sqlTsExpr(dateStr, offsetHours);
 }
 function randSqlTs(dateStr, minH, maxH) {
   return sqlTs(dateStr, randInt(minH, maxH) + randInt(0, 59) / 60);
@@ -1993,7 +2017,9 @@ periodData.forEach(pd => {
       const lsMaxH = { InProgress: pd.evalDays * 10, ReadyToSubmit: pd.evalDays * 16, Completed: pd.evalDays * 20, Editing: pd.evalDays * 18, Locked: pd.evalDays * 8, Blocked: pd.evalDays * 6 }[semanticState] ?? pd.evalDays * 12;
       const lsH = randInt(lsMinH, lsMaxH); const lsM = randInt(0, 59);
       lastSeenAt = sqlTs(pd.evalDay, lsH + lsM / 60);
-      sessionExpiresAt = sqlTs(pd.evalDay, lsH + 24 + lsM / 60);
+      // session_expires_at must remain in the future for active-state jurors
+      // (InProgress / ReadyToSubmit / Editing); use the unclamped helper.
+      sessionExpiresAt = sqlTsFuture(pd.evalDay, lsH + 24 + lsM / 60);
     }
     if (semanticState === 'Completed' || semanticState === 'Editing') {
       finalSubmittedAt = randSqlTs(pd.evalDay, pd.evalDays * 2, pd.evalDays * 20);
@@ -2229,7 +2255,9 @@ periodData.forEach(pd => {
         lastUsedAt = randSqlTs(pd.evalDay, -100, -80);
       } else {
         // i=0 is the active QR: always valid for exactly 1 day from SQL exec time
-        expiresAt = i === 0 ? `(now() + interval '1 day')` : sqlTs(pd.evalDay, 48 + pd.evalDays * 24);
+        // i=0: hardcoded future. i=1: active token whose expires_at must remain
+        // in the future for the demo to render it as still-valid → unclamped.
+        expiresAt = i === 0 ? `(now() + interval '1 day')` : sqlTsFuture(pd.evalDay, 48 + pd.evalDays * 24);
         lastUsedAt = i < 2 ? randSqlTs(pd.evalDay, 0, pd.evalDays * 12) : randSqlTs(pd.evalDay, -48, -12);
       }
     } else {
@@ -2832,7 +2860,9 @@ function dateAddDays(dateStr, days) {
 function bizTs(dateStr, dayOffset) {
   const dt = dateAddDays(dateStr, dayOffset || 0);
   const h = randInt(8, 17), m = randInt(0, 59), s = randInt(0, 59);
-  return `timestamp '${dt} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}'`;
+  const expr = `timestamp '${dt} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}'`;
+  // Clamp to "1 hour before now" so future-dated activity never leaks into the seed.
+  return `LEAST(${expr}, now() - interval '1 hour')`;
 }
 
 const AUTH_SPREAD_START = dateAddDays(TODAY, -90); // 90 days before script run date
