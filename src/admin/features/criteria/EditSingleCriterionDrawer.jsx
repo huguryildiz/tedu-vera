@@ -578,13 +578,13 @@ export default function EditSingleCriterionDrawer({
             </>
           )}
         </div>
-        <button className="crt-cancel-btn" onClick={onClose}>
+        <button className="fs-btn fs-btn-secondary crt-cancel-btn" onClick={onClose}>
           Cancel
         </button>
         <button
           ref={saveBtnRef}
           data-testid="criteria-drawer-save"
-          className="crt-save-btn"
+          className="fs-btn fs-btn-primary crt-save-btn"
           disabled={saving || fullyLocked || !row.label?.trim() || !currentMax}
           onClick={handleSave}
         >
