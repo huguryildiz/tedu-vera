@@ -66,10 +66,9 @@ test.describe("organizations crud", () => {
     await orgs.openCreateDrawer();
     await orgs.drawerCode().fill("BADTEST");
     await orgs.drawerContactEmail().fill("bad@test.local");
-    // Click save directly — drawer is expected to stay open on validation failure,
-    // so don't use saveCreate() which asserts drawer closure.
-    await orgs.drawerSave().click();
-    // Drawer should still be visible (validation rejected the save).
+    // Per ui-conventions: with the required name field empty, Save must be
+    // disabled (the disabled-Save + red-ring pair). Drawer stays open.
+    await expect(orgs.drawerSave()).toBeDisabled();
     await expect(orgs.drawerSave()).toBeVisible();
     await expect(orgs.drawerCancel()).toBeVisible();
   });

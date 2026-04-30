@@ -72,10 +72,11 @@ test.describe("maintenance mode", () => {
     const drawerTitle = page.getByText("Maintenance Mode");
     await expect(drawerTitle).toBeVisible();
 
-    // Set to immediate mode
-    const immediateRadio = page.locator('input[type="radio"][value="immediate"]');
-    await expect(immediateRadio).toBeVisible();
-    await immediateRadio.click();
+    // Set to immediate mode (custom button replaces native radio per
+    // GovernanceDrawers.jsx — `074b650e` removed native radio inputs).
+    const immediateBtn = page.getByRole("button", { name: "Immediate", exact: true });
+    await expect(immediateBtn).toBeVisible();
+    await immediateBtn.click();
 
     // Clear and set message
     const messageInput = page.locator('textarea').first();

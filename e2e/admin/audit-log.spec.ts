@@ -102,9 +102,10 @@ test.describe("audit log", () => {
     test("page size 25 limits display to 25 rows with correct info text", async ({ page }) => {
       const audit = await signInAndGoto(page);
       await audit.typeSearch(SEED_ACTOR);
-      // Wait for server-side search to settle on exactly 30 rows
+      // Default page size is 15; switch to 50 first so all 30 seeded rows fit on one page.
+      await audit.pageSizeBtn(50).click();
       await expect(audit.rows()).toHaveCount(SEED_COUNT, { timeout: 15_000 });
-      // Switch from default 50 to 25 per page
+      // Now switch to 25 per page
       await audit.pageSizeBtn(25).click();
       await expect(audit.rows()).toHaveCount(25);
       await expect(audit.pageInfo()).toContainText("1–25 of 30");
@@ -113,6 +114,7 @@ test.describe("audit log", () => {
     test("next page button advances to page 2 showing remaining 5 rows", async ({ page }) => {
       const audit = await signInAndGoto(page);
       await audit.typeSearch(SEED_ACTOR);
+      await audit.pageSizeBtn(50).click();
       await expect(audit.rows()).toHaveCount(SEED_COUNT, { timeout: 15_000 });
       await audit.pageSizeBtn(25).click();
       await expect(audit.rows()).toHaveCount(25);

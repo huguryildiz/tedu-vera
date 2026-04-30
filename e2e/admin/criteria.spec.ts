@@ -71,10 +71,11 @@ test.describe("criteria", () => {
   test("save with no name keeps drawer open (validation)", async ({ page }) => {
     const { criteria } = await signInAndGotoCriteria(page);
     await criteria.openAddDrawer();
-    // Fill weight only — empty name triggers client-side validation
+    // Fill weight only — empty name leaves required field invalid
     await criteria.drawerWeightInput().fill(CRIT_WEIGHT);
-    await criteria.drawerSaveBtn().click();
-    // Validation prevents save; drawer must still be visible
+    // Per ui-conventions: Save button is disabled while a required field is empty
+    // (the disabled-Save + red-ring pair). Drawer must still be visible.
+    await expect(criteria.drawerSaveBtn()).toBeDisabled();
     await expect(criteria.drawer()).toBeVisible();
   });
 });
