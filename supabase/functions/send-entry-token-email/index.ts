@@ -19,7 +19,7 @@ import { RequestPayloadSchema, type RequestPayload } from "./schema.ts";
 interface Payload {
   recipientEmail: string;
   tokenUrl: string;
-  expiresIn?: string;   // e.g. "2h 30m left"
+  expiresIn?: string;   // e.g. "2h 30m"
   periodName?: string;
   organizationName?: string;
   organizationInstitution?: string;

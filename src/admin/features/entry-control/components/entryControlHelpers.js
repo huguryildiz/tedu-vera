@@ -12,8 +12,8 @@ export function fmtExpiry(ts) {
     }
     const hours = Math.floor(diff / 3600000);
     const mins = Math.floor((diff % 3600000) / 60000);
-    if (hours > 0) return `${hours}h ${mins}m left`;
-    return `${mins}m left`;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${mins}m`;
   } catch {
     return null;
   }

@@ -100,8 +100,10 @@ function buildHtmlTemplate(params: {
   rawHtmlLines: string[];
   ctaLabel?: string;
   ctaUrl?: string;
+  bandGradient?: string;
 }): string {
   const lineHtml = params.rawHtmlLines.join("");
+  const band = params.bandGradient ?? "linear-gradient(90deg,#6c47ff,#a78bfa,#6c47ff)";
   const cta = params.ctaLabel && params.ctaUrl
     ? `<a href="${escapeHtml(params.ctaUrl)}" style="display:inline-block; background:linear-gradient(135deg,#6c47ff,#a78bfa); color:#ffffff; text-decoration:none; font-size:16px; font-weight:600; padding:14px 36px; border-radius:50px; letter-spacing:0.3px; box-shadow:0 4px 20px rgba(108,71,255,0.45);">${escapeHtml(params.ctaLabel)} &rarr;</a>`
     : "";
@@ -113,7 +115,7 @@ function buildHtmlTemplate(params: {
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0f0f1a; padding:40px 0;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px; width:100%; background:linear-gradient(160deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%); border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5);">
-        <tr><td style="background:linear-gradient(90deg,#6c47ff,#a78bfa,#6c47ff); height:4px; font-size:0; line-height:0;">&nbsp;</td></tr>
+        <tr><td style="background:${band}; height:4px; font-size:0; line-height:0;">&nbsp;</td></tr>
         <tr><td align="center" style="padding:40px 40px 20px;"><img src="https://vera-eval.app/vera_logo_dark.png" alt="VERA" width="120" style="display:block; border:0;" /></td></tr>
         <tr><td align="center" style="padding:8px 48px 12px;"><h1 style="margin:0; font-size:25px; font-weight:700; color:#ffffff; letter-spacing:-0.5px;">${escapeHtml(params.title)}</h1></td></tr>
         <tr><td align="center" style="padding:0 48px 20px;"><p style="margin:0; font-size:15px; line-height:1.7; color:#a0aec0;">${escapeHtml(params.intro)}</p></td></tr>
@@ -121,7 +123,7 @@ function buildHtmlTemplate(params: {
         <tr><td align="center" style="padding:16px 48px 24px;">${cta}</td></tr>
         <tr><td style="padding:0 48px;"><div style="border-top:1px solid rgba(255,255,255,0.08); font-size:0;">&nbsp;</div></td></tr>
         <tr><td align="center" style="padding:16px 48px 30px;"><p style="margin:0; font-size:12px; color:#4a5568; line-height:1.6;">&copy; 2026 VERA. All rights reserved.</p></td></tr>
-        <tr><td style="background:linear-gradient(90deg,#6c47ff,#a78bfa,#6c47ff); height:4px; font-size:0; line-height:0;">&nbsp;</td></tr>
+        <tr><td style="background:${band}; height:4px; font-size:0; line-height:0;">&nbsp;</td></tr>
       </table>
     </td></tr>
   </table>
@@ -182,6 +184,7 @@ Deno.serve(async (req: Request) => {
         html = buildHtmlTemplate({
           title: "Period Unlock Request",
           intro: "An org admin has requested to unlock a period that already has evaluation scores.",
+          bandGradient: "linear-gradient(90deg,#d97706,#f59e0b,#d97706)",
           rawHtmlLines: [
             `<p style="margin:0 0 8px; font-size:14px; line-height:1.7; color:#a0aec0;"><strong style="color:#f1f5f9;">${escapeHtml(requesterLabel)}</strong> requested to unlock <strong style="color:#f1f5f9;">${escapeHtml(periodLabel)}</strong> in <strong style="color:#f1f5f9;">${escapeHtml(orgLabel)}</strong>.</p>`,
             reasonText
@@ -203,11 +206,15 @@ Deno.serve(async (req: Request) => {
 
         subject = `Unlock request ${decision}: ${periodLabel}`;
         body = `Your unlock request for "${periodLabel}" was ${decision}.${note ? ` Note: ${note}` : ""}`;
+        const bandGradient = decision === "approved"
+          ? "linear-gradient(90deg,#16a34a,#4ade80,#16a34a)"
+          : "linear-gradient(90deg,#dc2626,#f87171,#dc2626)";
         html = buildHtmlTemplate({
           title: decision === "approved" ? "Unlock Approved" : "Unlock Rejected",
           intro: decision === "approved"
             ? "Your unlock request has been approved."
             : "Your unlock request has been rejected.",
+          bandGradient,
           rawHtmlLines: [
             `<p style="margin:0 0 8px; font-size:14px; line-height:1.7; color:#a0aec0;">Your request to unlock <strong style="color:#f1f5f9;">${escapeHtml(periodLabel)}</strong> in <strong style="color:#f1f5f9;">${escapeHtml(orgLabel)}</strong> was <strong style="color:${decision === "approved" ? "#4ade80" : "#f87171"};">${escapeHtml(decision)}</strong>.</p>`,
             note

@@ -246,7 +246,7 @@ Single-row configuration table seeded inline in `002_tables.sql`.
 | `rpc_jury_validate_entry_token(token)` | Validate entry token (SHA-256 lookup, revocation check, TTL) |
 | `rpc_jury_validate_entry_reference(reference)` | Resolve short access reference ID to token/period payload |
 | `rpc_jury_upsert_score(period_id, project_id, juror_id, session_token, scores, comment)` | Upsert `score_sheets` + `score_sheet_items`; enforces edit-window check |
-| `rpc_jury_finalize_submission(period_id, juror_id, session_token)` | Set `final_submitted_at`; write per-criterion diff audit event |
+| `rpc_jury_finalize_submission(period_id, juror_id, session_token)` | Integrity guard rejects with `error_code='incomplete_evaluations'` unless every assigned `score_sheets` row for this (juror, period) has `status='submitted'`; on success sets `final_submitted_at` and writes per-criterion diff audit event |
 | `rpc_jury_get_scores(period_id, juror_id, session_token)` | Return all scores for a juror in a period |
 | `rpc_jury_project_rankings(period_id, juror_id, session_token)` | Return ranked project list for a juror |
 | `rpc_submit_jury_feedback(period_id, juror_id, session_token, rating, comment)` | Submit post-eval feedback |

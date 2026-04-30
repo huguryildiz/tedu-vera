@@ -182,6 +182,8 @@ export function useJuryLifecycleHandlers({ identity, session, scoring, loading, 
       } else if (msg === "juror_blocked") {
         editState.setEditLockActive(true);
         setSubmitError("This juror has been blocked. Please contact the coordinators.");
+      } else if (msg === "incomplete_evaluations") {
+        setSubmitError("Please complete every project evaluation before submitting.");
       } else {
         setSubmitError("Final submission failed. Please try again.");
       }
