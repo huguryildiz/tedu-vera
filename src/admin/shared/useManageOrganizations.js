@@ -44,6 +44,8 @@ const EMPTY_EDIT = {
 const VALID_STATUSES = ["active", "archived"];
 const CODE_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const EMPTY_CREATE_ERRORS = { shortLabel: "", contact_email: "" };
+const EMPTY_EDIT_ERRORS = { name: "", contact_email: "" };
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const normalizeAdminInviteError = (raw) => {
   const msg = String(raw || "").trim();
@@ -89,6 +91,7 @@ export function useManageOrganizations({
   const [showEdit, setShowEdit] = useState(false);
   const [editForm, setEditForm] = useState(EMPTY_EDIT);
   const [editError, setEditError] = useState("");
+  const [editFieldErrors, setEditFieldErrors] = useState(EMPTY_EDIT_ERRORS);
   const editOrigRef = useRef(EMPTY_EDIT);
 
   // ── Invite loading ─────────────────────────────────────────────
@@ -212,6 +215,7 @@ export function useManageOrganizations({
     setEditForm(snapshot);
     editOrigRef.current = { ...snapshot };
     setEditError("");
+    setEditFieldErrors(EMPTY_EDIT_ERRORS);
     setShowEdit(true);
   }, []);
 
@@ -219,6 +223,7 @@ export function useManageOrganizations({
     setShowEdit(false);
     setEditForm(EMPTY_EDIT);
     setEditError("");
+    setEditFieldErrors(EMPTY_EDIT_ERRORS);
   }, []);
 
   // ── Validation helpers ────────────────────────────────────
@@ -299,6 +304,18 @@ export function useManageOrganizations({
   // ── Update handler ────────────────────────────────────────
   const handleUpdateOrg = useCallback(async () => {
     if (!enabled) return;
+    const nameVal = String(editForm.name || "").trim();
+    const emailVal = String(editForm.contact_email || "").trim();
+    const fieldErrs = {
+      name: !nameVal ? "Organization name is required." : "",
+      contact_email: emailVal && !EMAIL_RE.test(emailVal) ? "Enter a valid email address." : "",
+    };
+    if (Object.values(fieldErrs).some(Boolean)) {
+      setEditFieldErrors(fieldErrs);
+      setEditError("");
+      return;
+    }
+    setEditFieldErrors(EMPTY_EDIT_ERRORS);
     const validationError = validateEdit(editForm);
     if (validationError) {
       setEditError(validationError);
@@ -496,6 +513,8 @@ export function useManageOrganizations({
     editForm,
     setEditForm,
     editError,
+    editFieldErrors,
+    setEditFieldErrors,
     openEdit,
     closeEdit,
     handleUpdateOrg,

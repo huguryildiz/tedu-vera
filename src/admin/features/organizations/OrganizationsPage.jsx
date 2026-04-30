@@ -55,6 +55,8 @@ export default function OrganizationsPage() {
     editForm,
     setEditForm,
     editError,
+    editFieldErrors,
+    setEditFieldErrors,
     openEdit,
     closeEdit,
     handleUpdateOrg,
@@ -468,6 +470,8 @@ export default function OrganizationsPage() {
         editForm={editForm}
         setEditForm={setEditForm}
         editError={editError}
+        editFieldErrors={editFieldErrors}
+        setEditFieldErrors={setEditFieldErrors}
         editSaving={editSaving}
         onSave={handleSaveEditOrganization}
       />

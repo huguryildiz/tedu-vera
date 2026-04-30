@@ -128,6 +128,8 @@ export function EditOrgDrawer({
   editForm,
   setEditForm,
   editError,
+  editFieldErrors = { name: "", contact_email: "" },
+  setEditFieldErrors = () => {},
   editSaving,
   onSave,
 }) {
@@ -165,7 +167,20 @@ export function EditOrgDrawer({
       <div className="fs-drawer-body" style={{ gap: 16 }}>
         <div className="fs-field">
           <label className="fs-field-label">Organization Name</label>
-          <input data-testid="orgs-edit-drawer-name" className="fs-input" type="text" value={editForm.name || ""} onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="e.g., TED University — Electrical-Electronics Engineering" />
+          <input
+            data-testid="orgs-edit-drawer-name"
+            className={`fs-input${editFieldErrors.name ? " error" : ""}`}
+            type="text"
+            value={editForm.name || ""}
+            onChange={(e) => {
+              setEditForm((prev) => ({ ...prev, name: e.target.value }));
+              if (editFieldErrors.name) setEditFieldErrors((prev) => ({ ...prev, name: "" }));
+            }}
+            placeholder="e.g., TED University — Electrical-Electronics Engineering"
+          />
+          {editFieldErrors.name && (
+            <p className="fs-field-error"><AlertCircle size={12} strokeWidth={2} />{editFieldErrors.name}</p>
+          )}
         </div>
         <div className="fs-field">
           <label className="fs-field-label">Code</label>
@@ -173,7 +188,20 @@ export function EditOrgDrawer({
         </div>
         <div className="fs-field">
           <label className="fs-field-label">Contact Email</label>
-          <input data-testid="orgs-edit-drawer-contact-email" className="fs-input" type="email" value={editForm.contact_email || ""} onChange={(e) => setEditForm((prev) => ({ ...prev, contact_email: e.target.value }))} placeholder="admin@organization.org" />
+          <input
+            data-testid="orgs-edit-drawer-contact-email"
+            className={`fs-input${editFieldErrors.contact_email ? " error" : ""}`}
+            type="email"
+            value={editForm.contact_email || ""}
+            onChange={(e) => {
+              setEditForm((prev) => ({ ...prev, contact_email: e.target.value }));
+              if (editFieldErrors.contact_email) setEditFieldErrors((prev) => ({ ...prev, contact_email: "" }));
+            }}
+            placeholder="admin@organization.org"
+          />
+          {editFieldErrors.contact_email && (
+            <p className="fs-field-error"><AlertCircle size={12} strokeWidth={2} />{editFieldErrors.contact_email}</p>
+          )}
         </div>
         {editError && <FbAlert data-testid="orgs-edit-drawer-error" variant="danger">{editError}</FbAlert>}
       </div>
