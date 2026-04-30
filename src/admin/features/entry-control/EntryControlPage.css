@@ -275,6 +275,9 @@
   /* Hide Sessions td and Expires td — sessions shown inline */
   .entry-history-table td[data-label="Sessions"] { display: none; }
   .entry-history-table td.col-expires { display: none; }
+
+  /* Hide revoked_at timestamp under badge — date already shown in row 2 */
+  .entry-history-table .ec-revoked-at { display: none; }
 }
 
 /* ─── Landscape compact (≤ 768px landscape) ──────────────────
