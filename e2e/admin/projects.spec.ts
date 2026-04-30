@@ -35,16 +35,27 @@ test.describe("projects crud", () => {
   }
 
   test("create — project appears in table", async ({ page }) => {
-    // DEBUG: capture full request log, console output, and JS errors so we can
-    // see the real createProject failure path when the drawer fails to close.
+    // DEBUG: capture full request log, console output, network failures, and
+    // JS errors so we can see the real createProject failure path when the
+    // drawer fails to close.
     const consoleAll: string[] = [];
     const allRequests: string[] = [];
+    const failedRequests: string[] = [];
     const pageErrors: string[] = [];
     page.on("console", (msg) => {
       consoleAll.push(`[${msg.type()}] ${msg.text()}`);
     });
     page.on("pageerror", (err) => {
       pageErrors.push(`${err.name}: ${err.message}\n${err.stack || ""}`);
+    });
+    page.on("requestfailed", (req) => {
+      failedRequests.push(`FAILED ${req.method()} ${req.url()} → ${req.failure()?.errorText || ""}`);
+    });
+    page.on("request", (req) => {
+      const url = req.url();
+      if (url.includes("/rest/v1/projects") || url.includes("/rest/v1/periods")) {
+        allRequests.push(`→ ${req.method()} ${url}`);
+      }
     });
     page.on("response", async (resp) => {
       const url = resp.url();
@@ -67,18 +78,29 @@ test.describe("projects crud", () => {
     try {
       await projects.saveCreate();
     } catch (err) {
-      // Read the localStorage to see the active org / period in the UI.
-      const state = await page.evaluate(() => ({
-        activeOrg: localStorage.getItem("admin.active_organization_id"),
-        viewPeriod: localStorage.getItem("admin.view_period_id"),
-        url: location.href,
-      }));
+      // Capture the panel error message from the page DOM, the Save button
+      // disabled state, and any text in the drawer that reveals what went
+      // wrong.
+      const drawerInfo = await page.evaluate(() => {
+        const drawer = document.querySelector('[data-testid="project-drawer-title"]')?.closest('[role="dialog"]') || document.body;
+        const text = drawer instanceof HTMLElement ? drawer.innerText.slice(0, 500) : "";
+        const saveBtn = document.querySelector('[data-testid="project-drawer-save"]');
+        const periodTrigger = document.querySelector('[data-testid="period-selector-trigger"]');
+        return {
+          drawerText: text,
+          saveBtnDisabled: saveBtn instanceof HTMLButtonElement ? saveBtn.disabled : "no-btn",
+          periodTriggerText: periodTrigger instanceof HTMLElement ? periodTrigger.innerText : "no-trigger",
+          activeOrg: localStorage.getItem("admin.active_organization_id"),
+          url: location.href,
+        };
+      });
       // eslint-disable-next-line no-console
       console.log("=== DEBUG: createProject failure ===");
-      console.log("Page state:", JSON.stringify(state, null, 2));
+      console.log("Drawer info:", JSON.stringify(drawerInfo, null, 2));
       console.log("Page errors:", JSON.stringify(pageErrors, null, 2));
-      console.log("All projects/periods requests:", JSON.stringify(allRequests, null, 2));
-      console.log("All console output:", JSON.stringify(consoleAll.slice(-30), null, 2));
+      console.log("Network failures:", JSON.stringify(failedRequests, null, 2));
+      console.log("All requests:", JSON.stringify(allRequests, null, 2));
+      console.log("All console output:", JSON.stringify(consoleAll.slice(-50), null, 2));
       throw err;
     }
 
