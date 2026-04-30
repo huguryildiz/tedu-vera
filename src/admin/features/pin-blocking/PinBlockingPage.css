@@ -223,6 +223,7 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    align-content: flex-start;
     position: relative;
     gap: 0;
     width: 100%;
@@ -232,7 +233,7 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
     border-left: 3px solid var(--warning);
     border-radius: var(--radius-sm);
     margin-bottom: 8px;
-    padding: 10px 12px 9px 11px;
+    padding: 8px 10px 8px 11px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     overflow: hidden;
   }
