@@ -35,18 +35,27 @@ test.describe("projects crud", () => {
   }
 
   test("create — project appears in table", async ({ page }) => {
-    // DEBUG: capture network failures + console errors so we can see the
-    // real createProject error if the drawer doesn't close.
-    const consoleErrors: string[] = [];
-    const failedRequests: string[] = [];
+    // DEBUG: capture full request log, console output, and JS errors so we can
+    // see the real createProject failure path when the drawer fails to close.
+    const consoleAll: string[] = [];
+    const allRequests: string[] = [];
+    const pageErrors: string[] = [];
     page.on("console", (msg) => {
-      if (msg.type() === "error") consoleErrors.push(`[${msg.type()}] ${msg.text()}`);
+      consoleAll.push(`[${msg.type()}] ${msg.text()}`);
+    });
+    page.on("pageerror", (err) => {
+      pageErrors.push(`${err.name}: ${err.message}\n${err.stack || ""}`);
     });
     page.on("response", async (resp) => {
-      if (resp.status() >= 400 && resp.url().includes("/rest/v1/projects")) {
+      const url = resp.url();
+      if (
+        url.includes("/rest/v1/projects") ||
+        url.includes("/rest/v1/periods") ||
+        url.includes("admin-session-touch")
+      ) {
         let body = "";
-        try { body = await resp.text(); } catch {}
-        failedRequests.push(`${resp.status()} ${resp.request().method()} ${resp.url()} → ${body.slice(0, 500)}`);
+        try { body = (await resp.text()).slice(0, 300); } catch {}
+        allRequests.push(`${resp.status()} ${resp.request().method()} ${url} → ${body}`);
       }
     });
 
@@ -58,10 +67,18 @@ test.describe("projects crud", () => {
     try {
       await projects.saveCreate();
     } catch (err) {
+      // Read the localStorage to see the active org / period in the UI.
+      const state = await page.evaluate(() => ({
+        activeOrg: localStorage.getItem("admin.active_organization_id"),
+        viewPeriod: localStorage.getItem("admin.view_period_id"),
+        url: location.href,
+      }));
       // eslint-disable-next-line no-console
       console.log("=== DEBUG: createProject failure ===");
-      console.log("Failed requests:", JSON.stringify(failedRequests, null, 2));
-      console.log("Console errors:", JSON.stringify(consoleErrors, null, 2));
+      console.log("Page state:", JSON.stringify(state, null, 2));
+      console.log("Page errors:", JSON.stringify(pageErrors, null, 2));
+      console.log("All projects/periods requests:", JSON.stringify(allRequests, null, 2));
+      console.log("All console output:", JSON.stringify(consoleAll.slice(-30), null, 2));
       throw err;
     }
 
