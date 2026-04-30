@@ -416,6 +416,27 @@
   font-weight: 600 !important;
 }
 
+/* ─── Drawer detail rows (key / value pairs) ────── */
+.audit-drawer-detail-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+}
+.audit-drawer-detail-key {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  min-width: 64px;
+  flex-shrink: 0;
+}
+.audit-drawer-detail-val {
+  font-size: 11px;
+  color: var(--text-primary);
+  flex: 1;
+  word-break: break-word;
+}
+
 /* ─── Drawer context section ─────────────────────── */
 .audit-drawer-context .audit-drawer-detail-row { margin-bottom: 4px; }
 
