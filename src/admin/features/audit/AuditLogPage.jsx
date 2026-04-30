@@ -241,18 +241,25 @@ export default function AuditLogPage() {
   }, [baseFilteredLogs, savedView]);
 
   // ── KPI derived values ────────────────────────────────────
-  // Use server-side total count when available; fall back to loaded row count.
-  const total = auditTotalCount ?? baseFilteredLogs.length;
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+
+  const hasClientFilters = typeFilter || actorFilter || categoryFilter || severityFilter;
+  // When client filters are active, reflect the filtered count; otherwise use server total.
+  const total = hasClientFilters ? baseFilteredLogs.length : (auditTotalCount ?? baseFilteredLogs.length);
+  const totalLabel = hasClientFilters ? "Filtered Events" : "Total Events";
+
   const today = baseFilteredLogs.filter((l) => {
     if (!l.created_at) return false;
     const d = new Date(l.created_at);
     const n = new Date();
     return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
   }).length;
-  const adminCount = baseFilteredLogs.filter((l) => getActorInfo(l).type === "admin").length;
-
-  const oneDayMs = 24 * 60 * 60 * 1000;
-  const now = Date.now();
+  // Always show last-24h admin actions regardless of active filters, consistent with failedAuthCount.
+  const adminCount = auditLogs.filter(
+    (l) => getActorInfo(l).type === "admin" &&
+            l.created_at && (now - Date.parse(l.created_at)) < oneDayMs
+  ).length;
   const failedAuthCount = auditLogs.filter(
     (l) => (l.action?.includes("login.failure") || l.action === "admin.login.failure") &&
             l.created_at && (now - Date.parse(l.created_at)) < oneDayMs
@@ -393,11 +400,11 @@ export default function AuditLogPage() {
 
       {/* KPI strip */}
       <div className="scores-kpi-strip" data-testid="audit-kpi-strip">
-        <div className="scores-kpi-item">
+        <div className="scores-kpi-item scores-kpi-item--static">
           <div className="scores-kpi-item-value">{auditLoading && total === 0 ? "—" : total}</div>
-          <div className="scores-kpi-item-label">Total Events</div>
+          <div className="scores-kpi-item-label">{totalLabel}</div>
         </div>
-        <div className="scores-kpi-item">
+        <div className="scores-kpi-item scores-kpi-item--static">
           <div className="scores-kpi-item-value"><span className="accent">{auditLoading && total === 0 ? "—" : today}</span></div>
           <div className="scores-kpi-item-label">Today</div>
           {todayDelta != null && (
@@ -406,15 +413,15 @@ export default function AuditLogPage() {
             </div>
           )}
         </div>
-        <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value">{auditLoading && total === 0 ? "—" : adminCount}</div>
-          <div className="scores-kpi-item-label">Admin Actions</div>
+        <div className="scores-kpi-item scores-kpi-item--static">
+          <div className="scores-kpi-item-value">{auditLoading ? "—" : adminCount}</div>
+          <div className="scores-kpi-item-label">Admin Actions (24h)</div>
         </div>
-        <div className="scores-kpi-item" style={{ cursor: failedAuthCount > 0 ? "pointer" : "default" }} onClick={() => failedAuthCount > 0 && setSavedView("Failed auth")}>
+        <div className={`scores-kpi-item${failedAuthCount > 0 ? " scores-kpi-item--clickable" : " scores-kpi-item--static"}`} onClick={() => failedAuthCount > 0 && setSavedView("Failed auth")}>
           <div className={`scores-kpi-item-value${failedAuthCount > 0 ? " kpi-danger" : ""}`}>{auditLoading ? "—" : failedAuthCount}</div>
           <div className="scores-kpi-item-label">Failed Auth (24h)</div>
         </div>
-        <div className="scores-kpi-item" style={{ cursor: highRiskCount > 0 ? "pointer" : "default" }} onClick={() => highRiskCount > 0 && setSavedView("High risk")}>
+        <div className={`scores-kpi-item${highRiskCount > 0 ? " scores-kpi-item--clickable" : " scores-kpi-item--static"}`} onClick={() => highRiskCount > 0 && setSavedView("High risk")}>
           <div className={`scores-kpi-item-value${highRiskCount > 0 ? " kpi-warning" : ""}`}>{auditLoading && total === 0 ? "—" : highRiskCount}</div>
           <div className="scores-kpi-item-label">High Risk</div>
         </div>
