@@ -1031,6 +1031,8 @@
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.32);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
     z-index: 299;
   }
 
@@ -1050,19 +1052,20 @@
     overflow: hidden;
   }
 
-  .audit-drawer-head {
-    padding: 10px 16px 8px;
-  }
-
-  /* Drag handle hint */
-  .audit-drawer-head::before {
+  /* Drag handle — on panel, not head, to avoid flex-item quirk */
+  .audit-event-drawer-panel::before {
     content: "";
     display: block;
     width: 32px;
     height: 3px;
     background: var(--border);
     border-radius: 2px;
-    margin: 0 auto 8px;
+    margin: 10px auto 0;
+    flex-shrink: 0;
+  }
+
+  .audit-drawer-head {
+    padding: 6px 16px 8px;
   }
 
   .audit-drawer-tabs {
