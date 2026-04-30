@@ -110,6 +110,7 @@ export async function getEntryTokenStatus(periodId) {
     .select("id, token_hash, token_plain, is_revoked, created_at, expires_at, last_used_at")
     .eq("period_id", periodId)
     .eq("is_revoked", false)
+    .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
