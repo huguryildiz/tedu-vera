@@ -118,6 +118,8 @@
   margin: 0;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
+  text-align: justify;
+  text-justify: inter-word;
 }
 .audit-drawer-narrative-actor { font-weight: 600; color: var(--text-primary); }
 .audit-drawer-narrative-resource { font-weight: 600; color: var(--accent); }
