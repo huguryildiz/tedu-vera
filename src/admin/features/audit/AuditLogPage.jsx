@@ -886,7 +886,6 @@ export default function AuditLogPage() {
                       <div className="amc2-namerow">
                         <span className="amc2-name">{actor.name}</span>
                         <span className={`audit-chip audit-chip-${chip.type} amc2-chip`}>{chip.label}</span>
-                        <span className="amc2-rel">{relTime}</span>
                       </div>
 
                       {/* Row 2: action icon + verb + resource */}
