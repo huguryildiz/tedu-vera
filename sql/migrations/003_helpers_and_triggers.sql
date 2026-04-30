@@ -748,6 +748,64 @@ CREATE TRIGGER block_pcom_on_locked
   BEFORE INSERT OR UPDATE OR DELETE ON period_criterion_outcome_maps
   FOR EACH ROW EXECUTE FUNCTION trigger_block_period_child_on_locked();
 
+-- ── score_sheets: block DELETE once period is activated ────────────────────
+-- Score records are accreditation evidence. Once a period moves out of Draft
+-- (activated_at IS NOT NULL), score sheets must not be deleted directly — only
+-- via cascade when the period itself is deleted (which is already blocked for
+-- locked periods by trigger_block_periods_on_locked_mutate).
+CREATE OR REPLACE FUNCTION public.trigger_block_score_sheet_delete()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_activated_at TIMESTAMPTZ;
+BEGIN
+  SELECT activated_at INTO v_activated_at FROM periods WHERE id = OLD.period_id;
+  IF v_activated_at IS NOT NULL THEN
+    RAISE EXCEPTION 'score_delete_forbidden' USING
+      ERRCODE = 'check_violation',
+      HINT    = 'Score sheets cannot be deleted once a period has been activated.';
+  END IF;
+  RETURN OLD;
+END;
+$$;
+
+CREATE TRIGGER block_score_sheet_delete
+  BEFORE DELETE ON score_sheets
+  FOR EACH ROW EXECUTE FUNCTION trigger_block_score_sheet_delete();
+
+-- ── score_sheet_items: block direct DELETE once period is activated ─────────
+-- Items are written exclusively via rpc_jury_upsert_score. Direct deletion
+-- bypasses all audit and lock guards. Cascade from score_sheets is also
+-- covered by the parent trigger above.
+CREATE OR REPLACE FUNCTION public.trigger_block_score_sheet_item_delete()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_activated_at TIMESTAMPTZ;
+BEGIN
+  SELECT p.activated_at INTO v_activated_at
+    FROM score_sheets ss
+    JOIN periods p ON p.id = ss.period_id
+   WHERE ss.id = OLD.score_sheet_id;
+  IF v_activated_at IS NOT NULL THEN
+    RAISE EXCEPTION 'score_delete_forbidden' USING
+      ERRCODE = 'check_violation',
+      HINT    = 'Score sheet items cannot be deleted once a period has been activated.';
+  END IF;
+  RETURN OLD;
+END;
+$$;
+
+CREATE TRIGGER block_score_sheet_item_delete
+  BEFORE DELETE ON score_sheet_items
+  FOR EACH ROW EXECUTE FUNCTION trigger_block_score_sheet_item_delete();
+
 -- =============================================================================
 -- HELPER: email_is_verified(uid uuid)
 -- =============================================================================
