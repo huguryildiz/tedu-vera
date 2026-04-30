@@ -1474,7 +1474,7 @@ orgs.forEach(o => {
       const pcDescSql = descText ? `'${escapeSql(descText)}'` : 'NULL';
       out.push(`INSERT INTO framework_criteria (id, framework_id, key, label, description, max_score, weight, color, rubric_bands, sort_order) VALUES ('${fcId}', '${fwId}', '${c.key}', '${escapeSql(cLabel)}', ${pcDescSql}, ${c.max}, ${cWeight}, '${c.color}', '${rubricJson}', ${c.sortOrder}) ON CONFLICT DO NOTHING;`);
       out.push(`INSERT INTO period_criteria (id, period_id, source_criterion_id, key, label, description, max_score, weight, color, rubric_bands, sort_order) VALUES ('${pcId}', '${pId}', '${fcId}', '${c.key}', '${escapeSql(cLabel)}', ${pcDescSql}, ${c.max}, ${cWeight}, '${c.color}', '${rubricJson}', ${c.sortOrder}) ON CONFLICT DO NOTHING;`);
-      periodCrits.push({ key: c.key, max: c.max, weight: cWeight, pcId });
+      periodCrits.push({ key: c.key, label: cLabel, max: c.max, weight: cWeight, pcId });
     });
     periodCriteriaMap[pId] = periodCrits;
 
@@ -2093,7 +2093,8 @@ const defaultCommentsTr = ['Genel olarak makul bir çalışma.','İyi bir çaba.
 // Stores per-project scoring offset (hours from evalDay 09:00) for each juror×project pair.
 // Used to give each data.score.submitted audit entry a distinct timestamp and to compute
 // final_submitted_at as max(project sst) + 15 min.
-const projSstData = new Map(); // key: `${jId}-${projId}`, value: offsetHours (number)
+const projSstData = new Map();   // key: `${jId}-${projId}`, value: offsetHours (number)
+const projScoreData = new Map(); // key: `${jId}-${projId}`, value: { [criterionKey]: score }
 
 authList.forEach(auth => {
   // Locked jurors get partial scores (scored before lockout), Blocked/NotStarted skip entirely
@@ -2175,6 +2176,9 @@ authList.forEach(auth => {
       // Edge case: lenient grader (bias >= 1.10) on star project → allow perfect score
       if (bias >= 1.10 && arch === 'star') s = Math.min(c.max, Math.round(c.max * randInt(95, 100) / 100));
       ssiBatcher.push(`('${uuid(`ssi-${ssId}-${c.key}`)}', '${ssId}', '${c.pcId}', ${s})`);
+      const scoreKey = `${auth.jId}-${proj.id}`;
+      const prev = projScoreData.get(scoreKey) || {};
+      projScoreData.set(scoreKey, { ...prev, [c.key]: s });
     });
     scoredCount++;
   });
@@ -2465,7 +2469,9 @@ periodData.forEach(pd => {
     myProjs.forEach(proj => {
       const projH = projSstData.get(`${a.jId}-${proj.id}`);
       const projTs = projH !== undefined ? sqlTs(a.evalDay, projH) : a.finalTs;
-      auditObjList.push({ action:'data.score.submitted', resType:'score_sheets', resId:proj.id, orgId:o.id, userId:null, actorName:a.name, details:`{"juror_name":"${escapeSql(a.name)}","project_title":"${escapeSql(proj.title)}","period_name":"${escapeSql(pd.name)}","period_id":"${pd.id}"}`, timeStr:projTs, correlationId:corrId, _salt:`${a.jId}-${proj.id}` });
+      const scoreObj = projScoreData.get(`${a.jId}-${proj.id}`) || {};
+      const labelsObj = periodCrits.reduce((acc, c) => { acc[c.key] = c.label; return acc; }, {});
+      auditObjList.push({ action:'data.score.submitted', resType:'score_sheets', resId:proj.id, orgId:o.id, userId:null, actorName:a.name, details:`{"juror_name":"${escapeSql(a.name)}","project_title":"${escapeSql(proj.title)}","period_name":"${escapeSql(pd.name)}","period_id":"${pd.id}","scores":${JSON.stringify(scoreObj)},"criteria_labels":${JSON.stringify(labelsObj)}}`, timeStr:projTs, correlationId:corrId, _salt:`${a.jId}-${proj.id}` });
     });
   });
 

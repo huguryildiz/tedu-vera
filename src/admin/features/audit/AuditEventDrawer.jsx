@@ -42,6 +42,13 @@ function buildDetailRows(log) {
     if (d.fileSizeBytes != null) parts.push(`${(d.fileSizeBytes / (1024 * 1024)).toFixed(1)} MB`);
     rows.push({ key: "File", value: parts.join(" · ") });
   }
+  if (d.scores && typeof d.scores === "object") {
+    const labels = d.criteria_labels || {};
+    const entries = Object.entries(d.scores);
+    const total = entries.reduce((sum, [, v]) => sum + (Number(v) || 0), 0);
+    rows.push({ key: "Total", value: String(total) });
+    entries.forEach(([k, v]) => rows.push({ key: labels[k] || k, value: String(v) }));
+  }
   if (d.criteriaCount   != null)             rows.push({ key: "Criteria",  value: String(d.criteriaCount) });
   if (d.previousStatus && d.newStatus)       rows.push({ key: "Status",    value: `${d.previousStatus} → ${d.newStatus}` });
   if (d.method)                              rows.push({ key: "Method",    value: d.method });
