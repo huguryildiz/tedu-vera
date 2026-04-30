@@ -585,7 +585,7 @@ export default function EditSingleCriterionDrawer({
           ref={saveBtnRef}
           data-testid="criteria-drawer-save"
           className="crt-save-btn"
-          disabled={saving || fullyLocked}
+          disabled={saving || fullyLocked || !row.label?.trim() || !currentMax}
           onClick={handleSave}
         >
           {saving ? "Saving…" : isNew ? "Add Criterion" : "Done"}
