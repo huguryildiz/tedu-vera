@@ -328,14 +328,14 @@ export const EVENT_META = {
     label: "Admin login",
     narrative: (log) => {
       const d = log.details || {};
-      return { verb: d.method ? `signed in via ${d.method}` : "signed in", resource: null };
+      return { verb: d.method ? `signed in via ${d.method.charAt(0).toUpperCase() + d.method.slice(1)}` : "signed in", resource: null };
     },
   },
   "auth.admin.login.success": {
     label: "Admin signed in",
     narrative: (log) => {
       const d = log.details || {};
-      return { verb: d.method ? `signed in via ${d.method}` : "signed in", resource: null };
+      return { verb: d.method ? `signed in via ${d.method.charAt(0).toUpperCase() + d.method.slice(1)}` : "signed in", resource: null };
     },
   },
   "auth.admin.login.failure": {
