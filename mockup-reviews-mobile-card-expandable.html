@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VERA — Reviews Mobile Card · Expandable</title>
+<style>
+:root {
+  --bg-page:#f4f7fb;--bg-card:#fff;--surface-1:#eef2f8;--surface-2:#e3eaf4;
+  --border:rgba(15,23,42,0.08);--border-strong:rgba(15,23,42,0.14);
+  --text-primary:#111827;--text-secondary:#4b5675;--text-tertiary:#94a3b8;
+  --accent:#6366f1;--accent-bg:rgba(99,102,241,0.08);
+  --success:#16a34a;--success-bg:rgba(22,163,74,0.09);
+  --warning:#d97706;--warning-bg:rgba(217,119,6,0.09);
+  --danger:#e11d48;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --c-tc:#3b82f6;--c-wc:#8b5cf6;--c-oc:#10b981;--c-tw:#f59e0b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg-page); padding: 40px 24px; }
+
+/* ── page layout ── */
+.page-title { text-align: center; font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.page-sub { text-align: center; font-size: 13px; color: var(--text-tertiary); margin-bottom: 36px; }
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 360px);
+  gap: 48px;
+  justify-content: center;
+}
+.col-head { margin-bottom: 16px; }
+.col-head-label { display: inline-block; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 6px; font-size: 10px; font-weight: 700; color: var(--text-secondary); padding: 2px 7px; margin-right: 6px; letter-spacing: 0.5px; }
+.col-head-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 6px 0 4px; }
+.col-head-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+.col-head-pill { display: inline-block; background: var(--warning-bg); color: var(--warning); border: 1px solid rgba(217,119,6,0.15); border-radius: 99px; font-size: 10px; font-weight: 600; padding: 2px 8px; margin-right: 4px; }
+.col-head-pill--success { background: var(--success-bg); color: var(--success); border-color: rgba(22,163,74,0.15); }
+
+/* ── phone frame ── */
+.phone {
+  background: var(--surface-1);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 36px;
+  padding: 24px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ══════ SHARED CARD BASE ══════ */
+.card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-left: 3px solid var(--warning);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  transition: box-shadow 0.15s;
+}
+.card.complete { border-left-color: var(--success); }
+.card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg); }
+
+/* ── card header (always visible) ── */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+}
+.av {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11.5px; font-weight: 700; flex-shrink: 0;
+}
+.juror-info { flex: 1; min-width: 0; }
+.juror-name { font-size: 12.5px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.juror-affil { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* donut ring */
+.ring-wrap { flex-shrink: 0; position: relative; width: 46px; height: 46px; }
+.ring-svg { width: 46px; height: 46px; transform: rotate(-90deg); }
+.ring-track { fill: none; stroke: var(--surface-2); stroke-width: 4.5; }
+.ring-fill { fill: none; stroke-width: 4.5; stroke-linecap: round; }
+.ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
+.ring-val { font-size: 11px; font-weight: 800; font-family: var(--mono); line-height: 1; }
+.ring-max { font-size: 7.5px; color: var(--text-tertiary); font-family: var(--mono); }
+
+/* ── project row (always visible) ── */
+.proj-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 0 12px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.proj-badge { font-size: 10px; font-weight: 700; color: var(--accent); font-family: var(--mono); flex-shrink: 0; line-height: 1.4; }
+.proj-title { font-size: 11.5px; font-weight: 600; line-height: 1.4; color: var(--text-primary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ── EXPAND TOGGLE BUTTON ── */
+.expand-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  font-family: var(--font);
+  gap: 8px;
+}
+.expand-btn:hover { background: var(--surface-1); }
+.expand-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.expand-crit-pills {
+  display: flex;
+  gap: 4px;
+}
+.xcrit {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--mono);
+  padding: 2px 5px;
+  border-radius: 5px;
+}
+.expand-people-summary {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  margin-left: 4px;
+}
+.mini-av {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--surface-2);
+  border: 1.5px solid var(--bg-card);
+  margin-left: -5px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 7px; font-weight: 700; color: var(--text-tertiary);
+}
+.mini-av:first-child { margin-left: 0; }
+.expand-chevron {
+  flex-shrink: 0;
+  width: 18px; height: 18px;
+  background: var(--surface-2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s;
+}
+.expand-chevron svg { display: block; }
+.expand-btn.open .expand-chevron { transform: rotate(180deg); }
+.expand-btn.open { background: var(--accent-bg); border-bottom-color: rgba(99,102,241,0.12); }
+.expand-btn.open .expand-summary { opacity: 0; }
+
+/* ── EXPANDABLE BODY ── */
+.expand-body {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.25s ease;
+}
+.expand-body.open { max-height: 300px; }
+.expand-inner { padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border); }
+
+/* section labels */
+.sect-label { font-size: 9px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; }
+
+/* chips */
+.chips-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { display: flex; align-items: center; gap: 4px; background: var(--surface-1); border: 1px solid var(--border); border-radius: 99px; padding: 2px 8px 2px 3px; font-size: 11px; font-weight: 500; color: var(--text-secondary); }
+.chip-av { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 7.5px; font-weight: 700; }
+.overflow-chip { background: var(--surface-2); border: 1px solid var(--border); border-radius: 99px; padding: 2px 7px; font-size: 10.5px; font-weight: 600; color: var(--text-secondary); }
+.advisor-chip { display: flex; align-items: center; gap: 4px; background: var(--accent-bg); border: 1px solid rgba(99,102,241,0.2); border-radius: 99px; padding: 2px 8px 2px 3px; font-size: 11px; font-weight: 500; color: var(--accent); }
+.advisor-av { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 7.5px; font-weight: 700; }
+
+/* criteria bars */
+.crit-row { display: flex; align-items: center; gap: 8px; }
+.crit-name { font-size: 11px; color: var(--text-secondary); min-width: 90px; flex-shrink: 0; }
+.crit-bar-wrap { flex: 1; height: 5px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.crit-bar-fill { height: 100%; border-radius: 99px; }
+.crit-score { font-size: 11px; font-weight: 700; font-family: var(--mono); min-width: 40px; text-align: right; }
+.crit-max { color: var(--text-tertiary); font-weight: 400; }
+
+/* ── FOOTER (always visible) ── */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  gap: 8px;
+}
+.foot-group { display: flex; flex-direction: column; gap: 2px; }
+.foot-group--r { align-items: flex-end; }
+.foot-lbl { font-size: 9px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
+.pill-partial { font-size: 10.5px; font-weight: 600; color: var(--warning); background: var(--warning-bg); border: 1px solid rgba(217,119,6,0.15); border-radius: 6px; padding: 2px 7px; display: inline-flex; align-items: center; gap: 3px; }
+.pill-complete { font-size: 10.5px; font-weight: 600; color: var(--success); background: var(--success-bg); border: 1px solid rgba(22,163,74,0.15); border-radius: 6px; padding: 2px 7px; display: inline-flex; align-items: center; gap: 3px; }
+.pill-progress { font-size: 10.5px; font-weight: 600; color: var(--text-secondary); background: var(--surface-1); border: 1px solid var(--border); border-radius: 6px; padding: 2px 7px; }
+.submitted-row {
+  border-top: 1px solid var(--border);
+  padding: 5px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sub-label { font-size: 9.5px; color: var(--text-tertiary); display: flex; align-items: center; gap: 4px; }
+.sub-val { font-size: 9.5px; font-weight: 600; color: var(--text-secondary); font-family: var(--mono); }
+
+/* ── dark mode ── */
+.dark {
+  --bg-page:#0f1117;--bg-card:#1a1d27;--surface-1:#232635;--surface-2:#2c3044;
+  --border:rgba(255,255,255,0.07);--border-strong:rgba(255,255,255,0.13);
+  --text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-tertiary:#4b5675;
+  --accent:#818cf8;--accent-bg:rgba(129,140,248,0.12);
+  --success:#4ade80;--success-bg:rgba(74,222,128,0.09);
+  --warning:#fbbf24;--warning-bg:rgba(251,191,36,0.09);
+}
+.dark-toggle { position: fixed; bottom: 20px; right: 20px; background: var(--bg-card); border: 1.5px solid var(--border-strong); border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+</style>
+</head>
+<body>
+
+<p class="page-title">Reviews Mobile Card — Expandable Design</p>
+<p class="page-sub">Collapsed state (compact) · Tap the toggle strip to reveal Team Members, Advised By, Criteria Scores.</p>
+
+<div class="demo-grid">
+
+  <!-- ══ COL 1: COLLAPSED STATE ══ -->
+  <div>
+    <div class="col-head">
+      <div><span class="col-head-label">COLLAPSED</span> <span class="col-head-pill">~130px</span></div>
+      <div class="col-head-title">Kapalı hâl</div>
+      <div class="col-head-desc">Sadece juror + proje görünür. Kriter özeti (pill'ler) + üye avatarları toggle strip'te. Hızlı scroll için ideal.</div>
+    </div>
+    <div class="phone">
+
+      <!-- card 1 – partial, collapsed -->
+      <div class="card">
+        <div class="card-header">
+          <div class="av" style="background:#ede9fe;color:#7c3aed">AY</div>
+          <div class="juror-info">
+            <div class="juror-name">Ahmet Yılmaz</div>
+            <div class="juror-affil">TEDU · Electrical Eng.</div>
+          </div>
+          <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 46 46">
+              <circle class="ring-track" cx="23" cy="23" r="18"/>
+              <circle class="ring-fill" cx="23" cy="23" r="18" stroke="var(--warning)"
+                stroke-dasharray="113" stroke-dashoffset="32"/>
+            </svg>
+            <div class="ring-text">
+              <span class="ring-val" style="color:var(--warning)">71</span>
+              <span class="ring-max">/100</span>
+            </div>
+          </div>
+        </div>
+        <div class="proj-row">
+          <span class="proj-badge">P3</span>
+          <span class="proj-title">FPGA-Based Real-Time Signal Processing for 5G NR Systems</span>
+        </div>
+        <!-- expand toggle strip — closed -->
+        <button class="expand-btn">
+          <div class="expand-summary">
+            <div class="expand-crit-pills">
+              <span class="xcrit" style="background:rgba(59,130,246,0.10);color:var(--c-tc)">TC 18</span>
+              <span class="xcrit" style="background:rgba(139,92,246,0.10);color:var(--c-wc)">WC 17</span>
+              <span class="xcrit" style="background:rgba(16,185,129,0.10);color:var(--c-oc)">OC 22</span>
+              <span class="xcrit" style="background:rgba(245,158,11,0.10);color:var(--c-tw)">TW 14</span>
+            </div>
+            <div class="expand-people-summary">
+              <div class="mini-av" style="background:#dbeafe;color:#1d4ed8">E</div>
+              <div class="mini-av" style="background:#fce7f3;color:#be185d">M</div>
+              <div class="mini-av" style="background:#dcfce7;color:#15803d">S</div>
+              <div class="mini-av">+2</div>
+            </div>
+          </div>
+          <div class="expand-chevron">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </button>
+        <div class="card-footer">
+          <div class="foot-group"><span class="foot-lbl">Score Status</span><span class="pill-partial">⚠ Partial</span></div>
+          <div class="foot-group foot-group--r"><span class="foot-lbl">Juror Progress</span><span class="pill-progress">In Progress</span></div>
+        </div>
+        <div class="submitted-row">
+          <span class="sub-label">⏱ Submitted At</span>
+          <span class="sub-val">Apr 28, 2026 · 14:32</span>
+        </div>
+      </div>
+
+      <!-- card 2 – complete, collapsed -->
+      <div class="card complete">
+        <div class="card-header">
+          <div class="av" style="background:#dcfce7;color:#15803d">BÖ</div>
+          <div class="juror-info">
+            <div class="juror-name">Burcu Öztürk</div>
+            <div class="juror-affil">TEDU · Computer Eng.</div>
+          </div>
+          <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 46 46">
+              <circle class="ring-track" cx="23" cy="23" r="18"/>
+              <circle class="ring-fill" cx="23" cy="23" r="18" stroke="var(--success)"
+                stroke-dasharray="113" stroke-dashoffset="14"/>
+            </svg>
+            <div class="ring-text">
+              <span class="ring-val" style="color:var(--success)">88</span>
+              <span class="ring-max">/100</span>
+            </div>
+          </div>
+        </div>
+        <div class="proj-row">
+          <span class="proj-badge">P3</span>
+          <span class="proj-title">FPGA-Based Real-Time Signal Processing for 5G NR Systems</span>
+        </div>
+        <button class="expand-btn">
+          <div class="expand-summary">
+            <div class="expand-crit-pills">
+              <span class="xcrit" style="background:rgba(59,130,246,0.10);color:var(--c-tc)">TC 23</span>
+              <span class="xcrit" style="background:rgba(139,92,246,0.10);color:var(--c-wc)">WC 21</span>
+              <span class="xcrit" style="background:rgba(16,185,129,0.10);color:var(--c-oc)">OC 22</span>
+              <span class="xcrit" style="background:rgba(245,158,11,0.10);color:var(--c-tw)">TW 22</span>
+            </div>
+            <div class="expand-people-summary">
+              <div class="mini-av" style="background:#dbeafe;color:#1d4ed8">E</div>
+              <div class="mini-av" style="background:#fce7f3;color:#be185d">M</div>
+              <div class="mini-av" style="background:#dcfce7;color:#15803d">S</div>
+            </div>
+          </div>
+          <div class="expand-chevron">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </button>
+        <div class="card-footer">
+          <div class="foot-group"><span class="foot-lbl">Score Status</span><span class="pill-complete">✓ Complete</span></div>
+          <div class="foot-group foot-group--r"><span class="foot-lbl">Juror Progress</span><span class="pill-complete">✓ Submitted</span></div>
+        </div>
+        <div class="submitted-row">
+          <span class="sub-label">⏱ Submitted At</span>
+          <span class="sub-val">Apr 28, 2026 · 11:05</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ COL 2: EXPANDED STATE ══ -->
+  <div>
+    <div class="col-head">
+      <div><span class="col-head-label">EXPANDED</span> <span class="col-head-pill col-head-pill--success">~265px</span></div>
+      <div class="col-head-title">Açık hâl</div>
+      <div class="col-head-desc">Toggle strip'e basınca Team Members, Advised By, Criteria Scores yumuşakça açılır. Aynı strip'e tekrar basınca kapanır.</div>
+    </div>
+    <div class="phone">
+
+      <!-- card 1 – partial, EXPANDED -->
+      <div class="card selected">
+        <div class="card-header">
+          <div class="av" style="background:#ede9fe;color:#7c3aed">AY</div>
+          <div class="juror-info">
+            <div class="juror-name">Ahmet Yılmaz</div>
+            <div class="juror-affil">TEDU · Electrical Eng.</div>
+          </div>
+          <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 46 46">
+              <circle class="ring-track" cx="23" cy="23" r="18"/>
+              <circle class="ring-fill" cx="23" cy="23" r="18" stroke="var(--warning)"
+                stroke-dasharray="113" stroke-dashoffset="32"/>
+            </svg>
+            <div class="ring-text">
+              <span class="ring-val" style="color:var(--warning)">71</span>
+              <span class="ring-max">/100</span>
+            </div>
+          </div>
+        </div>
+        <div class="proj-row">
+          <span class="proj-badge">P3</span>
+          <span class="proj-title">FPGA-Based Real-Time Signal Processing for 5G NR Systems</span>
+        </div>
+        <!-- expand toggle strip — OPEN -->
+        <button class="expand-btn open">
+          <div class="expand-summary"><!-- hidden when open --></div>
+          <div class="expand-chevron" style="transform:rotate(180deg)">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </button>
+        <!-- expandable body — OPEN -->
+        <div class="expand-body open">
+          <div class="expand-inner">
+            <div>
+              <div class="sect-label">Team Members</div>
+              <div class="chips-row">
+                <span class="chip"><span class="chip-av" style="background:#1d4ed8">E</span>Elif K.</span>
+                <span class="chip"><span class="chip-av" style="background:#be185d">M</span>Mert A.</span>
+                <span class="chip"><span class="chip-av" style="background:#15803d">S</span>Serra T.</span>
+                <span class="overflow-chip">+1</span>
+              </div>
+            </div>
+            <div>
+              <div class="sect-label">Advised By</div>
+              <div class="chips-row">
+                <span class="advisor-chip"><span class="advisor-av">M</span>Dr. Mehmet Kaya</span>
+              </div>
+            </div>
+            <div>
+              <div class="sect-label">Criteria Scores</div>
+              <div style="display:flex;flex-direction:column;gap:5px;">
+                <div class="crit-row">
+                  <span class="crit-name">Technical Content</span>
+                  <div class="crit-bar-wrap"><div class="crit-bar-fill" style="width:72%;background:var(--c-tc)"></div></div>
+                  <span class="crit-score" style="color:var(--c-tc)">18.0<span class="crit-max">/25</span></span>
+                </div>
+                <div class="crit-row">
+                  <span class="crit-name">Written Content</span>
+                  <div class="crit-bar-wrap"><div class="crit-bar-fill" style="width:68%;background:var(--c-wc)"></div></div>
+                  <span class="crit-score" style="color:var(--c-wc)">17.0<span class="crit-max">/25</span></span>
+                </div>
+                <div class="crit-row">
+                  <span class="crit-name">Oral Delivery</span>
+                  <div class="crit-bar-wrap"><div class="crit-bar-fill" style="width:88%;background:var(--c-oc)"></div></div>
+                  <span class="crit-score" style="color:var(--c-oc)">22.0<span class="crit-max">/25</span></span>
+                </div>
+                <div class="crit-row">
+                  <span class="crit-name">Teamwork</span>
+                  <div class="crit-bar-wrap"><div class="crit-bar-fill" style="width:56%;background:var(--c-tw)"></div></div>
+                  <span class="crit-score" style="color:var(--c-tw)">14.0<span class="crit-max">/25</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="foot-group"><span class="foot-lbl">Score Status</span><span class="pill-partial">⚠ Partial</span></div>
+          <div class="foot-group foot-group--r"><span class="foot-lbl">Juror Progress</span><span class="pill-progress">In Progress</span></div>
+        </div>
+        <div class="submitted-row">
+          <span class="sub-label">⏱ Submitted At</span>
+          <span class="sub-val">Apr 28, 2026 · 14:32</span>
+        </div>
+      </div>
+
+      <!-- card 2 – collapsed (to show contrast) -->
+      <div class="card complete">
+        <div class="card-header">
+          <div class="av" style="background:#dcfce7;color:#15803d">BÖ</div>
+          <div class="juror-info">
+            <div class="juror-name">Burcu Öztürk</div>
+            <div class="juror-affil">TEDU · Computer Eng.</div>
+          </div>
+          <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 46 46">
+              <circle class="ring-track" cx="23" cy="23" r="18"/>
+              <circle class="ring-fill" cx="23" cy="23" r="18" stroke="var(--success)"
+                stroke-dasharray="113" stroke-dashoffset="14"/>
+            </svg>
+            <div class="ring-text">
+              <span class="ring-val" style="color:var(--success)">88</span>
+              <span class="ring-max">/100</span>
+            </div>
+          </div>
+        </div>
+        <div class="proj-row">
+          <span class="proj-badge">P3</span>
+          <span class="proj-title">FPGA-Based Real-Time Signal Processing for 5G NR Systems</span>
+        </div>
+        <button class="expand-btn">
+          <div class="expand-summary">
+            <div class="expand-crit-pills">
+              <span class="xcrit" style="background:rgba(59,130,246,0.10);color:var(--c-tc)">TC 23</span>
+              <span class="xcrit" style="background:rgba(139,92,246,0.10);color:var(--c-wc)">WC 21</span>
+              <span class="xcrit" style="background:rgba(16,185,129,0.10);color:var(--c-oc)">OC 22</span>
+              <span class="xcrit" style="background:rgba(245,158,11,0.10);color:var(--c-tw)">TW 22</span>
+            </div>
+          </div>
+          <div class="expand-chevron">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </button>
+        <div class="card-footer">
+          <div class="foot-group"><span class="foot-lbl">Score Status</span><span class="pill-complete">✓ Complete</span></div>
+          <div class="foot-group foot-group--r"><span class="foot-lbl">Juror Progress</span><span class="pill-complete">✓ Submitted</span></div>
+        </div>
+        <div class="submitted-row">
+          <span class="sub-label">⏱ Submitted At</span>
+          <span class="sub-val">Apr 28, 2026 · 11:05</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ COL 3: INTERACTIVE ══ -->
+  <div>
+    <div class="col-head">
+      <div><span class="col-head-label">INTERACTIVE</span> <span class="col-head-pill">tıkla ↓</span></div>
+      <div class="col-head-title">Canlı demo</div>
+      <div class="col-head-desc">Toggle strip'e bas — açılır/kapanır. Birden fazla kart aynı anda açık olabilir.</div>
+    </div>
+    <div class="phone">
+
+      <div class="card" id="ic1">
+        <div class="card-header">
+          <div class="av" style="background:#ede9fe;color:#7c3aed">AY</div>
+          <div class="juror-info">
+            <div class="juror-name">Ahmet Yılmaz</div>
+            <div class="juror-affil">TEDU · Electrical Eng.</div>
+          </div>
+          <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 46 46">
+              <circle class="ring-track" cx="23" cy="23" r="18"/>
+              <circle class="ring-fill" cx="23" cy="23" r="18" stroke="var(--warning)"
+                stroke-dasharray="113" stroke-dashoffset="32"/>
+            </svg>
+            <div class="ring-text">
+              <span class="ring-val" style="color:var(--warning)">71</span>
+              <span class="ring-max">/100</span>
+            </div>
+          </div>
+        </div>
+        <div class="proj-row">
+          <span class="proj-badge">P3</span>
+          <span class="proj-title">FPGA-Based Real-Time Signal Processing for 5G NR Systems</span>
+        </div>
+        <button class="expand-btn" onclick="toggleCard('ic1')">
+          <div class="expand-summary">
+            <div class="expand-crit-pills">
+              <span class="xcrit" style="background:rgba(59,130,246,0.10);color:var(--c-tc)">TC 18</span>
+              <span class="xcrit" style="background:rgba(139,92,246,0.10);color:var(--c-wc)">WC 17</span>
+              <span class="xcrit" style="background:rgba(16,185,129,0.10);color:var(--c-oc)">OC 22</span>
+              <span class="xcrit" style="background:rgba(245,158,11,0.10);color:var(--c-tw)">TW 14</span>
+            </div>
+            <div class="expand-people-summary">
+              <div class="mini-av" style="background:#dbeafe;color:#1d4ed8">E</div>
+              <div class="mini-av" style="background:#fce7f3;color:#be185d">M</div>
+              <div class="mini-av" style="background:#dcfce7;color:#15803d">S</div>
+            </div>
+          </div>
+          <div class="expand-chevron">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </button>
+        <div class="expand-body" id="ic1-body">
+          <div class="expand-inner">
+            <div>
+              <div class="sect-label">Team Members</div>
+              <div class="chips-row">
+                <span class="chip"><span class="chip-av" style="background:#1d4ed8">E</span>Elif K.</span>
+                <span class="chip"><span class="chip-av" style="background:#be185d">M</span>Mert A.</span>
+                <span class="chip"><span class="chip-av" style="background:#15803d">S</span>Serra T.</span>
+                <span class="overflow-chip">+1</span>
+              </div>
+            </div>
+            <div>
+              <div class="sect-label">Advised By</div>
+              <div class="chips-row">
+                <span class="advisor-chip"><span class="advisor-av">M</span>Dr. Mehmet Kaya</span>
+              </div>
+            </div>
+            <div>
+              <div class="sect-label">Criteria Scores</div>
+              <div style="display:flex;flex-direction:column;gap:5px;">
+                <div class="crit-row"><span class="crit-name">Technical Content</span><div class="crit-bar-wrap"><div class="crit-bar-fill" style="width:72%;background:var(--c-tc)"></div></div><span class="crit-score" style="color:var(--c-tc)">18.0<span class="crit-max">/25</span></span></div>
+                <div class="crit-row"><span class="crit-name">Written Content</span><div class="crit-bar-wrap"><div class="crit-bar-fill" style="width:68%;background:var(--c-wc)"></div></div><span class="crit-score" style="color:var(--c-wc)">17.0<span class="crit-max">/25</span></span></div>
+                <div class="crit-row"><span class="crit-name">Oral Delivery</span><div class="crit-bar-wrap"><div class="crit-bar-fill" style="width:88%;background:var(--c-oc)"></div></div><span class="crit-score" style="color:var(--c-oc)">22.0<span class="crit-max">/25</span></span></div>
+                <div class="crit-row"><span class="crit-name">Teamwork</span><div class="crit-bar-wrap"><div class="crit-bar-fill" style="width:56%;background:var(--c-tw)"></div></div><span class="crit-score" style="color:var(--c-tw)">14.0<span class="crit-max">/25</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="foot-group"><span class="foot-lbl">Score Status</span><span class="pill-partial">⚠ Partial</span></div>
+          <div class="foot-group foot-group--r"><span class="foot-lbl">Juror Progress</span><span class="pill-progress">In Progress</span></div>
+        </div>
+        <div class="submitted-row"><span class="sub-label">⏱ Submitted At</span><span class="sub-val">Apr 28, 2026 · 14:32</span></div>
+      </div>
+
+      <div class="card complete" id="ic2">
+        <div class="card-header">
+          <div class="av" style="background:#dcfce7;color:#15803d">BÖ</div>
+          <div class="juror-info">
+            <div class="juror-name">Burcu Öztürk</div>
+            <div class="juror-affil">TEDU · Computer Eng.</div>
+          </div>
+          <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 46 46">
+              <circle class="ring-track" cx="23" cy="23" r="18"/>
+              <circle class="ring-fill" cx="23" cy="23" r="18" stroke="var(--success)"
+                stroke-dasharray="113" stroke-dashoffset="14"/>
+            </svg>
+            <div class="ring-text">
+              <span class="ring-val" style="color:var(--success)">88</span>
+              <span class="ring-max">/100</span>
+            </div>
+          </div>
+        </div>
+        <div class="proj-row">
+          <span class="proj-badge">P3</span>
+          <span class="proj-title">FPGA-Based Real-Time Signal Processing for 5G NR Systems</span>
+        </div>
+        <button class="expand-btn" onclick="toggleCard('ic2')">
+          <div class="expand-summary">
+            <div class="expand-crit-pills">
+              <span class="xcrit" style="background:rgba(59,130,246,0.10);color:var(--c-tc)">TC 23</span>
+              <span class="xcrit" style="background:rgba(139,92,246,0.10);color:var(--c-wc)">WC 21</span>
+              <span class="xcrit" style="background:rgba(16,185,129,0.10);color:var(--c-oc)">OC 22</span>
+              <span class="xcrit" style="background:rgba(245,158,11,0.10);color:var(--c-tw)">TW 22</span>
+            </div>
+            <div class="expand-people-summary">
+              <div class="mini-av" style="background:#dbeafe;color:#1d4ed8">E</div>
+              <div class="mini-av" style="background:#fce7f3;color:#be185d">M</div>
+              <div class="mini-av" style="background:#dcfce7;color:#15803d">S</div>
+            </div>
+          </div>
+          <div class="expand-chevron">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </button>
+        <div class="expand-body" id="ic2-body">
+          <div class="expand-inner">
+            <div>
+              <div class="sect-label">Team Members</div>
+              <div class="chips-row">
+                <span class="chip"><span class="chip-av" style="background:#1d4ed8">E</span>Elif K.</span>
+                <span class="chip"><span class="chip-av" style="background:#be185d">M</span>Mert A.</span>
+                <span class="chip"><span class="chip-av" style="background:#15803d">S</span>Serra T.</span>
+              </div>
+            </div>
+            <div>
+              <div class="sect-label">Advised By</div>
+              <div class="chips-row">
+                <span class="advisor-chip"><span class="advisor-av">M</span>Dr. Mehmet Kaya</span>
+              </div>
+            </div>
+            <div>
+              <div class="sect-label">Criteria Scores</div>
+              <div style="display:flex;flex-direction:column;gap:5px;">
+                <div class="crit-row"><span class="crit-name">Technical Content</span><div class="crit-bar-wrap"><div class="crit-bar-fill" style="width:92%;background:var(--c-tc)"></div></div><span class="crit-score" style="color:var(--c-tc)">23.0<span class="crit-max">/25</span></span></div>
+                <div class="crit-row"><span class="crit-name">Written Content</span><div class="crit-bar-wrap"><div class="crit-bar-fill" style="width:84%;background:var(--c-wc)"></div></div><span class="crit-score" style="color:var(--c-wc)">21.0<span class="crit-max">/25</span></span></div>
+                <div class="crit-row"><span class="crit-name">Oral Delivery</span><div class="crit-bar-wrap"><div class="crit-bar-fill" style="width:88%;background:var(--c-oc)"></div></div><span class="crit-score" style="color:var(--c-oc)">22.0<span class="crit-max">/25</span></span></div>
+                <div class="crit-row"><span class="crit-name">Teamwork</span><div class="crit-bar-wrap"><div class="crit-bar-fill" style="width:88%;background:var(--c-tw)"></div></div><span class="crit-score" style="color:var(--c-tw)">22.0<span class="crit-max">/25</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="foot-group"><span class="foot-lbl">Score Status</span><span class="pill-complete">✓ Complete</span></div>
+          <div class="foot-group foot-group--r"><span class="foot-lbl">Juror Progress</span><span class="pill-complete">✓ Submitted</span></div>
+        </div>
+        <div class="submitted-row"><span class="sub-label">⏱ Submitted At</span><span class="sub-val">Apr 28, 2026 · 11:05</span></div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /demo-grid -->
+
+<button class="dark-toggle" onclick="document.body.classList.toggle('dark')">🌓</button>
+
+<script>
+function toggleCard(id) {
+  const card = document.getElementById(id);
+  const body = document.getElementById(id + '-body');
+  const btn = card.querySelector('.expand-btn');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+  card.classList.toggle('selected', !isOpen);
+}
+</script>
+</body>
+</html>

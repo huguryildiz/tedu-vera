@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>VERA — Project Card Compact Mockup</title>
+<style>
+:root {
+  --bg-page:        #f4f7fb;
+  --bg-card:        #ffffff;
+  --surface-1:      #eef2f8;
+  --surface-2:      #e3eaf4;
+  --border:         rgba(15,23,42,0.08);
+  --border-strong:  rgba(15,23,42,0.13);
+  --text-primary:   #111827;
+  --text-secondary: #4b5675;
+  --text-tertiary:  #94a3b8;
+  --accent:         #3b82f6;
+  --accent-ring:    rgba(59,130,246,0.15);
+  --success:        #16a34a;
+  --warning:        #d97706;
+  --danger:         #e11d48;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --ring-green:  #16a34a;
+  --ring-yellow: #d97706;
+  --ring-red:    #e11d48;
+  --ring-blue:   #3b82f6;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg-page);
+  color: var(--text-primary);
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ── Phone shell ── */
+.phone-frame {
+  width: 390px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: var(--bg-page);
+  padding: 20px 14px 60px;
+}
+
+/* ── Section headers ── */
+.sec-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin: 28px 0 4px 2px;
+}
+.sec-label:first-of-type { margin-top: 0; }
+.sec-note {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-bottom: 12px;
+  padding: 0 2px;
+  line-height: 1.5;
+}
+
+/* ── Height pill ── */
+.h-pill {
+  display: inline-flex; align-items: center;
+  padding: 1px 7px; border-radius: 99px;
+  font-size: 9px; font-weight: 700; font-family: var(--font-mono);
+  letter-spacing: 0.3px; margin-left: 6px; vertical-align: middle;
+}
+.h-pill.old { background: rgba(217,119,6,0.1); color: #92400e; border: 1px solid rgba(217,119,6,0.2); }
+.h-pill.new { background: rgba(22,163,74,0.09); color: #166534; border: 1px solid rgba(22,163,74,0.18); }
+.h-pill.mid { background: rgba(59,130,246,0.08); color: #1d4ed8; border: 1px solid rgba(59,130,246,0.18); }
+
+/* ── Card shell (shared) ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+}
+.card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+/* ── Kebab icon ── */
+.kebab {
+  width: 30px; height: 30px; flex-shrink: 0;
+  border: none; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; color: var(--text-tertiary);
+}
+
+/* ── Score ring ── */
+.ring {
+  border-radius: 50%;
+  background: conic-gradient(var(--ring) var(--pct), var(--surface-1) 0);
+  position: relative; flex-shrink: 0;
+}
+.ring::after {
+  content: ""; position: absolute; inset: 3px;
+  border-radius: 50%; background: var(--bg-card);
+}
+.ring-inner {
+  position: absolute; inset: 0; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.ring-num {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-weight: 700; color: var(--ring); line-height: 1;
+}
+.ring-lbl {
+  font-family: var(--font-mono); font-size: 6.5px; font-weight: 600;
+  color: var(--text-tertiary); letter-spacing: 0.3px; text-transform: uppercase; margin-top: 1px;
+}
+
+/* ── Chip colors ── */
+.c1 { background: #6366f1; }
+.c2 { background: #14b8a6; }
+.c3 { background: #f59e0b; }
+.c4 { background: #ec4899; }
+.c5 { background: #8b5cf6; }
+.c6 { background: #0ea5e9; }
+
+/* ═══════════════════════════════════════════════════
+   A — CURRENT (before)
+   ═══════════════════════════════════════════════════ */
+.cur-hero {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0 12px;
+  padding: 14px 12px 12px 14px;
+  align-items: start;
+}
+.cur-ring { width: 48px; height: 48px; }
+.cur-ring .ring-num { font-size: 14px; }
+.cur-title-block { min-width: 0; }
+.cur-eyebrow {
+  font-size: 10px; font-weight: 700;
+  color: var(--accent); letter-spacing: 0.5px; margin-bottom: 2px;
+}
+.cur-title {
+  font-size: 13.5px; font-weight: 650; line-height: 1.3;
+  letter-spacing: -0.2px; color: var(--text-primary);
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.cur-adv-eyebrow {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.7px; color: var(--text-tertiary); margin: 10px 0 6px;
+}
+.cur-adv-chip { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+.cur-adv-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #1e293b; color: #fff;
+  font-size: 9px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.cur-adv-name { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+.cur-members {
+  border-top: 1px solid var(--border); padding: 10px 14px 12px;
+}
+.cur-members-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.cur-m-chip { display: flex; align-items: center; gap: 5px; }
+.cur-m-dot {
+  width: 22px; height: 22px; border-radius: 50%;
+  font-size: 9px; font-weight: 700; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+.cur-m-name { font-size: 11.5px; color: var(--text-secondary); font-weight: 500; }
+.cur-footer {
+  border-top: 1px solid var(--border); padding: 8px 14px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 10.5px; color: var(--text-tertiary); gap: 10px;
+}
+.cur-footer strong { color: var(--text-secondary); font-weight: 600; }
+
+/* ═══════════════════════════════════════════════════
+   B — COMPACT v1: initials only  (chips + chips)
+   ═══════════════════════════════════════════════════ */
+.pc-row1 {
+  display: flex; align-items: center;
+  gap: 9px; padding: 10px 10px 9px 12px;
+}
+.pc-ring { width: 40px; height: 40px; }
+.pc-ring .ring-num { font-size: 12px; }
+.pc-meta { flex: 1; min-width: 0; }
+.pc-eyebrow {
+  font-size: 9.5px; font-weight: 700;
+  color: var(--accent); letter-spacing: 0.5px; margin-bottom: 2px;
+}
+.pc-title {
+  font-size: 13px; font-weight: 650; line-height: 1.25;
+  letter-spacing: -0.15px; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pc-row2 {
+  border-top: 1px solid var(--border);
+  padding: 7px 12px; display: flex; align-items: center; gap: 0;
+}
+.pc-adv-chips { display: flex; align-items: center; gap: 0; flex-shrink: 0; }
+.pc-adv-chip {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #1e293b; color: #fff;
+  font-size: 7.5px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--bg-card); margin-left: -4px; letter-spacing: 0.1px;
+}
+.pc-adv-chip:first-child { margin-left: 0; }
+.pc-sep {
+  width: 1px; height: 14px; background: var(--border-strong);
+  margin: 0 8px; flex-shrink: 0; border-radius: 1px;
+}
+.pc-mem-chips { display: flex; align-items: center; gap: 0; flex-shrink: 0; }
+.pc-chip {
+  width: 22px; height: 22px; border-radius: 50%; color: #fff;
+  font-size: 7.5px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--bg-card); margin-left: -5px;
+}
+.pc-chip:first-child { margin-left: 0; }
+.pc-chip-more {
+  background: var(--surface-1) !important;
+  color: var(--text-secondary) !important; font-size: 7px; font-weight: 700;
+}
+.pc-stats {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; justify-content: flex-end; gap: 5px;
+}
+.pc-stat { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; flex-shrink: 0; }
+.pc-stat strong { color: var(--text-secondary); font-weight: 600; font-size: 10.5px; }
+.pc-dot { color: var(--border-strong); font-size: 10px; flex-shrink: 0; }
+
+/* ═══════════════════════════════════════════════════
+   C — HYBRID: advisor name text + member chips
+   ═══════════════════════════════════════════════════ */
+.hb-row1 {
+  display: flex; align-items: center;
+  gap: 9px; padding: 10px 10px 9px 12px;
+}
+.hb-ring { width: 40px; height: 40px; }
+.hb-ring .ring-num { font-size: 12px; }
+.hb-meta { flex: 1; min-width: 0; }
+.hb-eyebrow {
+  font-size: 9.5px; font-weight: 700;
+  color: var(--accent); letter-spacing: 0.5px; margin-bottom: 2px;
+}
+.hb-title {
+  font-size: 13px; font-weight: 650; line-height: 1.25;
+  letter-spacing: -0.15px; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Row 2 — two sub-rows stacked */
+.hb-row2 {
+  border-top: 1px solid var(--border);
+  padding: 7px 12px 7px; display: flex; flex-direction: column; gap: 5px;
+}
+
+/* Advisor row: icon + truncated names */
+.hb-adv-row {
+  display: flex; align-items: center; gap: 6px; min-width: 0;
+}
+.hb-adv-icon {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: rgba(30,41,59,0.08); color: var(--text-tertiary);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.hb-adv-names {
+  font-size: 11px; color: var(--text-secondary); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 1; min-width: 0;
+}
+.hb-adv-names em { color: var(--text-tertiary); font-style: normal; font-size: 10.5px; }
+
+/* Member row: stacked chips + count text + stats */
+.hb-mem-row {
+  display: flex; align-items: center; gap: 6px; min-width: 0;
+}
+.hb-chips { display: flex; align-items: center; gap: 0; flex-shrink: 0; }
+.hb-chip {
+  width: 20px; height: 20px; border-radius: 50%; color: #fff;
+  font-size: 7px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--bg-card); margin-left: -4px;
+}
+.hb-chip:first-child { margin-left: 0; }
+.hb-chip-more {
+  background: var(--surface-1) !important;
+  color: var(--text-secondary) !important; font-size: 6.5px; font-weight: 700;
+}
+.hb-mem-names {
+  font-size: 10.5px; color: var(--text-secondary); font-weight: 400;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 1; min-width: 0;
+}
+.hb-mem-names em { color: var(--text-tertiary); font-style: normal; font-size: 10px; }
+.hb-ts {
+  font-size: 9.5px; color: var(--text-tertiary); flex-shrink: 0;
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════════════════════════════════════════
+   D — FULL NAMES: everything written out
+   ═══════════════════════════════════════════════════ */
+.fn-row1 {
+  display: flex; align-items: center;
+  gap: 9px; padding: 10px 10px 9px 12px;
+}
+.fn-ring { width: 40px; height: 40px; }
+.fn-ring .ring-num { font-size: 12px; }
+.fn-meta { flex: 1; min-width: 0; }
+.fn-eyebrow {
+  font-size: 9.5px; font-weight: 700;
+  color: var(--accent); letter-spacing: 0.5px; margin-bottom: 2px;
+}
+.fn-title {
+  font-size: 13px; font-weight: 650; line-height: 1.25;
+  letter-spacing: -0.15px; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fn-row2 {
+  border-top: 1px solid var(--border);
+  padding: 7px 12px 7px; display: flex; flex-direction: column; gap: 5px;
+}
+.fn-adv-row {
+  display: flex; align-items: flex-start; gap: 6px; min-width: 0;
+}
+.fn-adv-icon {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: rgba(30,41,59,0.08); color: var(--text-tertiary);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  margin-top: 1px;
+}
+.fn-adv-names {
+  font-size: 11px; color: var(--text-secondary); font-weight: 500;
+  line-height: 1.5; min-width: 0;
+}
+.fn-mem-row {
+  display: flex; align-items: flex-start; gap: 6px; min-width: 0;
+}
+.fn-mem-icon {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: rgba(30,41,59,0.06); color: var(--text-tertiary);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  margin-top: 1px;
+}
+.fn-mem-names {
+  font-size: 11px; color: var(--text-secondary); font-weight: 400;
+  line-height: 1.5; min-width: 0;
+}
+.fn-footer {
+  border-top: 1px solid var(--border); padding: 6px 12px;
+  display: flex; justify-content: flex-end; align-items: center; gap: 5px;
+}
+.fn-stat { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; }
+.fn-stat strong { color: var(--text-secondary); font-weight: 600; }
+.fn-dot { color: var(--border-strong); font-size: 10px; }
+
+/* ── Dark mode ── */
+body.dark {
+  --bg-page:        #060d1a;
+  --bg-card:        #0f172a;
+  --surface-1:      #1e293b;
+  --surface-2:      #162033;
+  --border:         rgba(127,153,205,0.18);
+  --border-strong:  rgba(127,153,205,0.28);
+  --text-primary:   #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-tertiary:  #4b5675;
+  --accent:         #60a5fa;
+  --accent-ring:    rgba(96,165,250,0.18);
+  --ring-green:     #4ade80;
+  --ring-yellow:    #fbbf24;
+  --ring-red:       #fb7185;
+  --ring-blue:      #60a5fa;
+}
+body.dark .card {
+  background: linear-gradient(145deg, #0f1629 0%, #0a1020 100%);
+  border-color: rgba(127,153,205,0.22);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 12px rgba(2,6,23,0.30);
+}
+body.dark .card.selected {
+  border-color: rgba(89,160,255,0.85);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08),
+              0 0 0 1px rgba(89,160,255,0.30),
+              0 0 16px rgba(59,130,246,0.28);
+}
+body.dark .ring::after { background: var(--bg-card); }
+body.dark .pc-adv-chip,
+body.dark .cur-adv-avatar { background: #2d3f5c; border-color: var(--bg-card); }
+body.dark .pc-chip,
+body.dark .hb-chip,
+body.dark .cur-m-dot { border-color: var(--bg-card); }
+body.dark .hb-adv-icon,
+body.dark .fn-adv-icon,
+body.dark .fn-mem-icon { background: rgba(255,255,255,0.06); }
+body.dark .h-pill.old { background: rgba(217,119,6,0.15); color: #fbbf24; border-color: rgba(217,119,6,0.25); }
+body.dark .h-pill.new { background: rgba(22,163,74,0.12); color: #4ade80; border-color: rgba(22,163,74,0.22); }
+body.dark .h-pill.mid { background: rgba(96,165,250,0.1); color: #93c5fd; border-color: rgba(96,165,250,0.2); }
+
+/* ── Dark mode toggle ── */
+.dm-btn {
+  position: fixed; bottom: 20px; right: 20px;
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid var(--border-strong); background: var(--bg-card);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; box-shadow: 0 4px 12px rgba(15,23,42,0.12);
+  z-index: 100; transition: transform .15s;
+}
+.dm-btn:hover { transform: scale(1.1); }
+body.dark .dm-btn { background: var(--bg-card); }
+
+/* ── Verdict card ── */
+.verdict {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px; margin-top: 6px;
+  font-size: 11px; line-height: 1.55; color: var(--text-secondary);
+}
+.verdict strong { color: var(--text-primary); font-weight: 700; }
+.verdict .v-row { display: flex; gap: 8px; align-items: baseline; margin-top: 6px; }
+.verdict .v-icon { flex-shrink: 0; font-size: 12px; }
+.verdict .v-ok { color: var(--ring-green); }
+.verdict .v-warn { color: var(--ring-yellow); }
+.verdict .v-bad { color: var(--ring-red); }
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+
+  <!-- ══════════════════════════════════════
+       A — CURRENT
+  ══════════════════════════════════════ -->
+  <div class="sec-label">A — Mevcut <span class="h-pill old">~164px</span></div>
+  <div class="card">
+    <div class="cur-hero">
+      <div class="ring cur-ring" style="--ring:var(--ring-green);--pct:327deg">
+        <div class="ring-inner"><span class="ring-num">91</span><span class="ring-lbl">AVG</span></div>
+      </div>
+      <div class="cur-title-block">
+        <div class="cur-eyebrow">P1</div>
+        <div class="cur-title">FPGA-Based Real-Time Signal Processing for 5G NR</div>
+        <div class="cur-adv-eyebrow">Advised by</div>
+        <div class="cur-adv-chip"><div class="cur-adv-avatar">TE</div><span class="cur-adv-name">Prof. Turgut Ercan</span></div>
+        <div class="cur-adv-chip"><div class="cur-adv-avatar">EA</div><span class="cur-adv-name">Dr. Ece Aydoğan</span></div>
+      </div>
+      <button class="kebab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>
+    </div>
+    <div class="cur-members">
+      <div class="cur-members-row">
+        <span class="cur-m-chip"><span class="cur-m-dot c1">A</span><span class="cur-m-name">Aslı Tezcan</span></span>
+        <span class="cur-m-chip"><span class="cur-m-dot c2">G</span><span class="cur-m-name">Gürkan Ateş</span></span>
+        <span class="cur-m-chip"><span class="cur-m-dot c3">Z</span><span class="cur-m-name">Zehra Kurt</span></span>
+        <span class="cur-m-chip"><span class="cur-m-dot c4">İ</span><span class="cur-m-name">İlker Durmaz</span></span>
+        <span class="cur-m-chip"><span class="cur-m-dot c5">T</span><span class="cur-m-name">Tuğçe Can</span></span>
+      </div>
+    </div>
+    <div class="cur-footer">
+      <span><strong>5</strong> members</span>
+      <span><strong>14</strong> evaluations</span>
+      <span>14h ago</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       B — COMPACT v1: all initials/chips
+  ══════════════════════════════════════ -->
+  <div class="sec-label" style="margin-top:32px;">B — Compact: tüm initials <span class="h-pill new">~80px ↓51%</span></div>
+  <div class="sec-note">Advisor = 22px initials chips · Üyeler = stacked chips · İsim yok</div>
+  <div class="card selected">
+    <div class="pc-row1">
+      <div class="ring pc-ring" style="--ring:var(--ring-green);--pct:327deg">
+        <div class="ring-inner"><span class="ring-num">91</span><span class="ring-lbl">AVG</span></div>
+      </div>
+      <div class="pc-meta">
+        <div class="pc-eyebrow">P1</div>
+        <div class="pc-title">FPGA-Based Real-Time Signal Processing for 5G NR</div>
+      </div>
+      <button class="kebab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>
+    </div>
+    <div class="pc-row2">
+      <div class="pc-adv-chips">
+        <div class="pc-adv-chip">TE</div>
+        <div class="pc-adv-chip">EA</div>
+      </div>
+      <div class="pc-sep"></div>
+      <div class="pc-mem-chips">
+        <div class="pc-chip c1">A</div>
+        <div class="pc-chip c2">G</div>
+        <div class="pc-chip c3">Z</div>
+        <div class="pc-chip c4">İ</div>
+        <div class="pc-chip c5">T</div>
+      </div>
+      <div class="pc-stats">
+        <span class="pc-stat"><strong>14</strong> eval</span>
+        <span class="pc-dot">·</span>
+        <span class="pc-stat">14h ago</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       C — HYBRID: advisor name + member chips
+  ══════════════════════════════════════ -->
+  <div class="sec-label" style="margin-top:32px;">C — Hybrid: advisor ismi + üye chips <span class="h-pill mid">~96px ↓41%</span></div>
+  <div class="sec-note">Advisor = truncated isim · Üyeler = stacked chips + isim listesi</div>
+  <div class="card selected">
+    <div class="hb-row1">
+      <div class="ring hb-ring" style="--ring:var(--ring-green);--pct:327deg">
+        <div class="ring-inner"><span class="ring-num">91</span><span class="ring-lbl">AVG</span></div>
+      </div>
+      <div class="hb-meta">
+        <div class="hb-eyebrow">P1</div>
+        <div class="hb-title">FPGA-Based Real-Time Signal Processing for 5G NR</div>
+      </div>
+      <button class="kebab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>
+    </div>
+    <div class="hb-row2">
+      <!-- Advisor: icon + truncated names -->
+      <div class="hb-adv-row">
+        <div class="hb-adv-icon">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="hb-adv-names">Prof. Turgut Ercan<em>, Dr. Ece Aydoğan</em></div>
+      </div>
+      <!-- Members: chips + names + timestamp -->
+      <div class="hb-mem-row">
+        <div class="hb-chips">
+          <div class="hb-chip c1">A</div>
+          <div class="hb-chip c2">G</div>
+          <div class="hb-chip c3">Z</div>
+          <div class="hb-chip c4">İ</div>
+          <div class="hb-chip c5">T</div>
+        </div>
+        <div class="hb-mem-names">Aslı, Gürkan, Zehra<em>, +2</em></div>
+        <div class="hb-ts">14h ago</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. advisor, uzun isim → truncate gösterimi -->
+  <div class="card">
+    <div class="hb-row1">
+      <div class="ring hb-ring" style="--ring:var(--ring-yellow);--pct:234deg">
+        <div class="ring-inner"><span class="ring-num">65</span><span class="ring-lbl">AVG</span></div>
+      </div>
+      <div class="hb-meta">
+        <div class="hb-eyebrow">P2</div>
+        <div class="hb-title">ML-Driven Predictive Maintenance for Industrial IoT</div>
+      </div>
+      <button class="kebab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>
+    </div>
+    <div class="hb-row2">
+      <div class="hb-adv-row">
+        <div class="hb-adv-icon">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="hb-adv-names">Doç. Dr. Mehmet Aydın</div>
+      </div>
+      <div class="hb-mem-row">
+        <div class="hb-chips">
+          <div class="hb-chip c6">B</div>
+          <div class="hb-chip c3">Y</div>
+          <div class="hb-chip c1">C</div>
+          <div class="hb-chip c2">N</div>
+        </div>
+        <div class="hb-mem-names">Berk, Yasemin, Cem, Nisa</div>
+        <div class="hb-ts">3h ago</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       D — FULL NAMES: her şey yazılı
+  ══════════════════════════════════════ -->
+  <div class="sec-label" style="margin-top:32px;">D — Full names: her şey yazılı <span class="h-pill old">~140px ↓15%</span></div>
+  <div class="sec-note">Advisor + üye isimleri tam. Compact kazanımı büyük ölçüde kayboluyor.</div>
+  <div class="card">
+    <div class="fn-row1">
+      <div class="ring fn-ring" style="--ring:var(--ring-green);--pct:327deg">
+        <div class="ring-inner"><span class="ring-num">91</span><span class="ring-lbl">AVG</span></div>
+      </div>
+      <div class="fn-meta">
+        <div class="fn-eyebrow">P1</div>
+        <div class="fn-title">FPGA-Based Real-Time Signal Processing for 5G NR</div>
+      </div>
+      <button class="kebab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>
+    </div>
+    <div class="fn-row2">
+      <div class="fn-adv-row">
+        <div class="fn-adv-icon">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="fn-adv-names">Prof. Turgut Ercan<br>Dr. Ece Aydoğan</div>
+      </div>
+      <div class="fn-mem-row">
+        <div class="fn-mem-icon">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="fn-mem-names">Aslı Tezcan, Gürkan Ateş, Zehra Kurt, İlker Durmaz, Tuğçe Can</div>
+      </div>
+    </div>
+    <div class="fn-footer">
+      <span class="fn-stat"><strong>14</strong> eval</span>
+      <span class="fn-dot">·</span>
+      <span class="fn-stat">14h ago</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       VERDİKT
+  ══════════════════════════════════════ -->
+  <div class="sec-label" style="margin-top:28px;">Değerlendirme</div>
+  <div class="verdict">
+    <div class="v-row"><span class="v-icon v-bad">✗</span><div><strong>D (full names):</strong> Üye satırı 3+ satıra sarılıyor, ~140px — mevcut karttan yalnızca %15 küçük. Kazanım yok.</div></div>
+    <div class="v-row"><span class="v-icon v-warn">◑</span><div><strong>C (hybrid):</strong> Advisor ismi okunabilir, üyeler chips. ~96px, %41 küçülme. İsim bilgisi var ama <em>2 advisorlu uzun isimler</em> satırı zorluyor.</div></div>
+    <div class="v-row"><span class="v-icon v-ok">✓</span><div><strong>B (initials):</strong> En kompakt, ~80px, %51 küçülme. Drawer zaten tam ismi gösteriyor — listede initials yeterli.</div></div>
+  </div>
+
+</div>
+
+<button class="dm-btn" onclick="document.body.classList.toggle('dark')" title="Toggle dark mode">🌗</button>
+
+</body>
+</html>

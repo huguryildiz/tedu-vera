@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VERA — Reviews Mobile Card Mockup</title>
+<style>
+:root {
+  --bg-page:        #f4f7fb;
+  --bg-card:        #ffffff;
+  --surface-1:      #eef2f8;
+  --surface-2:      #e3eaf4;
+  --border:         rgba(15,23,42,0.08);
+  --border-strong:  rgba(15,23,42,0.14);
+  --text-primary:   #111827;
+  --text-secondary: #4b5675;
+  --text-tertiary:  #94a3b8;
+  --accent:         #6366f1;
+  --accent-bg:      rgba(99,102,241,0.10);
+  --accent-ring:    rgba(99,102,241,0.20);
+  --success:        #16a34a;
+  --success-bg:     rgba(22,163,74,0.09);
+  --warning:        #d97706;
+  --warning-bg:     rgba(217,119,6,0.09);
+  --danger:         #e11d48;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --radius: 12px;
+  --radius-sm: 8px;
+  /* Criterion colors */
+  --c-tc: #3b82f6;
+  --c-wc: #8b5cf6;
+  --c-oc: #10b981;
+  --c-tw: #f59e0b;
+}
+.dark {
+  --bg-page:        #0f1117;
+  --bg-card:        #1a1d27;
+  --surface-1:      #232635;
+  --surface-2:      #2c3044;
+  --border:         rgba(255,255,255,0.07);
+  --border-strong:  rgba(255,255,255,0.13);
+  --text-primary:   #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-tertiary:  #4b5675;
+  --accent:         #818cf8;
+  --accent-bg:      rgba(129,140,248,0.12);
+  --accent-ring:    rgba(129,140,248,0.22);
+  --success:        #4ade80;
+  --success-bg:     rgba(74,222,128,0.09);
+  --warning:        #fbbf24;
+  --warning-bg:     rgba(251,191,36,0.09);
+  --danger:         #fb7185;
+  --c-tc: #60a5fa;
+  --c-wc: #a78bfa;
+  --c-oc: #34d399;
+  --c-tw: #fcd34d;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg-page);
+  color: var(--text-primary);
+  -webkit-text-size-adjust: 100%;
+  padding-bottom: 60px;
+}
+
+/* ── Layout ── */
+.page-wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 28px 20px;
+}
+.cols {
+  display: grid;
+  grid-template-columns: repeat(3, 360px);
+  gap: 32px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+/* ── Column header ── */
+.col-head {
+  margin-bottom: 14px;
+}
+.col-head-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+}
+.col-head-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+.col-head-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.pill-old { background: var(--surface-2); color: var(--text-secondary); border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 700; }
+.pill-new { background: var(--accent-bg); color: var(--accent); border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 700; border: 1px solid var(--accent-ring); }
+.pill-mid { background: var(--success-bg); color: var(--success); border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 700; }
+
+/* ── Phone shell ── */
+.phone {
+  width: 360px;
+  background: var(--bg-page);
+  border-radius: 20px;
+  padding: 16px 14px 24px;
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Section label ── */
+.sec-eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-tertiary);
+  display: block;
+}
+
+/* ── Juror avatar ── */
+.av {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.av-lg {
+  width: 36px;
+  height: 36px;
+  font-size: 12px;
+}
+
+/* ── Score pills ── */
+.score-pill-partial {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+.score-pill-complete {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--success-bg);
+  color: var(--success);
+}
+.progress-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* ── Member chip ── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px 2px 3px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 500;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.chip-av {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.advisor-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px 2px 3px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(249,115,22,0.08);
+  border: 1px solid rgba(249,115,22,0.16);
+  color: #c2410c;
+  flex-shrink: 0;
+}
+.dark .advisor-chip { color: #fb923c; background: rgba(249,115,22,0.12); }
+.advisor-chip-av {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: rgba(249,115,22,0.15);
+  color: #c2410c;
+  font-size: 9px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.dark .advisor-chip-av { color: #fb923c; }
+.overflow-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-size: 10px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  color: var(--text-tertiary);
+}
+
+/* ══════════════════════════════════════════════
+   VARIANT A — Current Design (reference)
+═══════════════════════════════════════════════ */
+
+/* Donut ring */
+.ring-wrap { flex-shrink: 0; }
+.ring {
+  position: relative;
+  display: block;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: conic-gradient(var(--ring-c, #94a3b8) var(--ring-d, 0deg), var(--surface-2) 0);
+}
+.ring::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  background: var(--bg-card);
+  border-radius: 50%;
+}
+.ring-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  z-index: 1;
+}
+.ring-score { font-size: 13px; font-weight: 800; line-height: 1; font-family: var(--mono); }
+.ring-denom { font-size: 8px; color: var(--text-tertiary); margin-top: 1px; font-family: var(--mono); }
+
+/* ── Card A shell ── */
+.card-a {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* header */
+.a-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.a-juror { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+.a-juror-name { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.a-juror-affil { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* project */
+.a-project { border-top: 1px solid var(--border); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.a-proj-row { display: flex; align-items: flex-start; gap: 7px; }
+.a-proj-badge { font-size: 10px; font-weight: 700; color: var(--accent); font-family: var(--mono); }
+.a-proj-title { font-size: 11px; font-weight: 600; line-height: 1.35; color: var(--text-primary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.a-meta { display: flex; flex-direction: column; gap: 5px; }
+.a-chips-row { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* crit bars */
+.a-crits { display: flex; flex-direction: column; gap: 5px; }
+.a-crit-heading { display: block; margin-bottom: 4px; }
+.a-crit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) 44px;
+  align-items: center;
+  gap: 8px;
+}
+.a-crit-label { font-size: 11px; color: var(--text-secondary); }
+.bar-track { height: 5px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 99px; }
+.a-crit-score { text-align: right; font-size: 11px; font-family: var(--mono); }
+.a-crit-val { font-weight: 700; font-family: var(--mono); }
+.a-crit-max { color: var(--text-tertiary); font-family: var(--mono); }
+
+/* footer */
+.a-footer { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 9px 0; display: flex; align-items: center; justify-content: space-between; }
+.a-foot-col { display: flex; flex-direction: column; gap: 4px; }
+.a-foot-col--r { align-items: flex-end; }
+.a-foot-label { font-size: 9px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* submitted */
+.a-submitted { display: flex; align-items: center; justify-content: space-between; }
+.a-sub-label { display: inline-flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
+.a-sub-val { font-size: 11px; font-family: var(--mono); color: var(--text-secondary); display: inline-flex; gap: 6px; }
+
+
+/* ══════════════════════════════════════════════
+   VARIANT B — Compact 2-col criteria grid
+   ~30% denser, abbreviated labels
+═══════════════════════════════════════════════ */
+
+.card-b {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+/* accent juror header band */
+.b-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 14px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg-card));
+  border-bottom: 1px solid var(--border);
+}
+.b-juror { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+.b-juror-name { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.b-juror-affil { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ring (smaller) */
+.ring-sm {
+  position: relative; display: block;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: conic-gradient(var(--ring-c, #94a3b8) var(--ring-d, 0deg), var(--surface-2) 0);
+}
+.ring-sm::after { content: ""; position: absolute; inset: 4px; background: var(--bg-card); border-radius: 50%; }
+.ring-sm .ring-inner { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1; line-height:1; }
+.ring-sm .ring-score { font-size: 12px; font-weight: 800; font-family: var(--mono); }
+.ring-sm .ring-denom { font-size: 7.5px; color: var(--text-tertiary); margin-top: 1px; font-family: var(--mono); }
+
+/* body */
+.b-body { padding: 11px 14px; display: flex; flex-direction: column; gap: 10px; }
+
+/* project row */
+.b-proj-row { display: flex; align-items: flex-start; gap: 6px; }
+.b-proj-badge { font-size: 10px; font-weight: 700; color: var(--accent); font-family: var(--mono); flex-shrink: 0; line-height: 1.35; }
+.b-proj-title { font-size: 11.5px; font-weight: 600; line-height: 1.35; color: var(--text-primary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* people row */
+.b-people { display: flex; flex-direction: column; gap: 5px; }
+.b-chips-row { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* 2-column criteria grid */
+.b-crits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+}
+.b-crit-cell { display: flex; flex-direction: column; gap: 3px; }
+.b-crit-top { display: flex; align-items: center; justify-content: space-between; }
+.b-crit-abbr { font-size: 10px; font-weight: 700; font-family: var(--mono); }
+.b-crit-score { font-size: 10px; font-family: var(--mono); font-weight: 700; }
+.b-crit-max { font-weight: 400; color: var(--text-tertiary); }
+.b-bar-track { height: 4px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.b-bar-fill { height: 100%; border-radius: 99px; }
+
+/* footer strip */
+.b-footer { border-top: 1px solid var(--border); padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.b-foot-col { display: flex; flex-direction: column; gap: 3px; }
+.b-foot-col--r { align-items: flex-end; }
+.b-foot-label { font-size: 9px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
+.b-submitted { border-top: 1px solid var(--border); padding: 6px 14px; display: flex; align-items: center; justify-content: space-between; }
+.b-sub-label { display: inline-flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
+.b-sub-val { font-size: 10.5px; font-family: var(--mono); color: var(--text-secondary); display: inline-flex; gap: 6px; }
+
+
+/* ══════════════════════════════════════════════
+   VARIANT C — Score strip + horizontal criteria
+   Most compact, ~40% shorter than A
+═══════════════════════════════════════════════ */
+
+.card-c {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+/* header — juror left, total score right (no donut, just score badge) */
+.c-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg-card));
+  border-bottom: 1px solid var(--border);
+}
+.c-juror { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.c-juror-name { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c-juror-affil { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* score badge (replaces ring) */
+.c-score-badge {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--warning-bg);
+  border: 1px solid rgba(217,119,6,0.20);
+  border-radius: 10px;
+  padding: 5px 10px;
+  gap: 1px;
+}
+.c-score-val { font-size: 17px; font-weight: 800; color: var(--warning); font-family: var(--mono); line-height: 1; }
+.c-score-max { font-size: 8.5px; color: var(--text-tertiary); font-family: var(--mono); }
+.c-score-badge--good { background: var(--success-bg); border-color: rgba(22,163,74,0.20); }
+.c-score-badge--good .c-score-val { color: var(--success); }
+
+/* body */
+.c-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 9px; }
+
+/* project row */
+.c-proj-row { display: flex; align-items: flex-start; gap: 6px; }
+.c-proj-badge { font-size: 10px; font-weight: 700; color: var(--accent); font-family: var(--mono); flex-shrink: 0; line-height: 1.35; }
+.c-proj-title { font-size: 11.5px; font-weight: 600; line-height: 1.35; color: var(--text-primary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* horizontal score strip — criteria as colored pill blocks */
+.c-score-strip {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.c-crit-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 46px;
+}
+.c-crit-abbr-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-family: var(--mono);
+}
+.c-crit-score-box {
+  width: 100%;
+  text-align: center;
+  padding: 4px 4px 3px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 800;
+  font-family: var(--mono);
+  line-height: 1;
+}
+.c-crit-bar { height: 3px; border-radius: 99px; background: var(--surface-2); width: 100%; overflow: hidden; margin-top: 1px; }
+.c-crit-bar-fill { height: 100%; border-radius: 99px; }
+
+/* people */
+.c-people { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.c-people-divider { width: 1px; height: 14px; background: var(--border-strong); flex-shrink: 0; }
+
+/* footer */
+.c-footer {
+  border-top: 1px solid var(--border);
+  padding: 7px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.c-foot-group { display: flex; flex-direction: column; gap: 3px; }
+.c-foot-group--r { align-items: flex-end; }
+.c-foot-lbl { font-size: 9px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
+.c-submitted {
+  border-top: 1px solid var(--border);
+  padding: 5px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-1);
+}
+.c-sub-label { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
+.c-sub-val { font-size: 10.5px; font-family: var(--mono); color: var(--text-secondary); }
+
+/* ── Dark toggle ── */
+.dm-btn {
+  position: fixed; bottom: 20px; right: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  width: 40px; height: 40px;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Page title ── */
+.page-title { font-size: 22px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
+.page-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 28px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <div class="page-title">Reviews Mobile Card — Tasarım Variants</div>
+  <div class="page-subtitle">
+    Mevcut kart (A) ile iki yeni tasarım önerisi (B, C). Sample: partial row, 4 kriter, 3 üye, 1 danışman.
+  </div>
+
+  <div class="cols">
+
+    <!-- ══════ COLUMN A — Current ══════ -->
+    <div>
+      <div class="col-head">
+        <div><span class="col-head-label">A</span> <span class="pill-old">Mevcut ~265px</span></div>
+        <div class="col-head-title">Current Design</div>
+        <div class="col-head-desc">Donut ring + tam kriter label'ları, dikey bar listesi. Referans nokta.</div>
+      </div>
+      <div class="phone">
+
+        <!-- Card A1: partial, 4 criteria -->
+        <div class="card-a">
+          <!-- header -->
+          <div class="a-header">
+            <div class="a-juror">
+              <div class="av" style="background:#ede9fe;color:#7c3aed">AY</div>
+              <div>
+                <div class="a-juror-name">Ahmet Yılmaz</div>
+                <div class="a-juror-affil">TEDU · Electrical Eng.</div>
+              </div>
+            </div>
+            <div class="ring-wrap">
+              <span class="ring" style="--ring-c:var(--warning);--ring-d:255.6deg">
+                <span class="ring-inner">
+                  <span class="ring-score" style="color:var(--warning)">71.0</span>
+                  <span class="ring-denom">/100</span>
+                </span>
+              </span>
+            </div>
+          </div>
+          <!-- project -->
+          <div class="a-project">
+            <div class="a-proj-row">
+              <span class="a-proj-badge">P3</span>
+              <span class="a-proj-title">FPGA-Based Real-Time Signal Processing for 5G NR Systems</span>
+            </div>
+            <div class="a-meta">
+              <span class="sec-eyebrow">Team Members</span>
+              <div class="a-chips-row">
+                <span class="chip"><span class="chip-av">E</span>Elif K.</span>
+                <span class="chip"><span class="chip-av">M</span>Mert A.</span>
+                <span class="chip"><span class="chip-av">S</span>Serra T.</span>
+                <span class="overflow-chip">+1</span>
+              </div>
+            </div>
+            <div class="a-meta">
+              <span class="sec-eyebrow">Advised By</span>
+              <div class="a-chips-row">
+                <span class="advisor-chip"><span class="advisor-chip-av">M</span>Dr. Mehmet Kaya</span>
+              </div>
+            </div>
+          </div>
+          <!-- crit bars -->
+          <div class="a-crits">
+            <span class="sec-eyebrow a-crit-heading">Criteria Scores</span>
+            <div class="a-crit-row">
+              <div class="a-crit-label">Technical Content</div>
+              <div class="bar-track"><div class="bar-fill" style="width:72%;background:var(--c-tc)"></div></div>
+              <div class="a-crit-score"><span class="a-crit-val" style="color:var(--c-tc)">18.0</span><span class="a-crit-max">/25</span></div>
+            </div>
+            <div class="a-crit-row">
+              <div class="a-crit-label">Written Content</div>
+              <div class="bar-track"><div class="bar-fill" style="width:68%;background:var(--c-wc)"></div></div>
+              <div class="a-crit-score"><span class="a-crit-val" style="color:var(--c-wc)">17.0</span><span class="a-crit-max">/25</span></div>
+            </div>
+            <div class="a-crit-row">
+              <div class="a-crit-label">Oral Delivery</div>
+              <div class="bar-track"><div class="bar-fill" style="width:88%;background:var(--c-oc)"></div></div>
+              <div class="a-crit-score"><span class="a-crit-val" style="color:var(--c-oc)">22.0</span><span class="a-crit-max">/25</span></div>
+            </div>
+            <div class="a-crit-row">
+              <div class="a-crit-label">Teamwork</div>
+              <div class="bar-track"><div class="bar-fill" style="width:56%;background:var(--c-tw)"></div></div>
+              <div class="a-crit-score"><span class="a-crit-val" style="color:var(--c-tw)">14.0</span><span class="a-crit-max">/25</span></div>
+            </div>
+          </div>
+          <!-- footer -->
+          <div class="a-footer">
+            <div class="a-foot-col">
+              <span class="a-foot-label">Score Status</span>
+              <span class="score-pill-partial">⚠ Partial</span>
+            </div>
+            <div class="a-foot-col a-foot-col--r">
+              <span class="a-foot-label">Juror Progress</span>
+              <span class="progress-pill">In Progress</span>
+            </div>
+          </div>
+          <!-- submitted -->
+          <div class="a-submitted">
+            <span class="a-sub-label">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Submitted At
+            </span>
+            <span class="a-sub-val"><span>Apr 28, 2026</span><span style="color:var(--text-tertiary)">14:32</span></span>
+          </div>
+        </div>
+
+        <!-- Card A2: complete -->
+        <div class="card-a" style="border-left-color:var(--success)">
+          <div class="a-header">
+            <div class="a-juror">
+              <div class="av" style="background:#dcfce7;color:#15803d">BÖ</div>
+              <div>
+                <div class="a-juror-name">Burcu Öztürk</div>
+                <div class="a-juror-affil">TEDU · Computer Eng.</div>
+              </div>
+            </div>
+            <div class="ring-wrap">
+              <span class="ring" style="--ring-c:var(--success);--ring-d:316.8deg">
+                <span class="ring-inner">
+                  <span class="ring-score" style="color:var(--success)">88.0</span>
+                  <span class="ring-denom">/100</span>
+                </span>
+              </span>
+            </div>
+          </div>
+          <div class="a-project">
+            <div class="a-proj-row">
+              <span class="a-proj-badge">P3</span>
+              <span class="a-proj-title">FPGA-Based Real-Time Signal Processing for 5G NR Systems</span>
+            </div>
+          </div>
+          <div class="a-crits">
+            <span class="sec-eyebrow a-crit-heading">Criteria Scores</span>
+            <div class="a-crit-row">
+              <div class="a-crit-label">Technical Content</div>
+              <div class="bar-track"><div class="bar-fill" style="width:92%;background:var(--c-tc)"></div></div>
+              <div class="a-crit-score"><span class="a-crit-val" style="color:var(--c-tc)">23.0</span><span class="a-crit-max">/25</span></div>
+            </div>
+            <div class="a-crit-row">
+              <div class="a-crit-label">Written Content</div>
+              <div class="bar-track"><div class="bar-fill" style="width:84%;background:var(--c-wc)"></div></div>
+              <div class="a-crit-score"><span class="a-crit-val" style="color:var(--c-wc)">21.0</span><span class="a-crit-max">/25</span></div>
+            </div>
+            <div class="a-crit-row">
+              <div class="a-crit-label">Oral Delivery</div>
+              <div class="bar-track"><div class="bar-fill" style="width:88%;background:var(--c-oc)"></div></div>
+              <div class="a-crit-score"><span class="a-crit-val" style="color:var(--c-oc)">22.0</span><span class="a-crit-max">/25</span></div>
+            </div>
+            <div class="a-crit-row">
+              <div class="a-crit-label">Teamwork</div>
+              <div class="bar-track"><div class="bar-fill" style="width:88%;background:var(--c-tw)"></div></div>
+              <div class="a-crit-score"><span class="a-crit-val" style="color:var(--c-tw)">22.0</span><span class="a-crit-max">/25</span></div>
+            </div>
+          </div>
+          <div class="a-footer">
+            <div class="a-foot-col">
+              <span class="a-foot-label">Score Status</span>
+              <span class="score-pill-complete">✓ Complete</span>
+            </div>
+            <div class="a-foot-col a-foot-col--r">
+              <span class="a-foot-label">Juror Progress</span>
+              <span class="score-pill-complete">✓ Submitted</span>
+            </div>
+          </div>
+          <div class="a-submitted">
+            <span class="a-sub-label">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Submitted At
+            </span>
+            <span class="a-sub-val"><span>Apr 28, 2026</span><span style="color:var(--text-tertiary)">11:05</span></span>
+          </div>
+        </div>
+
+      </div><!-- /phone A -->
+    </div>
+
+    <!-- ══════ COLUMN B — Compact 2-col grid ══════ -->
+    <div>
+      <div class="col-head">
+        <div><span class="col-head-label">B</span> <span class="pill-new">Compact ~195px ↓26%</span></div>
+        <div class="col-head-title">2-col Criteria Grid</div>
+        <div class="col-head-desc">Kısaltılmış kriter label'ları (TC/WC/OC/TW), 2×2 grid bar — aynı bilgi, daha az yer. Accent juror header band.</div>
+      </div>
+      <div class="phone">
+
+        <!-- Card B1: partial -->
+        <div class="card-b">
+          <div class="b-header">
+            <div class="b-juror">
+              <div class="av" style="background:#ede9fe;color:#7c3aed">AY</div>
+              <div>
+                <div class="b-juror-name">Ahmet Yılmaz</div>
+                <div class="b-juror-affil">TEDU · Electrical Eng.</div>
+              </div>
+            </div>
+            <span class="ring-sm" style="--ring-c:var(--warning);--ring-d:255.6deg">
+              <span class="ring-inner">
+                <span class="ring-score" style="color:var(--warning)">71.0</span>
+                <span class="ring-denom">/100</span>
+              </span>
+            </span>
+          </div>
+          <div class="b-body">
+            <!-- project -->
+            <div class="b-proj-row">
+              <span class="b-proj-badge">P3</span>
+              <span class="b-proj-title">FPGA-Based Real-Time Signal Processing for 5G NR Systems</span>
+            </div>
+            <!-- people -->
+            <div class="b-people">
+              <div class="b-chips-row">
+                <span class="chip"><span class="chip-av">E</span>Elif K.</span>
+                <span class="chip"><span class="chip-av">M</span>Mert A.</span>
+                <span class="chip"><span class="chip-av">S</span>Serra T.</span>
+                <span class="overflow-chip">+1</span>
+                <span class="advisor-chip"><span class="advisor-chip-av">M</span>Dr. Mehmet Kaya</span>
+              </div>
+            </div>
+            <!-- 2-col criteria grid -->
+            <div>
+              <span class="sec-eyebrow" style="margin-bottom:6px;display:block">Criteria Scores</span>
+              <div class="b-crits-grid">
+                <div class="b-crit-cell">
+                  <div class="b-crit-top">
+                    <span class="b-crit-abbr" style="color:var(--c-tc)">TC</span>
+                    <span class="b-crit-score"><span style="color:var(--c-tc)">18.0</span><span class="b-crit-max">/25</span></span>
+                  </div>
+                  <div class="b-bar-track"><div class="b-bar-fill" style="width:72%;background:var(--c-tc)"></div></div>
+                </div>
+                <div class="b-crit-cell">
+                  <div class="b-crit-top">
+                    <span class="b-crit-abbr" style="color:var(--c-wc)">WC</span>
+                    <span class="b-crit-score"><span style="color:var(--c-wc)">17.0</span><span class="b-crit-max">/25</span></span>
+                  </div>
+                  <div class="b-bar-track"><div class="b-bar-fill" style="width:68%;background:var(--c-wc)"></div></div>
+                </div>
+                <div class="b-crit-cell">
+                  <div class="b-crit-top">
+                    <span class="b-crit-abbr" style="color:var(--c-oc)">OC</span>
+                    <span class="b-crit-score"><span style="color:var(--c-oc)">22.0</span><span class="b-crit-max">/25</span></span>
+                  </div>
+                  <div class="b-bar-track"><div class="b-bar-fill" style="width:88%;background:var(--c-oc)"></div></div>
+                </div>
+                <div class="b-crit-cell">
+                  <div class="b-crit-top">
+                    <span class="b-crit-abbr" style="color:var(--c-tw)">TW</span>
+                    <span class="b-crit-score"><span style="color:var(--c-tw)">14.0</span><span class="b-crit-max">/25</span></span>
+                  </div>
+                  <div class="b-bar-track"><div class="b-bar-fill" style="width:56%;background:var(--c-tw)"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="b-footer">
+            <div class="b-foot-col">
+              <span class="b-foot-label">Score Status</span>
+              <span class="score-pill-partial">⚠ Partial</span>
+            </div>
+            <div class="b-foot-col b-foot-col--r">
+              <span class="b-foot-label">Juror Progress</span>
+              <span class="progress-pill">In Progress</span>
+            </div>
+          </div>
+          <div class="b-submitted">
+            <span class="b-sub-label">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Submitted At
+            </span>
+            <span class="b-sub-val"><span>Apr 28, 2026</span><span style="color:var(--text-tertiary)">14:32</span></span>
+          </div>
+        </div>
+
+        <!-- Card B2: complete -->
+        <div class="card-b" style="border-left-color:var(--success)">
+          <div class="b-header">
+            <div class="b-juror">
+              <div class="av" style="background:#dcfce7;color:#15803d">BÖ</div>
+              <div>
+                <div class="b-juror-name">Burcu Öztürk</div>
+                <div class="b-juror-affil">TEDU · Computer Eng.</div>
+              </div>
+            </div>
+            <span class="ring-sm" style="--ring-c:var(--success);--ring-d:316.8deg">
+              <span class="ring-inner">
+                <span class="ring-score" style="color:var(--success)">88.0</span>
+                <span class="ring-denom">/100</span>
+              </span>
+            </span>
+          </div>
+          <div class="b-body">
+            <div class="b-proj-row">
+              <span class="b-proj-badge">P3</span>
+              <span class="b-proj-title">FPGA-Based Real-Time Signal Processing for 5G NR Systems</span>
+            </div>
+            <div>
+              <span class="sec-eyebrow" style="margin-bottom:6px;display:block">Criteria Scores</span>
+              <div class="b-crits-grid">
+                <div class="b-crit-cell">
+                  <div class="b-crit-top"><span class="b-crit-abbr" style="color:var(--c-tc)">TC</span><span class="b-crit-score"><span style="color:var(--c-tc)">23.0</span><span class="b-crit-max">/25</span></span></div>
+                  <div class="b-bar-track"><div class="b-bar-fill" style="width:92%;background:var(--c-tc)"></div></div>
+                </div>
+                <div class="b-crit-cell">
+                  <div class="b-crit-top"><span class="b-crit-abbr" style="color:var(--c-wc)">WC</span><span class="b-crit-score"><span style="color:var(--c-wc)">21.0</span><span class="b-crit-max">/25</span></span></div>
+                  <div class="b-bar-track"><div class="b-bar-fill" style="width:84%;background:var(--c-wc)"></div></div>
+                </div>
+                <div class="b-crit-cell">
+                  <div class="b-crit-top"><span class="b-crit-abbr" style="color:var(--c-oc)">OC</span><span class="b-crit-score"><span style="color:var(--c-oc)">22.0</span><span class="b-crit-max">/25</span></span></div>
+                  <div class="b-bar-track"><div class="b-bar-fill" style="width:88%;background:var(--c-oc)"></div></div>
+                </div>
+                <div class="b-crit-cell">
+                  <div class="b-crit-top"><span class="b-crit-abbr" style="color:var(--c-tw)">TW</span><span class="b-crit-score"><span style="color:var(--c-tw)">22.0</span><span class="b-crit-max">/25</span></span></div>
+                  <div class="b-bar-track"><div class="b-bar-fill" style="width:88%;background:var(--c-tw)"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="b-footer">
+            <div class="b-foot-col">
+              <span class="b-foot-label">Score Status</span>
+              <span class="score-pill-complete">✓ Complete</span>
+            </div>
+            <div class="b-foot-col b-foot-col--r">
+              <span class="b-foot-label">Juror Progress</span>
+              <span class="score-pill-complete">✓ Submitted</span>
+            </div>
+          </div>
+          <div class="b-submitted">
+            <span class="b-sub-label">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Submitted At
+            </span>
+            <span class="b-sub-val"><span>Apr 28, 2026</span><span style="color:var(--text-tertiary)">11:05</span></span>
+          </div>
+        </div>
+
+      </div><!-- /phone B -->
+    </div>
+
+    <!-- ══════ COLUMN C — Horizontal score strip ══════ -->
+    <div>
+      <div class="col-head">
+        <div><span class="col-head-label">C</span> <span class="pill-mid">En Kompakt ~165px ↓38%</span></div>
+        <div class="col-head-title">Score Strip</div>
+        <div class="col-head-desc">Donut yerine renkli skor badge. Kriterler yatay şerit halinde — maksimum yoğunluk, 2 kart aynı anda ekranda görünür.</div>
+      </div>
+      <div class="phone">
+
+        <!-- Card C1: partial -->
+        <div class="card-c">
+          <div class="c-header">
+            <div class="c-juror">
+              <div class="av av-lg" style="background:#ede9fe;color:#7c3aed">AY</div>
+              <div>
+                <div class="c-juror-name">Ahmet Yılmaz</div>
+                <div class="c-juror-affil">TEDU · Electrical Eng.</div>
+              </div>
+            </div>
+            <div class="c-score-badge">
+              <span class="c-score-val">71.0</span>
+              <span class="c-score-max">/100</span>
+            </div>
+          </div>
+          <div class="c-body">
+            <!-- project -->
+            <div class="c-proj-row">
+              <span class="c-proj-badge">P3</span>
+              <span class="c-proj-title">FPGA-Based Real-Time Signal Processing for 5G NR Systems</span>
+            </div>
+            <!-- horizontal score strip -->
+            <div class="c-score-strip">
+              <div class="c-crit-block">
+                <span class="c-crit-abbr-label">TC</span>
+                <div class="c-crit-score-box" style="background:rgba(59,130,246,0.10);color:var(--c-tc)">18.0</div>
+                <div class="c-crit-bar"><div class="c-crit-bar-fill" style="width:72%;background:var(--c-tc)"></div></div>
+              </div>
+              <div class="c-crit-block">
+                <span class="c-crit-abbr-label">WC</span>
+                <div class="c-crit-score-box" style="background:rgba(139,92,246,0.10);color:var(--c-wc)">17.0</div>
+                <div class="c-crit-bar"><div class="c-crit-bar-fill" style="width:68%;background:var(--c-wc)"></div></div>
+              </div>
+              <div class="c-crit-block">
+                <span class="c-crit-abbr-label">OC</span>
+                <div class="c-crit-score-box" style="background:rgba(16,185,129,0.10);color:var(--c-oc)">22.0</div>
+                <div class="c-crit-bar"><div class="c-crit-bar-fill" style="width:88%;background:var(--c-oc)"></div></div>
+              </div>
+              <div class="c-crit-block">
+                <span class="c-crit-abbr-label">TW</span>
+                <div class="c-crit-score-box" style="background:rgba(245,158,11,0.10);color:var(--c-tw)">14.0</div>
+                <div class="c-crit-bar"><div class="c-crit-bar-fill" style="width:56%;background:var(--c-tw)"></div></div>
+              </div>
+            </div>
+            <!-- people -->
+            <div class="c-people">
+              <span class="chip"><span class="chip-av">E</span>Elif K.</span>
+              <span class="chip"><span class="chip-av">M</span>Mert A.</span>
+              <span class="chip"><span class="chip-av">S</span>Serra T.</span>
+              <span class="overflow-chip">+1</span>
+              <span class="c-people-divider"></span>
+              <span class="advisor-chip"><span class="advisor-chip-av">M</span>Dr. Mehmet Kaya</span>
+            </div>
+          </div>
+          <div class="c-footer">
+            <div class="c-foot-group">
+              <span class="c-foot-lbl">Score Status</span>
+              <span class="score-pill-partial">⚠ Partial</span>
+            </div>
+            <div class="c-foot-group c-foot-group--r">
+              <span class="c-foot-lbl">Juror Progress</span>
+              <span class="progress-pill">In Progress</span>
+            </div>
+          </div>
+          <div class="c-submitted">
+            <span class="c-sub-label">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Submitted At
+            </span>
+            <span class="c-sub-val" style="font-family:var(--mono)">Apr 28, 2026 · 14:32</span>
+          </div>
+        </div>
+
+        <!-- Card C2: complete -->
+        <div class="card-c" style="border-left-color:var(--success)">
+          <div class="c-header">
+            <div class="c-juror">
+              <div class="av av-lg" style="background:#dcfce7;color:#15803d">BÖ</div>
+              <div>
+                <div class="c-juror-name">Burcu Öztürk</div>
+                <div class="c-juror-affil">TEDU · Computer Eng.</div>
+              </div>
+            </div>
+            <div class="c-score-badge c-score-badge--good">
+              <span class="c-score-val">88.0</span>
+              <span class="c-score-max">/100</span>
+            </div>
+          </div>
+          <div class="c-body">
+            <div class="c-proj-row">
+              <span class="c-proj-badge">P3</span>
+              <span class="c-proj-title">FPGA-Based Real-Time Signal Processing for 5G NR Systems</span>
+            </div>
+            <div class="c-score-strip">
+              <div class="c-crit-block">
+                <span class="c-crit-abbr-label">TC</span>
+                <div class="c-crit-score-box" style="background:rgba(59,130,246,0.10);color:var(--c-tc)">23.0</div>
+                <div class="c-crit-bar"><div class="c-crit-bar-fill" style="width:92%;background:var(--c-tc)"></div></div>
+              </div>
+              <div class="c-crit-block">
+                <span class="c-crit-abbr-label">WC</span>
+                <div class="c-crit-score-box" style="background:rgba(139,92,246,0.10);color:var(--c-wc)">21.0</div>
+                <div class="c-crit-bar"><div class="c-crit-bar-fill" style="width:84%;background:var(--c-wc)"></div></div>
+              </div>
+              <div class="c-crit-block">
+                <span class="c-crit-abbr-label">OC</span>
+                <div class="c-crit-score-box" style="background:rgba(16,185,129,0.10);color:var(--c-oc)">22.0</div>
+                <div class="c-crit-bar"><div class="c-crit-bar-fill" style="width:88%;background:var(--c-oc)"></div></div>
+              </div>
+              <div class="c-crit-block">
+                <span class="c-crit-abbr-label">TW</span>
+                <div class="c-crit-score-box" style="background:rgba(245,158,11,0.10);color:var(--c-tw)">22.0</div>
+                <div class="c-crit-bar"><div class="c-crit-bar-fill" style="width:88%;background:var(--c-tw)"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="c-footer">
+            <div class="c-foot-group">
+              <span class="c-foot-lbl">Score Status</span>
+              <span class="score-pill-complete">✓ Complete</span>
+            </div>
+            <div class="c-foot-group c-foot-group--r">
+              <span class="c-foot-lbl">Juror Progress</span>
+              <span class="score-pill-complete">✓ Submitted</span>
+            </div>
+          </div>
+          <div class="c-submitted">
+            <span class="c-sub-label">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Submitted At
+            </span>
+            <span class="c-sub-val" style="font-family:var(--mono)">Apr 28, 2026 · 11:05</span>
+          </div>
+        </div>
+
+      </div><!-- /phone C -->
+    </div>
+
+  </div><!-- /cols -->
+</div><!-- /page-wrap -->
+
+<button class="dm-btn" onclick="document.documentElement.classList.toggle('dark')" title="Toggle dark mode">🌗</button>
+
+</body>
+</html>
