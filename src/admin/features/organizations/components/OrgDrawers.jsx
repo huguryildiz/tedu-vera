@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { AlertCircle, Crown, Icon, Mail, Trash2, UserPlus, CheckCircle2, X } from "lucide-react";
 import FbAlert from "@/shared/ui/FbAlert";
 import Drawer from "@/shared/ui/Drawer";
@@ -19,6 +20,22 @@ export function CreateOrgDrawer({
   createSaving,
   onSave,
 }) {
+  const [touched, setTouched] = useState({});
+  const touch = (field) => setTouched((t) => ({ ...t, [field]: true }));
+
+  useEffect(() => {
+    if (open) setTouched({});
+  }, [open]);
+
+  const handleSave = () => {
+    setTouched({ name: true, shortLabel: true, contact_email: true });
+    onSave();
+  };
+
+  const nameEmpty = !(createForm.name || "").trim();
+  const codeEmpty = !(createForm.shortLabel || "").trim();
+  const emailEmpty = !(createForm.contact_email || "").trim();
+
   return (
     <Drawer open={open} onClose={onClose}>
       <div className="fs-drawer-header">
@@ -57,24 +74,25 @@ export function CreateOrgDrawer({
           <label className="fs-field-label">Organization Name <span className="fs-field-req">*</span></label>
           <input
             data-testid="orgs-drawer-name"
-            className={`fs-input${createFieldErrors.name ? " error" : ""}`}
+            className={`fs-input${(touched.name && nameEmpty) || createFieldErrors.name ? " error" : ""}`}
             type="text"
             value={createForm.name || ""}
             onChange={(e) => {
               setCreateForm((prev) => ({ ...prev, name: e.target.value }));
               if (createFieldErrors.name) setCreateFieldErrors((prev) => ({ ...prev, name: "" }));
             }}
+            onBlur={() => touch("name")}
             placeholder="e.g., TED University — Electrical-Electronics Engineering"
           />
-          {createFieldErrors.name && (
-            <p className="fs-field-error"><AlertCircle size={12} strokeWidth={2} />{createFieldErrors.name}</p>
+          {((touched.name && nameEmpty) || createFieldErrors.name) && (
+            <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />{createFieldErrors.name || "Organization name is required."}</p>
           )}
         </div>
         <div className="fs-field">
           <label className="fs-field-label">Code <span className="fs-field-req">*</span></label>
           <input
             data-testid="orgs-drawer-code"
-            className={`fs-input${createFieldErrors.shortLabel ? " error" : ""}`}
+            className={`fs-input${(touched.shortLabel && codeEmpty) || createFieldErrors.shortLabel ? " error" : ""}`}
             type="text"
             value={createForm.shortLabel || ""}
             onChange={(e) => {
@@ -82,28 +100,30 @@ export function CreateOrgDrawer({
               setCreateForm((prev) => ({ ...prev, shortLabel, code: shortLabel.toLowerCase().replace(/\s+/g, "-") }));
               if (createFieldErrors.shortLabel) setCreateFieldErrors((prev) => ({ ...prev, shortLabel: "" }));
             }}
+            onBlur={() => touch("shortLabel")}
             placeholder="e.g., TEDU-EEE"
             style={{ textTransform: "uppercase", fontFamily: "var(--mono)" }}
           />
-          {createFieldErrors.shortLabel && (
-            <p className="fs-field-error"><AlertCircle size={12} strokeWidth={2} />{createFieldErrors.shortLabel}</p>
+          {((touched.shortLabel && codeEmpty) || createFieldErrors.shortLabel) && (
+            <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />{createFieldErrors.shortLabel || "Code is required."}</p>
           )}
         </div>
         <div className="fs-field">
           <label className="fs-field-label">Contact Email <span className="fs-field-req">*</span></label>
           <input
             data-testid="orgs-drawer-contact-email"
-            className={`fs-input${createFieldErrors.contact_email ? " error" : ""}`}
+            className={`fs-input${(touched.contact_email && emailEmpty) || createFieldErrors.contact_email ? " error" : ""}`}
             type="email"
             value={createForm.contact_email || ""}
             onChange={(e) => {
               setCreateForm((prev) => ({ ...prev, contact_email: e.target.value }));
               if (createFieldErrors.contact_email) setCreateFieldErrors((prev) => ({ ...prev, contact_email: "" }));
             }}
+            onBlur={() => touch("contact_email")}
             placeholder="admin@organization.org"
           />
-          {createFieldErrors.contact_email && (
-            <p className="fs-field-error"><AlertCircle size={12} strokeWidth={2} />{createFieldErrors.contact_email}</p>
+          {((touched.contact_email && emailEmpty) || createFieldErrors.contact_email) && (
+            <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />{createFieldErrors.contact_email || "Contact email is required."}</p>
           )}
         </div>
         <div className="fs-field">
@@ -117,12 +137,12 @@ export function CreateOrgDrawer({
         <button
           data-testid="orgs-drawer-save"
           className="fs-btn fs-btn-primary"
-          onClick={onSave}
+          onClick={handleSave}
           disabled={
             createSaving ||
-            !(createForm.name || "").trim() ||
-            !(createForm.shortLabel || "").trim() ||
-            !(createForm.contact_email || "").trim() ||
+            nameEmpty ||
+            codeEmpty ||
+            emailEmpty ||
             Object.values(createFieldErrors || {}).some(Boolean)
           }
         >
@@ -211,7 +231,7 @@ export function EditOrgDrawer({
             placeholder="admin@organization.org"
           />
           {editFieldErrors.contact_email && (
-            <p className="fs-field-error"><AlertCircle size={12} strokeWidth={2} />{editFieldErrors.contact_email}</p>
+            <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />{editFieldErrors.contact_email}</p>
           )}
         </div>
         {editError && <FbAlert data-testid="orgs-edit-drawer-error" variant="danger">{editError}</FbAlert>}

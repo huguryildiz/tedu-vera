@@ -333,7 +333,7 @@
     grid-template-rows: auto auto auto auto;
     align-items: start;
     gap: 0;
-    padding: 0;
+    padding: 10px 0 0;
     border: 1px solid var(--border);
     border-left: 3px solid var(--border);
     border-radius: 10px;
@@ -367,7 +367,7 @@
   /* org name — top-left */
   #page-platform-control .unlock-requests-table tbody td[data-label="Organization"] {
     grid-area: org;
-    padding: 16px 0 10px 12px;
+    padding: 6px 0 10px 12px;
     font-size: 12.5px;
     font-weight: 700;
     color: var(--text-primary);
@@ -376,7 +376,7 @@
   /* period chip — top-right */
   #page-platform-control .unlock-requests-table tbody td[data-label="Period"] {
     grid-area: period;
-    padding: 16px 12px 10px 6px;
+    padding: 6px 12px 10px 6px;
     font-size: 11px;
     font-weight: 600;
     color: var(--accent);
