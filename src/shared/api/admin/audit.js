@@ -83,6 +83,11 @@ function applyAuditFilters(query, filters) {
       `details->>applicant_name.ilike.${term}`,
       `details->>actor_name.ilike.${term}`,
       `details->>juror_name.ilike.${term}`,
+      `details->>project_title.ilike.${term}`,
+      `details->>projectTitle.ilike.${term}`,
+      `details->>periodName.ilike.${term}`,
+      `details->>period_name.ilike.${term}`,
+      `details->>org_name.ilike.${term}`,
     ];
     if (filters.searchActionKeys?.length) {
       orClauses.push(`action.in.(${filters.searchActionKeys.join(",")})`);
