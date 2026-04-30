@@ -145,13 +145,6 @@ export default function AuditEventDrawer({ log, onClose }) {
             </p>
           )}
 
-          {/* Actor */}
-          <div className="audit-drawer-actor-row audit-drawer-section">
-            <div className="audit-drawer-actor-info">
-              <div className="audit-drawer-actor-name">{actor.name}</div>
-              <div className="audit-drawer-actor-role">{actor.role}</div>
-            </div>
-          </div>
 
           {/* Contextual details */}
           {details.length > 0 && (
