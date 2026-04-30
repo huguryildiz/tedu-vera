@@ -242,6 +242,7 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
     border: none;
     padding: 0;
     min-width: 0;
+    min-height: 0;
   }
   .pin-lock-table td::before { display: none !important; }
 
@@ -279,6 +280,7 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
   .pin-lock-table .col-fails {
     flex: 0 0 auto;
     align-self: center;
+    margin-top: 5px;
   }
   .pin-lock-table .fails-mobile {
     display: inline-flex;
@@ -305,6 +307,7 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
     flex: 0 0 auto;
     margin-left: auto;
     align-self: center;
+    margin-top: 5px;
   }
   .pin-lock-table td[data-label="Unlock ETA"] .pin-eta-pill {
     font-size: 10.5px;
