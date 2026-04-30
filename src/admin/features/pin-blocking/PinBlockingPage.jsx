@@ -276,8 +276,8 @@ export default function PinBlockingPage() {
                         <td className={`col-fails${!j.failedAttempts ? " missing" : ""}`} data-label="Failed Attempts">
                           <span className="fails-desktop">{j.failedAttempts ?? "—"}</span>
                           <span className="fails-mobile">
-                            <AlertCircle size={9} strokeWidth={2.5} />
-                            <strong>×{j.failedAttempts ?? "—"}</strong>
+                            <AlertCircle size={10} strokeWidth={2} />
+                            Failed: <strong>{j.failedAttempts ?? "—"}</strong>
                           </span>
                         </td>
                         <td className="col-lock-started" data-label="Lock Started">

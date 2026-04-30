@@ -189,7 +189,8 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
 /* ─── Portrait card layout (≤ 768px portrait) ────────────────
    Two-row card:
      Row 1: Avatar + juror name + affiliation  (full width)
-     Row 2: ×N badge  ·  [auto spacer]  ·  ETA pill  ·  Unlock
+             Unlock button pinned top-right (absolute)
+     Row 2: Failed: N (left)  ·  ETA pill (right)
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: portrait) {
   /* Strip outer card wrapper so row-cards sit on page bg */
@@ -217,11 +218,12 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
   .pin-lock-table thead { display: none !important; }
   .pin-lock-table tbody { display: block; width: 100%; }
 
-  /* Two-row flex card via wrap */
+  /* Two-row flex card; Unlock button is absolute top-right */
   .pin-lock-table tbody tr {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    position: relative;
     gap: 0;
     width: 100%;
     box-sizing: border-box;
@@ -247,17 +249,43 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
   .pin-lock-table .fails-desktop,
   .pin-lock-table .lock-desktop { display: none; }
 
-  /* ×N fail badge */
+  /* ── Row 1: Juror identity — full width, right pad for button ── */
+  .pin-lock-table td:nth-child(1) {
+    flex: 0 0 100%;
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 7px;
+    padding-right: 74px;
+    box-sizing: border-box;
+  }
+  .pin-lock-table td:nth-child(1) .jb-name,
+  .pin-lock-table td:nth-child(1) .jb-affiliation {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── Unlock button — absolute top-right ── */
+  .pin-lock-table td.col-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* ── Row 2: "Failed: N" left · ETA pill right ── */
+
+  /* Fail label — plain text, anchored left */
+  .pin-lock-table .col-fails {
+    flex: 0 0 auto;
+    align-self: center;
+  }
   .pin-lock-table .fails-mobile {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: rgba(225,29,72,0.08);
-    border: 1px solid rgba(225,29,72,0.16);
-    font-size: 10px;
-    font-weight: 700;
+    gap: 4px;
+    font-size: 11px;
     color: var(--danger);
     white-space: nowrap;
     flex-shrink: 0;
@@ -270,49 +298,18 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
   }
   .pin-lock-table .fails-mobile svg { color: var(--danger); flex-shrink: 0; }
 
-  /* ── Row 1: Juror identity — full card width ── */
-  .pin-lock-table td:nth-child(1) {
-    flex: 0 0 100%;
-    width: 100%;
-    overflow: hidden;
-    margin-bottom: 8px;
-  }
-  .pin-lock-table td:nth-child(1) .jb-name,
-  .pin-lock-table td:nth-child(1) .jb-affiliation {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* ── Row 2: fail badge left · ETA + Unlock right ── */
-
-  /* Fail badge — anchored left */
-  .pin-lock-table .col-fails {
-    flex: 0 0 auto;
-    align-self: center;
-  }
-
   /* Lock started — hidden */
   .pin-lock-table td.col-lock-started { display: none !important; }
 
-  /* ETA pill — auto left margin pushes it + Unlock to the right */
+  /* ETA pill — margin-left: auto pushes it to the right */
   .pin-lock-table td[data-label="Unlock ETA"] {
     flex: 0 0 auto;
     margin-left: auto;
-    padding-right: 8px;
     align-self: center;
   }
   .pin-lock-table td[data-label="Unlock ETA"] .pin-eta-pill {
     font-size: 10.5px;
     padding: 2px 7px 2px 6px;
-  }
-
-  /* Unlock button — anchored right */
-  .pin-lock-table td.col-actions {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
   }
 }
 
