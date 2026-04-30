@@ -166,20 +166,20 @@ export function EditOrgDrawer({
       </div>
       <div className="fs-drawer-body" style={{ gap: 16 }}>
         <div className="fs-field">
-          <label className="fs-field-label">Organization Name</label>
+          <label className="fs-field-label">Organization Name <span className="fs-field-req">*</span></label>
           <input
             data-testid="orgs-edit-drawer-name"
-            className={`fs-input${editFieldErrors.name ? " error" : ""}`}
+            className={`fs-input${editFieldErrors.name || !(editForm.name || "").trim() ? " error" : ""}`}
             type="text"
             value={editForm.name || ""}
             onChange={(e) => {
               setEditForm((prev) => ({ ...prev, name: e.target.value }));
-              if (editFieldErrors.name) setEditFieldErrors((prev) => ({ ...prev, name: "" }));
+              setEditFieldErrors((prev) => ({ ...prev, name: e.target.value.trim() ? "" : "Organization name is required." }));
             }}
             placeholder="e.g., TED University — Electrical-Electronics Engineering"
           />
-          {editFieldErrors.name && (
-            <p className="fs-field-error"><AlertCircle size={12} strokeWidth={2} />{editFieldErrors.name}</p>
+          {(editFieldErrors.name || !(editForm.name || "").trim()) && (
+            <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />{editFieldErrors.name || "Organization name is required."}</p>
           )}
         </div>
         <div className="fs-field">

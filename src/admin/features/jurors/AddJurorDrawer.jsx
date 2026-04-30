@@ -10,7 +10,7 @@
 //   error        — string | null
 
 import { useState, useEffect } from "react";
-import { Info, UserPlus, X } from "lucide-react";
+import { AlertCircle, Info, UserPlus, X } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
@@ -85,7 +85,7 @@ export default function AddJurorDrawer({ open, onClose, onSave, periodName, erro
               Full Name <span className="fs-field-req">*</span>
             </label>
             <input
-              className="fs-input"
+              className={`fs-input${!form.name.trim() ? " error" : ""}`}
               type="text"
               placeholder="Prof. Dr. Sevgi Kahraman"
               value={form.name}
@@ -94,6 +94,9 @@ export default function AddJurorDrawer({ open, onClose, onSave, periodName, erro
               autoFocus
               data-testid="jurors-drawer-name"
             />
+            {!form.name.trim() && (
+              <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Full name is required.</p>
+            )}
           </div>
 
           <div className="fs-field">
@@ -101,7 +104,7 @@ export default function AddJurorDrawer({ open, onClose, onSave, periodName, erro
               Affiliation <span className="fs-field-req">*</span>
             </label>
             <input
-              className="fs-input"
+              className={`fs-input${!form.affiliation.trim() ? " error" : ""}`}
               type="text"
               placeholder="TED University"
               value={form.affiliation}
@@ -109,10 +112,14 @@ export default function AddJurorDrawer({ open, onClose, onSave, periodName, erro
               disabled={saving}
               data-testid="jurors-drawer-affiliation"
             />
-            <div className="fs-field-helper hint">
-              <Info size={12} />
-              University, company or research institution.
-            </div>
+            {!form.affiliation.trim() ? (
+              <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Affiliation is required.</p>
+            ) : (
+              <div className="fs-field-helper hint">
+                <Info size={12} />
+                University, company or research institution.
+              </div>
+            )}
           </div>
 
           <div className="fs-field">

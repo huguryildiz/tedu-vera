@@ -11,7 +11,7 @@
 //   error        — string | null
 
 import { useState, useEffect } from "react";
-import { X, Check, CheckCircle2, Lock } from "lucide-react";
+import { AlertCircle, X, Check, CheckCircle2, Lock } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
@@ -102,18 +102,21 @@ export default function OutcomeDetailDrawer({ open, onClose, outcome, criteria =
           <div className="fs-field">
             <label className="fs-field-label">Code <span className="fs-field-req">*</span></label>
             <input
-              className="fs-input"
+              className={`fs-input${!isLocked && !code.trim() ? " error" : ""}`}
               type="text"
               value={code}
               onChange={(e) => setCode(e.target.value)}
               disabled={saving || isLocked}
               maxLength={12}
             />
+            {!isLocked && !code.trim() && (
+              <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Code is required.</p>
+            )}
           </div>
           <div className="fs-field">
             <label className="fs-field-label">Label <span className="fs-field-req">*</span></label>
             <input
-              className="fs-input"
+              className={`fs-input${!isLocked && !shortLabel.trim() ? " error" : ""}`}
               type="text"
               placeholder="e.g., Engineering Knowledge"
               value={shortLabel}
@@ -121,9 +124,13 @@ export default function OutcomeDetailDrawer({ open, onClose, outcome, criteria =
               disabled={saving || isLocked}
               maxLength={25}
             />
-            <div className="fs-field-helper hint" style={{ fontSize: "10.5px" }}>
-              Short name shown in charts and tables ({25 - shortLabel.length} chars left)
-            </div>
+            {!isLocked && !shortLabel.trim() ? (
+              <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Label is required.</p>
+            ) : (
+              <div className="fs-field-helper hint" style={{ fontSize: "10.5px" }}>
+                Short name shown in charts and tables ({25 - shortLabel.length} chars left)
+              </div>
+            )}
           </div>
         </div>
 

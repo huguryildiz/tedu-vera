@@ -8,7 +8,7 @@
 //   error      — string | null
 
 import { useState, useEffect, useRef } from "react";
-import { Icon } from "lucide-react";
+import { AlertCircle, Icon } from "lucide-react";
 import FbAlert from "@/shared/ui/FbAlert";
 
 const HANDLE_SVG = (
@@ -128,7 +128,7 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
             Title <span className="fs-field-req">*</span>
           </label>
           <input
-            className="fs-input"
+            className={`fs-input${!form.title.trim() ? " error" : ""}`}
             type="text"
             placeholder="Project title"
             value={form.title}
@@ -136,6 +136,9 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
             disabled={saving}
             data-testid="project-drawer-title"
           />
+          {!form.title.trim() && (
+            <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Title is required.</p>
+          )}
         </div>
 
         <div className="fs-field">

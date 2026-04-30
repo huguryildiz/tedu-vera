@@ -10,7 +10,7 @@
 //   error      — string | null
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Icon } from "lucide-react";
+import { AlertCircle, Icon } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
@@ -200,7 +200,7 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
             </label>
             <textarea
               ref={titleRef}
-              className="fs-textarea"
+              className={`fs-textarea${!titleTrimmed ? " error" : ""}`}
               placeholder="Project title"
               value={form.title}
               onChange={(e) => { set("title", e.target.value); autoResizeTitle(); }}
@@ -210,7 +210,9 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
               style={{ resize: "none", overflow: "hidden", minHeight: "40px", lineHeight: "1.5" }}
               data-testid="project-edit-drawer-title"
             />
-            {titleTrimmed && (
+            {!titleTrimmed ? (
+              <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Title is required.</p>
+            ) : (
               <div className="fs-field-helper" style={{ color: "var(--success, #22c55e)" }}>
                 <Icon
                   iconNode={[]}

@@ -16,7 +16,7 @@
 //   error                      — string | null
 
 import { useState, useEffect } from "react";
-import { BadgeCheck, PlusCircle, X, Check } from "lucide-react";
+import { AlertCircle, BadgeCheck, PlusCircle, X, Check } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
@@ -174,7 +174,7 @@ export default function AddOutcomeDrawer({
                   <label className="fs-field-label">Code <span className="fs-field-req">*</span></label>
                   <input
                     data-testid="outcomes-drawer-code"
-                    className="fs-input"
+                    className={`fs-input${!form.code.trim() ? " error" : ""}`}
                     type="text"
                     placeholder="e.g., PO-5"
                     value={form.code}
@@ -182,15 +182,19 @@ export default function AddOutcomeDrawer({
                     disabled={saving}
                     maxLength={12}
                   />
-                  <div className="fs-field-helper hint" style={{ fontSize: "10.5px" }}>
-                    Short unique identifier (PO-5, SO-3, 1.2)
-                  </div>
+                  {!form.code.trim() ? (
+                    <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Code is required.</p>
+                  ) : (
+                    <div className="fs-field-helper hint" style={{ fontSize: "10.5px" }}>
+                      Short unique identifier (PO-5, SO-3, 1.2)
+                    </div>
+                  )}
                 </div>
                 <div className="fs-field">
                   <label className="fs-field-label">Label <span className="fs-field-req">*</span></label>
                   <input
                     data-testid="outcomes-drawer-label"
-                    className="fs-input"
+                    className={`fs-input${!form.shortLabel.trim() ? " error" : ""}`}
                     type="text"
                     placeholder="e.g., Engineering Knowledge"
                     value={form.shortLabel}
@@ -198,6 +202,9 @@ export default function AddOutcomeDrawer({
                     disabled={saving}
                     maxLength={25}
                   />
+                  {!form.shortLabel.trim() && (
+                    <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Label is required.</p>
+                  )}
                   <div className="fs-field-helper hint" style={{ fontSize: "10.5px" }}>
                     Short name shown in charts and tables ({25 - form.shortLabel.length} chars left)
                   </div>

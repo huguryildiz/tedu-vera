@@ -12,7 +12,7 @@
 //   error          — string | null
 
 import { useState, useEffect } from "react";
-import { Icon } from "lucide-react";
+import { AlertCircle, Icon } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import FbAlert from "@/shared/ui/FbAlert";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
@@ -124,25 +124,31 @@ export default function EditJurorDrawer({ open, onClose, juror, onSave, onResetP
           <div className="fs-field">
             <label className="fs-field-label">Full Name <span className="fs-field-req">*</span></label>
             <input
-              className="fs-input"
+              className={`fs-input${!form.name.trim() ? " error" : ""}`}
               type="text"
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
               disabled={saving}
               data-testid="jurors-edit-drawer-name"
             />
+            {!form.name.trim() && (
+              <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Full name is required.</p>
+            )}
           </div>
 
           <div className="fs-field">
             <label className="fs-field-label">Affiliation <span className="fs-field-req">*</span></label>
             <input
-              className="fs-input"
+              className={`fs-input${!form.affiliation.trim() ? " error" : ""}`}
               type="text"
               value={form.affiliation}
               onChange={(e) => set("affiliation", e.target.value)}
               disabled={saving}
               data-testid="jurors-edit-drawer-affiliation"
             />
+            {!form.affiliation.trim() && (
+              <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Affiliation is required.</p>
+            )}
           </div>
 
           <div className="fs-field">
