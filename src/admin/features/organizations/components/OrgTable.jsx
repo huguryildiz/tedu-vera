@@ -5,7 +5,7 @@ import Pagination from "@/shared/ui/Pagination";
 import useCardSelection from "@/shared/hooks/useCardSelection";
 import SortIcon from "./SortIcon";
 import OrgStatusBadge from "./OrgStatusBadge";
-import { formatShortDate, getOrgInitials, getOrgHue } from "./organizationHelpers";
+import { formatShortDate, formatShortDateTime, getOrgInitials, getOrgHue } from "./organizationHelpers";
 
 export default function OrgTable({
   // Filter panel
@@ -108,7 +108,7 @@ export default function OrgTable({
               <th className={`sortable${orgSortKey === "code" ? " sorted" : ""}`} onClick={() => onOrgSort("code")}>Code <SortIcon colKey="code" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
               <th className={`sortable${orgSortKey === "status" ? " sorted" : ""}`} onClick={() => onOrgSort("status")}>Status <SortIcon colKey="status" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
               <th className={`text-center sortable${orgSortKey === "admins" ? " sorted" : ""}`} onClick={() => onOrgSort("admins")}>Admins <SortIcon colKey="admins" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
-              <th className={`sortable${orgSortKey === "created_at" ? " sorted" : ""}`} onClick={() => onOrgSort("created_at")}>Created <SortIcon colKey="created_at" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
+              <th className={`sortable${orgSortKey === "created_at" ? " sorted" : ""}`} onClick={() => onOrgSort("created_at")}>Created At <SortIcon colKey="created_at" sortKey={orgSortKey} sortDir={orgSortDir} /></th>
               <th className="text-right">Actions</th>
             </tr>
           </thead>
@@ -143,7 +143,7 @@ export default function OrgTable({
                       <span className="org-admin-count-label">Admins:</span>{" "}
                       {org.tenantAdmins?.filter((a) => a.status === "active").length ?? 0}
                     </td>
-                    <td data-label="Created"><span className="vera-datetime-text">{formatShortDate(org.created_at)}</span></td>
+                    <td data-label="Created At"><span className="vera-datetime-text">{formatShortDateTime(org.created_at)}</span></td>
                     <td data-label="Actions" className="text-right">
                       <div style={{ display: "inline-flex" }}>
                         <FloatingMenu
@@ -207,7 +207,7 @@ export default function OrgTable({
                         {adminCount} {adminLabel}
                       </span>
                       <span className="org-meta-dot" />
-                      <span className="org-meta-date vera-datetime-text">{formatShortDate(org.created_at)}</span>
+                      <span className="org-meta-date vera-datetime-text">{formatShortDateTime(org.created_at)}</span>
                     </td>
                   </tr>
                 );
