@@ -304,7 +304,7 @@
   .acc-table thead th { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-header-size); }
   .acc-table tbody td { padding: var(--table-cell-py) var(--table-cell-px); font-size: var(--table-body-size); }
 }
-/* ── Mobile portrait: title → KPI → Add → toolbar (match Jurors/Projects pattern) ── */
+/* ── Mobile portrait: title → Add → search → filter → export (match Jurors/Projects pattern) ── */
 @media (max-width: 768px) and (orientation: portrait) {
   #page-accreditation {
     display: flex;
@@ -313,9 +313,12 @@
   #page-accreditation > .sem-header { display: contents; }
   #page-accreditation > * { order: 20; }
   #page-accreditation > .sem-header > .sem-header-left { order: -4; }
-  #page-accreditation > .mobile-primary-below-kpi { order: -1; }
-  /* .sem-header-actions (Filter + Export toolbar) stays at order 0 — below Add button */
-  #page-accreditation > .sem-header > .sem-header-actions { order: 0; margin-bottom: 12px; }
+  /* Toolbar: margin-top matches other pages' spacing between description and first toolbar item */
+  #page-accreditation > .sem-header > .sem-header-actions { order: 0; margin-top: 12px; margin-bottom: 12px; }
+  /* Show Add Outcome / lock badge as first item in the toolbar grid */
+  #page-accreditation .mobile-toolbar-stack .mobile-toolbar-primary { display: flex !important; order: 0; min-height: 36px; }
+  /* Hide the below-KPI duplicate — primary is now shown inside the toolbar */
+  #page-accreditation .mobile-primary-below-kpi { display: none !important; }
   #page-accreditation > .filter-panel { order: 1; }
   #page-accreditation > .export-panel { order: 2; }
   #page-accreditation > .lock-notice { order: 3; }
