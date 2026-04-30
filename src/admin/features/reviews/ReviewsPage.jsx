@@ -229,9 +229,21 @@ export default function ReviewsPage() {
   const scoredRows = kpiBase.filter(
     (r) => r.total != null && Number.isFinite(Number(r.total)) && r.jurorStatus === "completed"
   );
-  const avgScore = scoredRows.length > 0
-    ? (scoredRows.reduce((s, r) => s + Number(r.total), 0) / scoredRows.length).toFixed(1)
-    : "—";
+  const avgScore = (() => {
+    const byProject = new Map();
+    for (const r of scoredRows) {
+      const pid = r.projectId || r.project_id || r.title || r.projectName;
+      if (!pid) continue;
+      if (!byProject.has(pid)) byProject.set(pid, []);
+      byProject.get(pid).push(Number(r.total));
+    }
+    const projectAvgs = [...byProject.values()].map(
+      (vals) => vals.reduce((s, v) => s + v, 0) / vals.length
+    );
+    return projectAvgs.length > 0
+      ? (projectAvgs.reduce((s, v) => s + v, 0) / projectAvgs.length).toFixed(1)
+      : "—";
+  })();
 
   // ── Active filter count ───────────────────────────────────
   const activeFilterCount = useMemo(() => {

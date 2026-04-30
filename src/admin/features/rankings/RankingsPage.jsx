@@ -80,8 +80,8 @@ export default function RankingsPage() {
     () => rawScores.filter((r) => r.total != null && completedJurorIds.has(r.jurorId ?? r.juror_id)),
     [rawScores, completedJurorIds]
   );
-  const avgScore = completedRawScores.length
-    ? (completedRawScores.reduce((s, r) => s + r.total, 0) / completedRawScores.length).toFixed(1)
+  const avgScore = rankedRows.length
+    ? (rankedRows.reduce((s, r) => s + r.totalAvg, 0) / rankedRows.length).toFixed(1)
     : "—";
 
   const topScore    = totalProjects ? rankedRows[0].totalAvg.toFixed(1) : "—";

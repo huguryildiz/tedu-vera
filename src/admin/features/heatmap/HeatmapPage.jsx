@@ -182,9 +182,9 @@ export default function HeatmapPage() {
   );
 
   const overallAvg = useMemo(() => {
-    const vals = jurorRowAvgs.filter((v) => v != null);
+    const vals = visibleAverages.filter((v) => v != null);
     return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
-  }, [jurorRowAvgs]);
+  }, [visibleAverages]);
 
   // Score range for legend (min/max across all visible cells)
   const { rangeMin, rangeMax } = useMemo(() => {

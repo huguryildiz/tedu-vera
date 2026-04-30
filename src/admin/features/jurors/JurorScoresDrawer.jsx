@@ -134,11 +134,19 @@ export default function JurorScoresDrawer({
     : null;
 
   const periodAvg = useMemo(() => {
-    const all = scoreRows
-      .filter((r) => r.status === "submitted" && typeof r.total === "number")
-      .map((r) => r.total);
-    if (!all.length) return null;
-    return all.reduce((s, v) => s + v, 0) / all.length;
+    const byProject = new Map();
+    for (const r of scoreRows) {
+      if (r.status !== "submitted" || typeof r.total !== "number") continue;
+      const pid = String(r.projectId || r.project_id || "");
+      if (!pid) continue;
+      if (!byProject.has(pid)) byProject.set(pid, []);
+      byProject.get(pid).push(r.total);
+    }
+    const projectAvgs = [...byProject.values()].map(
+      (vals) => vals.reduce((s, v) => s + v, 0) / vals.length
+    );
+    if (!projectAvgs.length) return null;
+    return projectAvgs.reduce((s, v) => s + v, 0) / projectAvgs.length;
   }, [scoreRows]);
 
   const deltaVsAvg = avgScore != null && periodAvg != null ? avgScore - periodAvg : null;
