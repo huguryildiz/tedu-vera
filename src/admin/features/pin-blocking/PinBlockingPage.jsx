@@ -236,7 +236,7 @@ export default function PinBlockingPage() {
                 <thead>
                   <tr>
                     <th>Juror</th>
-                    <th className="text-right">Failed Attempts</th>
+                    <th>Failed Attempts</th>
                     <th>Lock Started</th>
                     <th>Unlock ETA</th>
                     <th className="text-right">Action</th>
