@@ -121,8 +121,8 @@ export default function Pagination({
           <button
             type="button"
             className="pagination-btn"
-            disabled={isLast || hasMore}
-            onClick={() => onPageChange(totalPages)}
+            disabled={isLast}
+            onClick={() => (hasMore && safePage >= totalPages) ? handleNext() : onPageChange(totalPages)}
             aria-label="Last page"
           >
             <ChevronsRight size={iconSize} />

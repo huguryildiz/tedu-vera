@@ -162,12 +162,16 @@ export default function AuditEventDrawer({ log, onClose }) {
           {/* Contextual details */}
           {details.length > 0 && (
             <div className="audit-drawer-details audit-drawer-section">
-              {details.map(({ key, value }) => (
-                <div key={key} className="audit-drawer-detail-row">
-                  <span className="audit-drawer-detail-key">{key}</span>
-                  <span className="audit-drawer-detail-val">{value}</span>
-                </div>
-              ))}
+              <table className="audit-detail-table">
+                <tbody>
+                  {details.map(({ key, value }) => (
+                    <tr key={key}>
+                      <td className="audit-drawer-detail-key">{key}</td>
+                      <td className="audit-drawer-detail-val">{value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
 

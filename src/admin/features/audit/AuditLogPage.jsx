@@ -930,7 +930,7 @@ export default function AuditLogPage() {
             totalPages={totalPages}
             pageSize={pageSize}
             totalItems={sortedLogs.length}
-            onPageChange={setCurrentPage}
+            onPageChange={(page) => { setCurrentPage(page); setSelectedLog(null); }}
             onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
             itemLabel="events"
             hasMore={auditHasMore}
