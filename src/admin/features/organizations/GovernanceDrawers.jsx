@@ -7,7 +7,7 @@
 //   GlobalSettingsDrawer, ExportBackupDrawer, MaintenanceDrawer, SystemHealthDrawer
 // Prototype: vera-premium-prototype.html lines 25671–26130
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import {
   AlertTriangle,
@@ -25,7 +25,6 @@ import { supabase } from "@/shared/lib/supabaseClient";
 import { invokeEdgeFunction } from "@/shared/api/core/invokeEdgeFunction";
 import { getMaintenanceConfig, setMaintenance, cancelMaintenance, getActiveJurorCount, sendTestMaintenanceEmail } from "@/shared/api/admin/maintenance";
 import { getPlatformSettings, setPlatformSettings } from "@/shared/api/admin/platform";
-import { listOrganizationsPublic } from "@/shared/api/admin/organizations";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import CustomSelect from "@/shared/ui/CustomSelect";
@@ -383,12 +382,6 @@ export function MaintenanceDrawer({ open, onClose }) {
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [activeJurorCount, setActiveJurorCount] = useState(null);
-  const [orgs, setOrgs] = useState([]);
-  const [orgScope, setOrgScope] = useState("all"); // "all" | "specific"
-  const [affectedOrgIds, setAffectedOrgIds] = useState([]);
-  // Snapshot of org IDs that were already affected when the drawer opened — drives
-  // the sort-to-top order so toggling checkboxes mid-session does not reshuffle the list.
-  const [initialAffectedOrgIds, setInitialAffectedOrgIds] = useState([]);
   const [sendingTest, setSendingTest] = useState(false);
 
   // Load current config, active juror count, and org list when drawer opens
@@ -404,24 +397,11 @@ export function MaintenanceDrawer({ open, onClose }) {
         if (cfg?.start_time) {
           setStartTime(new Date(cfg.start_time).toISOString().slice(0, 16));
         }
-        const affectedIds = cfg?.affected_org_ids?.length ? cfg.affected_org_ids : [];
-        if (affectedIds.length) {
-          setOrgScope("specific");
-          setAffectedOrgIds(affectedIds);
-          setInitialAffectedOrgIds(affectedIds);
-        } else {
-          setOrgScope("all");
-          setAffectedOrgIds([]);
-          setInitialAffectedOrgIds([]);
-        }
       })
       .catch(() => {}); // non-critical — drawer still works without pre-fill
     getActiveJurorCount()
       .then(setActiveJurorCount)
       .catch(() => setActiveJurorCount(null));
-    listOrganizationsPublic()
-      .then(setOrgs)
-      .catch(() => setOrgs([]));
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSchedule() {
@@ -432,7 +412,7 @@ export function MaintenanceDrawer({ open, onClose }) {
         startTime: mode === "scheduled" ? new Date(startTime).toISOString() : null,
         durationMin,
         message,
-        affectedOrgIds: orgScope === "specific" && affectedOrgIds.length > 0 ? affectedOrgIds : null,
+        affectedOrgIds: null,
         notifyAdmins,
       });
       const label = mode === "immediate" ? "Maintenance activated" : "Maintenance scheduled";
@@ -472,9 +452,6 @@ export function MaintenanceDrawer({ open, onClose }) {
 
   async function handleCancel() {
     setCancelling(true);
-    setOrgScope("all");
-    setAffectedOrgIds([]);
-    setInitialAffectedOrgIds([]);
     try {
       await cancelMaintenance();
       toast.success("Maintenance cancelled");
@@ -487,19 +464,6 @@ export function MaintenanceDrawer({ open, onClose }) {
   }
 
   const isCurrentlyActive = currentStatus?.is_active;
-
-  // Sort orgs so the ones already in maintenance (snapshot at open time) appear first.
-  // Snapshot — not live `affectedOrgIds` — so newly-toggled rows don't jump position.
-  const sortedOrgs = useMemo(() => {
-    if (!initialAffectedOrgIds.length) return orgs;
-    const initialSet = new Set(initialAffectedOrgIds);
-    return [...orgs].sort((a, b) => {
-      const aActive = initialSet.has(a.id) ? 0 : 1;
-      const bActive = initialSet.has(b.id) ? 0 : 1;
-      if (aActive !== bActive) return aActive - bActive;
-      return (a.name || "").localeCompare(b.name || "");
-    });
-  }, [orgs, initialAffectedOrgIds]);
 
   return (
     <Drawer open={open} onClose={onClose}>
@@ -608,89 +572,6 @@ export function MaintenanceDrawer({ open, onClose }) {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
           />
-        </div>
-
-        {/* Affected organizations */}
-        <div className="fs-field">
-          <label className="fs-field-label">Affected Organizations</label>
-          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-            {[["all", "All organizations"], ["specific", "Specific organizations"]].map(([val, label]) => (
-              <button
-                key={val}
-                type="button"
-                onClick={() => setOrgScope(val)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 6, fontSize: 12.5,
-                  cursor: "pointer", padding: "7px 12px", flex: 1,
-                  border: orgScope === val ? "1px solid var(--accent)" : "1px solid var(--border)",
-                  borderRadius: "var(--radius-sm)",
-                  background: orgScope === val ? "rgba(99,102,241,0.06)" : "transparent",
-                  fontFamily: "inherit",
-                }}
-              >
-                <span style={{
-                  width: 14, height: 14, borderRadius: "50%", flexShrink: 0,
-                  border: `2px solid ${orgScope === val ? "var(--accent)" : "var(--border)"}`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  {orgScope === val && (
-                    <span style={{
-                      width: 6, height: 6, borderRadius: "50%",
-                      background: "var(--accent)",
-                    }} />
-                  )}
-                </span>
-                {label}
-              </button>
-            ))}
-          </div>
-          <div style={{
-            maxHeight: 160, overflowY: "auto", border: "1px solid var(--border)",
-            borderRadius: "var(--radius-sm)", padding: "4px 0",
-          }}>
-            {sortedOrgs.length === 0 ? (
-              <div style={{ padding: "10px 14px", fontSize: 12.5, color: "var(--text-tertiary)" }}>
-                No active organizations found
-              </div>
-            ) : sortedOrgs.map((org) => {
-              const checked = orgScope === "all" || affectedOrgIds.includes(org.id);
-              const handleChange = (e) => {
-                if (orgScope === "all") {
-                  if (!e.target.checked) {
-                    // Deselecting one → switch to specific with all others still selected
-                    setOrgScope("specific");
-                    setAffectedOrgIds(sortedOrgs.map(o => o.id).filter(id => id !== org.id));
-                  }
-                  return;
-                }
-                setAffectedOrgIds(e.target.checked
-                  ? [...affectedOrgIds, org.id]
-                  : affectedOrgIds.filter((id) => id !== org.id)
-                );
-              };
-              return (
-                <label
-                  key={org.id}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    padding: "7px 14px", cursor: "pointer", fontSize: 13,
-                    background: checked ? "rgba(99,102,241,0.06)" : undefined,
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={handleChange}
-                    style={{ accentColor: "var(--accent)", flexShrink: 0 }}
-                  />
-                  <span style={{ fontWeight: 500 }}>{org.name}</span>
-                  {org.code && (
-                    <span className="vera-datetime-text" style={{ fontSize: 11, color: "var(--text-tertiary)", marginLeft: "auto", textAlign: "right" }}>{org.code}</span>
-                  )}
-                </label>
-              );
-            })}
-          </div>
         </div>
 
         <ToggleRow
