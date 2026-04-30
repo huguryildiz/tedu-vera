@@ -1133,6 +1133,15 @@ export function formatActionDetail(log) {
   if (!log.details) return "";
   const d = log.details;
 
+  // Score submission — show total + per-criterion breakdown
+  if (log.action === "data.score.submitted" && d.scores && typeof d.scores === "object") {
+    const labels = d.criteria_labels || {};
+    const entries = Object.entries(d.scores);
+    const total = entries.reduce((sum, [, v]) => sum + (Number(v) || 0), 0);
+    const parts = [`Total: ${total}`, ...entries.map(([k, v]) => `${labels[k] || k}: ${v}`)];
+    return parts.join(" · ");
+  }
+
   // Juror actions — show juror name
   if (d.juror_name) return d.juror_name;
   if (d.actor_name && !log.user_id) return d.actor_name;

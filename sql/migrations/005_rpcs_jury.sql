@@ -658,6 +658,7 @@ DECLARE
   v_after           JSONB;
   v_assigned_count  INT;
   v_submitted_count INT;
+  v_criteria_labels JSONB;
 BEGIN
   v_session_hash := encode(digest(p_session_token, 'sha256'), 'hex');
 
@@ -765,6 +766,11 @@ BEGIN
       );
     END IF;
 
+    SELECT COALESCE(jsonb_object_agg(pc.key, pc.label ORDER BY pc.sort_order), '{}'::JSONB)
+    INTO v_criteria_labels
+    FROM period_criteria pc
+    WHERE pc.period_id = p_period_id;
+
     FOR v_project_rec IN
       SELECT p.id AS project_id, p.title AS project_title
       FROM score_sheets ss
@@ -824,7 +830,8 @@ BEGIN
           'project_title', v_project_rec.project_title,
           'period_name',   v_period_name,
           'period_id',     p_period_id,
-          'scores',        v_current_scores
+          'scores',          v_current_scores,
+          'criteria_labels', v_criteria_labels
         ),
         v_diff,
         'juror'::audit_actor_type,
