@@ -2497,7 +2497,11 @@ periodData.forEach(pd => {
   myAuths.filter(a => a.semanticState==='Completed' || a.semanticState==='Editing').forEach((a) => {
     if (myProjs.length === 0) return;
     const corrId = uuid(`finalize-${a.jId}-${pd.id}`);
-    auditObjList.push({ action:'evaluation.complete', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}"}`, timeStr:a.finalTs, correlationId:corrId });
+    const scoredProjs = myProjs.filter(proj => projScoreData.has(`${a.jId}-${proj.id}`));
+    const projTotals = scoredProjs.map(proj => Object.values(projScoreData.get(`${a.jId}-${proj.id}`) || {}).reduce((s, v) => s + (Number(v) || 0), 0));
+    const avgScore = projTotals.length > 0 ? Math.round(projTotals.reduce((s, v) => s + v, 0) / projTotals.length * 10) / 10 : null;
+    const projCount = scoredProjs.length || myProjs.length;
+    auditObjList.push({ action:'evaluation.complete', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}","juror_name":"${escapeSql(a.name)}","periodName":"${escapeSql(pd.name)}","project_count":${projCount}${avgScore !== null ? `,"avg_score":${avgScore}` : ''}}`, timeStr:a.finalTs, correlationId:corrId });
     myProjs.forEach(proj => {
       const projH = projSstData.get(`${a.jId}-${proj.id}`);
       const projTs = projH !== undefined ? sqlTs(a.evalDay, projH) : a.finalTs;
