@@ -71,14 +71,19 @@ export function ThresholdGapChart({ submittedData = [], criteria = [], threshold
         const modifier = gap == null ? "" : gap >= 0 ? "positive" : "negative";
         const stemLeft = gap != null ? (gap >= 0 ? "50%" : `${normalize(gap)}%`) : "50%";
         const stemWidth = gap != null ? `${Math.abs(normalize(gap) - 50)}%` : "0%";
-        const dotLeft = gap != null ? `${normalize(gap)}%` : "50%";
-        // Positive: label anchored to left of dot position, shifted right
-        // Negative: label anchored to right edge at dot position, shifted left via transform
+        const dotPos = gap != null ? normalize(gap) : 50;
+        const dotLeft = `${dotPos}%`;
+        // Default: positive → right of dot, negative → left of dot.
+        // Flip when the value would overflow the track edge.
         const valStyle = gap == null
           ? { left: "52%", color: "var(--text-tertiary)" }
           : gap >= 0
-            ? { left: `calc(${normalize(gap)}% + 14px)` }
-            : { left: `calc(${normalize(gap)}% - 14px)`, transform: "translateX(-100%)" };
+            ? (dotPos > 85
+                ? { left: `calc(${dotPos}% - 14px)`, transform: "translateX(-100%)" }
+                : { left: `calc(${dotPos}% + 14px)` })
+            : (dotPos < 15
+                ? { left: `calc(${dotPos}% + 14px)` }
+                : { left: `calc(${dotPos}% - 14px)`, transform: "translateX(-100%)" });
 
         return (
           <div key={code} className="lollipop-row">

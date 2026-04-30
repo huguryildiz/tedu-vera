@@ -70,11 +70,15 @@ export function AttainmentRateChart({ submittedData = [], criteria = [], thresho
               <div
                 className={`att-bar-fill${modifier ? ` ${modifier}` : ""}`}
                 style={{ width: pct != null ? `${pct}%` : "0%" }}
-              >
-                {pct != null && (
-                  <span className={`att-bar-val${modifier ? ` ${modifier}` : ""}`}>{pct}%</span>
-                )}
-              </div>
+              />
+              {pct != null && (
+                <span
+                  className={`att-bar-val${modifier ? ` ${modifier}` : ""}${pct >= 15 ? " inside" : " outside"}`}
+                  style={pct >= 15 ? { right: `${100 - pct}%` } : { left: `${pct}%` }}
+                >
+                  {pct}%
+                </span>
+              )}
               <div
                 className={`att-bar-target${idx === 0 ? " first" : ""}`}
                 style={{ left: `${threshold}%` }}

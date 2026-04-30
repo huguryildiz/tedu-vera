@@ -307,11 +307,13 @@ body:not(.dark-mode) .ga-cv-poor{background:rgba(220,38,38,0.12);box-shadow:inse
 .att-bar-label .code{font-family:var(--mono);font-weight:700;color:var(--accent);display:block;font-size:11px}
 .att-bar-label .name{display:block;font-size:10px;color:var(--text-secondary);font-weight:500;margin-top:1px}
 .att-bar-track{flex:1;height:22px;background:var(--surface-1);border-radius:var(--radius-sm);position:relative;overflow:visible}
-.att-bar-fill{height:100%;border-radius:var(--radius-sm);transition:width .5s ease;position:relative;display:flex;align-items:center;justify-content:flex-end;padding-right:8px}
+.att-bar-fill{height:100%;border-radius:var(--radius-sm);transition:width .5s ease}
 .att-bar-fill.met{background:linear-gradient(90deg,rgba(22,163,74,0.12),rgba(22,163,74,0.22))}
 .att-bar-fill.borderline{background:linear-gradient(90deg,rgba(217,119,6,0.12),rgba(217,119,6,0.22))}
 .att-bar-fill.not-met{background:linear-gradient(90deg,rgba(225,29,72,0.12),rgba(225,29,72,0.22))}
-.att-bar-val{font-family:var(--mono);font-size:12px;font-weight:700;white-space:nowrap}
+.att-bar-val{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:12px;font-weight:700;white-space:nowrap;z-index:1}
+.att-bar-val.inside{padding-right:8px}
+.att-bar-val.outside{padding-left:6px}
 .att-bar-val.met{color:var(--success)}
 .att-bar-val.borderline{color:var(--warning)}
 .att-bar-val.not-met{color:var(--danger)}
