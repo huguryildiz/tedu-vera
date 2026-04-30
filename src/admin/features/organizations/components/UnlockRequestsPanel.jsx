@@ -72,7 +72,7 @@ export default function UnlockRequestsPanel({
 
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
         <div className="table-wrap table-wrap--split">
-          <table className="organizations-table unlock-requests-table table-standard table-pill-balance">
+          <table className="organizations-table unlock-requests-table table-dense table-pill-balance">
             <thead>
               <tr>
                 <th className={`sortable${unlockSortKey === "organization_name" ? " sorted" : ""}`} onClick={() => onUnlockSort("organization_name")}>Organization <SortIcon colKey="organization_name" sortKey={unlockSortKey} sortDir={unlockSortDir} /></th>
@@ -105,8 +105,10 @@ export default function UnlockRequestsPanel({
                   <td data-label="Organization">{r.organization_name || "—"}</td>
                   <td data-label="Period"><strong>{r.period_name || "—"}</strong></td>
                   <td data-label="Requester">{r.requester_name || "—"}</td>
-                  <td data-label="Reason" style={{ maxWidth: 400, whiteSpace: "normal", textAlign: "justify", textJustify: "inter-word" }}>
-                    {r.reason}
+                  <td data-label="Reason" style={{ maxWidth: 320, whiteSpace: "normal" }}>
+                    <span style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      {r.reason}
+                    </span>
                   </td>
                   <td data-label="Requested" className="vera-datetime-text">{formatDateTime(r.created_at)}</td>
                   <td data-label="Status"><TenantStatusPill status={r.status} /></td>
