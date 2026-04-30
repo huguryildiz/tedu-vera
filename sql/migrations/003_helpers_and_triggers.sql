@@ -452,6 +452,14 @@ BEGIN
     WHERE j.id = NEW.juror_id;
   END IF;
 
+  -- Enrich entry_tokens events with period_name (drawer Period row)
+  IF TG_TABLE_NAME = 'entry_tokens' THEN
+    SELECT jsonb_build_object('period_name', per.name)
+    INTO v_extra_details
+    FROM periods per
+    WHERE per.id = CASE WHEN TG_OP = 'DELETE' THEN OLD.period_id ELSE NEW.period_id END;
+  END IF;
+
   -- Enrich memberships events with member email + role
   IF TG_TABLE_NAME = 'memberships' THEN
     SELECT jsonb_build_object(
