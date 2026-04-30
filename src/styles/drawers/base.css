@@ -527,10 +527,7 @@ textarea.crt-field-input { height: auto; padding: 8px 10px; }
 .fs-session-card-meta { font-size: 10.5px; color: var(--text-quaternary); line-height: 1.5; }
 .fs-session-card-actions {
   flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.15s;
 }
-.fs-session-card:hover .fs-session-card-actions { opacity: 1; }
 .fs-session-revoke-btn {
   font-size: 10.5px; font-weight: 600;
   padding: 3px 9px; border-radius: var(--radius-sm);
