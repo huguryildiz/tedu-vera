@@ -8,7 +8,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { listAuditLogs, logExportInitiated } from "@/shared/api";
 import {
   AUDIT_PAGE_SIZE,
-  NOISY_SYSTEM_ACTIONS,
   formatAuditTimestamp,
   getAuditDateRangeError,
   buildAuditParams,
@@ -109,8 +108,8 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
       return;
     }
     try {
-      const excludeActions = showSystemEventsRef.current ? null : NOISY_SYSTEM_ACTIONS;
-      const params = buildAuditParams(filters || defaultAuditFilters, AUDIT_PAGE_SIZE, cursor, searchTerm, excludeActions);
+      const excludeActorTypes = showSystemEventsRef.current ? null : ["system"];
+      const params = buildAuditParams(filters || defaultAuditFilters, AUDIT_PAGE_SIZE, cursor, searchTerm, null, excludeActorTypes);
       const { data: rawRows, totalCount } = await listAuditLogs({ ...params, organizationId, includeNullOrg: isSuper });
       const rows = rawRows || [];
       if (mode === "append") {
@@ -238,8 +237,8 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
       let all = [];
       let loops = 0;
       while (true) {
-        const exportExclude = showSystemEvents ? null : NOISY_SYSTEM_ACTIONS;
-        const params = buildAuditParams(auditFilters, pageSize, cursor, auditSearch, exportExclude);
+        const exportExcludeActorTypes = showSystemEvents ? null : ["system"];
+        const params = buildAuditParams(auditFilters, pageSize, cursor, auditSearch, null, exportExcludeActorTypes);
         const { data: rows } = await listAuditLogs({ ...params, organizationId, includeNullOrg: isSuper });
         if (!rows || rows.length === 0) break;
         all = [...all, ...rows];

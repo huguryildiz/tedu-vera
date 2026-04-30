@@ -187,7 +187,7 @@ export const getAuditDateRangeError = (filters) => {
 // Converts UI filter state into the RPC parameter object for
 // rpc_admin_list_audit_logs.
 
-export const buildAuditParams = (filters, limit, cursor, searchText, excludeActions) => {
+export const buildAuditParams = (filters, limit, cursor, searchText, excludeActions, excludeActorTypes) => {
   let startAt = null;
   let endAt = null;
 
@@ -223,6 +223,7 @@ export const buildAuditParams = (filters, limit, cursor, searchText, excludeActi
     searchMonth: searchDate?.month || null,
     searchYear: searchDate?.year || null,
     excludeActions: excludeActions?.length ? excludeActions : null,
+    excludeActorTypes: excludeActorTypes?.length ? excludeActorTypes : null,
   };
 };
 
