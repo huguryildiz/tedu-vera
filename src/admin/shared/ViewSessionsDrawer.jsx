@@ -132,13 +132,13 @@ export default function ViewSessionsDrawer({
                   )}
                   {session?.expires_at && (
                     <span className={`fs-session-pill${expiringSoon ? " warning" : ""}`}>
-                      Exp: {formatAbsoluteDate(session.expires_at)}
+                      Exp: <span className="vera-datetime-text">{formatAbsoluteDate(session.expires_at)}</span>
                     </span>
                   )}
                 </div>
 
                 <div className="fs-session-card-meta">
-                  Signed in {formatAbsoluteDate(signedInAt)}
+                  Signed in <span className="vera-datetime-text">{formatAbsoluteDate(signedInAt)}</span>
                   {usedSignedInFallback && (
                     <span
                       style={{ marginLeft: 5 }}
@@ -147,7 +147,7 @@ export default function ViewSessionsDrawer({
                       {" "}(first seen)
                     </span>
                   )}
-                  {" · "}Last active {formatRelative(session?.last_activity_at)}
+                  {" · "}Last active <span className="vera-datetime-text">{formatRelative(session?.last_activity_at)}</span>
                 </div>
               </div>
 
