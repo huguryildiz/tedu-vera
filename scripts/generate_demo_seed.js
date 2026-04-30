@@ -2615,6 +2615,38 @@ periodData.forEach(pd => {
     auditObjList.push({ action:'export.backup', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"format":"xlsx","period_count":${periodCountForOrg},"org_id":"${o.id}"}`, timeStr:randSqlTs(pd.start, 48, 240) });
   }
 
+  // export.periods — once per org (exports all periods list, no period context)
+  if (pd.histIdx === 2 && adminId) {
+    const totalPeriodsForOrg = periodData.filter(p => p.org === pd.org).length;
+    auditObjList.push({ action:'export.periods', resType:'periods', resId:o.id, orgId:o.id, userId:adminId, details:`{"format":"xlsx","row_count":${totalPeriodsForOrg}}`, timeStr:randSqlTs(pd.start, 120, 480) });
+  }
+
+  // admin.create — once per org at earliest (oldest) period (admin account creation event)
+  if (adminId) {
+    const maxHistForOrg = Math.max(...periodData.filter(p => p.org === pd.org).map(p => p.histIdx));
+    if (pd.histIdx === maxHistForOrg) {
+      const adminNm = (orgAdminNames[pd.org] || [])[0] || '';
+      const adminEmailVal = adminEmailFor(adminNm);
+      auditObjList.push({ action:'admin.create', resType:'memberships', resId:adminId, orgId:o.id, userId:adminId, details:`{"adminName":"${escapeSql(adminNm)}","adminEmail":"${adminEmailVal}"}`, timeStr:sqlTs(pd.start, -240) });
+    }
+  }
+
+  // security.anomaly.detected — one per org for current period, different anomaly type per org
+  if (pd.isCur && adminId) {
+    const orgIdx = orgs.indexOf(o);
+    const anomalyOptions = [
+      `{"anomaly_type":"login_failure_burst","count":${randInt(4,8)},"ip":"${randIp()}"}`,
+      `{"anomaly_type":"token_revocation_burst","count":${randInt(3,6)}}`,
+      `{"anomaly_type":"pin_reset_burst","count":${randInt(3,5)}}`,
+      `{"anomaly_type":"export_burst","count":${randInt(5,10)}}`,
+      `{"anomaly_type":"pin_lockout","count":${randInt(2,4)}}`,
+      `{"anomaly_type":"org_suspension","count":1,"orgCode":"${o.code}"}`,
+    ];
+    if (orgIdx < anomalyOptions.length) {
+      auditObjList.push({ action:'security.anomaly.detected', resType:'audit_logs', resId:o.id, orgId:o.id, userId:adminId, details:anomalyOptions[orgIdx], timeStr:cRandSqlTs(ev, evD*4, evD*20, true) });
+    }
+  }
+
   // criteria.save — admin saves criteria config before each period's eval day
   if (adminId) {
     const periodCrits = periodCriteriaMap[pd.id] || [];
