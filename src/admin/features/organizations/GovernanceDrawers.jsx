@@ -13,10 +13,8 @@ import {
   AlertTriangle,
   AlertCircle,
   Settings,
-  Download,
   Wrench,
   Activity,
-  Database,
   Icon,
 } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
@@ -31,7 +29,6 @@ import { listOrganizationsPublic } from "@/shared/api/admin/organizations";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import CustomSelect from "@/shared/ui/CustomSelect";
-import ManageBackupsDrawer from "@/admin/shared/ManageBackupsDrawer";
 import { formatDate, formatTime } from "@/shared/lib/dateUtils";
 import { KEYS } from "@/shared/storage/keys";
 
@@ -355,88 +352,7 @@ export function GlobalSettingsDrawer({ open, onClose }) {
 }
 
 // ── 2. Audit Center — REMOVED (redundant with /audit page) ────
-
-// ── 3. Export & Backup ─────────────────────────────────────────
-
-function ExportRow({ icon, iconColor, title, desc, loading, disabled, onClick, label }) {
-  return (
-    <div
-      style={{
-        display: "flex", alignItems: "center", gap: 12,
-        padding: "10px 12px",
-        background: "var(--card-bg)",
-        border: "1px solid var(--border)",
-        borderRadius: "var(--radius-sm)",
-      }}
-    >
-      <div
-        style={{
-          width: 30, height: 30, flexShrink: 0,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          background: `color-mix(in srgb, ${iconColor} 12%, transparent)`,
-          borderRadius: 6,
-          color: iconColor,
-        }}
-      >
-        {icon}
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 12.5, fontWeight: 650, color: "var(--text-primary)" }}>{title}</div>
-        <div style={{ fontSize: 11.5, color: "var(--text-tertiary)", marginTop: 1 }}>{desc}</div>
-      </div>
-      <button
-        className="fs-btn fs-btn-secondary"
-        style={{ fontSize: 11, padding: "5px 11px", flexShrink: 0 }}
-        disabled={disabled || loading}
-        onClick={onClick}
-      >
-        <AsyncButtonContent loading={loading} loadingText="…">{label}</AsyncButtonContent>
-      </button>
-    </div>
-  );
-}
-
-export function ExportBackupDrawer({ open, onClose }) {
-  const { organizationId } = useAdminContext();
-  const [backupsOpen, setBackupsOpen] = useState(false);
-
-  return (
-    <>
-      <Drawer open={open} onClose={onClose}>
-        <DrawerHeader
-          icon={(stroke) => <Download size={17} stroke={stroke} strokeWidth={2} />}
-          iconStroke="var(--accent)"
-          title="Database Backups"
-          subtitle="Browse, create, and download database snapshots"
-          onClose={onClose}
-        />
-        <div className="fs-drawer-body" style={{ gap: 14 }}>
-          <ExportRow
-            icon={<Database size={14} strokeWidth={2} />}
-            iconColor="#8b5cf6"
-            title="Full Backups"
-            desc="Browse, create, and download JSON snapshots"
-            loading={false}
-            disabled={!organizationId}
-            onClick={() => setBackupsOpen(true)}
-            label="Manage →"
-          />
-        </div>
-        <div className="fs-drawer-footer">
-          <button className="fs-btn fs-btn-secondary" type="button" onClick={onClose}>Close</button>
-        </div>
-      </Drawer>
-
-      {backupsOpen && (
-        <ManageBackupsDrawer
-          open
-          onClose={() => setBackupsOpen(false)}
-          organizationId={organizationId}
-        />
-      )}
-    </>
-  );
-}
+// ── 3. Export & Backup — REMOVED (replaced by direct ManageBackupsDrawer) ────
 
 // ── 4. Maintenance ─────────────────────────────────────────────
 

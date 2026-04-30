@@ -13,10 +13,10 @@ import { Icon } from "lucide-react";
 import { updateOrganization, listUnlockRequests, resolveUnlockRequest, deleteOrganization } from "@/shared/api";
 import {
   GlobalSettingsDrawer,
-  ExportBackupDrawer,
   MaintenanceDrawer,
   SystemHealthDrawer,
 } from "./GovernanceDrawers";
+import ManageBackupsDrawer from "@/admin/shared/ManageBackupsDrawer";
 import { LOCK_TOOLTIP_GRACE, LOCK_TOOLTIP_EXPIRED } from "@/auth/shared/lockedActions";
 import OrgTable from "./components/OrgTable";
 import UnlockRequestsPanel from "./components/UnlockRequestsPanel";
@@ -447,7 +447,7 @@ export default function OrganizationsPage() {
   return (
     <>
       <GlobalSettingsDrawer open={globalSettingsOpen} onClose={() => setGlobalSettingsOpen(false)} />
-      <ExportBackupDrawer open={exportBackupOpen} onClose={() => setExportBackupOpen(false)} />
+      <ManageBackupsDrawer open={exportBackupOpen} onClose={() => setExportBackupOpen(false)} organizationId={_organizationId} />
       <MaintenanceDrawer open={maintenanceOpen} onClose={() => setMaintenanceOpen(false)} />
       <SystemHealthDrawer open={systemHealthOpen} onClose={() => setSystemHealthOpen(false)} />
 
