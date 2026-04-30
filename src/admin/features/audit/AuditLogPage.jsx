@@ -818,11 +818,14 @@ export default function AuditLogPage() {
           {/* Mobile portrait card list */}
           <div className="audit-card-list" ref={auditScopeRef}>
             {showAuditSkeleton && Array.from({ length: 4 }, (_, i) => (
-              <div key={i} className="mcard amc">
-                <div className="amc-body">
-                  <div className="audit-skeleton-row" style={{ width: "40%", marginBottom: 10 }} />
-                  <div className="audit-skeleton-row" style={{ width: "70%", marginBottom: 8 }} />
-                  <div className="audit-skeleton-row" style={{ width: "55%" }} />
+              <div key={i} className="mcard amc2">
+                <div className="amc2-body">
+                  <div className="audit-skeleton-row" style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, marginTop: 1 }} />
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+                    <div className="audit-skeleton-row" style={{ width: "55%" }} />
+                    <div className="audit-skeleton-row" style={{ width: "75%" }} />
+                    <div className="audit-skeleton-row" style={{ width: "40%" }} />
+                  </div>
                 </div>
               </div>
             ))}
@@ -852,65 +855,68 @@ export default function AuditLogPage() {
               else if (chip.type === "export") badge = { type: "export", label: "CSV" };
               else if (actor.type === "system") badge = { type: "system", label: "AUTO" };
 
+              const verb = cardSentence?.verb ?? formatActionLabel(log.action);
+              const resource = cardSentence?.resource;
+
               return (
                 <div
                   key={log.id}
                   data-card-selectable=""
-                  className={["mcard", "amc", isWarning ? "amc-warning" : ""].filter(Boolean).join(" ")}
+                  className={["mcard", "amc2", isWarning ? "amc2-warning" : "", isSelected ? "is-selected" : ""].filter(Boolean).join(" ")}
                   data-cat={log.category || undefined}
                   data-sev={(log.severity === "high" || log.severity === "critical") ? log.severity : undefined}
                   onClick={() => setSelectedLog(isSelected ? null : log)}
                 >
-                  <div className="amc-body">
-                    <div className="amc-header">
-                      <span className={`audit-chip audit-chip-${chip.type}`}>{chip.label}</span>
-                      <span className="amc-rel">{relTime}</span>
-                    </div>
-                    <div className="amc-actor">
-                      {actor.type === "system" ? (
-                        <>
-                          <div className="amc-avatar amc-avatar-system"><Clock size={14} /></div>
-                          <div className="amc-actor-info">
-                            <div className="amc-actor-name">{actor.name}</div>
-                            <div className="amc-actor-role">{actor.role}</div>
-                          </div>
-                        </>
-                      ) : (
-                        <JurorBadge name={actor.name} affiliation={actor.role} size="lg" avatarBg={actor.type === "admin" ? "var(--accent)" : undefined} avatarFg={actor.type === "admin" ? "#fff" : undefined} />
-                      )}
-                    </div>
-                    <div className="amc-divider" />
-                    <div className="amc-action">
-                      <div className="amc-icon">
+                  <div className="amc2-body">
+                    {/* Avatar */}
+                    {actor.type === "system" ? (
+                      <div className="amc2-avatar amc2-avatar-system"><Clock size={11} /></div>
+                    ) : (
+                      <div
+                        className="amc2-avatar"
+                        style={actor.type === "admin" ? { background: "var(--accent)", color: "#fff" } : undefined}
+                      >
+                        {actor.initials}
+                      </div>
+                    )}
+
+                    {/* Right column */}
+                    <div className="amc2-right">
+                      {/* Row 1: name + chip + rel time */}
+                      <div className="amc2-namerow">
+                        <span className="amc2-name">{actor.name}</span>
+                        <span className={`audit-chip audit-chip-${chip.type} amc2-chip`}>{chip.label}</span>
+                        <span className="amc2-rel">{relTime}</span>
+                      </div>
+
+                      {/* Row 2: action icon + verb + resource */}
+                      <div className="amc2-action">
                         <ActionIcon action={log.action} chipType={chip.type} />
+                        <span className="amc2-verb">{verb}</span>
+                        {resource && <span className="amc2-resource">· {resource}</span>}
+                        {!resource && detail && <span className="amc2-resource">· {detail}</span>}
                       </div>
-                      <div className="amc-action-content">
-                        <div className="amc-action-title">
-                          {cardSentence?.verb ?? formatActionLabel(log.action)}
-                          {cardSentence?.resource && (
-                            <> <span className="audit-action-resource">{cardSentence.resource}</span></>
-                          )}
+
+                      {/* Diff chips */}
+                      {diffs.length > 0 && (
+                        <div className="amc-diff-list">
+                          {diffs.map((d, i) => (
+                            <span key={i} className="amc-diff-chip">
+                              <span className="amc-diff-key">{d.key}: </span>
+                              {d.from != null && <span className="amc-diff-from">{d.from}</span>}
+                              {d.from != null && d.to != null && <span className="amc-diff-arrow"> → </span>}
+                              {d.to != null && <span className="amc-diff-to">{d.to}</span>}
+                            </span>
+                          ))}
                         </div>
-                        {diffs.length > 0 ? (
-                          <div className="amc-diff-list">
-                            {diffs.map((d, i) => (
-                              <span key={i} className="amc-diff-chip">
-                                <span className="amc-diff-key">{d.key}: </span>
-                                {d.from != null && <span className="amc-diff-from">{d.from}</span>}
-                                {d.from != null && d.to != null && <span className="amc-diff-arrow"> → </span>}
-                                {d.to != null && <span className="amc-diff-to">{d.to}</span>}
-                              </span>
-                            ))}
-                          </div>
-                        ) : detail ? (
-                          <div className="amc-action-detail">{detail}</div>
-                        ) : null}
+                      )}
+
+                      {/* Row 3: timestamp + badge */}
+                      <div className="amc2-meta">
+                        <span className="amc2-ts">{ts}</span>
+                        {badge && <span className={`amc-badge amc-badge-${badge.type}`}>{badge.label}</span>}
                       </div>
                     </div>
-                  </div>
-                  <div className="amc-footer">
-                    <span className="amc-ts">{ts}</span>
-                    {badge && <span className={`amc-badge amc-badge-${badge.type}`}>{badge.label}</span>}
                   </div>
                 </div>
               );
