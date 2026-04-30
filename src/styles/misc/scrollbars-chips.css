@@ -74,9 +74,10 @@
  *   .btn-success is in components/buttons.css (was duplicated here).
  */
 
-/* ── Pills & badges: radius consistency (global) ── */
+/* ── Pills & badges: radius + width consistency (global) ── */
 .badge, .pill, .status-badge, .tag {
   border-radius: 100px !important;
+  align-self: flex-start;
 }
 
 /* ── Feature-specific portrait refinements moved to per-page CSS in S10b ──
