@@ -115,8 +115,16 @@ Deno.serve(async (req: Request) => {
   const { action, organizationId, resourceType, resourceId, details } = validation.data;
 
   // Tenant scope check for org-bound exports.
+  // Super admins have a membership with organization_id = null, which grants
+  // access to any org. We use service role for this check to avoid RLS issues
+  // with super admin JWT membership reads.
   if (typeof organizationId === "string" && organizationId.length > 0) {
-    const { data: memberships, error: memErr } = await caller
+    const serviceClient = createClient(
+      supabaseUrl,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "",
+      { auth: { persistSession: false } },
+    );
+    const { data: memberships, error: memErr } = await serviceClient
       .from("memberships")
       .select("organization_id")
       .eq("user_id", userData.user.id)
