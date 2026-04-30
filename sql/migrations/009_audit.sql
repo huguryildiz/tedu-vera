@@ -21,11 +21,33 @@ WHERE audit_logs.action IN (
   'evaluation.complete',
   'juror.edit_mode_closed_on_resubmit',
   'pin.reset',
-  'data.juror.pin.reset'
+  'data.juror.pin.reset',
+  'juror.pin_locked',
+  'data.juror.pin.locked',
+  'juror.edit_mode_enabled',
+  'juror.edit_mode_disabled',
+  'juror.pin_unlocked_and_reset',
+  'data.juror.auth.created',
+  'criteria.save',
+  'mapping.upsert',
+  'mapping.delete',
+  'config.outcome.created',
+  'config.outcome.updated',
+  'config.outcome.deleted'
 )
   AND audit_logs.details ? 'period_id'
   AND NOT (audit_logs.details ? 'periodName')
   AND p.id = (audit_logs.details->>'period_id')::UUID;
+
+-- Also backfill periodName for projects.* trigger rows (period_id lives in diff,
+-- not details, so resolve via projects table by resource_id).
+UPDATE audit_logs
+SET details = details || jsonb_build_object('periodName', p.name, 'period_name', p.name)
+FROM projects pr
+JOIN periods p ON p.id = pr.period_id
+WHERE audit_logs.action IN ('projects.insert','projects.update','projects.delete')
+  AND audit_logs.resource_id = pr.id
+  AND NOT (audit_logs.details ? 'periodName');
 
 -- -----------------------------------------------------------------------------
 -- 1b. Backfill: category, severity, actor_type, actor_name for all existing rows
@@ -613,6 +635,7 @@ SET search_path = public, extensions
 AS $$
 DECLARE
   v_org_id       UUID;
+  v_period_name  TEXT;
   v_total_max    NUMERIC := 0;
   v_before       JSONB := '{}'::JSONB;
   v_after        JSONB := '{}'::JSONB;
@@ -630,7 +653,7 @@ BEGIN
     RAISE EXCEPTION 'criteria_must_be_array';
   END IF;
 
-  SELECT organization_id INTO v_org_id
+  SELECT organization_id, name INTO v_org_id, v_period_name
   FROM periods WHERE id = p_period_id;
   IF v_org_id IS NULL THEN
     RAISE EXCEPTION 'period_not_found';
@@ -704,7 +727,7 @@ BEGIN
     p_period_id,
     'config'::audit_category,
     'medium'::audit_severity,
-    jsonb_build_object('criteriaCount', v_count),
+    jsonb_build_object('criteriaCount', v_count, 'periodName', v_period_name),
     jsonb_build_object('before', v_before, 'after', v_after)
   );
 
@@ -935,11 +958,13 @@ SECURITY DEFINER
 SET search_path = public, extensions
 AS $$
 DECLARE
-  v_org_id  UUID;
-  v_row     JSONB;
-  v_new_id  UUID;
+  v_org_id       UUID;
+  v_period_name  TEXT;
+  v_row          JSONB;
+  v_new_id       UUID;
 BEGIN
-  SELECT organization_id INTO v_org_id FROM periods WHERE id = p_period_id;
+  SELECT organization_id, name INTO v_org_id, v_period_name
+  FROM periods WHERE id = p_period_id;
   IF v_org_id IS NULL THEN
     RAISE EXCEPTION 'period_not_found';
   END IF;
@@ -958,7 +983,13 @@ BEGIN
     v_new_id,
     'config'::audit_category,
     'low'::audit_severity,
-    jsonb_build_object('outcome_code', p_code, 'outcome_label', p_label, 'period_id', p_period_id),
+    jsonb_build_object(
+      'outcome_code', p_code,
+      'outcome_label', p_label,
+      'period_id', p_period_id,
+      'period_name', v_period_name,
+      'periodName', v_period_name
+    ),
     jsonb_build_object('after', v_row)
   );
 
@@ -982,13 +1013,14 @@ SECURITY DEFINER
 SET search_path = public, extensions
 AS $$
 DECLARE
-  v_org_id    UUID;
-  v_period_id UUID;
-  v_before    JSONB;
-  v_after     JSONB;
+  v_org_id       UUID;
+  v_period_id    UUID;
+  v_period_name  TEXT;
+  v_before       JSONB;
+  v_after        JSONB;
 BEGIN
-  SELECT p.organization_id, po.period_id, to_jsonb(po.*)
-    INTO v_org_id, v_period_id, v_before
+  SELECT p.organization_id, po.period_id, p.name, to_jsonb(po.*)
+    INTO v_org_id, v_period_id, v_period_name, v_before
   FROM period_outcomes po
   JOIN periods p ON p.id = po.period_id
   WHERE po.id = p_outcome_id;
@@ -1018,7 +1050,10 @@ BEGIN
     'low'::audit_severity,
     jsonb_build_object(
       'outcome_code', v_after->>'code',
-      'outcome_label', v_after->>'label'
+      'outcome_label', v_after->>'label',
+      'period_id', v_period_id,
+      'period_name', v_period_name,
+      'periodName', v_period_name
     ),
     jsonb_build_object('before', v_before, 'after', v_after)
   );
@@ -1042,12 +1077,13 @@ SECURITY DEFINER
 SET search_path = public, extensions
 AS $$
 DECLARE
-  v_org_id    UUID;
-  v_period_id UUID;
-  v_before    JSONB;
+  v_org_id       UUID;
+  v_period_id    UUID;
+  v_period_name  TEXT;
+  v_before       JSONB;
 BEGIN
-  SELECT p.organization_id, po.period_id, to_jsonb(po.*)
-    INTO v_org_id, v_period_id, v_before
+  SELECT p.organization_id, po.period_id, p.name, to_jsonb(po.*)
+    INTO v_org_id, v_period_id, v_period_name, v_before
   FROM period_outcomes po
   JOIN periods p ON p.id = po.period_id
   WHERE po.id = p_outcome_id;
@@ -1070,7 +1106,10 @@ BEGIN
     'low'::audit_severity,
     jsonb_build_object(
       'outcome_code', v_before->>'code',
-      'outcome_label', v_before->>'label'
+      'outcome_label', v_before->>'label',
+      'period_id', v_period_id,
+      'period_name', v_period_name,
+      'periodName', v_period_name
     ),
     jsonb_build_object('before', v_before)
   );
@@ -1100,16 +1139,17 @@ SECURITY DEFINER
 SET search_path = public, extensions
 AS $$
 DECLARE
-  v_org_id UUID;
-  v_locked BOOLEAN;
-  v_row    JSONB;
-  v_id     UUID;
+  v_org_id       UUID;
+  v_period_name  TEXT;
+  v_locked       BOOLEAN;
+  v_row          JSONB;
+  v_id           UUID;
 BEGIN
   IF p_coverage_type NOT IN ('direct', 'indirect') THEN
     RAISE EXCEPTION 'invalid_coverage_type';
   END IF;
 
-  SELECT organization_id, is_locked INTO v_org_id, v_locked
+  SELECT organization_id, is_locked, name INTO v_org_id, v_locked, v_period_name
   FROM periods WHERE id = p_period_id;
   IF v_org_id IS NULL THEN
     RAISE EXCEPTION 'period_not_found';
@@ -1153,6 +1193,8 @@ BEGIN
     'low'::audit_severity,
     jsonb_build_object(
       'period_id', p_period_id,
+      'period_name', v_period_name,
+      'periodName', v_period_name,
       'period_criterion_id', p_period_criterion_id,
       'period_outcome_id', p_period_outcome_id,
       'coverage_type', p_coverage_type
@@ -1179,13 +1221,14 @@ SECURITY DEFINER
 SET search_path = public, extensions
 AS $$
 DECLARE
-  v_org_id    UUID;
-  v_period_id UUID;
-  v_locked    BOOLEAN;
-  v_before    JSONB;
+  v_org_id       UUID;
+  v_period_id    UUID;
+  v_period_name  TEXT;
+  v_locked       BOOLEAN;
+  v_before       JSONB;
 BEGIN
-  SELECT p.organization_id, p.id, p.is_locked, to_jsonb(pcm.*)
-    INTO v_org_id, v_period_id, v_locked, v_before
+  SELECT p.organization_id, p.id, p.name, p.is_locked, to_jsonb(pcm.*)
+    INTO v_org_id, v_period_id, v_period_name, v_locked, v_before
   FROM period_criterion_outcome_maps pcm
   JOIN periods p ON p.id = pcm.period_id
   WHERE pcm.id = p_map_id;
@@ -1210,6 +1253,8 @@ BEGIN
     'low'::audit_severity,
     jsonb_build_object(
       'period_id', v_period_id,
+      'period_name', v_period_name,
+      'periodName', v_period_name,
       'period_criterion_id', v_before->>'period_criterion_id',
       'period_outcome_id', v_before->>'period_outcome_id'
     ),

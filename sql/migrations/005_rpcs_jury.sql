@@ -28,6 +28,7 @@ SET search_path = public, auth, extensions
 AS $$
 DECLARE
   v_organization_id UUID;
+  v_period_name     TEXT;
   v_juror_id        UUID;
   v_pin             TEXT;
   v_pin_hash        TEXT;
@@ -39,7 +40,7 @@ DECLARE
 BEGIN
   v_clean_email := NULLIF(TRIM(BOTH FROM COALESCE(p_email, '')), '');
 
-  SELECT organization_id INTO v_organization_id
+  SELECT organization_id, name INTO v_organization_id, v_period_name
   FROM periods
   WHERE id = p_period_id;
 
@@ -84,6 +85,8 @@ BEGIN
         'juror_name',  p_juror_name,
         'juror_id',    v_juror_id,
         'period_id',   p_period_id,
+        'period_name', v_period_name,
+        'periodName',  v_period_name,
         'affiliation', p_affiliation
       ),
       NULL::JSONB,
@@ -175,6 +178,7 @@ DECLARE
   v_lock_duration   INTERVAL;
   v_new_failed      INT;
   v_org_id          UUID;
+  v_period_name     TEXT;
 BEGIN
   -- Read lockout policy from security_policy; fall back to 5 attempts + 30 minutes.
   SELECT
@@ -280,6 +284,7 @@ BEGIN
     IF v_new_failed >= v_max_attempts THEN
       -- Emit audit log for lockout; rpc_jury_verify_pin runs as anon so user_id is NULL
       SELECT organization_id INTO v_org_id FROM jurors WHERE id = v_juror_id;
+      SELECT name INTO v_period_name FROM periods WHERE id = p_period_id;
       IF v_org_id IS NOT NULL THEN
         INSERT INTO audit_logs (organization_id, user_id, action, resource_type, resource_id, details)
         VALUES (
@@ -290,6 +295,8 @@ BEGIN
           v_juror_id,
           jsonb_build_object(
             'period_id',       p_period_id,
+            'period_name',     v_period_name,
+            'periodName',      v_period_name,
             'juror_id',        v_juror_id,
             'actor_name',      p_juror_name,
             'failed_attempts', v_new_failed,

@@ -115,9 +115,12 @@ DECLARE
   v_minutes       INT;
   v_expires_at    TIMESTAMPTZ;
   v_juror_name    TEXT;
+  v_period_name   TEXT;
 BEGIN
   SELECT organization_id, juror_name INTO v_org_id, v_juror_name
   FROM jurors WHERE id = p_juror_id;
+
+  SELECT name INTO v_period_name FROM periods WHERE id = p_period_id;
 
   IF v_org_id IS NULL THEN
     RETURN jsonb_build_object('ok', false, 'error_code', 'juror_not_found')::JSON;
@@ -168,7 +171,8 @@ BEGIN
     VALUES (
       v_org_id, auth.uid(), 'juror.edit_mode_enabled', 'juror_period_auth', p_juror_id,
       jsonb_build_object(
-        'period_id', p_period_id, 'juror_id', p_juror_id, 'juror_name', v_juror_name,
+        'period_id', p_period_id, 'period_name', v_period_name, 'periodName', v_period_name,
+        'juror_id', p_juror_id, 'juror_name', v_juror_name,
         'reason', v_reason, 'duration_minutes', v_minutes, 'expires_at', v_expires_at
       )
     );
@@ -185,6 +189,8 @@ BEGIN
     v_org_id, auth.uid(), 'juror.edit_mode_disabled', 'juror_period_auth', p_juror_id,
     jsonb_build_object(
       'period_id',           p_period_id,
+      'period_name',         v_period_name,
+      'periodName',          v_period_name,
       'juror_id',            p_juror_id,
       'juror_name',          v_juror_name,
       'previous_reason',     v_auth_row.edit_reason,
@@ -216,17 +222,20 @@ SECURITY DEFINER
 SET search_path = public, auth, extensions
 AS $$
 DECLARE
-  v_org_id     UUID;
-  v_is_admin   BOOLEAN;
-  v_juror_name TEXT;
-  v_pin        TEXT;
-  v_pin_hash   TEXT;
+  v_org_id      UUID;
+  v_is_admin    BOOLEAN;
+  v_juror_name  TEXT;
+  v_period_name TEXT;
+  v_pin         TEXT;
+  v_pin_hash    TEXT;
 BEGIN
   -- Fetch juror org + name
   SELECT organization_id, juror_name
   INTO v_org_id, v_juror_name
   FROM jurors
   WHERE id = p_juror_id;
+
+  SELECT name INTO v_period_name FROM periods WHERE id = p_period_id;
 
   IF v_org_id IS NULL THEN
     RETURN jsonb_build_object('ok', false, 'error_code', 'juror_not_found')::JSON;
@@ -270,9 +279,11 @@ BEGIN
     'juror_period_auth',
     p_juror_id,
     jsonb_build_object(
-      'period_id',  p_period_id,
-      'juror_id',   p_juror_id,
-      'juror_name', v_juror_name
+      'period_id',   p_period_id,
+      'period_name', v_period_name,
+      'periodName',  v_period_name,
+      'juror_id',    p_juror_id,
+      'juror_name',  v_juror_name
     )
   );
 
