@@ -17,9 +17,6 @@ import {
   Wrench,
   Activity,
   Database,
-  BarChart2,
-  Layers,
-  Users,
   Icon,
 } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
@@ -31,10 +28,7 @@ import { invokeEdgeFunction } from "@/shared/api/core/invokeEdgeFunction";
 import { getMaintenanceConfig, setMaintenance, cancelMaintenance, getActiveJurorCount, sendTestMaintenanceEmail } from "@/shared/api/admin/maintenance";
 import { getPlatformSettings, setPlatformSettings } from "@/shared/api/admin/platform";
 import { listOrganizationsPublic } from "@/shared/api/admin/organizations";
-import { listPeriods, listJurorsSummary, getScores, getProjectSummary, logExportInitiated, adminListProjects } from "@/shared/api";
-import { exportXLSX, buildExportFilename } from "@/admin/utils/exportXLSX";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
-import { useAuth } from "@/auth";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import ManageBackupsDrawer from "@/admin/shared/ManageBackupsDrawer";
@@ -404,192 +398,7 @@ function ExportRow({ icon, iconColor, title, desc, loading, disabled, onClick, l
 
 export function ExportBackupDrawer({ open, onClose }) {
   const { organizationId } = useAdminContext();
-  const { activeOrganization } = useAuth();
-  const tenantCode = activeOrganization?.code || "";
-  const toast = useToast();
-
-  const [scoresLoading, setScoresLoading] = useState(false);
-  const [projectsLoading, setProjectsLoading] = useState(false);
-  const [jurorsLoading, setJurorsLoading] = useState(false);
   const [backupsOpen, setBackupsOpen] = useState(false);
-
-  const sortPeriods = (periods) =>
-    [...periods].sort((a, b) => {
-      const aTs = a?.end_date ? Date.parse(a.end_date) : 0;
-      const bTs = b?.end_date ? Date.parse(b.end_date) : 0;
-      return bTs - aTs;
-    });
-
-  const handleExportScores = useCallback(async () => {
-    if (!organizationId) return;
-    setScoresLoading(true);
-    try {
-      const periods = (await listPeriods(organizationId)) || [];
-      if (!periods.length) { toast.error("No evaluation periods found"); return; }
-      const ordered = sortPeriods(periods);
-      const results = await Promise.all(
-        ordered.map(async (period) => {
-          const [rows, summary] = await Promise.all([
-            getScores(period.id),
-            getProjectSummary(period.id).catch(() => []),
-          ]);
-          const summaryMap = new Map((summary || []).map((p) => [p.id, p]));
-          return {
-            rows: (rows || []).map((r) => ({
-              ...r,
-              period: period?.name || period?.period_name || "",
-              students: summaryMap.get(r.projectId)?.students ?? "",
-            })),
-            summary: summary || [],
-          };
-        }),
-      );
-      const allRows = results.flatMap((x) => x.rows);
-      const allSummary = results.flatMap((x) => x.summary);
-      const jurorCount = new Set(
-        allRows
-          .map((r) => r?.jurorId || r?.juror_id || r?.juryName || r?.juror_name || null)
-          .filter(Boolean),
-      ).size;
-
-      logExportInitiated({
-        action: "export.scores",
-        organizationId,
-        resourceType: "score_sheets",
-        details: {
-          format: "xlsx",
-          row_count: allRows.length,
-          period_name: "all-periods",
-          project_count: allSummary.length,
-          juror_count: jurorCount || null,
-          filters: { scope: "all_periods" },
-        },
-      }).catch((err) => {
-        console.warn("[export] audit log failed:", err);
-      });
-
-      await exportXLSX(allRows, {
-        periodName: "all-periods",
-        summaryData: allSummary,
-        tenantCode,
-      });
-      toast.success(`Score report downloaded · ${ordered.length} period${ordered.length !== 1 ? "s" : ""} · Excel`);
-    } catch (e) {
-      toast.error("Score report export failed — try again");
-    } finally {
-      setScoresLoading(false);
-    }
-  }, [organizationId, tenantCode]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleExportProjects = useCallback(async () => {
-    if (!organizationId) return;
-    setProjectsLoading(true);
-    try {
-      const periods = (await listPeriods(organizationId)) || [];
-      if (!periods.length) { toast.error("No evaluation periods found"); return; }
-      const ordered = sortPeriods(periods);
-      const projectsByPeriod = await Promise.all(
-        ordered.map(async (period) => ({
-          periodName: period?.name || period?.period_name || "",
-          rows: await adminListProjects(period.id),
-        })),
-      );
-      const XLSX = await import("xlsx-js-style");
-      const headers = ["Period", "Project", "Title", "Team Members"];
-      const data = projectsByPeriod.flatMap(({ periodName, rows }) =>
-        (rows || []).map((p) => [periodName, p?.group_no ?? "", p?.group_no != null ? `P${p.group_no} — ${p?.title ?? ""}` : (p?.title ?? ""), p?.members || ""]),
-      );
-      const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
-      ws["!cols"] = [18, 8, 36, 42].map((w) => ({ wch: w }));
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Groups");
-
-      logExportInitiated({
-        action: "export.projects",
-        organizationId,
-        resourceType: "projects",
-        details: {
-          format: "xlsx",
-          row_count: data.length,
-          period_name: "all-periods",
-          project_count: data.length,
-          juror_count: null,
-          filters: { scope: "all_periods" },
-        },
-      }).catch((err) => {
-        console.warn("[export] audit log failed:", err);
-      });
-
-      XLSX.writeFile(wb, buildExportFilename("Projects", "all-periods", "xlsx", tenantCode));
-      toast.success(`${data.length} project${data.length !== 1 ? "s" : ""} exported · Excel`);
-    } catch (e) {
-      toast.error("Projects export failed — try again");
-    } finally {
-      setProjectsLoading(false);
-    }
-  }, [organizationId, tenantCode]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleExportJurors = useCallback(async () => {
-    if (!organizationId) return;
-    setJurorsLoading(true);
-    try {
-      const periods = (await listPeriods(organizationId)) || [];
-      if (!periods.length) { toast.error("No evaluation periods found"); return; }
-      const ordered = sortPeriods(periods);
-      const jurorsByPeriod = await Promise.all(
-        ordered.map(async (period) => ({
-          periodName: period?.name || period?.period_name || "",
-          rows: await listJurorsSummary(period.id),
-        })),
-      );
-      const isAssigned = (j) => {
-        if (j?.isAssigned === true || j?.is_assigned === true) return true;
-        if (typeof j?.isAssigned === "string") return ["true","t","1"].includes(j.isAssigned.toLowerCase());
-        if (typeof j?.is_assigned === "string") return ["true","t","1"].includes(j.is_assigned.toLowerCase());
-        return false;
-      };
-      const XLSX = await import("xlsx-js-style");
-      const headers = ["Period", "Juror Name", "Affiliation"];
-      const data = jurorsByPeriod.flatMap(({ periodName, rows }) => {
-        const hasFlag = (rows || []).some((j) =>
-          (j?.isAssigned !== undefined && j?.isAssigned !== null) ||
-          (j?.is_assigned !== undefined && j?.is_assigned !== null),
-        );
-        return (hasFlag ? (rows || []).filter(isAssigned) : rows || []).map((j) => [
-          periodName,
-          j?.juryName || j?.juror_name || j?.jurorName || "",
-          j?.affiliation || "",
-        ]);
-      });
-      const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
-      ws["!cols"] = [18, 28, 32].map((w) => ({ wch: w }));
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Jurors");
-
-      logExportInitiated({
-        action: "export.jurors",
-        organizationId,
-        resourceType: "jurors",
-        details: {
-          format: "xlsx",
-          row_count: data.length,
-          period_name: "all-periods",
-          project_count: null,
-          juror_count: data.length,
-          filters: { scope: "all_periods" },
-        },
-      }).catch((err) => {
-        console.warn("[export] audit log failed:", err);
-      });
-
-      XLSX.writeFile(wb, buildExportFilename("Jurors", "all-periods", "xlsx", tenantCode));
-      toast.success(`${data.length} juror${data.length !== 1 ? "s" : ""} exported · Excel`);
-    } catch (e) {
-      toast.error("Jurors export failed — try again");
-    } finally {
-      setJurorsLoading(false);
-    }
-  }, [organizationId, tenantCode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
@@ -597,46 +406,11 @@ export function ExportBackupDrawer({ open, onClose }) {
         <DrawerHeader
           icon={(stroke) => <Download size={17} stroke={stroke} strokeWidth={2} />}
           iconStroke="var(--accent)"
-          title="Export & Backup"
-          subtitle="Download evaluation data and manage backups"
+          title="Database Backups"
+          subtitle="Browse, create, and download database snapshots"
           onClose={onClose}
         />
         <div className="fs-drawer-body" style={{ gap: 14 }}>
-          <SectionLabel>Export Reports</SectionLabel>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <ExportRow
-              icon={<BarChart2 size={14} strokeWidth={2} />}
-              iconColor="var(--accent)"
-              title="Score Report"
-              desc="Rankings, averages, per-juror breakdown"
-              loading={scoresLoading}
-              disabled={!organizationId}
-              onClick={handleExportScores}
-              label="↓ .xlsx"
-            />
-            <ExportRow
-              icon={<Layers size={14} strokeWidth={2} />}
-              iconColor="#10b981"
-              title="Projects"
-              desc="All project titles and team members"
-              loading={projectsLoading}
-              disabled={!organizationId}
-              onClick={handleExportProjects}
-              label="↓ .xlsx"
-            />
-            <ExportRow
-              icon={<Users size={14} strokeWidth={2} />}
-              iconColor="#f59e0b"
-              title="Jurors"
-              desc="Assigned jurors per evaluation period"
-              loading={jurorsLoading}
-              disabled={!organizationId}
-              onClick={handleExportJurors}
-              label="↓ .xlsx"
-            />
-          </div>
-
-          <SectionLabel style={{ marginTop: 4 }}>Database Backups</SectionLabel>
           <ExportRow
             icon={<Database size={14} strokeWidth={2} />}
             iconColor="#8b5cf6"
