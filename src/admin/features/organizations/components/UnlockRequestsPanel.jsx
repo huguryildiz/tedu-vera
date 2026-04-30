@@ -3,9 +3,10 @@ import FbAlert from "@/shared/ui/FbAlert";
 import Pagination from "@/shared/ui/Pagination";
 import Avatar from "@/shared/ui/Avatar";
 import { formatDateTime } from "@/shared/lib/dateUtils";
+import { jurorInitials, jurorAvatarBg } from "@/admin/utils/jurorIdentity";
+import useCardSelection from "@/shared/hooks/useCardSelection";
 import SortIcon from "./SortIcon";
 import TenantStatusPill from "./TenantStatusPill";
-import { getInitials, getAvatarColor } from "./organizationHelpers";
 
 const UNLOCK_TABS = [
   { key: "pending",  label: "Pending",  icon: Clock },
@@ -30,6 +31,8 @@ export default function UnlockRequestsPanel({
   setUnlockPage,
   setUnlockPageSize,
 }) {
+  const unlockScopeRef = useCardSelection();
+
   return (
     <div style={{ paddingTop: 8 }}>
       {unlockError && (
@@ -87,7 +90,7 @@ export default function UnlockRequestsPanel({
                 {unlockTab === "pending" && <th style={{ textAlign: "right" }}>Actions</th>}
               </tr>
             </thead>
-            <tbody>
+            <tbody ref={unlockScopeRef}>
               {unlockLoading && (
                 <tr>
                   <td colSpan={7} style={{ padding: 24, textAlign: "center", color: "var(--text-tertiary)" }}>
@@ -103,23 +106,21 @@ export default function UnlockRequestsPanel({
                 </tr>
               )}
               {!unlockLoading && pagedUnlockRows.map((r) => (
-                <tr key={r.id} data-status={r.status}>
+                <tr key={r.id} data-status={r.status} data-card-selectable>
                   <td data-label="Organization"><strong>{r.organization_name || "—"}</strong></td>
                   <td data-label="Period">{r.period_name || "—"}</td>
                   <td data-label="Requester">
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                       <Avatar
-                        initials={getInitials(r.requester_name, r.requester_email)}
-                        bg={getAvatarColor(r.requester_name || r.requester_email)}
+                        initials={jurorInitials(r.requester_name || r.requester_email)}
+                        bg={jurorAvatarBg(r.requester_name || r.requester_email)}
                         size={28}
                       />
                       {r.requester_name || "—"}
                     </span>
                   </td>
-                  <td data-label="Reason" style={{ maxWidth: 320, whiteSpace: "normal" }}>
-                    <span style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                      {r.reason}
-                    </span>
+                  <td data-label="Reason" style={{ maxWidth: 320, whiteSpace: "normal", wordBreak: "break-word", textAlign: "justify", textJustify: "inter-word" }}>
+                    {r.reason}
                   </td>
                   <td data-label="Requested" className="vera-datetime-text">{formatDateTime(r.created_at)}</td>
                   <td data-label="Status"><TenantStatusPill status={r.status} /></td>

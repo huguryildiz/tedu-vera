@@ -114,7 +114,18 @@ export function CreateOrgDrawer({
       </div>
       <div className="fs-drawer-footer">
         <button data-testid="orgs-drawer-cancel" className="fs-btn fs-btn-secondary" onClick={onClose} disabled={createSaving}>Cancel</button>
-        <button data-testid="orgs-drawer-save" className="fs-btn fs-btn-primary" onClick={onSave} disabled={createSaving}>
+        <button
+          data-testid="orgs-drawer-save"
+          className="fs-btn fs-btn-primary"
+          onClick={onSave}
+          disabled={
+            createSaving ||
+            !(createForm.name || "").trim() ||
+            !(createForm.shortLabel || "").trim() ||
+            !(createForm.contact_email || "").trim() ||
+            Object.values(createFieldErrors || {}).some(Boolean)
+          }
+        >
           <AsyncButtonContent loading={createSaving} loadingText="Creating…">Create Organization</AsyncButtonContent>
         </button>
       </div>
@@ -207,7 +218,16 @@ export function EditOrgDrawer({
       </div>
       <div className="fs-drawer-footer">
         <button data-testid="orgs-edit-drawer-cancel" className="fs-btn fs-btn-secondary" onClick={onClose} disabled={editSaving}>Cancel</button>
-        <button data-testid="orgs-edit-drawer-save" className="fs-btn fs-btn-primary" onClick={onSave} disabled={editSaving}>
+        <button
+          data-testid="orgs-edit-drawer-save"
+          className="fs-btn fs-btn-primary"
+          onClick={onSave}
+          disabled={
+            editSaving ||
+            !(editForm.name || "").trim() ||
+            Object.values(editFieldErrors || {}).some(Boolean)
+          }
+        >
           <AsyncButtonContent loading={editSaving} loadingText="Saving…">Save Changes</AsyncButtonContent>
         </button>
       </div>
