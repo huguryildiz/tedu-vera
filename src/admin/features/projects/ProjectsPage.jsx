@@ -430,7 +430,7 @@ export default function ProjectsPage() {
           <div className="scores-kpi-item-label">Coverage</div>
         </div>
         <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value accent">{kpiAvgScore != null ? kpiAvgScore : "—"}</div>
+          <div className="scores-kpi-item-value accent">{kpiAvgScore != null ? kpiAvgScore : "—"}<span className="kpi-denom">/100</span></div>
           <div className="scores-kpi-item-label">Avg Score</div>
         </div>
         <div className="scores-kpi-item">
