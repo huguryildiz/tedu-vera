@@ -9,7 +9,7 @@
 //   currentDeviceId — current browser device_id
 //   onRevoke        — (id: string) => Promise<void>  (optional)
 
-import { Laptop, Smartphone, Monitor, X } from "lucide-react";
+import { Laptop, Smartphone, Monitor, X, Clock } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import { maskIpAddress, normalizeCountryCode } from "@/shared/lib/adminSession";
 import { formatDateTime as formatAbsoluteDate } from "@/shared/lib/dateUtils";
@@ -131,8 +131,9 @@ export default function ViewSessionsDrawer({
                     <span className="fs-session-pill accent">{session.auth_method}</span>
                   )}
                   {session?.expires_at && (
-                    <span className={`fs-session-pill${expiringSoon ? " warning" : ""}`}>
-                      Exp: <span className="vera-datetime-text">{formatAbsoluteDate(session.expires_at)}</span>
+                    <span className={`fs-session-pill${expiringSoon ? " warning" : ""}`} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <Clock size={10} strokeWidth={2} />
+                      <span className="vera-datetime-text">{formatAbsoluteDate(session.expires_at)}</span>
                     </span>
                   )}
                 </div>
