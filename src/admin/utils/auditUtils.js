@@ -302,6 +302,14 @@ export function getActorInfo(log) {
 // Prefix-matched groups (export.*, notification.*) are handled by
 // formatSentence's fallback matchers; no narrative entry needed here.
 
+// Trigger-generated events store entity data in log.diff, RPC-generated events in log.details.
+// This helper checks both so narratives work regardless of event origin.
+const dv = (log, field, side = "after") =>
+  (log.details || {})[field] ??
+  (log.details || {})[side]?.[field] ??
+  log.diff?.[side]?.[field] ??
+  null;
+
 export const EVENT_META = {
   // ── Auth ──────────────────────────────────────────────────────
   "admin.login": {
@@ -657,30 +665,21 @@ export const EVENT_META = {
   },
   "periods.insert": {
     label: "Period created",
-    narrative: (log) => {
-      const d = log.details || {};
-      return { verb: "created period", resource: d.periodName || null };
-    },
+    narrative: (log) => ({ verb: "created period", resource: dv(log, "periodName") || dv(log, "name") }),
   },
   "periods.update": {
     label: "Period updated",
-    narrative: (log) => {
-      const d = log.details || {};
-      return { verb: "updated period", resource: d.periodName || null };
-    },
+    narrative: (log) => ({ verb: "updated period", resource: dv(log, "periodName") || dv(log, "name") }),
   },
   "periods.delete": {
     label: "Period deleted",
-    narrative: (log) => {
-      const d = log.details || {};
-      return { verb: "deleted period", resource: d.periodName || null };
-    },
+    narrative: (log) => ({ verb: "deleted period", resource: dv(log, "periodName") || dv(log, "name", "before") }),
   },
   "period.duplicated": {
     label: "Period duplicated",
     narrative: (log) => {
       const d = log.details || {};
-      return { verb: "duplicated period", resource: d.source_name ? `from ${d.source_name}` : (d.periodName || null) };
+      return { verb: "duplicated period", resource: d.source_name ? `from ${d.source_name}` : (dv(log, "periodName") || dv(log, "name")) };
     },
   },
 
@@ -801,68 +800,41 @@ export const EVENT_META = {
   },
   "project.create": {
     label: "Project created",
-    narrative: (log) => {
-      const d = log.details || {};
-      return { verb: "created project", resource: d.title || d.projectTitle || d.after?.title || null };
-    },
+    narrative: (log) => ({ verb: "created project", resource: dv(log, "title") || dv(log, "projectTitle") }),
   },
   "project.update": {
     label: "Project updated",
-    narrative: (log) => {
-      const d = log.details || {};
-      return { verb: "updated project", resource: d.title || d.projectTitle || d.after?.title || null };
-    },
+    narrative: (log) => ({ verb: "updated project", resource: dv(log, "title") || dv(log, "projectTitle") }),
   },
   "project.delete": {
     label: "Project deleted",
-    narrative: (log) => {
-      const d = log.details || {};
-      return { verb: "deleted project", resource: d.title || d.projectTitle || d.before?.title || null };
-    },
+    narrative: (log) => ({ verb: "deleted project", resource: dv(log, "title", "before") || dv(log, "projectTitle", "before") }),
   },
   "projects.insert": {
     label: "Project created",
-    narrative: (log) => {
-      const d = log.details || {};
-      return { verb: "created project", resource: d.title || d.projectTitle || d.after?.title || null };
-    },
+    narrative: (log) => ({ verb: "created project", resource: dv(log, "title") || dv(log, "projectTitle") }),
   },
   "projects.update": {
     label: "Project updated",
-    narrative: (log) => {
-      const d = log.details || {};
-      return { verb: "updated project", resource: d.title || d.projectTitle || d.after?.title || null };
-    },
+    narrative: (log) => ({ verb: "updated project", resource: dv(log, "title") || dv(log, "projectTitle") }),
   },
   "projects.delete": {
     label: "Project deleted",
-    narrative: (log) => {
-      const d = log.details || {};
-      return { verb: "deleted project", resource: d.title || d.projectTitle || d.before?.title || null };
-    },
+    narrative: (log) => ({ verb: "deleted project", resource: dv(log, "title", "before") || dv(log, "projectTitle", "before") }),
   },
 
   // ── Juror management (trigger-based) ─────────────────────────
   "jurors.insert": {
     label: "Juror created",
-    narrative: (log) => {
-      const d = log.details || {};
-      return { verb: "created juror", resource: d.after?.juror_name || null };
-    },
+    narrative: (log) => ({ verb: "created juror", resource: dv(log, "juror_name") }),
   },
   "jurors.update": {
     label: "Juror updated",
-    narrative: (log) => {
-      const d = log.details || {};
-      return { verb: "updated juror", resource: d.after?.juror_name || d.before?.juror_name || null };
-    },
+    narrative: (log) => ({ verb: "updated juror", resource: dv(log, "juror_name") || dv(log, "juror_name", "before") }),
   },
   "jurors.delete": {
     label: "Juror deleted",
-    narrative: (log) => {
-      const d = log.details || {};
-      return { verb: "deleted juror", resource: d.before?.juror_name || null };
-    },
+    narrative: (log) => ({ verb: "deleted juror", resource: dv(log, "juror_name", "before") }),
   },
 
   // ── Membership (trigger-based) ────────────────────────────────
@@ -882,17 +854,11 @@ export const EVENT_META = {
   // ── Organizations (trigger-based + status change) ─────────────
   "organizations.insert": {
     label: "Organization created",
-    narrative: (log) => {
-      const d = log.details || {};
-      return { verb: "created organization", resource: d.after?.name || null };
-    },
+    narrative: (log) => ({ verb: "created organization", resource: dv(log, "name") }),
   },
   "organizations.update": {
     label: "Organization updated",
-    narrative: (log) => {
-      const d = log.details || {};
-      return { verb: "updated organization", resource: d.after?.name || d.before?.name || null };
-    },
+    narrative: (log) => ({ verb: "updated organization", resource: dv(log, "name") || dv(log, "name", "before") }),
   },
   "organization.status_changed": {
     label: "Organization status changed",
