@@ -126,7 +126,7 @@ export default function UnlockRequestsPanel({
                       <button
                         type="button"
                         className="btn btn-outline"
-                        style={{ padding: "4px 10px", fontSize: 11.5, borderRadius: 6, marginRight: 6, gap: 4, height: 28, minWidth: 80 }}
+                        style={{ padding: "4px 10px", fontSize: 11.5, borderRadius: 6, marginRight: 6, gap: 4, height: 28, width: 82, justifyContent: "center" }}
                         onClick={() => onOpenResolve(r, "rejected")}
                       >
                         <XCircle size={12} />
@@ -135,7 +135,7 @@ export default function UnlockRequestsPanel({
                       <button
                         type="button"
                         className="btn btn-primary"
-                        style={{ padding: "4px 10px", fontSize: 11.5, borderRadius: 6, gap: 4, height: 28, minWidth: 80 }}
+                        style={{ padding: "4px 10px", fontSize: 11.5, borderRadius: 6, gap: 4, height: 28, width: 82, justifyContent: "center" }}
                         onClick={() => onOpenResolve(r, "approved")}
                       >
                         <CheckCircle2 size={12} />
