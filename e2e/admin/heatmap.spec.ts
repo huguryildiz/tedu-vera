@@ -181,11 +181,33 @@ test.describe("heatmap data accuracy (E3)", () => {
       .limit(1);
     if (sheetErr || !sheets?.length) throw new Error("mutation setup: J1×P1 sheet not found");
     const sheetId = sheets[0].id;
+
+    // The score-item DELETE trigger (block_score_sheet_item_delete) blocks
+    // direct deletes once period.activated_at IS NOT NULL. Capture the current
+    // activated_at, clear it for the delete, then restore.
+    const { data: periodRow } = await adminClient
+      .from("periods")
+      .select("activated_at")
+      .eq("id", fixture.periodId)
+      .single();
+    const savedActivatedAt = periodRow?.activated_at ?? null;
+    if (savedActivatedAt) {
+      await adminClient
+        .from("periods")
+        .update({ activated_at: null })
+        .eq("id", fixture.periodId);
+    }
     const { error: delErr } = await adminClient
       .from("score_sheet_items")
       .delete()
       .eq("score_sheet_id", sheetId)
       .eq("period_criterion_id", fixture.criteriaBId);
+    if (savedActivatedAt) {
+      await adminClient
+        .from("periods")
+        .update({ activated_at: savedActivatedAt })
+        .eq("id", fixture.periodId);
+    }
     if (delErr) throw new Error(`mutation: delete criterion B item failed: ${delErr.message}`);
 
     // Phase 3 — fresh page session picks up the mutation. Same page instance

@@ -7,7 +7,7 @@ import {
   generateEntryToken,
   type ScoringFixture,
 } from "../helpers/scoringFixture";
-import { adminClient, readRubricScores } from "../helpers/supabaseAdmin";
+import { adminClient, readRubricScores, deleteScoreSheetsForJurorPeriod } from "../helpers/supabaseAdmin";
 
 /**
  * P0-E5 — Jury offline → reconnect → autosave flush.
@@ -80,12 +80,9 @@ test.describe("jury offline → reconnect → autosave flush (P0-E5)", () => {
       .eq("period_id", fixture.periodId);
     if (authErr) throw new Error(`reset juror_period_auth failed: ${authErr.message}`);
 
-    const { error: sheetErr } = await adminClient
-      .from("score_sheets")
-      .delete()
-      .eq("juror_id", fixture.jurorId)
-      .eq("period_id", fixture.periodId);
-    if (sheetErr) throw new Error(`clear score_sheets failed: ${sheetErr.message}`);
+    // Helper temporarily clears activated_at so block_score_sheet_delete
+    // does not fire on activated periods.
+    await deleteScoreSheetsForJurorPeriod(fixture.jurorId, fixture.periodId);
   });
 
   async function navigateToEval(page: Page): Promise<JuryEvalPom> {

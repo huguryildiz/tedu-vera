@@ -453,9 +453,11 @@ export async function reweightFixture(
   aWeight?: number,
   bWeight?: number,
 ): Promise<void> {
+  // Clear activated_at + is_locked so score_sheets DELETE trigger
+  // (block_score_sheet_delete) does not fire. Restored after the reweight.
   const { error: unlockErr } = await adminClient
     .from("periods")
-    .update({ is_locked: false })
+    .update({ is_locked: false, activated_at: null })
     .eq("id", fixture.periodId);
   if (unlockErr) {
     throw new Error(`reweightFixture unlock failed: ${unlockErr.message}`);

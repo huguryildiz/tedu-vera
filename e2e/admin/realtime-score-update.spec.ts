@@ -136,6 +136,21 @@ test.describe("realtime score update", () => {
       }
 
       // === Cleanup: Delete the inserted score ===
+      // The DELETE triggers (block_score_sheet_delete / block_score_sheet_item_delete)
+      // fire when period.activated_at IS NOT NULL. Clear it for cleanup, then restore.
+      const { data: periodRow } = await adminClient
+        .from("periods")
+        .select("activated_at")
+        .eq("id", fixture.periodId)
+        .single();
+      const savedActivatedAt = periodRow?.activated_at ?? null;
+      if (savedActivatedAt) {
+        await adminClient
+          .from("periods")
+          .update({ activated_at: null })
+          .eq("id", fixture.periodId);
+      }
+
       const { error: deleteItemErr } = await adminClient
         .from("score_sheet_items")
         .delete()
@@ -147,6 +162,13 @@ test.describe("realtime score update", () => {
         .delete()
         .eq("id", scoreSheetId);
       expect(deleteSheetErr).toBeNull();
+
+      if (savedActivatedAt) {
+        await adminClient
+          .from("periods")
+          .update({ activated_at: savedActivatedAt })
+          .eq("id", fixture.periodId);
+      }
 
       console.log("✓ Realtime score update verified and cleaned up");
     } finally {

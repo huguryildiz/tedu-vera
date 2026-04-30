@@ -4,6 +4,7 @@ import { JuryEvalPom } from "../poms/JuryEvalPom";
 import {
   resetJurorAuth,
   readRubricScores,
+  deleteScoreSheetsForJurorPeriod,
 } from "../helpers/supabaseAdmin";
 import { EVAL_PERIOD_ID, EVAL_JURORS } from "../fixtures/seed-ids";
 
@@ -37,16 +38,9 @@ test.describe("jury resume", () => {
     const targetJurorId: string = jurorBody?.[0]?.juror_id || RESUME_JUROR.id;
 
     await resetJurorAuth(targetJurorId, EVAL_PERIOD_ID);
-    await request.delete(
-      `${SUPABASE_URL}/rest/v1/score_sheets?juror_id=eq.${targetJurorId}&period_id=eq.${EVAL_PERIOD_ID}`,
-      {
-        headers: {
-          apikey: SERVICE_KEY,
-          Authorization: `Bearer ${SERVICE_KEY}`,
-          Prefer: "return=minimal",
-        },
-      },
-    );
+    // Helper bypasses block_score_sheet_delete by temporarily clearing
+    // activated_at, deleting, then restoring.
+    await deleteScoreSheetsForJurorPeriod(targetJurorId, EVAL_PERIOD_ID);
     const projectsLookup = await request.get(
       `${SUPABASE_URL}/rest/v1/projects?period_id=eq.${EVAL_PERIOD_ID}&select=id&limit=1`,
       {
@@ -95,16 +89,9 @@ test.describe("jury resume", () => {
       // resetJurorAuth, plus edit flags) and clear prior score_sheets so a
       // blur-write assertion sees a fresh row.
       await resetJurorAuth(RESUME_JUROR.id, EVAL_PERIOD_ID);
-      await request.delete(
-        `${SUPABASE_URL}/rest/v1/score_sheets?juror_id=eq.${RESUME_JUROR.id}&period_id=eq.${EVAL_PERIOD_ID}`,
-        {
-          headers: {
-            apikey: SERVICE_KEY,
-            Authorization: `Bearer ${SERVICE_KEY}`,
-            Prefer: "return=minimal",
-          },
-        },
-      );
+      // Helper bypasses block_score_sheet_delete by temporarily clearing
+      // activated_at, deleting, then restoring.
+      await deleteScoreSheetsForJurorPeriod(RESUME_JUROR.id, EVAL_PERIOD_ID);
     });
 
     async function installTourBypass(page: Parameters<Parameters<typeof test>[1]>[0]["page"]) {

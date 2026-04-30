@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { JuryPom } from "../poms/JuryPom";
 import { JuryEvalPom } from "../poms/JuryEvalPom";
 import { JuryCompletePom } from "../poms/JuryCompletePom";
-import { readRubricScores } from "../helpers/supabaseAdmin";
+import { readRubricScores, deleteScoreSheetsForJurorPeriod } from "../helpers/supabaseAdmin";
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
@@ -38,17 +38,9 @@ test.describe("jury evaluate flow", () => {
     }
     // Clean score_sheets only for the Blur juror used in C1 DB-validating tests,
     // so assertions on score_value always see a fresh write rather than stale rows.
-    // score_sheet_items cascade-deletes automatically.
-    await request.delete(
-      `${SUPABASE_URL}/rest/v1/score_sheets?juror_id=eq.${BLUR_JUROR_ID}&period_id=eq.${EVAL_PERIOD_ID}`,
-      {
-        headers: {
-          apikey: SERVICE_KEY,
-          Authorization: `Bearer ${SERVICE_KEY}`,
-          Prefer: "return=minimal",
-        },
-      },
-    );
+    // score_sheet_items cascade-deletes automatically. Helper temporarily clears
+    // activated_at so the block_score_sheet_delete trigger does not fire.
+    await deleteScoreSheetsForJurorPeriod(BLUR_JUROR_ID, EVAL_PERIOD_ID);
   });
 
   async function navigateToEval(

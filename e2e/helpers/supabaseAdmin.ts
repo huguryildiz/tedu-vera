@@ -237,6 +237,44 @@ export async function resetJurorAuth(jurorId: string, periodId: string): Promise
  * Uses the service-role client so RLS is bypassed — suitable for test assertions.
  * Returns an empty array if no sheets exist yet.
  */
+/**
+ * Delete score_sheets matching the filter, bypassing the
+ * `block_score_sheet_delete` trigger (which fires on activated periods).
+ *
+ * Captures the period's current `activated_at`, clears it for the delete, then
+ * restores it. Use only in test fixtures where the trigger needs to be
+ * bypassed for state reset.
+ */
+export async function deleteScoreSheetsForJurorPeriod(
+  jurorId: string,
+  periodId: string,
+): Promise<void> {
+  const { data: periodRow } = await adminClient
+    .from("periods")
+    .select("activated_at")
+    .eq("id", periodId)
+    .single();
+  const savedActivatedAt = periodRow?.activated_at ?? null;
+  if (savedActivatedAt) {
+    await adminClient
+      .from("periods")
+      .update({ activated_at: null })
+      .eq("id", periodId);
+  }
+  const { error } = await adminClient
+    .from("score_sheets")
+    .delete()
+    .eq("juror_id", jurorId)
+    .eq("period_id", periodId);
+  if (savedActivatedAt) {
+    await adminClient
+      .from("periods")
+      .update({ activated_at: savedActivatedAt })
+      .eq("id", periodId);
+  }
+  if (error) throw new Error(`deleteScoreSheetsForJurorPeriod failed: ${error.message}`);
+}
+
 export async function readRubricScores(jurorId: string, periodId: string) {
   const { data, error } = await adminClient
     .from("score_sheets")
