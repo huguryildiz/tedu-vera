@@ -1262,10 +1262,11 @@ export function formatSentence(log) {
   }
   if (action.startsWith("notification.")) {
     const type = action.replace("notification.", "");
-    return {
-      verb: `sent ${type.replace(/_/g, " ")} to`,
-      resource: d.recipientEmail || (Array.isArray(d.recipients) ? d.recipients.join(", ") : null),
-    };
+    const resource =
+      d.jurorName ||
+      d.recipientEmail ||
+      (Array.isArray(d.recipients) ? d.recipients.join(", ") : null);
+    return { verb: `sent ${type.replace(/_/g, " ")} to`, resource };
   }
 
   // ── Trigger-based CRUD fallback (table.insert/update/delete) ──

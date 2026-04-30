@@ -2474,7 +2474,7 @@ periodData.forEach(pd => {
       const jurorEntry = jurorIdList.find(j => j.id === a.jId);
       if (jurorEntry) {
         const jMail = jurorEmail(jurorEntry.n);
-        auditObjList.push({ action:'notification.juror_pin', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:adminId, details:`{"recipient_email":"${jMail}","juror_name":"${escapeSql(a.name)}","sent":true}`, timeStr:randSqlTs(ev, 1+i*3+1, evD*10+i*3+2) });
+        auditObjList.push({ action:'notification.juror_pin', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:adminId, details:`{"recipientEmail":"${jMail}","jurorName":"${escapeSql(a.name)}","periodName":"${escapeSql(pd.name)}","sent":true}`, timeStr:randSqlTs(ev, 1+i*3+1, evD*10+i*3+2) });
       }
     });
   }
