@@ -163,7 +163,7 @@ export default function AuditLogPage() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [severityFilter, setSeverityFilter] = useState("");
 
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize, setPageSize] = useState(15);
   const [currentPage, setCurrentPage] = useState(1);
 
   const {
@@ -931,7 +931,6 @@ export default function AuditLogPage() {
             onPageChange={setCurrentPage}
             onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
             itemLabel="events"
-            pageSizeOptions={[25, 50, 100]}
             hasMore={auditHasMore}
             onLoadMore={handleAuditLoadMore}
           />
