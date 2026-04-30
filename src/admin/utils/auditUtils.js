@@ -1392,7 +1392,7 @@ export function formatDiffChips(log) {
     const SKIP_KEYS = new Set([
       "created_at", "updated_at", "id", "organization_id",
       "user_id", "period_id", "framework_id",
-      "reviewed_by", "requester_id", "final_submitted_at",
+      "reviewed_by", "requester_id",
     ]);
     const formatVal = (k, v) => smartStringify(k, v);
     const allKeys = [...new Set([...Object.keys(before), ...Object.keys(after)])];
