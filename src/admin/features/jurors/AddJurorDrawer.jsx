@@ -20,16 +20,20 @@ const EMPTY = { name: "", affiliation: "", email: "" };
 
 export default function AddJurorDrawer({ open, onClose, onSave, periodName, error }) {
   const [form, setForm] = useState(EMPTY);
+  const [touched, setTouched] = useState({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
-    if (open) { setForm(EMPTY); setSaveError(""); setSaving(false); }
+    if (open) { setForm(EMPTY); setTouched({}); setSaveError(""); setSaving(false); }
   }, [open]);
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
+  const touch = (key) => setTouched((t) => ({ ...t, [key]: true }));
 
   const handleSave = async () => {
+    setTouched({ name: true, affiliation: true });
+    if (!form.name.trim() || !form.affiliation.trim()) return;
     setSaveError("");
     setSaving(true);
     try {
@@ -85,16 +89,17 @@ export default function AddJurorDrawer({ open, onClose, onSave, periodName, erro
               Full Name <span className="fs-field-req">*</span>
             </label>
             <input
-              className={`fs-input${!form.name.trim() ? " error" : ""}`}
+              className={`fs-input${touched.name && !form.name.trim() ? " error" : ""}`}
               type="text"
               placeholder="Prof. Dr. Sevgi Kahraman"
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
+              onBlur={() => touch("name")}
               disabled={saving}
               autoFocus
               data-testid="jurors-drawer-name"
             />
-            {!form.name.trim() && (
+            {touched.name && !form.name.trim() && (
               <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Full name is required.</p>
             )}
           </div>
@@ -104,15 +109,16 @@ export default function AddJurorDrawer({ open, onClose, onSave, periodName, erro
               Affiliation <span className="fs-field-req">*</span>
             </label>
             <input
-              className={`fs-input${!form.affiliation.trim() ? " error" : ""}`}
+              className={`fs-input${touched.affiliation && !form.affiliation.trim() ? " error" : ""}`}
               type="text"
               placeholder="TED University"
               value={form.affiliation}
               onChange={(e) => set("affiliation", e.target.value)}
+              onBlur={() => touch("affiliation")}
               disabled={saving}
               data-testid="jurors-drawer-affiliation"
             />
-            {!form.affiliation.trim() ? (
+            {touched.affiliation && !form.affiliation.trim() ? (
               <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Affiliation is required.</p>
             ) : (
               <div className="fs-field-helper hint">

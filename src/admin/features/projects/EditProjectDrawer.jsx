@@ -30,6 +30,7 @@ const HANDLE_SVG = (
 
 export default function EditProjectDrawer({ open, onClose, project, onSave, error }) {
   const [form, setForm] = useState({ title: "", advisor: "", description: "", members: [""] });
+  const [touched, setTouched] = useState({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
@@ -41,12 +42,14 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
         description: project.description ?? "",
         members: project.members?.length ? [...project.members] : [""],
       });
+      setTouched({});
       setSaveError("");
       setSaving(false);
     }
   }, [open, project]);
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
+  const touch = (key) => setTouched((t) => ({ ...t, [key]: true }));
 
   const setMember = (i, val) =>
     setForm((f) => { const m = [...f.members]; m[i] = val; return { ...f, members: m }; });
@@ -76,6 +79,8 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
   };
 
   const handleSave = async () => {
+    setTouched({ title: true });
+    if (!form.title.trim()) return;
     setSaveError("");
     setSaving(true);
     try {
@@ -200,19 +205,20 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
             </label>
             <textarea
               ref={titleRef}
-              className={`fs-textarea${!titleTrimmed ? " error" : ""}`}
+              className={`fs-textarea${touched.title && !titleTrimmed ? " error" : ""}`}
               placeholder="Project title"
               value={form.title}
               onChange={(e) => { set("title", e.target.value); autoResizeTitle(); }}
+              onBlur={() => touch("title")}
               disabled={saving}
               autoFocus
               rows={1}
               style={{ resize: "none", overflow: "hidden", minHeight: "40px", lineHeight: "1.5" }}
               data-testid="project-edit-drawer-title"
             />
-            {!titleTrimmed ? (
+            {touched.title && !titleTrimmed ? (
               <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Title is required.</p>
-            ) : (
+            ) : titleTrimmed ? (
               <div className="fs-field-helper" style={{ color: "var(--success, #22c55e)" }}>
                 <Icon
                   iconNode={[]}
@@ -224,7 +230,7 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
                   strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></Icon>
                 {" "}Looks good
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="fs-field">

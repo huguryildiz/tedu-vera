@@ -37,6 +37,7 @@ function formatRelative(ts) {
 
 export default function EditJurorDrawer({ open, onClose, juror, onSave, onResetPin, onRemove, error }) {
   const [form, setForm] = useState({ name: "", affiliation: "", email: "" });
+  const [touched, setTouched] = useState({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [pinCopied, setPinCopied] = useState(false);
@@ -44,6 +45,7 @@ export default function EditJurorDrawer({ open, onClose, juror, onSave, onResetP
   useEffect(() => {
     if (open && juror) {
       setForm({ name: juror.name ?? "", affiliation: juror.affiliation ?? "", email: juror.email ?? "" });
+      setTouched({});
       setSaveError("");
       setSaving(false);
       setPinCopied(false);
@@ -51,8 +53,11 @@ export default function EditJurorDrawer({ open, onClose, juror, onSave, onResetP
   }, [open, juror?.id]);
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
+  const touch = (key) => setTouched((t) => ({ ...t, [key]: true }));
 
   const handleSave = async () => {
+    setTouched({ name: true, affiliation: true });
+    if (!form.name.trim() || !form.affiliation.trim()) return;
     setSaveError("");
     setSaving(true);
     try {
@@ -124,14 +129,15 @@ export default function EditJurorDrawer({ open, onClose, juror, onSave, onResetP
           <div className="fs-field">
             <label className="fs-field-label">Full Name <span className="fs-field-req">*</span></label>
             <input
-              className={`fs-input${!form.name.trim() ? " error" : ""}`}
+              className={`fs-input${touched.name && !form.name.trim() ? " error" : ""}`}
               type="text"
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
+              onBlur={() => touch("name")}
               disabled={saving}
               data-testid="jurors-edit-drawer-name"
             />
-            {!form.name.trim() && (
+            {touched.name && !form.name.trim() && (
               <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Full name is required.</p>
             )}
           </div>
@@ -139,14 +145,15 @@ export default function EditJurorDrawer({ open, onClose, juror, onSave, onResetP
           <div className="fs-field">
             <label className="fs-field-label">Affiliation <span className="fs-field-req">*</span></label>
             <input
-              className={`fs-input${!form.affiliation.trim() ? " error" : ""}`}
+              className={`fs-input${touched.affiliation && !form.affiliation.trim() ? " error" : ""}`}
               type="text"
               value={form.affiliation}
               onChange={(e) => set("affiliation", e.target.value)}
+              onBlur={() => touch("affiliation")}
               disabled={saving}
               data-testid="jurors-edit-drawer-affiliation"
             />
-            {!form.affiliation.trim() && (
+            {touched.affiliation && !form.affiliation.trim() && (
               <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Affiliation is required.</p>
             )}
           </div>
