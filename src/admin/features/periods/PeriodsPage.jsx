@@ -16,6 +16,7 @@ import {
   deletePeriod,
   listPeriodStats,
   requestPeriodUnlock,
+  resolveUnlockRequest,
   listUnlockRequests,
   checkPeriodReadiness,
   publishPeriod,
@@ -60,7 +61,7 @@ export default function PeriodsPage() {
     bgRefresh,
   } = useAdminContext();
   const _toast = useToast();
-  const { activeOrganization } = useAuth();
+  const { activeOrganization, isSuper } = useAuth();
   const rowsScopeRef = useCardSelection();
   const setMessage = (msg) => { if (msg) _toast.success(msg); };
   const [panelError, setPanelErrorState] = useState("");
@@ -397,6 +398,29 @@ export default function PeriodsPage() {
   async function handleRevertPeriod() {
     if (!revertTarget) return;
     const target = revertTarget;
+    const pendingRequest = pendingRequests[target.id];
+
+    // Super admin approving a pending unlock request: bypass the
+    // request-revert detour and resolve the request directly.
+    if (isSuper && pendingRequest?.id) {
+      const result = await resolveUnlockRequest(pendingRequest.id, "approved", null);
+      if (!result?.ok) {
+        _toast.error(
+          result?.error_code === "request_not_pending"
+            ? "This request was already resolved"
+            : `Failed to approve revert for ${target.name || "period"}`
+        );
+        setRevertTarget(null);
+        return;
+      }
+      periods.applyPeriodPatch({ id: target.id, is_locked: false, closed_at: null });
+      storageClearRawToken(target.id);
+      reloadPendingRequests();
+      _toast.success(`Approved revert for ${target.name || "period"} — period unlocked`);
+      setRevertTarget(null);
+      return;
+    }
+
     // Underlying RPC remains rpc_admin_set_period_lock (wrapped by
     // setEvalLock). Server rejects when scores exist, prompting the
     // request-revert flow.
@@ -720,6 +744,7 @@ export default function PeriodsPage() {
           readiness={periodReadiness}
           frameworks={frameworks}
           pendingRequests={pendingRequests}
+          isSuper={isSuper}
           openMenuId={openMenuId}
           setOpenMenuId={setOpenMenuId}
           getState={getState}

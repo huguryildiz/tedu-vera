@@ -36,6 +36,7 @@ function PeriodRow({
   readiness,
   frameworks,
   pendingRequests,
+  isSuper,
   openMenuId,
   setOpenMenuId,
   onCurrentPeriodChange,
@@ -379,10 +380,18 @@ function PeriodRow({
           )}
 
           <div className="floating-menu-divider" />
-          {period.is_locked && pendingRequests[period.id] ? (
+          {period.is_locked && pendingRequests[period.id] && !isSuper ? (
             <button className="floating-menu-item" disabled>
               <LockOpen size={13} />
               Revert Requested — awaiting super admin
+            </button>
+          ) : period.is_locked && pendingRequests[period.id] && isSuper ? (
+            <button
+              className="floating-menu-item"
+              onMouseDown={() => { setOpenMenuId(null); onRevert(period); }}
+            >
+              <LockOpen size={13} />
+              Approve Revert Request
             </button>
           ) : period.is_locked ? (
             <button
@@ -453,6 +462,7 @@ export default function PeriodsTable({
   readiness,
   frameworks,
   pendingRequests,
+  isSuper,
   openMenuId,
   setOpenMenuId,
   getState,
@@ -474,6 +484,7 @@ export default function PeriodsTable({
         readiness={readiness}
         frameworks={frameworks}
         pendingRequests={pendingRequests}
+        isSuper={isSuper}
         openMenuId={openMenuId}
         setOpenMenuId={setOpenMenuId}
         onCurrentPeriodChange={onCurrentPeriodChange}
@@ -487,7 +498,7 @@ export default function PeriodsTable({
         onDelete={rowHandlers.onDelete}
       />
     );
-  }), [pagedRows, stats, readiness, frameworks, pendingRequests, openMenuId, setOpenMenuId, getState, onCurrentPeriodChange, onNavigate, rowHandlers]);
+  }), [pagedRows, stats, readiness, frameworks, pendingRequests, isSuper, openMenuId, setOpenMenuId, getState, onCurrentPeriodChange, onNavigate, rowHandlers]);
 
   return (
     <div className="periods-table-scroll">
