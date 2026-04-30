@@ -9,7 +9,7 @@ import { useAuth } from "@/auth";
 import { useToast } from "@/shared/hooks/useToast";
 import useCardSelection from "@/shared/hooks/useCardSelection";
 import { useManageOrganizations } from "@/admin/shared/useManageOrganizations";
-import { Icon } from "lucide-react";
+import { Icon, Database } from "lucide-react";
 import { updateOrganization, listUnlockRequests, resolveUnlockRequest, deleteOrganization } from "@/shared/api";
 import {
   GlobalSettingsDrawer,
@@ -703,14 +703,8 @@ export default function OrganizationsPage() {
                       onClick: () => setGlobalSettingsOpen(true),
                     },
                     {
-                      label: "Export & Backup",
-                      icon: <Icon
-                        iconNode={[]}
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        style={{ width: 14, height: 14 }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></Icon>,
+                      label: "Database Backups",
+                      icon: <Database size={14} strokeWidth={2} />,
                       onClick: () => setExportBackupOpen(true),
                     },
                     {
