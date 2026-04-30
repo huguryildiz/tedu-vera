@@ -387,7 +387,7 @@ export default function JurorsPage() {
         <div className="jurors-page-header-top">
           <div className="jurors-page-header-left">
             <div className="page-title">Jurors</div>
-            <div className="page-desc">Manage juror assignments, progress, access, and scoring activity across the active term.</div>
+            <div className="page-desc">Manage juror assignments, progress, access, and scoring activity across the live term.</div>
           </div>
           <div className="sem-header-actions mobile-toolbar-stack">
             <div className="admin-search-wrap mobile-toolbar-search">

@@ -466,7 +466,7 @@ export default function AnalyticsPage() {
         <div className="analytics-header-left">
           <div className="page-title">Programme Outcome Analytics</div>
           <div className="page-desc">
-            Outcome attainment &amp; continuous improvement evidence
+            Outcome attainment &amp; continuous improvement evidence.
           </div>
         </div>
         <div className="analytics-actions">
@@ -693,7 +693,7 @@ export default function AnalyticsPage() {
           <div className="chart-header">
             <div>
               <div className="chart-title">Rubric Achievement Distribution</div>
-              <div className="chart-subtitle">Performance band breakdown per criterion — continuous improvement evidence</div>
+              <div className="chart-subtitle">Performance band breakdown per criterion — continuous improvement evidence.</div>
             </div>
           </div>
           <div className="chart-body" id="pdf-chart-rubric">
@@ -731,7 +731,7 @@ export default function AnalyticsPage() {
       <div className="insight-banner insight-banner-full">
         <InfoIcon />
         <div>
-          Rubric bands provide <strong>continuous improvement evidence</strong>; programme averages with ±1σ highlight criteria with high <strong>assessment variability</strong>.
+          Rubric bands provide <strong>continuous improvement evidence.</strong>; programme averages with ±1σ highlight criteria with high <strong>assessment variability</strong>.
         </div>
       </div>
 

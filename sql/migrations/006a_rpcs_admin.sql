@@ -1625,3 +1625,406 @@ $$;
 -- Service role only — no public/authenticated/anon grant
 REVOKE ALL ON FUNCTION public.rpc_platform_metrics() FROM PUBLIC, authenticated, anon;
 
+-- =============================================================================
+-- Score aggregation RPCs (single source of truth)
+-- =============================================================================
+-- Three RPCs replace the parallel JS-side aggregations in `getProjectSummary`,
+-- `ProjectsPage.projectAvgMap`, `ProjectScoresDrawer.finalScore`,
+-- `JurorScoresDrawer.avgScore`, and `RankingsPage`. All compute on the same
+-- filter — `score_sheets.status = 'submitted'` AND (when `p_only_finalized`
+-- is true) `juror_period_auth.final_submitted_at IS NOT NULL`.
+--
+-- Default `p_only_finalized = true` is for official/accreditation views
+-- (Rankings, Projects, Drawers, Export, Outcome Attainment). Set to false
+-- for live-monitoring views (Heatmap, JurorsPage live status) where partial
+-- data must be visible.
+--
+-- Common shape:
+--   total_max  := SUM(period_criteria.max_score) for the period
+--   juror_total[i,p] := SUM(score_value[i,p]) for juror i × project p
+--   juror_pct[i,p]   := juror_total[i,p] / total_max * 100
+--
+-- Per-project: AVG / MIN / MAX / stddev_pop over juror_pct, RANK by total_avg.
+-- Per-juror:   AVG / stddev_pop over juror_pct (across all projects scored).
+-- Period:      AVG over per-project total_pct + AVG over per-juror avg_total_pct.
+
+-- =============================================================================
+-- rpc_admin_period_summary
+-- =============================================================================
+-- Returns ONE row of period-wide reference values. Drawers use this to compute
+-- "vs avg" deltas (project's total_pct vs avg_total_pct, juror's avg_total_pct
+-- vs avg_juror_pct). Cheaper than recomputing the period mean on every drawer
+-- open.
+
+CREATE OR REPLACE FUNCTION public.rpc_admin_period_summary(
+  p_period_id        UUID,
+  p_only_finalized   BOOLEAN DEFAULT true
+)
+RETURNS TABLE (
+  total_max         NUMERIC,
+  total_projects    INT,
+  ranked_count      INT,
+  total_jurors      INT,
+  finalized_jurors  INT,
+  avg_total_pct     NUMERIC,
+  avg_juror_pct     NUMERIC
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_org_id UUID;
+BEGIN
+  SELECT organization_id INTO v_org_id FROM periods WHERE id = p_period_id;
+  IF v_org_id IS NULL THEN
+    RAISE EXCEPTION 'period_not_found';
+  END IF;
+
+  IF NOT (
+    current_user_is_super_admin()
+    OR EXISTS (
+      SELECT 1 FROM memberships
+      WHERE user_id = auth.uid() AND organization_id = v_org_id
+    )
+  ) THEN
+    RAISE EXCEPTION 'unauthorized';
+  END IF;
+
+  RETURN QUERY
+  WITH period_max AS (
+    SELECT COALESCE(SUM(max_score), 0)::numeric AS total_max
+    FROM period_criteria
+    WHERE period_id = p_period_id
+  ),
+  sheets AS (
+    SELECT ss.id, ss.project_id, ss.juror_id
+    FROM score_sheets ss
+    JOIN juror_period_auth jpa
+      ON jpa.juror_id = ss.juror_id AND jpa.period_id = ss.period_id
+    WHERE ss.period_id = p_period_id
+      AND CASE
+            WHEN p_only_finalized THEN jpa.final_submitted_at IS NOT NULL
+            ELSE ss.status = 'submitted'
+          END
+  ),
+  juror_totals AS (
+    SELECT s.project_id, s.juror_id, SUM(ssi.score_value)::numeric AS juror_total
+    FROM sheets s
+    JOIN score_sheet_items ssi ON ssi.score_sheet_id = s.id
+    GROUP BY s.project_id, s.juror_id
+  ),
+  juror_pct AS (
+    SELECT
+      jt.project_id, jt.juror_id, jt.juror_total,
+      CASE
+        WHEN (SELECT total_max FROM period_max) > 0
+          THEN jt.juror_total / (SELECT total_max FROM period_max) * 100
+        ELSE NULL
+      END AS pct
+    FROM juror_totals jt
+  ),
+  project_pct AS (
+    SELECT project_id, AVG(pct) AS total_pct, AVG(juror_total) AS total_avg
+    FROM juror_pct
+    GROUP BY project_id
+  ),
+  juror_avg_pct AS (
+    SELECT juror_id, AVG(pct) AS avg_pct
+    FROM juror_pct
+    GROUP BY juror_id
+  )
+  SELECT
+    (SELECT total_max FROM period_max)::numeric                      AS total_max,
+    (SELECT COUNT(*)::int FROM projects WHERE period_id = p_period_id) AS total_projects,
+    (SELECT COUNT(*)::int FROM project_pct WHERE total_avg IS NOT NULL) AS ranked_count,
+    (SELECT COUNT(*)::int FROM juror_period_auth WHERE period_id = p_period_id) AS total_jurors,
+    (SELECT COUNT(*)::int FROM juror_period_auth
+       WHERE period_id = p_period_id AND final_submitted_at IS NOT NULL)        AS finalized_jurors,
+    (SELECT AVG(total_pct) FROM project_pct)::numeric                AS avg_total_pct,
+    (SELECT AVG(avg_pct) FROM juror_avg_pct)::numeric                AS avg_juror_pct;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.rpc_admin_period_summary(UUID, BOOLEAN) TO authenticated;
+
+-- =============================================================================
+-- rpc_admin_project_summary
+-- =============================================================================
+-- Returns one row per project with all aggregations needed by ProjectsPage,
+-- ProjectScoresDrawer, RankingsPage, and Export. `per_criterion` is a JSONB
+-- map { criterion_key: { avg, max, pct } } so drawers can render the
+-- criterion strip without extra queries.
+
+CREATE OR REPLACE FUNCTION public.rpc_admin_project_summary(
+  p_period_id        UUID,
+  p_only_finalized   BOOLEAN DEFAULT true
+)
+RETURNS TABLE (
+  project_id        UUID,
+  title             TEXT,
+  project_no        INT,
+  members           JSONB,
+  advisor           TEXT,
+  juror_count       INT,
+  submitted_count   INT,
+  assigned_count    INT,
+  total_avg         NUMERIC,
+  total_pct         NUMERIC,
+  total_min         NUMERIC,
+  total_max         NUMERIC,
+  std_dev_pct       NUMERIC,
+  rank              INT,
+  per_criterion     JSONB
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_org_id UUID;
+BEGIN
+  SELECT organization_id INTO v_org_id FROM periods WHERE id = p_period_id;
+  IF v_org_id IS NULL THEN
+    RAISE EXCEPTION 'period_not_found';
+  END IF;
+
+  IF NOT (
+    current_user_is_super_admin()
+    OR EXISTS (
+      SELECT 1 FROM memberships
+      WHERE user_id = auth.uid() AND organization_id = v_org_id
+    )
+  ) THEN
+    RAISE EXCEPTION 'unauthorized';
+  END IF;
+
+  RETURN QUERY
+  WITH period_max AS (
+    SELECT COALESCE(SUM(pc.max_score), 0)::numeric AS pmax
+    FROM period_criteria pc
+    WHERE pc.period_id = p_period_id
+  ),
+  sheets AS (
+    SELECT ss.id, ss.project_id, ss.juror_id
+    FROM score_sheets ss
+    JOIN juror_period_auth jpa
+      ON jpa.juror_id = ss.juror_id AND jpa.period_id = ss.period_id
+    WHERE ss.period_id = p_period_id
+      AND CASE
+            WHEN p_only_finalized THEN jpa.final_submitted_at IS NOT NULL
+            ELSE ss.status = 'submitted'
+          END
+  ),
+  juror_totals AS (
+    SELECT s.project_id, s.juror_id, SUM(ssi.score_value)::numeric AS juror_total
+    FROM sheets s
+    JOIN score_sheet_items ssi ON ssi.score_sheet_id = s.id
+    GROUP BY s.project_id, s.juror_id
+  ),
+  juror_pct AS (
+    SELECT
+      jt.project_id,
+      jt.juror_id,
+      jt.juror_total,
+      CASE
+        WHEN (SELECT pmax FROM period_max) > 0
+          THEN jt.juror_total / (SELECT pmax FROM period_max) * 100
+        ELSE NULL
+      END AS pct
+    FROM juror_totals jt
+  ),
+  project_totals AS (
+    SELECT
+      jp.project_id,
+      AVG(jp.juror_total)::numeric           AS p_total_avg,
+      AVG(jp.pct)::numeric                   AS p_total_pct,
+      MIN(jp.juror_total)::numeric           AS p_total_min,
+      MAX(jp.juror_total)::numeric           AS p_total_max,
+      stddev_pop(jp.pct)::numeric            AS p_std_dev_pct,
+      COUNT(*)::int                          AS p_juror_count
+    FROM juror_pct jp
+    GROUP BY jp.project_id
+  ),
+  per_crit AS (
+    SELECT
+      s.project_id,
+      pc.key,
+      AVG(ssi.score_value)::numeric AS crit_avg,
+      pc.max_score::numeric         AS crit_max
+    FROM sheets s
+    JOIN score_sheet_items ssi ON ssi.score_sheet_id = s.id
+    JOIN period_criteria pc    ON pc.id = ssi.period_criterion_id
+    WHERE ssi.score_value IS NOT NULL
+    GROUP BY s.project_id, pc.key, pc.max_score
+  ),
+  ranked AS (
+    SELECT
+      pt.project_id,
+      RANK() OVER (ORDER BY pt.p_total_avg DESC NULLS LAST, pt.project_id)::int AS rk
+    FROM project_totals pt
+  ),
+  assigned AS (
+    SELECT ss.project_id, COUNT(*)::int AS ac
+    FROM score_sheets ss
+    WHERE ss.period_id = p_period_id
+    GROUP BY ss.project_id
+  )
+  SELECT
+    p.id                                       AS project_id,
+    p.title                                    AS title,
+    p.project_no                               AS project_no,
+    p.members::jsonb                           AS members,
+    p.advisor_name                             AS advisor,
+    COALESCE(pt.p_juror_count, 0)              AS juror_count,
+    COALESCE(pt.p_juror_count, 0)              AS submitted_count,
+    COALESCE(a.ac, 0)                          AS assigned_count,
+    pt.p_total_avg                             AS total_avg,
+    pt.p_total_pct                             AS total_pct,
+    pt.p_total_min                             AS total_min,
+    pt.p_total_max                             AS total_max,
+    pt.p_std_dev_pct                           AS std_dev_pct,
+    r.rk                                       AS rank,
+    COALESCE(
+      (SELECT jsonb_object_agg(
+                pc.key,
+                jsonb_build_object(
+                  'avg', pc.crit_avg,
+                  'max', pc.crit_max,
+                  'pct', CASE WHEN pc.crit_max > 0
+                              THEN pc.crit_avg / pc.crit_max * 100
+                              ELSE NULL END
+                )
+              )
+       FROM per_crit pc WHERE pc.project_id = p.id),
+      '{}'::jsonb
+    )                                          AS per_criterion
+  FROM projects p
+  LEFT JOIN project_totals pt ON pt.project_id = p.id
+  LEFT JOIN ranked r          ON r.project_id  = p.id
+  LEFT JOIN assigned a        ON a.project_id  = p.id
+  WHERE p.period_id = p_period_id
+  ORDER BY p.title;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.rpc_admin_project_summary(UUID, BOOLEAN) TO authenticated;
+
+-- =============================================================================
+-- rpc_admin_juror_summary
+-- =============================================================================
+-- Returns one row per juror in the period with their evaluation stats.
+-- JurorsPage and JurorScoresDrawer consume this directly.
+
+CREATE OR REPLACE FUNCTION public.rpc_admin_juror_summary(
+  p_period_id        UUID,
+  p_only_finalized   BOOLEAN DEFAULT true
+)
+RETURNS TABLE (
+  juror_id            UUID,
+  juror_name          TEXT,
+  affiliation         TEXT,
+  scored_count        INT,
+  assigned_count      INT,
+  completion_pct      NUMERIC,
+  avg_total           NUMERIC,
+  avg_total_pct       NUMERIC,
+  std_dev_pct         NUMERIC,
+  final_submitted_at  TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_org_id UUID;
+BEGIN
+  SELECT organization_id INTO v_org_id FROM periods WHERE id = p_period_id;
+  IF v_org_id IS NULL THEN
+    RAISE EXCEPTION 'period_not_found';
+  END IF;
+
+  IF NOT (
+    current_user_is_super_admin()
+    OR EXISTS (
+      SELECT 1 FROM memberships
+      WHERE user_id = auth.uid() AND organization_id = v_org_id
+    )
+  ) THEN
+    RAISE EXCEPTION 'unauthorized';
+  END IF;
+
+  RETURN QUERY
+  WITH period_max AS (
+    SELECT COALESCE(SUM(pc.max_score), 0)::numeric AS pmax
+    FROM period_criteria pc
+    WHERE pc.period_id = p_period_id
+  ),
+  sheets AS (
+    SELECT ss.id, ss.project_id, ss.juror_id
+    FROM score_sheets ss
+    JOIN juror_period_auth jpa
+      ON jpa.juror_id = ss.juror_id AND jpa.period_id = ss.period_id
+    WHERE ss.period_id = p_period_id
+      AND CASE
+            WHEN p_only_finalized THEN jpa.final_submitted_at IS NOT NULL
+            ELSE ss.status = 'submitted'
+          END
+  ),
+  juror_totals AS (
+    SELECT s.project_id, s.juror_id, SUM(ssi.score_value)::numeric AS juror_total
+    FROM sheets s
+    JOIN score_sheet_items ssi ON ssi.score_sheet_id = s.id
+    GROUP BY s.project_id, s.juror_id
+  ),
+  juror_pct AS (
+    SELECT
+      jt.juror_id,
+      jt.juror_total,
+      CASE
+        WHEN (SELECT pmax FROM period_max) > 0
+          THEN jt.juror_total / (SELECT pmax FROM period_max) * 100
+        ELSE NULL
+      END AS pct
+    FROM juror_totals jt
+  ),
+  juror_stats AS (
+    SELECT
+      jp.juror_id,
+      AVG(jp.juror_total)::numeric AS j_avg_total,
+      AVG(jp.pct)::numeric         AS j_avg_pct,
+      stddev_pop(jp.pct)::numeric  AS j_std_dev_pct,
+      COUNT(*)::int                AS j_scored
+    FROM juror_pct jp
+    GROUP BY jp.juror_id
+  ),
+  assigned_per_juror AS (
+    SELECT ss.juror_id, COUNT(*)::int AS ac
+    FROM score_sheets ss
+    WHERE ss.period_id = p_period_id
+    GROUP BY ss.juror_id
+  )
+  SELECT
+    j.id                                              AS juror_id,
+    j.juror_name                                      AS juror_name,
+    j.affiliation                                     AS affiliation,
+    COALESCE(js.j_scored, 0)                          AS scored_count,
+    COALESCE(a.ac, 0)                                 AS assigned_count,
+    CASE WHEN COALESCE(a.ac, 0) > 0
+         THEN (COALESCE(js.j_scored, 0)::numeric / a.ac * 100)
+         ELSE NULL END                                AS completion_pct,
+    js.j_avg_total                                    AS avg_total,
+    js.j_avg_pct                                      AS avg_total_pct,
+    js.j_std_dev_pct                                  AS std_dev_pct,
+    jpa.final_submitted_at                            AS final_submitted_at
+  FROM juror_period_auth jpa
+  JOIN jurors j ON j.id = jpa.juror_id
+  LEFT JOIN juror_stats js        ON js.juror_id = jpa.juror_id
+  LEFT JOIN assigned_per_juror a  ON a.juror_id  = jpa.juror_id
+  WHERE jpa.period_id = p_period_id
+  ORDER BY j.juror_name;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.rpc_admin_juror_summary(UUID, BOOLEAN) TO authenticated;
+

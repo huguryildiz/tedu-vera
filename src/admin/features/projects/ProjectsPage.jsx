@@ -378,7 +378,7 @@ export default function ProjectsPage() {
       <div className="sem-header">
         <div className="sem-header-left">
           <div className="page-title">Projects</div>
-          <div className="page-desc">Manage project records, student teams, and evaluation coverage for the active term.</div>
+          <div className="page-desc">Manage project records, student teams, and evaluation coverage for the live term.</div>
         </div>
         <div className="sem-header-actions mobile-toolbar-stack">
           <div className="admin-search-wrap mobile-toolbar-search">

@@ -20,20 +20,6 @@ import JurorBadge from "@/admin/shared/JurorBadge";
 import UnlockAllModal from "./UnlockAllModal";
 import UnlockPinModal from "./UnlockPinModal";
 
-function groupBarColor(scored, total) {
-  if (total === 0) return "var(--text-tertiary)";
-  if (scored >= total) return "var(--success)";
-  if (scored > 0) return "var(--warning)";
-  return "var(--text-tertiary)";
-}
-
-function groupTextClass(scored, total) {
-  if (total === 0) return "jurors-table-groups jt-zero";
-  if (scored >= total) return "jurors-table-groups jt-done";
-  if (scored > 0) return "jurors-table-groups jt-partial";
-  return "jurors-table-groups jt-zero";
-}
-
 function formatAgo(iso) {
   if (!iso) return "just now";
   const secs = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
@@ -205,7 +191,6 @@ export default function PinBlockingPage() {
                 <thead>
                   <tr>
                     <th>Juror</th>
-                    <th className="text-center">Progress</th>
                     <th className="text-right">Failed Attempts</th>
                     <th>Lock Started</th>
                     <th>Unlock ETA</th>
@@ -215,13 +200,13 @@ export default function PinBlockingPage() {
                 <tbody ref={lockScopeRef}>
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="text-sm text-muted" style={{ textAlign: "center", padding: "18px 0" }}>
+                      <td colSpan={5} className="text-sm text-muted" style={{ textAlign: "center", padding: "18px 0" }}>
                         Loading…
                       </td>
                     </tr>
                   ) : lockedJurors.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-sm text-muted" style={{ textAlign: "center", padding: "18px 0" }}>
+                      <td colSpan={5} className="text-sm text-muted" style={{ textAlign: "center", padding: "18px 0" }}>
                         No active lockouts.
                       </td>
                     </tr>
@@ -230,24 +215,6 @@ export default function PinBlockingPage() {
                       <tr key={j.jurorId} data-card-selectable="">
                         <td data-label="Juror">
                           <JurorBadge name={j.jurorName} affiliation={j.affiliation} size="sm" />
-                        </td>
-                        <td className="col-projects text-center" data-label="Progress">
-                          {(() => {
-                            const total = j.totalProjects || 0;
-                            const scored = j.completedProjects || 0;
-                            const pct = total > 0 ? Math.round((scored / total) * 100) : 0;
-                            return (
-                              <span className={groupTextClass(scored, total)}>
-                                {scored} / {total}
-                                <span className="jurors-group-bar">
-                                  <span
-                                    className="jurors-group-bar-fill"
-                                    style={{ width: `${pct}%`, background: groupBarColor(scored, total) }}
-                                  />
-                                </span>
-                              </span>
-                            );
-                          })()}
                         </td>
                         <td className={`col-fails${!j.failedAttempts ? " missing" : ""}`} data-label="Failed Attempts">
                           <span className="fails-desktop">{j.failedAttempts ?? "—"}</span>

@@ -301,7 +301,7 @@ export default function OverviewPage() {
       <div className="overview-heading-row" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
           <div className="page-title">Overview</div>
-          <div className="page-desc">Real-time evaluation progress and jury activity</div>
+          <div className="page-desc">Real-time evaluation progress and jury activity.</div>
         </div>
       </div>
 
