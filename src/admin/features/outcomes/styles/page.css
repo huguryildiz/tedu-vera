@@ -6,7 +6,7 @@
 
 #page-accreditation .sem-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
   gap: 16px;

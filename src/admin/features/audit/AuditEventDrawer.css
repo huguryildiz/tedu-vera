@@ -258,6 +258,7 @@
   padding: 12px 14px;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 .audit-drawer-empty-tab {
   padding: 24px 0 16px;
