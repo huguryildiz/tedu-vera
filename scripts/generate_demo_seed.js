@@ -2611,6 +2611,140 @@ periodData.forEach(pd => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════════
+// UNLOCK REQUESTS
+// 1-2 examples per activated period per org. Mixed statuses:
+//   histIdx=1 → approved (used alongside the existing period.unlock audit events)
+//   histIdx=2 → rejected
+//   isCur     → pending (no reviewed_by / reviewed_at)
+// The unique constraint allows only one pending per period, so only one
+// pending per org (the current period) is seeded here.
+// ═══════════════════════════════════════════════════════════════
+out.push('');
+out.push('-- Unlock requests');
+
+const unlockReasons = {
+  approved: [
+    "Criterion 3 label has a typo that was published by mistake. The label affects juror interpretation — it must be corrected before rankings are shared with the committee.",
+    "Outcome mapping for CS-4 was accidentally left as 'indirect' instead of 'direct'. This changes attainment percentages and must be fixed before the official report.",
+    "Two projects were assigned to the wrong group due to a data import error. Reverting to Draft is the only way to reassign them without corrupting existing scores.",
+  ],
+  rejected: [
+    "Requesting revert to adjust the period name from 'Spring 2024' to 'Spring 2024 — Final'. This is cosmetic and does not justify reopening a closed evaluation.",
+    "Would like to add a new juror who missed the evaluation window. Adding jurors post-evaluation is outside accreditation policy — scores cannot be reopened for this reason.",
+    "Criterion weights were configured correctly. The requester confused weight percentages with max score values. No structural issue exists.",
+  ],
+  pending: [
+    "Rubric band for the 'Oral Presentation' criterion uses incorrect score ranges (overlap between band 3 and 4). This must be corrected before results are submitted to the accreditation board.",
+    "One project title contains a confidential internal code name that must be anonymised before the report is sent to external reviewers.",
+  ],
+};
+
+const reviewNotes = {
+  approved: [
+    "Verified the issue. The typo is confirmed in the published criterion label. Approved — please correct and re-lock within 48 hours.",
+    "Confirmed the mapping error via the outcomes report. Approved with the condition that no score values are changed, only the mapping type.",
+    "Cross-checked the project assignments. The import error is real. Approved — reassign and re-lock immediately.",
+  ],
+  rejected: [
+    "Period name changes do not require a revert to Draft. Update the display name via the period settings instead.",
+    "Post-evaluation juror additions are not permitted under the current accreditation framework. Request rejected.",
+    "Reviewed the criterion config — weights are correct as configured. Request rejected; no action required.",
+  ],
+};
+
+periodData.forEach((pd, _pi) => {
+  const o = orgs.find(x => x.code === pd.org);
+  if (!o) return;
+  const adminId = adminFor(pd.org);
+  if (!adminId) return;
+
+  // Only activated (non-draft) periods get unlock requests
+  // pd.histIdx: 0 = current, 1 = first historical, 2 = second, etc.
+  // isCur = histIdx 0
+  let status, reviewedBy, reviewedAt, reviewNote, reasonPool, reviewNotePool, requestTs, resolveTs;
+
+  if (pd.isCur) {
+    // Current period → pending request (no resolution yet)
+    status = 'pending';
+    reviewedBy = 'NULL';
+    reviewedAt = 'NULL';
+    reviewNote = null;
+    reasonPool = unlockReasons.pending;
+    requestTs = randSqlTs(pd.evalDay, pd.evalDays * 24 + 24, pd.evalDays * 24 + 120);
+    resolveTs = null;
+  } else if (pd.histIdx === 1) {
+    // First historical period → approved (ties into existing period.unlock audit)
+    status = 'approved';
+    reviewedBy = `'${demoAdminId}'`;
+    reasonPool = unlockReasons.approved;
+    reviewNotePool = reviewNotes.approved;
+    requestTs = randSqlTs(pd.evalDay, pd.evalDays * 24 + 200, pd.evalDays * 24 + 230);
+    resolveTs = randSqlTs(pd.evalDay, pd.evalDays * 24 + 235, pd.evalDays * 24 + 260);
+    const rnIdx = orgs.findIndex(x => x.code === pd.org) % reviewNotePool.length;
+    reviewNote = reviewNotePool[rnIdx];
+    reviewedAt = resolveTs;
+  } else if (pd.histIdx === 2) {
+    // Second historical period → rejected
+    status = 'rejected';
+    reviewedBy = `'${demoAdminId}'`;
+    reasonPool = unlockReasons.rejected;
+    reviewNotePool = reviewNotes.rejected;
+    requestTs = randSqlTs(pd.start, 240, 480);
+    resolveTs = randSqlTs(pd.start, 485, 600);
+    const rnIdx2 = orgs.findIndex(x => x.code === pd.org) % reviewNotePool.length;
+    reviewNote = reviewNotePool[rnIdx2];
+    reviewedAt = resolveTs;
+  } else {
+    // Older historical periods — skip to avoid noise
+    return;
+  }
+
+  const reasonIdx = orgs.findIndex(x => x.code === pd.org) % reasonPool.length;
+  const reason = reasonPool[reasonIdx];
+  const urId = uuid(`unlock-req-${pd.org}-${pd.histIdx}`);
+  const reviewedBySql = reviewedBy || 'NULL';
+  const reviewedAtSql = reviewedAt || 'NULL';
+  const reviewNoteSql = reviewNote ? `'${escapeSql(reviewNote)}'` : 'NULL';
+
+  out.push(`INSERT INTO unlock_requests (id, period_id, organization_id, requested_by, reason, status, reviewed_by, reviewed_at, review_note, created_at) VALUES ('${urId}', '${pd.id}', '${o.id}', '${adminId}', '${escapeSql(reason)}', '${status}', ${reviewedBySql}, ${reviewedAtSql}, ${reviewNoteSql}, ${requestTs}) ON CONFLICT DO NOTHING;`);
+
+  // Audit: unlock_request.create
+  const adminNm = (orgAdminNames[pd.org] || [])[0] || '';
+  auditObjList.push({
+    action: 'unlock_request.create',
+    resType: 'unlock_requests',
+    resId: urId,
+    orgId: o.id,
+    userId: adminId,
+    actorName: adminNm,
+    ip: randIp(),
+    ua: randUserAgent(),
+    sessionId: randSessionId(`ur-create-${pd.id}`),
+    details: `{"unlock_request_id":"${urId}","period_id":"${pd.id}","periodName":"${escapeSql(pd.name)}","reason":"${escapeSql(reason.substring(0, 80))}..."}`,
+    timeStr: requestTs,
+  });
+
+  // Audit: unlock_request.resolve (only for approved/rejected)
+  if (status !== 'pending' && resolveTs) {
+    auditObjList.push({
+      action: 'unlock_request.resolve',
+      resType: 'unlock_requests',
+      resId: urId,
+      orgId: o.id,
+      userId: demoAdminId,
+      actorName: 'Vera Platform Admin',
+      ip: randIp(),
+      ua: randUserAgent(),
+      sessionId: randSessionId(`ur-resolve-${pd.id}`),
+      details: `{"unlock_request_id":"${urId}","period_id":"${pd.id}","periodName":"${escapeSql(pd.name)}","decision":"${status}","review_note":"${escapeSql((reviewNote || '').substring(0, 60))}..."}`,
+      timeStr: resolveTs,
+    });
+  }
+});
+
+out.push('');
+
 // ─── SECURITY ANOMALY — failed login burst for TEDU-EE ───
 // 5 rapid failed login attempts from a non-pool IP → triggers anomaly signal
 {
