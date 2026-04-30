@@ -2,6 +2,14 @@
 
 /* ── From vera.css 3086-3230: Entry control page ── */
 /* ─── ENTRY CONTROL ─── */
+/* KPI strip — status badge */
+.ec-kpi-status-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--font);font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:99px;letter-spacing:0.1px;line-height:1.5}
+.ec-kpi-status-badge--active{background:var(--success-soft);color:var(--success)}
+.ec-kpi-status-badge--expired{background:var(--danger-soft);color:var(--danger)}
+.ec-kpi-status-badge--none{background:var(--surface-1);color:var(--text-tertiary)}
+.ec-kpi-status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+/* KPI strip — sessions denominator */
+.ec-kpi-sessions-denom{font-family:var(--font);font-size:10px;font-weight:500;color:var(--text-tertiary);letter-spacing:0}
 .progress-bar{height:6px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-top:6px}
 .progress-fill{height:100%;border-radius:99px;background:var(--accent);transition:width .3s}
 /* ── Entry Control Premium Styles ── */

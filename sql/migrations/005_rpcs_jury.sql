@@ -656,6 +656,8 @@ DECLARE
   v_diff            JSONB;
   v_before          JSONB;
   v_after           JSONB;
+  v_assigned_count  INT;
+  v_submitted_count INT;
 BEGIN
   v_session_hash := encode(digest(p_session_token, 'sha256'), 'hex');
 
@@ -673,6 +675,30 @@ BEGIN
 
   IF v_auth_row.is_blocked THEN
     RETURN jsonb_build_object('ok', false, 'error_code', 'juror_blocked')::JSON;
+  END IF;
+
+  -- Integrity guard: a juror can only finalize once every assigned project
+  -- sheet is fully submitted. "Assigned" = score_sheets row exists for this
+  -- (juror, period). UI already gates the Submit button, but the RPC must
+  -- enforce this independently — otherwise direct callers could set
+  -- final_submitted_at while sheets are still in_progress, breaking the
+  -- invariant relied on by admin aggregation RPCs (final_submitted_at
+  -- IS NOT NULL ⟹ all sheets submitted).
+  SELECT COUNT(*) INTO v_assigned_count
+  FROM score_sheets
+  WHERE juror_id = p_juror_id AND period_id = p_period_id;
+
+  SELECT COUNT(*) INTO v_submitted_count
+  FROM score_sheets
+  WHERE juror_id = p_juror_id AND period_id = p_period_id AND status = 'submitted';
+
+  IF v_assigned_count = 0 OR v_submitted_count < v_assigned_count THEN
+    RETURN jsonb_build_object(
+      'ok',         false,
+      'error_code', 'incomplete_evaluations',
+      'submitted',  v_submitted_count,
+      'assigned',   v_assigned_count
+    )::JSON;
   END IF;
 
   UPDATE juror_period_auth

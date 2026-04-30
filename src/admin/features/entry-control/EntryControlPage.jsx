@@ -33,7 +33,6 @@ import {
   fmtExpiryHeadline,
   fmtExpiryCompact,
   fmtRelative,
-  fmtTokenPrefix,
   toTimestampMs,
   isExpiringSoon,
 } from "./components/entryControlHelpers";
@@ -524,10 +523,7 @@ export default function EntryControlPage() {
   const activeSessionsCount = typeof status?.active_session_count === "number"
     ? status.active_session_count
     : (typeof status?.active_juror_count === "number" ? status.active_juror_count : null);
-  const totalSessionsCount = typeof status?.total_sessions === "number" ? status.total_sessions : null;
   const activeSessions = activeSessionsCount ?? "—";
-  const lastActivityLabel = fmtRelative(status?.last_activity) || "—";
-  const tokenPrefixLabel = hasToken ? (fmtTokenPrefix(status?.token_prefix) || "ACTIVE") : "—";
   const entryUrlLabel = (() => {
     if (!entryUrl) return "";
     try {
@@ -752,42 +748,47 @@ export default function EntryControlPage() {
 
       <div className="scores-kpi-strip">
         <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value">{tokenPrefixLabel}</div>
-          <div className="scores-kpi-item-label">Active Token</div>
+          <div className="scores-kpi-item-value">
+            {hasToken && isActive ? (
+              <span className="ec-kpi-status-badge ec-kpi-status-badge--active">
+                <span className="ec-kpi-status-dot" />Active
+              </span>
+            ) : hasToken ? (
+              <span className="ec-kpi-status-badge ec-kpi-status-badge--expired">
+                <span className="ec-kpi-status-dot" />Expired
+              </span>
+            ) : (
+              <span className="ec-kpi-status-badge ec-kpi-status-badge--none">No Token</span>
+            )}
+          </div>
+          <div className="scores-kpi-item-label">Token Status</div>
         </div>
         <div className="scores-kpi-item">
           <div className="scores-kpi-item-value">
-            {hasToken && isActive ? (
-              activeSessionsCount != null && totalSessionsCount != null ? (
-                <>
-                  <span className="success">{activeSessionsCount}</span>
-                  <span> / </span>
-                  <span>{totalSessionsCount}</span>
-                </>
-              ) : (
-                activeSessions
-              )
+            {hasToken && isActive && activeSessionsCount != null ? (
+              <>
+                <span className="success">{activeSessionsCount}</span>
+                {allJurors.length > 0 && (
+                  <span className="ec-kpi-sessions-denom"> of {allJurors.length}</span>
+                )}
+              </>
             ) : "—"}
           </div>
-          <div className="scores-kpi-item-label">Active Sessions</div>
+          <div className="scores-kpi-item-label">Live Sessions</div>
         </div>
         <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value" style={expirySoon ? { color: "var(--danger)" } : undefined}>
+          <div className={`scores-kpi-item-value${expirySoon ? " danger" : ""}`}>
             {expiryCompact || (status?.expires_at ? fmtDate(status.expires_at) : "—")}
           </div>
-          <div className="scores-kpi-item-label">Expires</div>
-        </div>
-        <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value">{lastActivityLabel}</div>
-          <div className="scores-kpi-item-label">Last Activity</div>
-        </div>
-        <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value">{revokedCount}</div>
-          <div className="scores-kpi-item-label">Revoked</div>
+          <div className="scores-kpi-item-label">Expires In</div>
         </div>
         <div className="scores-kpi-item">
           <div className="scores-kpi-item-value"><span className="success">{totalEntries}</span></div>
           <div className="scores-kpi-item-label">Total Entries</div>
+        </div>
+        <div className="scores-kpi-item">
+          <div className="scores-kpi-item-value">{revokedCount}</div>
+          <div className="scores-kpi-item-label">Revoked Tokens</div>
         </div>
       </div>
 
