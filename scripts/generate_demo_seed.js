@@ -85,6 +85,18 @@ function randSqlTs(dateStr, minH, maxH) {
   return sqlTs(dateStr, randInt(minH, maxH) + randInt(0, 59) / 60);
 }
 
+// Cap hour offsets for the current-period demo day so timestamps never cross midnight.
+// sqlTs() anchors at 09:00; base 09:00 + 13 h = 22:00 on the same calendar day.
+const MAX_CUR_H = 13;
+function capH(minH, maxH, isCur) {
+  if (!isCur) return [minH, maxH];
+  return [Math.min(minH, MAX_CUR_H), Math.min(maxH, MAX_CUR_H)];
+}
+function cRandSqlTs(dateStr, minH, maxH, isCur) {
+  const [safeMin, safeMax] = capH(minH, maxH, isCur);
+  return randSqlTs(dateStr, safeMin, safeMax);
+}
+
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════
@@ -2100,12 +2112,13 @@ authList.forEach(auth => {
   const jurorIdx = jurorIdList.findIndex(j => j.id === auth.jId);
   const bias = jurorBiases[jurorIdx % jurorBiases.length];
 
-  // Scoring time clustering: 70% during 09-17, 20% during 17-22, 10% next day
+  // Scoring time clustering: 70% during 09-17, 20% during 17-22, 10% next day (historical only)
+  // Current-period jurors stay same-day to avoid future timestamps (TODAY + offset > midnight).
   const timeRoll = random();
   let evalHourMin, evalHourMax;
   if (timeRoll < 0.70) { evalHourMin = 0; evalHourMax = 8; }       // 09:00-17:00 (base is 09:00)
-  else if (timeRoll < 0.90) { evalHourMin = 8; evalHourMax = 13; }  // 17:00-22:00
-  else { evalHourMin = 15; evalHourMax = 23; }                       // next day morning
+  else if (timeRoll < 0.90 || auth.isCur) { evalHourMin = 8; evalHourMax = 13; }  // 17:00-22:00
+  else { evalHourMin = 15; evalHourMax = 23; }                       // next day morning (historical only)
 
   let scoredCount = 0;
   myProjs.forEach(proj => {
@@ -2120,7 +2133,8 @@ authList.forEach(auth => {
       ssStatus = 'submitted'; // locked jurors submitted before PIN lockout; lock is captured in juror_period_auth
     }
     const ssId = uuid(`ss-${auth.jId}-${proj.id}`);
-    const sstH = randInt(evalHourMin + scoredCount * 0.3, evalHourMax + scoredCount * 0.3) + randInt(0, 59) / 60;
+    const rawSstH = randInt(evalHourMin + scoredCount * 0.3, evalHourMax + scoredCount * 0.3) + randInt(0, 59) / 60;
+    const sstH = auth.isCur ? Math.min(rawSstH, MAX_CUR_H) : rawSstH;
     const sst = sqlTs(auth.evalDay, sstH);
     projSstData.set(`${auth.jId}-${proj.id}`, sstH);
 
@@ -2417,7 +2431,7 @@ periodData.forEach(pd => {
   // auth.admin.login.success around eval day — method "password"
   if (adminId) {
     auditObjList.push({ action:'auth.admin.login.success', resType:'profiles', resId:adminId, orgId:o.id, userId:adminId, details:`{"method":"password","organization_id":"${o.id}"}`, timeStr:randSqlTs(ev, -2, 2) });
-    if (pd.isCur) auditObjList.push({ action:'auth.admin.login.success', resType:'profiles', resId:adminId, orgId:o.id, userId:adminId, details:`{"method":"password","organization_id":"${o.id}"}`, timeStr:randSqlTs(ev, evD*8, evD*16) });
+    if (pd.isCur) auditObjList.push({ action:'auth.admin.login.success', resType:'profiles', resId:adminId, orgId:o.id, userId:adminId, details:`{"method":"password","organization_id":"${o.id}"}`, timeStr:cRandSqlTs(ev, evD*8, evD*16, pd.isCur) });
   }
 
   // token.generate — admin creates entry token before eval day
@@ -2476,7 +2490,7 @@ periodData.forEach(pd => {
   myAuths.filter(a => a.semanticState==='Editing').forEach(a => {
     const durationMin = 30;
     const expiresAt = new Date(new Date().getTime() + durationMin * 60000).toISOString();
-    auditObjList.push({ action:'data.juror.edit_mode.granted', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:adminId, details:`{"juror_id":"${a.jId}","juror_name":"${escapeSql(a.name)}","reason":"Late submission due to connectivity issue","duration_minutes":${durationMin},"expires_at":"${expiresAt}"}`, timeStr:randSqlTs(ev, evD*8, evD*14) });
+    auditObjList.push({ action:'data.juror.edit_mode.granted', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:adminId, details:`{"juror_id":"${a.jId}","juror_name":"${escapeSql(a.name)}","reason":"Late submission due to connectivity issue","duration_minutes":${durationMin},"expires_at":"${expiresAt}"}`, timeStr:cRandSqlTs(ev, evD*8, evD*14, pd.isCur) });
   });
 
   // data.juror.edit_mode.closed — historical periods, 1 completed juror (closed by resubmit)
@@ -2489,7 +2503,7 @@ periodData.forEach(pd => {
   // data.score.edit_requested — completed juror requests edit mode after submitting (current + histIdx<=1)
   if (pd.isCur || pd.histIdx <= 1) {
     myAuths.filter(a => a.semanticState==='Completed').slice(0, 1).forEach(a => {
-      auditObjList.push({ action:'data.score.edit_requested', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, actorType:'juror', actorName:a.name, details:`{"jurorName":"${escapeSql(a.name)}","periodName":"${escapeSql(pd.name)}","orgName":"${escapeSql(o.name)}","sent":true}`, timeStr:randSqlTs(ev, evD*14+1, evD*16) });
+      auditObjList.push({ action:'data.score.edit_requested', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, actorType:'juror', actorName:a.name, details:`{"jurorName":"${escapeSql(a.name)}","periodName":"${escapeSql(pd.name)}","orgName":"${escapeSql(o.name)}","sent":true}`, timeStr:cRandSqlTs(ev, evD*14+1, evD*16, pd.isCur) });
     });
   }
 
@@ -2500,7 +2514,7 @@ periodData.forEach(pd => {
       const jurorEntry = jurorIdList.find(j => j.id === a.jId);
       if (jurorEntry) {
         const jMail = jurorEmail(jurorEntry.n);
-        auditObjList.push({ action:'notification.juror_pin', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:adminId, details:`{"recipientEmail":"${jMail}","jurorName":"${escapeSql(a.name)}","periodName":"${escapeSql(pd.name)}","sent":true}`, timeStr:randSqlTs(ev, 1+i*3+1, evD*10+i*3+2) });
+        auditObjList.push({ action:'notification.juror_pin', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:adminId, details:`{"recipientEmail":"${jMail}","jurorName":"${escapeSql(a.name)}","periodName":"${escapeSql(pd.name)}","sent":true}`, timeStr:cRandSqlTs(ev, 1+i*3+1, evD*10+i*3+2, pd.isCur) });
       }
     });
   }
@@ -2516,7 +2530,7 @@ periodData.forEach(pd => {
 
   // export.scores — xlsx
   if (pd.isCur && myProjs.length > 0) {
-    auditObjList.push({ action:'export.scores', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","format":"xlsx","row_count":${Math.min(myProjs.length * myJurors.length, 100)}}`, timeStr:randSqlTs(ev, evD*12, evD*18) });
+    auditObjList.push({ action:'export.scores', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","format":"xlsx","row_count":${Math.min(myProjs.length * myJurors.length, 100)}}`, timeStr:cRandSqlTs(ev, evD*12, evD*18, pd.isCur) });
   } else if (!pd.isCur && pd.histIdx <= 2) {
     auditObjList.push({ action:'export.scores', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","format":"xlsx","row_count":45}`, timeStr:sqlTs(ev, (evD+10)*24) });
   }
@@ -2529,17 +2543,17 @@ periodData.forEach(pd => {
   // export.rankings + export.heatmap + export.analytics + notification.export_report (current periods)
   if (pd.isCur) {
     const scoredCount = myAuths.filter(a => a.semanticState === 'Completed').length;
-    auditObjList.push({ action:'export.rankings', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","format":"pdf","row_count":${Math.max(10, Math.floor(scoredCount * 0.6))}}`, timeStr:randSqlTs(ev, evD*8+2, evD*20) });
-    auditObjList.push({ action:'export.heatmap', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","format":"pdf","juror_count":${myJurors.length},"project_count":${myProjs.length}}`, timeStr:randSqlTs(ev, evD*10, evD*18) });
-    auditObjList.push({ action:'export.analytics', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","format":"pdf"}`, timeStr:randSqlTs(ev, evD*12+1, evD*20) });
+    auditObjList.push({ action:'export.rankings', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","format":"pdf","row_count":${Math.max(10, Math.floor(scoredCount * 0.6))}}`, timeStr:cRandSqlTs(ev, evD*8+2, evD*20, pd.isCur) });
+    auditObjList.push({ action:'export.heatmap', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","format":"pdf","juror_count":${myJurors.length},"project_count":${myProjs.length}}`, timeStr:cRandSqlTs(ev, evD*10, evD*18, pd.isCur) });
+    auditObjList.push({ action:'export.analytics', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","format":"pdf"}`, timeStr:cRandSqlTs(ev, evD*12+1, evD*20, pd.isCur) });
     const reportRecipients = (orgAdminNames[pd.org] || []).slice(0, 2).map(nm => adminEmailFor(nm));
-    auditObjList.push({ action:'notification.export_report', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"recipients":${JSON.stringify(reportRecipients)},"period_id":"${pd.id}"}`, timeStr:randSqlTs(ev, evD*14, evD*22) });
+    auditObjList.push({ action:'notification.export_report', resType:'score_sheets', resId:pd.id, orgId:o.id, userId:adminId, details:`{"recipients":${JSON.stringify(reportRecipients)},"period_id":"${pd.id}"}`, timeStr:cRandSqlTs(ev, evD*14, evD*22, pd.isCur) });
   }
 
   // export.audit — current + first historical of first 2 orgs
   if (pd.isCur || (pd.histIdx === 1 && orgs.indexOf(o) < 2)) {
     const rowCount = pd.isCur ? randInt(80, 200) : randInt(40, 120);
-    auditObjList.push({ action:'export.audit', resType:'audit_logs', resId:pd.id, orgId:o.id, userId:adminId, details:`{"format":"csv","row_count":${rowCount},"period_id":"${pd.id}"}`, timeStr:randSqlTs(ev, evD*16, evD*24) });
+    auditObjList.push({ action:'export.audit', resType:'audit_logs', resId:pd.id, orgId:o.id, userId:adminId, details:`{"format":"csv","row_count":${rowCount},"period_id":"${pd.id}"}`, timeStr:cRandSqlTs(ev, evD*16, evD*24, pd.isCur) });
   }
 
   // export.backup — once per org at histIdx===1
