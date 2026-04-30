@@ -108,7 +108,7 @@ export default function UnlockRequestsPanel({
               {!unlockLoading && pagedUnlockRows.map((r) => (
                 <tr key={r.id} data-status={r.status} data-card-selectable>
                   <td data-label="Organization"><strong>{r.organization_name || "—"}</strong></td>
-                  <td data-label="Period">{r.period_name || "—"}</td>
+                  <td data-label="Period"><strong>{r.period_name || "—"}</strong></td>
                   <td data-label="Requester">
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                       <Avatar
@@ -126,10 +126,17 @@ export default function UnlockRequestsPanel({
                   <td data-label="Status"><TenantStatusPill status={r.status} /></td>
                   {unlockTab !== "pending" && (
                     <td data-label="Reviewed" style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-                      <div>{r.reviewer_name || "—"}</div>
-                      <div className="vera-datetime-text">{r.reviewed_at ? formatDateTime(r.reviewed_at) : ""}</div>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                        <Avatar
+                          initials={jurorInitials(r.reviewer_name || r.reviewer_email)}
+                          bg="var(--accent)"
+                          size={28}
+                        />
+                        <span style={{ fontFamily: "var(--mono)", fontSize: 11 }}>{r.reviewer_name || "—"}</span>
+                      </span>
+                      <div className="vera-datetime-text" style={{ marginTop: 3 }}>{r.reviewed_at ? formatDateTime(r.reviewed_at) : ""}</div>
                       {r.review_note && (
-                        <div style={{ marginTop: 4, fontStyle: "italic" }}>"{r.review_note}"</div>
+                        <div className="unlock-review-note">{r.review_note}</div>
                       )}
                     </td>
                   )}

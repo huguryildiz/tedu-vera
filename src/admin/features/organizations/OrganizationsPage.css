@@ -8,6 +8,20 @@
   display: none;
 }
 
+/* ── Unlock request review note box ─────────────────────────── */
+.unlock-review-note {
+  padding: 8px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--text-primary) 3%, transparent); /* nested-panel-ok: quote box */
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
 /* ── Organizations page (super-admin) — mobile portrait ─────── */
 @media (max-width: 768px) and (orientation: portrait) {
   #page-platform-control .page-desc {
@@ -381,6 +395,7 @@
     font-weight: 600;
     color: var(--accent);
     white-space: nowrap;
+    text-align: right;
   }
   #page-platform-control .unlock-requests-table tbody td[data-label="Period"] strong {
     display: inline-block;
@@ -460,7 +475,7 @@
     justify-content: center;
   }
   #page-platform-control .unlock-requests-table tbody td[data-label="Actions"] .btn-primary {
-    flex: 2;
+    flex: 1;
     width: auto !important;
     min-height: 32px;
     height: auto !important;
@@ -481,6 +496,10 @@
     color: var(--text-secondary);
     border-top: 1px solid var(--border) !important;
     margin-top: 2px;
+  }
+  #page-platform-control .unlock-requests-table .unlock-review-note {
+    margin-top: 6px;
+    width: 100%;
   }
 }
 

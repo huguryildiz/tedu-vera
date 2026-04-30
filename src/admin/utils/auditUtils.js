@@ -1321,6 +1321,31 @@ export function formatSentence(log) {
  * Return diff entries for update events.
  * @returns {{ key: string, from: string|null, to: string|null }[]}
  */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function smartStringify(k, v) {
+  if (v == null) return null;
+  if (k && k.endsWith("_at")) return formatDateTime(v);
+  if (Array.isArray(v)) {
+    const items = v.map((item) => {
+      if (item == null) return null;
+      if (typeof item === "object") {
+        return item.name ?? item.full_name ?? item.label ?? item.title ?? item.email ?? null;
+      }
+      return String(item);
+    }).filter(Boolean);
+    return items.length ? items.join("; ").slice(0, 80) : null;
+  }
+  if (typeof v === "object") {
+    const s = v.name ?? v.full_name ?? v.label ?? v.title ?? v.email;
+    if (s != null) return String(s).slice(0, 60);
+    return null;
+  }
+  const s = String(v);
+  if (UUID_RE.test(s.trim())) return null;
+  return s.slice(0, 60);
+}
+
 export function formatDiffChips(log) {
   const d = log.details || {};
   const action = log.action || "";
@@ -1331,8 +1356,8 @@ export function formatDiffChips(log) {
       .slice(0, 4)
       .map(([key, val]) => ({
         key,
-        from: val?.from != null ? String(val.from) : null,
-        to:   val?.to   != null ? String(val.to)   : null,
+        from: val?.from != null ? smartStringify(key, val.from) : null,
+        to:   val?.to   != null ? smartStringify(key, val.to)   : null,
       }));
   }
 
@@ -1340,8 +1365,8 @@ export function formatDiffChips(log) {
   if ((action === "period.update" || action === "periods.update") && Array.isArray(d.changedFields)) {
     return d.changedFields.slice(0, 3).map((field) => ({
       key:  field,
-      from: d.oldValues?.[field] != null ? String(d.oldValues[field]) : null,
-      to:   d.newValues?.[field] != null ? String(d.newValues[field]) : null,
+      from: d.oldValues?.[field] != null ? smartStringify(field, d.oldValues[field]) : null,
+      to:   d.newValues?.[field] != null ? smartStringify(field, d.newValues[field]) : null,
     }));
   }
 
@@ -1352,17 +1377,20 @@ export function formatDiffChips(log) {
     const SKIP_KEYS = new Set([
       "created_at", "updated_at", "id", "organization_id",
       "user_id", "period_id", "framework_id",
+      "reviewed_by", "requester_id", "final_submitted_at",
     ]);
+    const formatVal = (k, v) => smartStringify(k, v);
     const allKeys = [...new Set([...Object.keys(before), ...Object.keys(after)])];
     const changed = allKeys.filter(
       (k) => !SKIP_KEYS.has(k) && JSON.stringify(before[k]) !== JSON.stringify(after[k])
     );
     if (changed.length > 0) {
-      return changed.slice(0, 4).map((k) => ({
-        key:  k.replace(/_/g, " "),
-        from: before[k] != null ? String(before[k]).slice(0, 60) : null,
-        to:   after[k]  != null ? String(after[k]).slice(0, 60)  : null,
-      }));
+      return changed.slice(0, 4).flatMap((k) => {
+        const from = formatVal(k, before[k]);
+        const to   = formatVal(k, after[k]);
+        if (from == null && to == null) return [];
+        return [{ key: k.replace(/_/g, " "), from, to }];
+      });
     }
   }
 
