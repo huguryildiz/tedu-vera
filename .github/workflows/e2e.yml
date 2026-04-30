@@ -465,3 +465,81 @@ jobs:
           name: visual-regression-results-${{ github.run_number }}
           path: test-results/
           retention-days: 14
+
+  update-visual-snapshots:
+    name: Update visual snapshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Only allow explicit dispatch — never run on push/PR/schedule.
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Use a token with push rights so the commit step can push back.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get Playwright version
+        id: pw-version
+        run: echo "version=$(node -e "console.log(require('./node_modules/@playwright/test/package.json').version)")" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium --with-deps
+
+      - name: Install Playwright system deps (cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Start local Supabase + seed
+        id: supabase
+        uses: ./.github/actions/start-local-supabase
+
+      - name: Regenerate visual snapshots (linux baselines)
+        run: npm run e2e -- --project=visual --update-snapshots
+        env:
+          CI: true
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/playwright-results.json
+          VITE_SUPABASE_URL:           ${{ steps.supabase.outputs.url }}
+          VITE_SUPABASE_ANON_KEY:      ${{ steps.supabase.outputs.anon_key }}
+          VITE_RPC_SECRET:             e2e-local-rpc-secret
+          SUPABASE_SERVICE_ROLE_KEY:   ${{ steps.supabase.outputs.service_role_key }}
+          E2E_SUPABASE_URL:            ${{ steps.supabase.outputs.url }}
+          VITE_DEMO_MODE:              "true"
+          VITE_DEMO_ADMIN_EMAIL:       "demo-admin@vera-eval.app"
+          VITE_DEMO_ADMIN_PASSWORD:    "E2eLocal!Admin123"
+          VITE_DEMO_ENTRY_TOKEN:       "demo-tedu-ee"
+          VITE_E2E:                    "true"
+          E2E_ADMIN_EMAIL:             "demo-admin@vera-eval.app"
+          E2E_ADMIN_PASSWORD:          "E2eLocal!Admin123"
+
+      - name: Commit updated snapshots
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add e2e/visual/admin-routes.spec.ts-snapshots/
+          if git diff --cached --quiet; then
+            echo "No snapshot changes — baselines already up to date."
+          else
+            git commit -m "chore(visual): refresh linux baseline snapshots [skip ci]"
+            git push
+          fi
