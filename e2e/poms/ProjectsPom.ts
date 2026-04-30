@@ -35,8 +35,14 @@ export class ProjectsPom extends BasePom {
 
   async waitForReady(): Promise<void> {
     await expect(this.addBtn()).toBeVisible();
-    // Wait for viewPeriodId to be set — the placeholder only renders when it is empty.
-    await expect(this.noPeriodPlaceholder()).toHaveCount(0, { timeout: 10000 });
+    // Wait until the page reaches a post-load state where viewPeriodId is set.
+    // "projects-period-ready" renders when a period is selected but has no projects;
+    // "project-row" renders when projects exist. Both are absent during initial
+    // loading (hasPeriods=false, viewPeriodId="") so this correctly blocks until
+    // loadPeriods completes and the period is auto-selected.
+    await expect(
+      this.page.locator('[data-testid="projects-period-ready"], [data-testid="project-row"]').first()
+    ).toBeVisible({ timeout: 15_000 });
   }
 
   async openCreateDrawer(): Promise<void> {

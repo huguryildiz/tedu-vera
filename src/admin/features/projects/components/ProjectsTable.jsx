@@ -135,7 +135,7 @@ export default function ProjectsTable({
                       </div>
                     </div>
                   ) : (
-                    <div className="vera-es-no-data">
+                    <div className="vera-es-no-data" data-testid="projects-period-ready">
                       <div className="vera-es-ghost-rows" aria-hidden="true">
                         <div className="vera-es-ghost-row" style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 14px" }}>
                           <div className="vera-es-ghost-num" />

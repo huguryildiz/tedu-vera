@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { listAuditLogs, logExportInitiated } from "@/shared/api";
 import {
   AUDIT_PAGE_SIZE,
+  NOISY_SYSTEM_ACTIONS,
   formatAuditTimestamp,
   getAuditDateRangeError,
   buildAuditParams,
@@ -50,8 +51,10 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
   const [auditExporting, setAuditExporting] = useState(false);
   const [showAllAuditLogs, setShowAllAuditLogs] = useState(false);
   const [auditTotalCount, setAuditTotalCount] = useState(null);
+  const [showSystemEvents, setShowSystemEvents] = useState(false);
 
   const auditSearchRef = useRef("");
+  const showSystemEventsRef = useRef(false);
   const auditTimerRef = useRef(null);
   const auditScrollRef = useRef(null);
   const auditSentinelRef = useRef(null);
@@ -72,10 +75,14 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
   const showAuditSkeleton = auditLoading && auditLogs.length === 0;
   const isAuditStaleRefresh = auditLoading && auditLogs.length > 0;
 
-  // ── Keep ref in sync with state ───────────────────────────
+  // ── Keep refs in sync with state ─────────────────────────
   useEffect(() => {
     auditSearchRef.current = auditSearch;
   }, [auditSearch]);
+
+  useEffect(() => {
+    showSystemEventsRef.current = showSystemEvents;
+  }, [showSystemEvents]);
 
   // ── Hide "show all" toggle when it's no longer needed ─────
   useEffect(() => {
@@ -102,7 +109,8 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
       return;
     }
     try {
-      const params = buildAuditParams(filters || defaultAuditFilters, AUDIT_PAGE_SIZE, cursor, searchTerm);
+      const excludeActions = showSystemEventsRef.current ? null : NOISY_SYSTEM_ACTIONS;
+      const params = buildAuditParams(filters || defaultAuditFilters, AUDIT_PAGE_SIZE, cursor, searchTerm, excludeActions);
       const { data: rawRows, totalCount } = await listAuditLogs({ ...params, organizationId, includeNullOrg: isSuper });
       const rows = rawRows || [];
       if (mode === "append") {
@@ -138,6 +146,13 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
     if (!organizationId) return;
     loadAuditLogs(auditFilters, { mode: "replace", cursor: null });
   }, [organizationId, auditFilters, loadAuditLogs]);
+
+  // ── Reload when showSystemEvents toggle changes ───────────
+  useEffect(() => {
+    if (!organizationId) return;
+    loadAuditLogs(auditFilters, { mode: "replace", cursor: null });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSystemEvents]);
 
   // ── Debounced search refetch ──────────────────────────────
   useEffect(() => {
@@ -223,7 +238,8 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
       let all = [];
       let loops = 0;
       while (true) {
-        const params = buildAuditParams(auditFilters, pageSize, cursor, auditSearch);
+        const exportExclude = showSystemEvents ? null : NOISY_SYSTEM_ACTIONS;
+        const params = buildAuditParams(auditFilters, pageSize, cursor, auditSearch, exportExclude);
         const { data: rows } = await listAuditLogs({ ...params, organizationId, includeNullOrg: isSuper });
         if (!rows || rows.length === 0) break;
         all = [...all, ...rows];
@@ -273,6 +289,8 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
     auditExporting,
     showAllAuditLogs,
     setShowAllAuditLogs,
+    showSystemEvents,
+    setShowSystemEvents,
     // Refs
     auditScrollRef,
     auditSentinelRef,

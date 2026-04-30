@@ -51,6 +51,9 @@ function applyAuditFilters(query, filters) {
   if (filters.actions?.length) {
     query = query.in("action", filters.actions);
   }
+  if (filters.excludeActions?.length) {
+    query = query.not("action", "in", `(${filters.excludeActions.join(",")})`);
+  }
   if (filters.categories?.length) {
     query = query.in("category", filters.categories);
   }

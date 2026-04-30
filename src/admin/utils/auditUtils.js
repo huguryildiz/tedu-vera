@@ -19,6 +19,19 @@ import { jurorInitials, jurorAvatarBg, jurorAvatarFg } from "./jurorIdentity";
 
 export const AUDIT_PAGE_SIZE = 50;
 
+// Trigger-fired structural events that are voluminous and low-signal for admins.
+// Hidden by default; visible when showSystemEvents is enabled.
+export const NOISY_SYSTEM_ACTIONS = [
+  "score_sheets.insert",
+  "score_sheets.update",
+  "framework_outcomes.insert",
+  "framework_outcomes.update",
+  "period_criteria.insert",
+  "period_criteria.update",
+  "period_criterion_outcome_maps.insert",
+  "period_criterion_outcome_maps.update",
+];
+
 export const CATEGORY_META = {
   auth:     { label: "Auth",     cssClass: "cat-auth",     color: "#3b82f6" },
   access:   { label: "Access",   cssClass: "cat-access",   color: "#8b5cf6" },
@@ -174,7 +187,7 @@ export const getAuditDateRangeError = (filters) => {
 // Converts UI filter state into the RPC parameter object for
 // rpc_admin_list_audit_logs.
 
-export const buildAuditParams = (filters, limit, cursor, searchText) => {
+export const buildAuditParams = (filters, limit, cursor, searchText, excludeActions) => {
   let startAt = null;
   let endAt = null;
 
@@ -209,6 +222,7 @@ export const buildAuditParams = (filters, limit, cursor, searchText) => {
     searchDay: searchDate?.day || null,
     searchMonth: searchDate?.month || null,
     searchYear: searchDate?.year || null,
+    excludeActions: excludeActions?.length ? excludeActions : null,
   };
 };
 

@@ -17,6 +17,7 @@ import CustomSelect from "@/shared/ui/CustomSelect";
 import { getActorInfo, formatActionLabel, formatActionDetail, formatSentence, formatDiffChips, detectAnomalies, CATEGORY_META, SEVERITY_META, groupBulkEvents, formatEventMeta, addDaySeparators } from "@/admin/utils/auditUtils";
 import { AUDIT_TABLE_COLUMNS } from "@/admin/utils/auditColumns";
 import AuditEventDrawer from "./AuditEventDrawer";
+import JurorBadge from "@/admin/shared/JurorBadge";
 import useCardSelection from "@/shared/hooks/useCardSelection";
 import Pagination from "@/shared/ui/Pagination";
 import "./AuditLogPage.css";
@@ -184,6 +185,8 @@ export default function AuditLogPage() {
     handleAuditExport,
     scheduleAuditRefresh,
     formatAuditTimestamp,
+    showSystemEvents,
+    setShowSystemEvents,
   } = useAuditLogFilters({ organizationId, isMobile: false, setMessage });
 
   usePageRealtime({
@@ -692,16 +695,17 @@ export default function AuditLogPage() {
                           <span className={`audit-chip audit-chip-${chip.type}`}>{chip.label}</span>
                         </td>
                         <td className="audit-actor" data-label="Actor">
-                          <div
-                            className={`audit-actor-avatar${actor.type === "system" ? " audit-actor-system" : ""}`}
-                            style={actor.bg ? { background: actor.bg, color: actor.fg } : undefined}
-                          >
-                            {actor.type === "system" ? <Clock size={13} /> : actor.initials}
-                          </div>
-                          <div className="audit-actor-info">
-                            <div className="audit-actor-name">{actor.name}</div>
-                            <div className="audit-actor-role">{actor.role}</div>
-                          </div>
+                          {actor.type === "system" ? (
+                            <>
+                              <div className="audit-actor-avatar audit-actor-system"><Clock size={13} /></div>
+                              <div className="audit-actor-info">
+                                <div className="audit-actor-name" style={{ color: "var(--text-tertiary)" }}>{actor.name}</div>
+                                <div className="audit-actor-role">{actor.role}</div>
+                              </div>
+                            </>
+                          ) : (
+                            <JurorBadge name={actor.name} affiliation={actor.role} size="md" />
+                          )}
                         </td>
                         <td data-label="Action">
                           <div className="audit-action-row">
@@ -758,23 +762,16 @@ export default function AuditLogPage() {
                       </td>
                       <td className="audit-actor" data-label="Actor">
                         {actor.type === "system" ? (
-                          <div className="audit-actor-avatar audit-actor-system">
-                            <Clock size={13} />
-                          </div>
+                          <>
+                            <div className="audit-actor-avatar audit-actor-system"><Clock size={13} /></div>
+                            <div className="audit-actor-info">
+                              <div className="audit-actor-name" style={{ color: "var(--text-tertiary)" }}>{actor.name}</div>
+                              <div className="audit-actor-role">{actor.role}</div>
+                            </div>
+                          </>
                         ) : (
-                          <div
-                            className="audit-actor-avatar"
-                            style={actor.bg ? { background: actor.bg, color: actor.fg } : undefined}
-                          >
-                            {actor.initials}
-                          </div>
+                          <JurorBadge name={actor.name} affiliation={actor.role} size="md" />
                         )}
-                        <div className="audit-actor-info">
-                          <div className="audit-actor-name" style={actor.type === "system" ? { color: "var(--text-tertiary)" } : {}}>
-                            {actor.name}
-                          </div>
-                          <div className="audit-actor-role">{actor.role}</div>
-                        </div>
                       </td>
                       <td data-label="Action">
                         <div className="audit-action-row">
@@ -853,16 +850,17 @@ export default function AuditLogPage() {
                       <span className="amc-rel">{relTime}</span>
                     </div>
                     <div className="amc-actor">
-                      <div
-                        className={`amc-avatar${actor.type === "system" ? " amc-avatar-system" : ""}`}
-                        style={actor.bg ? { background: actor.bg, color: actor.fg } : undefined}
-                      >
-                        {actor.type === "system" ? <Clock size={14} /> : actor.initials}
-                      </div>
-                      <div className="amc-actor-info">
-                        <div className="amc-actor-name">{actor.name}</div>
-                        <div className="amc-actor-role">{actor.role}</div>
-                      </div>
+                      {actor.type === "system" ? (
+                        <>
+                          <div className="amc-avatar amc-avatar-system"><Clock size={14} /></div>
+                          <div className="amc-actor-info">
+                            <div className="amc-actor-name">{actor.name}</div>
+                            <div className="amc-actor-role">{actor.role}</div>
+                          </div>
+                        </>
+                      ) : (
+                        <JurorBadge name={actor.name} affiliation={actor.role} size="lg" />
+                      )}
                     </div>
                     <div className="amc-divider" />
                     <div className="amc-action">
