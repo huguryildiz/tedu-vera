@@ -13,6 +13,9 @@ const PERIOD_ID = EVAL_PERIOD_ID;
 
 test.describe("pin-blocking", () => {
   test.describe.configure({ mode: "serial" });
+  // signInAndGotoPinBlocking does login + dashboard wait + nav + period select +
+  // networkidle + ready wait. Under CI load this routinely exceeds 30s.
+  test.setTimeout(60_000);
 
   test.beforeEach(async () => {
     // Ensure the seed juror is locked before each test so repeat-each runs stay stable

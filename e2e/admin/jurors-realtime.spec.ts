@@ -64,6 +64,9 @@ async function signInAndOpenJurors(page: Page) {
 
 test.describe("jurors realtime — two-context state propagation", () => {
   test.describe.configure({ mode: "serial" });
+  // Two-tab realtime test does login twice + sets up Realtime subscription +
+  // waits for propagation. Under CI load this routinely exceeds 30s.
+  test.setTimeout(60_000);
 
   const suffix = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
   const jurorName = `E2E Realtime Juror ${suffix}`;

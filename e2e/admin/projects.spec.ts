@@ -35,12 +35,35 @@ test.describe("projects crud", () => {
   }
 
   test("create — project appears in table", async ({ page }) => {
+    // DEBUG: capture network failures + console errors so we can see the
+    // real createProject error if the drawer doesn't close.
+    const consoleErrors: string[] = [];
+    const failedRequests: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error") consoleErrors.push(`[${msg.type()}] ${msg.text()}`);
+    });
+    page.on("response", async (resp) => {
+      if (resp.status() >= 400 && resp.url().includes("/rest/v1/projects")) {
+        let body = "";
+        try { body = await resp.text(); } catch {}
+        failedRequests.push(`${resp.status()} ${resp.request().method()} ${resp.url()} → ${body.slice(0, 500)}`);
+      }
+    });
+
     const projects = await signInAndGoto(page);
     const title = uniqueTitle("E2E Project");
 
     await projects.openCreateDrawer();
     await projects.fillCreateForm(title, "Alice Test");
-    await projects.saveCreate();
+    try {
+      await projects.saveCreate();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log("=== DEBUG: createProject failure ===");
+      console.log("Failed requests:", JSON.stringify(failedRequests, null, 2));
+      console.log("Console errors:", JSON.stringify(consoleErrors, null, 2));
+      throw err;
+    }
 
     await projects.expectProjectVisible(title);
 
