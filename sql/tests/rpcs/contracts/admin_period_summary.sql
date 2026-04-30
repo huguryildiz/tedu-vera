@@ -56,10 +56,12 @@ SELECT lives_ok(
 );
 
 -- ────────── 6. cross-org call rejected ──────────
+-- Use the seeded Org B period UUID directly. Looking it up via a SELECT here
+-- would return NULL because RLS hides Org B periods from admin_a, and the
+-- function would raise period_not_found instead of unauthorized.
 SELECT throws_ok(
   $c$SELECT * FROM rpc_admin_period_summary(
-       (SELECT id FROM periods WHERE organization_id = (SELECT id FROM organizations WHERE name = 'pgtap Org B') LIMIT 1),
-       true
+       'dddd0000-0000-4000-8000-000000000002'::uuid, true
      )$c$,
   'unauthorized',
   'org_a admin cannot summarize org_b period (unauthorized)'

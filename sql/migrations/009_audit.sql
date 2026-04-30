@@ -1556,6 +1556,9 @@ REVOKE EXECUTE ON FUNCTION public.rpc_admin_update_member_profile(UUID, TEXT, UU
 REVOKE EXECUTE ON FUNCTION public.rpc_admin_revoke_entry_token(UUID) FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.rpc_admin_verify_audit_chain(UUID) FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.rpc_admin_force_close_juror_edit_mode(UUID, UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_juror_summary(UUID, BOOLEAN) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_period_summary(UUID, BOOLEAN) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rpc_admin_project_summary(UUID, BOOLEAN) FROM PUBLIC;
 
 -- =============================================================================
 -- 6) UNVERIFIED ACCOUNT CLEANUP CRON

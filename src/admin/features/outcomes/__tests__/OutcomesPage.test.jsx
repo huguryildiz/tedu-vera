@@ -60,6 +60,44 @@ vi.mock("@/admin/features/outcomes/useOutcomesExport", () => ({
   useOutcomesExport: () => ({ generateFile: vi.fn(), handleExport: vi.fn() }),
 }));
 
+const mockFwState = {
+  outcomes: [],
+  criteria: [],
+  mappings: [],
+};
+vi.mock("@/admin/shared/usePeriodOutcomes", () => ({
+  usePeriodOutcomes: () => ({
+    outcomes: mockFwState.outcomes,
+    criteria: mockFwState.criteria,
+    mappings: mockFwState.mappings,
+    savedOutcomesCount: mockFwState.outcomes.length,
+    savedMappingsCount: mockFwState.mappings.length,
+    loading: false,
+    error: null,
+    saving: false,
+    isDirty: false,
+    itemsDirty: false,
+    pendingFrameworkName: undefined,
+    pendingUnassign: null,
+    pendingFrameworkImport: null,
+    loadAll: vi.fn(),
+    commitDraft: vi.fn(),
+    discardDraft: vi.fn(),
+    getCoverage: () => "unmapped",
+    getMappedCriteria: () => [],
+    getMappedOutcomes: () => [],
+    addOutcome: vi.fn(),
+    editOutcome: vi.fn(),
+    removeOutcome: vi.fn(),
+    addMapping: vi.fn(),
+    removeMapping: vi.fn(),
+    cycleCoverage: vi.fn(),
+    setPendingFrameworkName: vi.fn(),
+    markUnassign: vi.fn(),
+    setPendingFrameworkImport: vi.fn(),
+  }),
+}));
+
 vi.mock("../AddOutcomeDrawer", () => ({ default: () => null }));
 vi.mock("../OutcomeDetailDrawer", () => ({ default: () => null }));
 vi.mock("../components/OutcomesTable", () => ({ default: () => null }));
@@ -93,6 +131,9 @@ describe("OutcomesPage", () => {
   beforeEach(() => {
     mockOutcomesState.selectedPeriod = null;
     mockOutcomesState.frameworks = [];
+    mockFwState.outcomes = [];
+    mockFwState.criteria = [];
+    mockFwState.mappings = [];
   });
 
   qaTest("admin.outcomes.page.mounts-with-no-outcomes", () => {
@@ -115,8 +156,10 @@ describe("OutcomesPage", () => {
 
   qaTest("admin.outcomes.page.kpi-strip", () => {
     mockOutcomesState.selectedPeriod = { id: "period-001", name: "Spring 2026", framework_id: "fw-001" };
+    mockFwState.outcomes = [{ id: "o-1", code: "PO1", short_label: "Engineering", description: "" }];
     renderPage();
-    expect(screen.getByText("Total Outcomes")).toBeInTheDocument();
+    expect(screen.getByText("Overall Coverage")).toBeInTheDocument();
+    expect(screen.getByText(/Unmapped \(1\)/)).toBeInTheDocument();
   });
 
   qaTest("admin.outcomes.page.search-input", () => {

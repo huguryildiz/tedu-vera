@@ -18,6 +18,7 @@ SELECT plan(8);
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.seed_jurors();
 SELECT pgtap_test.seed_periods();
+SELECT pgtap_test.seed_projects();
 
 -- Seed a juror_period_auth row for Juror A / Period A1 with a known session token.
 INSERT INTO juror_period_auth (juror_id, period_id, session_token_hash, edit_enabled) VALUES
@@ -25,6 +26,15 @@ INSERT INTO juror_period_auth (juror_id, period_id, session_token_hash, edit_ena
    'cccc0000-0000-4000-8000-000000000001'::uuid,
    encode(digest('pgtap-session-token-a', 'sha256'), 'hex'),
    false);
+
+-- Seed an assigned-and-submitted score_sheet so the integrity guard
+-- (rpc_jury_finalize_submission rejects finalize when any sheet is unsubmitted)
+-- is satisfied for the valid finalize calls below.
+INSERT INTO score_sheets (juror_id, project_id, period_id, status) VALUES
+  ('55550000-0000-4000-8000-000000000001'::uuid,
+   '33330000-0000-4000-8000-000000000001'::uuid,
+   'cccc0000-0000-4000-8000-000000000001'::uuid,
+   'submitted');
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 1. Unknown juror/period → session_not_found

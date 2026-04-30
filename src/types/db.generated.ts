@@ -1523,6 +1523,21 @@ export type Database = {
         Args: { p_org_id: string; p_user_id: string }
         Returns: Json
       }
+      rpc_admin_juror_summary: {
+        Args: { p_only_finalized?: boolean; p_period_id: string }
+        Returns: {
+          affiliation: string
+          assigned_count: number
+          avg_total: number
+          avg_total_pct: number
+          completion_pct: number
+          final_submitted_at: string
+          juror_id: string
+          juror_name: string
+          scored_count: number
+          std_dev_pct: number
+        }[]
+      }
       rpc_admin_list_organizations: { Args: never; Returns: Json }
       rpc_admin_list_unlock_requests: {
         Args: { p_status?: string }
@@ -1540,9 +1555,41 @@ export type Database = {
         Args: { p_org_id: string }
         Returns: string
       }
+      rpc_admin_period_summary: {
+        Args: { p_only_finalized?: boolean; p_period_id: string }
+        Returns: {
+          avg_juror_pct: number
+          avg_total_pct: number
+          finalized_jurors: number
+          ranked_count: number
+          total_jurors: number
+          total_max: number
+          total_projects: number
+        }[]
+      }
       rpc_admin_period_unassign_framework: {
         Args: { p_period_id: string }
         Returns: Json
+      }
+      rpc_admin_project_summary: {
+        Args: { p_only_finalized?: boolean; p_period_id: string }
+        Returns: {
+          advisor: string
+          assigned_count: number
+          juror_count: number
+          members: Json
+          per_criterion: Json
+          project_id: string
+          project_no: number
+          rank: number
+          std_dev_pct: number
+          submitted_count: number
+          title: string
+          total_avg: number
+          total_max: number
+          total_min: number
+          total_pct: number
+        }[]
       }
       rpc_admin_publish_period: { Args: { p_period_id: string }; Returns: Json }
       rpc_admin_reject_application: {
