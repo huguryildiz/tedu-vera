@@ -3576,6 +3576,98 @@ out.push(`UPDATE periods SET is_locked = false WHERE id IN ('${E2E_CRIT_PERIOD}'
 out.push('');
 
 // ═══════════════════════════════════════════════════════════════
+// AUDIT LOG TIMESTAMP FIXUP
+// ═══════════════════════════════════════════════════════════════
+// During seeding, audit_log_trigger fires on every INSERT/UPDATE issued
+// by this script and writes audit_logs rows with created_at = now() (i.e.
+// the seed-execution time). Manual auditObjList rows already use period-aware
+// timestamps; only the trigger-emitted rows need to be backdated to align
+// with the period dates so the audit log looks realistic.
+//
+// We backdate trigger-emitted rows from their parent record's relevant
+// timestamp (created_at, activated_at, or a value extracted from the JSONB
+// diff). After updating created_at we MUST rebuild row_hash, because the
+// hash chain (audit_logs_compute_hash) is BEFORE INSERT only and signs
+// over created_at. Without this rebuild, _audit_verify_chain fails.
+out.push(`-- Backdate trigger-emitted audit rows to their parent record's timestamps`);
+out.push(`-- (manual auditObjList rows already carry period-aware created_at values).`);
+
+// organizations.insert/update → org.created_at
+out.push(`UPDATE audit_logs al SET created_at = o.created_at FROM organizations o WHERE al.resource_type='organizations' AND al.resource_id = o.id AND al.actor_type='system';`);
+
+// memberships.insert → m.created_at + 1 minute (so org-create precedes membership)
+out.push(`UPDATE audit_logs al SET created_at = m.created_at + interval '1 minute' FROM memberships m WHERE al.resource_type='memberships' AND al.resource_id = m.id AND al.actor_type='system';`);
+
+// periods.insert → p.created_at
+out.push(`UPDATE audit_logs al SET created_at = p.created_at FROM periods p WHERE al.resource_type='periods' AND al.action='periods.insert' AND al.resource_id = p.id AND al.actor_type='system';`);
+
+// periods.update (lock toggle most common) → COALESCE(activated_at, start_date, created_at)
+out.push(`UPDATE audit_logs al SET created_at = COALESCE(p.activated_at, p.start_date::timestamptz, p.created_at) FROM periods p WHERE al.resource_type='periods' AND al.action='periods.update' AND al.resource_id = p.id AND al.actor_type='system';`);
+
+// projects.insert/update → projects.created_at
+out.push(`UPDATE audit_logs al SET created_at = pr.created_at FROM projects pr WHERE al.resource_type='projects' AND al.resource_id = pr.id AND al.actor_type='system';`);
+
+// jurors.insert/update → jurors.created_at
+out.push(`UPDATE audit_logs al SET created_at = j.created_at FROM jurors j WHERE al.resource_type='jurors' AND al.resource_id = j.id AND al.actor_type='system';`);
+
+// entry_tokens.insert/update → entry_tokens.created_at (revoked rows naturally inherit a ~ creation-anchor; revoke audit lives in auditObjList separately)
+out.push(`UPDATE audit_logs al SET created_at = e.created_at FROM entry_tokens e WHERE al.resource_type='entry_tokens' AND al.resource_id = e.id AND al.actor_type='system';`);
+
+// juror_period_auth.update with final_submitted_at change → use the new value (true submission time)
+out.push(`UPDATE audit_logs al SET created_at = (al.diff -> 'after' ->> 'final_submitted_at')::timestamptz WHERE al.resource_type='juror_period_auth' AND al.action='juror_period_auth.update' AND al.actor_type='system' AND al.diff -> 'after' ? 'final_submitted_at' AND (al.diff -> 'after' ->> 'final_submitted_at') IS NOT NULL;`);
+
+// juror_period_auth.insert → use earliest jpa.created_at per juror (composite PK; resource_id = juror_id)
+out.push(`UPDATE audit_logs al SET created_at = jpa_min.min_created_at FROM (SELECT juror_id, MIN(created_at) AS min_created_at FROM juror_period_auth GROUP BY juror_id) jpa_min WHERE al.resource_type='juror_period_auth' AND al.action='juror_period_auth.insert' AND al.resource_id = jpa_min.juror_id AND al.actor_type='system';`);
+
+// juror_period_auth.update without final_submitted_at (lock/edit-window/PIN events) → fall back to JPA earliest + 1h
+out.push(`UPDATE audit_logs al SET created_at = jpa_min.min_created_at + interval '1 hour' FROM (SELECT juror_id, MIN(created_at) AS min_created_at FROM juror_period_auth GROUP BY juror_id) jpa_min WHERE al.resource_type='juror_period_auth' AND al.action='juror_period_auth.update' AND al.resource_id = jpa_min.juror_id AND al.actor_type='system' AND NOT (al.diff -> 'after' ? 'final_submitted_at');`);
+
+// period_criteria.insert/update → parent period.created_at + 1h (criteria authored shortly after period creation)
+out.push(`UPDATE audit_logs al SET created_at = p.created_at + interval '1 hour' FROM period_criteria pc JOIN periods p ON p.id = pc.period_id WHERE al.resource_type='period_criteria' AND al.resource_id = pc.id AND al.actor_type='system';`);
+
+// period_criterion_outcome_maps → parent period.created_at + 2h
+out.push(`UPDATE audit_logs al SET created_at = p.created_at + interval '2 hours' FROM period_criterion_outcome_maps pcom JOIN periods p ON p.id = pcom.period_id WHERE al.resource_type='period_criterion_outcome_maps' AND al.resource_id = pcom.id AND al.actor_type='system';`);
+
+// score_sheets.insert/update → score_sheets.last_activity_at (period-aware, set by seed)
+out.push(`UPDATE audit_logs al SET created_at = COALESCE(ss.last_activity_at, ss.started_at, ss.created_at) FROM score_sheets ss WHERE al.resource_type='score_sheets' AND al.resource_id = ss.id AND al.actor_type='system';`);
+
+// unlock_requests.insert/update → unlock_requests.created_at (insert) or reviewed_at (update)
+out.push(`UPDATE audit_logs al SET created_at = ur.created_at FROM unlock_requests ur WHERE al.resource_type='unlock_requests' AND al.action='unlock_requests.insert' AND al.resource_id = ur.id AND al.actor_type='system';`);
+out.push(`UPDATE audit_logs al SET created_at = COALESCE(ur.reviewed_at, ur.created_at) FROM unlock_requests ur WHERE al.resource_type='unlock_requests' AND al.action='unlock_requests.update' AND al.resource_id = ur.id AND al.actor_type='system';`);
+
+// Rebuild row_hash for every audit_logs row in chain_seq order, scoped per organization.
+// The hash chain trigger fires only BEFORE INSERT, so updating created_at after the
+// fact would otherwise leave row_hash referring to the old timestamp and break verification.
+out.push(`DO $audit_rehash$
+DECLARE
+  r RECORD;
+  prev_hash TEXT := NULL;
+  prev_org UUID := NULL;
+  first_row BOOLEAN := TRUE;
+  chain_input TEXT;
+  new_hash TEXT;
+BEGIN
+  FOR r IN
+    SELECT id, action, organization_id, created_at, chain_seq
+    FROM audit_logs
+    WHERE row_hash IS NOT NULL
+    ORDER BY organization_id NULLS FIRST, chain_seq ASC
+  LOOP
+    IF first_row OR r.organization_id IS DISTINCT FROM prev_org THEN
+      prev_hash := NULL;
+      prev_org := r.organization_id;
+      first_row := FALSE;
+    END IF;
+    chain_input := r.id::text || r.action || COALESCE(r.organization_id::text, '') || r.created_at::text || COALESCE(prev_hash, 'GENESIS');
+    new_hash := encode(sha256(chain_input::bytea), 'hex');
+    UPDATE audit_logs SET row_hash = new_hash WHERE id = r.id;
+    prev_hash := new_hash;
+  END LOOP;
+END
+$audit_rehash$;`);
+out.push('');
+
+// ═══════════════════════════════════════════════════════════════
 // OUTPUT
 // ═══════════════════════════════════════════════════════════════
 
