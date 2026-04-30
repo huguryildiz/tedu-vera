@@ -175,10 +175,6 @@ export function EditOrgDrawer({
           <label className="fs-field-label">Contact Email</label>
           <input data-testid="orgs-edit-drawer-contact-email" className="fs-input" type="email" value={editForm.contact_email || ""} onChange={(e) => setEditForm((prev) => ({ ...prev, contact_email: e.target.value }))} placeholder="admin@organization.org" />
         </div>
-        <div className="fs-field">
-          <label className="fs-field-label">Status</label>
-          <CustomSelect value={editForm.status || "active"} onChange={(val) => setEditForm((prev) => ({ ...prev, status: val }))} options={[{ value: "active", label: "Active" }, { value: "archived", label: "Archived" }]} />
-        </div>
         {editError && <FbAlert data-testid="orgs-edit-drawer-error" variant="danger">{editError}</FbAlert>}
       </div>
       <div className="fs-drawer-footer">

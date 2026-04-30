@@ -316,7 +316,6 @@ export function useManageOrganizations({
         code,
         shortLabel,
         contact_email: String(editForm.contact_email || "").trim() || null,
-        status: editForm.status,
       });
       closeEdit();
       await loadOrgs();

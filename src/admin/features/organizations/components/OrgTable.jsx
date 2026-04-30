@@ -1,4 +1,4 @@
-import { Eye, Filter, Icon, Lock, MoreVertical, Pencil, Search, Trash2, UserPlus, Users, XCircle } from "lucide-react";
+import { Code2, Eye, Filter, Icon, Lock, MoreVertical, Pencil, Search, Trash2, UserPlus, Users, XCircle } from "lucide-react";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import FloatingMenu from "@/shared/ui/FloatingMenu";
 import Pagination from "@/shared/ui/Pagination";
@@ -233,7 +233,10 @@ export default function OrgTable({
                       </div>
                     </td>
                     <td className="org-card-meta-row" aria-hidden="true">
-                      <span className="org-meta-chip">{code || "—"}</span>
+                      <span className="org-meta-code">
+                        <Code2 size={11} strokeWidth={2} />
+                        <span className="org-meta-chip">{code || "—"}</span>
+                      </span>
                       <span className="org-meta-dot" />
                       <span className={`org-meta-admin${isUnstaffed ? " org-meta-admin--warn" : ""}`}>
                         <Users size={10} strokeWidth={2} />

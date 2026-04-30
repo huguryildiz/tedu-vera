@@ -7,7 +7,7 @@
 //   GlobalSettingsDrawer, ExportBackupDrawer, MaintenanceDrawer, SystemHealthDrawer
 // Prototype: vera-premium-prototype.html lines 25671–26130
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import {
   AlertTriangle,
@@ -386,6 +386,9 @@ export function MaintenanceDrawer({ open, onClose }) {
   const [orgs, setOrgs] = useState([]);
   const [orgScope, setOrgScope] = useState("all"); // "all" | "specific"
   const [affectedOrgIds, setAffectedOrgIds] = useState([]);
+  // Snapshot of org IDs that were already affected when the drawer opened — drives
+  // the sort-to-top order so toggling checkboxes mid-session does not reshuffle the list.
+  const [initialAffectedOrgIds, setInitialAffectedOrgIds] = useState([]);
   const [sendingTest, setSendingTest] = useState(false);
 
   // Load current config, active juror count, and org list when drawer opens
@@ -404,9 +407,11 @@ export function MaintenanceDrawer({ open, onClose }) {
           if (cfg.affected_org_ids?.length) {
             setOrgScope("specific");
             setAffectedOrgIds(cfg.affected_org_ids);
+            setInitialAffectedOrgIds(cfg.affected_org_ids);
           } else {
             setOrgScope("all");
             setAffectedOrgIds([]);
+            setInitialAffectedOrgIds([]);
           }
         }
       })
@@ -479,6 +484,19 @@ export function MaintenanceDrawer({ open, onClose }) {
   }
 
   const isCurrentlyActive = currentStatus?.is_active;
+
+  // Sort orgs so the ones already in maintenance (snapshot at open time) appear first.
+  // Snapshot — not live `affectedOrgIds` — so newly-toggled rows don't jump position.
+  const sortedOrgs = useMemo(() => {
+    if (!initialAffectedOrgIds.length) return orgs;
+    const initialSet = new Set(initialAffectedOrgIds);
+    return [...orgs].sort((a, b) => {
+      const aActive = initialSet.has(a.id) ? 0 : 1;
+      const bActive = initialSet.has(b.id) ? 0 : 1;
+      if (aActive !== bActive) return aActive - bActive;
+      return (a.name || "").localeCompare(b.name || "");
+    });
+  }, [orgs, initialAffectedOrgIds]);
 
   return (
     <Drawer open={open} onClose={onClose}>
@@ -614,35 +632,48 @@ export function MaintenanceDrawer({ open, onClose }) {
               maxHeight: 160, overflowY: "auto", border: "1px solid var(--border)",
               borderRadius: "var(--radius-sm)", padding: "4px 0",
             }}>
-              {orgs.length === 0 ? (
+              {sortedOrgs.length === 0 ? (
                 <div style={{ padding: "10px 14px", fontSize: 12.5, color: "var(--text-tertiary)" }}>
                   No active organizations found
                 </div>
-              ) : orgs.map((org) => (
-                <label
-                  key={org.id}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    padding: "7px 14px", cursor: "pointer", fontSize: 13,
-                    background: affectedOrgIds.includes(org.id) ? "rgba(99,102,241,0.06)" : undefined,
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={affectedOrgIds.includes(org.id)}
-                    onChange={(e) => setAffectedOrgIds(
-                      e.target.checked
-                        ? [...affectedOrgIds, org.id]
-                        : affectedOrgIds.filter((id) => id !== org.id)
+              ) : sortedOrgs.map((org, idx) => {
+                const initialSet = new Set(initialAffectedOrgIds);
+                const isInitial = initialSet.has(org.id);
+                const nextOrg = sortedOrgs[idx + 1];
+                const showDivider = isInitial && nextOrg && !initialSet.has(nextOrg.id);
+                return (
+                  <div key={org.id}>
+                    <label
+                      style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: "7px 14px", cursor: "pointer", fontSize: 13,
+                        background: affectedOrgIds.includes(org.id) ? "rgba(99,102,241,0.06)" : undefined,
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={affectedOrgIds.includes(org.id)}
+                        onChange={(e) => setAffectedOrgIds(
+                          e.target.checked
+                            ? [...affectedOrgIds, org.id]
+                            : affectedOrgIds.filter((id) => id !== org.id)
+                        )}
+                        style={{ accentColor: "var(--accent)", flexShrink: 0 }}
+                      />
+                      <span style={{ fontWeight: 500 }}>{org.name}</span>
+                      {org.code && (
+                        <span className="vera-datetime-text" style={{ fontSize: 11, color: "var(--text-tertiary)", marginLeft: "auto", textAlign: "right" }}>{org.code}</span>
+                      )}
+                    </label>
+                    {showDivider && (
+                      <div style={{
+                        borderTop: "1px solid var(--border)",
+                        margin: "4px 0",
+                      }} />
                     )}
-                    style={{ accentColor: "var(--accent)", flexShrink: 0 }}
-                  />
-                  <span style={{ fontWeight: 500 }}>{org.name}</span>
-                  {org.code && (
-                    <span style={{ fontSize: 11, color: "var(--text-tertiary)", marginLeft: "auto" }}>{org.code}</span>
-                  )}
-                </label>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
