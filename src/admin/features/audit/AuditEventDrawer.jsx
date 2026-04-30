@@ -215,8 +215,7 @@ export default function AuditEventDrawer({ log, onClose }) {
             </div>
           ) : (
             <div className="audit-drawer-empty-tab">
-              No session context available for this event.<br />
-              <span style={{ fontSize: 11, opacity: 0.6 }}>IP, browser, and session data captured from migration 043+.</span>
+              No session context available for this event.
             </div>
           )}
         </div>
