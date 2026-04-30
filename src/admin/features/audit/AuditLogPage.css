@@ -438,6 +438,184 @@
   font-weight: 600 !important;
 }
 
+/* ─── Feed layout: table + side panel ───────────── */
+.audit-feed-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 14px;
+  align-items: start;
+}
+
+/* ─── Event detail side panel ────────────────────── */
+.audit-event-drawer-panel {
+  position: sticky;
+  top: 72px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 90px);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.dark-mode .audit-event-drawer-panel {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* ─── Drawer header ──────────────────────────────── */
+.audit-drawer-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.audit-drawer-title-group { flex: 1; min-width: 0; }
+.audit-drawer-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+  word-break: break-word;
+}
+.audit-drawer-sub {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.audit-drawer-close {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  background: none;
+  border: none;
+}
+.audit-drawer-close:hover { background: var(--surface-1); color: var(--text-primary); }
+
+/* ─── Drawer actor row ───────────────────────────── */
+.audit-drawer-actor-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.audit-drawer-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: -0.5px;
+}
+.audit-drawer-avatar.system {
+  background: var(--surface-2);
+  color: var(--text-tertiary);
+}
+.audit-drawer-actor-info { min-width: 0; }
+.audit-drawer-actor-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.audit-drawer-actor-role {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+
+/* ─── Drawer section spacing ─────────────────────── */
+.audit-drawer-section { margin-bottom: 12px; }
+.audit-drawer-section:last-child { margin-bottom: 0; }
+
+/* ─── Drawer section label ───────────────────────── */
+.audit-drawer-section-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+}
+
+/* ─── Narrative sentence ─────────────────────────── */
+.audit-drawer-narrative {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+.audit-drawer-narrative-actor { font-weight: 600; color: var(--text-primary); }
+.audit-drawer-narrative-resource { font-weight: 600; color: var(--accent); }
+
+/* ─── Drawer details grid ────────────────────────── */
+.audit-drawer-details { display: flex; flex-direction: column; }
+
+/* ─── Diffs tab ──────────────────────────────────── */
+.audit-drawer-diffs { display: flex; flex-direction: column; gap: 4px; }
+.audit-drawer-diff-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+}
+.audit-drawer-diff-row:last-child { border-bottom: none; }
+.audit-drawer-diff-key {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  min-width: 72px;
+  flex-shrink: 0;
+  text-transform: capitalize;
+}
+.audit-drawer-diff-from {
+  font-size: 10px;
+  background: rgba(239,68,68,0.08);
+  color: var(--danger, #dc2626);
+  border-radius: 3px;
+  padding: 1px 5px;
+  text-decoration: line-through;
+}
+.audit-drawer-diff-arrow {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+.audit-drawer-diff-to {
+  font-size: 10px;
+  background: rgba(34,197,94,0.08);
+  color: #16a34a;
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+.dark-mode .audit-drawer-diff-to { color: #4ade80; }
+
+/* ─── Raw tab actions ────────────────────────────── */
+.audit-drawer-actions { display: flex; gap: 6px; }
+.audit-drawer-raw-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* ─── Drawer detail rows (key / value pairs) ────── */
 .audit-drawer-detail-row {
   display: flex;
