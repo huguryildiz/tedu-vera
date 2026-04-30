@@ -222,8 +222,7 @@ export default function PinBlockingPage() {
                 </div>
               </div>
               <button
-                className="btn btn-sm"
-                style={{ background: "var(--danger)", color: "#fff" }}
+                className="btn btn-sm btn-danger"
                 disabled={totalActive === 0 || loading}
                 onClick={() => setUnlockAllOpen(true)}
               >
