@@ -53,7 +53,12 @@ export default function SessionHistoryTable({
                   <td className="mono" data-label="Reference ID" style={token.is_active ? { fontWeight: 700, color: "var(--accent)" } : {}}>
                     {token.access_id}
                   </td>
-                  <td className="text-sm" data-label="Created" style={{ fontWeight: 500 }}>{fmtDate(token.created_at)}</td>
+                  <td className="text-sm" data-label="Created" style={{ fontWeight: 500 }}>
+                    {fmtDate(token.created_at)}
+                    {typeof token.session_count === "number" && (
+                      <span className="ec-hist-sessions-inline">{token.session_count} sessions</span>
+                    )}
+                  </td>
                   <td className="text-sm col-expires" data-label="Expires">{fmtDate(token.expires_at)}</td>
                   <td className="mono" data-label="Sessions" style={{ fontWeight: 600 }}>
                     {typeof token.session_count === "number" ? token.session_count : "—"}

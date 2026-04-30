@@ -170,8 +170,13 @@
   }
 }
 
+/* Hidden on desktop; shown inline inside date cell on mobile portrait */
+.ec-hist-sessions-inline { display: none; }
+
 /* ─── Portrait card layout (≤ 768px portrait) ────────────────
-   Token history rows become stacked cards.
+   Option B: two-line compact cards.
+   Row 1: Reference ID (left) · Status badge (right)
+   Row 2: Date + inline sessions (left) · QR button (right)
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: portrait) {
   .entry-control-page .table-wrap {
@@ -186,19 +191,20 @@
   .entry-history-table thead { display: none !important; }
   .entry-history-table tbody { display: block; width: 100%; }
 
-  /* Card container */
+  /* Card container — compact 2-row grid */
   .entry-history-table tbody tr {
     display: grid;
     grid-template-columns: 1fr auto;
-    grid-gap: 14px 16px;
-    align-items: start;
+    grid-template-rows: auto auto;
+    align-items: center;
+    gap: 6px 10px;
     width: 100%;
     box-sizing: border-box;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    margin-bottom: 10px;
-    padding: 14px 16px;
+    margin-bottom: 8px;
+    padding: 10px 14px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     transition: box-shadow 0.15s, border-color 0.15s;
   }
@@ -211,52 +217,63 @@
   .entry-history-table td {
     display: block;
     border-bottom: none;
-    padding: 0 !important; /* Reset padding for grid */
+    padding: 0 !important;
     box-sizing: border-box;
   }
 
-  /* data-label micro-labels */
-  .entry-history-table td[data-label]::before {
-    content: attr(data-label);
-    display: block;
-    font-size: 8.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: var(--text-tertiary);
-    font-weight: 600;
-    margin-bottom: 4px;
+  /* Hide all data-label micro-labels — no room in compact layout */
+  .entry-history-table td[data-label]::before { display: none; }
+
+  /* Row 1 left: Reference ID */
+  .entry-history-table td:nth-child(1) {
+    order: 1;
+    grid-column: 1;
+    grid-row: 1;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--mono);
   }
 
-  /* Row 1: Reference ID (Left) + Status (Right) */
-  .entry-history-table td:nth-child(1) { order: 1; font-size: 12px; }
-  .entry-history-table td[data-label="Status"] { order: 2; text-align: right; }
-  .entry-history-table td[data-label="Status"]::before { text-align: right; }
+  /* Row 1 right: Status badge */
+  .entry-history-table td[data-label="Status"] {
+    order: 2;
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+    align-self: center;
+  }
 
-  /* Row 2: Created (Left) + Sessions (Right) */
+  /* Row 2 left: Created date + inline sessions */
   .entry-history-table td[data-label="Created"] {
     order: 3;
-    border-top: 1px solid var(--border);
-    padding-top: 14px !important;
+    grid-column: 1;
+    grid-row: 2;
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    font-weight: 500;
   }
-  .entry-history-table td[data-label="Sessions"] {
-    order: 4;
-    text-align: right;
-    border-top: 1px solid var(--border);
-    padding-top: 14px !important;
-  }
-  .entry-history-table td[data-label="Sessions"]::before { text-align: right; }
 
-  /* Row 3: Actions (full width, right-aligned) */
+  /* Inline sessions count shown only on mobile */
+  .ec-hist-sessions-inline {
+    display: inline;
+    margin-left: 4px;
+    color: var(--text-tertiary);
+    font-weight: 500;
+  }
+  .ec-hist-sessions-inline::before { content: "· "; }
+
+  /* Row 2 right: QR button */
   .entry-history-table td.col-actions {
-    grid-column: 1 / -1;
-    order: 10;
-    padding-top: 10px !important;
-    text-align: right !important;
-    border-top: 1px solid var(--border);
+    order: 4;
+    grid-column: 2;
+    grid-row: 2;
+    text-align: right;
+    align-self: center;
   }
   .entry-history-table td.col-actions::before { display: none; }
 
-  /* Hide Expires — rarely needed on mobile */
+  /* Hide Sessions td and Expires td — sessions shown inline */
+  .entry-history-table td[data-label="Sessions"] { display: none; }
   .entry-history-table td.col-expires { display: none; }
 }
 
