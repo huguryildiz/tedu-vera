@@ -60,9 +60,19 @@ export async function getSecurityPolicy() {
  *   ccOnPasswordChanged: boolean
  * }} policy
  */
+const POLICY_KEYS = [
+  "googleOAuth", "emailPassword", "rememberMe", "qrTtl",
+  "maxPinAttempts", "pinLockCooldown",
+  "ccOnPinReset", "ccOnScoreEdit", "ccOnTenantApplication",
+  "ccOnMaintenance", "ccOnPasswordChanged",
+];
+
 export async function setSecurityPolicy(policy) {
+  const payload = Object.fromEntries(
+    POLICY_KEYS.filter((k) => k in policy).map((k) => [k, policy[k]])
+  );
   const { data, error } = await supabase.rpc("rpc_admin_set_security_policy", {
-    p_policy: policy,
+    p_policy: payload,
   });
   if (error) throw error;
   return data;

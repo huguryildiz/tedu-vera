@@ -96,6 +96,7 @@ Registered actor types: `admin`, `juror`, `system`, `anonymous`
 | `periods.insert` | Period created | created period *{periodName}* |
 | `periods.update` | Period updated | updated period *{periodName}* |
 | `periods.delete` | Period deleted | deleted period *{periodName}* |
+| `period.duplicated` | Period duplicated | duplicated period *from {source_name}* |
 
 ### Criteria, Outcomes & Framework
 
@@ -109,6 +110,7 @@ Registered actor types: `admin`, `juror`, `system`, `anonymous`
 | `frameworks.insert` | Framework created | created accreditation framework *{name}* |
 | `frameworks.update` | Framework updated | updated accreditation framework *{name}* |
 | `frameworks.delete` | Framework deleted | deleted accreditation framework *{name}* |
+| `config.framework.unassigned` | Framework unassigned from period | unassigned framework from *{periodName}* |
 
 ### Project Management
 
