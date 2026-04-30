@@ -138,16 +138,15 @@ export default function ViewSessionsDrawer({
                 </div>
 
                 <div className="fs-session-card-meta">
-                  Signed in <span className="vera-datetime-text">{formatAbsoluteDate(signedInAt)}</span>
-                  {usedSignedInFallback && (
-                    <span
-                      style={{ marginLeft: 5 }}
-                      aria-label="signed-in-fallback-info"
-                    >
-                      {" "}(first seen)
-                    </span>
-                  )}
-                  {" · "}Last active <span className="vera-datetime-text">{formatRelative(session?.last_activity_at)}</span>
+                  <div>
+                    Signed in <span className="vera-datetime-text">{formatAbsoluteDate(signedInAt)}</span>
+                    {usedSignedInFallback && (
+                      <span style={{ marginLeft: 5 }} aria-label="signed-in-fallback-info">
+                        (first seen)
+                      </span>
+                    )}
+                  </div>
+                  <div>Last active <span className="vera-datetime-text">{formatRelative(session?.last_activity_at)}</span></div>
                 </div>
               </div>
 
