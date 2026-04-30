@@ -494,6 +494,11 @@ export default function EntryControlPage() {
       const raw = await hiRes.getRawData("png");
       if (!raw) throw new Error("QR data unavailable.");
       const blob = raw instanceof Blob ? raw : new Blob([raw], { type: "image/png" });
+      const file = new File([blob], `${fileName}.png`, { type: "image/png" });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Jury QR Code" });
+        return;
+      }
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -503,6 +508,7 @@ export default function EntryControlPage() {
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch (err) {
+      if (err?.name === "AbortError") return;
       _toast.error("Failed to download QR code");
     }
   }
