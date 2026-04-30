@@ -78,9 +78,11 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
     dragOverIndex.current = null;
   };
 
+  const hasMember = form.members.some((m) => m.trim());
+
   const handleSave = async () => {
-    setTouched({ title: true });
-    if (!form.title.trim()) return;
+    setTouched({ title: true, members: true });
+    if (!form.title.trim() || !hasMember) return;
     setSaveError("");
     setSaving(true);
     try {
@@ -112,6 +114,7 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
   const saveBtnRef = useShakeOnError(displayError);
   const memberCount = form.members.filter((m) => m.trim()).length;
   const titleTrimmed = form.title.trim();
+  const showMembersError = touched.members && !hasMember;
 
   return (
     <Drawer open={open} onClose={onClose}>
@@ -286,11 +289,12 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
             >
               <div className="fs-list-handle" title="Drag to reorder" style={{ cursor: "grab" }}>{HANDLE_SVG}</div>
               <input
-                className="fs-input"
+                className={`fs-input${i === 0 && showMembersError ? " error" : ""}`}
                 type="text"
                 placeholder={`Member ${i + 1}`}
                 value={m}
                 onChange={(e) => setMember(i, e.target.value)}
+                onBlur={() => touch("members")}
                 disabled={saving}
                 style={{ cursor: "text" }}
               />
@@ -324,6 +328,9 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
             </Icon>
             Add Member
           </button>
+          {showMembersError && (
+            <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />At least one team member is required.</p>
+          )}
         </div>
       </div>
       <div className="fs-drawer-footer">
@@ -335,7 +342,7 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
           className="fs-btn fs-btn-primary"
           type="button"
           onClick={handleSave}
-          disabled={saving || !titleTrimmed}
+          disabled={saving || !titleTrimmed || !hasMember}
           data-testid="project-edit-drawer-save"
         >
           <AsyncButtonContent loading={saving} loadingText="Saving…">Save Changes</AsyncButtonContent>

@@ -30,14 +30,16 @@ const EMPTY = { title: "", advisor: "", description: "", members: [""] };
 
 export default function AddProjectDrawer({ open, onClose, onSave, error }) {
   const [form, setForm] = useState(EMPTY);
+  const [touched, setTouched] = useState({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
-    if (open) { setForm(EMPTY); setSaveError(""); setSaving(false); }
+    if (open) { setForm(EMPTY); setTouched({}); setSaveError(""); setSaving(false); }
   }, [open]);
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
+  const touch = (key) => setTouched((t) => ({ ...t, [key]: true }));
 
   const setMember = (i, val) =>
     setForm((f) => { const m = [...f.members]; m[i] = val; return { ...f, members: m }; });
@@ -67,7 +69,11 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
     dragOverIndex.current = null;
   };
 
+  const hasMember = form.members.some((m) => m.trim());
+
   const handleSave = async () => {
+    setTouched({ title: true, members: true });
+    if (!form.title.trim() || !hasMember) return;
     setSaveError("");
     setSaving(true);
     try {
@@ -87,6 +93,7 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
 
   const displayError = saveError || error;
   const saveBtnRef = useShakeOnError(displayError);
+  const showMembersError = touched.members && !hasMember;
 
   return (
     <Drawer open={open} onClose={onClose}>
@@ -128,15 +135,16 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
             Title <span className="fs-field-req">*</span>
           </label>
           <input
-            className={`fs-input${!form.title.trim() ? " error" : ""}`}
+            className={`fs-input${touched.title && !form.title.trim() ? " error" : ""}`}
             type="text"
             placeholder="Project title"
             value={form.title}
             onChange={(e) => set("title", e.target.value)}
+            onBlur={() => touch("title")}
             disabled={saving}
             data-testid="project-drawer-title"
           />
-          {!form.title.trim() && (
+          {touched.title && !form.title.trim() && (
             <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Title is required.</p>
           )}
         </div>
@@ -184,11 +192,12 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
             >
               <div className="fs-list-handle" title="Drag to reorder" style={{ cursor: "grab" }}>{HANDLE_SVG}</div>
               <input
-                className="fs-input"
+                className={`fs-input${i === 0 && showMembersError ? " error" : ""}`}
                 type="text"
                 placeholder={`Member ${i + 1}`}
                 value={m}
                 onChange={(e) => setMember(i, e.target.value)}
+                onBlur={() => touch("members")}
                 disabled={saving}
                 style={{ cursor: "text" }}
                 data-testid={`project-drawer-member-${i}`}
@@ -220,6 +229,9 @@ export default function AddProjectDrawer({ open, onClose, onSave, error }) {
               strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></Icon>
             Add member
           </button>
+          {showMembersError && (
+            <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />At least one team member is required.</p>
+          )}
         </div>
       </div>
       <div className="fs-drawer-footer">
