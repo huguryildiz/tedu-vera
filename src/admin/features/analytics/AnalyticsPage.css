@@ -321,11 +321,11 @@ body:not(.dark-mode) .ga-cv-poor{background:rgba(220,38,38,0.12);box-shadow:inse
 .att-bar-target.first::before{content:'Target';position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:600;color:var(--text-tertiary);white-space:nowrap;letter-spacing:0.3px}
 
 /* Diverging lollipop */
-.lollipop-row{display:flex;align-items:center;gap:0;margin-bottom:5px}
+.lollipop-row{display:flex;align-items:center;gap:0;margin-bottom:8px}
 .lollipop-label{width:140px;flex-shrink:0;text-align:right;padding-right:12px;font-size:11px;font-weight:500;color:var(--text-secondary);line-height:1.3}
 .lollipop-label .code{font-family:var(--mono);font-weight:700;color:var(--accent);display:block;font-size:11px}
 .lollipop-label .name{display:block;font-size:10px;color:var(--text-secondary);font-weight:500;margin-top:1px}
-.lollipop-track{flex:1;height:22px;position:relative;display:flex;align-items:center}
+.lollipop-track{flex:1;height:30px;position:relative;display:flex;align-items:center}
 .lollipop-center{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--border-strong)}
 .lollipop-stem{position:absolute;height:2px;top:50%;transform:translateY(-50%)}
 .lollipop-stem.positive{background:var(--success)}
@@ -333,7 +333,7 @@ body:not(.dark-mode) .ga-cv-poor{background:rgba(220,38,38,0.12);box-shadow:inse
 .lollipop-dot{position:absolute;width:10px;height:10px;border-radius:50%;top:50%;transform:translate(-50%,-50%);border:2px solid var(--bg-card);box-shadow:0 0 0 1px rgba(0,0,0,0.1)}
 .lollipop-dot.positive{background:var(--success)}
 .lollipop-dot.negative{background:var(--danger)}
-.lollipop-val{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:10px;font-weight:700;white-space:nowrap}
+.lollipop-val{position:absolute;bottom:calc(50% + 5px);transform:translateX(-50%);font-family:var(--mono);font-size:10px;font-weight:700;white-space:nowrap}
 .lollipop-val.positive{color:var(--success)}
 .lollipop-val.negative{color:var(--danger)}
 .lollipop-axis-labels{display:flex;justify-content:space-between;margin-left:90px;font-size:9px;color:var(--text-tertiary);font-family:var(--mono);font-weight:500;padding-top:4px}

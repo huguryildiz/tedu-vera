@@ -73,17 +73,10 @@ export function ThresholdGapChart({ submittedData = [], criteria = [], threshold
         const stemWidth = gap != null ? `${Math.abs(normalize(gap) - 50)}%` : "0%";
         const dotPos = gap != null ? normalize(gap) : 50;
         const dotLeft = `${dotPos}%`;
-        // Default: positive → right of dot, negative → left of dot.
-        // Flip when the value would overflow the track edge.
+        // Value centered above the dot on the horizontal axis.
         const valStyle = gap == null
-          ? { left: "52%", color: "var(--text-tertiary)" }
-          : gap >= 0
-            ? (dotPos > 85
-                ? { left: `calc(${dotPos}% - 14px)`, transform: "translateX(-100%)" }
-                : { left: `calc(${dotPos}% + 14px)` })
-            : (dotPos < 15
-                ? { left: `calc(${dotPos}% + 14px)` }
-                : { left: `calc(${dotPos}% - 14px)`, transform: "translateX(-100%)" });
+          ? { left: "50%", color: "var(--text-tertiary)" }
+          : { left: `${dotPos}%` };
 
         return (
           <div key={code} className="lollipop-row">
