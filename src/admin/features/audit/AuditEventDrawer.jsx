@@ -21,10 +21,8 @@ function buildDetailRows(log) {
   const d = log.details || {};
   const rows = [];
   if (d.period_name || d.periodName)         rows.push({ key: "Period",    value: d.period_name || d.periodName });
-  // Use actor_name column first (migration 043+), fall back to details
-  const jurorName = log.actor_name || d.juror_name || (log.actor_type === "juror" ? d.actor_name : null);
-  if (jurorName && log.actor_type === "juror")         rows.push({ key: "Juror",     value: jurorName });
   // For admin-triggered juror events (e.g. edit_mode_enabled), juror is the resource not the actor
+  // When actor_type === "juror", the actor block already shows the juror — no need to repeat here
   if (d.juror_name && log.actor_type !== "juror")      rows.push({ key: "Juror",     value: d.juror_name });
   if (d.adminName || d.adminEmail)           rows.push({ key: "Admin",     value: d.adminName || d.adminEmail });
   if (d.applicant_email || d.applicantEmail) rows.push({ key: "Applicant", value: d.applicant_email || d.applicantEmail });
