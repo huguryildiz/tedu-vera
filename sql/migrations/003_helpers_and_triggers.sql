@@ -441,7 +441,16 @@ BEGIN
     CASE WHEN auth.uid() IS NOT NULL THEN 'admin' ELSE 'system' END::audit_actor_type,
     v_actor_name,
     v_ip, v_ua,
-    jsonb_build_object('operation', TG_OP, 'table', TG_TABLE_NAME),
+    jsonb_build_object('operation', TG_OP, 'table', TG_TABLE_NAME)
+    || CASE
+         WHEN TG_TABLE_NAME = 'periods' THEN
+           jsonb_build_object('periodName', COALESCE(NEW.name, OLD.name))
+         WHEN TG_TABLE_NAME = 'projects' THEN
+           jsonb_build_object('project_title', COALESCE(NEW.title, OLD.title))
+         WHEN TG_TABLE_NAME = 'jurors' THEN
+           jsonb_build_object('juror_name', COALESCE(NEW.juror_name, OLD.juror_name))
+         ELSE '{}'::jsonb
+       END,
     v_diff
   );
 
