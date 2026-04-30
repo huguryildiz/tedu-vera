@@ -428,7 +428,7 @@ export default function ReviewsPage() {
           <div className="scores-kpi-item-label">Completed</div>
         </div>
         <div className="scores-kpi-item" data-testid="reviews-kpi-avg-score" data-value={avgScore}>
-          <div className="scores-kpi-item-value">{avgScore}</div>
+          <div className="scores-kpi-item-value accent">{avgScore}<span className="kpi-denom">/100</span></div>
           <div className="scores-kpi-item-label">Avg Score</div>
         </div>
         <div className="scores-kpi-item" data-testid="reviews-kpi-high-disagreement" data-value={highDisagreementCount}>
