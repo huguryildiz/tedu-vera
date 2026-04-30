@@ -2075,6 +2075,11 @@ const commentPoolsTr = {
 const defaultCommentsEn = ['Reasonable work overall.','Good effort.','Needs further development.'];
 const defaultCommentsTr = ['Genel olarak makul bir çalışma.','İyi bir çaba.','Daha fazla gelişim gerekiyor.'];
 
+// Stores per-project scoring offset (hours from evalDay 09:00) for each juror×project pair.
+// Used to give each data.score.submitted audit entry a distinct timestamp and to compute
+// final_submitted_at as max(project sst) + 15 min.
+const projSstData = new Map(); // key: `${jId}-${projId}`, value: offsetHours (number)
+
 authList.forEach(auth => {
   // Locked jurors get partial scores (scored before lockout), Blocked/NotStarted skip entirely
   if (['Blocked','NotStarted'].includes(auth.semanticState)) return;
@@ -2115,7 +2120,9 @@ authList.forEach(auth => {
       ssStatus = 'submitted'; // locked jurors submitted before PIN lockout; lock is captured in juror_period_auth
     }
     const ssId = uuid(`ss-${auth.jId}-${proj.id}`);
-    const sst = randSqlTs(auth.evalDay, evalHourMin + scoredCount * 0.3, evalHourMax + scoredCount * 0.3);
+    const sstH = randInt(evalHourMin + scoredCount * 0.3, evalHourMax + scoredCount * 0.3) + randInt(0, 59) / 60;
+    const sst = sqlTs(auth.evalDay, sstH);
+    projSstData.set(`${auth.jId}-${proj.id}`, sstH);
 
     // Variable duration per archetype
     const dur = scoreDurations[proj.arch] || [25, 35];
@@ -2157,6 +2164,23 @@ authList.forEach(auth => {
 });
 ssBatcher.flush(out);
 ssiBatcher.flush(out);
+out.push('');
+
+// Recompute finalTs for Completed/Editing jurors so evaluation.complete is always AFTER
+// all per-project data.score.submitted entries, then UPDATE juror_period_auth to match.
+out.push('-- Align final_submitted_at: max(project submission time) + 15 minutes');
+authList.forEach(auth => {
+  if (!['Completed', 'Editing'].includes(auth.semanticState)) return;
+  const myProjs = projList.filter(p => p.pId === auth.pId);
+  let maxH = -Infinity;
+  myProjs.forEach(proj => {
+    const h = projSstData.get(`${auth.jId}-${proj.id}`);
+    if (h !== undefined && h > maxH) maxH = h;
+  });
+  if (maxH === -Infinity) return;
+  auth.finalTs = sqlTs(auth.evalDay, maxH + 0.25); // 15 min after last project scored
+  out.push(`UPDATE juror_period_auth SET final_submitted_at = ${auth.finalTs} WHERE juror_id = '${auth.jId}' AND period_id = '${auth.pId}';`);
+});
 out.push('');
 
 // ═══════════════════════════════════════════════════════════════
@@ -2422,7 +2446,9 @@ periodData.forEach(pd => {
     const corrId = uuid(`finalize-${a.jId}-${pd.id}`);
     auditObjList.push({ action:'evaluation.complete', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}"}`, timeStr:a.finalTs, correlationId:corrId });
     myProjs.forEach(proj => {
-      auditObjList.push({ action:'data.score.submitted', resType:'score_sheets', resId:proj.id, orgId:o.id, userId:null, actorName:a.name, details:`{"juror_name":"${escapeSql(a.name)}","project_title":"${escapeSql(proj.title)}","period_name":"${escapeSql(pd.name)}","period_id":"${pd.id}"}`, timeStr:a.finalTs, correlationId:corrId, _salt:`${a.jId}-${proj.id}` });
+      const projH = projSstData.get(`${a.jId}-${proj.id}`);
+      const projTs = projH !== undefined ? sqlTs(a.evalDay, projH) : a.finalTs;
+      auditObjList.push({ action:'data.score.submitted', resType:'score_sheets', resId:proj.id, orgId:o.id, userId:null, actorName:a.name, details:`{"juror_name":"${escapeSql(a.name)}","project_title":"${escapeSql(proj.title)}","period_name":"${escapeSql(pd.name)}","period_id":"${pd.id}"}`, timeStr:projTs, correlationId:corrId, _salt:`${a.jId}-${proj.id}` });
     });
   });
 
