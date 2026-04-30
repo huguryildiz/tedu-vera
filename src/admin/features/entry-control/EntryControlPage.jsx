@@ -495,7 +495,8 @@ export default function EntryControlPage() {
       if (!raw) throw new Error("QR data unavailable.");
       const blob = raw instanceof Blob ? raw : new Blob([raw], { type: "image/png" });
       const file = new File([blob], `${fileName}.png`, { type: "image/png" });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      const isTouchDevice = navigator.maxTouchPoints > 1;
+      if (isTouchDevice && navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], title: "Jury QR Code" });
         return;
       }
