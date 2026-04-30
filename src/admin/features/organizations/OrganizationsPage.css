@@ -94,16 +94,16 @@
     position: relative;
     overflow: hidden;
   }
-  #page-platform-control .organizations-table tbody tr:not([data-card-selectable]) {
+  #page-platform-control .organizations-table tbody tr:has(td[colspan]) {
     display: table-row;
     background: none;
     border: none;
     box-shadow: none;
   }
-  #page-platform-control .organizations-table tbody tr:not([data-card-selectable])::before {
+  #page-platform-control .organizations-table tbody tr:has(td[colspan])::before {
     display: none;
   }
-  #page-platform-control .organizations-table tbody tr:not([data-card-selectable]) td {
+  #page-platform-control .organizations-table tbody td[colspan] {
     display: block;
     text-align: center;
     padding: 32px 16px !important;
