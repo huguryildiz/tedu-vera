@@ -148,7 +148,7 @@ body:not(.dark-mode) .kpi:hover {
 .ec-session-time,
 .jrm-submitted {
   font-family: var(--mono);
-  color: var(--text-tertiary) !important;
+  color: var(--text-tertiary);
 }
 
 /* Global blue primary button preset (Add Juror style) */
