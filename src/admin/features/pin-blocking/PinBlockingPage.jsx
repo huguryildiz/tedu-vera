@@ -58,6 +58,19 @@ function parseCooldownMinutes(value) {
   return Number.isFinite(n) && n > 0 ? Math.trunc(n) : 30;
 }
 
+function formatCooldown(minutes) {
+  if (minutes >= 60 && minutes % 60 === 0) {
+    const h = minutes / 60;
+    return `${h} hour${h !== 1 ? "s" : ""}`;
+  }
+  if (minutes >= 60) {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h}h ${m}m`;
+  }
+  return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
+}
+
 export default function PinBlockingPage() {
   const { selectedPeriodId, organizationId, periodName } = useAdminContext();
   const policy = useSecurityPolicy();
@@ -85,7 +98,7 @@ export default function PinBlockingPage() {
   const noPeriod = !selectedPeriodId;
   const failThreshold = parseFailThreshold(policy?.maxPinAttempts);
   const cooldownMinutes = parseCooldownMinutes(policy?.pinLockCooldown);
-  const cooldownLabel = `${cooldownMinutes} minute${cooldownMinutes !== 1 ? "s" : ""}`;
+  const cooldownLabel = formatCooldown(cooldownMinutes);
 
   const totalActive = lockedJurors.length;
 

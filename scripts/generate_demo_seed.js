@@ -185,9 +185,9 @@ CASCADE;
 out.push(`DELETE FROM auth.identities WHERE user_id IN (SELECT id FROM auth.users WHERE email != 'demo-admin@vera-eval.app');`);
 out.push(`DELETE FROM auth.users WHERE email != 'demo-admin@vera-eval.app';`);
 
-// Security policy: demo-specific settings (bmax=3, lockout=5m, qrTtl=24h)
+// Security policy: demo-specific settings (bmax=3, lockout=1440m=24h, qrTtl=24h)
 out.push(`UPDATE security_policy SET policy = policy
-  || '{"maxPinAttempts":3,"pinLockCooldown":"5m","qrTtl":"24h"}'::jsonb
+  || '{"maxPinAttempts":3,"pinLockCooldown":"1440m","qrTtl":"24h"}'::jsonb
   WHERE id = 1;`);
 out.push('');
 
@@ -1989,13 +1989,28 @@ periodData.forEach(pd => {
       editExpiresAt = `(now() + interval '30 minutes')`;
     }
     if (semanticState === 'Locked') {
-      const lt = randSqlTs(pd.evalDay, 2, pd.evalDays * 12);
       failedAttempts = String(randInt(3, 5));
-      lockedUntil = `${lt} + interval '30 minutes'`;
-      lockedAt = lt;
+      if (pd.isCur) {
+        const elapsedMins = randInt(10, 30);
+        lockedAt = `(now() - interval '${elapsedMins} minutes')`;
+        lockedUntil = `(now() + interval '${randInt(16, 20)} hours')`;
+      } else {
+        const lt = randSqlTs(pd.evalDay, 2, pd.evalDays * 12);
+        lockedUntil = `${lt} + interval '30 minutes'`;
+        lockedAt = lt;
+      }
     }
     if (semanticState === 'Blocked') {
-      isBlocked = 'true';
+      failedAttempts = String(randInt(3, 5));
+      if (pd.isCur) {
+        const elapsedMins = randInt(20, 40);
+        lockedAt = `(now() - interval '${elapsedMins} minutes')`;
+        lockedUntil = `(now() + interval '${randInt(14, 18)} hours')`;
+      } else {
+        const lt = randSqlTs(pd.evalDay, 2, pd.evalDays * 12);
+        lockedUntil = `${lt} + interval '30 minutes'`;
+        lockedAt = lt;
+      }
     }
 
     jpaBatcher.push(`('${j.id}', '${pd.id}', '${pinHash}', ${lastSeenAt}, ${sessionExpiresAt}, ${finalSubmittedAt}, ${editEnabled}, ${editReason}, ${editExpiresAt}, ${failedAttempts}, ${lockedUntil}, ${lockedAt}, ${isBlocked})`);
@@ -2924,7 +2939,7 @@ orgs.forEach((o, oi) => {
 
 // security_policy.update — platform admin adjusting security settings (migration 057 trigger)
 [
-  { day: 5,  details: '{"changedFields":["maxPinAttempts","pinLockCooldown"],"diff":{"before":{"maxPinAttempts":5,"pinLockCooldown":"10m"},"after":{"maxPinAttempts":3,"pinLockCooldown":"5m"}}}' },
+  { day: 5,  details: '{"changedFields":["maxPinAttempts","pinLockCooldown"],"diff":{"before":{"maxPinAttempts":5,"pinLockCooldown":"10m"},"after":{"maxPinAttempts":3,"pinLockCooldown":"1440m"}}}' },
   { day: 30, details: '{"changedFields":["qrTtl"],"diff":{"before":{"qrTtl":"12h"},"after":{"qrTtl":"24h"}}}' },
 ].forEach((item, si) => {
   auditObjList.push({

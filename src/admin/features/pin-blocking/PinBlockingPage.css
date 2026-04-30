@@ -253,16 +253,17 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
 
   /* Juror cell — takes remaining space, truncates */
   .pin-lock-table td:nth-child(1) {
-    flex: 1;
-    min-width: 0;
+    flex: 1 1 0;
+    min-width: 90px;
     overflow: hidden;
   }
-  .pin-lock-table td:nth-child(1) .jb-name,
-  .pin-lock-table td:nth-child(1) .jb-affiliation {
+  .pin-lock-table td:nth-child(1) .jb-name {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* Suppress affiliation in ultra-compact row to reclaim horizontal space */
+  .pin-lock-table td:nth-child(1) .jb-affiliation { display: none; }
 
   /* Fail attempts cell */
   .pin-lock-table .col-fails {
@@ -274,9 +275,14 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
   /* Lock started — hidden in ultra compact */
   .pin-lock-table td.col-lock-started { display: none !important; }
 
-  /* ETA pill */
+  /* ETA pill — cap width so it doesn't crowd the name */
   .pin-lock-table td[data-label="Unlock ETA"] {
     flex-shrink: 0;
+    max-width: 88px;
+  }
+  .pin-lock-table td[data-label="Unlock ETA"] .pin-eta-pill {
+    font-size: 10.5px;
+    padding: 2px 7px 2px 6px;
   }
 
   /* Unlock button */
