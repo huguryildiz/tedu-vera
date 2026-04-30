@@ -298,12 +298,21 @@ export default function ProjectsPage() {
   }
 
   // KPI stats
-  const totalProjects = projectList.length;
-  const totalMembers = projectList.reduce((sum, p) => sum + membersToArray(p.members).length, 0);
   const kpiBase = filteredList.length !== projectList.length ? filteredList : projectList;
   const kpiTotalProjects = kpiBase.length;
-  const kpiTotalMembers = kpiBase.reduce((sum, p) => sum + membersToArray(p.members).length, 0);
   const kpiEvaluated = kpiBase.filter((p) => projectAvgMap.has(p.id)).length;
+  const kpiAvgScore = useMemo(() => {
+    const vals = kpiBase.map((p) => projectAvgMap.get(p.id)).filter((v) => v != null).map(Number);
+    if (!vals.length) return null;
+    return (vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(1);
+  }, [kpiBase, projectAvgMap]);
+  const kpiActiveJurors = useMemo(() => {
+    if (!rawScores?.length) return 0;
+    const kpiIds = new Set(kpiBase.map((p) => p.id));
+    return new Set(
+      rawScores.filter((r) => kpiIds.has(r.projectId || r.project_id)).map((r) => r.jurorId || r.juror_id).filter(Boolean)
+    ).size;
+  }, [rawScores, kpiBase]);
 
   function openEditDrawer(project) {
     setEditDrawerProject({
@@ -413,16 +422,18 @@ export default function ProjectsPage() {
       {/* KPI strip */}
       <div className="scores-kpi-strip">
         <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value">{kpiTotalProjects}</div>
-          <div className="scores-kpi-item-label">Projects</div>
+          <div className={`scores-kpi-item-value${kpiEvaluated === kpiTotalProjects && kpiTotalProjects > 0 ? " success" : kpiEvaluated === 0 && kpiTotalProjects > 0 ? " danger" : ""}`}>
+            {kpiEvaluated} / {kpiTotalProjects}
+          </div>
+          <div className="scores-kpi-item-label">Coverage</div>
         </div>
         <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value">{kpiTotalMembers}</div>
-          <div className="scores-kpi-item-label">Team Members</div>
+          <div className="scores-kpi-item-value">{kpiAvgScore != null ? kpiAvgScore : "—"}</div>
+          <div className="scores-kpi-item-label">Avg Score</div>
         </div>
         <div className="scores-kpi-item">
-          <div className="scores-kpi-item-value">{kpiEvaluated} / {kpiTotalProjects}</div>
-          <div className="scores-kpi-item-label">Evaluated</div>
+          <div className="scores-kpi-item-value">{kpiActiveJurors}</div>
+          <div className="scores-kpi-item-label">Jurors Active</div>
         </div>
       </div>
       <button
