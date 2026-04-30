@@ -38,11 +38,12 @@ export default function AddOutcomeDrawer({
   error,
 }) {
   const [form, setForm] = useState(EMPTY);
+  const [touched, setTouched] = useState({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
-    if (open) { setForm(EMPTY); setSaveError(""); setSaving(false); }
+    if (open) { setForm(EMPTY); setTouched({}); setSaveError(""); setSaving(false); }
   }, [open]);
 
   const handleSelectTemplate = (fw) => {
@@ -50,6 +51,7 @@ export default function AddOutcomeDrawer({
   };
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
+  const touch = (key) => setTouched((t) => ({ ...t, [key]: true }));
 
   const toggleCriterion = (id) =>
     setForm((f) => ({
@@ -60,6 +62,8 @@ export default function AddOutcomeDrawer({
     }));
 
   const handleSave = async () => {
+    setTouched({ code: true, shortLabel: true });
+    if (!form.code.trim() || !form.shortLabel.trim()) return;
     setSaveError("");
     setSaving(true);
     try {
@@ -174,15 +178,16 @@ export default function AddOutcomeDrawer({
                   <label className="fs-field-label">Code <span className="fs-field-req">*</span></label>
                   <input
                     data-testid="outcomes-drawer-code"
-                    className={`fs-input${!form.code.trim() ? " error" : ""}`}
+                    className={`fs-input${touched.code && !form.code.trim() ? " error" : ""}`}
                     type="text"
                     placeholder="e.g., PO-5"
                     value={form.code}
                     onChange={(e) => set("code", e.target.value)}
+                    onBlur={() => touch("code")}
                     disabled={saving}
                     maxLength={12}
                   />
-                  {!form.code.trim() ? (
+                  {touched.code && !form.code.trim() ? (
                     <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Code is required.</p>
                   ) : (
                     <div className="fs-field-helper hint" style={{ fontSize: "10.5px" }}>
@@ -194,15 +199,16 @@ export default function AddOutcomeDrawer({
                   <label className="fs-field-label">Label <span className="fs-field-req">*</span></label>
                   <input
                     data-testid="outcomes-drawer-label"
-                    className={`fs-input${!form.shortLabel.trim() ? " error" : ""}`}
+                    className={`fs-input${touched.shortLabel && !form.shortLabel.trim() ? " error" : ""}`}
                     type="text"
                     placeholder="e.g., Engineering Knowledge"
                     value={form.shortLabel}
                     onChange={(e) => set("shortLabel", e.target.value)}
+                    onBlur={() => touch("shortLabel")}
                     disabled={saving}
                     maxLength={25}
                   />
-                  {!form.shortLabel.trim() && (
+                  {touched.shortLabel && !form.shortLabel.trim() && (
                     <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Label is required.</p>
                   )}
                   <div className="fs-field-helper hint" style={{ fontSize: "10.5px" }}>
