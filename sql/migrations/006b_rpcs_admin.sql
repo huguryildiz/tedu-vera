@@ -797,7 +797,8 @@ BEGIN
       'auth.admin.password.reset.requested',
       'notification.entry_token', 'notification.juror_pin',
       'notification.export_report', 'notification.admin_invite',
-      'notification.application'
+      'notification.application',
+      'project.import'
     ) THEN 'low'
 
     ELSE 'info'

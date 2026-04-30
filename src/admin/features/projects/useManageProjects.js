@@ -12,6 +12,7 @@ import {
   createProject,
   upsertProject,
   deleteProject,
+  writeAuditLog,
 } from "@/shared/api";
 import { normalizeTeamMemberNames } from "@/admin/utils/auditUtils";
 
@@ -147,6 +148,15 @@ export function useManageProjects({
         }
       }
       await loadProjects(viewPeriodId);
+      try {
+        await writeAuditLog("project.import", {
+          resourceType: "projects",
+          details: { count: imported, period_id: viewPeriodId, period_name: periodContext },
+          organizationId,
+        });
+      } catch {
+        // Audit write failure must not block the import result
+      }
       setMessage(`Projects imported for Period ${periodContext}`);
       return { ok: true, imported, skipped: 0, failed };
     } catch (e) {

@@ -388,6 +388,27 @@ export const EVENT_META = {
       return { verb: "updated admin", resource: d.adminName || d.adminEmail || null };
     },
   },
+  "admin.role_granted": {
+    label: "Admin role granted",
+    narrative: (log) => {
+      const d = log.details || {};
+      return { verb: "granted admin role to", resource: d.adminName || d.adminEmail || null };
+    },
+  },
+  "admin.role_revoked": {
+    label: "Admin role revoked",
+    narrative: (log) => {
+      const d = log.details || {};
+      return { verb: "revoked admin role from", resource: d.adminName || d.adminEmail || null };
+    },
+  },
+  "org.ownership.transfer": {
+    label: "Organization ownership transferred",
+    narrative: (log) => {
+      const d = log.details || {};
+      return { verb: "transferred organization ownership", resource: d.to_email || d.to_user_id || null };
+    },
+  },
 
   // ── Evaluation flow (juror-initiated) ─────────────────────────
   "data.juror.auth.created": {
@@ -510,6 +531,27 @@ export const EVENT_META = {
     narrative: (log) => {
       const d = log.details || {};
       return { verb: "added juror", resource: d.juror_name || null };
+    },
+  },
+  "data.juror.created": {
+    label: "Juror created",
+    narrative: (log) => {
+      const d = log.details || {};
+      return { verb: "added juror", resource: d.juror_name || d.name || null };
+    },
+  },
+  "data.juror.updated": {
+    label: "Juror updated",
+    narrative: (log) => {
+      const d = log.details || {};
+      return { verb: "updated juror", resource: d.juror_name || d.name || null };
+    },
+  },
+  "data.juror.deleted": {
+    label: "Juror removed",
+    narrative: (log) => {
+      const d = log.details || {};
+      return { verb: "removed juror", resource: d.juror_name || d.name || null };
     },
   },
 
@@ -1062,6 +1104,13 @@ export const EVENT_META = {
   "notification.juror_reminder": { label: "Juror reminder sent" },
   "notification.unlock_request": { label: "Unlock request notification sent" },
   "notification.email_verification": { label: "Email verification link sent" },
+  "unlock_request.create": {
+    label: "Unlock request submitted",
+    narrative: (log) => {
+      const d = log.details || {};
+      return { verb: "submitted an unlock request for", resource: d.period_name || null };
+    },
+  },
 
   // ── Juror-initiated security / data requests ─────────────────
   "security.pin_reset.requested": {
