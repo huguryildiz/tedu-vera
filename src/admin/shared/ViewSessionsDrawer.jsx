@@ -151,7 +151,7 @@ export default function ViewSessionsDrawer({
                 </div>
               </div>
 
-              {!isCurrent && onRevoke && (
+              {onRevoke && (
                 <div className="fs-session-card-actions">
                   <button
                     type="button"
