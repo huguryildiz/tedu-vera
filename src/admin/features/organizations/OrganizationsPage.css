@@ -322,7 +322,7 @@
     gap: 8px;
     width: 100%;
   }
-  #page-platform-control .unlock-requests-table tbody tr {
+  #page-platform-control .unlock-requests-table tbody tr[data-status] {
     display: grid;
     grid-template-columns: 1fr auto;
     grid-template-areas:
