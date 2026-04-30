@@ -397,22 +397,22 @@ export function MaintenanceDrawer({ open, onClose }) {
     getMaintenanceConfig()
       .then((cfg) => {
         setCurrentStatus(cfg);
-        if (cfg) {
-          setMode(cfg.mode || "scheduled");
-          setMessage(cfg.message || message);
-          setNotifyAdmins(cfg.notify_admins ?? true);
-          if (cfg.start_time) {
-            setStartTime(new Date(cfg.start_time).toISOString().slice(0, 16));
-          }
-          if (cfg.affected_org_ids?.length) {
-            setOrgScope("specific");
-            setAffectedOrgIds(cfg.affected_org_ids);
-            setInitialAffectedOrgIds(cfg.affected_org_ids);
-          } else {
-            setOrgScope("all");
-            setAffectedOrgIds([]);
-            setInitialAffectedOrgIds([]);
-          }
+        // Always reset all fields — Drawer doesn't unmount so stale state persists between opens.
+        setMode(cfg?.mode || "scheduled");
+        setMessage(cfg?.message || "VERA is undergoing scheduled maintenance. We'll be back shortly.");
+        setNotifyAdmins(cfg?.notify_admins ?? true);
+        if (cfg?.start_time) {
+          setStartTime(new Date(cfg.start_time).toISOString().slice(0, 16));
+        }
+        const affectedIds = cfg?.affected_org_ids?.length ? cfg.affected_org_ids : [];
+        if (affectedIds.length) {
+          setOrgScope("specific");
+          setAffectedOrgIds(affectedIds);
+          setInitialAffectedOrgIds(affectedIds);
+        } else {
+          setOrgScope("all");
+          setAffectedOrgIds([]);
+          setInitialAffectedOrgIds([]);
         }
       })
       .catch(() => {}); // non-critical — drawer still works without pre-fill
@@ -475,6 +475,9 @@ export function MaintenanceDrawer({ open, onClose }) {
     try {
       await cancelMaintenance();
       toast.success("Maintenance cancelled");
+      setOrgScope("all");
+      setAffectedOrgIds([]);
+      setInitialAffectedOrgIds([]);
       onClose();
     } catch (err) {
       toast.error("Failed to cancel maintenance");
@@ -530,26 +533,33 @@ export function MaintenanceDrawer({ open, onClose }) {
           <label className="fs-field-label">Mode</label>
           <div style={{ display: "flex", gap: 8 }}>
             {[["scheduled", "Scheduled", "rgba(217,119,6,0.04)", "rgba(217,119,6,0.25)"], ["immediate", "Immediate", "rgba(239,68,68,0.04)", "rgba(239,68,68,0.25)"]].map(([val, label, bg, border]) => (
-              <label
+              <button
                 key={val}
+                type="button"
+                onClick={() => setMode(val)}
                 style={{
                   display: "flex", alignItems: "center", gap: 6, fontSize: 12.5,
                   cursor: "pointer", padding: "8px 14px", flex: 1,
                   border: mode === val ? `1px solid ${border}` : "1px solid var(--border)",
                   borderRadius: "var(--radius-sm)",
-                  background: mode === val ? bg : undefined,
+                  background: mode === val ? bg : "transparent",
+                  fontFamily: "inherit",
                 }}
               >
-                <input
-                  type="radio"
-                  name="maint-mode"
-                  value={val}
-                  checked={mode === val}
-                  onChange={() => setMode(val)}
-                  style={{ accentColor: val === "scheduled" ? "var(--warning)" : "var(--danger)" }}
-                />
+                <span style={{
+                  width: 14, height: 14, borderRadius: "50%", flexShrink: 0,
+                  border: `2px solid ${mode === val ? (val === "scheduled" ? "var(--warning)" : "var(--danger)") : "var(--border)"}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  {mode === val && (
+                    <span style={{
+                      width: 6, height: 6, borderRadius: "50%",
+                      background: val === "scheduled" ? "var(--warning)" : "var(--danger)",
+                    }} />
+                  )}
+                </span>
                 {label}
-              </label>
+              </button>
             ))}
           </div>
         </div>
@@ -605,77 +615,82 @@ export function MaintenanceDrawer({ open, onClose }) {
           <label className="fs-field-label">Affected Organizations</label>
           <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
             {[["all", "All organizations"], ["specific", "Specific organizations"]].map(([val, label]) => (
-              <label
+              <button
                 key={val}
+                type="button"
+                onClick={() => setOrgScope(val)}
                 style={{
                   display: "flex", alignItems: "center", gap: 6, fontSize: 12.5,
                   cursor: "pointer", padding: "7px 12px", flex: 1,
                   border: orgScope === val ? "1px solid var(--accent)" : "1px solid var(--border)",
                   borderRadius: "var(--radius-sm)",
-                  background: orgScope === val ? "rgba(99,102,241,0.06)" : undefined,
+                  background: orgScope === val ? "rgba(99,102,241,0.06)" : "transparent",
+                  fontFamily: "inherit",
                 }}
               >
-                <input
-                  type="radio"
-                  name="maint-org-scope"
-                  value={val}
-                  checked={orgScope === val}
-                  onChange={() => { setOrgScope(val); if (val === "all") setAffectedOrgIds([]); }}
-                  style={{ accentColor: "var(--accent)" }}
-                />
+                <span style={{
+                  width: 14, height: 14, borderRadius: "50%", flexShrink: 0,
+                  border: `2px solid ${orgScope === val ? "var(--accent)" : "var(--border)"}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  {orgScope === val && (
+                    <span style={{
+                      width: 6, height: 6, borderRadius: "50%",
+                      background: "var(--accent)",
+                    }} />
+                  )}
+                </span>
                 {label}
-              </label>
+              </button>
             ))}
           </div>
-          {orgScope === "specific" && (
-            <div style={{
-              maxHeight: 160, overflowY: "auto", border: "1px solid var(--border)",
-              borderRadius: "var(--radius-sm)", padding: "4px 0",
-            }}>
-              {sortedOrgs.length === 0 ? (
-                <div style={{ padding: "10px 14px", fontSize: 12.5, color: "var(--text-tertiary)" }}>
-                  No active organizations found
-                </div>
-              ) : sortedOrgs.map((org, idx) => {
-                const initialSet = new Set(initialAffectedOrgIds);
-                const isInitial = initialSet.has(org.id);
-                const nextOrg = sortedOrgs[idx + 1];
-                const showDivider = isInitial && nextOrg && !initialSet.has(nextOrg.id);
-                return (
-                  <div key={org.id}>
-                    <label
-                      style={{
-                        display: "flex", alignItems: "center", gap: 8,
-                        padding: "7px 14px", cursor: "pointer", fontSize: 13,
-                        background: affectedOrgIds.includes(org.id) ? "rgba(99,102,241,0.06)" : undefined,
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={affectedOrgIds.includes(org.id)}
-                        onChange={(e) => setAffectedOrgIds(
-                          e.target.checked
-                            ? [...affectedOrgIds, org.id]
-                            : affectedOrgIds.filter((id) => id !== org.id)
-                        )}
-                        style={{ accentColor: "var(--accent)", flexShrink: 0 }}
-                      />
-                      <span style={{ fontWeight: 500 }}>{org.name}</span>
-                      {org.code && (
-                        <span className="vera-datetime-text" style={{ fontSize: 11, color: "var(--text-tertiary)", marginLeft: "auto", textAlign: "right" }}>{org.code}</span>
-                      )}
-                    </label>
-                    {showDivider && (
-                      <div style={{
-                        borderTop: "1px solid var(--border)",
-                        margin: "4px 0",
-                      }} />
-                    )}
-                  </div>
+          <div style={{
+            maxHeight: 160, overflowY: "auto", border: "1px solid var(--border)",
+            borderRadius: "var(--radius-sm)", padding: "4px 0",
+          }}>
+            {sortedOrgs.length === 0 ? (
+              <div style={{ padding: "10px 14px", fontSize: 12.5, color: "var(--text-tertiary)" }}>
+                No active organizations found
+              </div>
+            ) : sortedOrgs.map((org) => {
+              const checked = orgScope === "all" || affectedOrgIds.includes(org.id);
+              const handleChange = (e) => {
+                if (orgScope === "all") {
+                  if (!e.target.checked) {
+                    // Deselecting one → switch to specific with all others still selected
+                    setOrgScope("specific");
+                    setAffectedOrgIds(sortedOrgs.map(o => o.id).filter(id => id !== org.id));
+                  }
+                  return;
+                }
+                setAffectedOrgIds(e.target.checked
+                  ? [...affectedOrgIds, org.id]
+                  : affectedOrgIds.filter((id) => id !== org.id)
                 );
-              })}
-            </div>
-          )}
+              };
+              return (
+                <label
+                  key={org.id}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "7px 14px", cursor: "pointer", fontSize: 13,
+                    background: checked ? "rgba(99,102,241,0.06)" : undefined,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={handleChange}
+                    style={{ accentColor: "var(--accent)", flexShrink: 0 }}
+                  />
+                  <span style={{ fontWeight: 500 }}>{org.name}</span>
+                  {org.code && (
+                    <span className="vera-datetime-text" style={{ fontSize: 11, color: "var(--text-tertiary)", marginLeft: "auto", textAlign: "right" }}>{org.code}</span>
+                  )}
+                </label>
+              );
+            })}
+          </div>
         </div>
 
         <ToggleRow

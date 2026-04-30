@@ -2,7 +2,7 @@
 // Audit Log page: track admin actions, score changes, and access events.
 // Hook connections: useAuditLogFilters, usePageRealtime
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
 import { Search, Download, X, Clock, Filter, Lock, Shield, UserCheck, Activity, Key, Package, Calendar, LogIn, FileText, ShieldCheck, XCircle } from "lucide-react";
 import { useToast } from "@/shared/hooks/useToast";
@@ -139,6 +139,7 @@ function ActionIcon({ action = "", chipType = "" }) {
   if (a.startsWith("token") || chipType === "token") return <Key {...props} />;
   return <Activity {...props} />;
 }
+
 
 // ── Component ─────────────────────────────────────────────────
 export default function AuditLogPage() {
