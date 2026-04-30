@@ -48,7 +48,10 @@ Deno.test("notify-maintenance — missing Supabase env returns 500", async () =>
 Deno.test("notify-maintenance — non-super-admin returns 403", async () => {
   const handler = await setup();
   setMockConfig({
-    rpc: { current_user_is_super_admin: { data: false, error: null } },
+    authGetUser: { data: { user: { id: "u1", email: "user@test.com" } as unknown as { id: string } }, error: null },
+    tables: {
+      memberships: { selectMaybeSingle: { data: null, error: null } },
+    },
   });
   const res = await handler(makeRequest({ token: "user-jwt", body: {} }));
   assertEquals(res.status, 403);
@@ -61,9 +64,12 @@ Deno.test("notify-maintenance — non-super-admin returns 403", async () => {
 Deno.test("notify-maintenance — no active org admins returns 200 sent:0", async () => {
   const handler = await setup();
   setMockConfig({
-    rpc: { current_user_is_super_admin: { data: true, error: null } },
+    authGetUser: { data: { user: { id: "super1", email: "super@test.com" } as unknown as { id: string } }, error: null },
     tables: {
-      memberships: { selectList: { data: [], error: null } },
+      memberships: {
+        selectMaybeSingle: { data: { organization_id: null }, error: null },
+        selectList: { data: [], error: null },
+      },
     },
   });
   const res = await handler(makeRequest({ token: "super-jwt", body: {} }));
@@ -81,8 +87,10 @@ Deno.test("notify-maintenance — no active org admins returns 200 sent:0", asyn
 Deno.test("notify-maintenance — testRecipient mismatch returns 400", async () => {
   const handler = await setup();
   setMockConfig({
-    rpc: { current_user_is_super_admin: { data: true, error: null } },
     authGetUser: { data: { user: { id: "u1", email: "caller@test.com" } as unknown as { id: string } }, error: null },
+    tables: {
+      memberships: { selectMaybeSingle: { data: { organization_id: null }, error: null } },
+    },
   });
   const res = await handler(makeRequest({
     token: "super-jwt",
@@ -98,9 +106,12 @@ Deno.test("notify-maintenance — testRecipient mismatch returns 400", async () 
 Deno.test("notify-maintenance — members fetch error returns 500", async () => {
   const handler = await setup();
   setMockConfig({
-    rpc: { current_user_is_super_admin: { data: true, error: null } },
+    authGetUser: { data: { user: { id: "super1", email: "super@test.com" } as unknown as { id: string } }, error: null },
     tables: {
-      memberships: { selectList: { data: null, error: { message: "relation not found" } } },
+      memberships: {
+        selectMaybeSingle: { data: { organization_id: null }, error: null },
+        selectList: { data: null, error: { message: "relation not found" } },
+      },
     },
   });
   const res = await handler(makeRequest({ token: "super-jwt", body: {} }));
@@ -133,9 +144,10 @@ Deno.test("notify-maintenance — non-POST returns 405", async () => {
 Deno.test("notify-maintenance — listUsers error returns 500", async () => {
   const handler = await setup();
   setMockConfig({
-    rpc: { current_user_is_super_admin: { data: true, error: null } },
+    authGetUser: { data: { user: { id: "super1", email: "super@test.com" } as unknown as { id: string } }, error: null },
     tables: {
       memberships: {
+        selectMaybeSingle: { data: { organization_id: null }, error: null },
         selectList: {
           data: [
             {
@@ -162,9 +174,10 @@ Deno.test("notify-maintenance — happy path no RESEND returns 200 sent:1", asyn
   const handler = await setup();
   Deno.env.delete("RESEND_API_KEY");
   setMockConfig({
-    rpc: { current_user_is_super_admin: { data: true, error: null } },
+    authGetUser: { data: { user: { id: "super1", email: "super@test.com" } as unknown as { id: string } }, error: null },
     tables: {
       memberships: {
+        selectMaybeSingle: { data: { organization_id: null }, error: null },
         selectList: {
           data: [
             {
@@ -196,9 +209,6 @@ Deno.test("notify-maintenance — happy path no RESEND returns 200 sent:1", asyn
 // qa: edge.real.notify-maintenance.11
 Deno.test("notify-maintenance — invalid JSON body returns 500", async () => {
   const handler = await setup();
-  setMockConfig({
-    rpc: { current_user_is_super_admin: { data: true, error: null } },
-  });
   const req = new Request("http://localhost/fn", {
     method: "POST",
     headers: {
@@ -219,9 +229,10 @@ Deno.test("notify-maintenance — profiles fetch error does not block send", asy
   const handler = await setup();
   Deno.env.delete("RESEND_API_KEY");
   setMockConfig({
-    rpc: { current_user_is_super_admin: { data: true, error: null } },
+    authGetUser: { data: { user: { id: "super1", email: "super@test.com" } as unknown as { id: string } }, error: null },
     tables: {
       memberships: {
+        selectMaybeSingle: { data: { organization_id: null }, error: null },
         selectList: {
           data: [
             {
@@ -256,9 +267,10 @@ Deno.test("notify-maintenance — response shape pins ok/sent/total/errors field
   const handler = await setup();
   Deno.env.delete("RESEND_API_KEY");
   setMockConfig({
-    rpc: { current_user_is_super_admin: { data: true, error: null } },
+    authGetUser: { data: { user: { id: "super1", email: "super@test.com" } as unknown as { id: string } }, error: null },
     tables: {
       memberships: {
+        selectMaybeSingle: { data: { organization_id: null }, error: null },
         selectList: {
           data: [
             {
@@ -295,9 +307,10 @@ Deno.test("notify-maintenance — schema.success pins ok/sent/total response sha
   const handler = await setup();
   Deno.env.delete("RESEND_API_KEY");
   setMockConfig({
-    rpc: { current_user_is_super_admin: { data: true, error: null } },
+    authGetUser: { data: { user: { id: "super1", email: "super@test.com" } as unknown as { id: string } }, error: null },
     tables: {
       memberships: {
+        selectMaybeSingle: { data: { organization_id: null }, error: null },
         selectList: {
           data: [
             {
@@ -330,9 +343,10 @@ Deno.test("notify-maintenance — schema.success pins ok/sent/total response sha
 Deno.test("notify-maintenance — schema.internal-error pins error field on listUsers failure", async () => {
   const handler = await setup();
   setMockConfig({
-    rpc: { current_user_is_super_admin: { data: true, error: null } },
+    authGetUser: { data: { user: { id: "super1", email: "super@test.com" } as unknown as { id: string } }, error: null },
     tables: {
       memberships: {
+        selectMaybeSingle: { data: { organization_id: null }, error: null },
         selectList: {
           data: [
             {
@@ -361,9 +375,10 @@ Deno.test(
     const handler = await setup();
     Deno.env.delete("RESEND_API_KEY");
     setMockConfig({
-      rpc: { current_user_is_super_admin: { data: true, error: null } },
+      authGetUser: { data: { user: { id: "super1", email: "super@test.com" } as unknown as { id: string } }, error: null },
       tables: {
         memberships: {
+          selectMaybeSingle: { data: { organization_id: null }, error: null },
           selectList: {
             data: [
               {
@@ -406,9 +421,12 @@ Deno.test(
   async () => {
     const handler = await setup();
     setMockConfig({
-      rpc: { current_user_is_super_admin: { data: true, error: null } },
+      authGetUser: { data: { user: { id: "super1", email: "super@test.com" } as unknown as { id: string } }, error: null },
       tables: {
-        memberships: { selectList: { data: null, error: { message: "fetch failed" } } },
+        memberships: {
+          selectMaybeSingle: { data: { organization_id: null }, error: null },
+          selectList: { data: null, error: { message: "fetch failed" } },
+        },
       },
     });
     const res = await handler(makeRequest({ token: "super-jwt", body: {} }));
