@@ -166,6 +166,8 @@ export default function AdminRouteLayout() {
     summaryData,
     allJurors,
     sortedPeriods,
+    jurorSummary,
+    periodSummary,
     loading,
     loadError,
     lastRefresh,
@@ -372,6 +374,8 @@ export default function AdminRouteLayout() {
     summaryData,
     allJurors,
     sortedPeriods,
+    jurorSummary,
+    periodSummary,
     loading,
     loadError,
     lastRefresh,
@@ -402,6 +406,7 @@ export default function AdminRouteLayout() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [
     rawScores, summaryData, allJurors, sortedPeriods,
+    jurorSummary, periodSummary,
     loading, loadError, lastRefresh, fetchData, bgRefresh,
     selectedPeriod, selectedPeriodId, setSelectedPeriodId,
     criteriaConfig, criteriaLoading, outcomeConfig, frameworks, reloadFrameworks, reloadCriteriaAndOutcomes,

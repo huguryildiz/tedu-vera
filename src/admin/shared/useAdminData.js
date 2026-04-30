@@ -20,6 +20,8 @@ import {
   listJurorsSummary,
   listPeriods,
   getProjectSummary,
+  getJurorSummary,
+  getPeriodSummary,
 } from "../../shared/api";
 import { sortPeriodsByStartDateDesc } from "../../shared/periodSort";
 import { pickDefaultPeriod } from "../../jury/shared/periodSelection";
@@ -101,6 +103,9 @@ export function useAdminData({
   const [summaryData, setSummaryData] = useState([]);
   const [allJurors, setAllJurors] = useState([]);
   const [periodList, setPeriodList] = useState([]);
+  // Server-side aggregation slices (single source of truth for averages)
+  const [jurorSummary, setJurorSummary] = useState([]);
+  const [periodSummary, setPeriodSummary] = useState(null);
 
   // ── Details view state (all-periods lazy load) ──────────
   const [detailsScores, setDetailsScores] = useState([]);
@@ -189,18 +194,24 @@ export function useAdminData({
       selectedPeriodRef.current = targetId;
       onSelectedPeriodChange(targetId);
 
-      // Fetch scores + summary + juror list in parallel.
-      // listJurorsSummary is non-fatal: degrades gracefully if RPC not yet deployed.
-      const [scores, summary, jurors] = await Promise.all([
+      // Fetch scores + summary + juror list + new server-side aggregations.
+      // The three new aggregation RPCs are non-fatal: if a deployment is
+      // mid-rollout and the RPC isn't there yet, degrade to empty arrays
+      // so drawers/pages can still render with the legacy fields.
+      const [scores, summary, jurors, jSummary, pSummary] = await Promise.all([
         getScores(targetId),
         getProjectSummary(targetId),
         listJurorsSummary(targetId).catch(() => []),
+        getJurorSummary(targetId).catch(() => []),
+        getPeriodSummary(targetId).catch(() => null),
       ]);
       if (!isLatest()) return;
 
       setRawScores(scores);
       setSummaryData(summary);
       setAllJurors(jurors);
+      setJurorSummary(jSummary);
+      setPeriodSummary(pSummary);
       setLastRefresh(new Date());
       setAuthError("");
 
@@ -302,12 +313,18 @@ export function useAdminData({
       tasks.push(needScores  ? getScores(periodId)              : Promise.resolve(null));
       tasks.push(needSummary ? getProjectSummary(periodId)      : Promise.resolve(null));
       tasks.push(needJurors  ? listJurorsSummary(periodId).catch(() => []) : Promise.resolve(null));
-      const [scores, summary, jurors] = await Promise.all(tasks);
+      // Server-side aggregations refresh whenever scores or summary change —
+      // they share the same source tables (score_sheets/score_sheet_items).
+      tasks.push(needScores || needSummary ? getJurorSummary(periodId).catch(() => []) : Promise.resolve(null));
+      tasks.push(needScores || needSummary ? getPeriodSummary(periodId).catch(() => null) : Promise.resolve(null));
+      const [scores, summary, jurors, jSummary, pSummary] = await Promise.all(tasks);
       if (!isLatest()) return;
 
-      if (scores  !== null) setRawScores(scores);
-      if (summary !== null) setSummaryData(summary);
-      if (jurors  !== null) setAllJurors(jurors);
+      if (scores   !== null) setRawScores(scores);
+      if (summary  !== null) setSummaryData(summary);
+      if (jurors   !== null) setAllJurors(jurors);
+      if (jSummary !== null) setJurorSummary(jSummary);
+      if (pSummary !== null) setPeriodSummary(pSummary);
       setLastRefresh(new Date());
     } catch {
       // Silent — don't flash error on background sync
@@ -394,6 +411,8 @@ export function useAdminData({
     allJurors,
     periodList,
     sortedPeriods,
+    jurorSummary,
+    periodSummary,
     detailsScores,
     detailsSummary,
     detailsLoading,

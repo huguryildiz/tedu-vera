@@ -86,6 +86,8 @@ export {
   getPeriodMaxScore,
   listJurorsSummary,
   getProjectSummary,
+  getJurorSummary,
+  getPeriodSummary,
   getOutcomeTrends,
   getOutcomeAttainmentTrends,
   getDeleteCounts,

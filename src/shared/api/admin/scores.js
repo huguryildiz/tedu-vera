@@ -138,71 +138,119 @@ export async function listJurorsSummary(periodId) {
 }
 
 /**
- * Returns per-project summary with aggregated scores (dynamic criteria).
+ * Returns per-project summary with aggregated scores via the
+ * `rpc_admin_project_summary` server-side aggregation. Fields are normalized
+ * to camelCase + legacy aliases so existing call sites (ProjectsPage,
+ * RankingsPage, ProjectScoresDrawer, Export) read the same shape they did
+ * when this was JS-side aggregation.
+ *
+ * Server returns one row per project with both raw (`total_avg`, `total_min`,
+ * `total_max`) and normalized (`total_pct`, `std_dev_pct`) values, plus
+ * `rank` (deterministic via `RANK() OVER (... NULLS LAST, project_id)`) and
+ * `per_criterion` JSONB (`{ key: { avg, max, pct } }`).
+ *
+ * @param {string} periodId
+ * @param {object} [opts]
+ * @param {boolean} [opts.onlyFinalized=true] - when true (default, official
+ *   view) only includes sheets from jurors with `final_submitted_at IS NOT
+ *   NULL`. When false, falls back to `score_sheets.status='submitted'` for
+ *   live-monitoring views.
  */
-export async function getProjectSummary(periodId) {
-  // Get projects
-  const { data: projects, error: projErr } = await supabase
-    .from("projects")
-    .select("id, title, members, project_no, advisor_name")
-    .eq("period_id", periodId)
-    .order("title");
-  if (projErr) throw projErr;
-
-  // Get only submitted score sheets for this period
-  const { data: sheets, error: sheetErr } = await supabase
-    .from("score_sheets")
-    .select(`
-      id, project_id,
-      items:score_sheet_items(score_value, period_criteria(key))
-    `)
-    .eq("period_id", periodId)
-    .eq("status", "submitted")
-    .limit(SCORE_QUERY_CAP);
-  if (sheetErr) throw sheetErr;
-  warnIfCapped("getProjectSummary", sheets);
-
-  // Aggregate scores per project
-  const scoresByProject = {};
-  for (const s of sheets || []) {
-    if (!scoresByProject[s.project_id]) scoresByProject[s.project_id] = [];
-    scoresByProject[s.project_id].push(pivotItems(s.items));
-  }
-
-  return (projects || []).map((p) => {
-    const pScores = scoresByProject[p.id] || [];
-    const count = pScores.length;
-
-    // Collect all criterion keys across all jurors
-    const allKeys = new Set();
-    pScores.forEach((ps) => Object.keys(ps.scores).forEach((k) => allKeys.add(k)));
-
-    // Compute per-criterion average
+export async function getProjectSummary(periodId, { onlyFinalized = true } = {}) {
+  const { data, error } = await supabase.rpc("rpc_admin_project_summary", {
+    p_period_id: periodId,
+    p_only_finalized: onlyFinalized,
+  });
+  if (error) throw error;
+  return (data || []).map((row) => {
+    // Flatten per_criterion { key: { avg, max, pct } } → legacy `avg[key]` (raw mean)
+    const perCrit = row.per_criterion || {};
     const avg = {};
-    allKeys.forEach((key) => {
-      const vals = pScores.map((ps) => ps.scores[key]).filter((v) => v != null);
-      avg[key] = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
-    });
-
-    const totalAvg = count
-      ? pScores.reduce((sum, ps) => sum + ps.total, 0) / count
-      : null;
-
-    const totals = pScores.map((ps) => ps.total);
-
+    for (const [key, info] of Object.entries(perCrit)) {
+      if (info && typeof info === "object") avg[key] = info.avg;
+    }
     return {
-      id: p.id,
-      group_no: p.project_no ?? null,
-      title: p.title,
-      members: formatMembers(p.members),
-      advisor: p.advisor_name || "",
-      count,
+      // Legacy aliases (do not remove until all call sites migrate)
+      id: row.project_id,
+      group_no: row.project_no ?? null,
+      count: row.juror_count ?? 0,
       avg,
-      totalAvg,
-      totalMin: totals.length ? Math.min(...totals) : null,
-      totalMax: totals.length ? Math.max(...totals) : null,
+      totalAvg: row.total_avg,
+      totalMin: row.total_min,
+      totalMax: row.total_max,
+      // Pass-through identity fields
+      title: row.title,
+      members: formatMembers(row.members),
+      advisor: row.advisor || "",
+      // New server-side aggregations
+      totalPct:    row.total_pct,
+      stdDevPct:   row.std_dev_pct,
+      rank:        row.rank,
+      submittedCount: row.submitted_count ?? 0,
+      assignedCount:  row.assigned_count ?? 0,
+      perCriterion: perCrit,
     };
   });
+}
+
+/**
+ * Returns per-juror summary for a period via `rpc_admin_juror_summary`.
+ * Used by JurorScoresDrawer and (later) JurorsPage live KPI cards.
+ *
+ * @param {string} periodId
+ * @param {object} [opts]
+ * @param {boolean} [opts.onlyFinalized=true]
+ */
+export async function getJurorSummary(periodId, { onlyFinalized = true } = {}) {
+  const { data, error } = await supabase.rpc("rpc_admin_juror_summary", {
+    p_period_id: periodId,
+    p_only_finalized: onlyFinalized,
+  });
+  if (error) throw error;
+  return (data || []).map((row) => ({
+    jurorId:          row.juror_id,
+    jurorName:        row.juror_name,
+    affiliation:      row.affiliation || "",
+    scoredCount:      row.scored_count ?? 0,
+    assignedCount:    row.assigned_count ?? 0,
+    completionPct:    row.completion_pct,
+    avgTotal:         row.avg_total,
+    avgTotalPct:      row.avg_total_pct,
+    stdDevPct:        row.std_dev_pct,
+    finalSubmittedAt: row.final_submitted_at || null,
+  }));
+}
+
+/**
+ * Returns the period-wide reference summary via `rpc_admin_period_summary`.
+ * Drawers use this to compute "vs avg" deltas without re-iterating
+ * project/juror lists client-side.
+ *
+ * @param {string} periodId
+ * @param {object} [opts]
+ * @param {boolean} [opts.onlyFinalized=true]
+ * @returns {Promise<{
+ *   totalMax: number, totalProjects: number, rankedCount: number,
+ *   totalJurors: number, finalizedJurors: number,
+ *   avgTotalPct: number|null, avgJurorPct: number|null
+ * }>}
+ */
+export async function getPeriodSummary(periodId, { onlyFinalized = true } = {}) {
+  const { data, error } = await supabase.rpc("rpc_admin_period_summary", {
+    p_period_id: periodId,
+    p_only_finalized: onlyFinalized,
+  });
+  if (error) throw error;
+  const row = (data || [])[0] || {};
+  return {
+    totalMax:        row.total_max ?? 0,
+    totalProjects:   row.total_projects ?? 0,
+    rankedCount:     row.ranked_count ?? 0,
+    totalJurors:     row.total_jurors ?? 0,
+    finalizedJurors: row.finalized_jurors ?? 0,
+    avgTotalPct:     row.avg_total_pct,
+    avgJurorPct:     row.avg_juror_pct,
+  };
 }
 
 /**

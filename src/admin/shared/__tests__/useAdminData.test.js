@@ -8,12 +8,16 @@ const mockListPeriods = vi.fn();
 const mockGetScores = vi.fn();
 const mockGetProjectSummary = vi.fn();
 const mockListJurorsSummary = vi.fn();
+const mockGetJurorSummary = vi.fn();
+const mockGetPeriodSummary = vi.fn();
 
 vi.mock("@/shared/api", () => ({
   listPeriods: (...a) => mockListPeriods(...a),
   getScores: (...a) => mockGetScores(...a),
   getProjectSummary: (...a) => mockGetProjectSummary(...a),
   listJurorsSummary: (...a) => mockListJurorsSummary(...a),
+  getJurorSummary: (...a) => mockGetJurorSummary(...a),
+  getPeriodSummary: (...a) => mockGetPeriodSummary(...a),
 }));
 
 vi.mock("@/shared/periodSort", () => ({
@@ -75,6 +79,8 @@ describe("useAdminData", () => {
     mockGetScores.mockResolvedValue(makeScores());
     mockGetProjectSummary.mockResolvedValue([{ id: "proj1", students: "Alice, Bob" }]);
     mockListJurorsSummary.mockResolvedValue([{ id: "j1", name: "Juror A" }]);
+    mockGetJurorSummary.mockResolvedValue([]);
+    mockGetPeriodSummary.mockResolvedValue(null);
   });
 
   qaTest("admin.shared.adminData.01", async () => {

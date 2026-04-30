@@ -6,10 +6,13 @@ import { describe, expect, vi, beforeEach } from "vitest";
 import { qaTest } from "../../../../test/qaTest.js";
 import { mockError, makeSheetRow, makeItem, makeProject } from "../../../../test/adminApiMocks.js";
 
-const { mockFrom } = vi.hoisted(() => ({ mockFrom: vi.fn() }));
+const { mockFrom, mockRpc } = vi.hoisted(() => ({
+  mockFrom: vi.fn(),
+  mockRpc: vi.fn(),
+}));
 
 vi.mock("@/shared/lib/supabaseClient", () => ({
-  supabase: { from: mockFrom },
+  supabase: { from: mockFrom, rpc: mockRpc },
 }));
 
 import { getScores, getProjectSummary, listJurorsSummary } from "../scores.js";
@@ -56,20 +59,12 @@ describe("admin/scores — cross-org boundary", () => {
   });
 
   qaTest("scores.cross-org.02", async () => {
-    // RLS blocks the projects query inside getProjectSummary — must throw
-    const rlsError = { message: "permission denied for table projects", code: "42501" };
-    mockFrom.mockImplementation((table) => {
-      if (table === "projects") {
-        return {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              order: vi.fn().mockResolvedValue({ data: null, error: rlsError }),
-            }),
-          }),
-        };
-      }
-      return scoresSheetsEqLimitChain({ data: [], error: null });
-    });
+    // RLS / tenant gate inside rpc_admin_project_summary blocks the call —
+    // must propagate the error, not return empty rows. (The RPC raises
+    // 'unauthorized' for cross-org callers; PostgREST surfaces it as code
+    // 42501 / message 'unauthorized'.)
+    const rlsError = { message: "unauthorized", code: "42501" };
+    mockRpc.mockResolvedValue({ data: null, error: rlsError });
     await expect(getProjectSummary("period-x")).rejects.toMatchObject({ code: "42501" });
   });
 

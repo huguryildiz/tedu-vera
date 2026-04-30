@@ -9087,6 +9087,50 @@
     "severity": "critical"
   },
   {
+    "id": "scores.juror_summary.01",
+    "module": "Shared / API",
+    "area": "admin/scores — getJurorSummary",
+    "story": "getJurorSummary — RPC fields are mapped to camelCase UI shape",
+    "scenario": "rpc_admin_juror_summary returns one juror; wrapper exposes jurorId, avgTotalPct, completionPct, finalSubmittedAt",
+    "whyItMatters": "JurorScoresDrawer reads server-aggregated values directly — wrong field names would break Avg Score and Completion KPIs.",
+    "risk": "Drawer renders 'undefined' KPIs because snake-case columns weren't translated.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "scores.juror_summary.02",
+    "module": "Shared / API",
+    "area": "admin/scores — getJurorSummary",
+    "story": "getJurorSummary — empty RPC result returns empty array",
+    "scenario": "RPC returns []; wrapper passes through []",
+    "whyItMatters": "Periods with no jurors must not throw; UI renders empty state.",
+    "risk": "Wrapper crashes on null/empty data, blocking the JurorsPage table from rendering.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
+    "id": "scores.period_summary.01",
+    "module": "Shared / API",
+    "area": "admin/scores — getPeriodSummary",
+    "story": "getPeriodSummary — single RPC row maps to camelCase summary object",
+    "scenario": "rpc_admin_period_summary returns one row; wrapper returns { totalMax, avgTotalPct, finalizedJurors, ... }",
+    "whyItMatters": "Drawers compute 'vs avg' deltas from this object — incorrect mapping yields wrong delta sign or magnitude.",
+    "risk": "ProjectScoresDrawer shows ▲ when actual delta is ▼ because the period mean was misread.",
+    "coverageStrength": "Strong",
+    "severity": "normal"
+  },
+  {
+    "id": "scores.period_summary.02",
+    "module": "Shared / API",
+    "area": "admin/scores — getPeriodSummary",
+    "story": "getPeriodSummary — empty RPC result yields safe defaults",
+    "scenario": "RPC returns []; wrapper returns { totalMax: 0, totalProjects: 0, ... }",
+    "whyItMatters": "Periods with no scoring data must not crash drawer rendering; defaults preserve UI stability.",
+    "risk": "Drawer KPI cards crash on null period summary, blocking the entire admin page.",
+    "coverageStrength": "Medium",
+    "severity": "normal"
+  },
+  {
     "id": "scores.cross-org.01",
     "module": "Shared / API",
     "area": "admin/scores — cross-org boundary",

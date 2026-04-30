@@ -7,16 +7,23 @@ import { qaTest } from "../../../../test/qaTest.js";
 import {
   makeSheetRow,
   makeItem,
-  makeProject,
 } from "../../../../test/adminApiMocks.js";
 
-const { mockFrom } = vi.hoisted(() => ({ mockFrom: vi.fn() }));
-
-vi.mock("@/shared/lib/supabaseClient", () => ({
-  supabase: { from: mockFrom },
+const { mockFrom, mockRpc } = vi.hoisted(() => ({
+  mockFrom: vi.fn(),
+  mockRpc: vi.fn(),
 }));
 
-import { getScores, getProjectSummary } from "../scores.js";
+vi.mock("@/shared/lib/supabaseClient", () => ({
+  supabase: { from: mockFrom, rpc: mockRpc },
+}));
+
+import {
+  getScores,
+  getProjectSummary,
+  getJurorSummary,
+  getPeriodSummary,
+} from "../scores.js";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -30,27 +37,34 @@ function mockGetScores(data, error = null) {
   });
 }
 
-function mockGetProjectSummary(projects, sheets, { projError = null, sheetError = null } = {}) {
-  mockFrom.mockImplementation((table) => {
-    if (table === "projects") {
-      return {
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            order: vi.fn().mockResolvedValue({ data: projects, error: projError }),
-          }),
-        }),
-      };
+// New shape: getProjectSummary calls rpc_admin_project_summary which returns
+// pre-aggregated rows. Tests verify the RPC→UI field mapping (snake → camel
+// + legacy aliases) rather than re-checking server-side aggregation math
+// (the math now lives in pgTAP contract tests for the RPC).
+function mockProjectSummaryRpc(rows, error = null) {
+  mockRpc.mockImplementation((name) => {
+    if (name === "rpc_admin_project_summary") {
+      return Promise.resolve({ data: rows, error });
     }
-    // score_sheets
-    return {
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({ data: sheets, error: sheetError }),
-          }),
-        }),
-      }),
-    };
+    return Promise.resolve({ data: null, error: null });
+  });
+}
+
+function mockJurorSummaryRpc(rows, error = null) {
+  mockRpc.mockImplementation((name) => {
+    if (name === "rpc_admin_juror_summary") {
+      return Promise.resolve({ data: rows, error });
+    }
+    return Promise.resolve({ data: null, error: null });
+  });
+}
+
+function mockPeriodSummaryRpc(rows, error = null) {
+  mockRpc.mockImplementation((name) => {
+    if (name === "rpc_admin_period_summary") {
+      return Promise.resolve({ data: rows, error });
+    }
+    return Promise.resolve({ data: null, error: null });
   });
 }
 
@@ -239,68 +253,71 @@ describe("admin/scores — pivotItems (via getScores)", () => {
   });
 });
 
-// ─── getProjectSummary aggregation ──────────────────────────────────────────
+// ─── getProjectSummary RPC mapping ──────────────────────────────────────────
+// Aggregation math is now enforced by the pgTAP contract test for
+// `rpc_admin_project_summary`. These JS tests verify that the API wrapper
+// faithfully maps the RPC's snake_case columns to the legacy + new
+// camelCase fields consumed by ProjectsPage / RankingsPage / drawers.
 
-describe("admin/scores — getProjectSummary aggregation", () => {
+describe("admin/scores — getProjectSummary RPC mapping", () => {
   beforeEach(() => vi.clearAllMocks());
   afterEach(() => vi.restoreAllMocks());
 
   qaTest("scores.pivot.16", async () => {
-    const project = makeProject({ id: "p1", title: "Alpha" });
-    const sheet = {
-      id: "sh1",
-      project_id: "p1",
-      items: [makeItem("c1", 80), makeItem("c2", 70)],
-    };
-    mockGetProjectSummary([project], [sheet]);
+    mockProjectSummaryRpc([{
+      project_id: "p1", title: "Alpha", project_no: 7, members: null,
+      advisor: "Advisor A",
+      juror_count: 1, submitted_count: 1, assigned_count: 1,
+      total_avg: 150, total_pct: 75, total_min: 150, total_max: 150,
+      std_dev_pct: 0, rank: 1,
+      per_criterion: { c1: { avg: 80, max: 100, pct: 80 }, c2: { avg: 70, max: 100, pct: 70 } },
+    }]);
     const [row] = await getProjectSummary("period-1");
     expect(row.count).toBe(1);
     expect(row.totalAvg).toBe(150);
+    expect(row.id).toBe("p1");
+    expect(row.group_no).toBe(7);
   });
 
   qaTest("scores.pivot.17", async () => {
-    const project = makeProject({ id: "p1", title: "Alpha" });
-    // Juror A: total 100; Juror B: total 60 → avg = 80
-    const sheetA = {
-      id: "sh1",
-      project_id: "p1",
-      items: [makeItem("c1", 60), makeItem("c2", 40)],
-    };
-    const sheetB = {
-      id: "sh2",
-      project_id: "p1",
-      items: [makeItem("c1", 40), makeItem("c2", 20)],
-    };
-    mockGetProjectSummary([project], [sheetA, sheetB]);
+    // Two-juror aggregation: server returns total_avg=80 (avg of 100 and 60).
+    mockProjectSummaryRpc([{
+      project_id: "p1", title: "Alpha",
+      juror_count: 2, total_avg: 80, total_pct: 40,
+      per_criterion: { c1: { avg: 50, max: 100, pct: 50 } },
+    }]);
     const [row] = await getProjectSummary("period-1");
     expect(row.count).toBe(2);
     expect(row.totalAvg).toBe(80);
+    expect(row.totalPct).toBe(40);
   });
 
   qaTest("scores.pivot.18", async () => {
-    const project = makeProject({ id: "p1", title: "Alpha" });
-    mockGetProjectSummary([project], []);
+    mockProjectSummaryRpc([{
+      project_id: "p1", title: "Alpha",
+      juror_count: 0, total_avg: null, per_criterion: {},
+    }]);
     const [row] = await getProjectSummary("period-1");
     expect(row.count).toBe(0);
     expect(row.totalAvg).toBeNull();
   });
 
   qaTest("scores.pivot.19", async () => {
-    const project = makeProject({ id: "p1", title: "Alpha" });
-    // Juror A: c1=80; Juror B: c1=60 → avg.c1 = 70
-    const sheetA = { id: "sh1", project_id: "p1", items: [makeItem("c1", 80)] };
-    const sheetB = { id: "sh2", project_id: "p1", items: [makeItem("c1", 60)] };
-    mockGetProjectSummary([project], [sheetA, sheetB]);
+    // Per-criterion average flows through `avg[key]` legacy alias from
+    // per_criterion[key].avg field.
+    mockProjectSummaryRpc([{
+      project_id: "p1", title: "Alpha", juror_count: 2, total_avg: 70,
+      per_criterion: { c1: { avg: 70, max: 100, pct: 70 } },
+    }]);
     const [row] = await getProjectSummary("period-1");
     expect(row.avg.c1).toBe(70);
   });
 
   qaTest("scores.pivot.20", async () => {
-    const projA = makeProject({ id: "p1", title: "Alpha" });
-    const projB = makeProject({ id: "p2", title: "Beta" });
-    const sheetA = { id: "sh1", project_id: "p1", items: [makeItem("c1", 90)] };
-    const sheetB = { id: "sh2", project_id: "p2", items: [makeItem("c1", 50)] };
-    mockGetProjectSummary([projA, projB], [sheetA, sheetB]);
+    mockProjectSummaryRpc([
+      { project_id: "p1", title: "Alpha", juror_count: 1, total_avg: 90, per_criterion: {} },
+      { project_id: "p2", title: "Beta",  juror_count: 1, total_avg: 50, per_criterion: {} },
+    ]);
     const rows = await getProjectSummary("period-1");
     const alpha = rows.find((r) => r.id === "p1");
     const beta = rows.find((r) => r.id === "p2");
@@ -310,7 +327,59 @@ describe("admin/scores — getProjectSummary aggregation", () => {
 
   qaTest("scores.pivot.22", async () => {
     const err = { message: "permission denied", code: "42501" };
-    mockGetProjectSummary(null, null, { projError: err });
+    mockProjectSummaryRpc(null, err);
     await expect(getProjectSummary("period-1")).rejects.toMatchObject({ message: "permission denied" });
+  });
+});
+
+// ─── getJurorSummary + getPeriodSummary RPC wrappers ────────────────────────
+
+describe("admin/scores — getJurorSummary RPC mapping", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  qaTest("scores.juror_summary.01", async () => {
+    mockJurorSummaryRpc([{
+      juror_id: "j1", juror_name: "Dr. A", affiliation: "EE",
+      scored_count: 5, assigned_count: 5, completion_pct: 100,
+      avg_total: 80, avg_total_pct: 80, std_dev_pct: 5.2,
+      final_submitted_at: "2026-04-30T10:00:00Z",
+    }]);
+    const [row] = await getJurorSummary("period-1");
+    expect(row.jurorId).toBe("j1");
+    expect(row.avgTotalPct).toBe(80);
+    expect(row.completionPct).toBe(100);
+    expect(row.finalSubmittedAt).toBe("2026-04-30T10:00:00Z");
+  });
+
+  qaTest("scores.juror_summary.02", async () => {
+    mockJurorSummaryRpc([]);
+    const rows = await getJurorSummary("period-1");
+    expect(rows).toEqual([]);
+  });
+});
+
+describe("admin/scores — getPeriodSummary RPC mapping", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  qaTest("scores.period_summary.01", async () => {
+    mockPeriodSummaryRpc([{
+      total_max: 100, total_projects: 10, ranked_count: 10,
+      total_jurors: 12, finalized_jurors: 12,
+      avg_total_pct: 74.78, avg_juror_pct: 75.1,
+    }]);
+    const result = await getPeriodSummary("period-1");
+    expect(result.totalMax).toBe(100);
+    expect(result.avgTotalPct).toBe(74.78);
+    expect(result.avgJurorPct).toBe(75.1);
+    expect(result.finalizedJurors).toBe(12);
+  });
+
+  qaTest("scores.period_summary.02", async () => {
+    // Empty RPC response (period with no data) → safe defaults
+    mockPeriodSummaryRpc([]);
+    const result = await getPeriodSummary("period-1");
+    expect(result.totalMax).toBe(0);
+    expect(result.totalProjects).toBe(0);
+    expect(result.avgTotalPct).toBeUndefined();
   });
 });
