@@ -104,25 +104,21 @@ export default function ProjectsPage() {
   // Delete confirmation
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // Per-project average score map
+  // Per-project average score map — derived from server-aggregated
+  // `summaryData` (rpc_admin_project_summary). Keyed by project id, value is
+  // `totalAvg` (raw sum-mean for legacy displays expecting raw values).
+  // Filtering / sorting in this page uses this map; the table renders the
+  // value via .toFixed(1). Final Score, percentages, std dev, and rank live
+  // on the drawer side and consume `summaryData` rows directly.
   const projectAvgMap = useMemo(() => {
     const map = new Map();
-    if (!rawScores?.length) return map;
-    const byProject = new Map();
-    for (const r of rawScores) {
-      if (r.status !== "submitted") continue;
-      const pid = r.projectId || r.project_id;
-      if (!pid) continue;
-      const total = Number(r.total);
-      if (!Number.isFinite(total)) continue;
-      if (!byProject.has(pid)) byProject.set(pid, []);
-      byProject.get(pid).push(total);
-    }
-    for (const [pid, totals] of byProject) {
-      map.set(pid, totals.reduce((s, v) => s + v, 0) / totals.length);
+    for (const row of summaryData || []) {
+      if (row?.id != null && row.totalAvg != null) {
+        map.set(row.id, Number(row.totalAvg));
+      }
     }
     return map;
-  }, [rawScores]);
+  }, [summaryData]);
 
   // Per-project distinct juror count (for mobile footer "N evaluations").
   const projectEvalCountMap = useMemo(() => {
@@ -219,8 +215,12 @@ export default function ProjectsPage() {
       }
 
       if (filters.scoreBand !== "all" && projectAvgMap.has(p.id)) {
-        const max = periodMaxScore || 100;
-        const pct = (Number(projectAvgMap.get(p.id)) / max) * 100;
+        // Prefer the server-computed total_pct if available; fall back to
+        // local divide-by-max for transitional safety while RPC rollouts.
+        const row = (summaryData || []).find((r) => r.id === p.id);
+        const pct = row?.totalPct != null
+          ? Number(row.totalPct)
+          : (Number(projectAvgMap.get(p.id)) / (periodMaxScore || 100)) * 100;
         if (filters.scoreBand === "high" && pct < 85) return false;
         if (filters.scoreBand === "mid" && (pct < 70 || pct >= 85)) return false;
         if (filters.scoreBand === "low" && pct >= 70) return false;
