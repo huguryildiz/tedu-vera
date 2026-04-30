@@ -2,6 +2,7 @@ import { Code2, Eye, Filter, MoreVertical, PauseCircle, Pencil, PlayCircle, Tras
 import CustomSelect from "@/shared/ui/CustomSelect";
 import FloatingMenu from "@/shared/ui/FloatingMenu";
 import Pagination from "@/shared/ui/Pagination";
+import useCardSelection from "@/shared/hooks/useCardSelection";
 import SortIcon from "./SortIcon";
 import OrgStatusBadge from "./OrgStatusBadge";
 import { formatShortDate, getOrgInitials, getOrgHue } from "./organizationHelpers";
@@ -22,7 +23,6 @@ export default function OrgTable({
   orgSortKey,
   orgSortDir,
   onOrgSort,
-  orgsScopeRef,
   // Row actions menu
   openOrgActionMenuId,
   setOpenOrgActionMenuId,
@@ -35,6 +35,8 @@ export default function OrgTable({
   setOrgCurrentPage,
   setOrgPageSize,
 }) {
+  const orgsScopeRef = useCardSelection();
+
   return (
     <div className="card" style={{ marginBottom: 14, padding: 14 }}>
       <div className="card-header" style={{ marginBottom: 10 }}>

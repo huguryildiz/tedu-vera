@@ -7,7 +7,6 @@ import { Navigate } from "react-router-dom";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
 import { useAuth } from "@/auth";
 import { useToast } from "@/shared/hooks/useToast";
-import useCardSelection from "@/shared/hooks/useCardSelection";
 import { useManageOrganizations } from "@/admin/shared/useManageOrganizations";
 import { Icon, Database, Plus, Search } from "lucide-react";
 import { FilterButton } from "@/shared/ui/FilterButton";
@@ -36,7 +35,6 @@ export default function OrganizationsPage() {
   const _toast = useToast();
   const setMessage = useCallback((msg) => { if (msg) _toast.success(msg); }, [_toast]);
   const noop = useCallback(() => {}, []);
-  const orgsScopeRef = useCardSelection();
 
   const {
     orgList,
@@ -697,7 +695,6 @@ export default function OrganizationsPage() {
               orgSortKey={orgSortKey}
               orgSortDir={orgSortDir}
               onOrgSort={handleOrgSort}
-              orgsScopeRef={orgsScopeRef}
               openOrgActionMenuId={openOrgActionMenuId}
               setOpenOrgActionMenuId={setOpenOrgActionMenuId}
               runOrgMenuAction={runOrgMenuAction}
