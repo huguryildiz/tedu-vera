@@ -1,3 +1,8 @@
+/* Base: hide mobile-only meta row on desktop */
+.organizations-table td.org-card-meta-row {
+  display: none;
+}
+
 /* ── Organizations page (super-admin) — mobile portrait ─────── */
 @media (max-width: 768px) and (orientation: portrait) {
   #page-platform-control .page-desc {

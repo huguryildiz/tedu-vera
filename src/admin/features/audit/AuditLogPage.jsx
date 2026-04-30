@@ -721,7 +721,7 @@ export default function AuditLogPage() {
                               </div>
                             </>
                           ) : (
-                            <JurorBadge name={actor.name} affiliation={actor.role} size="md" />
+                            <JurorBadge name={actor.name} affiliation={actor.role} size="md" avatarBg={actor.type === "admin" ? "var(--accent)" : undefined} avatarFg={actor.type === "admin" ? "#fff" : undefined} />
                           )}
                         </td>
                         <td data-label="Action">
@@ -787,7 +787,7 @@ export default function AuditLogPage() {
                             </div>
                           </>
                         ) : (
-                          <JurorBadge name={actor.name} affiliation={actor.role} size="md" />
+                          <JurorBadge name={actor.name} affiliation={actor.role} size="md" avatarBg={actor.type === "admin" ? "var(--accent)" : undefined} avatarFg={actor.type === "admin" ? "#fff" : undefined} />
                         )}
                       </td>
                       <td data-label="Action">
@@ -876,7 +876,7 @@ export default function AuditLogPage() {
                           </div>
                         </>
                       ) : (
-                        <JurorBadge name={actor.name} affiliation={actor.role} size="lg" />
+                        <JurorBadge name={actor.name} affiliation={actor.role} size="lg" avatarBg={actor.type === "admin" ? "var(--accent)" : undefined} avatarFg={actor.type === "admin" ? "#fff" : undefined} />
                       )}
                     </div>
                     <div className="amc-divider" />

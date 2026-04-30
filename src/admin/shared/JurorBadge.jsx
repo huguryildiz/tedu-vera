@@ -23,11 +23,13 @@ export default function JurorBadge({
   variant,
   style,
   className,
+  avatarBg,
+  avatarFg,
 }) {
   const displayName = name ? String(name).trim() : "";
   const ini = jurorInitials(name);
-  const bg = jurorAvatarBg(name);
-  const fg = jurorAvatarFg(name);
+  const bg = avatarBg ?? jurorAvatarBg(name);
+  const fg = avatarFg ?? jurorAvatarFg(name);
 
   const sizes = {
     sm: { avatar: 22, fontSize: 8, nameSize: 12, instSize: 10, gap: 6 },

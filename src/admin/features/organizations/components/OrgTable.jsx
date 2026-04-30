@@ -1,4 +1,4 @@
-import { Eye, Filter, Icon, Lock, MoreVertical, Pencil, Search, Trash2, UserPlus, XCircle } from "lucide-react";
+import { Eye, Filter, Icon, Lock, MoreVertical, Pencil, Search, Trash2, UserPlus, Users, XCircle } from "lucide-react";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import FloatingMenu from "@/shared/ui/FloatingMenu";
 import Pagination from "@/shared/ui/Pagination";
@@ -162,6 +162,9 @@ export default function OrgTable({
                 const code = String(org.code || "").toUpperCase();
                 const initials = getOrgInitials(org.name);
                 const hue = getOrgHue(org.name);
+                const adminCount = org.tenantAdmins?.filter((a) => a.status === "active").length ?? 0;
+                const adminLabel = adminCount === 1 ? "admin" : "admins";
+                const isUnstaffed = adminCount === 0;
                 return (
                   <tr
                     key={org.id}
@@ -228,6 +231,16 @@ export default function OrgTable({
                           </button>
                         </FloatingMenu>
                       </div>
+                    </td>
+                    <td className="org-card-meta-row" aria-hidden="true">
+                      <span className="org-meta-chip">{code || "—"}</span>
+                      <span className="org-meta-dot" />
+                      <span className={`org-meta-admin${isUnstaffed ? " org-meta-admin--warn" : ""}`}>
+                        <Users size={10} strokeWidth={2} />
+                        {adminCount} {adminLabel}
+                      </span>
+                      <span className="org-meta-dot" />
+                      <span className="org-meta-date vera-datetime-text">{formatShortDate(org.created_at)}</span>
                     </td>
                   </tr>
                 );
