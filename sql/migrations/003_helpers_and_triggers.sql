@@ -275,6 +275,8 @@ DECLARE
   v_ua          TEXT;
   v_req_headers JSON;
   v_ip_raw      TEXT;
+  v_entity_key  TEXT;
+  v_entity_name TEXT;
 BEGIN
   v_action := TG_TABLE_NAME || '.' || lower(TG_OP);
 
@@ -424,6 +426,20 @@ BEGIN
     v_org_id := NULL;
   END IF;
 
+  -- Extract entity display name for the audit drawer. Must use procedural
+  -- IF/ELSIF (lazy eval) — a SQL CASE around NEW.<col> is planned eagerly and
+  -- raises "record has no field" when the trigger fires on a sibling table.
+  IF TG_TABLE_NAME = 'periods' THEN
+    v_entity_key  := 'periodName';
+    v_entity_name := CASE WHEN TG_OP = 'DELETE' THEN OLD.name ELSE NEW.name END;
+  ELSIF TG_TABLE_NAME = 'projects' THEN
+    v_entity_key  := 'project_title';
+    v_entity_name := CASE WHEN TG_OP = 'DELETE' THEN OLD.title ELSE NEW.title END;
+  ELSIF TG_TABLE_NAME = 'jurors' THEN
+    v_entity_key  := 'juror_name';
+    v_entity_name := CASE WHEN TG_OP = 'DELETE' THEN OLD.juror_name ELSE NEW.juror_name END;
+  END IF;
+
   INSERT INTO audit_logs (
     organization_id, user_id,
     action, resource_type, resource_id,
@@ -443,12 +459,8 @@ BEGIN
     v_ip, v_ua,
     jsonb_build_object('operation', TG_OP, 'table', TG_TABLE_NAME)
     || CASE
-         WHEN TG_TABLE_NAME = 'periods' THEN
-           jsonb_build_object('periodName', COALESCE(NEW.name, OLD.name))
-         WHEN TG_TABLE_NAME = 'projects' THEN
-           jsonb_build_object('project_title', COALESCE(NEW.title, OLD.title))
-         WHEN TG_TABLE_NAME = 'jurors' THEN
-           jsonb_build_object('juror_name', COALESCE(NEW.juror_name, OLD.juror_name))
+         WHEN v_entity_key IS NOT NULL AND v_entity_name IS NOT NULL THEN
+           jsonb_build_object(v_entity_key, v_entity_name)
          ELSE '{}'::jsonb
        END,
     v_diff

@@ -4,6 +4,7 @@
 
 import { X, Clipboard, Check, Bot } from "lucide-react";
 import { useState } from "react";
+import "./AuditEventDrawer.css";
 import {
   getActorInfo,
   formatActionLabel,
