@@ -92,7 +92,6 @@ export default function OrganizationsPage() {
   const [createSaving, setCreateSaving] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [toggleOrg, setToggleOrg] = useState(null);
-  const [toggleStatus, setToggleStatus] = useState("active");
   const [toggleReason, setToggleReason] = useState("");
   const [toggleSaving, setToggleSaving] = useState(false);
   const [toggleError, setToggleError] = useState("");
@@ -387,15 +386,16 @@ export default function OrganizationsPage() {
 
   const handleSaveToggleStatus = useCallback(async () => {
     if (!toggleOrg?.id) return;
+    const targetStatus = toggleOrg.status === "active" ? "archived" : "active";
     setToggleSaving(true);
     setToggleError("");
     try {
       await updateOrganization({
         organizationId: toggleOrg.id,
-        status: toggleStatus,
+        status: targetStatus,
         reason: toggleReason.trim() || undefined,
       });
-      setMessage(`Organization status updated to ${toggleStatus}`);
+      setMessage(`Organization status updated to ${targetStatus}`);
       setToggleOrg(null);
       setToggleReason("");
       await loadOrgs();
@@ -405,7 +405,7 @@ export default function OrganizationsPage() {
     } finally {
       setToggleSaving(false);
     }
-  }, [loadOrgs, refreshMemberships, setMessage, toggleOrg, toggleReason, toggleStatus]);
+  }, [loadOrgs, refreshMemberships, setMessage, toggleOrg, toggleReason]);
 
   const handleDeleteOrg = useCallback(async () => {
     if (!deleteOrg?.id) return;
@@ -439,7 +439,7 @@ export default function OrganizationsPage() {
     onView: (org) => setViewOrg(org),
     onEdit: (org) => openEdit(org),
     onManageAdmins: (org) => { setManageAdminsOrg(org); loadOrgs(); },
-    onToggleStatus: (org) => { setToggleOrg(org); setToggleStatus(org.status || "active"); setToggleReason(""); setToggleError(""); },
+    onToggleStatus: (org) => { setToggleOrg(org); setToggleReason(""); setToggleError(""); },
     onDelete: (org) => { setDeleteOrg(org); setDeleteConfirmCode(""); setDeleteError(""); },
   }), [openEdit, loadOrgs]);
 

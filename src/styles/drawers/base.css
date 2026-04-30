@@ -525,6 +525,8 @@ textarea.crt-field-input { height: auto; padding: 8px 10px; }
 .fs-session-pill.accent  { background: var(--accent-soft); border-color: rgba(99,102,241,0.22); color: var(--accent); }
 .fs-session-pill.warning { background: rgba(234,179,8,0.08); border-color: rgba(234,179,8,0.22); color: #b45309; }
 .fs-session-card-meta { font-size: 10.5px; color: var(--text-quaternary); line-height: 1.5; }
+.fs-session-card-meta .vera-datetime-text { color: var(--text-secondary); }
+.fs-session-card.current .fs-session-card-meta .vera-datetime-text { color: var(--success); }
 .fs-session-card-actions {
   flex-shrink: 0;
 }

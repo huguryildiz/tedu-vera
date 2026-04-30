@@ -1,16 +1,13 @@
-import { AlertCircle, Archive, CheckCircle2, Icon, Lock, Trash2, TriangleAlert, X, XCircle } from "lucide-react";
+import { AlertCircle, PauseCircle, PlayCircle, Trash2, TriangleAlert, X, XCircle } from "lucide-react";
 import FbAlert from "@/shared/ui/FbAlert";
 import Modal from "@/shared/ui/Modal";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
-import OrgStatusBadge from "./OrgStatusBadge";
 
 export function ToggleStatusModal({
   open,
   onClose,
   toggleOrg,
-  toggleStatus,
-  setToggleStatus,
   toggleReason,
   setToggleReason,
   toggleError,
@@ -19,54 +16,34 @@ export function ToggleStatusModal({
   isGraceLocked,
   onSave,
 }) {
+  const isSuspending = toggleOrg?.status === "active";
+  const orgName = String(toggleOrg?.code || "").toUpperCase();
+
   return (
     <Modal open={open} onClose={onClose} size="sm">
       <div className="fs-modal-header" style={{ textAlign: "center", borderBottom: "none", paddingBottom: 4, position: "relative" }}>
         <button className="fs-close" onClick={onClose} style={{ position: "absolute", top: 0, right: 0 }}>
-          <Icon
-            iconNode={[]}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></Icon>
+          <X size={16} strokeWidth={2} />
         </button>
         <div className="eem-icon" style={{ margin: "0 auto 10px", display: "grid", placeItems: "center" }}>
-          <Lock size={20} />
+          {isSuspending ? <PauseCircle size={20} /> : <PlayCircle size={20} />}
         </div>
-        <div className="fs-title" style={{ letterSpacing: "-0.3px" }}>Organization Status</div>
+        <div className="fs-title" style={{ letterSpacing: "-0.3px" }}>
+          {isSuspending ? "Suspend" : "Activate"}{" "}
+          <strong>{orgName}</strong>?
+        </div>
         <div className="fs-subtitle" style={{ marginTop: 4 }}>
-          Update lifecycle state for{" "}
-          <strong style={{ color: "var(--text-primary)", fontWeight: 700 }}>{String(toggleOrg?.code || "").toUpperCase()}</strong>
+          {isSuspending
+            ? "Jurors and evaluations will be paused."
+            : "This organization will accept jurors and evaluations again."}
         </div>
-        {toggleOrg?.status && (
-          <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
-            <OrgStatusBadge status={toggleOrg.status} />
-          </div>
-        )}
       </div>
-      <div className="fs-modal-body" style={{ paddingTop: 12 }}>
-        <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)", marginBottom: 8 }}>Select new status</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
-          {[
-            { value: "active", label: "Active", desc: "Accepting jurors and evaluations", icon: <CheckCircle2 size={15} />, borderColor: "var(--success)", bg: "var(--success-soft)", ring: "0 0 0 3px var(--success-ring)", textColor: "var(--success)" },
-            { value: "archived", label: "Archived", desc: "Preserved for historical reference only", icon: <Archive size={15} />, borderColor: "rgba(148,163,184,0.6)", bg: "var(--surface-1)", ring: "0 0 0 3px rgba(148,163,184,0.18)", textColor: "var(--text-secondary)" },
-          ].map((opt) => {
-            const sel = toggleStatus === opt.value;
-            return (
-              <label key={opt.value} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: "var(--radius)", border: `1.5px solid ${sel ? opt.borderColor : "var(--border)"}`, background: sel ? opt.bg : "transparent", cursor: "pointer", boxShadow: sel ? opt.ring : "none", transition: "border-color .15s, background .15s, box-shadow .15s", userSelect: "none" }}>
-                <input type="radio" name="toggle-org-status" checked={sel} onChange={() => setToggleStatus(opt.value)} style={{ display: "none" }} />
-                <span style={{ width: 16, height: 16, borderRadius: "50%", border: `2px solid ${sel ? opt.borderColor : "var(--border-strong)"}`, background: sel ? opt.borderColor : "transparent", flexShrink: 0, display: "grid", placeItems: "center", transition: "all .15s" }}>
-                  {sel && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#fff" }} />}
-                </span>
-                <span style={{ color: sel ? opt.textColor : "var(--text-tertiary)", flexShrink: 0, display: "flex" }}>{opt.icon}</span>
-                <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: sel ? opt.textColor : "var(--text-primary)", lineHeight: 1 }}>{opt.label}</span>
-                  <span style={{ fontSize: 11, color: "var(--text-tertiary)", lineHeight: 1.35 }}>{opt.desc}</span>
-                </span>
-              </label>
-            );
-          })}
-        </div>
+      <div className="fs-modal-body" style={{ paddingTop: 8 }}>
+        {isSuspending && isGraceLocked && (
+          <FbAlert variant="warning" style={{ marginBottom: 12 }}>
+            {graceLockTooltip}
+          </FbAlert>
+        )}
         <div>
           <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
             <span style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>Reason</span>
@@ -83,9 +60,16 @@ export function ToggleStatusModal({
       </div>
       <div className="fs-modal-footer" style={{ justifyContent: "center", borderTop: "none", background: "transparent", paddingTop: 0, paddingBottom: 20, gap: 8 }}>
         <button className="fs-btn fs-btn-secondary" onClick={onClose} style={{ minWidth: 88 }}>Cancel</button>
-        <PremiumTooltip text={toggleStatus === "archived" ? graceLockTooltip : null}>
-          <button className="fs-btn fs-btn-primary" onClick={onSave} disabled={toggleSaving || (toggleStatus === "archived" && isGraceLocked)} style={{ minWidth: 130 }}>
-            <AsyncButtonContent loading={toggleSaving} loadingText="Updating…">Update Status</AsyncButtonContent>
+        <PremiumTooltip text={isSuspending ? graceLockTooltip : null}>
+          <button
+            className={`fs-btn ${isSuspending ? "fs-btn-danger" : "fs-btn-primary"}`}
+            onClick={onSave}
+            disabled={toggleSaving || (isSuspending && isGraceLocked)}
+            style={{ minWidth: 130 }}
+          >
+            <AsyncButtonContent loading={toggleSaving} loadingText={isSuspending ? "Suspending…" : "Activating…"}>
+              {isSuspending ? "Suspend Organization" : "Activate Organization"}
+            </AsyncButtonContent>
           </button>
         </PremiumTooltip>
       </div>
