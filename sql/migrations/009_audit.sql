@@ -19,7 +19,9 @@ SET details = details || jsonb_build_object('periodName', p.name)
 FROM periods p
 WHERE audit_logs.action IN (
   'evaluation.complete',
-  'juror.edit_mode_closed_on_resubmit'
+  'juror.edit_mode_closed_on_resubmit',
+  'pin.reset',
+  'data.juror.pin.reset'
 )
   AND audit_logs.details ? 'period_id'
   AND NOT (audit_logs.details ? 'periodName')

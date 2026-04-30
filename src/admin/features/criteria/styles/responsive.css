@@ -13,6 +13,8 @@
   #page-criteria > .filter-panel { order: 1; }
   #page-criteria > .export-panel { order: 2; }
   #page-criteria > .lock-notice { order: 3; }
+  /* Show Evaluation Active badge in toolbar as first item (matches Outcomes page pattern) */
+  #page-criteria .mobile-toolbar-stack .crt-lock-badge { display: flex !important; order: 0; min-height: 36px; width: 100%; justify-content: center; }
 }
 
 /* ── Page action row: portrait ─────────────────────────────────── */
