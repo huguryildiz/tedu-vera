@@ -1,16 +1,13 @@
-import { Code2, Eye, Filter, Icon, MoreVertical, PauseCircle, Pencil, PlayCircle, Search, Trash2, UserPlus, Users, XCircle } from "lucide-react";
+import { Code2, Eye, Filter, MoreVertical, PauseCircle, Pencil, PlayCircle, Trash2, UserPlus, Users, XCircle } from "lucide-react";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import FloatingMenu from "@/shared/ui/FloatingMenu";
 import Pagination from "@/shared/ui/Pagination";
-import { FilterButton } from "@/shared/ui/FilterButton";
 import SortIcon from "./SortIcon";
 import OrgStatusBadge from "./OrgStatusBadge";
 import { formatShortDate, getOrgInitials, getOrgHue } from "./organizationHelpers";
 
 export default function OrgTable({
-  // Toolbar + search + filter
-  search,
-  setSearch,
+  // Filter panel
   orgFilterOpen,
   setOrgFilterOpen,
   orgActiveFilterCount,
@@ -18,7 +15,6 @@ export default function OrgTable({
   setOrgStatusFilter,
   orgStaffingFilter,
   setOrgStaffingFilter,
-  onOpenCreate,
   // Table data + sort
   sortedFilteredOrgs,
   pagedOrgs,
@@ -41,48 +37,12 @@ export default function OrgTable({
 }) {
   return (
     <div className="card" style={{ marginBottom: 14, padding: 14 }}>
-      <div className="card-header">
+      <div className="card-header" style={{ marginBottom: 10 }}>
         <div>
           <div className="card-title">Organization Management</div>
           <div className="text-sm text-muted" style={{ marginTop: 3 }}>
             Organization identity, health, admin capacity, and operational actions.
           </div>
-        </div>
-        <div className="organizations-toolbar" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "nowrap" }}>
-          <div style={{ position: "relative", flex: "1 1 180px", minWidth: 160 }}>
-            <Search size={13} strokeWidth={2} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", color: "var(--text-tertiary)", pointerEvents: "none" }} />
-            <input
-              className="form-input organizations-toolbar-search"
-              style={{ width: "100%", height: 30, fontSize: 12, paddingLeft: 28, boxSizing: "border-box" }}
-              placeholder="Search organizations…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <FilterButton
-            activeCount={orgActiveFilterCount}
-            isOpen={orgFilterOpen}
-            onClick={() => setOrgFilterOpen((v) => !v)}
-          />
-          <button
-            data-testid="orgs-create-btn"
-            className="btn btn-primary btn-sm organizations-toolbar-create"
-            style={{ width: "auto", padding: "6px 14px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, whiteSpace: "nowrap" }}
-            onClick={onOpenCreate}
-          >
-            <Icon
-              iconNode={[]}
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </Icon>
-            Create Organization
-          </button>
         </div>
       </div>
 

@@ -34,37 +34,9 @@
     margin-top: 1px;
   }
 
-  /* Card header: title block above, toolbar below full-width */
+  /* Card: page-specific padding */
   #page-platform-control .card {
     padding: 12px !important;
-  }
-  #page-platform-control .card-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-  #page-platform-control .organizations-toolbar {
-    display: grid !important;
-    grid-template-columns: 1fr;
-    gap: 8px !important;
-    width: 100%;
-  }
-  #page-platform-control .organizations-toolbar .custom-select,
-  #page-platform-control .organizations-toolbar-search {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    flex: none !important;
-    height: 38px !important;
-    font-size: 13px !important;
-  }
-  #page-platform-control .organizations-toolbar-create {
-    width: 100% !important;
-    padding: 10px 14px !important;
-    font-size: 13px !important;
-    justify-content: center;
-    min-height: 40px;
-    order: -1;
   }
 
   /* Table → card stack */

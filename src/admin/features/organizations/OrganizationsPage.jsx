@@ -9,7 +9,8 @@ import { useAuth } from "@/auth";
 import { useToast } from "@/shared/hooks/useToast";
 import useCardSelection from "@/shared/hooks/useCardSelection";
 import { useManageOrganizations } from "@/admin/shared/useManageOrganizations";
-import { Icon, Database } from "lucide-react";
+import { Icon, Database, Plus, Search } from "lucide-react";
+import { FilterButton } from "@/shared/ui/FilterButton";
 import { updateOrganization, listUnlockRequests, resolveUnlockRequest, deleteOrganization } from "@/shared/api";
 import {
   GlobalSettingsDrawer,
@@ -538,12 +539,42 @@ export default function OrganizationsPage() {
       />
 
       <div className="page" id="page-platform-control">
-        <div className="page-title">Platform Control</div>
-        <div className="page-desc" style={{ marginBottom: 12 }}>
-          Super-admin hub for organization management, unlock request approvals, and platform governance.
-        </div>
-        <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 0 }}>
-          <span className="badge badge-neutral">Super Admin</span>
+        <div className="sem-header">
+          <div className="sem-header-left">
+            <div className="page-title">Platform Control</div>
+            <div className="page-desc">
+              Super-admin hub for organization management, unlock request approvals, and platform governance.
+            </div>
+            <span className="badge badge-neutral" style={{ marginTop: 6 }}>Super Admin</span>
+          </div>
+          {mainTab === "organizations" && (
+            <div className="sem-header-actions mobile-toolbar-stack">
+              <div className="admin-search-wrap mobile-toolbar-search">
+                <Search size={14} strokeWidth={2} style={{ opacity: 0.45 }} />
+                <input
+                  className="search-input"
+                  type="text"
+                  placeholder="Search organizations…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <FilterButton
+                className="mobile-toolbar-filter"
+                activeCount={orgActiveFilterCount}
+                isOpen={orgFilterOpen}
+                onClick={() => setOrgFilterOpen((v) => !v)}
+              />
+              <button
+                data-testid="orgs-create-btn"
+                className="btn btn-primary btn-sm mobile-toolbar-primary"
+                onClick={openCreate}
+              >
+                <Plus size={14} strokeWidth={2.5} style={{ verticalAlign: "-1px" }} />
+                {" "}Create Organization
+              </button>
+            </div>
+          )}
         </div>
 
         <div
@@ -655,8 +686,6 @@ export default function OrganizationsPage() {
             </div>
 
             <OrgTable
-              search={search}
-              setSearch={setSearch}
               orgFilterOpen={orgFilterOpen}
               setOrgFilterOpen={setOrgFilterOpen}
               orgActiveFilterCount={orgActiveFilterCount}
@@ -664,7 +693,6 @@ export default function OrganizationsPage() {
               setOrgStatusFilter={setOrgStatusFilter}
               orgStaffingFilter={orgStaffingFilter}
               setOrgStaffingFilter={setOrgStaffingFilter}
-              onOpenCreate={openCreate}
               sortedFilteredOrgs={sortedFilteredOrgs}
               pagedOrgs={pagedOrgs}
               getOrgMeta={getOrgMeta}
