@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LockOpen, Settings, Check, Clock, AlertCircle, CalendarDays } from "lucide-react";
+import { LockOpen, Settings, Check, Clock, AlertCircle, CalendarDays, Lock, Timer, Users, ShieldAlert } from "lucide-react";
 import "./PinBlockingPage.css";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
 import { usePinBlocking } from "./usePinBlocking";
@@ -80,6 +80,7 @@ export default function PinBlockingPage() {
   const {
     lockedJurors,
     todayLockEvents,
+    atRiskCount,
     loading,
     error,
     loadLockedJurors,
@@ -101,6 +102,23 @@ export default function PinBlockingPage() {
   const cooldownLabel = formatCooldown(cooldownMinutes);
 
   const totalActive = lockedJurors.length;
+
+  const nextAutoUnlock = (() => {
+    if (loading) return null;
+    if (lockedJurors.length === 0) return null;
+    const times = lockedJurors
+      .filter((j) => j.lockedUntil)
+      .map((j) => new Date(j.lockedUntil).getTime());
+    if (times.length === 0) return null;
+    const earliest = Math.min(...times);
+    const ms = earliest - Date.now();
+    if (ms <= 0) return "Expiring";
+    const totalMins = Math.ceil(ms / 60000);
+    if (totalMins < 60) return `${totalMins}m`;
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    return m ? `${h}h ${m}m` : `${h}h`;
+  })();
 
   return (
     <div className="page pin-lock-page">
@@ -155,19 +173,45 @@ export default function PinBlockingPage() {
         </div>
       ) : (
         <>
-          {/* KPI strip — live metrics only */}
+          {/* KPI strip */}
           <div className="scores-kpi-strip">
             <div className="scores-kpi-item">
-              <div className={`scores-kpi-item-value${totalActive > 0 ? " kpi-danger" : ""}`}>
-                {loading ? "—" : totalActive}
+              <div className={`pin-kpi-icon${totalActive > 0 ? " icon-danger" : " icon-success"}`}>
+                <Lock size={15} strokeWidth={2} />
               </div>
-              <div className="scores-kpi-item-label">Currently Locked</div>
+              <div className={`scores-kpi-item-value${totalActive > 0 ? " kpi-danger" : " kpi-success"}`}>
+                {loading ? "—" : totalActive > 0 ? totalActive : <Check size={18} strokeWidth={2.5} />}
+              </div>
+              <div className="scores-kpi-item-label">
+                {!loading && totalActive === 0 ? "All Clear" : "Currently Locked"}
+              </div>
             </div>
             <div className="scores-kpi-item">
+              <div className="pin-kpi-icon icon-muted">
+                <Timer size={15} strokeWidth={2} />
+              </div>
+              <div className="scores-kpi-item-value">
+                {loading ? "—" : nextAutoUnlock ?? "—"}
+              </div>
+              <div className="scores-kpi-item-label">Next Auto-Unlock</div>
+            </div>
+            <div className="scores-kpi-item">
+              <div className="pin-kpi-icon icon-accent">
+                <Users size={15} strokeWidth={2} />
+              </div>
               <div className="scores-kpi-item-value">
                 <span className="accent">{loading ? "—" : todayLockEvents}</span>
               </div>
-              <div className="scores-kpi-item-label">Today's Lock Events</div>
+              <div className="scores-kpi-item-label">Jurors Locked Today</div>
+            </div>
+            <div className="scores-kpi-item" style={{ borderRight: "none" }}>
+              <div className={`pin-kpi-icon${atRiskCount > 0 ? " icon-warning" : " icon-muted"}`}>
+                <ShieldAlert size={15} strokeWidth={2} />
+              </div>
+              <div className={`scores-kpi-item-value${atRiskCount > 0 ? " kpi-warning" : ""}`}>
+                {loading ? "—" : atRiskCount}
+              </div>
+              <div className="scores-kpi-item-label">At Risk</div>
             </div>
           </div>
 

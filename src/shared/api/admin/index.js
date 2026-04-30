@@ -46,6 +46,7 @@ export {
   forceCloseJurorEditMode,
   listLockedJurors,
   countTodayLockEvents,
+  countAtRiskJurors,
   unlockJurorPin,
   notifyJuror,
 } from "./jurors";

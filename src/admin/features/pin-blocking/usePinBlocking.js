@@ -8,6 +8,7 @@ import { useCallback, useState } from "react";
 import {
   listLockedJurors,
   countTodayLockEvents,
+  countAtRiskJurors,
   unlockJurorPin,
   listJurorsSummary,
 } from "@/shared/api";
@@ -17,6 +18,7 @@ export function usePinBlocking({ periodId }) {
   const _toast = useToast();
   const [lockedJurors, setLockedJurors] = useState([]);
   const [todayLockEvents, setTodayLockEvents] = useState(0);
+  const [atRiskCount, setAtRiskCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [unlockModal, setUnlockModal] = useState(null); // { pin, jurorId, jurorName, affiliation, email }
@@ -33,10 +35,11 @@ export function usePinBlocking({ periodId }) {
       setError("");
     }
     try {
-      const [rows, todayCount, summaries] = await Promise.all([
+      const [rows, todayCount, summaries, atRisk] = await Promise.all([
         listLockedJurors({ periodId }),
         countTodayLockEvents({ periodId }),
         listJurorsSummary(periodId),
+        countAtRiskJurors({ periodId }),
       ]);
       const progressByJuror = new Map();
       (summaries || []).forEach((s) => {
@@ -51,11 +54,13 @@ export function usePinBlocking({ periodId }) {
       });
       setLockedJurors(enriched);
       setTodayLockEvents(todayCount || 0);
+      setAtRiskCount(atRisk || 0);
       if (silent) setError("");
     } catch (e) {
       if (!silent) {
         setLockedJurors([]);
         setTodayLockEvents(0);
+        setAtRiskCount(0);
         setError("Failed to load locked jurors.");
       }
     } finally {
@@ -103,6 +108,7 @@ export function usePinBlocking({ periodId }) {
   return {
     lockedJurors,
     todayLockEvents,
+    atRiskCount,
     loading,
     error,
     loadLockedJurors,

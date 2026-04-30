@@ -136,6 +136,20 @@ export async function countTodayLockEvents({ periodId }) {
   return count || 0;
 }
 
+export async function countAtRiskJurors({ periodId }) {
+  if (!periodId) throw new Error("countAtRiskJurors: periodId required");
+  const now = new Date().toISOString();
+  const { count, error } = await supabase
+    .from("juror_period_auth")
+    .select("juror_id", { count: "exact", head: true })
+    .eq("period_id", periodId)
+    .gt("failed_attempts", 0)
+    .eq("is_blocked", false)
+    .or(`locked_until.is.null,locked_until.lte.${now}`);
+  if (error) throw error;
+  return count || 0;
+}
+
 export async function unlockJurorPin({ jurorId, periodId }) {
   if (!jurorId || !periodId) throw new Error("unlockJurorPin: jurorId and periodId required");
   const { data, error } = await supabase.rpc("rpc_juror_unlock_pin", {

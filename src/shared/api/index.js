@@ -61,6 +61,7 @@ export {
   forceCloseJurorEditMode,
   listLockedJurors,
   countTodayLockEvents,
+  countAtRiskJurors,
   unlockJurorPin,
   notifyJuror,
   listOrganizations,

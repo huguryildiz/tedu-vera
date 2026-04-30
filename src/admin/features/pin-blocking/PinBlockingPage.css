@@ -1,5 +1,23 @@
 /* PIN Blocking page — Premium layout */
 
+/* ─── KPI strip value colors ─────────────────────────────── */
+.kpi-danger  { color: var(--danger,  #dc2626) !important; }
+.kpi-success { color: var(--success, #059669) !important; }
+.kpi-warning { color: var(--warning, #d97706) !important; }
+
+/* ─── KPI icon row above value ───────────────────────────── */
+.pin-kpi-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+.pin-kpi-icon.icon-danger  { color: var(--danger,  #dc2626); }
+.pin-kpi-icon.icon-success { color: var(--success, #059669); }
+.pin-kpi-icon.icon-warning { color: var(--warning, #d97706); }
+.pin-kpi-icon.icon-accent  { color: var(--accent,  #2563eb); }
+.pin-kpi-icon.icon-muted   { color: var(--text-tertiary); }
+
 /* ─── ETA pill with live pulse ───────────────────────────── */
 .pin-eta-pill {
   display: inline-flex;
@@ -169,9 +187,9 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
 .pin-lock-table .lock-mobile { display: none; }
 
 /* ─── Portrait card layout (≤ 768px portrait) ────────────────
-   Ultra Compact: single flex row.
-   Avatar+name | ×N badge | ETA pill | Unlock btn
-   Lock-started is omitted to preserve row density.
+   Two-row card:
+     Row 1: Avatar + juror name + affiliation  (full width)
+     Row 2: ×N badge  ·  [auto spacer]  ·  ETA pill  ·  Unlock
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: portrait) {
   /* Strip outer card wrapper so row-cards sit on page bg */
@@ -199,11 +217,12 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
   .pin-lock-table thead { display: none !important; }
   .pin-lock-table tbody { display: block; width: 100%; }
 
-  /* Single-row flex card */
+  /* Two-row flex card via wrap */
   .pin-lock-table tbody tr {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 7px;
+    gap: 0;
     width: 100%;
     box-sizing: border-box;
     background: var(--bg-card);
@@ -211,7 +230,7 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
     border-left: 3px solid var(--warning);
     border-radius: var(--radius-sm);
     margin-bottom: 8px;
-    padding: 9px 12px 9px 11px;
+    padding: 10px 12px 9px 11px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     overflow: hidden;
   }
@@ -233,7 +252,7 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    padding: 2px 5px;
+    padding: 2px 6px;
     border-radius: 4px;
     background: rgba(225,29,72,0.08);
     border: 1px solid rgba(225,29,72,0.16);
@@ -251,44 +270,46 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
   }
   .pin-lock-table .fails-mobile svg { color: var(--danger); flex-shrink: 0; }
 
-  /* Juror cell — takes remaining space, truncates */
+  /* ── Row 1: Juror identity — full card width ── */
   .pin-lock-table td:nth-child(1) {
-    flex: 1 1 0;
-    min-width: 90px;
+    flex: 0 0 100%;
+    width: 100%;
     overflow: hidden;
+    margin-bottom: 8px;
   }
-  .pin-lock-table td:nth-child(1) .jb-name {
+  .pin-lock-table td:nth-child(1) .jb-name,
+  .pin-lock-table td:nth-child(1) .jb-affiliation {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  /* Suppress affiliation in ultra-compact row to reclaim horizontal space */
-  .pin-lock-table td:nth-child(1) .jb-affiliation { display: none; }
 
-  /* Fail attempts cell */
+  /* ── Row 2: fail badge left · ETA + Unlock right ── */
+
+  /* Fail badge — anchored left */
   .pin-lock-table .col-fails {
-    flex-shrink: 0;
-    text-align: left;
-    font-size: 10px;
+    flex: 0 0 auto;
+    align-self: center;
   }
 
-  /* Lock started — hidden in ultra compact */
+  /* Lock started — hidden */
   .pin-lock-table td.col-lock-started { display: none !important; }
 
-  /* ETA pill — cap width so it doesn't crowd the name */
+  /* ETA pill — auto left margin pushes it + Unlock to the right */
   .pin-lock-table td[data-label="Unlock ETA"] {
-    flex-shrink: 0;
-    max-width: 88px;
+    flex: 0 0 auto;
+    margin-left: auto;
+    padding-right: 8px;
+    align-self: center;
   }
   .pin-lock-table td[data-label="Unlock ETA"] .pin-eta-pill {
     font-size: 10.5px;
     padding: 2px 7px 2px 6px;
   }
 
-  /* Unlock button */
+  /* Unlock button — anchored right */
   .pin-lock-table td.col-actions {
-    flex-shrink: 0;
-    text-align: right;
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: flex-end;
