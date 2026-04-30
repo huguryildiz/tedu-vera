@@ -347,7 +347,7 @@ export default function ProjectsPage() {
       title: data.title,
       advisor: data.advisor,
       description: data.description,
-      group_no: parseInt(data.groupNo, 10) || (totalProjects + 1),
+      group_no: parseInt(data.groupNo, 10) || (projectList.length + 1),
       members: data.members,
     });
     if (result?.ok === false) {
@@ -486,7 +486,7 @@ export default function ProjectsPage() {
         <ExportPanel
           title="Export Projects"
           subtitle="Download the project list with team members and evaluation coverage."
-          meta={`${periods.viewPeriodLabel} · ${totalProjects} projects`}
+          meta={`${periods.viewPeriodLabel} · ${projectList.length} projects`}
           periodName={periods.viewPeriodLabel}
           organization={activeOrganization?.name || ""}
           department=""
