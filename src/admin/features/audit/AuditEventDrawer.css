@@ -200,7 +200,7 @@
   color: var(--text-tertiary);
   padding: 5px 10px 5px 0;
   white-space: nowrap;
-  vertical-align: top;
+  vertical-align: middle;
   width: 1%;
 }
 .audit-drawer-detail-val {
@@ -208,6 +208,7 @@
   color: var(--text-primary);
   padding: 5px 0;
   word-break: break-word;
+  vertical-align: middle;
 }
 
 /* ─── Drawer context section ─────────────────────── */

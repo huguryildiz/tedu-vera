@@ -123,7 +123,7 @@
 
 /* Audit table */
 .audit-table{width:100%;border-collapse:collapse;table-layout:fixed}
-.audit-table thead th{position:sticky;top:0;z-index:2;background:var(--surface-1);text-transform:uppercase;color:var(--text-tertiary);border-bottom:1px solid var(--border);white-space:nowrap}
+.audit-table thead th{position:sticky;top:0;z-index:2;background:var(--surface-1);text-transform:uppercase;color:var(--text-tertiary);border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle}
 .audit-table tbody tr{transition:background .12s}
 .audit-table tbody tr:not(.audit-day-header):hover{background:var(--accent-soft)}
 .audit-table tbody tr.audit-row-system{background:var(--surface-1)}
