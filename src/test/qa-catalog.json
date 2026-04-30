@@ -7153,8 +7153,8 @@
     "module": "admin/features/jurors/JurorsPage",
     "area": "JurorsPage",
     "story": "KPI strip labels",
-    "scenario": "renders all KPI labels: Completed, In Progress, Editing, Ready to Submit, Not Started",
-    "whyItMatters": "KPI strip must always show all status labels for juror overview",
+    "scenario": "renders all KPI labels: Completion Rate, Avg Evals / Project, Avg Score, Not Started",
+    "whyItMatters": "KPI strip must show outcome-oriented metrics for juror overview",
     "risk": "low",
     "coverageStrength": "render",
     "severity": "minor"

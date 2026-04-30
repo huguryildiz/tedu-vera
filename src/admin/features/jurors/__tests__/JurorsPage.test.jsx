@@ -191,10 +191,9 @@ describe("JurorsPage", () => {
 
   qaTest("admin.jurors.page.kpi-labels", () => {
     renderPage();
-    expect(screen.getByText("Completed")).toBeInTheDocument();
-    expect(screen.getByText("In Progress")).toBeInTheDocument();
-    expect(screen.getByText("Editing")).toBeInTheDocument();
-    expect(screen.getByText("Ready to Submit")).toBeInTheDocument();
+    expect(screen.getByText("Completion Rate")).toBeInTheDocument();
+    expect(screen.getByText("Avg Evals / Project")).toBeInTheDocument();
+    expect(screen.getByText("Avg Score")).toBeInTheDocument();
     expect(screen.getByText("Not Started")).toBeInTheDocument();
   });
 

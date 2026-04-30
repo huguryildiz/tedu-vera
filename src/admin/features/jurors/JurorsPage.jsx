@@ -279,12 +279,17 @@ export default function JurorsPage() {
   }
 
   // ── KPI stats ────────────────────────────────────────────────
-  const totalJurors = jurorList.length;
+  const totalJurors      = jurorList.length;
   const completedJurors  = jurorList.filter((j) => getLiveOverviewStatus(j, editWindowNowMs) === "completed").length;
-  const inProgressJurors = jurorList.filter((j) => j.overviewStatus === "in_progress").length;
-  const editingJurors    = jurorList.filter((j) => getLiveOverviewStatus(j, editWindowNowMs) === "editing").length;
-  const readyJurors      = jurorList.filter((j) => j.overviewStatus === "ready_to_submit").length;
   const notStartedJurors = jurorList.filter((j) => j.overviewStatus === "not_started").length;
+  const completionPct    = totalJurors > 0 ? Math.round((completedJurors / totalJurors) * 100) : 0;
+  const kpiScoreRows     = jurorsHook.scoreRows || [];
+  const kpiScoredSheets  = kpiScoreRows.filter((r) => r.total != null);
+  const kpiUniqueProjects = new Set(kpiScoreRows.map((r) => r.projectId).filter(Boolean)).size;
+  const avgEvalPerProject = kpiUniqueProjects > 0 ? (kpiScoredSheets.length / kpiUniqueProjects).toFixed(1) : "—";
+  const avgScore         = kpiScoredSheets.length > 0
+    ? (kpiScoredSheets.reduce((s, r) => s + r.total, 0) / kpiScoredSheets.length).toFixed(1)
+    : "—";
 
   const editingBannerJurors = useMemo(
     () => jurorList.filter(
@@ -425,12 +430,36 @@ export default function JurorsPage() {
       </div>
       {/* KPI strip */}
       <div className="scores-kpi-strip">
-        <div className="scores-kpi-item"><div className="scores-kpi-item-value">{totalJurors}</div><div className="scores-kpi-item-label">Jurors</div></div>
-        <div className="scores-kpi-item"><div className="scores-kpi-item-value"><span className="success">{completedJurors}</span></div><div className="scores-kpi-item-label">Completed</div></div>
-        <div className="scores-kpi-item"><div className="scores-kpi-item-value" style={{ color: "var(--warning)" }}>{inProgressJurors}</div><div className="scores-kpi-item-label">In Progress</div></div>
-        <div className="scores-kpi-item"><div className="scores-kpi-item-value" style={{ color: "#a78bfa" }}>{editingJurors}</div><div className="scores-kpi-item-label">Editing</div></div>
-        <div className="scores-kpi-item"><div className="scores-kpi-item-value"><span className="accent">{readyJurors}</span></div><div className="scores-kpi-item-label">Ready to Submit</div></div>
-        <div className="scores-kpi-item"><div className="scores-kpi-item-value">{notStartedJurors}</div><div className="scores-kpi-item-label">Not Started</div></div>
+        <div className="scores-kpi-item">
+          <div className="scores-kpi-item-value">
+            <span className={completionPct === 100 ? "success" : completionPct >= 50 ? "accent" : "warning"}>{completionPct}%</span>
+          </div>
+          <div className="scores-kpi-item-label">Completion Rate</div>
+          <div className="scores-kpi-item-sub"><span className="sub-muted">{completedJurors}/{totalJurors} jurors</span></div>
+        </div>
+        <div className="scores-kpi-item">
+          <div className="scores-kpi-item-value vera-datetime-text">{avgEvalPerProject}</div>
+          <div className="scores-kpi-item-label">Avg Evals / Project</div>
+          <div className="scores-kpi-item-sub"><span className="sub-muted">{kpiUniqueProjects > 0 ? `across ${kpiUniqueProjects} projects` : "no data yet"}</span></div>
+        </div>
+        <div className="scores-kpi-item">
+          <div className="scores-kpi-item-value vera-datetime-text">
+            {avgScore !== "—" ? (
+              <span className="accent">{avgScore}<span className="vera-score-denom">/{periodMaxScore ?? 100}</span></span>
+            ) : "—"}
+          </div>
+          <div className="scores-kpi-item-label">Avg Score</div>
+          <div className="scores-kpi-item-sub"><span className="sub-muted">{kpiScoredSheets.length > 0 ? `${kpiScoredSheets.length} submissions` : "no submissions yet"}</span></div>
+        </div>
+        <div className="scores-kpi-item">
+          <div className={`scores-kpi-item-value${notStartedJurors > 0 ? " warning" : ""}`}>{notStartedJurors}</div>
+          <div className="scores-kpi-item-label">Not Started</div>
+          <div className="scores-kpi-item-sub">
+            {notStartedJurors > 0
+              ? <span className="sub-warn">needs attention</span>
+              : <span className="sub-success">all active</span>}
+          </div>
+        </div>
       </div>
       <PremiumTooltip text={graceLockTooltip}>
         <button
