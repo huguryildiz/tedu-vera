@@ -1,7 +1,13 @@
 /* Audit Log page — Premium Operations Console */
 
+/* Page header: title+desc left, toolbar right */
+.audit-page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.audit-page-header-left{min-width:0}
+.audit-page-header-left .page-title{margin-bottom:2px}
+.audit-page-header-left .page-desc{margin-bottom:0}
+
 /* Toolbar */
-.audit-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.audit-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;padding-top:4px}
 .audit-search-wrap{position:relative;flex:1;min-width:200px;max-width:320px}
 .audit-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-tertiary);pointer-events:none}
 .audit-search-input{width:100%;padding:7px 12px 7px 32px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;background:var(--bg-card);color:var(--text-primary);outline:none;transition:border-color .15s,box-shadow .15s}

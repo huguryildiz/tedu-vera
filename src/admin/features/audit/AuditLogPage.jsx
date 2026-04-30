@@ -371,9 +371,59 @@ export default function AuditLogPage() {
 
   return (
     <div id="page-audit" className="page audit-log-page" data-testid="audit-log-page">
-      <div className="page-title">Audit Log</div>
-      <div className="page-desc">
-        Track admin actions, score changes, and access events for compliance and accountability.
+      <div className="audit-page-header">
+        <div className="audit-page-header-left">
+          <div className="page-title">Audit Log</div>
+          <div className="page-desc">
+            Track admin actions, score changes, and access events for compliance and accountability.
+          </div>
+        </div>
+
+        {/* Toolbar */}
+        <div className="audit-toolbar mobile-toolbar-stack">
+          <div className="audit-search-wrap mobile-toolbar-search">
+            <Search size={14} className="audit-search-icon" />
+            <input
+              className="audit-search-input"
+              type="text"
+              placeholder="Search events, actors, actions…"
+              value={auditSearch}
+              onChange={(e) => { setAuditSearch(e.target.value); setCurrentPage(1); }}
+              data-testid="audit-log-search"
+            />
+          </div>
+
+          <FilterButton
+            className="mobile-toolbar-filter"
+            activeCount={auditActiveFilterCount}
+            isOpen={filterOpen}
+            onClick={() => { setFilterOpen((v) => !v); setExportOpen(false); }}
+            testId="audit-filter-toggle"
+          />
+
+          <button
+            className="btn btn-outline btn-sm mobile-toolbar-export"
+            type="button"
+            disabled={auditExporting}
+            onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}
+            data-testid="audit-log-export-btn"
+          >
+            <Download size={13} style={{ marginRight: 4 }} />
+            Export
+          </button>
+
+          {isSuper && (
+            <button
+              className="btn btn-outline btn-sm"
+              type="button"
+              disabled={verifying}
+              onClick={handleVerifyIntegrity}
+            >
+              <ShieldCheck size={13} style={{ marginRight: 4 }} />
+              {verifying ? "Verifying…" : "Verify Integrity"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Anomaly banner */}
@@ -434,54 +484,6 @@ export default function AuditLogPage() {
           {auditRangeError || auditError}
         </FbAlert>
       )}
-
-      {/* Toolbar */}
-      <div className="audit-toolbar mobile-toolbar-stack">
-        <div className="audit-search-wrap mobile-toolbar-search">
-          <Search size={14} className="audit-search-icon" />
-          <input
-            className="audit-search-input"
-            type="text"
-            placeholder="Search events, actors, actions…"
-            value={auditSearch}
-            onChange={(e) => { setAuditSearch(e.target.value); setCurrentPage(1); }}
-            data-testid="audit-log-search"
-          />
-        </div>
-
-        <FilterButton
-          className="mobile-toolbar-filter"
-          activeCount={auditActiveFilterCount}
-          isOpen={filterOpen}
-          onClick={() => { setFilterOpen((v) => !v); setExportOpen(false); }}
-          testId="audit-filter-toggle"
-        />
-
-        <div className="mobile-toolbar-spacer" />
-
-        <button
-          className="btn btn-outline btn-sm mobile-toolbar-export"
-          type="button"
-          disabled={auditExporting}
-          onClick={() => { setExportOpen((v) => !v); setFilterOpen(false); }}
-          data-testid="audit-log-export-btn"
-        >
-          <Download size={13} style={{ marginRight: 4 }} />
-          Export
-        </button>
-
-        {isSuper && (
-          <button
-            className="btn btn-outline btn-sm"
-            type="button"
-            disabled={verifying}
-            onClick={handleVerifyIntegrity}
-          >
-            <ShieldCheck size={13} style={{ marginRight: 4 }} />
-            {verifying ? "Verifying…" : "Verify Integrity"}
-          </button>
-        )}
-      </div>
 
       {/* Filter Panel */}
       {filterOpen && (
