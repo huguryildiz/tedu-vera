@@ -560,73 +560,6 @@ export default function OutcomesPage() {
         <FrameworkSetupPanel variant="pendingImport" pendingImport={pendingImport} />
       ) : (
         <>
-          {/* KPI strip */}
-          <div className="scores-kpi-strip">
-            <div
-              className={`scores-kpi-item ${coverageFilter === "all" ? "scores-kpi-item--active" : ""}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => { setCoverageFilter("all"); setFilterOpen(false); }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setCoverageFilter("all");
-                  setFilterOpen(false);
-                }
-              }}
-            >
-              <div className="scores-kpi-item-value">{totalOutcomes}</div>
-              <div className="scores-kpi-item-label">Total Outcomes</div>
-            </div>
-            <div
-              className={`scores-kpi-item ${coverageFilter === "direct" ? "scores-kpi-item--active" : ""}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => { setCoverageFilter("direct"); setFilterOpen(true); }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setCoverageFilter("direct");
-                  setFilterOpen(true);
-                }
-              }}
-            >
-              <div className="scores-kpi-item-value success">{directCount}</div>
-              <div className="scores-kpi-item-label">Direct</div>
-            </div>
-            <div
-              className={`scores-kpi-item ${coverageFilter === "indirect" ? "scores-kpi-item--active" : ""}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => { setCoverageFilter("indirect"); setFilterOpen(true); }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setCoverageFilter("indirect");
-                  setFilterOpen(true);
-                }
-              }}
-            >
-              <div className="scores-kpi-item-value warning">{indirectCount}</div>
-              <div className="scores-kpi-item-label">Indirect</div>
-            </div>
-            <div
-              className={`scores-kpi-item ${coverageFilter === "none" ? "scores-kpi-item--active" : ""}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => { setCoverageFilter("none"); setFilterOpen(true); }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setCoverageFilter("none");
-                  setFilterOpen(true);
-                }
-              }}
-            >
-              <div className="scores-kpi-item-value muted">{unmappedCount}</div>
-              <div className="scores-kpi-item-label">Unmapped</div>
-            </div>
-          </div>
           <PremiumTooltip text={isLocked ? "Evaluation period is locked. Unlock the period to make changes." : null} position="bottom">
             <button
               data-testid="outcomes-add-btn-below"
@@ -643,20 +576,30 @@ export default function OutcomesPage() {
             <div className="acc-coverage-progress">
               <div className="acc-coverage-progress-top">
                 <span className="acc-coverage-progress-label">Overall Coverage</span>
-                <span className={`acc-coverage-progress-pct${unmappedCount === 0 && totalOutcomes > 0 ? " acc-coverage-progress-pct--full" : ""}`}>
-                  {unmappedCount === 0 && totalOutcomes > 0
-                    ? `✓ ${Math.round(((directCount + indirectCount) / totalOutcomes) * 100)}% covered`
-                    : `${totalOutcomes > 0 ? Math.round(((directCount + indirectCount) / totalOutcomes) * 100) : 0}% covered`}
-                </span>
+                <div className="acc-coverage-progress-meta">
+                  {frameworkId && (
+                    <span className={`acc-threshold-badge${meetsThreshold ? " acc-threshold-badge--ok" : " acc-threshold-badge--warn"}`}>
+                      {meetsThreshold
+                        ? `✓ ${directPct}% direct · meets ${savedFrameworkThreshold}% threshold`
+                        : `⚠ ${directPct}% direct · target ${savedFrameworkThreshold}%`}
+                    </span>
+                  )}
+                  <span className={`acc-coverage-progress-pct${unmappedCount === 0 ? " acc-coverage-progress-pct--full" : ""}`}>
+                    {unmappedCount === 0
+                      ? `✓ ${Math.round(((directCount + indirectCount) / totalOutcomes) * 100)}% covered`
+                      : `${Math.round(((directCount + indirectCount) / totalOutcomes) * 100)}% covered`}
+                  </span>
+                </div>
               </div>
-              <div className={`acc-coverage-bar-track${unmappedCount === 0 && totalOutcomes > 0 ? " acc-coverage-bar-track--full" : ""}`}>
-                <div className="acc-coverage-bar-direct" style={{ width: `${totalOutcomes > 0 ? (directCount / totalOutcomes) * 100 : 0}%` }} />
-                <div className="acc-coverage-bar-indirect" style={{ width: `${totalOutcomes > 0 ? (indirectCount / totalOutcomes) * 100 : 0}%` }} />
+              <div className={`acc-coverage-bar-track${unmappedCount === 0 ? " acc-coverage-bar-track--full" : ""}`}>
+                <div className="acc-coverage-bar-direct" style={{ width: `${(directCount / totalOutcomes) * 100}%` }} />
+                <div className="acc-coverage-bar-indirect" style={{ width: `${(indirectCount / totalOutcomes) * 100}%` }} />
               </div>
               <div className="acc-coverage-bar-legend">
                 <span className="acc-coverage-bar-legend-item"><span className="legend-dot" style={{ background: "var(--success)" }} /> Direct ({directCount})</span>
                 <span className="acc-coverage-bar-legend-item"><span className="legend-dot" style={{ background: "var(--warning)" }} /> Indirect ({indirectCount})</span>
                 <span className="acc-coverage-bar-legend-item"><span className="legend-dot" style={{ background: "var(--text-quaternary)" }} /> Unmapped ({unmappedCount})</span>
+                <span className="acc-coverage-bar-legend-item acc-coverage-bar-legend-item--avg">· {avgMappingsPerOutcome} avg/outcome</span>
               </div>
             </div>
           )}

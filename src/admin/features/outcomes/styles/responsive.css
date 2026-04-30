@@ -313,7 +313,6 @@
   #page-accreditation > .sem-header { display: contents; }
   #page-accreditation > * { order: 20; }
   #page-accreditation > .sem-header > .sem-header-left { order: -4; }
-  #page-accreditation > .scores-kpi-strip { order: -2; }
   #page-accreditation > .mobile-primary-below-kpi { order: -1; }
   /* .sem-header-actions (Filter + Export toolbar) stays at order 0 — below Add button */
   #page-accreditation > .sem-header > .sem-header-actions { order: 0; margin-bottom: 12px; }

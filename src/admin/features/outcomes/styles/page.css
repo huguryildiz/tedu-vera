@@ -256,98 +256,6 @@
   line-height: 1.5;
 }
 
-/* ── KPI Cards ──────────────────────────────────────────────── */
-
-.acc-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.acc-kpi-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  position: relative;
-  overflow: hidden;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.acc-kpi-card:hover {
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow-sm);
-}
-
-.acc-kpi-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  border-radius: var(--radius) var(--radius) 0 0;
-}
-
-.acc-kpi-card.kpi-total::before { background: var(--accent); }
-.acc-kpi-card.kpi-direct::before { background: var(--success); }
-.acc-kpi-card.kpi-indirect::before { background: var(--warning); }
-.acc-kpi-card.kpi-unmapped::before { background: var(--text-quaternary); }
-
-.acc-kpi-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 10px;
-}
-
-.acc-kpi-card.kpi-total .acc-kpi-icon { background: var(--accent-soft); color: var(--accent); }
-.acc-kpi-card.kpi-direct .acc-kpi-icon { background: var(--success-soft); color: var(--success); }
-.acc-kpi-card.kpi-indirect .acc-kpi-icon { background: var(--warning-soft); color: var(--warning); }
-.acc-kpi-card.kpi-unmapped .acc-kpi-icon { background: rgba(148,163,184,0.1); color: var(--text-tertiary); }
-
-.acc-kpi-icon svg {
-  width: 16px;
-  height: 16px;
-  stroke-width: 2;
-  fill: none;
-  stroke: currentColor;
-}
-
-.acc-kpi-value {
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.acc-kpi-card.kpi-total .acc-kpi-value { color: var(--text-primary); }
-.acc-kpi-card.kpi-direct .acc-kpi-value { color: var(--success); }
-.acc-kpi-card.kpi-indirect .acc-kpi-value { color: var(--warning); }
-.acc-kpi-card.kpi-unmapped .acc-kpi-value { color: var(--text-tertiary); }
-
-.acc-kpi-label {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 1px;
-}
-
-.acc-kpi-sublabel {
-  font-size: 10px;
-  color: var(--text-quaternary);
-  font-weight: 500;
-}
-
 /* ── Coverage Progress Bar ──────────────────────────────────── */
 
 .acc-coverage-progress {
@@ -364,6 +272,39 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+}
+
+.acc-coverage-progress-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.acc-threshold-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.acc-threshold-badge--ok {
+  color: var(--success);
+  background: var(--success-soft);
+}
+
+.acc-threshold-badge--warn {
+  color: var(--warning);
+  background: var(--warning-soft);
+}
+
+.dark-mode .acc-threshold-badge--ok {
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.dark-mode .acc-threshold-badge--warn {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.10);
 }
 
 .acc-coverage-progress-label {
@@ -431,6 +372,11 @@
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
+}
+
+.acc-coverage-bar-legend-item--avg {
+  margin-left: auto;
+  color: var(--text-quaternary);
 }
 
 /* ── Code column vertical centering ─────────────────────────── */

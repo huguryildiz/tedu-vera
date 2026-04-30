@@ -472,13 +472,4 @@
   color: var(--accent-light, #93c5fd);
 }
 
-/* ── Clickable KPI strip (coverage filter drilldown) ──────── */
-#page-accreditation .scores-kpi-item {
-  cursor: pointer;
-  outline: none;
-}
-#page-accreditation .scores-kpi-item:focus-visible {
-  box-shadow: 0 0 0 2px var(--accent-soft, rgba(79, 70, 229, 0.25));
-}
-/* --active and :hover use global rules from components/cards.css */
 
