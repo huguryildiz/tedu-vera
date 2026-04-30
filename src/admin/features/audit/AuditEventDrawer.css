@@ -211,6 +211,8 @@
   padding: 5px 0;
   word-break: break-word;
   vertical-align: middle;
+  text-align: justify;
+  text-justify: inter-word;
 }
 
 /* ─── Drawer context section ─────────────────────── */
