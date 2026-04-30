@@ -634,6 +634,13 @@ export const EVENT_META = {
       return { verb: "deleted period", resource: d.periodName || null };
     },
   },
+  "period.duplicated": {
+    label: "Period duplicated",
+    narrative: (log) => {
+      const d = log.details || {};
+      return { verb: "duplicated period", resource: d.source_name ? `from ${d.source_name}` : (d.periodName || null) };
+    },
+  },
 
   // ── Criteria, outcomes & framework ───────────────────────────
   "criteria.save": {
@@ -732,6 +739,13 @@ export const EVENT_META = {
     narrative: (log) => {
       const d = log.details || {};
       return { verb: "deleted outcome set", resource: d.before?.name || null };
+    },
+  },
+  "config.framework.unassigned": {
+    label: "Framework unassigned from period",
+    narrative: (log) => {
+      const d = log.details || {};
+      return { verb: "unassigned framework from", resource: d.periodName || null };
     },
   },
 

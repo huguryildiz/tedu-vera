@@ -172,6 +172,21 @@ BEGIN
       snapshot_frozen_at  = NULL
   WHERE id = p_period_id;
 
+  PERFORM public._audit_write(
+    v_period.organization_id,
+    'config.framework.unassigned',
+    'periods',
+    p_period_id,
+    'config'::audit_category,
+    'medium'::audit_severity,
+    jsonb_build_object(
+      'periodName',       v_period.name,
+      'framework_id',     v_period.framework_id,
+      'outcomes_removed', v_outcomes_count,
+      'mappings_removed', v_maps_count
+    )
+  );
+
   RETURN json_build_object(
     'ok', true,
     'outcomes_removed', v_outcomes_count,
@@ -1375,6 +1390,20 @@ BEGIN
   IF v_new_fw_id IS NOT NULL THEN
     PERFORM public.rpc_period_freeze_snapshot(v_new_period_id, false);
   END IF;
+
+  PERFORM public._audit_write(
+    v_src.organization_id,
+    'period.duplicated',
+    'periods',
+    v_new_period_id,
+    'config'::audit_category,
+    'low'::audit_severity,
+    jsonb_build_object(
+      'periodName',       v_new_name,
+      'source_period_id', p_source_period_id,
+      'source_name',      v_src.name
+    )
+  );
 
   RETURN v_new_period_id;
 END;

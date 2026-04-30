@@ -200,7 +200,9 @@ accepted for historical rows and mapped to the same UI labels.
 | `organization.status_changed` | RPC (`rpc_admin_update_organization`) with diff | high |
 | `period.set_current` | RPC (`rpc_admin_set_current_period`) | info |
 | `period.lock` / `period.unlock` | RPC (`rpc_admin_set_period_lock`) | high |
+| `period.duplicated` | RPC (`rpc_admin_duplicate_period`) — details: `periodName`, `source_period_id`, `source_name` | low |
 | `criteria.save` | RPC (`rpc_admin_save_period_criteria`) with diff | medium |
+| `config.framework.unassigned` | RPC (`rpc_admin_period_unassign_framework`) — details: `periodName`, `framework_id`, `outcomes_removed`, `mappings_removed` | medium |
 | `config.outcome.created` / `.updated` / `.deleted` | RPC trio | info |
 | `config.platform_settings.updated` | RPC (`rpc_admin_set_platform_settings`) with diff | medium |
 | `config.backup_schedule.updated` | RPC (`rpc_admin_set_backup_schedule`) with diff | high |
