@@ -658,6 +658,7 @@ DECLARE
   v_after           JSONB;
   v_assigned_count  INT;
   v_submitted_count INT;
+  v_avg_score       NUMERIC(5,1);
   v_criteria_labels JSONB;
 BEGIN
   v_session_hash := encode(digest(p_session_token, 'sha256'), 'hex');
@@ -716,6 +717,16 @@ BEGIN
   SELECT name INTO v_period_name
   FROM periods WHERE id = p_period_id;
 
+  SELECT ROUND(AVG(totals.total)::numeric, 1)
+  INTO v_avg_score
+  FROM (
+    SELECT SUM(ssi.score_value) AS total
+    FROM score_sheets ss
+    JOIN score_sheet_items ssi ON ssi.score_sheet_id = ss.id
+    WHERE ss.juror_id = p_juror_id AND ss.period_id = p_period_id
+    GROUP BY ss.project_id
+  ) totals;
+
   IF v_org_id IS NOT NULL THEN
     PERFORM public._audit_write(
       v_org_id,
@@ -725,11 +736,13 @@ BEGIN
       'data'::audit_category,
       'info'::audit_severity,
       jsonb_build_object(
-        'actor_name',  v_juror_name,
-        'juror_name',  v_juror_name,
-        'period_id',   p_period_id,
-        'juror_id',    p_juror_id,
-        'periodName',  v_period_name
+        'actor_name',    v_juror_name,
+        'juror_name',    v_juror_name,
+        'period_id',     p_period_id,
+        'juror_id',      p_juror_id,
+        'periodName',    v_period_name,
+        'project_count', v_submitted_count,
+        'avg_score',     v_avg_score
       ),
       NULL::JSONB,
       'juror'::audit_actor_type,

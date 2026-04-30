@@ -22,6 +22,8 @@ function buildDetailRows(log) {
   const d = log.details || {};
   const rows = [];
   if (d.period_name || d.periodName)         rows.push({ key: "Period",    value: d.period_name || d.periodName });
+  if (d.project_count != null && !d.format) rows.push({ key: "Projects",  value: String(d.project_count) });
+  if (d.avg_score     != null)              rows.push({ key: "Avg score", value: String(d.avg_score) });
   if (d.project_title || d.projectTitle)     rows.push({ key: "Project",   value: d.project_title || d.projectTitle });
   // For admin-triggered juror events (e.g. edit_mode_enabled), juror is the resource not the actor
   // When actor_type === "juror", the actor block already shows the juror — no need to repeat here
