@@ -1194,16 +1194,17 @@ SECURITY DEFINER
 SET search_path = public, extensions, auth
 AS $$
 DECLARE
-  v_token      TEXT;
-  v_token_hash TEXT;
-  v_expires_at TIMESTAMPTZ;
-  v_org_id     UUID;
-  v_is_locked  BOOLEAN;
-  v_ttl_str    TEXT;
-  v_ttl        INTERVAL;
+  v_token       TEXT;
+  v_token_hash  TEXT;
+  v_expires_at  TIMESTAMPTZ;
+  v_org_id      UUID;
+  v_is_locked   BOOLEAN;
+  v_period_name TEXT;
+  v_ttl_str     TEXT;
+  v_ttl         INTERVAL;
 BEGIN
   -- Serialize generation per period to avoid parallel active-token races.
-  SELECT organization_id, is_locked INTO v_org_id, v_is_locked
+  SELECT organization_id, is_locked, name INTO v_org_id, v_is_locked, v_period_name
   FROM periods
   WHERE id = p_period_id
   FOR UPDATE;
@@ -1266,7 +1267,7 @@ BEGIN
     'token.generate',
     'entry_tokens',
     p_period_id,
-    jsonb_build_object('period_id', p_period_id, 'expires_at', v_expires_at, 'ttl', v_ttl_str)
+    jsonb_build_object('period_id', p_period_id, 'period_name', v_period_name, 'expires_at', v_expires_at, 'ttl', v_ttl_str)
   );
 
   RETURN v_token;

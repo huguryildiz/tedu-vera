@@ -2016,8 +2016,10 @@ periodData.forEach(pd => {
     let isBlocked = 'false';
 
     if (semanticState !== 'NotStarted') {
+      // Max offset (hours from evalDay 09:00) that stays within end_date 23:00
+      const maxH = pd.evalDays * 24 - 10;
       const lsMinH = { InProgress: 1, ReadyToSubmit: pd.evalDays * 8, Completed: pd.evalDays * 2, Editing: pd.evalDays * 2, Locked: 1, Blocked: 1 }[semanticState] ?? 1;
-      const lsMaxH = { InProgress: pd.evalDays * 10, ReadyToSubmit: pd.evalDays * 16, Completed: pd.evalDays * 20, Editing: pd.evalDays * 18, Locked: pd.evalDays * 8, Blocked: pd.evalDays * 6 }[semanticState] ?? pd.evalDays * 12;
+      const lsMaxH = { InProgress: pd.evalDays * 10, ReadyToSubmit: pd.evalDays * 16, Completed: Math.min(pd.evalDays * 20, maxH), Editing: Math.min(pd.evalDays * 18, maxH), Locked: pd.evalDays * 8, Blocked: pd.evalDays * 6 }[semanticState] ?? pd.evalDays * 12;
       const lsH = randInt(lsMinH, lsMaxH); const lsM = randInt(0, 59);
       lastSeenAt = sqlTs(pd.evalDay, lsH + lsM / 60);
       // session_expires_at must remain in the future for active-state jurors
@@ -2025,7 +2027,8 @@ periodData.forEach(pd => {
       sessionExpiresAt = sqlTsFuture(pd.evalDay, lsH + 24 + lsM / 60);
     }
     if (semanticState === 'Completed' || semanticState === 'Editing') {
-      finalSubmittedAt = randSqlTs(pd.evalDay, pd.evalDays * 2, pd.evalDays * 20);
+      const maxH = pd.evalDays * 24 - 10;
+      finalSubmittedAt = randSqlTs(pd.evalDay, pd.evalDays * 2, Math.min(pd.evalDays * 20, maxH));
       authObj.finalTs = finalSubmittedAt;
     }
     if (semanticState === 'Editing') {
@@ -2168,7 +2171,8 @@ authList.forEach(auth => {
     }
     const ssId = uuid(`ss-${auth.jId}-${proj.id}`);
     const rawSstH = randInt(evalHourMin + scoredCount * 0.3, evalHourMax + scoredCount * 0.3) + randInt(0, 59) / 60;
-    const sstH = auth.isCur ? Math.min(rawSstH, MAX_CUR_H) : rawSstH;
+    const maxSstH = auth.evalDays * 24 - 10;
+    const sstH = auth.isCur ? Math.min(rawSstH, MAX_CUR_H) : Math.min(rawSstH, maxSstH);
     const sst = sqlTs(auth.evalDay, sstH);
     projSstData.set(`${auth.jId}-${proj.id}`, sstH);
 

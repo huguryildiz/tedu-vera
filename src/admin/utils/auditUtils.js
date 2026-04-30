@@ -579,7 +579,7 @@ export const EVENT_META = {
     label: "QR access code generated",
     narrative: (log) => {
       const d = log.details || {};
-      return { verb: "generated QR access code for", resource: d.periodName || null };
+      return { verb: "generated QR access code", resource: d.periodName || d.period_name || null };
     },
   },
   "token.revoke": {
@@ -1350,7 +1350,7 @@ export function formatSentence(log) {
       d.jurorName ||
       d.recipientEmail ||
       (Array.isArray(d.recipients) ? d.recipients.join(", ") : null);
-    return { verb: `sent ${type.replace(/_/g, " ")} to`, resource };
+    return { verb: `sent ${type.replace(/_/g, " ")}${resource ? " to" : ""}`, resource };
   }
 
   // ── Trigger-based CRUD fallback (table.insert/update/delete) ──
