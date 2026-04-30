@@ -2481,7 +2481,7 @@ periodData.forEach(pd => {
   myTokens.forEach((tok, i) => {
     const ttl = '24h';
     const expiresAt = new Date(new Date().getTime() + (ttl.includes('72') ? 72 : ttl.includes('24') ? 24 : 1) * 3600000).toISOString();
-    auditObjList.push({ action:'token.generate', resType:'entry_tokens', resId:tok.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","expires_at":"${expiresAt}","ttl":"${ttl}"}`, timeStr:randSqlTs(ev, -336+i*24, -168+i*24) });
+    auditObjList.push({ action:'token.generate', resType:'entry_tokens', resId:tok.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","period_name":"${escapeSql(pd.name)}","expires_at":"${expiresAt}","ttl":"${ttl}"}`, timeStr:randSqlTs(ev, -336+i*24, -168+i*24) });
   });
 
   // notification.entry_token — bulk QR/link email to jurors before eval day
@@ -2493,7 +2493,7 @@ periodData.forEach(pd => {
 
   // security.entry_token.revoked — admin revokes a token (migration 049 semantic event)
   myTokens.filter(t => t.isRevoked).forEach(tok => {
-    auditObjList.push({ action:'security.entry_token.revoked', resType:'entry_tokens', resId:tok.id, orgId:o.id, userId:adminId, details:`{"tokenId":"${tok.id}","periodId":"${pd.id}"}`, timeStr:randSqlTs(ev, -48, evD*12) });
+    auditObjList.push({ action:'security.entry_token.revoked', resType:'entry_tokens', resId:tok.id, orgId:o.id, userId:adminId, details:`{"period_id":"${pd.id}","period_name":"${escapeSql(pd.name)}","revoked_count":1,"active_juror_count":0}`, timeStr:randSqlTs(ev, -48, evD*12) });
   });
 
   // evaluation.complete + data.score.submitted — Completed AND Editing jurors both submitted at some point
