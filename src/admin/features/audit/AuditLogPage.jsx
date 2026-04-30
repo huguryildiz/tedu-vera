@@ -624,6 +624,16 @@ export default function AuditLogPage() {
             </span>
           </button>
         ))}
+        <span className="audit-saved-views-sep" aria-hidden="true" />
+        <button
+          type="button"
+          className={`audit-view-chip audit-view-chip-system${showSystemEvents ? " active" : ""}`}
+          onClick={() => { setShowSystemEvents((v) => !v); setCurrentPage(1); }}
+          data-testid="audit-toggle-system-events"
+          title={showSystemEvents ? "Hide automated system events" : "Show automated system events (score sheets, criteria, outcome maps)"}
+        >
+          {showSystemEvents ? "Hide automated" : "Show automated"}
+        </button>
       </div>
 
       {/* Table + detail panel */}

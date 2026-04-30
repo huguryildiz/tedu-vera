@@ -97,6 +97,28 @@
   background: var(--accent);
   color: #fff;
 }
+.audit-saved-views-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+.audit-view-chip-system {
+  color: var(--text-tertiary);
+  border-style: dashed;
+}
+.audit-view-chip-system:hover {
+  color: var(--text-secondary);
+  border-style: dashed;
+}
+.audit-view-chip-system.active {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+  border-style: solid;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
 
 /* Audit table */
 .audit-table{width:100%;border-collapse:collapse;table-layout:fixed}
