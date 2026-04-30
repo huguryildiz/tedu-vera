@@ -125,19 +125,20 @@ export default function UnlockRequestsPanel({
                     <td data-label="Actions" style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                       <button
                         type="button"
-                        className="btn btn-sm btn-outline"
-                        style={{ marginRight: 6 }}
+                        className="btn btn-outline"
+                        style={{ padding: "4px 10px", fontSize: 11.5, borderRadius: 6, marginRight: 6, gap: 4, height: 28 }}
                         onClick={() => onOpenResolve(r, "rejected")}
                       >
-                        <XCircle size={13} style={{ marginRight: 4 }} />
+                        <XCircle size={12} />
                         Reject
                       </button>
                       <button
                         type="button"
-                        className="btn btn-sm btn-primary"
+                        className="btn btn-primary"
+                        style={{ padding: "4px 10px", fontSize: 11.5, borderRadius: 6, gap: 4, height: 28 }}
                         onClick={() => onOpenResolve(r, "approved")}
                       >
-                        <CheckCircle2 size={13} style={{ marginRight: 4 }} />
+                        <CheckCircle2 size={12} />
                         Approve
                       </button>
                     </td>
