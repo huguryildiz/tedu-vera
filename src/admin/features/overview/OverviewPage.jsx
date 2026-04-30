@@ -311,6 +311,7 @@ export default function OverviewPage() {
           className="card kpi"
           data-testid="overview-kpi-active-jurors"
           data-value={kpi.totalJ}
+          data-period-id={selectedPeriod?.id ?? ""}
           data-completed={kpi.completed}
           data-editing={kpi.editing}
           data-ready={kpi.readyToSubmit}

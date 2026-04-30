@@ -58,14 +58,21 @@ async function signInAndOpenOverview(page: Page, fixture: OverviewFixture): Prom
   await expect(overview.kpiActiveJurors()).toBeVisible({ timeout: 15_000 });
   // Explicitly select the fixture period to be immune to inter-worker races.
   await shell.selectPeriod(fixture.periodId, fixture.periodName);
-  // Wait for kpiActiveJurors to reflect the fixture's exact juror count,
-  // confirming the correct period's data has loaded.
+  // Wait until the KPI card reflects BOTH the correct period ID and the fixture
+  // juror count in the same render. Polling on juror count alone is insufficient
+  // when another period coincidentally has the same count — the stale data from
+  // the wrong period would make the poll resolve early.
   await expect
     .poll(
-      async () => Number((await overview.kpiActiveJurors().getAttribute("data-value")) ?? 0),
+      async () => {
+        const card = overview.kpiActiveJurors();
+        const periodId = await card.getAttribute("data-period-id");
+        const value = Number((await card.getAttribute("data-value")) ?? 0);
+        return periodId === fixture.periodId && value === fixture.jurorIds.length;
+      },
       { timeout: 15_000, intervals: [200, 500, 1000] },
     )
-    .toBe(fixture.jurorIds.length);
+    .toBe(true);
   return overview;
 }
 

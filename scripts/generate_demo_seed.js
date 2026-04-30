@@ -3567,6 +3567,12 @@ out.push('');
 // criteria.spec / outcomes.spec can add new rows (add button is hidden when
 // is_locked=true; replaced by an "Evaluation Active" badge).
 out.push(`UPDATE periods SET is_locked = true WHERE id = '${E2E_EVAL_PERIOD}';`);
+// The bulk-lock at the end of the regular seed data (activated_at IS NOT NULL)
+// runs BEFORE E2E inserts on the first run but AFTER on re-runs (since the
+// ON CONFLICT DO NOTHING skips the inserts). That means on re-runs PRJ_PERIOD,
+// CRIT_PERIOD, OUT_PERIOD, TOK_PERIOD, and LIF_PERIOD all end up locked.
+// Explicitly unlock them here so the seed is idempotent.
+out.push(`UPDATE periods SET is_locked = false WHERE id IN ('${E2E_CRIT_PERIOD}', '${E2E_OUT_PERIOD}', '${E2E_TOK_PERIOD}', '${E2E_PRJ_PERIOD}', '${E2E_LIF_PERIOD}');`);
 out.push('');
 
 // ═══════════════════════════════════════════════════════════════
