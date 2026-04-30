@@ -280,6 +280,11 @@
 
 /* Mobile card kebab uses global .row-action-btn (components.css). */
 
+button.crt-mobile-card-pts-edit {
+  font: inherit;
+  cursor: pointer;
+}
+
 /* ── Section label (Rubric Bands / Outcomes) ─────────────────── */
 
 .crt-mobile-section-label {

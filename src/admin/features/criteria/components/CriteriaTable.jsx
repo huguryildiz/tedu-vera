@@ -346,6 +346,13 @@ export default function CriteriaTable({
                     <span className="crt-mobile-card-name">
                       {criterion.label || criterion.shortLabel || `Criterion ${i + 1}`}
                     </span>
+                    <ChevronDown
+                      size={16}
+                      strokeWidth={2}
+                      className={`crt-mobile-card-chevron${isExpanded ? " expanded" : ""}`}
+                    />
+                  </button>
+                  {isLocked ? (
                     <span
                       className="crt-mobile-card-pts-badge"
                       style={{
@@ -356,19 +363,19 @@ export default function CriteriaTable({
                     >
                       {criterion.max != null ? `${criterion.max} pts` : "—"}
                     </span>
-                    <ChevronDown
-                      size={16}
-                      strokeWidth={2}
-                      className={`crt-mobile-card-chevron${isExpanded ? " expanded" : ""}`}
-                    />
-                  </button>
-                  {!isLocked && (
+                  ) : (
                     <button
-                      className="row-action-btn"
-                      aria-label="Edit criterion"
+                      className="crt-mobile-card-pts-badge crt-mobile-card-pts-edit"
+                      style={{
+                        backgroundColor: `${color || "#94A3B8"}18`,
+                        borderColor: `${color || "#94A3B8"}40`,
+                        color: color || "var(--text-tertiary)",
+                      }}
                       onClick={(e) => { e.stopPropagation(); onEditIndex(i); }}
+                      aria-label={`Edit ${criterion.label || `Criterion ${i + 1}`}`}
                     >
-                      <Pencil size={16} strokeWidth={2} />
+                      {criterion.max != null ? `${criterion.max} pts` : "—"}
+                      <Pencil size={10} strokeWidth={2.2} style={{ marginLeft: 3, flexShrink: 0 }} />
                     </button>
                   )}
                   <FloatingMenu

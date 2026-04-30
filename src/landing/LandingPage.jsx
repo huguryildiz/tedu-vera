@@ -51,11 +51,13 @@ function useLandingFeedback() {
 }
 
 function useCountUp(target, duration = 1400) {
-  const [count, setCount] = useState(0);
+  const isE2E = import.meta.env.VITE_E2E;
+  const [count, setCount] = useState(isE2E ? target : 0);
   const ref = useRef(null);
   const started = useRef(false);
 
   useEffect(() => {
+    if (isE2E) return;
     const el = ref.current;
     if (!el) return;
     const observer = new IntersectionObserver(

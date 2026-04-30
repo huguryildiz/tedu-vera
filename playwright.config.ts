@@ -21,6 +21,8 @@ export default defineConfig({
   testIgnore: ["**/legacy/**"],
   globalSetup: "./e2e/global.setup.ts",
   outputDir: "test-results/playwright-artifacts",
+  // Remove platform suffix so darwin-generated snapshots work on linux CI
+  snapshotPathTemplate: "{testDir}/{testFileName}-snapshots/{arg}{ext}",
   timeout: 30_000,
   // E2E specs mutate shared local-Supabase fixture state. CI jobs are already
   // isolated by workflow job/shard, so keep each job single-worker to avoid
