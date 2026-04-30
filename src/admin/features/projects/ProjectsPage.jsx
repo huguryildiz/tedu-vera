@@ -109,6 +109,7 @@ export default function ProjectsPage() {
     if (!rawScores?.length) return map;
     const byProject = new Map();
     for (const r of rawScores) {
+      if (r.status !== "submitted") continue;
       const pid = r.projectId || r.project_id;
       if (!pid) continue;
       const total = Number(r.total);

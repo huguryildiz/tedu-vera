@@ -116,8 +116,9 @@ describe("ProjectsPage", () => {
 
   qaTest("admin.projects.page.kpi-labels", () => {
     renderPage();
-    expect(screen.getAllByText("Team Members").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Evaluated").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Coverage").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Avg Score").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Jurors Active").length).toBeGreaterThan(0);
   });
 
   qaTest("admin.projects.page.search-input", () => {
