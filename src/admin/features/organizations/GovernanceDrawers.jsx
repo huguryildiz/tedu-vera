@@ -472,12 +472,12 @@ export function MaintenanceDrawer({ open, onClose }) {
 
   async function handleCancel() {
     setCancelling(true);
+    setOrgScope("all");
+    setAffectedOrgIds([]);
+    setInitialAffectedOrgIds([]);
     try {
       await cancelMaintenance();
       toast.success("Maintenance cancelled");
-      setOrgScope("all");
-      setAffectedOrgIds([]);
-      setInitialAffectedOrgIds([]);
       onClose();
     } catch (err) {
       toast.error("Failed to cancel maintenance");
