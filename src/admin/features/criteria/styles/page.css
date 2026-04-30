@@ -12,6 +12,7 @@
 
 #page-criteria .crt-header-left {
   flex: 1;
+  min-width: 0;
 }
 
 /* ── Add button ──────────────────────────────────────────────── */

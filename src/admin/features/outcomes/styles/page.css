@@ -14,6 +14,7 @@
 
 #page-accreditation .sem-header-left {
   flex: 1;
+  min-width: 0;
 }
 
 /* ── Table card ──────────────────────────────────────────────── */

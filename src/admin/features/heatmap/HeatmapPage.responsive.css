@@ -71,7 +71,7 @@
   .heatmap-page .matrix-header {
     flex-wrap: wrap; align-items: center; gap: 8px;
   }
-  .heatmap-page .matrix-header-left { order: 1; flex: 1; }
+  .heatmap-page .matrix-header-left { order: 1; flex: 1; min-width: 0; }
   .heatmap-page .analytics-actions  { order: 2; }
   .heatmap-page .matrix-header > .hm-criteria-tabs {
     order: 3;
