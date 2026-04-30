@@ -1982,6 +1982,7 @@ periodData.forEach(pd => {
     }
     if (semanticState === 'Completed' || semanticState === 'Editing') {
       finalSubmittedAt = randSqlTs(pd.evalDay, pd.evalDays * 2, pd.evalDays * 20);
+      authObj.finalTs = finalSubmittedAt;
     }
     if (semanticState === 'Editing') {
       editEnabled = 'true';
@@ -1999,6 +2000,7 @@ periodData.forEach(pd => {
         lockedUntil = `${lt} + interval '30 minutes'`;
         lockedAt = lt;
       }
+      authObj.lockedAt = lockedAt;
     }
     if (semanticState === 'Blocked') {
       failedAttempts = String(randInt(3, 5));
@@ -2011,6 +2013,7 @@ periodData.forEach(pd => {
         lockedUntil = `${lt} + interval '30 minutes'`;
         lockedAt = lt;
       }
+      authObj.lockedAt = lockedAt;
     }
 
     jpaBatcher.push(`('${j.id}', '${pd.id}', '${pinHash}', ${lastSeenAt}, ${sessionExpiresAt}, ${finalSubmittedAt}, ${editEnabled}, ${editReason}, ${editExpiresAt}, ${failedAttempts}, ${lockedUntil}, ${lockedAt}, ${isBlocked})`);
@@ -2407,22 +2410,27 @@ periodData.forEach(pd => {
   });
 
   // evaluation.complete — juror-initiated (user_id=NULL)
-  myAuths.filter(a => a.semanticState==='Completed').forEach((a, i) => {
+  // timestamp and correlation_id match final_submitted_at on juror_period_auth (mirrors production rpc_jury_finalize_submission)
+  myAuths.filter(a => a.semanticState==='Completed').forEach((a) => {
     if (myProjs.length === 0) return;
-    auditObjList.push({ action:'evaluation.complete', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}"}`, timeStr:randSqlTs(ev, 2+i*2, evD*16+i*2) });
+    const corrId = uuid(`finalize-${a.jId}-${pd.id}`);
+    auditObjList.push({ action:'evaluation.complete', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}"}`, timeStr:a.finalTs, correlationId:corrId });
   });
 
-  // data.score.submitted — DB trigger (migration 048): fires per project the juror scored
-  // Represent as 1 event per completed juror (juror submitted all their scores)
-  myAuths.filter(a => a.semanticState==='Completed').slice(0, 4).forEach((a, i) => {
+  // data.score.submitted — one event per project per completed juror (mirrors production rpc_jury_finalize_submission loop)
+  // same timestamp + correlation_id as evaluation.complete for the same juror
+  myAuths.filter(a => a.semanticState==='Completed').forEach((a) => {
     if (myProjs.length === 0) return;
-    const proj = myProjs[i % myProjs.length];
-    auditObjList.push({ action:'data.score.submitted', resType:'score_sheets', resId:proj.id, orgId:o.id, userId:null, actorName:a.name, details:`{"juror_name":"${escapeSql(a.name)}","project_title":"${escapeSql(proj.title)}","period_name":"${escapeSql(pd.name)}","period_id":"${pd.id}"}`, timeStr:randSqlTs(ev, 1+i*3, evD*14+i*3) });
+    const corrId = uuid(`finalize-${a.jId}-${pd.id}`);
+    myProjs.forEach(proj => {
+      auditObjList.push({ action:'data.score.submitted', resType:'score_sheets', resId:proj.id, orgId:o.id, userId:null, actorName:a.name, details:`{"juror_name":"${escapeSql(a.name)}","project_title":"${escapeSql(proj.title)}","period_name":"${escapeSql(pd.name)}","period_id":"${pd.id}"}`, timeStr:a.finalTs, correlationId:corrId, _salt:`${a.jId}-${proj.id}` });
+    });
   });
 
   // data.juror.pin.locked — juror-initiated (user_id=NULL)
+  // timestamp matches locked_at on juror_period_auth row
   myAuths.filter(a => a.semanticState==='Locked').slice(0, 1).forEach(a => {
-    auditObjList.push({ action:'data.juror.pin.locked', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}","failed_attempts":3,"locked_until":"${new Date(new Date().getTime() + 5 * 60000).toISOString()}"}`, timeStr:randSqlTs(ev, 2, evD*12) });
+    auditObjList.push({ action:'data.juror.pin.locked', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, details:`{"period_id":"${pd.id}","juror_id":"${a.jId}","actor_name":"${escapeSql(a.name)}","failed_attempts":3,"locked_until":"${new Date(new Date().getTime() + 5 * 60000).toISOString()}"}`, timeStr:a.lockedAt || randSqlTs(ev, 2, evD*12) });
     // security.pin_reset.requested — same juror requests PIN reset after being locked
     auditObjList.push({ action:'security.pin_reset.requested', resType:'juror_period_auth', resId:a.jId, orgId:o.id, userId:null, actorType:'juror', details:`{"jurorName":"${escapeSql(a.name)}","periodName":"${escapeSql(pd.name)}","orgName":"${escapeSql(o.name)}","sent":true}`, timeStr:randSqlTs(ev, evD*12+1, evD*12+3) });
   });
@@ -2992,7 +3000,7 @@ orgs.forEach((o, oi) => {
   });
 });
 
-const auditBatcher = makeBatcher('audit_logs', 'id, organization_id, user_id, action, resource_type, resource_id, category, severity, actor_type, actor_name, ip_address, user_agent, session_id, details, created_at');
+const auditBatcher = makeBatcher('audit_logs', 'id, organization_id, user_id, action, resource_type, resource_id, category, severity, actor_type, actor_name, ip_address, user_agent, session_id, details, created_at, correlation_id');
 auditObjList.forEach(ad => {
   const saltKey = ad._salt !== undefined ? `-${ad._salt}` : '';
   const aId = uuid(`audit-${ad.action}-${ad.resId}${saltKey}-${String(ad.timeStr).substring(0,30)}`);
@@ -3006,7 +3014,8 @@ auditObjList.forEach(ad => {
   const ipSql = ad.ip ? `'${ad.ip}'` : 'NULL';
   const uaSql = ad.ua ? `'${escapeSql(ad.ua)}'` : 'NULL';
   const sessionSql = ad.sessionId ? `'${ad.sessionId}'` : 'NULL';
-  auditBatcher.push(`('${aId}', ${orgSql}, ${userSql}, '${ad.action}', '${ad.resType}', '${ad.resId}', '${cat}', '${sev}', '${act}', ${actorNameSql}, ${ipSql}, ${uaSql}, ${sessionSql}, '${escapeSql(ad.details)}', ${ad.timeStr})`);
+  const corrSql = ad.correlationId ? `'${ad.correlationId}'` : 'NULL';
+  auditBatcher.push(`('${aId}', ${orgSql}, ${userSql}, '${ad.action}', '${ad.resType}', '${ad.resId}', '${cat}', '${sev}', '${act}', ${actorNameSql}, ${ipSql}, ${uaSql}, ${sessionSql}, '${escapeSql(ad.details)}', ${ad.timeStr}, ${corrSql})`);
 });
 auditBatcher.flush(out);
 out.push('');
