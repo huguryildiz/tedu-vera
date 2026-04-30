@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LockOpen, Settings, Check, Clock, AlertCircle, CalendarDays, Lock, Timer, Users, ShieldAlert } from "lucide-react";
+import { LockOpen, Settings, Check, Clock, AlertCircle, CalendarDays } from "lucide-react";
 import "./PinBlockingPage.css";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
 import { usePinBlocking } from "./usePinBlocking";
@@ -176,9 +176,6 @@ export default function PinBlockingPage() {
           {/* KPI strip */}
           <div className="scores-kpi-strip">
             <div className="scores-kpi-item">
-              <div className={`pin-kpi-icon${totalActive > 0 ? " icon-danger" : " icon-success"}`}>
-                <Lock size={15} strokeWidth={2} />
-              </div>
               <div className={`scores-kpi-item-value${totalActive > 0 ? " kpi-danger" : " kpi-success"}`}>
                 {loading ? "—" : totalActive > 0 ? totalActive : <Check size={18} strokeWidth={2.5} />}
               </div>
@@ -187,27 +184,18 @@ export default function PinBlockingPage() {
               </div>
             </div>
             <div className="scores-kpi-item">
-              <div className="pin-kpi-icon icon-muted">
-                <Timer size={15} strokeWidth={2} />
-              </div>
               <div className="scores-kpi-item-value">
                 {loading ? "—" : nextAutoUnlock ?? "—"}
               </div>
               <div className="scores-kpi-item-label">Next Auto-Unlock</div>
             </div>
             <div className="scores-kpi-item">
-              <div className="pin-kpi-icon icon-accent">
-                <Users size={15} strokeWidth={2} />
-              </div>
               <div className="scores-kpi-item-value">
                 <span className="accent">{loading ? "—" : todayLockEvents}</span>
               </div>
               <div className="scores-kpi-item-label">Jurors Locked Today</div>
             </div>
             <div className="scores-kpi-item" style={{ borderRight: "none" }}>
-              <div className={`pin-kpi-icon${atRiskCount > 0 ? " icon-warning" : " icon-muted"}`}>
-                <ShieldAlert size={15} strokeWidth={2} />
-              </div>
               <div className={`scores-kpi-item-value${atRiskCount > 0 ? " kpi-warning" : ""}`}>
                 {loading ? "—" : atRiskCount}
               </div>
