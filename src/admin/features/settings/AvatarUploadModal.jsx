@@ -9,6 +9,7 @@
 import { useCallback, useRef, useState } from "react";
 import { ImageIcon, Upload, X } from "lucide-react";
 import Modal from "@/shared/ui/Modal";
+import FbAlert from "@/shared/ui/FbAlert";
 
 const MAX_KB = 200;
 const MAX_BYTES = MAX_KB * 1024;
@@ -223,18 +224,8 @@ export default function AvatarUploadModal({ open, onClose, onConfirm }) {
 
         {/* Inline error */}
         {fileError && (
-          <div style={{
-            marginTop: 10,
-            padding: "8px 12px",
-            borderRadius: "var(--radius-sm)",
-            background: "color-mix(in srgb, var(--danger) 8%, transparent)",
-            border: "1px solid color-mix(in srgb, var(--danger) 28%, transparent)",
-            fontSize: 12,
-            color: "var(--danger)",
-            display: "flex", alignItems: "center", gap: 7,
-          }}>
-            <X size={12} style={{ flexShrink: 0 }} />
-            {fileError}
+          <div style={{ marginTop: 10 }}>
+            <FbAlert variant="danger">{fileError}</FbAlert>
           </div>
         )}
 
