@@ -78,7 +78,7 @@
 .ec-divider{height:1px;background:var(--border);margin:0 -24px;width:calc(100% + 48px)}
 /* Activity list */
 .ec-sessions-activity-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-tertiary);margin-top:16px;margin-bottom:12px}
-.ec-sessions-list{display:flex;flex-direction:column;gap:2px;margin-top:auto}
+.ec-sessions-list{display:flex;flex-direction:column;gap:2px}
 .ec-session-item{display:flex;align-items:center;gap:10px;font-size:12px;padding:8px 12px;border-radius:var(--radius-sm);transition:background .12s}
 .ec-session-item:hover{background:var(--surface-1)}
 .ec-session-avatar{width:28px;height:28px;border-radius:50%;background:var(--surface-1);border:1px solid var(--border-strong);display:grid;place-items:center;font-size:9px;font-weight:700;color:var(--text-secondary);flex-shrink:0;text-transform:uppercase}
