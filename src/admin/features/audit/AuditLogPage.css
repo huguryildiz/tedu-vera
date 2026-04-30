@@ -649,42 +649,54 @@
 .audit-drawer-details { display: flex; flex-direction: column; }
 
 /* ─── Diffs tab ──────────────────────────────────── */
-.audit-drawer-diffs { display: flex; flex-direction: column; gap: 4px; }
+.audit-drawer-diffs { display: flex; flex-direction: column; gap: 0; }
 .audit-drawer-diff-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-wrap: wrap;
-  padding: 3px 0;
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: start;
+  gap: 10px;
+  padding: 7px 0;
   border-bottom: 1px solid var(--border);
 }
 .audit-drawer-diff-row:last-child { border-bottom: none; }
 .audit-drawer-diff-key {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  min-width: 72px;
-  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
   text-transform: capitalize;
+  padding-top: 2px;
+  word-break: break-word;
+}
+.audit-drawer-diff-values {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
 }
 .audit-drawer-diff-from {
-  font-size: 10px;
+  font-size: 11px;
   background: rgba(239,68,68,0.08);
   color: var(--danger, #dc2626);
-  border-radius: 3px;
-  padding: 1px 5px;
+  border-radius: 4px;
+  padding: 2px 7px;
   text-decoration: line-through;
+  word-break: break-word;
+  max-width: 100%;
 }
 .audit-drawer-diff-arrow {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-tertiary);
 }
 .audit-drawer-diff-to {
-  font-size: 10px;
+  font-size: 11px;
   background: rgba(34,197,94,0.08);
   color: #16a34a;
-  border-radius: 3px;
-  padding: 1px 5px;
+  border-radius: 4px;
+  padding: 2px 7px;
+  word-break: break-word;
+  max-width: 100%;
+  line-height: 1.45;
 }
 .dark-mode .audit-drawer-diff-to { color: #4ade80; }
 
@@ -849,6 +861,11 @@
   line-height: 1.3;
 }
 
+/* ── Drawer backdrop (mobile portrait only) ──────── */
+.audit-drawer-backdrop {
+  display: none;
+}
+
 /* ── Portrait refinement ── */
 @media (max-width: 768px) and (orientation: portrait) {
   #page-audit .page-desc {
@@ -1002,5 +1019,85 @@
   }
   #page-audit .audit-pagination {
     gap: 5px;
+  }
+
+  /* ── Detail panel: bottom-sheet overlay on portrait ── */
+  #page-audit .audit-feed-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .audit-drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.32);
+    z-index: 299;
+  }
+
+  .audit-event-drawer-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    max-height: 78vh;
+    border-radius: 14px 14px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.14);
+    z-index: 300;
+    overflow: hidden;
+  }
+
+  .audit-drawer-head {
+    padding: 10px 16px 8px;
+  }
+
+  /* Drag handle hint */
+  .audit-drawer-head::before {
+    content: "";
+    display: block;
+    width: 32px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 8px;
+  }
+
+  .audit-drawer-tabs {
+    padding: 0 16px;
+  }
+
+  .audit-drawer-body {
+    padding: 10px 16px 20px;
+  }
+
+  /* Diff rows: stack key above value on very narrow drawers */
+  .audit-drawer-diff-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 8px 0;
+  }
+
+  .audit-drawer-diff-key {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-tertiary);
+    padding-top: 0;
+  }
+
+  .audit-drawer-diff-values {
+    gap: 4px;
+  }
+
+  .audit-drawer-diff-from,
+  .audit-drawer-diff-to {
+    font-size: 12px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    line-height: 1.5;
   }
 }

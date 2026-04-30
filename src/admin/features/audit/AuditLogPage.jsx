@@ -938,6 +938,9 @@ export default function AuditLogPage() {
           />
         </div>
 
+        {selectedLog && (
+          <div className="audit-drawer-backdrop" onClick={() => setSelectedLog(null)} aria-hidden="true" />
+        )}
         <AuditEventDrawer key={selectedLog?.id} log={selectedLog} onClose={() => setSelectedLog(null)} />
       </div>
     </div>

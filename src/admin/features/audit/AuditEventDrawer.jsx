@@ -214,9 +214,11 @@ export default function AuditEventDrawer({ log, onClose }) {
               {diffs.map((d) => (
                 <div key={d.key} className="audit-drawer-diff-row">
                   <span className="audit-drawer-diff-key">{d.key.replace(/_/g, " ")}</span>
-                  {d.from && <span className="audit-drawer-diff-from">{d.from}</span>}
-                  {d.from && d.to && <span className="audit-drawer-diff-arrow">→</span>}
-                  {d.to && <span className="audit-drawer-diff-to">{d.to}</span>}
+                  <div className="audit-drawer-diff-values">
+                    {d.from && <span className="audit-drawer-diff-from">{d.from}</span>}
+                    {d.from && d.to && <span className="audit-drawer-diff-arrow">→</span>}
+                    {d.to && <span className="audit-drawer-diff-to">{d.to}</span>}
+                  </div>
                 </div>
               ))}
             </div>
