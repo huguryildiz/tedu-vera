@@ -262,28 +262,9 @@
   text-overflow: ellipsis;
 }
 
-.crt-mobile-card-pts-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 9px;
-  border-radius: 6px;
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  white-space: nowrap;
-  flex-shrink: 0;
-  letter-spacing: 0.2px;
-}
-
 /* Mobile card kebab uses global .row-action-btn (components.css). */
 
-button.crt-mobile-card-pts-edit {
-  font: inherit;
-  cursor: pointer;
-}
+.crt-mobile-card-header .crt-inline-weight { flex-shrink: 0; }
 
 /* ── Section label (Rubric Bands / Outcomes) ─────────────────── */
 

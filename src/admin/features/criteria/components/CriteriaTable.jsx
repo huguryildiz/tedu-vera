@@ -352,32 +352,13 @@ export default function CriteriaTable({
                       className={`crt-mobile-card-chevron${isExpanded ? " expanded" : ""}`}
                     />
                   </button>
-                  {isLocked ? (
-                    <span
-                      className="crt-mobile-card-pts-badge"
-                      style={{
-                        backgroundColor: `${color || "#94A3B8"}18`,
-                        borderColor: `${color || "#94A3B8"}40`,
-                        color: color || "var(--text-tertiary)",
-                      }}
-                    >
-                      {criterion.max != null ? `${criterion.max} pts` : "—"}
-                    </span>
-                  ) : (
-                    <button
-                      className="crt-mobile-card-pts-badge crt-mobile-card-pts-edit"
-                      style={{
-                        backgroundColor: `${color || "#94A3B8"}18`,
-                        borderColor: `${color || "#94A3B8"}40`,
-                        color: color || "var(--text-tertiary)",
-                      }}
-                      onClick={(e) => { e.stopPropagation(); onEditIndex(i); }}
-                      aria-label={`Edit ${criterion.label || `Criterion ${i + 1}`}`}
-                    >
-                      {criterion.max != null ? `${criterion.max} pts` : "—"}
-                      <Pencil size={10} strokeWidth={2.2} style={{ marginLeft: 3, flexShrink: 0 }} />
-                    </button>
-                  )}
+                  <InlineWeightEdit
+                    value={criterion.max || 0}
+                    color={color}
+                    otherTotal={draftCriteria.reduce((s, c, j) => j === i ? s : s + (Number(c.max) || 0), 0)}
+                    onChange={(v) => onWeightChange(i, v)}
+                    disabled={isLocked}
+                  />
                   <FloatingMenu
                     trigger={
                       <button
