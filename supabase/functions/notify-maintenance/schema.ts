@@ -4,10 +4,10 @@ import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 // ── Request shape ─────────────────────────────────────────────────────────
 export const RequestPayloadSchema = z.object({
   message: z.string().optional(),
-  startTime: z.string().optional(),
-  endTime: z.string().optional(),
+  startTime: z.string().nullish(),
+  endTime: z.string().nullish(),
   mode: z.string().optional(),
-  affectedOrgIds: z.array(z.string()).optional(),
+  affectedOrgIds: z.array(z.string()).nullish(),
   testRecipient: z.string().optional(),
 });
 
