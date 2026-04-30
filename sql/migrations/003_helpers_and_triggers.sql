@@ -275,8 +275,9 @@ DECLARE
   v_ua          TEXT;
   v_req_headers JSON;
   v_ip_raw      TEXT;
-  v_entity_key  TEXT;
-  v_entity_name TEXT;
+  v_entity_key     TEXT;
+  v_entity_name    TEXT;
+  v_extra_details  JSONB := '{}'::jsonb;
 BEGIN
   v_action := TG_TABLE_NAME || '.' || lower(TG_OP);
 
@@ -440,6 +441,27 @@ BEGIN
     v_entity_name := CASE WHEN TG_OP = 'DELETE' THEN OLD.juror_name ELSE NEW.juror_name END;
   END IF;
 
+  -- Enrich juror_period_auth INSERT with human-readable names
+  IF TG_TABLE_NAME = 'juror_period_auth' AND TG_OP = 'INSERT' THEN
+    SELECT jsonb_build_object(
+      'juror_name', j.juror_name,
+      'period_name', per.name
+    ) INTO v_extra_details
+    FROM jurors j
+    JOIN periods per ON per.id = NEW.period_id
+    WHERE j.id = NEW.juror_id;
+  END IF;
+
+  -- Enrich memberships events with member email + role
+  IF TG_TABLE_NAME = 'memberships' THEN
+    SELECT jsonb_build_object(
+      'member_email', u.email,
+      'role', CASE WHEN TG_OP = 'DELETE' THEN OLD.role ELSE NEW.role END
+    ) INTO v_extra_details
+    FROM auth.users u
+    WHERE u.id = CASE WHEN TG_OP = 'DELETE' THEN OLD.user_id ELSE NEW.user_id END;
+  END IF;
+
   INSERT INTO audit_logs (
     organization_id, user_id,
     action, resource_type, resource_id,
@@ -462,7 +484,8 @@ BEGIN
          WHEN v_entity_key IS NOT NULL AND v_entity_name IS NOT NULL THEN
            jsonb_build_object(v_entity_key, v_entity_name)
          ELSE '{}'::jsonb
-       END,
+       END
+    || v_extra_details,
     v_diff
   );
 

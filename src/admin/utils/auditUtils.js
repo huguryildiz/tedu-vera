@@ -837,10 +837,28 @@ export const EVENT_META = {
     narrative: (log) => ({ verb: "deleted juror", resource: dv(log, "juror_name", "before") }),
   },
 
+  // ── Juror period auth (trigger-based) ────────────────────────
+  "juror_period_auth.insert": {
+    label: "Juror received PIN",
+    narrative: (log) => {
+      const d = log.details || {};
+      const juror = d.juror_name ?? "Juror";
+      const period = d.period_name ?? null;
+      const resource = period ? `${juror} for ${period}` : juror;
+      return { verb: "received PIN", resource };
+    },
+  },
+
   // ── Membership (trigger-based) ────────────────────────────────
   "memberships.insert": {
     label: "Membership created",
-    narrative: () => ({ verb: "added member", resource: null }),
+    narrative: (log) => {
+      const d = log.details || {};
+      const who = d.member_email ?? null;
+      const role = d.role ?? null;
+      const resource = [who, role].filter(Boolean).join(" as ") || null;
+      return { verb: "added member", resource };
+    },
   },
   "memberships.update": {
     label: "Membership updated",
@@ -848,7 +866,10 @@ export const EVENT_META = {
   },
   "memberships.delete": {
     label: "Membership deleted",
-    narrative: () => ({ verb: "removed member", resource: null }),
+    narrative: (log) => {
+      const email = (log.details || {}).member_email ?? null;
+      return { verb: "removed member", resource: email };
+    },
   },
 
   // ── Organizations (trigger-based + status change) ─────────────

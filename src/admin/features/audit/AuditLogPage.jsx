@@ -18,6 +18,7 @@ import { getActorInfo, formatActionLabel, formatActionDetail, formatSentence, fo
 import { AUDIT_TABLE_COLUMNS } from "@/admin/utils/auditColumns";
 import AuditEventDrawer from "./AuditEventDrawer";
 import JurorBadge from "@/admin/shared/JurorBadge";
+import { ToggleSwitch } from "@/shared/ui/ToggleSwitch";
 import useCardSelection from "@/shared/hooks/useCardSelection";
 import Pagination from "@/shared/ui/Pagination";
 import "./AuditLogPage.css";
@@ -635,15 +636,12 @@ export default function AuditLogPage() {
           </button>
         ))}
         <span className="audit-saved-views-sep" aria-hidden="true" />
-        <button
-          type="button"
-          className={`audit-view-chip audit-view-chip-system${showSystemEvents ? " active" : ""}`}
-          onClick={() => { setShowSystemEvents((v) => !v); setCurrentPage(1); }}
-          data-testid="audit-toggle-system-events"
-          title={showSystemEvents ? "Hide automated system events" : "Show automated system events (score sheets, criteria, outcome maps)"}
-        >
-          {showSystemEvents ? "Hide automated" : "Show automated"}
-        </button>
+        <ToggleSwitch
+          checked={showSystemEvents}
+          onChange={(v) => { setShowSystemEvents(v); setCurrentPage(1); }}
+          label="Show automated"
+          testId="audit-toggle-system-events"
+        />
       </div>
 
       {/* Table + detail panel */}
