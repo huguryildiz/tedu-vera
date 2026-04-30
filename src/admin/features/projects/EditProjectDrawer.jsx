@@ -61,13 +61,19 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
 
   const dragIndex = useRef(null);
   const dragOverIndex = useRef(null);
+  const [draggableIdx, setDraggableIdx] = useState(null);
 
   const onDragStart = (i) => { dragIndex.current = i; };
   const onDragEnter = (i) => { dragOverIndex.current = i; };
   const onDragEnd = () => {
     const from = dragIndex.current;
     const to = dragOverIndex.current;
-    if (from === null || to === null || from === to) return;
+    if (from === null || to === null || from === to) {
+      dragIndex.current = null;
+      dragOverIndex.current = null;
+      setDraggableIdx(null);
+      return;
+    }
     setForm((f) => {
       const m = [...f.members];
       const [moved] = m.splice(from, 1);
@@ -76,6 +82,7 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
     });
     dragIndex.current = null;
     dragOverIndex.current = null;
+    setDraggableIdx(null);
   };
 
   const hasMember = form.members.some((m) => m.trim());
@@ -280,14 +287,19 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
             <div
               key={i}
               className="fs-list-row"
-              draggable
+              draggable={draggableIdx === i}
               onDragStart={() => onDragStart(i)}
               onDragEnter={() => onDragEnter(i)}
               onDragEnd={onDragEnd}
               onDragOver={(e) => e.preventDefault()}
-              style={{ cursor: "grab" }}
             >
-              <div className="fs-list-handle" title="Drag to reorder" style={{ cursor: "grab" }}>{HANDLE_SVG}</div>
+              <div
+                className="fs-list-handle"
+                title="Drag to reorder"
+                style={{ cursor: "grab" }}
+                onMouseDown={() => setDraggableIdx(i)}
+                onMouseUp={() => setDraggableIdx(null)}
+              >{HANDLE_SVG}</div>
               <input
                 className={`fs-input${i === 0 && showMembersError ? " error" : ""}`}
                 type="text"
@@ -296,7 +308,6 @@ export default function EditProjectDrawer({ open, onClose, project, onSave, erro
                 onChange={(e) => setMember(i, e.target.value)}
                 onBlur={() => touch("members")}
                 disabled={saving}
-                style={{ cursor: "text" }}
               />
               {form.members.length > 1 && (
                 <button
