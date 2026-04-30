@@ -159,13 +159,16 @@ export default function EditProfileDrawer({ open, onClose, profile, onSave, onCa
         <div className="fs-field">
           <label className="fs-field-label">Display Name</label>
           <input
-            className="fs-input"
+            className={`fs-input${!displayName.trim() ? " error" : ""}`}
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             disabled={saving}
             placeholder="Your display name"
           />
+          {!displayName.trim() && (
+            <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Display name is required.</p>
+          )}
         </div>
 
         <div className="fs-field">
