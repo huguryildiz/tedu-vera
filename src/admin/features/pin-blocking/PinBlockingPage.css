@@ -70,12 +70,14 @@ body.dark-mode .pin-eta-pill.expired {
 
 /* ─── Failed attempts cell — mirrors reviews .col-score ──── */
 .pin-lock-table .col-fails {
-  font-family: var(--mono);
   font-size: 12px;
   font-weight: 500;
   text-align: right;
   white-space: nowrap;
   color: var(--text-primary);
+}
+.pin-lock-table .fails-desktop {
+  font-family: var(--mono);
 }
 .pin-lock-table .col-fails.missing {
   color: var(--text-tertiary);
