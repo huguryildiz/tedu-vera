@@ -195,17 +195,13 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
      Row 2: Failed: N (left)  ·  ETA pill (right)
    ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) and (orientation: portrait) {
-  /* Strip outer card wrapper so row-cards sit on page bg */
+  /* Keep outer card white; strip only the table-wrap chrome */
   .pin-lock-page .card:has(.pin-lock-table) {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    border-radius: 0;
-    padding: 0;
+    padding-bottom: 8px;
     margin-bottom: 12px;
   }
   .pin-lock-page .card:has(.pin-lock-table) > .card-header {
-    padding: 4px 2px 10px;
+    padding-bottom: 10px;
     border-bottom: none;
   }
   .pin-lock-page .table-wrap {
@@ -214,6 +210,7 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
     background: none;
     box-shadow: none;
     border-radius: 0;
+    padding: 0 16px;
   }
 
   .pin-lock-table { display: contents; }
