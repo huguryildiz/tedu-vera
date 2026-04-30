@@ -85,9 +85,12 @@ function randSqlTs(dateStr, minH, maxH) {
   return sqlTs(dateStr, randInt(minH, maxH) + randInt(0, 59) / 60);
 }
 
-// Cap hour offsets for the current-period demo day so timestamps never cross midnight.
-// sqlTs() anchors at 09:00; base 09:00 + 13 h = 22:00 on the same calendar day.
-const MAX_CUR_H = 13;
+// Cap hour offsets for the current-period demo day so timestamps stay in the past.
+// sqlTs() anchors at 09:00; MAX_CUR_H is computed from the wall clock at seed generation
+// time so the latest timestamp is always at least 1 hour before "now".
+// e.g. running at 16:00 → MAX_CUR_H = 6 → latest timestamp = 15:00.
+const _nowH = new Date().getHours() + new Date().getMinutes() / 60;
+const MAX_CUR_H = Math.max(1, _nowH - 9 - 1); // 1 h buffer before current time, min 1
 function capH(minH, maxH, isCur) {
   if (!isCur) return [minH, maxH];
   return [Math.min(minH, MAX_CUR_H), Math.min(maxH, MAX_CUR_H)];
