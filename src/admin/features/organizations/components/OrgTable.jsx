@@ -175,7 +175,7 @@ export default function OrgTable({
                     <td data-label="Organization" style={{ fontWeight: 600 }}>
                       {org.name || "—"}
                     </td>
-                    <td data-label="Code" className="mono"><span className="org-code-pill">{code || "—"}</span></td>
+                    <td data-label="Code" className="mono"><span className="org-code-pill mono">{code || "—"}</span></td>
                     <td data-label="Status"><OrgStatusBadge status={org.status} /></td>
                     <td data-label="Admins" className="text-center mono org-admin-count-cell">
                       <span className="org-admin-count-label">Admins:</span>{" "}
@@ -235,7 +235,7 @@ export default function OrgTable({
                     <td className="org-card-meta-row" aria-hidden="true">
                       <span className="org-meta-code">
                         <Code2 size={11} strokeWidth={2} />
-                        <span className="org-meta-chip">{code || "—"}</span>
+                        <span className="org-meta-chip mono">{code || "—"}</span>
                       </span>
                       <span className="org-meta-dot" />
                       <span className={`org-meta-admin${isUnstaffed ? " org-meta-admin--warn" : ""}`}>
