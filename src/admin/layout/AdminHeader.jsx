@@ -218,7 +218,7 @@ export default function AdminHeader({
           </button>
         </div>
       )}
-      {sortedPeriods.length > 0 && currentPage !== "setup" && (
+      {sortedPeriods.length > 0 && currentPage !== "setup" && currentPage !== "audit-log" && (
         <div className={`dropdown${dropdownOpen ? " open" : ""}`}>
           <button
             ref={triggerRef}
