@@ -2,6 +2,12 @@
 // Read-only drawer showing a single project's jury scores:
 // KPI strip, per-criterion averages, juror breakdown, feedback.
 //
+// KPI numbers come from server-side aggregation (rpc_admin_project_summary,
+// rpc_admin_period_summary), surfaced via useAdminContext as `summaryData`
+// (per-project) and `periodSummary` (period-wide reference). The drawer
+// performs zero client-side aggregation for averages — it only iterates
+// `rawScores` for the per-juror breakdown rows.
+//
 // Props:
 //   open          — boolean
 //   onClose       — () => void
@@ -9,7 +15,8 @@
 //   periodId      — string
 //   periodLabel   — string
 //   rawScores     — all score_sheets for the period (from useAdminContext)
-//   summaryData   — per-project aggregates (from useAdminContext)
+//   summaryData   — per-project server-aggregated rows (id, totalAvg, totalPct, stdDevPct, rank, perCriterion, …)
+//   periodSummary — period-wide reference summary { avgTotalPct, rankedCount, … }
 //   allJurors     — period juror summaries (from useAdminContext)
 //   onOpenReviews — () => void (navigate to Reviews page scoped to this project)
 
@@ -28,13 +35,6 @@ function bandFor(pct) {
   if (pct >= 70) return { key: "good", label: "Good" };
   if (pct >= 55) return { key: "fair", label: "Fair" };
   return { key: "poor", label: "Poor" };
-}
-
-function stdDev(nums) {
-  if (!nums.length) return null;
-  const mean = nums.reduce((s, v) => s + v, 0) / nums.length;
-  const variance = nums.reduce((s, v) => s + (v - mean) ** 2, 0) / nums.length;
-  return Math.sqrt(variance);
 }
 
 function CritBar({ label, color, val, maxScore }) {
@@ -69,6 +69,7 @@ export default function ProjectScoresDrawer({
   periodLabel,
   rawScores = [],
   summaryData = [],
+  periodSummary = null,
   allJurors = [],
   onOpenReviews,
 }) {
@@ -109,83 +110,73 @@ export default function ProjectScoresDrawer({
     return [];
   }, [project]);
 
-  // Score sheets for this project
+  // Score sheets for this project (used only for the per-juror breakdown).
+  // Aggregations come from `summaryData[i]`, not from re-iterating these.
   const sheets = useMemo(() => {
     if (!projectId) return [];
     return rawScores.filter((r) => (r.projectId || r.project_id) === projectId);
   }, [rawScores, projectId]);
 
-  const submittedSheets = useMemo(
-    () => sheets.filter((s) => s.status === "submitted"),
-    [sheets]
-  );
-
-  // Final score, std dev, rank
-  const finalScore = useMemo(() => {
-    const totals = submittedSheets.map((s) => Number(s.total)).filter(Number.isFinite);
-    if (!totals.length) return null;
-    return totals.reduce((s, v) => s + v, 0) / totals.length;
-  }, [submittedSheets]);
-
-  const sigma = useMemo(() => {
-    const totals = submittedSheets.map((s) => Number(s.total)).filter(Number.isFinite);
-    return stdDev(totals);
-  }, [submittedSheets]);
-
-  const rank = useMemo(() => {
-    if (!Array.isArray(summaryData) || !summaryData.length || !projectId) return null;
-    const sorted = [...summaryData]
-      .filter((r) => Number.isFinite(Number(r.totalAvg)))
-      .sort((a, b) => Number(b.totalAvg) - Number(a.totalAvg));
-    const idx = sorted.findIndex((r) => r.id === projectId);
-    return idx >= 0 ? { rank: idx + 1, total: sorted.length } : null;
+  // Server-aggregated row for this project (single source of truth for the
+  // KPI strip and criterion averages). Falls back to {} so drawer renders
+  // an empty-state strip while data loads.
+  const projectRow = useMemo(() => {
+    if (!Array.isArray(summaryData) || !projectId) return null;
+    return summaryData.find((r) => r.id === projectId) || null;
   }, [summaryData, projectId]);
 
-  const overallAvg = useMemo(() => {
-    if (!Array.isArray(summaryData) || !summaryData.length) return null;
-    const vals = summaryData.map((r) => Number(r.totalAvg)).filter(Number.isFinite);
-    if (!vals.length) return null;
-    return vals.reduce((s, v) => s + v, 0) / vals.length;
-  }, [summaryData]);
+  const finalScorePct  = projectRow?.totalPct ?? null;          // 0–100 normalized
+  const stdDevPct      = projectRow?.stdDevPct ?? null;
+  const rank           = projectRow?.rank ?? null;
+  const rankedCount    = periodSummary?.rankedCount ?? null;
+  const overallAvgPct  = periodSummary?.avgTotalPct ?? null;
+  const submittedCount = projectRow?.submittedCount ?? 0;
+  const assignedCount  = projectRow?.assignedCount ?? (Array.isArray(allJurors) ? allJurors.length : 0);
 
-  // Per-criterion averages (submitted only)
+  // Per-criterion strip from the RPC's `per_criterion` JSONB, joined with
+  // the criteria metadata (label, color, group). Display uses the
+  // server-computed `pct` directly.
   const criteriaRows = useMemo(() => {
-    if (!criteria.length || !submittedSheets.length) return [];
-    return criteria.map((c) => {
-      const key = c.key;
-      const maxScore = Number(c.max_score) || 20;
-      const vals = submittedSheets
-        .map((s) => Number(s[key]))
-        .filter(Number.isFinite);
-      const mean = vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
-      const pct = mean != null ? (mean / maxScore) * 100 : null;
-      const band = pct != null ? bandFor(pct) : null;
-      return {
-        key,
-        label: c.label || c.key,
-        group: c.group || null,
-        maxScore,
-        mean,
-        pct,
-        band,
-      };
-    });
-  }, [criteria, submittedSheets]);
+    if (!criteria.length) return [];
+    const perCrit = projectRow?.perCriterion || {};
+    return criteria
+      .map((c) => {
+        const info = perCrit[c.key];
+        if (!info) return null;
+        const mean = info.avg ?? null;
+        const maxScore = Number(info.max ?? c.max_score) || 20;
+        const pct = info.pct ?? null;
+        const band = pct != null ? bandFor(pct) : null;
+        return {
+          key: c.key,
+          label: c.label || c.key,
+          group: c.group || null,
+          maxScore,
+          mean,
+          pct,
+          band,
+        };
+      })
+      .filter(Boolean);
+  }, [criteria, projectRow]);
 
-  // Juror rows
+  // Per-juror breakdown rows. This is NOT an aggregation — it's the per-
+  // juror sheet display. Outlier detection uses the server-supplied total
+  // mean (totalAvg) and stdDevPct (rescaled to raw via totalMax).
   const jurorRows = useMemo(() => {
-    // Group sheets by juror
     const byJuror = new Map();
     for (const s of sheets) {
       const jid = s.jurorId || s.juror_id;
       if (!jid) continue;
       byJuror.set(jid, s);
     }
+    const mean = projectRow?.totalAvg ?? 0;
+    // Rescale stdDevPct (0..100) back to the raw total-score scale using
+    // the period's total_max so the 1.5σ outlier threshold compares like
+    // for like.
+    const totalMax = periodSummary?.totalMax ?? 100;
+    const sd = stdDevPct != null ? (stdDevPct * totalMax) / 100 : 0;
     const rows = [];
-    // Mean/sigma for outlier detection
-    const totals = submittedSheets.map((s) => Number(s.total)).filter(Number.isFinite);
-    const mean = totals.length ? totals.reduce((s, v) => s + v, 0) / totals.length : 0;
-    const sd = stdDev(totals) || 0;
     for (const [jid, s] of byJuror) {
       const total = Number(s.total);
       const isOutlier =
@@ -210,22 +201,14 @@ export default function ProjectScoresDrawer({
       return (b.total ?? -1) - (a.total ?? -1);
     });
     return rows;
-  }, [sheets, submittedSheets]);
+  }, [sheets, projectRow, stdDevPct, periodSummary]);
 
   const feedbackRows = jurorRows.filter((j) => j.comments);
 
-  const assignedCount = useMemo(() => {
-    // Prefer distinct jurors with any sheet for this project;
-    // fall back to all period jurors if sheets are sparse.
-    if (jurorRows.length) return jurorRows.length;
-    return Array.isArray(allJurors) ? allJurors.length : 0;
-  }, [jurorRows, allJurors]);
-
-  const submittedCount = submittedSheets.length;
-
-  const deltaVsAvg = finalScore != null && overallAvg != null
-    ? finalScore - overallAvg
-    : null;
+  const deltaVsAvg =
+    finalScorePct != null && overallAvgPct != null
+      ? finalScorePct - overallAvgPct
+      : null;
 
   return (
     <Drawer open={open} onClose={onClose}>
@@ -264,7 +247,7 @@ export default function ProjectScoresDrawer({
           <div className="psd-kpi">
             <div className="psd-kpi-label">Final Score</div>
             <div className="psd-kpi-value psd-kpi-value--accent">
-              {finalScore != null ? finalScore.toFixed(1) : "—"}
+              {finalScorePct != null ? Number(finalScorePct).toFixed(1) : "—"}
             </div>
             <div className={`psd-kpi-delta ${deltaVsAvg != null && deltaVsAvg >= 0 ? "up" : deltaVsAvg != null ? "down" : ""}`}>
               {deltaVsAvg != null
@@ -279,28 +262,34 @@ export default function ProjectScoresDrawer({
               <span className="psd-kpi-denom">/{assignedCount || "—"}</span>
             </div>
             <div className="psd-kpi-delta">
-              {jurorRows.length - submittedCount > 0
-                ? `${jurorRows.length - submittedCount} in progress`
+              {assignedCount - submittedCount > 0
+                ? `${assignedCount - submittedCount} in progress`
                 : "complete"}
             </div>
           </div>
           <div className="psd-kpi">
             <div className="psd-kpi-label">Std Dev</div>
             <div className="psd-kpi-value">
-              {sigma != null ? sigma.toFixed(1) : "—"}
+              {stdDevPct != null ? Number(stdDevPct).toFixed(1) : "—"}
             </div>
             <div className="psd-kpi-delta">
-              {sigma == null ? "—" : sigma < 3 ? "Low variance" : sigma < 6 ? "Moderate" : "High variance"}
+              {stdDevPct == null
+                ? "—"
+                : stdDevPct < 3 ? "Low variance"
+                : stdDevPct < 6 ? "Moderate"
+                : "High variance"}
             </div>
           </div>
           <div className="psd-kpi">
             <div className="psd-kpi-label">Rank</div>
             <div className="psd-kpi-value">
-              {rank ? `#${rank.rank}` : "—"}
-              {rank && <span className="psd-kpi-denom">/{rank.total}</span>}
+              {rank ? `#${rank}` : "—"}
+              {rank && rankedCount ? <span className="psd-kpi-denom">/{rankedCount}</span> : null}
             </div>
-            <div className={`psd-kpi-delta ${rank && rank.rank / rank.total <= 0.25 ? "up" : ""}`}>
-              {rank ? `Top ${Math.max(1, Math.round((rank.rank / rank.total) * 100))}%` : "—"}
+            <div className={`psd-kpi-delta ${rank && rankedCount && rank / rankedCount <= 0.25 ? "up" : ""}`}>
+              {rank && rankedCount
+                ? `Top ${Math.max(1, Math.round((rank / rankedCount) * 100))}%`
+                : "—"}
             </div>
           </div>
         </div>

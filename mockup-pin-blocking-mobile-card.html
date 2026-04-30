@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VERA — PIN Blocking Mobile Card Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* ── Design tokens ──────────────────────────────────────────── */
+:root {
+  --bg-page:        #f4f7fb;
+  --bg-card:        #ffffff;
+  --surface-1:      #eef2f8;
+  --surface-2:      #e3eaf4;
+  --border:         rgba(15,23,42,0.08);
+  --border-subtle:  rgba(15,23,42,0.06);
+  --border-strong:  rgba(15,23,42,0.14);
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary:  #94a3b8;
+  --text-muted:     #64748b;
+  --accent:         #3b82f6;
+  --accent-dark:    #2563eb;
+  --accent-soft:    rgba(59,130,246,0.08);
+  --success:        #16a34a;
+  --success-soft:   rgba(22,163,74,0.09);
+  --warning:        #d97706;
+  --warning-muted:  #fef3c7;
+  --warning-fg:     #854d0e;
+  --warning-border: #fde68a;
+  --warning-soft:   rgba(217,119,6,0.08);
+  --danger:         #e11d48;
+  --danger-soft:    rgba(225,29,72,0.07);
+  --font: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+.dark {
+  --bg-page:        #080d1a;
+  --bg-card:        #0b1022;
+  --surface-1:      #151d32;
+  --surface-2:      #1c2740;
+  --border:         rgba(255,255,255,0.07);
+  --border-subtle:  rgba(255,255,255,0.05);
+  --border-strong:  rgba(255,255,255,0.13);
+  --text-primary:   #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-tertiary:  #4b5675;
+  --text-muted:     #64748b;
+  --accent:         #60a5fa;
+  --accent-dark:    #93c5fd;
+  --accent-soft:    rgba(59,130,246,0.14);
+  --success:        #4ade80;
+  --success-soft:   rgba(74,222,128,0.09);
+  --warning:        #fbbf24;
+  --warning-muted:  rgba(245,158,11,0.12);
+  --warning-fg:     #fcd34d;
+  --warning-border: rgba(252,211,77,0.3);
+  --warning-soft:   rgba(217,119,6,0.12);
+  --danger:         #f87171;
+  --danger-soft:    rgba(239,68,68,0.12);
+}
+
+/* ── Reset ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: #1e293b;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 32px 16px 48px;
+  gap: 32px;
+}
+
+/* ── Controls ─────────────────────────────────────────────── */
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ctrl-btn {
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.08);
+  color: #e2e8f0;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ctrl-btn:hover { background: rgba(255,255,255,0.14); }
+.ctrl-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+.label {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+/* ── Phone frame ──────────────────────────────────────────── */
+.phone-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.phone-label {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.phone {
+  width: 390px;
+  background: var(--bg-page);
+  border-radius: 40px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 8px #1e293b,
+    0 0 0 10px #334155,
+    0 30px 80px rgba(0,0,0,0.6);
+  position: relative;
+}
+/* Notch */
+.phone::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 120px; height: 34px;
+  background: #1e293b;
+  border-radius: 0 0 20px 20px;
+  z-index: 10;
+}
+.phone-screen {
+  padding: 50px 0 24px;
+  min-height: 600px;
+  overflow-y: auto;
+  max-height: 780px;
+}
+
+/* ── Page chrome ──────────────────────────────────────────── */
+.page-header {
+  padding: 0 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.page-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+.page-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+/* ── Alert banner ─────────────────────────────────────────── */
+.alert-banner {
+  margin: 12px 16px 0;
+  padding: 10px 12px;
+  background: rgba(217,119,6,0.08);
+  border: 1px solid rgba(217,119,6,0.22);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--warning-fg);
+  line-height: 1.45;
+}
+.dark .alert-banner {
+  background: rgba(245,158,11,0.10);
+  border-color: rgba(251,191,36,0.25);
+  color: #fbbf24;
+}
+.alert-title {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 3px;
+}
+.alert-icon { flex-shrink: 0; }
+
+/* ── KPI strip ────────────────────────────────────────────── */
+.kpi-strip {
+  display: flex;
+  gap: 0;
+  margin: 12px 16px 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.kpi-item {
+  flex: 1;
+  padding: 10px 12px;
+  text-align: center;
+}
+.kpi-item + .kpi-item {
+  border-left: 1px solid var(--border);
+}
+.kpi-value {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  line-height: 1;
+  font-family: var(--mono);
+}
+.kpi-value.danger { color: var(--danger); }
+.kpi-value.accent { color: var(--accent); }
+.kpi-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-top: 3px;
+}
+
+/* ── Section header ───────────────────────────────────────── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+}
+.section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.count-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+.section-subtitle {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+.btn-unlock-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 7px;
+  border: none;
+  background: var(--danger);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Cards list ───────────────────────────────────────────── */
+.cards-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   COMPACT LOCKOUT CARD — 2-column × 3-row grid
+   Col 1 (flex): main content  |  Col 2 (auto): secondary
+   ═══════════════════════════════════════════════════════════ */
+.lockout-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.lockout-card:active {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+
+/* ─ Row 1: Avatar + name (left)  |  ETA pill (right) ──────── */
+.card-identity {
+  grid-column: 1;
+  grid-row: 1;
+  padding: 10px 6px 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.card-eta {
+  grid-column: 2;
+  grid-row: 1;
+  padding: 10px 12px 6px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+/* ─ Row 2: Meta (left)  |  (empty right) ─────────────────── */
+.card-meta {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  padding: 0 12px 8px 50px; /* 50px = 12 left + 9 gap + 20 avatar + 9 gap ≈ aligns with name */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ─ Row 3: Footer bar ─────────────────────────────────────── */
+.card-footer {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ─ Avatar ────────────────────────────────────────────────── */
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+.avatar.amber { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+.avatar.rose  { background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%); }
+.avatar.teal  { background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); }
+.avatar.violet{ background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+
+/* ─ Name block ────────────────────────────────────────────── */
+.name-block { min-width: 0; }
+.juror-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+.juror-affil {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+/* ─ ETA pill ──────────────────────────────────────────────── */
+.eta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px 3px 7px;
+  border-radius: 999px;
+  background: var(--warning-muted);
+  color: var(--warning-fg);
+  border: 1px solid var(--warning-border);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  letter-spacing: -0.3px;
+}
+.eta-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--warning);
+  box-shadow: 0 0 0 2px rgba(217,119,6,0.18);
+  flex-shrink: 0;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+.eta-pill.expired {
+  background: rgba(225,29,72,0.08);
+  color: #991b1b;
+  border-color: rgba(225,29,72,0.22);
+}
+.dark .eta-pill.expired {
+  background: rgba(239,68,68,0.12);
+  color: #fca5a5;
+  border-color: rgba(248,113,113,0.3);
+}
+.eta-pill.expired .eta-dot { background: var(--danger); animation: none; }
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.82); }
+}
+
+/* ─ Meta chips ────────────────────────────────────────────── */
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.meta-chip svg { flex-shrink: 0; color: var(--text-tertiary); }
+.meta-chip .val {
+  font-weight: 700;
+  color: var(--danger);
+  font-variant-numeric: tabular-nums;
+  font-family: var(--mono);
+}
+.meta-chip.muted .val { color: var(--text-secondary); }
+.meta-divider {
+  width: 1px;
+  height: 11px;
+  background: var(--border-strong);
+  flex-shrink: 0;
+}
+
+/* ─ Footer ────────────────────────────────────────────────── */
+.lock-ago {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+.lock-ago svg { flex-shrink: 0; }
+.btn-unlock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.13s, border-color 0.13s, box-shadow 0.13s;
+  letter-spacing: 0.01em;
+}
+.btn-unlock:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.10);
+}
+
+/* ─ Empty state ───────────────────────────────────────────── */
+.empty-state {
+  margin: 0 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 16px;
+  text-align: center;
+}
+.empty-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--success-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+}
+.empty-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.empty-desc {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+
+/* ── Variant B showcase ───────────────────────────────────── */
+.variant-label {
+  margin: 16px 16px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.variant-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ─── VARIANT B: Ultra-compact single-row card ──────────────
+   For lockout pages with many entries. One-liner with avatar,
+   name, attempts badge, ETA, unlock button all on one row.   */
+.lockout-card-compact {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px 9px 11px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  overflow: hidden;
+}
+.lockout-card-compact .avatar { width: 28px; height: 28px; font-size: 10.5px; flex-shrink: 0; }
+.compact-identity {
+  flex: 1;
+  min-width: 0;
+}
+.compact-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+.compact-sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+.compact-affil {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(225,29,72,0.09);
+  border: 1px solid rgba(225,29,72,0.18);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--danger);
+  font-variant-numeric: tabular-nums;
+  font-family: var(--mono);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.dark .fail-badge {
+  background: rgba(248,113,113,0.12);
+  border-color: rgba(248,113,113,0.25);
+}
+.compact-right {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+/* ── SVG icon helpers ────────────────────────────────────── */
+svg { display: inline-block; vertical-align: middle; }
+
+/* ── Page scroll area bottom padding ────────────────────── */
+.page-bottom { height: 12px; }
+</style>
+</head>
+<body>
+
+<!-- Controls -->
+<div class="controls">
+  <span class="label">Theme:</span>
+  <button class="ctrl-btn active" onclick="setTheme('light')">Light</button>
+  <button class="ctrl-btn" onclick="setTheme('dark')">Dark</button>
+  <span class="label" style="margin-left:12px">Variant:</span>
+  <button class="ctrl-btn active" onclick="setVariant('standard')">Standard Compact</button>
+  <button class="ctrl-btn" onclick="setVariant('ultra')">Ultra Compact</button>
+  <button class="ctrl-btn" onclick="setVariant('both')">Both</button>
+</div>
+
+<!-- Phone frame -->
+<div class="phone-wrap">
+  <div class="phone-label">390 × 844 — iPhone 14 Pro</div>
+  <div class="phone" id="phone">
+    <div class="phone-screen" id="screen">
+
+      <!-- Page header -->
+      <div class="page-header">
+        <div class="page-title">PIN Blocking</div>
+        <div class="page-desc">Monitor and manage blocked jurors.</div>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert-banner">
+        <div class="alert-title">
+          <svg class="alert-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Lock policy is active
+        </div>
+        Locked for 30 minutes after 5 failed attempts.
+      </div>
+
+      <!-- KPI strip -->
+      <div class="kpi-strip">
+        <div class="kpi-item">
+          <div class="kpi-value danger">3</div>
+          <div class="kpi-label">Locked</div>
+        </div>
+        <div class="kpi-item">
+          <div class="kpi-value accent">7</div>
+          <div class="kpi-label">Today's Events</div>
+        </div>
+      </div>
+
+      <!-- ═══ STANDARD COMPACT CARDS (Variant A) ═════════════ -->
+      <div id="variant-standard">
+
+        <!-- Section header -->
+        <div class="section-header">
+          <div>
+            <div class="section-title-row">
+              <span class="section-title">Active Lockouts</span>
+              <span class="count-pill">3</span>
+            </div>
+            <div class="section-subtitle">Blocked from PIN entry</div>
+          </div>
+          <button class="btn-unlock-all">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+            Unlock All
+          </button>
+        </div>
+
+        <div class="cards-list">
+
+          <!-- Card 1 — 11h+ left -->
+          <div class="lockout-card">
+            <div class="card-identity">
+              <div class="avatar">SG</div>
+              <div class="name-block">
+                <div class="juror-name">Dr. Serap Gündoğdu</div>
+                <div class="juror-affil">TED University, EE</div>
+              </div>
+            </div>
+            <div class="card-eta">
+              <span class="eta-pill">
+                <span class="eta-dot"></span>
+                11h 21m left
+              </span>
+            </div>
+            <div class="card-meta">
+              <span class="meta-chip">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="val">5</span> failed
+              </span>
+            </div>
+            <div class="card-footer">
+              <span class="lock-ago">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Locked just now
+              </span>
+              <button class="btn-unlock">Unlock</button>
+            </div>
+          </div>
+
+          <!-- Card 2 — 2h 45m left -->
+          <div class="lockout-card">
+            <div class="card-identity">
+              <div class="avatar amber">OS</div>
+              <div class="name-block">
+                <div class="juror-name">Prof. Orhan Sezgin</div>
+                <div class="juror-affil">Ankara Uni., CS</div>
+              </div>
+            </div>
+            <div class="card-eta">
+              <span class="eta-pill">
+                <span class="eta-dot"></span>
+                2h 45m left
+              </span>
+            </div>
+            <div class="card-meta">
+              <span class="meta-chip">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="val">5</span> failed
+              </span>
+            </div>
+            <div class="card-footer">
+              <span class="lock-ago">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Locked 27m ago
+              </span>
+              <button class="btn-unlock">Unlock</button>
+            </div>
+          </div>
+
+          <!-- Card 3 — expired -->
+          <div class="lockout-card" style="border-left-color: var(--danger);">
+            <div class="card-identity">
+              <div class="avatar rose">AK</div>
+              <div class="name-block">
+                <div class="juror-name">Assoc. Prof. Aylin Kaya</div>
+                <div class="juror-affil">METU, ME</div>
+              </div>
+            </div>
+            <div class="card-eta">
+              <span class="eta-pill expired">
+                <span class="eta-dot"></span>
+                Expired
+              </span>
+            </div>
+            <div class="card-meta">
+              <span class="meta-chip">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="val">5</span> failed
+              </span>
+            </div>
+            <div class="card-footer">
+              <span class="lock-ago">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Locked 1h 2m ago
+              </span>
+              <button class="btn-unlock">Unlock</button>
+            </div>
+          </div>
+
+        </div><!-- /cards-list -->
+      </div><!-- /variant-standard -->
+
+      <!-- ═══ ULTRA COMPACT CARDS (Variant B) ════════════════ -->
+      <div id="variant-ultra" style="display:none">
+
+        <div class="section-header">
+          <div>
+            <div class="section-title-row">
+              <span class="section-title">Active Lockouts</span>
+              <span class="count-pill">3</span>
+            </div>
+            <div class="section-subtitle">Blocked from PIN entry</div>
+          </div>
+          <button class="btn-unlock-all">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+            Unlock All
+          </button>
+        </div>
+
+        <div class="cards-list">
+
+          <div class="lockout-card-compact">
+            <div class="avatar">SG</div>
+            <div class="compact-identity">
+              <div class="compact-name">Dr. Serap Gündoğdu</div>
+              <div class="compact-sub">
+                <span class="compact-affil">TED University, EE</span>
+              </div>
+            </div>
+            <div class="compact-right">
+              <span class="fail-badge">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                ×5
+              </span>
+              <span class="eta-pill">
+                <span class="eta-dot"></span>
+                11h 21m
+              </span>
+              <button class="btn-unlock" style="padding:4px 9px;font-size:11px">Unlock</button>
+            </div>
+          </div>
+
+          <div class="lockout-card-compact">
+            <div class="avatar amber">OS</div>
+            <div class="compact-identity">
+              <div class="compact-name">Prof. Orhan Sezgin</div>
+              <div class="compact-sub">
+                <span class="compact-affil">Ankara Uni., CS</span>
+              </div>
+            </div>
+            <div class="compact-right">
+              <span class="fail-badge">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                ×5
+              </span>
+              <span class="eta-pill">
+                <span class="eta-dot"></span>
+                2h 45m
+              </span>
+              <button class="btn-unlock" style="padding:4px 9px;font-size:11px">Unlock</button>
+            </div>
+          </div>
+
+          <div class="lockout-card-compact" style="border-left-color: var(--danger);">
+            <div class="avatar rose">AK</div>
+            <div class="compact-identity">
+              <div class="compact-name">Assoc. Prof. Aylin Kaya</div>
+              <div class="compact-sub">
+                <span class="compact-affil">METU, ME</span>
+              </div>
+            </div>
+            <div class="compact-right">
+              <span class="fail-badge">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                ×5
+              </span>
+              <span class="eta-pill expired">
+                <span class="eta-dot"></span>
+                Expired
+              </span>
+              <button class="btn-unlock" style="padding:4px 9px;font-size:11px">Unlock</button>
+            </div>
+          </div>
+
+          <!-- 4th to show density -->
+          <div class="lockout-card-compact">
+            <div class="avatar violet">YD</div>
+            <div class="compact-identity">
+              <div class="compact-name">Dr. Yusuf Demir</div>
+              <div class="compact-sub">
+                <span class="compact-affil">Bilkent Uni., IE</span>
+              </div>
+            </div>
+            <div class="compact-right">
+              <span class="fail-badge">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                ×3
+              </span>
+              <span class="eta-pill">
+                <span class="eta-dot"></span>
+                18m
+              </span>
+              <button class="btn-unlock" style="padding:4px 9px;font-size:11px">Unlock</button>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /variant-ultra -->
+
+      <div class="page-bottom"></div>
+    </div><!-- /phone-screen -->
+  </div><!-- /phone -->
+</div><!-- /phone-wrap -->
+
+<script>
+function setTheme(t) {
+  document.getElementById('phone').classList.toggle('dark', t === 'dark');
+  document.querySelectorAll('.ctrl-btn').forEach(b => {
+    if (b.textContent === (t === 'dark' ? 'Dark' : 'Light')) b.classList.add('active');
+    else if (b.textContent === 'Light' || b.textContent === 'Dark') b.classList.remove('active');
+  });
+}
+
+function setVariant(v) {
+  const std = document.getElementById('variant-standard');
+  const ultra = document.getElementById('variant-ultra');
+  std.style.display = (v === 'standard' || v === 'both') ? '' : 'none';
+  ultra.style.display = (v === 'ultra' || v === 'both') ? '' : 'none';
+  document.querySelectorAll('.ctrl-btn').forEach(b => {
+    const labels = { standard: 'Standard Compact', ultra: 'Ultra Compact', both: 'Both' };
+    if (b.textContent === labels[v]) b.classList.add('active');
+    else if (['Standard Compact','Ultra Compact','Both'].includes(b.textContent)) b.classList.remove('active');
+  });
+}
+</script>
+</body>
+</html>

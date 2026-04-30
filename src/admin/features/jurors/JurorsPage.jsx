@@ -47,6 +47,8 @@ export default function JurorsPage() {
     onViewReviews,
     onNavigate,
     bgRefresh,
+    jurorSummary = [],
+    periodSummary = null,
   } = useAdminContext();
   const _toast = useToast();
   const { activeOrganization, isEmailVerified, graceEndsAt } = useAuth();
@@ -696,6 +698,8 @@ export default function JurorsPage() {
         periodLabel={periods.viewPeriodLabel}
         scoreRows={jurorsHook.scoreRows}
         projects={projectsHook.projects}
+        jurorSummary={jurorSummary}
+        periodSummary={periodSummary}
         onOpenReviews={() => { setScoresJuror(null); onViewReviews?.(scoresJuror); }}
       />
       <ImportJurorsModal

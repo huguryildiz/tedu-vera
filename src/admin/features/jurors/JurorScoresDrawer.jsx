@@ -1,4 +1,15 @@
 // src/admin/drawers/JurorScoresDrawer.jsx
+//
+// KPI numbers (Avg Score, Std Dev, Completion, "vs avg" delta) come from
+// server-side aggregation — `jurorSummary[i]` (rpc_admin_juror_summary) and
+// `periodSummary` (rpc_admin_period_summary). The drawer iterates rawScores
+// only for the per-project breakdown rows.
+//
+// The per-criterion strip is still computed in JS because the per-juror
+// summary RPC returns aggregations across all of the juror's projects, not
+// per-juror × per-criterion. Cost is small (one juror × ~5 criteria ×
+// ~5–10 projects) so a dedicated RPC is unjustified.
+
 import { useEffect, useMemo, useState } from "react";
 import { Users, X, ArrowRight, FileText } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
@@ -12,13 +23,6 @@ function bandFor(pct) {
   if (pct >= 70) return { key: "good", label: "Good" };
   if (pct >= 55) return { key: "fair", label: "Fair" };
   return { key: "poor", label: "Poor" };
-}
-
-function stdDev(nums) {
-  if (!nums.length) return null;
-  const mean = nums.reduce((s, v) => s + v, 0) / nums.length;
-  const variance = nums.reduce((s, v) => s + (v - mean) ** 2, 0) / nums.length;
-  return Math.sqrt(variance);
 }
 
 function CritBar({ label, color, val, maxScore }) {
@@ -53,6 +57,8 @@ export default function JurorScoresDrawer({
   periodLabel,
   scoreRows = [],
   projects = [],
+  jurorSummary = [],
+  periodSummary = null,
   onOpenReviews,
 }) {
   const jurorId = juror?.jurorId || juror?.juror_id;
@@ -126,30 +132,25 @@ export default function JurorScoresDrawer({
   }, [projects, sheetByProject]);
 
   const submittedRows = useMemo(() => projectRows.filter((r) => r.submitted), [projectRows]);
-  const totals = submittedRows.map((r) => r.total).filter(Number.isFinite);
-  const avgScore = totals.length ? totals.reduce((s, v) => s + v, 0) / totals.length : null;
-  const sigma = useMemo(() => stdDev(totals), [totals]);
-  const completionPct = projectRows.length > 0
-    ? Math.round((submittedRows.length / projectRows.length) * 100)
-    : null;
 
-  const periodAvg = useMemo(() => {
-    const byProject = new Map();
-    for (const r of scoreRows) {
-      if (r.status !== "submitted" || typeof r.total !== "number") continue;
-      const pid = String(r.projectId || r.project_id || "");
-      if (!pid) continue;
-      if (!byProject.has(pid)) byProject.set(pid, []);
-      byProject.get(pid).push(r.total);
-    }
-    const projectAvgs = [...byProject.values()].map(
-      (vals) => vals.reduce((s, v) => s + v, 0) / vals.length
-    );
-    if (!projectAvgs.length) return null;
-    return projectAvgs.reduce((s, v) => s + v, 0) / projectAvgs.length;
-  }, [scoreRows]);
+  // Server-aggregated row for this juror (single source of truth for the
+  // KPI strip). `jurorSummary` is one row per juror in juror_period_auth.
+  const jurorRow = useMemo(() => {
+    if (!Array.isArray(jurorSummary) || !jurorId) return null;
+    return jurorSummary.find((r) => String(r.jurorId) === String(jurorId)) || null;
+  }, [jurorSummary, jurorId]);
 
-  const deltaVsAvg = avgScore != null && periodAvg != null ? avgScore - periodAvg : null;
+  const avgScorePct  = jurorRow?.avgTotalPct ?? null;
+  const stdDevPct    = jurorRow?.stdDevPct ?? null;
+  const completionPct =
+    jurorRow?.completionPct != null
+      ? Math.round(jurorRow.completionPct)
+      : (projectRows.length > 0
+          ? Math.round((submittedRows.length / projectRows.length) * 100)
+          : null);
+  const periodAvgPct = periodSummary?.avgJurorPct ?? null;
+  const deltaVsAvg =
+    avgScorePct != null && periodAvgPct != null ? avgScorePct - periodAvgPct : null;
 
   const criteriaRows = useMemo(() => {
     if (!criteriaWithColor.length || !submittedRows.length) return [];
@@ -197,7 +198,7 @@ export default function JurorScoresDrawer({
           <div className="psd-kpi">
             <div className="psd-kpi-label">Avg Score</div>
             <div className="psd-kpi-value psd-kpi-value--accent">
-              {avgScore != null ? avgScore.toFixed(1) : "—"}
+              {avgScorePct != null ? Number(avgScorePct).toFixed(1) : "—"}
             </div>
             <div className={`psd-kpi-delta ${deltaVsAvg != null && deltaVsAvg >= 0 ? "up" : deltaVsAvg != null ? "down" : ""}`}>
               {deltaVsAvg != null
@@ -219,9 +220,13 @@ export default function JurorScoresDrawer({
           </div>
           <div className="psd-kpi">
             <div className="psd-kpi-label">Std Dev</div>
-            <div className="psd-kpi-value">{sigma != null ? sigma.toFixed(1) : "—"}</div>
+            <div className="psd-kpi-value">{stdDevPct != null ? Number(stdDevPct).toFixed(1) : "—"}</div>
             <div className="psd-kpi-delta">
-              {sigma == null ? "—" : sigma < 3 ? "Low variance" : sigma < 6 ? "Moderate" : "High variance"}
+              {stdDevPct == null
+                ? "—"
+                : stdDevPct < 3 ? "Low variance"
+                : stdDevPct < 6 ? "Moderate"
+                : "High variance"}
             </div>
           </div>
           <div className="psd-kpi">

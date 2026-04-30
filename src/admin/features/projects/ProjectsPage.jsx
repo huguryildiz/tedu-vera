@@ -37,6 +37,7 @@ export default function ProjectsPage() {
     summaryData,
     allJurors,
     sortedPeriods,
+    periodSummary,
     bgRefresh,
     criteriaConfig = [],
   } = useAdminContext();
@@ -612,6 +613,7 @@ export default function ProjectsPage() {
         periodLabel={periods.viewPeriodLabel}
         rawScores={rawScores}
         summaryData={summaryData}
+        periodSummary={periodSummary}
         allJurors={allJurors}
         onOpenReviews={() => onNavigate?.("reviews")}
       />
