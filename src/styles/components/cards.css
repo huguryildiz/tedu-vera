@@ -181,6 +181,8 @@
 .scores-kpi-item-value.success{color:var(--success)}
 .scores-kpi-item-value.warning{color:var(--warning)}
 .scores-kpi-item-value.danger{color:var(--danger)}
+.scores-kpi-delta{font-size:10px;font-weight:600;color:var(--success);margin-top:3px;letter-spacing:0.1px}
+.scores-kpi-delta.down{color:var(--danger)}
 .scores-kpi-item-value.muted{color:var(--text-tertiary)}
 /* ─── Text-value KPI (period name etc.) ─── */
 .scores-kpi-item-value--text{font-family:var(--font);font-size:13px;font-weight:700;letter-spacing:-0.1px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3}
