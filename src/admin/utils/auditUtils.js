@@ -264,12 +264,14 @@ export function getActorInfo(log) {
     }
     // admin
     const name = colName || log.profiles?.display_name || "Admin";
-    return { type: "admin", name, role: "Organization Admin", initials: getInitials(name), bg: null, fg: null };
+    const isSuperAdmin = log.profiles?.memberships?.some((m) => m.organization_id === null);
+    return { type: "admin", name, role: isSuperAdmin ? "Super Admin" : "Organization Admin", initials: getInitials(name), bg: null, fg: null };
   }
   // Legacy fallback for rows without actor_type column
   if (log.user_id) {
     const name = log.profiles?.display_name || "Admin";
-    return { type: "admin", name, role: "Organization Admin", initials: getInitials(name), bg: null, fg: null };
+    const isSuperAdmin = log.profiles?.memberships?.some((m) => m.organization_id === null);
+    return { type: "admin", name, role: isSuperAdmin ? "Super Admin" : "Organization Admin", initials: getInitials(name), bg: null, fg: null };
   }
   if (JUROR_ACTIONS.has(log.action) && log.details?.actor_name) {
     const name = log.details.actor_name;

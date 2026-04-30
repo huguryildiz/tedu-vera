@@ -95,7 +95,7 @@ export async function verifyAuditChain(orgId) {
 export async function listAuditLogs(filters = {}) {
   let query = supabase
     .from("audit_logs")
-    .select("*, profiles(display_name)")
+    .select("*, profiles(display_name, memberships(organization_id))")
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(filters.limit || 120);
