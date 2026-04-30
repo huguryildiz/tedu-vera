@@ -2618,13 +2618,13 @@ periodData.forEach(pd => {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// UNLOCK REQUESTS
-// 1-2 examples per activated period per org. Mixed statuses:
-//   histIdx=1 → approved (used alongside the existing period.unlock audit events)
-//   histIdx=2 → rejected
-//   isCur     → pending (no reviewed_by / reviewed_at)
-// The unique constraint allows only one pending per period, so only one
-// pending per org (the current period) is seeded here.
+// UNLOCK REQUESTS — every activated period gets 1-2 examples
+//   isCur (histIdx=0) → 1 pending request
+//   histIdx=1         → 2 requests: earlier rejected + later approved
+//   histIdx=2         → 1 rejected
+//   histIdx≥3 odd     → 1 approved
+//   histIdx≥3 even    → 1 rejected
+// Unique constraint: only one PENDING per period; multiple resolved allowed.
 // ═══════════════════════════════════════════════════════════════
 out.push('');
 out.push('-- Unlock requests');
@@ -2702,8 +2702,17 @@ periodData.forEach((pd, _pi) => {
     reviewNote = reviewNotePool[rnIdx2];
     reviewedAt = resolveTs;
   } else {
-    // Older historical periods — skip to avoid noise
-    return;
+    // Older historical periods (histIdx ≥ 3) — alternate approved/rejected for variety
+    const isApprOld = pd.histIdx % 2 === 1; // odd → approved, even → rejected (mirrors idx 1/2)
+    status = isApprOld ? 'approved' : 'rejected';
+    reviewedBy = `'${demoAdminId}'`;
+    reviewNotePool = isApprOld ? reviewNotes.approved : reviewNotes.rejected;
+    reasonPool = isApprOld ? unlockReasons.approved : unlockReasons.rejected;
+    requestTs = randSqlTs(pd.start, 240, 480);
+    resolveTs = randSqlTs(pd.start, 485, 600);
+    const rnIdxOld = (orgs.findIndex(x => x.code === pd.org) + pd.histIdx) % reviewNotePool.length;
+    reviewNote = reviewNotePool[rnIdxOld];
+    reviewedAt = resolveTs;
   }
 
   const reasonIdx = orgs.findIndex(x => x.code === pd.org) % reasonPool.length;
@@ -2745,6 +2754,49 @@ periodData.forEach((pd, _pi) => {
       sessionId: randSessionId(`ur-resolve-${pd.id}`),
       details: `{"unlock_request_id":"${urId}","period_id":"${pd.id}","periodName":"${escapeSql(pd.name)}","decision":"${status}","review_note":"${escapeSql((reviewNote || '').substring(0, 60))}..."}`,
       timeStr: resolveTs,
+    });
+  }
+
+  // Second unlock request for histIdx=1: an earlier rejected attempt before the approved one.
+  // Shows the full "denied → revised → approved" lifecycle in the audit trail.
+  if (pd.histIdx === 1) {
+    const urId2 = uuid(`unlock-req-${pd.org}-${pd.histIdx}-b`);
+    const orgFindIdx2 = orgs.findIndex(x => x.code === pd.org);
+    const reasonIdx2 = (orgFindIdx2 + 1) % unlockReasons.rejected.length;
+    const reason2 = unlockReasons.rejected[reasonIdx2];
+    const requestTs2 = randSqlTs(pd.evalDay, pd.evalDays * 24 + 100, pd.evalDays * 24 + 130);
+    const resolveTs2 = randSqlTs(pd.evalDay, pd.evalDays * 24 + 135, pd.evalDays * 24 + 160);
+    const rnIdx2b = (orgFindIdx2 + 2) % reviewNotes.rejected.length;
+    const reviewNote2 = reviewNotes.rejected[rnIdx2b];
+
+    out.push(`INSERT INTO unlock_requests (id, period_id, organization_id, requested_by, reason, status, reviewed_by, reviewed_at, review_note, created_at) VALUES ('${urId2}', '${pd.id}', '${o.id}', '${adminId}', '${escapeSql(reason2)}', 'rejected', '${demoAdminId}', ${resolveTs2}, '${escapeSql(reviewNote2)}', ${requestTs2}) ON CONFLICT DO NOTHING;`);
+
+    auditObjList.push({
+      action: 'unlock_request.create',
+      resType: 'unlock_requests',
+      resId: urId2,
+      orgId: o.id,
+      userId: adminId,
+      actorName: adminNm,
+      ip: randIp(),
+      ua: randUserAgent(),
+      sessionId: randSessionId(`ur-create-b-${pd.id}`),
+      details: `{"unlock_request_id":"${urId2}","period_id":"${pd.id}","periodName":"${escapeSql(pd.name)}","reason":"${escapeSql(reason2.substring(0, 80))}..."}`,
+      timeStr: requestTs2,
+    });
+
+    auditObjList.push({
+      action: 'unlock_request.resolve',
+      resType: 'unlock_requests',
+      resId: urId2,
+      orgId: o.id,
+      userId: demoAdminId,
+      actorName: 'Vera Platform Admin',
+      ip: randIp(),
+      ua: randUserAgent(),
+      sessionId: randSessionId(`ur-resolve-b-${pd.id}`),
+      details: `{"unlock_request_id":"${urId2}","period_id":"${pd.id}","periodName":"${escapeSql(pd.name)}","decision":"rejected","review_note":"${escapeSql(reviewNote2.substring(0, 60))}..."}`,
+      timeStr: resolveTs2,
     });
   }
 });
