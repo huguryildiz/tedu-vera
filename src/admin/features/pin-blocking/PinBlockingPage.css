@@ -254,7 +254,6 @@ body:not(.dark-mode) .pin-policy-edit-btn:hover {
     flex: 0 0 100%;
     width: 100%;
     overflow: hidden;
-    margin-bottom: 7px;
     padding-right: 74px;
     box-sizing: border-box;
   }
