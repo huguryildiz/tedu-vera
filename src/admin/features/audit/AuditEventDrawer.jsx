@@ -22,6 +22,12 @@ function buildDetailRows(log) {
   const d = log.details || {};
   const rows = [];
   if (d.period_name || d.periodName)         rows.push({ key: "Period",    value: d.period_name || d.periodName });
+  if (d.criterion_name)                      rows.push({ key: "Criterion", value: d.criterion_name });
+  if (d.outcome_code || d.outcome_label) {
+    const code = d.outcome_code || "";
+    const label = d.outcome_label || "";
+    rows.push({ key: "Outcome", value: code && label ? `${code} · ${label}` : (code || label) });
+  }
   if (d.project_count != null && !d.format) rows.push({ key: "Projects",  value: String(d.project_count) });
   if (d.avg_score     != null)              rows.push({ key: "Avg score", value: String(d.avg_score) });
   if (d.project_title || d.projectTitle)     rows.push({ key: "Project",   value: d.project_title || d.projectTitle });

@@ -460,6 +460,14 @@ BEGIN
     WHERE per.id = CASE WHEN TG_OP = 'DELETE' THEN OLD.period_id ELSE NEW.period_id END;
   END IF;
 
+  -- Enrich projects events with period_name (drawer Period row)
+  IF TG_TABLE_NAME = 'projects' THEN
+    SELECT jsonb_build_object('period_name', per.name, 'periodName', per.name)
+    INTO v_extra_details
+    FROM periods per
+    WHERE per.id = CASE WHEN TG_OP = 'DELETE' THEN OLD.period_id ELSE NEW.period_id END;
+  END IF;
+
   -- Enrich memberships events with member email + role
   IF TG_TABLE_NAME = 'memberships' THEN
     SELECT jsonb_build_object(
@@ -468,6 +476,33 @@ BEGIN
     ) INTO v_extra_details
     FROM auth.users u
     WHERE u.id = CASE WHEN TG_OP = 'DELETE' THEN OLD.user_id ELSE NEW.user_id END;
+  END IF;
+
+  -- Enrich period_criteria events with criterion label + period name so the
+  -- drawer doesn't render bare UUIDs.
+  IF TG_TABLE_NAME = 'period_criteria' THEN
+    SELECT jsonb_build_object(
+      'period_name',    per.name,
+      'criterion_name', CASE WHEN TG_OP = 'DELETE' THEN OLD.label ELSE NEW.label END
+    ) INTO v_extra_details
+    FROM periods per
+    WHERE per.id = CASE WHEN TG_OP = 'DELETE' THEN OLD.period_id ELSE NEW.period_id END;
+  END IF;
+
+  -- Enrich period_criterion_outcome_maps events with the joined criterion label,
+  -- outcome code/label, and period name. The raw row only stores UUIDs which are
+  -- meaningless in the audit drawer.
+  IF TG_TABLE_NAME = 'period_criterion_outcome_maps' THEN
+    SELECT jsonb_build_object(
+      'period_name',    per.name,
+      'criterion_name', pc.label,
+      'outcome_code',   po.code,
+      'outcome_label',  po.label
+    ) INTO v_extra_details
+    FROM periods per
+    JOIN period_criteria pc ON pc.id = CASE WHEN TG_OP = 'DELETE' THEN OLD.period_criterion_id ELSE NEW.period_criterion_id END
+    JOIN period_outcomes po ON po.id = CASE WHEN TG_OP = 'DELETE' THEN OLD.period_outcome_id   ELSE NEW.period_outcome_id   END
+    WHERE per.id = CASE WHEN TG_OP = 'DELETE' THEN OLD.period_id ELSE NEW.period_id END;
   END IF;
 
   INSERT INTO audit_logs (
