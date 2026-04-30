@@ -3578,7 +3578,7 @@ out.push('');
 
 // 5) Locked juror + locked juror_period_auth (for pin-blocking spec)
 out.push(`INSERT INTO jurors (id, organization_id, juror_name, affiliation, email, avatar_color) VALUES ('${E2E_LOCKED_JUROR}', '${E2E_PERIODS_ORG}', 'E2E Locked Juror', 'E2E Test Affiliation', 'e2e-locked@vera-eval.test', '#EF4444') ON CONFLICT (id) DO NOTHING;`);
-out.push(`INSERT INTO juror_period_auth (juror_id, period_id, pin_hash, last_seen_at, session_expires_at, final_submitted_at, edit_enabled, edit_reason, edit_expires_at, failed_attempts, locked_until, locked_at, is_blocked) VALUES ('${E2E_LOCKED_JUROR}', '${E2E_EVAL_PERIOD}', NULL, now(), NULL, NULL, false, NULL, NULL, 3, now() + interval '1 hour', now(), false) ON CONFLICT (juror_id, period_id) DO UPDATE SET failed_attempts = 3, locked_until = now() + interval '1 hour', locked_at = now();`);
+out.push(`INSERT INTO juror_period_auth (juror_id, period_id, pin_hash, last_seen_at, session_expires_at, final_submitted_at, edit_enabled, edit_reason, edit_expires_at, failed_attempts, locked_until, locked_at, is_blocked) VALUES ('${E2E_LOCKED_JUROR}', '${E2E_EVAL_PERIOD}', NULL, now(), NULL, NULL, false, NULL, NULL, 3, now() + interval '24 hours', now(), false) ON CONFLICT (juror_id, period_id) DO UPDATE SET failed_attempts = 3, locked_until = now() + interval '24 hours', locked_at = now();`);
 out.push('');
 
 // 6) Eval jurors (3) + their juror_period_auth rows under E2E_EVAL_PERIOD.
