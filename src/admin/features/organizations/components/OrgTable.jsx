@@ -1,4 +1,4 @@
-import { Code2, Eye, Filter, Icon, Lock, MoreVertical, Pencil, Search, Trash2, UserPlus, Users, XCircle } from "lucide-react";
+import { Code2, Eye, Filter, Icon, MoreVertical, PauseCircle, Pencil, PlayCircle, Search, Trash2, UserPlus, Users, XCircle } from "lucide-react";
 import CustomSelect from "@/shared/ui/CustomSelect";
 import FloatingMenu from "@/shared/ui/FloatingMenu";
 import Pagination from "@/shared/ui/Pagination";
@@ -217,8 +217,10 @@ export default function OrgTable({
                             className="floating-menu-item danger"
                             onMouseDown={(e) => runOrgMenuAction(e, () => rowHandlers.onToggleStatus(org))}
                           >
-                            <Lock size={13} strokeWidth={2} />
-                            Enable / Disable Organization
+                            {org.status === "active"
+                              ? <PauseCircle size={13} strokeWidth={2} />
+                              : <PlayCircle size={13} strokeWidth={2} />}
+                            {org.status === "active" ? "Suspend Organization" : "Activate Organization"}
                           </button>
                           <div className="floating-menu-divider" />
                           <button
