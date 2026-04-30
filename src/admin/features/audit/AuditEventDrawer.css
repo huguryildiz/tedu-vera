@@ -116,6 +116,8 @@
   color: var(--text-secondary);
   line-height: 1.5;
   margin: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
 }
 .audit-drawer-narrative-actor { font-weight: 600; color: var(--text-primary); }
 .audit-drawer-narrative-resource { font-weight: 600; color: var(--accent); }
