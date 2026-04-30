@@ -43,6 +43,15 @@ export class ProjectsPom extends BasePom {
     await expect(
       this.page.locator('[data-testid="projects-period-ready"], [data-testid="project-row"]').first()
     ).toBeVisible({ timeout: 15_000 });
+    // Defense in depth: even after the period-ready signal, the global header's
+    // period selector must show a non-em-dash label, otherwise selectedPeriodId
+    // in the layout (and thus useManageProjects' viewPeriodId prop) is still
+    // null. Wait for it to resolve to an actual period name before allowing
+    // any subsequent action that depends on viewPeriodId.
+    const periodTrigger = this.page.locator('[data-testid="period-selector-trigger"]');
+    if (await periodTrigger.count() > 0) {
+      await expect(periodTrigger).not.toContainText("—", { timeout: 10_000 });
+    }
   }
 
   async openCreateDrawer(): Promise<void> {
