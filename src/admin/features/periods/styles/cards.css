@@ -12,7 +12,7 @@
     flex-direction: column;
   }
   .periods-page > .sem-header { display: contents; }
-  .periods-page > .sem-header > .sem-header-left { order: -3; }
+  .periods-page > .sem-header > .sem-header-left { display: block; order: -3; }
   .periods-page > .scores-kpi-strip { order: -2; }
   .periods-page > .mobile-primary-below-kpi { order: -1; }
   /* .sem-header-actions defaults to order: 0 → falls below Add button */

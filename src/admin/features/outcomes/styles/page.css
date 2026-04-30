@@ -2,20 +2,8 @@
 /* Most fw-* and acc-* classes are already in components.css / layout.css.
    This file adds page-specific elements only. */
 
-/* ── Page header: title left, actions right (mirrors .crt-header) ── */
-
-#page-accreditation .sem-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  gap: 16px;
-}
-
-#page-accreditation .sem-header-left {
-  flex: 1;
-  min-width: 0;
-}
+/* ── Page header (grid globally defined; only override margin here) ── */
+#page-accreditation .sem-header { margin-bottom: 24px; }
 
 /* ── Table card ──────────────────────────────────────────────── */
 

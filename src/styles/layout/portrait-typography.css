@@ -22,11 +22,13 @@
     font-size: 12px; line-height: 1.3;
   }
 
-  /* ── Periods header: stack like other headers ── */
+  /* ── Page header portrait: single-column grid, actions move to row 3 ── */
   .sem-header {
-    flex-direction: column; align-items: flex-start; gap: 8px;
+    grid-template-columns: 1fr;
+    row-gap: 8px;
   }
   .sem-header-actions {
+    grid-column: 1; grid-row: 3;
     display: flex; flex-wrap: wrap; gap: 6px; width: 100%;
   }
   .sem-header-actions .btn {

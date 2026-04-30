@@ -2,8 +2,10 @@
 
 /* ─── Page header ─────────────────────────────────────────── */
 .jurors-page-header { margin-bottom: 18px }
-.jurors-page-header-top { display: flex; align-items: center; justify-content: space-between; gap: 16px }
-.jurors-page-header-left { flex: 1; min-width: 0 }
+.jurors-page-header-top { display: grid; grid-template-columns: 1fr auto; row-gap: 4px; column-gap: 16px }
+.jurors-page-header-left { display: contents }
+.jurors-page-header-left > .page-title { grid-column: 1; grid-row: 1; align-self: center; margin-bottom: 0 }
+.jurors-page-header-left > .page-desc  { grid-column: 1 / -1; grid-row: 2 }
 
 /* ─── Toolbar ─────────────────────────────────────────────── */
 .jurors-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap }
@@ -75,8 +77,10 @@
 /* ─── JURORS PAGE (redesigned) ─── */
 /* ─── Jurors page header ─── */
 .jurors-page-header{margin-bottom:18px}
-.jurors-page-header-top{display:flex;align-items:center;justify-content:space-between;gap:16px}
-.jurors-page-header-left{flex:1;min-width:0}
+.jurors-page-header-top{display:grid;grid-template-columns:1fr auto;row-gap:4px;column-gap:16px}
+.jurors-page-header-left{display:contents}
+.jurors-page-header-left>.page-title{grid-column:1;grid-row:1;align-self:center;margin-bottom:0}
+.jurors-page-header-left>.page-desc{grid-column:1/-1;grid-row:2}
 .jurors-page-desc{font-size:12.5px;color:var(--text-tertiary);margin-top:0;font-weight:400;letter-spacing:-0.01em;line-height:1.5}
 
 /* ─── Summary strip ─── */
@@ -135,10 +139,7 @@
 .manage-student-row .modal-input{flex:1}
 #projects-main-table tbody tr{transition:background .12s}
 /* ─── Periods Page ─── */
-.sem-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
-.sem-header-left{flex:1;min-width:0}
 .sem-header-desc{font-size:12.5px;color:var(--text-tertiary);margin-top:0;font-weight:400;letter-spacing:-0.01em;line-height:1.5}
-.sem-header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .sem-summary{position:relative;display:flex;align-items:center;gap:0;margin-bottom:16px;padding:0 0 0 0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;overflow:hidden}
 .sem-summary-action{position:absolute;right:0;top:-20px;display:flex;justify-content:flex-end;pointer-events:auto}
 .sem-summary-item{display:flex;align-items:center;gap:7px;padding:11px 20px;border-right:1px solid var(--border);white-space:nowrap;transition:background .12s}
@@ -294,7 +295,7 @@
   }
   #page-jurors > .jurors-page-header { display: contents; }
   #page-jurors > .jurors-page-header > .jurors-page-header-top { display: contents; }
-  #page-jurors > .jurors-page-header > .jurors-page-header-top > .jurors-page-header-left { order: -4; }
+  #page-jurors > .jurors-page-header > .jurors-page-header-top > .jurors-page-header-left { display: block; order: -4; }
   #page-jurors > .fb-banner { order: -3; margin-top: 12px; }
   #page-jurors > .scores-kpi-strip { order: -2; }
   #page-jurors > .mobile-primary-below-kpi { order: -1; }

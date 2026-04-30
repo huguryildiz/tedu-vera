@@ -312,7 +312,7 @@
   }
   #page-accreditation > .sem-header { display: contents; }
   #page-accreditation > * { order: 20; }
-  #page-accreditation > .sem-header > .sem-header-left { order: -4; }
+  #page-accreditation > .sem-header > .sem-header-left { display: block; order: -4; }
   /* Toolbar: margin-top matches other pages' spacing between description and first toolbar item */
   #page-accreditation > .sem-header > .sem-header-actions { order: 0; margin-top: 12px; margin-bottom: 12px; }
   /* Show Add Outcome / lock badge as first item in the toolbar grid */

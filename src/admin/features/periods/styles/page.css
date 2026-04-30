@@ -1,9 +1,6 @@
 /* Periods page*/
 
-/* ─── Page header ─────────────────────────────────────────── */
-.sem-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px }
-.sem-header-left { flex: 1; min-width: 0 }
-.sem-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0 }
+/* ─── Page header (grid defined globally in period-popover.css) ─── */
 
 /* ─── Lifecycle progress bar ─────────────────────────────── */
 .periods-lifecycle-bar {

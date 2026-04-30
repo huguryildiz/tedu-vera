@@ -1,9 +1,6 @@
 /* Projects page*/
 
-/* ─── Desktop header layout ─── */
-.sem-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
-.sem-header-left{flex:1;min-width:0}
-.sem-header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+/* ─── Desktop header layout (grid defined globally in period-popover.css) ─── */
 
 /* ─── Mobile portrait: title → KPI → Add → toolbar (match Jurors page) ── */
 @media (max-width: 768px) and (orientation: portrait) {
@@ -13,7 +10,7 @@
   }
   /* Flatten sem-header so its children become direct children of #page-projects */
   #page-projects > .sem-header { display: contents; }
-  #page-projects > .sem-header > .sem-header-left { order: -3; }
+  #page-projects > .sem-header > .sem-header-left { display: block; order: -3; }
   #page-projects > .scores-kpi-strip { order: -2; }
   #page-projects > .mobile-primary-below-kpi { order: -1; }
   /* .sem-header-actions (toolbar) defaults to order: 0 → falls below Add button */
