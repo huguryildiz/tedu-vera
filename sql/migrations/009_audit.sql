@@ -1359,12 +1359,13 @@ SET search_path = public, extensions
 AS $$
 DECLARE
   v_org_id           UUID;
+  v_period_name      TEXT;
   v_revoked_count    INT;
   v_first_revoked_id UUID;
   v_active_count     INT;
   v_now              TIMESTAMPTZ := now();
 BEGIN
-  SELECT organization_id INTO v_org_id FROM periods WHERE id = p_period_id;
+  SELECT organization_id, name INTO v_org_id, v_period_name FROM periods WHERE id = p_period_id;
   IF v_org_id IS NULL THEN
     RAISE EXCEPTION 'period_not_found';
   END IF;
@@ -1397,6 +1398,7 @@ BEGIN
       'high'::audit_severity,
       jsonb_build_object(
         'period_id', p_period_id,
+        'period_name', v_period_name,
         'revoked_count', v_revoked_count,
         'active_juror_count', v_active_count
       )

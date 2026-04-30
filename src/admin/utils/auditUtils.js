@@ -593,7 +593,7 @@ export const EVENT_META = {
     label: "Entry token revoked",
     narrative: (log) => {
       const d = log.details || {};
-      return { verb: "revoked entry token", resource: d.period_id ? `${d.revoked_count || 1} token(s)` : null };
+      return { verb: "revoked entry token for", resource: d.period_name || d.period_id || null };
     },
   },
   "snapshot.freeze": {
