@@ -292,7 +292,7 @@ export default function ProjectsTable({
                 <td className="text-center avg-score-cell" data-label="Avg Score">
                   {projectAvgMap.has(project.id)
                     ? <>
-                        <span className="vera-score-num">{projectAvgMap.get(project.id)}</span>
+                        <span className="vera-score-num">{Number(projectAvgMap.get(project.id)).toFixed(1)}</span>
                         <span className="vera-score-denom">/100</span>
                       </>
                     : <span className="avg-score-empty">—</span>}

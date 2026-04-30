@@ -118,7 +118,7 @@ export default function ProjectsPage() {
       byProject.get(pid).push(total);
     }
     for (const [pid, totals] of byProject) {
-      map.set(pid, (totals.reduce((s, v) => s + v, 0) / totals.length).toFixed(1));
+      map.set(pid, totals.reduce((s, v) => s + v, 0) / totals.length);
     }
     return map;
   }, [rawScores]);
