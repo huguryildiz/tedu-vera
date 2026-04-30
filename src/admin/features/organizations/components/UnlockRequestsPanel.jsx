@@ -106,7 +106,7 @@ export default function UnlockRequestsPanel({
                   <td data-label="Period"><strong>{r.period_name || "—"}</strong></td>
                   <td data-label="Requester">{r.requester_name || "—"}</td>
                   <td data-label="Reason" style={{ maxWidth: 320, whiteSpace: "normal" }}>
-                    <span style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    <span style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                       {r.reason}
                     </span>
                   </td>
@@ -122,7 +122,7 @@ export default function UnlockRequestsPanel({
                     </td>
                   )}
                   {unlockTab === "pending" && (
-                    <td data-label="Actions" style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                    <td data-label="Actions">
                       <button
                         type="button"
                         className="btn btn-outline"
