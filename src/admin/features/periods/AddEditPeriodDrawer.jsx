@@ -33,6 +33,7 @@ export default function AddEditPeriodDrawer({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [nameError, setNameError] = useState("");
+  const [nameTouched, setNameTouched] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -43,6 +44,7 @@ export default function AddEditPeriodDrawer({
     setSaveError("");
     setNameError("");
     setSaving(false);
+    setNameTouched(false);
   }, [open, period?.id]);
 
   // Name uniqueness check (edit mode)
@@ -56,6 +58,7 @@ export default function AddEditPeriodDrawer({
 
 
   const handleSave = async () => {
+    setNameTouched(true);
     if (!formName.trim() || nameError) return;
     setSaveError("");
     setSaving(true);
@@ -115,26 +118,26 @@ export default function AddEditPeriodDrawer({
               Period Name <span className="fs-field-req">*</span>
             </label>
             <input
-              className={`fs-input${nameError ? " error" : ""}`}
+              className={`fs-input${(nameTouched && !formName.trim()) || nameError ? " error" : ""}`}
               type="text"
               placeholder="e.g., Spring 2026"
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
+              onBlur={() => setNameTouched(true)}
               disabled={saving}
               autoFocus
               data-testid="period-drawer-name"
             />
-            {nameError && (
-              <div className="fs-field-helper" style={{ color: "var(--danger, #ef4444)" }}>
-                <AlertCircle size={11} style={{ verticalAlign: "-1px" }} /> {nameError}
-              </div>
-            )}
-            {!nameError && formName.trim() && (
+            {nameTouched && !formName.trim() ? (
+              <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Period name is required.</p>
+            ) : nameError ? (
+              <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />{nameError}</p>
+            ) : formName.trim() ? (
               <div className="fs-field-helper" style={{ color: "var(--success, #22c55e)" }}>
                 <Check size={11} strokeWidth={2.5} style={{ verticalAlign: "-1px" }} />
                 {" "}Looks good
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="fs-field">

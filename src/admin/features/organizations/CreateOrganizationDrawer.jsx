@@ -9,7 +9,7 @@
 //   error   — string | null
 
 import { useState, useEffect } from "react";
-import { Icon } from "lucide-react";
+import { AlertCircle, Icon } from "lucide-react";
 import Drawer from "@/shared/ui/Drawer";
 import AsyncButtonContent from "@/shared/ui/AsyncButtonContent";
 import useShakeOnError from "@/shared/hooks/useShakeOnError";
@@ -26,16 +26,20 @@ const EMPTY = {
 
 export default function CreateOrganizationDrawer({ open, onClose, onSave, error }) {
   const [form, setForm] = useState(EMPTY);
+  const [touched, setTouched] = useState({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
-    if (open) { setForm(EMPTY); setSaveError(""); setSaving(false); }
+    if (open) { setForm(EMPTY); setTouched({}); setSaveError(""); setSaving(false); }
   }, [open]);
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
+  const touch = (key) => setTouched((t) => ({ ...t, [key]: true }));
 
   const handleSave = async () => {
+    setTouched({ name: true, shortLabel: true });
+    if (!form.name.trim() || !form.shortLabel.trim()) return;
     setSaveError("");
     setSaving(true);
     try {
@@ -110,13 +114,17 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
             Organization Name <span className="fs-field-req">*</span>
           </label>
           <input
-            className="fs-input"
+            className={`fs-input${touched.name && !form.name.trim() ? " error" : ""}`}
             type="text"
             placeholder="e.g., Bilkent Computer Engineering"
             value={form.name}
             onChange={(e) => set("name", e.target.value)}
+            onBlur={() => touch("name")}
             disabled={saving}
           />
+          {touched.name && !form.name.trim() && (
+            <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Organization name is required.</p>
+          )}
         </div>
 
         <div className="fs-field">
@@ -124,15 +132,20 @@ export default function CreateOrganizationDrawer({ open, onClose, onSave, error 
             Short Label <span className="fs-field-req">*</span>
           </label>
           <textarea
-            className="fs-input"
+            className={`fs-input${touched.shortLabel && !form.shortLabel.trim() ? " error" : ""}`}
             style={{ resize: "vertical", overflow: "hidden", padding: "10px 12px", fontSize: 13, marginTop: 2, minHeight: 40, textTransform: "uppercase" }}
             placeholder="e.g., BILKENT-CS"
             value={form.shortLabel}
             onChange={(e) => set("shortLabel", e.target.value.toUpperCase())}
+            onBlur={() => touch("shortLabel")}
             disabled={saving}
             rows={2}
           />
-          <div className="fs-field-helper hint">Used in exports and cross-org reports. Must be unique.</div>
+          {touched.shortLabel && !form.shortLabel.trim() ? (
+            <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />Short label is required.</p>
+          ) : (
+            <div className="fs-field-helper hint">Used in exports and cross-org reports. Must be unique.</div>
+          )}
         </div>
 
 

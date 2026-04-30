@@ -152,6 +152,7 @@ export function GlobalSettingsDrawer({ open, onClose }) {
   const toast = useToast();
   const [form, setForm] = useState(DEFAULT_PLATFORM_SETTINGS);
   const [initial, setInitial] = useState(DEFAULT_PLATFORM_SETTINGS);
+  const [touched, setTouched] = useState({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -159,11 +160,13 @@ export function GlobalSettingsDrawer({ open, onClose }) {
   const [updatedAt, setUpdatedAt] = useState(null);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const touch = (k) => setTouched((t) => ({ ...t, [k]: true }));
 
   // Load current settings whenever the drawer opens.
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
+    setTouched({});
     setLoading(true);
     setLoadError("");
     setSaveError("");
@@ -214,6 +217,7 @@ export function GlobalSettingsDrawer({ open, onClose }) {
   const saveBtnRef = useShakeOnError(saveError);
 
   const handleSave = async () => {
+    setTouched({ platform_name: true, support_email: true });
     if (!canSave) return;
     setSaveError("");
     setSaving(true);
@@ -257,29 +261,39 @@ export function GlobalSettingsDrawer({ open, onClose }) {
 
         <SectionLabel>Platform Identity</SectionLabel>
         <div className="fs-field">
-          <label className="fs-field-label">Platform Name</label>
+          <label className="fs-field-label">Platform Name <span className="fs-field-req">*</span></label>
           <input
-            className={`fs-input${nameError && form.platform_name !== initial.platform_name ? " error" : ""}`}
+            className={`fs-input${touched.platform_name && nameError ? " error" : ""}`}
             type="text"
             maxLength={100}
             value={form.platform_name}
             onChange={(e) => set("platform_name", e.target.value)}
+            onBlur={() => touch("platform_name")}
             disabled={loading || saving}
             placeholder="VERA Evaluation Platform"
           />
-          <div className="fs-field-helper hint">Shown in email templates and future login/landing surfaces.</div>
+          {touched.platform_name && nameError ? (
+            <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />{nameError}</p>
+          ) : (
+            <div className="fs-field-helper hint">Shown in email templates and future login/landing surfaces.</div>
+          )}
         </div>
         <div className="fs-field">
-          <label className="fs-field-label">Support Email</label>
+          <label className="fs-field-label">Support Email <span className="fs-field-req">*</span></label>
           <input
-            className={`fs-input${emailError && form.support_email !== initial.support_email ? " error" : ""}`}
+            className={`fs-input${touched.support_email && emailError ? " error" : ""}`}
             type="email"
             value={form.support_email}
             onChange={(e) => set("support_email", e.target.value)}
+            onBlur={() => touch("support_email")}
             disabled={loading || saving}
             placeholder="support@vera-eval.app"
           />
-          <div className="fs-field-helper hint">Contact address included in notification email footers.</div>
+          {touched.support_email && emailError ? (
+            <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />{emailError}</p>
+          ) : (
+            <div className="fs-field-helper hint">Contact address included in notification email footers.</div>
+          )}
         </div>
 
         <SectionLabel style={{ marginTop: 4 }}>Organization Settings</SectionLabel>
