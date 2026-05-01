@@ -359,3 +359,36 @@ body:not(.dark-mode) .apply-field-error{color:#dc2626}
 
 body:not(.dark-mode) .apply-progress-bar{background:#e2e8f0}
 body:not(.dark-mode) .apply-progress-bar--filled{background:#3b82f6}
+
+/* ── Light mode: Register / Apply screen ── */
+body:not(.dark-mode) .apply-screen{
+  background:linear-gradient(135deg,#eaeff6 0%,#e2e9f3 50%,#edf1f8 100%) !important;
+}
+body:not(.dark-mode) .apply-screen::before{
+  background:radial-gradient(circle,rgba(59,130,246,0.05) 0%,transparent 70%) !important;
+}
+body:not(.dark-mode) .apply-screen::after{
+  background:radial-gradient(circle,rgba(124,58,237,0.04) 0%,transparent 70%) !important;
+}
+body:not(.dark-mode) .apply-card{
+  background:rgba(255,255,255,0.97) !important;
+  border-color:rgba(15,23,42,0.07) !important;
+  box-shadow:0 0 0 1px rgba(15,23,42,0.04),0 2px 8px rgba(15,23,42,0.06),0 8px 32px rgba(15,23,42,0.08) !important;
+}
+body:not(.dark-mode) .apply-header{border-bottom-color:rgba(15,23,42,0.06) !important}
+body:not(.dark-mode) .apply-sub{color:#64748b !important}
+body:not(.dark-mode) .apply-label{color:#334155 !important}
+body:not(.dark-mode) .apply-input{
+  background:#ffffff !important;border-color:#cdd5e0 !important;color:#0f172a !important;
+}
+body:not(.dark-mode) .apply-input::placeholder{color:#94a3b8 !important}
+body:not(.dark-mode) .apply-input:focus{
+  border-color:rgba(59,130,246,0.5) !important;box-shadow:0 0 0 3px rgba(59,130,246,0.08) !important;
+}
+body:not(.dark-mode) .apply-icon-wrap{
+  background:linear-gradient(135deg,#eff6ff,#dbeafe) !important;
+  border:1px solid rgba(59,130,246,0.20) !important;
+  box-shadow:0 2px 12px rgba(59,130,246,0.12),inset 0 1px 0 rgba(255,255,255,0.8) !important;
+  color:#2563eb !important;
+}
+body:not(.dark-mode) .apply-footer{color:#64748b !important}
