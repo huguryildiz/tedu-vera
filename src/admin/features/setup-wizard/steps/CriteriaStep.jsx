@@ -8,6 +8,7 @@ import {
   listPeriodCriteriaForMapping,
   upsertPeriodCriterionOutcomeMap,
   assignFrameworkToPeriod,
+  freezePeriodSnapshot,
   getVeraStandardCriteria,
   setPeriodCriteriaName,
 } from "@/shared/api";
@@ -190,6 +191,7 @@ function FrameworkPhase({ periodId, frameworks = [], onContinue, onBack }) {
     setSaving(true);
     try {
       await assignFrameworkToPeriod(periodId, fw.id);
+      await freezePeriodSnapshot(periodId, true);
       toast.success(`${fw.name} assigned`);
       onContinue(fw.id);
       await Promise.all([fetchData?.(), reloadCriteriaAndOutcomes?.()]);
