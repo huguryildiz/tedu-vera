@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
 import { useToast } from "@/shared/hooks/useToast";
+import { KEYS } from "@/shared/storage/keys";
 import {
   savePeriodCriteria,
   listPeriodOutcomes,
@@ -109,12 +110,14 @@ export default function CriteriaStep({ periodId, frameworks, onContinue, onBack 
                   <div className="sw-criteria-dot" style={{ backgroundColor: c.color }} />
                   <div className="sw-criteria-name">{c.label}</div>
                 </div>
-                <div className="sw-criteria-pts">{c.max} pts</div>
-                <div className="sw-criteria-bar">
-                  <div className="sw-criteria-bar-fill" style={{
-                    backgroundColor: c.color,
-                    width: `${(fillPct / maxPct) * 100}%`,
-                  }} />
+                <div className="sw-criteria-meta">
+                  <div className="sw-criteria-pts">{c.max} pts</div>
+                  <div className="sw-criteria-bar">
+                    <div className="sw-criteria-bar-fill" style={{
+                      backgroundColor: c.color,
+                      width: `${(fillPct / maxPct) * 100}%`,
+                    }} />
+                  </div>
                 </div>
               </div>
             );
@@ -169,7 +172,7 @@ export default function CriteriaStep({ periodId, frameworks, onContinue, onBack 
 // ============================================================
 function FrameworkPhase({ periodId, frameworks = [], onContinue, onBack }) {
   const toast = useToast();
-  const { navigateTo, setSelectedPeriodId, fetchData, reloadCriteriaAndOutcomes, sortedPeriods } = useAdminContext();
+  const { navigateTo, setSelectedPeriodId, fetchData, reloadCriteriaAndOutcomes, sortedPeriods, organizationId } = useAdminContext();
   const [selected, setSelected] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -295,6 +298,7 @@ function FrameworkPhase({ periodId, frameworks = [], onContinue, onBack }) {
         className="sw-scratch-card"
         onClick={() => {
           if (periodId) setSelectedPeriodId(periodId);
+          try { sessionStorage.setItem(KEYS.SETUP_SKIP_PREFIX + organizationId, "1"); } catch { /* ignore */ }
           navigateTo("outcomes");
         }}
       >
@@ -325,7 +329,7 @@ function FrameworkPhase({ periodId, frameworks = [], onContinue, onBack }) {
 // ============================================================
 function CriteriaPhase({ periodId, onContinue, onBack, loading }) {
   const toast = useToast();
-  const { fetchData, navigateTo, setSelectedPeriodId, reloadCriteriaAndOutcomes, criteriaConfig, criteriaLoading, sortedPeriods } = useAdminContext();
+  const { fetchData, navigateTo, setSelectedPeriodId, reloadCriteriaAndOutcomes, criteriaConfig, criteriaLoading, sortedPeriods, organizationId } = useAdminContext();
   const hasCriteria = !criteriaLoading && Array.isArray(criteriaConfig) && criteriaConfig.length > 0;
   const criteriaName = sortedPeriods?.find((p) => p.id === periodId)?.criteria_name ?? null;
   const [nameInput, setNameInput] = useState("");
@@ -394,6 +398,9 @@ function CriteriaPhase({ periodId, onContinue, onBack, loading }) {
 
   const handleBuildCustom = () => {
     if (periodId) setSelectedPeriodId(periodId);
+    // Set the skip flag so the setup-redirect guard doesn't bounce us back.
+    // The progress banner will remain visible on the criteria page.
+    try { sessionStorage.setItem(KEYS.SETUP_SKIP_PREFIX + organizationId, "1"); } catch { /* ignore */ }
     navigateTo("criteria");
   };
 
@@ -443,15 +450,17 @@ function CriteriaPhase({ periodId, onContinue, onBack, loading }) {
                   <div className="sw-criteria-dot" style={{ backgroundColor: c.color }} />
                   <div className="sw-criteria-name">{c.label}</div>
                 </div>
-                <div className="sw-criteria-pts">{c.max} pts</div>
-                <div className="sw-criteria-bar">
-                  <div
-                    className="sw-criteria-bar-fill"
-                    style={{
-                      backgroundColor: c.color,
-                      width: `${(fillPercentage / existingMaxPct) * 100}%`,
-                    }}
-                  />
+                <div className="sw-criteria-meta">
+                  <div className="sw-criteria-pts">{c.max} pts</div>
+                  <div className="sw-criteria-bar">
+                    <div
+                      className="sw-criteria-bar-fill"
+                      style={{
+                        backgroundColor: c.color,
+                        width: `${(fillPercentage / existingMaxPct) * 100}%`,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             );
@@ -548,15 +557,17 @@ function CriteriaPhase({ periodId, onContinue, onBack, loading }) {
                     />
                     <div className="sw-criteria-name">{c.label}</div>
                   </div>
-                  <div className="sw-criteria-pts">{c.max} pts</div>
-                  <div className="sw-criteria-bar">
-                    <div
-                      className="sw-criteria-bar-fill"
-                      style={{
-                        backgroundColor: c.color,
-                        width: `${(fillPercentage / maxPercentage) * 100}%`,
-                      }}
-                    />
+                  <div className="sw-criteria-meta">
+                    <div className="sw-criteria-pts">{c.max} pts</div>
+                    <div className="sw-criteria-bar">
+                      <div
+                        className="sw-criteria-bar-fill"
+                        style={{
+                          backgroundColor: c.color,
+                          width: `${(fillPercentage / maxPercentage) * 100}%`,
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               );
