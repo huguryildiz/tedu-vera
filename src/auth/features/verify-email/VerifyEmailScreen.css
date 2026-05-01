@@ -177,11 +177,11 @@
 
 /* ── Email row (success) ── */
 .vef-email-row{
-  display:inline-flex;align-items:center;gap:7px;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  width:fit-content;margin:0 auto 14px;
   padding:7px 14px;border-radius:20px;
   background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);
   font-size:12.5px;color:#94a3b8;font-weight:500;
-  margin:0 auto 14px;
 }
 .vef-email-row svg{color:#64748b;flex-shrink:0}
 
