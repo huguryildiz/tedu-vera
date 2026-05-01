@@ -40,26 +40,29 @@ export default function EmailVerifyBanner() {
 
   return (
     <div className="evb-wrap" role="status" aria-live="polite">
-      <MailWarning size={13} strokeWidth={1.8} className="evb-icon" />
-      <span className="evb-body">
-        Verify your email — this account will be deleted
-        {deadline ? <> on <strong>{deadline}</strong></> : " if not verified"}.
-      </span>
-      <div className="evb-action">
-        {state === "sent" ? (
-          <span className="evb-sent">Link sent — check your inbox.</span>
-        ) : (
-          <button
-            type="button"
-            className="evb-btn"
-            onClick={onResend}
-            disabled={state === "sending"}
-          >
-            {state === "sending" ? "Sending…" : "Resend link"}
-          </button>
+      <div className="evb-header">
+        <MailWarning size={13} strokeWidth={1.8} className="evb-icon" />
+        <span className="evb-body">
+          Verify your email — this account will be deleted
+          {deadline ? <> on <strong>{deadline}</strong></> : " if not verified"}.
+        </span>
+        {state !== "sent" && (
+          <div className="evb-action">
+            <button
+              type="button"
+              className="evb-btn"
+              onClick={onResend}
+              disabled={state === "sending"}
+            >
+              {state === "sending" ? "Sending…" : "Resend link"}
+            </button>
+            {state === "error" && <span className="evb-error">{errorMsg}</span>}
+          </div>
         )}
-        {state === "error" && <span className="evb-error">{errorMsg}</span>}
       </div>
+      {state === "sent" && (
+        <span className="evb-sent evb-sent-row">Link sent — check your inbox.</span>
+      )}
     </div>
   );
 }

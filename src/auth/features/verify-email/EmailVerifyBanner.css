@@ -4,8 +4,8 @@
   top: 0;
   z-index: var(--z-sticky);
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 4px;
   padding: 7px 16px;
   overflow: hidden;
   border-bottom: 1px solid rgba(245, 158, 11, 0.25);
@@ -52,6 +52,8 @@
   animation: ln-glow-bar 2.8s ease-in-out infinite;
 }
 
+.evb-header { display: flex; align-items: center; gap: 8px; width: 100%; }
+
 .evb-icon { color: #b45309; flex-shrink: 0; }
 
 .evb-body {
@@ -78,6 +80,7 @@
 .evb-btn:hover:not(:disabled) { background: rgba(245, 158, 11, 0.10); }
 .evb-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .evb-sent { color: var(--success, #059669); font-size: 12px; white-space: nowrap; }
+.evb-sent-row { padding-left: 21px; }
 .evb-error { color: var(--danger); font-size: 12px; }
 
 /* ── Dark mode ── */
