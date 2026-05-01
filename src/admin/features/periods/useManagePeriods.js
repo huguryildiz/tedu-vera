@@ -719,6 +719,7 @@ export function useManagePeriods({
     try {
       await setEvalLock(viewPeriodId, !!next.evalLockActive);
       applyPeriodPatch({ id: viewPeriodId, is_locked: !!next.evalLockActive });
+      bgRefresh?.current?.(["periods"]);
       setSettings(next);
       const periodContext =
         viewPeriodLabel && viewPeriodLabel !== "—" ? viewPeriodLabel : "the selected";
