@@ -119,9 +119,15 @@ for (const route of ROUTES) {
         });
         await page.waitForTimeout(150);
 
+        // Public marketing routes (landing) use viewport-only capture: the
+        // page is long, animation-heavy, and progressive-scroll fullPage
+        // capture fires IntersectionObservers between Playwright's two
+        // stability passes which the screenshot retry loop can't recover
+        // from. Admin routes are short enough that fullPage is stable.
+        const fullPage = route.type !== "public";
         await expect(page).toHaveScreenshot(
           `${route.name}-${viewport.label}-${theme}.png`,
-          { maxDiffPixelRatio: 0.02, fullPage: true },
+          { maxDiffPixelRatio: 0.02, fullPage },
         );
       });
     }
