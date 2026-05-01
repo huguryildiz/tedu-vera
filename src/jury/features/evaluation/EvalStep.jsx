@@ -1,7 +1,6 @@
 // src/jury/features/evaluation/EvalStep.jsx
 import { useState } from "react";
 import {
-  ArrowLeft,
   Check,
   ChevronDown,
   ClipboardCheck,
@@ -99,16 +98,7 @@ export default function EvalStep({ state }) {
         {/* ── Compact Header (juror info) ── */}
         <div className="dj-fh-header">
           <div className="dj-fh-header-left">
-            <button
-              type="button"
-              data-testid="jury-eval-back-btn"
-              onClick={() => state.setStep("progress_check")}
-              style={{ background: "none", border: "none", padding: "4px 6px 4px 0", cursor: "pointer", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}
-            >
-              <ArrowLeft size={13} strokeWidth={2} />
-              Back
-            </button>
-            <div className="dj-fh-header-name">
+<div className="dj-fh-header-name">
               <UserRound size={16} strokeWidth={2} />
               <span>{state.juryName}</span>
             </div>
