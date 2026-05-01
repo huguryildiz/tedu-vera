@@ -9,7 +9,7 @@ import {
   ChevronRightIcon,
   LockIcon,
 } from "@/shared/ui/Icons";
-import { RUBRIC_EDITOR_TEXT } from "@/shared/constants";
+const CRITERION_BLURB_PLACEHOLDER = "Brief description of the criterion.";
 import {
   getCriterionDisplayName,
   getBandRangeLabel,
@@ -195,7 +195,7 @@ export default function CriterionEditor({
             value={row.blurb}
             onChange={(e) => setRow(i, "blurb", e.target.value)}
             onBlur={() => markTouched(i, "blurb")}
-            placeholder={RUBRIC_EDITOR_TEXT.criterionBlurbPlaceholder}
+            placeholder={CRITERION_BLURB_PLACEHOLDER}
             aria-label={`Criterion ${i + 1} description`}
           />
           {(saveAttempted || row._fieldTouched?.blurb) && errors[`blurb_${i}`] && (

@@ -60,11 +60,13 @@ textarea::placeholder {
 .vera-field-input--error {
   border-color: var(--danger);
   box-shadow: var(--field-error-ring);
+  background-color: var(--field-error-bg);
 }
 
 .vera-field-input--error:focus {
   border-color: var(--danger);
   box-shadow: var(--field-error-ring);
+  background-color: var(--field-error-bg);
 }
 
 /* ── Global disabled cursor for inputs & textareas ──────────
@@ -98,6 +100,7 @@ select.error:focus-visible,
 select.error:active {
   border-color: var(--danger) !important;
   box-shadow: var(--field-error-ring) !important;
+  background-color: var(--field-error-bg) !important;
 }
 
 /* Rounded-lg variant (used in CriterionEditor) */
@@ -133,9 +136,11 @@ select.error:active {
 
 .vera-autogrow--error {
   border-color: var(--danger);
+  background-color: var(--field-error-bg);
 }
 
 .vera-autogrow--error:focus {
   box-shadow: var(--field-error-ring);
+  background-color: var(--field-error-bg);
 }
 
