@@ -21,7 +21,7 @@ export async function applyStandardFramework(organizationId) {
     description: "Standard evaluation framework with programme outcomes",
   });
 
-  // 2. Create all 18 outcomes from OUTCOME_DEFINITIONS
+  // 2. Create all 18 outcomes from OUTCOME_DEFINITIONS (short English label + full English description)
   const outcomeMap = {};
   let sortOrder = 1;
 
@@ -29,8 +29,8 @@ export async function applyStandardFramework(organizationId) {
     const outcome = await createOutcome({
       framework_id: framework.id,
       code,
-      label: `${code}: ${definitions.en}`,
-      description: definitions.tr, // Turkish description as detail
+      label: definitions.label,
+      description: definitions.en,
       sort_order: sortOrder,
     });
     outcomeMap[code] = outcome;

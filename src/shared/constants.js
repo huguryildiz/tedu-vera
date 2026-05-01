@@ -107,79 +107,99 @@ export const BAND_COLORS = {
   Insufficient: { bg: "#FEE2E2", text: "#DC2626" },
 };
 
-// All 18 MÜDEK outcome codes with English and Turkish text.
+// All 18 MÜDEK outcome codes with short label, English description, and Turkish text.
 // Each CRITERIA entry's outcomes[] array references codes from this object.
+// label: short display name used as the DB framework_outcomes.label
+// en: full English description stored as framework_outcomes.description
 export const OUTCOME_DEFINITIONS = {
   "1.1": {
-    en: "Knowledge in mathematics, natural sciences, fundamental engineering, computational methods, and discipline-specific topics.",
+    label: "Foundational Knowledge",
+    en: "Knowledge in mathematics, natural sciences, basic engineering, computational methods, and discipline-specific topics",
     tr: "Matematik, fen bilimleri, temel mühendislik, bilgisayarla hesaplama ve ilgili mühendislik disiplinine özgü konularda bilgi.",
   },
   "1.2": {
-    en: "Ability to apply knowledge of mathematics, natural sciences, fundamental engineering, computation, and discipline-specific topics to solve complex engineering problems.",
+    label: "Knowledge Application",
+    en: "Ability to apply knowledge in mathematics, natural sciences, basic engineering, computational methods, and discipline-specific topics to solve complex engineering problems",
     tr: "Matematik, fen bilimleri, temel mühendislik, bilgisayarla hesaplama ve ilgili mühendislik disiplinine özgü konulardaki bilgileri, karmaşık mühendislik problemlerinin çözümünde kullanabilme becerisi.",
   },
   "2": {
-    en: "Ability to identify, formulate, and analyse complex engineering problems using fundamental science, mathematics, and engineering knowledge, with consideration of relevant UN Sustainable Development Goals.",
+    label: "Problem Identification & Analysis",
+    en: "Ability to identify, formulate, and analyze complex engineering problems using basic science, mathematics, and engineering knowledge while considering relevant UN Sustainable Development Goals",
     tr: "Karmaşık mühendislik problemlerini, temel bilim, matematik ve mühendislik bilgilerini kullanarak ve ele alınan problemle ilgili BM Sürdürülebilir Kalkınma Amaçlarını gözetarak tanımlama, formüle etme ve analiz becerisi.",
   },
   "3.1": {
-    en: "Ability to design creative solutions to complex engineering problems.",
+    label: "Creative Solution Design",
+    en: "Ability to design creative solutions to complex engineering problems",
     tr: "Karmaşık mühendislik problemlerine yaratıcı çözümler tasarlama becerisi.",
   },
   "3.2": {
-    en: "Ability to design complex systems, processes, devices, or products under realistic constraints and conditions, meeting current and future requirements.",
+    label: "Complex System Design",
+    en: "Ability to design complex systems, processes, devices, or products that meet current and future requirements while considering realistic constraints and conditions",
     tr: "Karmaşık sistemleri, süreçleri, cihazları veya ürünleri gerçekçi kısıtları ve koşulları gözetarak, mevcut ve gelecekteki gereksinimleri karşılayacak biçimde tasarlama becerisi.",
   },
   "4": {
-    en: "Ability to select and use appropriate techniques, resources, and modern engineering and IT tools — including estimation and modelling — for the analysis and solution of complex engineering problems, with awareness of their limitations.",
+    label: "Modern Tools & Techniques",
+    en: "Ability to select and use appropriate techniques, resources, and modern engineering and IT tools, including estimation and modeling, for analysis and solution of complex engineering problems, with awareness of their limitations",
     tr: "Karmaşık mühendislik problemlerinin analizi ve çözümüne yönelik, tahmin ve modelleme de dahil olmak üzere, uygun teknikleri, kaynakları ve modern mühendislik ve bilişim araçlarını, sınırlamalarının da farkında olarak seçme ve kullanma becerisi.",
   },
   "5": {
-    en: "Ability to use research methods for investigating complex engineering problems, including literature review, experiment design, experimentation, data collection, and analysis and interpretation of results.",
+    label: "Research Methods",
+    en: "Ability to use research methods including literature review, experiment design, data collection, result analysis, and interpretation for investigation of complex engineering problems",
     tr: "Karmaşık mühendislik problemlerinin incelenmesi için literatür araştırması, deney tasarlama, deney yapma, veri toplama, sonuçları analiz etme ve yorumlama dahil, araştırma yöntemlerini kullanma becerisi.",
   },
   "6.1": {
-    en: "Knowledge of the impacts of engineering applications on society, health and safety, economy, sustainability, and the environment within the scope of UN Sustainable Development Goals.",
+    label: "Societal & Environmental Impact",
+    en: "Knowledge of the impacts of engineering applications on society, health and safety, economy, sustainability, and environment within the scope of UN Sustainable Development Goals",
     tr: "Mühendislik uygulamalarının BM Sürdürülebilir Kalkınma Amaçları kapsamında, topluma, sağlık ve güvenliğe, ekonomiye, sürdürülebilirlik ve çevreye etkileri hakkında bilgi.",
   },
   "6.2": {
-    en: "Awareness of the legal consequences of engineering solutions.",
+    label: "Legal Awareness",
+    en: "Awareness of the legal consequences of engineering solutions",
     tr: "Mühendislik çözümlerinin hukuksal sonuçları konusunda farkındalık.",
   },
   "7.1": {
-    en: "Knowledge of acting in accordance with engineering professional principles and ethical responsibility.",
+    label: "Ethics & Professional Conduct",
+    en: "Knowledge of acting in accordance with engineering professional principles and ethical responsibility",
     tr: "Mühendislik meslek ilkelerine uygun davranma, etik sorumluluk hakkında bilgi.",
   },
   "7.2": {
-    en: "Awareness of non-discrimination, impartiality, and inclusivity of diversity.",
+    label: "Impartiality & Diversity",
+    en: "Awareness of acting without discrimination and being inclusive of diversity",
     tr: "Hiçbir konuda ayrımcılık yapmadan, tarafsız davranma ve çeşitliliği kapsayıcı olma konularında farkındalık.",
   },
   "8.1": {
-    en: "Ability to work effectively as a team member or leader in intra-disciplinary teams (in-person, remote, or hybrid).",
+    label: "Intra-disciplinary Teamwork",
+    en: "Ability to work effectively as a team member or leader in intra-disciplinary teams (face-to-face, remote, or hybrid)",
     tr: "Bireysel olarak disiplin içi takım çalışmalarında (yüz yüze, uzaktan veya karma) takım üyesi veya lideri olarak etkin biçimde çalışabilme becerisi.",
   },
   "8.2": {
-    en: "Ability to work effectively as a team member or leader in multidisciplinary teams (in-person, remote, or hybrid).",
+    label: "Multidisciplinary Teamwork",
+    en: "Ability to work effectively as a team member or leader in multidisciplinary teams (face-to-face, remote, or hybrid)",
     tr: "Bireysel olarak çok disiplinli takımlarda (yüz yüze, uzaktan veya karma) takım üyesi veya lideri olarak etkin biçimde çalışabilme becerisi.",
   },
   "9.1": {
-    en: "Ability to communicate effectively on technical topics orally, adapting to audience differences (education, language, profession, etc.).",
+    label: "Oral Communication",
+    en: "Ability to communicate effectively orally on technical subjects, taking into account the diverse characteristics of the target audience (education, language, profession, etc.)",
     tr: "Hedef kitlenin çeşitli farklılıklarını (eğitim, dil, meslek gibi) dikkate alarak, teknik konularda sözlü etkin iletişim kurma becerisi.",
   },
   "9.2": {
-    en: "Ability to communicate effectively on technical topics in writing, adapting to audience differences (education, language, profession, etc.).",
+    label: "Written Communication",
+    en: "Ability to communicate effectively in writing on technical subjects, taking into account the diverse characteristics of the target audience (education, language, profession, etc.)",
     tr: "Hedef kitlenin çeşitli farklılıklarını (eğitim, dil, meslek gibi) dikkate alarak, teknik konularda yazılı etkin iletişim kurma becerisi.",
   },
   "10.1": {
-    en: "Knowledge of business practices such as project management and economic feasibility analysis.",
+    label: "Business & Project Management",
+    en: "Knowledge of business practices such as project management and economic feasibility analysis",
     tr: "Proje yönetimi ve ekonomik yapılabilirlik analizi gibi iş hayatındaki uygulamalar hakkında bilgi.",
   },
   "10.2": {
-    en: "Awareness of entrepreneurship and innovation.",
+    label: "Entrepreneurship & Innovation",
+    en: "Awareness of entrepreneurship and innovation",
     tr: "Girişimcilik ve yenilikçilik hakkında farkındalık.",
   },
   "11": {
-    en: "Lifelong learning skills including independent and continuous learning, adaptation to new and emerging technologies, and critical thinking about technological change.",
+    label: "Lifelong Learning",
+    en: "Ability to learn independently and continuously, adapt to new and emerging technologies, and think critically about technological changes",
     tr: "Bağımsız ve sürekli öğrenebilme, yeni ve gelişmekte olan teknolojilere uyum sağlayabilme ve teknolojik değişimlerle ilgili sorgulayıcı düşünebilmeyi kapsayan yaşam boyu öğrenme becerisi.",
   },
 };
