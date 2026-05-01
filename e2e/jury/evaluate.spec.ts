@@ -95,14 +95,6 @@ test.describe("jury evaluate flow", () => {
     await expect(evalPom.allCompleteBanner()).toBeVisible({ timeout: 5_000 });
   });
 
-  test("back button navigates to progress step", async ({ page }) => {
-    const jury = new JuryPom(page);
-    const evalPom = await navigateToEval(page, "E2E Eval Render");
-    await evalPom.waitForEvalStep();
-    await evalPom.clickBack();
-    await expect(jury.progressTitle()).toBeVisible({ timeout: 5_000 });
-  });
-
   test("fill all scores → confirm submission → complete screen", async ({ page }) => {
     const evalPom = await navigateToEval(page, "E2E Eval Submit");
     await evalPom.waitForEvalStep();

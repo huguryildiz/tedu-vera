@@ -68,14 +68,6 @@ export class JuryEvalPom extends BasePom {
     return this.byTestId("jury-eval-all-complete-banner");
   }
 
-  backBtn(): Locator {
-    return this.byTestId("jury-eval-back-btn");
-  }
-
-  async clickBack(): Promise<void> {
-    await this.backBtn().click();
-  }
-
   async clickConfirmSubmit(): Promise<void> {
     await this.confirmSubmitBtn().click();
   }
