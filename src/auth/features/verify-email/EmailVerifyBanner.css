@@ -61,7 +61,7 @@
   line-height: 1.4;
 }
 
-.evb-action { display: flex; gap: 8px; align-items: center; flex: 0 0 auto; }
+.evb-action { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex: 0 0 auto; }
 
 .evb-btn {
   background: transparent;
