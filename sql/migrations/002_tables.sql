@@ -612,10 +612,12 @@ GRANT SELECT ON profiles         TO anon;
 GRANT SELECT ON org_applications TO anon;
 
 -- Service role (Edge Functions bypass RLS but still need table-level grants)
-GRANT SELECT, INSERT, UPDATE, DELETE ON organizations    TO service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON profiles         TO service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON memberships      TO service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON org_applications TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON organizations              TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON profiles                   TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON memberships                TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON org_applications           TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON email_verification_tokens  TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON audit_logs                 TO service_role;
 
 -- Frameworks
 GRANT SELECT, INSERT, UPDATE, DELETE ON frameworks                       TO authenticated;
