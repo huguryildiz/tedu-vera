@@ -85,6 +85,22 @@ for (const route of ROUTES) {
           await page.waitForTimeout(300);
         }
 
+        // Playwright's animation disable doesn't catch @property-driven CSS
+        // custom-property animations (e.g. --acr-angle on the dark hero), so
+        // landing-desktop-dark stayed unstable. Force-kill all animations.
+        await page.addStyleTag({
+          content: `
+            *, *::before, *::after {
+              animation-duration: 0s !important;
+              animation-delay: 0s !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0s !important;
+              transition-delay: 0s !important;
+            }
+          `,
+        });
+        await page.waitForTimeout(150);
+
         await expect(page).toHaveScreenshot(
           `${route.name}-${viewport.label}-${theme}.png`,
           { maxDiffPixelRatio: 0.02, fullPage: true },
