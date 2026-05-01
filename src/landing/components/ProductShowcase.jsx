@@ -24,6 +24,7 @@ export default function ProductShowcase() {
   const timerRef = useRef(null);
 
   const startTimer = () => {
+    if (import.meta.env.VITE_E2E) return;
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setActiveIndex((i) => (i + 1) % SLIDES.length);

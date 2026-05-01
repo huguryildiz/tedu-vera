@@ -102,9 +102,10 @@ export function LandingPage() {
   const nextTestimonial = () => setTestimonialIdx((i) => (i + 1) % testimonials.length);
   const prevTestimonial = () => setTestimonialIdx((i) => (i - 1 + testimonials.length) % testimonials.length);
 
-  // Auto-rotate testimonials every 6s
+  // Auto-rotate testimonials every 6s (disabled in E2E to keep snapshots stable)
   useEffect(() => {
     if (testimonials.length <= 1) return;
+    if (isE2E) return;
     const id = setInterval(nextTestimonial, 6000);
     return () => clearInterval(id);
   }, [testimonials.length]);
