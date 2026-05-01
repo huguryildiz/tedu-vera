@@ -50,6 +50,30 @@ for (const route of ROUTES) {
           } catch {}
         });
 
+        // Inject animation-killing CSS at document_start so every keyframe
+        // and transition (including @property-driven --acr-angle and
+        // .reveal-section scroll-in transitions) is dead from the first paint.
+        // Without this, fullPage capture's progressive scroll fires
+        // IntersectionObservers at different positions between stability
+        // passes and the screenshot never settles.
+        await page.addInitScript(() => {
+          const style = document.createElement("style");
+          style.textContent = `
+            *, *::before, *::after {
+              animation-duration: 0s !important;
+              animation-delay: 0s !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0s !important;
+              transition-delay: 0s !important;
+            }
+            .reveal-section, .reveal-section .reveal-child, .landing-steps {
+              opacity: 1 !important;
+              transform: none !important;
+            }
+          `;
+          (document.head || document.documentElement).appendChild(style);
+        });
+
         if (route.type === "demo") {
           // Step 1 — trigger auto-login. DemoAdminLoader signs in with the
           // demo admin and then window.location.replace("/demo/admin").
@@ -85,19 +109,13 @@ for (const route of ROUTES) {
           await page.waitForTimeout(300);
         }
 
-        // Playwright's animation disable doesn't catch @property-driven CSS
-        // custom-property animations (e.g. --acr-angle on the dark hero), so
-        // landing-desktop-dark stayed unstable. Force-kill all animations.
-        await page.addStyleTag({
-          content: `
-            *, *::before, *::after {
-              animation-duration: 0s !important;
-              animation-delay: 0s !important;
-              animation-iteration-count: 1 !important;
-              transition-duration: 0s !important;
-              transition-delay: 0s !important;
-            }
-          `,
+        // Force every IntersectionObserver-driven reveal into its end state
+        // so fullPage capture's progressive scroll can't trigger a class
+        // change mid-screenshot.
+        await page.evaluate(() => {
+          document
+            .querySelectorAll(".reveal-section, .landing-steps")
+            .forEach((el) => el.classList.add("is-visible"));
         });
         await page.waitForTimeout(150);
 
