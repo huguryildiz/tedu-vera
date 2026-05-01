@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Lock, LockKeyhole, Pencil, Plus } from "lucide-react";
+import { Lock, LockKeyhole, Plus } from "lucide-react";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
 import { useToast } from "@/shared/hooks/useToast";
 import { useManagePeriods } from "@/admin/features/periods/useManagePeriods";
@@ -449,13 +449,13 @@ export default function CriteriaPage() {
             <div className="lock-notice-badge">locked</div>
           </div>
           <div className="lock-notice-body">
-            <div className="lock-notice-title">Evaluation in progress — structural fields locked</div>
+            <div className="lock-notice-title">Period locked — criteria are read-only</div>
             <div className="lock-notice-desc">
-              Criterion weights, rubric bands, and outcome mappings are locked while scores exist. Labels and descriptions can still be edited.
+              Every criterion field is frozen while this period is locked, so existing scores stay anchored to the structure they were given against. Open the <strong>Periods</strong> page and unlock this period to edit names, weights, rubric bands, or outcome mappings.
             </div>
             <div className="lock-notice-chips">
-              <span className="lock-notice-chip editable"><Pencil size={11} strokeWidth={2} /> Labels &amp; Descriptions</span>
-              <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Criterion Weights</span>
+              <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Names &amp; Descriptions</span>
+              <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Weights &amp; Max Scores</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Rubric Bands</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Outcome Mappings</span>
             </div>

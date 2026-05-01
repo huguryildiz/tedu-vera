@@ -79,14 +79,16 @@ export default function OutcomesTable({
             <div className="lock-notice-badge">locked</div>
           </div>
           <div className="lock-notice-body">
-            <div className="lock-notice-title">Evaluation in progress — structural fields locked</div>
+            <div className="lock-notice-title">Period locked — outcomes are read-only</div>
             <div className="lock-notice-desc">
-              Criterion mappings and coverage types are locked while scores exist. Labels and descriptions can still be edited.
+              Every outcome field is frozen while this period is locked, so accreditation reports stay anchored to the structure scored against. Open the <strong>Periods</strong> page and unlock this period to edit codes, labels, descriptions, criterion mappings, coverage types, or the acceptance threshold.
             </div>
             <div className="lock-notice-chips">
-              <span className="lock-notice-chip editable"><Pencil size={11} strokeWidth={2} /> Labels &amp; Descriptions</span>
+              <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Codes &amp; Labels</span>
+              <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Descriptions</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Criterion Mappings</span>
               <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Coverage Types</span>
+              <span className="lock-notice-chip locked"><Lock size={11} strokeWidth={2} /> Acceptance Threshold</span>
             </div>
           </div>
         </div>
