@@ -23,7 +23,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(7);
+SELECT plan(8);
 
 CREATE TEMP TABLE _ctx ON COMMIT DROP AS
 SELECT EXISTS (
@@ -35,7 +35,7 @@ SELECT EXISTS (
 
 GRANT SELECT ON _ctx TO authenticated, anon, service_role;
 
-SELECT skip('migration 009 not applied — rpc_admin_upsert_period_criterion_outcome_map missing', 7)
+SELECT skip('migration 009 not applied — rpc_admin_upsert_period_criterion_outcome_map missing', 8)
 FROM _ctx WHERE NOT rpc_exists;
 
 SELECT pgtap_test.seed_two_orgs() FROM _ctx WHERE rpc_exists;
@@ -126,6 +126,19 @@ SELECT throws_ok(
   NULL::text,
   'period_not_found'::text,
   '3-arg call (default coverage_type) reaches period lookup'
+) FROM _ctx WHERE rpc_exists;
+
+-- ────────── 7. error paths do not emit audit_logs rows ──────────
+-- _audit_write fires only on the success path; period_not_found, period_locked,
+-- criterion_not_in_period, outcome_not_in_period, and invalid_coverage_type
+-- must raise before audit emission. Regression guard for the audit
+-- side-effect contract on the mapping.upsert action.
+SELECT is(
+  (SELECT count(*)::int FROM audit_logs
+    WHERE action = 'mapping.upsert'
+      AND resource_type = 'period_criterion_outcome_maps'),
+  0,
+  'mapping.upsert audit_logs row is NOT written on error paths'
 ) FROM _ctx WHERE rpc_exists;
 
 SELECT pgtap_test.become_reset() FROM _ctx WHERE rpc_exists;

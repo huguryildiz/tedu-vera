@@ -12,7 +12,7 @@
 
 BEGIN;
 SET LOCAL search_path = tap, public, extensions;
-SELECT plan(10);
+SELECT plan(11);
 
 SELECT pgtap_test.seed_two_orgs();
 SELECT pgtap_test.seed_periods();
@@ -96,7 +96,21 @@ SELECT is(
   'returned code matches input'
 );
 
--- ────────── 6. super-admin can create in any unlocked period ──────────
+-- ────────── 6. audit_logs row written with period_name + outcome_code ──────────
+-- Verifies _audit_write fires and details contain the period name we resolve
+-- via SELECT name FROM periods (regression guard for periodName enrichment).
+SELECT is(
+  (SELECT count(*)::int FROM audit_logs
+    WHERE action = 'config.outcome.created'
+      AND resource_type = 'period_outcomes'
+      AND details->>'outcome_code' = 'PO1'
+      AND details->>'period_name' IS NOT NULL
+      AND details->>'periodName' IS NOT NULL),
+  1,
+  'audit_logs row written with period_name + periodName + outcome_code'
+);
+
+-- ────────── 7. super-admin can create in any unlocked period ──────────
 SELECT pgtap_test.become_reset();
 SELECT pgtap_test.become_super();
 
