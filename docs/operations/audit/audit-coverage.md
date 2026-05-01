@@ -201,9 +201,10 @@ accepted for historical rows and mapped to the same UI labels.
 | `period.set_current` | RPC (`rpc_admin_set_current_period`) | info |
 | `period.lock` / `period.unlock` | RPC (`rpc_admin_set_period_lock`) | high |
 | `period.duplicated` | RPC (`rpc_admin_duplicate_period`) — details: `periodName`, `source_period_id`, `source_name` | low |
-| `criteria.save` | RPC (`rpc_admin_save_period_criteria`) with diff | medium |
+| `criteria.save` | RPC (`rpc_admin_save_period_criteria`) with diff — details: `criteriaCount`, `periodName` | medium |
 | `config.framework.unassigned` | RPC (`rpc_admin_period_unassign_framework`) — details: `periodName`, `framework_id`, `outcomes_removed`, `mappings_removed` | medium |
-| `config.outcome.created` / `.updated` / `.deleted` | RPC trio | info |
+| `config.outcome.created` / `.updated` / `.deleted` | RPC trio (`rpc_admin_create/update/delete_period_outcome` for `period_outcomes`; `rpc_admin_create/update/delete_framework_outcome` for `framework_outcomes`) — details for period_outcomes variants: `outcome_code`, `outcome_label`, `period_id`, `period_name`, `periodName` | info |
+| `mapping.upsert` / `mapping.delete` | RPC (`rpc_admin_upsert/delete_period_criterion_outcome_map`) — details: `period_id`, `period_name`, `periodName`, `period_criterion_id`, `period_outcome_id`, `coverage_type` | low |
 | `config.platform_settings.updated` | RPC (`rpc_admin_set_platform_settings`) with diff | medium |
 | `config.backup_schedule.updated` | RPC (`rpc_admin_set_backup_schedule`) with diff | high |
 | `application.approved` / `.rejected` | RPC (`rpc_admin_approve_application` / `rpc_admin_reject_application`) | medium |
@@ -216,15 +217,15 @@ Canonical PIN taxonomy is `juror.pin_locked` / `juror.pin_unlocked` /
 
 | Action | Mechanism | Severity |
 | --- | --- | --- |
-| `data.juror.auth.created` | RPC (`rpc_jury_authenticate`) — first auth per (juror, period) pair | info |
+| `data.juror.auth.created` | RPC (`rpc_jury_authenticate`) — first auth per (juror, period) pair; details include `juror_name`, `juror_id`, `period_id`, `period_name`, `periodName`, `affiliation` | info |
 | `data.score.submitted` | RPC (`rpc_jury_finalize_submission`) with per-criterion diff | info |
 | `data.score.edit_requested` | Edge Function (`request-score-edit`) | low |
-| `juror.pin_locked` / `juror.pin_unlocked` | RPC (juror auth) | medium |
-| `pin.reset` | RPC (`rpc_juror_reset_pin`, `rpc_juror_unlock_pin`) — emits whenever an admin resets a juror PIN, with `juror_name`, `period_id`, `reset_by` in `details` | medium |
+| `juror.pin_locked` / `juror.pin_unlocked` | RPC (juror auth) — details include `juror_id`, `period_id`, `period_name`, `periodName`, `failed_attempts`, `locked_until` | medium |
+| `pin.reset` / `juror.pin_unlocked_and_reset` | RPC (`rpc_juror_reset_pin`, `rpc_juror_unlock_pin`) — admin reset; details: `juror_name`, `juror_id`, `period_id`, `period_name`/`periodName`, `reset_by` | medium |
 | `data.juror.edit_mode.granted` / `.force_closed` / `.closed` | RPC | info-medium |
-| `juror.edit_mode_enabled` / `juror.edit_mode_disabled` | RPC (`rpc_juror_toggle_edit_mode`, both paths) | info |
+| `juror.edit_mode_enabled` / `juror.edit_mode_disabled` | RPC (`rpc_juror_toggle_edit_mode`, both paths) — details include `period_id`, `period_name`, `periodName`, `juror_id`, `juror_name`; enabled adds `reason`, `duration_minutes`, `expires_at`; disabled adds `previous_reason`, `close_source` | info |
 | `evaluation.complete` | RPC (`rpc_jury_finalize_submission`) | info |
-| CRUD on tracked tables (`<table>.insert/update/delete`) | DB trigger | info-medium |
+| CRUD on tracked tables (`<table>.insert/update/delete`) | DB trigger (`trigger_audit_log`) — enriches details with table-specific human-readable fields: `periods.*` → `periodName`; `projects.*` → `project_title` + `period_name` + `periodName`; `jurors.*` → `juror_name`; `juror_period_auth.insert` → `juror_name` + `period_name`; `entry_tokens.*` → `period_name`; `period_criteria.*` → `period_name` + `criterion_name`; `period_criterion_outcome_maps.*` → `period_name` + `criterion_name` + `outcome_code` + `outcome_label`; `memberships.*` → `member_email` + `role` | info-medium |
 
 ### Security
 
