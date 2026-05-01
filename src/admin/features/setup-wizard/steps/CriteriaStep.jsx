@@ -105,8 +105,10 @@ export default function CriteriaStep({ periodId, frameworks, onContinue, onBack 
             const fillPct = total > 0 ? ((c.max || 0) / total) * 100 : 0;
             return (
               <div key={c.key ?? c.id} className="sw-criteria-row">
-                <div className="sw-criteria-dot" style={{ backgroundColor: c.color }} />
-                <div className="sw-criteria-name">{c.label}</div>
+                <div className="sw-criteria-label">
+                  <div className="sw-criteria-dot" style={{ backgroundColor: c.color }} />
+                  <div className="sw-criteria-name">{c.label}</div>
+                </div>
                 <div className="sw-criteria-pts">{c.max} pts</div>
                 <div className="sw-criteria-bar">
                   <div className="sw-criteria-bar-fill" style={{
@@ -437,8 +439,10 @@ function CriteriaPhase({ periodId, onContinue, onBack, loading }) {
             const fillPercentage = existingTotal > 0 ? ((c.max || 0) / existingTotal) * 100 : 0;
             return (
               <div key={c.key ?? c.id} className="sw-criteria-row">
-                <div className="sw-criteria-dot" style={{ backgroundColor: c.color }} />
-                <div className="sw-criteria-name">{c.label}</div>
+                <div className="sw-criteria-label">
+                  <div className="sw-criteria-dot" style={{ backgroundColor: c.color }} />
+                  <div className="sw-criteria-name">{c.label}</div>
+                </div>
                 <div className="sw-criteria-pts">{c.max} pts</div>
                 <div className="sw-criteria-bar">
                   <div
@@ -537,11 +541,13 @@ function CriteriaPhase({ periodId, onContinue, onBack, loading }) {
               const fillPercentage = (c.max / totalPoints) * 100;
               return (
                 <div key={c.key ?? c.id} className="sw-criteria-row">
-                  <div
-                    className="sw-criteria-dot"
-                    style={{ backgroundColor: c.color }}
-                  />
-                  <div className="sw-criteria-name">{c.label}</div>
+                  <div className="sw-criteria-label">
+                    <div
+                      className="sw-criteria-dot"
+                      style={{ backgroundColor: c.color }}
+                    />
+                    <div className="sw-criteria-name">{c.label}</div>
+                  </div>
                   <div className="sw-criteria-pts">{c.max} pts</div>
                   <div className="sw-criteria-bar">
                     <div

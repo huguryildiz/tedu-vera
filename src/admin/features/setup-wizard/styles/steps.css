@@ -321,17 +321,24 @@
 
 .sw-criteria-row {
   display: grid;
-  grid-template-columns: 10px 1fr 44px 72px;
+  grid-template-columns: 1fr 44px 72px;
   align-items: center;
   gap: 8px;
   padding: 5px 0;
+}
+
+.sw-criteria-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .sw-criteria-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  justify-self: center;
+  flex-shrink: 0;
+  margin-top: 4px;
 }
 
 .sw-criteria-name {
