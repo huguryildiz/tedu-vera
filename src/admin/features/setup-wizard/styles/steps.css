@@ -321,7 +321,7 @@
 
 .sw-criteria-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) 120px;
   align-items: center;
   gap: 12px;
   padding: 5px 0;
