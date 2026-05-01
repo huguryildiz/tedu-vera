@@ -284,6 +284,7 @@ export function useAuditLogFilters({ organizationId, isMobile, setMessage }) {
     auditSearch,
     setAuditSearch,
     auditHasMore,
+    auditCursor,
     auditTotalCount,
     auditExporting,
     showAllAuditLogs,

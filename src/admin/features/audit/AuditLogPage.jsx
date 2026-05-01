@@ -2,7 +2,7 @@
 // Audit Log page: track admin actions, score changes, and access events.
 // Hook connections: useAuditLogFilters, usePageRealtime
 
-import { useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
 import { Search, Download, X, Clock, Filter, Lock, Shield, UserCheck, Activity, Key, Package, Calendar, LogIn, FileText, ShieldCheck, XCircle } from "lucide-react";
 import { useToast } from "@/shared/hooks/useToast";
@@ -176,6 +176,7 @@ export default function AuditLogPage() {
     auditSearch,
     setAuditSearch,
     auditHasMore,
+    auditCursor,
     auditTotalCount,
     auditExporting,
     showAuditSkeleton,
@@ -321,6 +322,18 @@ export default function AuditLogPage() {
   const safePage = Math.min(currentPage, totalPages);
   const pageStart = (safePage - 1) * pageSize;
   const pagedLogs = sortedLogs.slice(pageStart, pageStart + pageSize);
+
+  // Server fetches in 50-row chunks; if the user picks a larger page size or
+  // navigates further, auto-fetch until the current page window is filled.
+  // Cursor guard avoids the 350ms window after a search/filter change where
+  // hasMore is reset to true but the debounced reload hasn't fired yet —
+  // appending without a cursor would duplicate rows.
+  useEffect(() => {
+    if (!auditHasMore || auditLoading || !auditCursor) return;
+    if (auditLogs.length < safePage * pageSize) {
+      handleAuditLoadMore();
+    }
+  }, [auditHasMore, auditLoading, auditCursor, auditLogs.length, pageSize, safePage, handleAuditLoadMore]);
   const pagedItems = useMemo(
     () => addDaySeparators(groupBulkEvents(pagedLogs), sortedLogs),
     [pagedLogs, sortedLogs]
