@@ -102,6 +102,15 @@ BEGIN
 
   GET DIAGNOSTICS v_outcomes_count = ROW_COUNT;
 
+  -- Back-fill source_criterion_id for criteria that were saved before the
+  -- framework was assigned (e.g. via savePeriodCriteria which omitted it).
+  UPDATE period_criteria pc
+  SET source_criterion_id = fc.id
+  FROM framework_criteria fc
+  WHERE pc.period_id = p_period_id
+    AND fc.framework_id = v_period.framework_id
+    AND fc.key = pc.key;
+
   -- Re-link mappings where existing period_criteria.source_criterion_id matches
   -- the new framework's criterion IDs. Unmatched criteria end up unmapped and
   -- can be remapped manually from the UI.

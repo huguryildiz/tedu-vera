@@ -714,6 +714,16 @@ BEGIN
   WHERE period_id = p_period_id
     AND key <> ALL(v_keys);
 
+  -- Back-link source_criterion_id from the period's assigned framework by key.
+  -- This is a no-op when the period has no framework or the key has no match.
+  UPDATE period_criteria pc
+  SET source_criterion_id = fc.id
+  FROM periods p
+  JOIN framework_criteria fc ON fc.framework_id = p.framework_id
+  WHERE pc.period_id = p_period_id
+    AND p.id = p_period_id
+    AND pc.key = fc.key;
+
   -- Collect the resulting rows for return
   SELECT jsonb_agg(to_jsonb(pc.*) ORDER BY pc.sort_order)
   INTO v_inserted
