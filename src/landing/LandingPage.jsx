@@ -88,6 +88,7 @@ function useCountUp(target, duration = 1400) {
 export function LandingPage() {
   const navigate = useNavigate();
   const demoToken = import.meta.env.VITE_DEMO_ENTRY_TOKEN;
+  const isE2E = import.meta.env.VITE_E2E;
   const { theme } = useTheme();
   const stats = useLandingStats();
   const feedback = useLandingFeedback();
