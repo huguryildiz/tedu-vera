@@ -204,7 +204,7 @@ export function useJurySessionHandlers({ identity, session, scoring, loading, wo
         }),
         listPeriodOutcomes(period.id).catch((e) => {
           if (e?.name === "AbortError") throw e;
-          return []; // Non-fatal: fall back to static OUTCOME_DEFINITIONS via buildOutcomeLookup([]).
+          return []; // Non-fatal: outcome descriptions will be empty in rubric sheet.
         }),
       ]);
 

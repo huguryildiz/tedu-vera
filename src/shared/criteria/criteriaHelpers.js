@@ -14,7 +14,6 @@
 //   - criterionToConfig()      : view model → stored shape (emits legacy compat)
 // ============================================================
 
-import { OUTCOME_DEFINITIONS } from "../constants";
 
 // ── Internal helpers ──────────────────────────────────────────
 
@@ -201,24 +200,14 @@ export function normalizePeriodCriteria(config) {
  * This is the primary adapter for period-specific outcome data.
  *
  * Output shape: { [id]: { id, code, desc_en, desc_tr } }
- *
- * Falls back to config OUTCOME_DEFINITIONS when config is null or empty
- * (intended for new periods or legacy migration only).
  */
 export function buildOutcomeLookup(outcomeConfig) {
-  if (Array.isArray(outcomeConfig) && outcomeConfig.length > 0) {
-    return Object.fromEntries(
-      outcomeConfig.map((o) => [
-        o.id,
-        { id: o.id, code: o.code, desc_en: o.desc_en, desc_tr: o.desc_tr },
-      ])
-    );
-  }
+  if (!Array.isArray(outcomeConfig) || outcomeConfig.length === 0) return {};
   return Object.fromEntries(
-    Object.entries(OUTCOME_DEFINITIONS).map(([code, desc]) => {
-      const id = _codeToId(code);
-      return [id, { id, code, desc_en: desc.en, desc_tr: desc.tr }];
-    })
+    outcomeConfig.map((o) => [
+      o.id,
+      { id: o.id, code: o.code, desc_en: o.desc_en, desc_tr: o.desc_tr },
+    ])
   );
 }
 

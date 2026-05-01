@@ -9,7 +9,7 @@ vi.mock("@/shared/ui/AutoTextarea", () => ({ default: () => null }));
 vi.mock("@/shared/ui/AlertCard", () => ({ default: () => null }));
 vi.mock("@/shared/ui/InlineError", () => ({ default: () => null }));
 vi.mock("@/shared/ui/AsyncButtonContent", () => ({ default: () => null }));
-vi.mock("@/shared/constants", () => ({ RUBRIC_EDITOR_TEXT: {} }));
+
 vi.mock("@/shared/criteriaValidation", () => ({
   validateCriterion: vi.fn(() => ({
     errors: {},

@@ -12,7 +12,7 @@ import {
   getVeraStandardCriteria,
   setPeriodCriteriaName,
 } from "@/shared/api";
-import { CRITERIA } from "@/shared/constants";
+
 import FbAlert from "@/shared/ui/FbAlert";
 import {
   ClipboardCheck,
@@ -25,25 +25,6 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
-
-// Helper: Build criteria payload for savePeriodCriteria fallback.
-function buildCriteriaPayload() {
-  return CRITERIA.map((c) => ({
-    key: c.id,
-    label: c.label,
-    shortLabel: c.shortLabel,
-    color: c.color,
-    max: c.max,
-    blurb: c.blurb,
-    outcomes: c.outcomes,
-    rubric: c.rubric.map((r) => ({
-      min: r.min,
-      max: r.max,
-      level: r.level,
-      desc: r.desc,
-    })),
-  }));
-}
 
 // ============================================================
 // Step 3: Criteria + Framework wrapper
@@ -349,16 +330,16 @@ function CriteriaPhase({ periodId, onContinue, onBack, loading }) {
     return () => { cancelled = true; };
   }, []);
 
-  const displayCriteria = templateCriteria ?? CRITERIA;
+  const displayCriteria = templateCriteria ?? [];
 
   const handleApplyTemplate = async () => {
-    if (!periodId) {
+    if (!periodId || !templateCriteria?.length) {
       toast.error("No period selected");
       return;
     }
 
     try {
-      const payload = templateCriteria ? templateCriteria : buildCriteriaPayload();
+      const payload = templateCriteria;
       await savePeriodCriteria(periodId, payload);
 
       // Criterion↔outcome mappings live in period_criterion_outcome_maps now.

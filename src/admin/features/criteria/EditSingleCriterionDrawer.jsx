@@ -9,7 +9,7 @@ import Drawer from "@/shared/ui/Drawer";
 import AlertCard from "@/shared/ui/AlertCard";
 import InlineError from "@/shared/ui/InlineError";
 import FbAlert from "@/shared/ui/FbAlert";
-import { RUBRIC_EDITOR_TEXT } from "@/shared/constants";
+const CRITERION_BLURB_PLACEHOLDER = "Brief description of the criterion.";
 import { validateCriterion } from "@/shared/criteriaValidation";
 import { criterionToConfig } from "@/shared/criteria/criteriaHelpers";
 import {
@@ -499,7 +499,7 @@ export default function EditSingleCriterionDrawer({
                   value={row.blurb}
                   onChange={(e) => setField("blurb", e.target.value)}
                   onBlur={() => markTouched("blurb")}
-                  placeholder={RUBRIC_EDITOR_TEXT.criterionBlurbPlaceholder}
+                  placeholder={CRITERION_BLURB_PLACEHOLDER}
                   aria-label="Criterion description"
                   disabled={fullyLocked}
                 />

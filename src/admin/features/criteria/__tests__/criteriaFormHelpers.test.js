@@ -1,9 +1,6 @@
 import { describe, expect, vi } from "vitest";
 import { qaTest } from "../../../../test/qaTest.js";
 
-vi.mock("@/shared/constants", () => ({
-  RUBRIC_DEFAULT_LEVELS: ["Excellent", "Good", "Developing", "Insufficient"],
-}));
 
 vi.mock("@/shared/criteria/criteriaHelpers", () => ({
   normalizeCriterion: (c) => ({

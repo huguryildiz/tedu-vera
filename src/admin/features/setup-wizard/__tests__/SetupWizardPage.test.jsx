@@ -91,7 +91,7 @@ vi.mock("@/shared/ui/avatarColor", () => ({
   initials: vi.fn(() => "DA"),
 }));
 vi.mock("@/shared/storage/keys", () => ({ KEYS: {} }));
-vi.mock("@/shared/constants", () => ({ CRITERIA: [] }));
+
 vi.mock("qr-code-styling", () => ({ default: class { append() {} update() {} } }));
 vi.mock("@/assets/vera_logo.png", () => ({ default: "" }));
 vi.mock("@/shared/ui/FbAlert", () => ({ default: () => null }));
