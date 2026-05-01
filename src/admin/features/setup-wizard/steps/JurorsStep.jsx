@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
 import { useToast } from "@/shared/hooks/useToast";
+import { KEYS } from "@/shared/storage/keys";
 import ImportJurorsModal from "@/admin/shared/ImportJurorsModal";
 import { parseJurorsCsv } from "@/admin/utils/csvParser";
 import { avatarGradient, initials } from "@/shared/ui/avatarColor";
@@ -141,7 +142,11 @@ export default function JurorsStep({ periodId, onContinue, onBack, onLaunch, loa
         <div className="sw-footer sw-footer-stack">
           <button
             className="sw-btn-link"
-            onClick={() => { if (periodId) setSelectedPeriodId(periodId); navigateTo("jurors"); }}
+            onClick={() => {
+              if (periodId) setSelectedPeriodId(periodId);
+              try { sessionStorage.setItem(KEYS.SETUP_SKIP_PREFIX + activeOrganization?.id, "1"); } catch { /* ignore */ }
+              navigateTo("jurors");
+            }}
           >
             Add more jurors →
           </button>

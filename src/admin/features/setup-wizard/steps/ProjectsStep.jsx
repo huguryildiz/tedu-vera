@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useAdminContext } from "@/admin/shared/useAdminContext";
 import { useToast } from "@/shared/hooks/useToast";
+import { KEYS } from "@/shared/storage/keys";
 import ImportCsvModal from "@/admin/shared/ImportCsvModal";
 import { parseProjectsCsv } from "@/admin/utils/csvParser";
 import { normalizeTeamMemberNames } from "@/admin/utils/auditUtils";
@@ -30,7 +31,7 @@ function membersStringToJsonb(value) {
 
 export default function ProjectsStep({ periodId, onContinue, onBack, loading }) {
   const toast = useToast();
-  const { fetchData, summaryData, navigateTo, setSelectedPeriodId } = useAdminContext();
+  const { fetchData, summaryData, navigateTo, setSelectedPeriodId, organizationId } = useAdminContext();
   // summaryData is already scoped to selectedPeriodId by getProjectSummary —
   // items have no period_id field. Trust the list.
   const periodProjects = summaryData || [];
@@ -193,7 +194,11 @@ export default function ProjectsStep({ periodId, onContinue, onBack, loading }) 
         <div className="sw-footer sw-footer-stack">
           <button
             className="sw-btn-link"
-            onClick={() => { if (periodId) setSelectedPeriodId(periodId); navigateTo("projects"); }}
+            onClick={() => {
+              if (periodId) setSelectedPeriodId(periodId);
+              try { sessionStorage.setItem(KEYS.SETUP_SKIP_PREFIX + organizationId, "1"); } catch { /* ignore */ }
+              navigateTo("projects");
+            }}
           >
             Add more projects →
           </button>
