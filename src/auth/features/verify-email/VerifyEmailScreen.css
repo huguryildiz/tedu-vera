@@ -203,12 +203,23 @@
 }
 .vef-sent-msg svg{flex-shrink:0}
 
-/* ── Resend button (layout only; apply-submit provides the visual) ── */
+/* ── CTA primary button ── */
+.vef-btn-primary{
+  width:100%;border:none;border-radius:10px;
+  background:linear-gradient(135deg,#6c47ff,#a78bfa);
+  color:#fff;font-size:14px;font-weight:600;padding:12px;
+  cursor:pointer;font-family:var(--font);
+  box-shadow:0 4px 16px rgba(108,71,255,0.35);
+  transition:box-shadow .15s,opacity .15s;
+}
+.vef-btn-primary:hover{box-shadow:0 6px 24px rgba(108,71,255,0.5)}
+.vef-btn-primary:disabled{opacity:0.65;cursor:not-allowed}
+
+/* ── Resend button ── */
 .vef-resend-btn{
   display:flex;align-items:center;justify-content:center;gap:7px;
   margin-bottom:10px;
 }
-.vef-resend-btn:disabled{opacity:0.65;cursor:not-allowed}
 
 /* ── Ghost "Back to dashboard" button ── */
 .vef-btn-ghost{

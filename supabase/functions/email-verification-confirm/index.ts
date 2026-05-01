@@ -103,26 +103,24 @@ Deno.serve(async (req: Request) => {
       return json({ error: tokenUpdateErr.message }, 500);
     }
 
-    // Audit row — account activation is access-control critical.
-    // Fail-closed: if audit insert fails, surface 500 (no silent verifications).
-    try {
-      await writeEdgeAuditLog(req, {
-        action: "auth.admin.email_verified",
-        user_id: tokenRow.user_id,
-        resource_type: "profiles",
-        resource_id: tokenRow.user_id,
-        category: "auth",
-        severity: "low",
-        actor_type: "admin",
-        details: {
-          email: tokenRow.email,
-          verified_at: now,
-        },
-      });
-    } catch (auditErr) {
+    // Audit row — fire-and-forget. Profile verified + token consumed above are
+    // the durable side-effects; a transient audit write failure must not show
+    // "Verification failed" to a user whose email is already verified.
+    writeEdgeAuditLog(req, {
+      action: "auth.admin.email_verified",
+      user_id: tokenRow.user_id,
+      resource_type: "profiles",
+      resource_id: tokenRow.user_id,
+      category: "auth",
+      severity: "low",
+      actor_type: "admin",
+      details: {
+        email: tokenRow.email,
+        verified_at: now,
+      },
+    }).catch((auditErr) => {
       console.error("email-verification-confirm audit write failed:", (auditErr as Error).message);
-      return json({ error: "audit_failed" }, 500);
-    }
+    });
 
     return json({ ok: true });
   } catch (e) {

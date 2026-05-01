@@ -121,7 +121,7 @@ export default function VerifyEmailScreen() {
             ) : (
               <button
                 type="button"
-                className="apply-submit vef-resend-btn"
+                className="vef-btn-primary vef-resend-btn"
                 onClick={onResend}
                 disabled={resendState === "sending"}
               >
