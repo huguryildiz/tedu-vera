@@ -2,16 +2,22 @@ import { createClient } from "@supabase/supabase-js";
 
 // Use the demo Supabase URL when available, since the session-injection tests
 // target /demo/* routes which use VITE_DEMO_SUPABASE_URL in the browser.
+// Never fall back to VITE_SUPABASE_URL — that points at prod and would let
+// E2E auth flows write into the production project.
 const supabaseUrl =
-  process.env.VITE_DEMO_SUPABASE_URL ||
-  process.env.E2E_SUPABASE_URL ||
-  process.env.VITE_SUPABASE_URL ||
-  "";
+  process.env.VITE_DEMO_SUPABASE_URL || process.env.E2E_SUPABASE_URL || "";
 
 const anonKey =
   process.env.VITE_DEMO_SUPABASE_ANON_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY ||
+  process.env.E2E_SUPABASE_ANON_KEY ||
   "";
+
+if (process.env.VITE_SUPABASE_URL && supabaseUrl === process.env.VITE_SUPABASE_URL) {
+  throw new Error(
+    "oauthSession: resolved supabaseUrl equals VITE_SUPABASE_URL (prod). " +
+      "Set VITE_DEMO_SUPABASE_URL or E2E_SUPABASE_URL to a non-prod project.",
+  );
+}
 
 // Local admin client scoped to the demo URL so getUserById targets the right project.
 // This is intentionally separate from supabaseAdmin.ts (which may target prod).

@@ -1,8 +1,22 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl =
-  process.env.E2E_SUPABASE_URL || process.env.VITE_SUPABASE_URL || "";
+// E2E_SUPABASE_URL is required. Falling back to VITE_SUPABASE_URL would point
+// the service-role admin client at prod and let test fixtures pollute it.
+const supabaseUrl = process.env.E2E_SUPABASE_URL || "";
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+
+if (!supabaseUrl) {
+  throw new Error(
+    "E2E_SUPABASE_URL is not set. Refusing to run E2E against an unset target. " +
+      "Set E2E_SUPABASE_URL to the dedicated E2E Supabase project URL.",
+  );
+}
+if (process.env.VITE_SUPABASE_URL && supabaseUrl === process.env.VITE_SUPABASE_URL) {
+  throw new Error(
+    "E2E_SUPABASE_URL must not equal VITE_SUPABASE_URL (the prod URL). " +
+      "Use a separate Supabase project for E2E.",
+  );
+}
 
 export const adminClient = createClient(supabaseUrl, serviceRoleKey, {
   auth: { autoRefreshToken: false, persistSession: false },
