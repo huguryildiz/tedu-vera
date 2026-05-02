@@ -99,7 +99,7 @@ describe("OutcomesTable", () => {
   qaTest("coverage.outcomes-table.lock-banner", () => {
     render(<OutcomesTable {...defaultProps} isLocked={true} />);
     expect(
-      screen.getByText("Evaluation in progress — structural fields locked")
+      screen.getByText("Period locked — outcomes are read-only")
     ).toBeInTheDocument();
   });
 

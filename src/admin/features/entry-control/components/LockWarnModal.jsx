@@ -21,8 +21,8 @@ export default function LockWarnModal({ open, onClose, onConfirm, periodName, re
         </div>
       </div>
       <div className="fs-modal-body" style={{ paddingTop: 2 }}>
-        <FbAlert variant="warning" title="Structural fields will be locked">
-          Criterion weights, rubric bands, outcome mappings and coverage types cannot change while the QR is active — this keeps every juror on the same rubric. Labels and descriptions stay editable. You can unlock from the Periods page if you need to adjust something later.
+        <FbAlert variant="warning" title="Criteria and outcomes will become read-only">
+          Once the QR is live, every criterion and outcome field — names, descriptions, weights, rubric bands, mappings, coverage types — is frozen so each juror scores against the same rubric. You can unlock from the Periods page if you need to adjust something later.
         </FbAlert>
       </div>
       <div className="fs-modal-footer" style={{ justifyContent: "center", background: "transparent", borderTop: "none", paddingTop: 0 }}>

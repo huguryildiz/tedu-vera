@@ -179,12 +179,19 @@ requires updating `EVENT_META` so the UI renders it correctly.
 
 ---
 
-## Field locking (score-based)
+## Field locking (period-based)
 
-Once any score is written into a *period*, certain fields become
-read-only: criterion weights, rubric band thresholds, outcome mappings,
-project metadata. Labels and descriptions remain editable. Enforced at
-RLS + RPC level; UI mirrors with disabled inputs. See
+Once a *period* is locked (`is_locked = true`, set when the QR is
+generated / period is activated), every editable field on its criteria
+and outcomes becomes read-only — including names, descriptions, codes,
+labels, weights, max scores, rubric bands, criterion ↔ outcome mappings,
+coverage types, and the acceptance threshold. Project metadata is also
+frozen. The lock exists so existing scores stay anchored to the rubric
+they were given against and so accreditation reports remain reproducible.
+Enforced at RLS + RPC level; the UI mirrors it with disabled inputs and
+a top-of-page lock banner. To edit anything, an admin must unlock the
+period from the Periods page (super-admin approval required for already
+published periods). See
 [walkthroughs/evaluation-period-lifecycle.md](walkthroughs/evaluation-period-lifecycle.md).
 
 ---

@@ -91,31 +91,37 @@ not retroactively change historical scoring.
 
 - **RPC:** `rpc_admin_freeze_period_snapshot(period_id)`.
 - **Audit event:** `snapshot.freeze` with `{ periodName }`.
-- After this step, weight/band/mapping edits to the period itself are
-  locked. Labels and descriptions remain editable.
+- After this step, the period's criteria and outcomes are fully read-only
+  — names, descriptions, weights, rubric bands, mappings, coverage types,
+  and acceptance thresholds are all frozen until the period is unlocked.
 
 ### 5. Mint entry tokens
 
 See [jury-day-end-to-end.md](jury-day-end-to-end.md) — token minting is the
 gateway between an admin-configured period and live juror scoring.
 
-### 6. Score-based field locking kicks in
+### 6. Period-based field locking kicks in
 
-The moment the **first score** is written into the period (a juror submits
-any project), additional fields become read-only:
+From the moment the period is locked (QR generated / activated), all
+configuration fields on the period's criteria, outcomes, and project list
+become read-only and stay that way until the period is unlocked. The
+table below captures the lock surface:
 
-| Field | Editable before any scores? | Editable after first score? |
+| Field | Editable while period is unlocked? | Editable while period is locked? |
 | --- | --- | --- |
-| Criterion weights | Yes | No |
-| Rubric band thresholds | Yes | No |
-| Outcome mappings | Yes | No |
-| Criterion / outcome labels | Yes | Yes |
-| Criterion / outcome descriptions | Yes | Yes |
+| Criterion names & descriptions | Yes | No |
+| Criterion weights & max scores | Yes | No |
+| Rubric band thresholds & labels | Yes | No |
+| Outcome codes, labels, descriptions | Yes | No |
+| Criterion ↔ outcome mappings | Yes | No |
+| Outcome coverage types | Yes | No |
+| Acceptance threshold | Yes | No |
 | Project names, advisors, team | Yes | No |
 | Juror names, affiliations | Yes | Yes (cosmetic only) |
 
-This rule is enforced at the SQL layer (RLS + RPC checks); the UI mirrors it
-by disabling inputs.
+This rule is enforced at the SQL layer (RLS + RPC checks); the UI mirrors
+it by disabling inputs and surfacing a top-of-page lock banner on the
+Criteria and Outcomes pages.
 
 ### 7. Live scoring window
 
