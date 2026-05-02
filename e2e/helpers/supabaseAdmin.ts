@@ -11,7 +11,15 @@ if (!supabaseUrl) {
       "Set E2E_SUPABASE_URL to the dedicated E2E Supabase project URL.",
   );
 }
-if (process.env.VITE_SUPABASE_URL && supabaseUrl === process.env.VITE_SUPABASE_URL) {
+// Block only when VITE_SUPABASE_URL points at a hosted Supabase project
+// (*.supabase.co). In CI both env vars point at the same local CLI emulator
+// (127.0.0.1) and that's safe — only collision with a real prod URL is dangerous.
+const _viteUrl = process.env.VITE_SUPABASE_URL || "";
+const _viteHosted = (() => {
+  try { return new URL(_viteUrl).hostname.endsWith(".supabase.co"); }
+  catch { return false; }
+})();
+if (_viteUrl && supabaseUrl === _viteUrl && _viteHosted) {
   throw new Error(
     "E2E_SUPABASE_URL must not equal VITE_SUPABASE_URL (the prod URL). " +
       "Use a separate Supabase project for E2E.",

@@ -12,7 +12,14 @@ const anonKey =
   process.env.E2E_SUPABASE_ANON_KEY ||
   "";
 
-if (process.env.VITE_SUPABASE_URL && supabaseUrl === process.env.VITE_SUPABASE_URL) {
+// Block only when VITE_SUPABASE_URL is a hosted Supabase project (*.supabase.co).
+// CI's local emulator URL (127.0.0.1) is safe to share across env vars.
+const _viteUrl = process.env.VITE_SUPABASE_URL || "";
+const _viteHosted = (() => {
+  try { return new URL(_viteUrl).hostname.endsWith(".supabase.co"); }
+  catch { return false; }
+})();
+if (_viteUrl && supabaseUrl === _viteUrl && _viteHosted) {
   throw new Error(
     "oauthSession: resolved supabaseUrl equals VITE_SUPABASE_URL (prod). " +
       "Set VITE_DEMO_SUPABASE_URL or E2E_SUPABASE_URL to a non-prod project.",
