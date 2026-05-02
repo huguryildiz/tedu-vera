@@ -44,7 +44,7 @@ const EMPTY_EDIT = {
 const VALID_STATUSES = ["active", "archived"];
 const CODE_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const EMPTY_CREATE_ERRORS = { shortLabel: "", contact_email: "" };
-const EMPTY_EDIT_ERRORS = { name: "", contact_email: "" };
+const EMPTY_EDIT_ERRORS = { name: "", shortLabel: "", contact_email: "" };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const normalizeAdminInviteError = (raw) => {
@@ -202,12 +202,13 @@ export function useManageOrganizations({
   }, []);
 
   const openEdit = useCallback((org) => {
+    const ownerEmail = (org.tenantAdmins || []).find((a) => a.isOwner)?.email || "";
     const snapshot = {
       id: org.id,
       name: org.name || "",
       code: org.code,
       shortLabel: String(org.code || "").toUpperCase(),
-      contact_email: org.contact_email || "",
+      contact_email: org.contact_email || ownerEmail || "",
       status: org.status,
       created_at: org.created_at,
       updated_at: org.updated_at,
@@ -305,9 +306,21 @@ export function useManageOrganizations({
   const handleUpdateOrg = useCallback(async () => {
     if (!enabled) return;
     const nameVal = String(editForm.name || "").trim();
+    const labelVal = String(editForm.shortLabel || "").trim();
     const emailVal = String(editForm.contact_email || "").trim();
+    const slugVal = labelVal.toLowerCase().replace(/\s+/g, "-");
+    const codeTaken = !!labelVal && orgList.some(
+      (o) => o.id !== editForm.id && String(o.code || "").toLowerCase() === slugVal
+    );
     const fieldErrs = {
       name: !nameVal ? "Organization name is required." : "",
+      shortLabel: !labelVal
+        ? "Code is required."
+        : !CODE_RE.test(slugVal)
+          ? "Use a slug-compatible code (e.g. TEDU-EE)."
+          : codeTaken
+            ? `Code "${labelVal}" already exists.`
+            : "",
       contact_email: emailVal && !EMAIL_RE.test(emailVal) ? "Enter a valid email address." : "",
     };
     if (Object.values(fieldErrs).some(Boolean)) {
@@ -339,15 +352,18 @@ export function useManageOrganizations({
       setMessage?.("Organization updated.");
     } catch (e) {
       const msg = String(e?.message || "");
+      const lower = msg.toLowerCase();
       if (msg.includes("organization_not_found")) {
         setEditError("Organization not found. It may have been removed.");
+      } else if (lower.includes("duplicate") || lower.includes("unique")) {
+        setEditFieldErrors((prev) => ({ ...prev, shortLabel: "An organization with this code already exists." }));
       } else {
         setEditError("Failed to update organization.");
       }
     } finally {
       decLoading();
     }
-  }, [enabled, editForm, validateEdit, closeEdit, loadOrgs, setMessage, incLoading, decLoading]);
+  }, [enabled, editForm, orgList, validateEdit, closeEdit, loadOrgs, setMessage, incLoading, decLoading]);
 
   const handleUpdateTenantAdmin = useCallback(async ({ organizationId, userId, name, email }) => {
     if (!enabled || !organizationId || !userId) return false;

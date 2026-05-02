@@ -159,11 +159,26 @@ export function EditOrgDrawer({
   editForm,
   setEditForm,
   editError,
-  editFieldErrors = { name: "", contact_email: "" },
+  editFieldErrors = { name: "", shortLabel: "", contact_email: "" },
   setEditFieldErrors = () => {},
   editSaving,
   onSave,
 }) {
+  const [touched, setTouched] = useState({});
+  const touch = (field) => setTouched((t) => ({ ...t, [field]: true }));
+
+  useEffect(() => {
+    if (open) setTouched({});
+  }, [open]);
+
+  const nameEmpty = !(editForm.name || "").trim();
+  const codeEmpty = !(editForm.shortLabel || "").trim();
+
+  const handleSave = () => {
+    setTouched({ name: true, shortLabel: true, contact_email: true });
+    onSave();
+  };
+
   return (
     <Drawer open={open} onClose={onClose}>
       <div className="fs-drawer-header">
@@ -200,22 +215,39 @@ export function EditOrgDrawer({
           <label className="fs-field-label">Organization Name <span className="fs-field-req">*</span></label>
           <input
             data-testid="orgs-edit-drawer-name"
-            className={`fs-input${editFieldErrors.name || !(editForm.name || "").trim() ? " error" : ""}`}
+            className={`fs-input${(touched.name && nameEmpty) || editFieldErrors.name ? " error" : ""}`}
             type="text"
             value={editForm.name || ""}
             onChange={(e) => {
               setEditForm((prev) => ({ ...prev, name: e.target.value }));
-              setEditFieldErrors((prev) => ({ ...prev, name: e.target.value.trim() ? "" : "Organization name is required." }));
+              if (editFieldErrors.name) setEditFieldErrors((prev) => ({ ...prev, name: "" }));
             }}
+            onBlur={() => touch("name")}
             placeholder="e.g., TED University — Electrical-Electronics Engineering"
           />
-          {(editFieldErrors.name || !(editForm.name || "").trim()) && (
+          {((touched.name && nameEmpty) || editFieldErrors.name) && (
             <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />{editFieldErrors.name || "Organization name is required."}</p>
           )}
         </div>
         <div className="fs-field">
-          <label className="fs-field-label">Code</label>
-          <input className="fs-input" type="text" value={editForm.code || ""} disabled placeholder="Auto-generated" style={{ fontFamily: "var(--mono)" }} />
+          <label className="fs-field-label">Code <span className="fs-field-req">*</span></label>
+          <input
+            data-testid="orgs-edit-drawer-code"
+            className={`fs-input${(touched.shortLabel && codeEmpty) || editFieldErrors.shortLabel ? " error" : ""}`}
+            type="text"
+            value={editForm.shortLabel || ""}
+            onChange={(e) => {
+              const shortLabel = e.target.value.toUpperCase();
+              setEditForm((prev) => ({ ...prev, shortLabel, code: shortLabel.toLowerCase().replace(/\s+/g, "-") }));
+              if (editFieldErrors.shortLabel) setEditFieldErrors((prev) => ({ ...prev, shortLabel: "" }));
+            }}
+            onBlur={() => touch("shortLabel")}
+            placeholder="e.g., TEDU-EEE"
+            style={{ textTransform: "uppercase", fontFamily: "var(--mono)" }}
+          />
+          {((touched.shortLabel && codeEmpty) || editFieldErrors.shortLabel) && (
+            <p className="crt-field-error"><AlertCircle size={12} strokeWidth={2} />{editFieldErrors.shortLabel || "Code is required."}</p>
+          )}
         </div>
         <div className="fs-field">
           <label className="fs-field-label">Contact Email</label>
@@ -228,6 +260,7 @@ export function EditOrgDrawer({
               setEditForm((prev) => ({ ...prev, contact_email: e.target.value }));
               if (editFieldErrors.contact_email) setEditFieldErrors((prev) => ({ ...prev, contact_email: "" }));
             }}
+            onBlur={() => touch("contact_email")}
             placeholder="admin@organization.org"
           />
           {editFieldErrors.contact_email && (
@@ -241,10 +274,11 @@ export function EditOrgDrawer({
         <button
           data-testid="orgs-edit-drawer-save"
           className="fs-btn fs-btn-primary"
-          onClick={onSave}
+          onClick={handleSave}
           disabled={
             editSaving ||
-            !(editForm.name || "").trim() ||
+            nameEmpty ||
+            codeEmpty ||
             Object.values(editFieldErrors || {}).some(Boolean)
           }
         >
