@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import "@/styles/showcase-slides.css";
 import { SLIDES } from "./showcase/showcaseData";
 import SlideScreenshot from "./showcase/SlideScreenshot";
-import OutcomeAttainmentChart from "./showcase/OutcomeAttainmentChart";
 
 import { Icon } from "lucide-react";
 
@@ -78,11 +77,7 @@ export default function ProductShowcase() {
                     )}
                   </div>
                   <div className="ps-card-visual">
-                    {s.visual === "outcome-chart" ? (
-                      <OutcomeAttainmentChart />
-                    ) : (
-                      <SlideScreenshot image={s.image} alt={s.title} />
-                    )}
+                    <SlideScreenshot image={s.image} alt={s.title} />
                   </div>
                 </div>
               </div>

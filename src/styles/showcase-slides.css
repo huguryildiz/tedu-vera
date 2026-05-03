@@ -93,40 +93,6 @@ body:not(.dark-mode) .ps-screenshot-dot{
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Outcome Attainment chart slide (slide 03)
-   ═══════════════════════════════════════════════════════════ */
-.ps-chart-window{
-  display:flex;flex-direction:column;
-}
-.ps-chart-header{
-  display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
-  padding:12px 16px 4px;
-  flex-wrap:wrap;
-}
-.ps-chart-title-block{display:flex;flex-direction:column;gap:2px;min-width:0}
-.ps-chart-eyebrow{
-  font-size:12px;font-weight:700;letter-spacing:0.01em;
-  color:var(--text-primary);
-}
-.ps-chart-sub{
-  font-size:10px;color:var(--text-tertiary);
-  font-family:var(--mono);font-feature-settings:"tnum" 1;
-}
-.ps-chart-legend{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.ps-chart-legend-item{
-  display:inline-flex;align-items:center;gap:5px;
-  font-size:10px;font-weight:600;color:var(--text-secondary);
-  letter-spacing:0.01em;
-}
-.ps-chart-legend-item i{
-  width:8px;height:8px;border-radius:2px;display:inline-block;
-}
-.ps-chart-body{
-  padding:2px 12px 12px;
-}
-.ps-chart-body svg{display:block;width:100%;height:auto}
-
-/* ═══════════════════════════════════════════════════════════
    Responsive
    ═══════════════════════════════════════════════════════════ */
 @media(max-width:900px){
