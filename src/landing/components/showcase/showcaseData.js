@@ -54,6 +54,7 @@ export const SLIDES = [
       { label: "Above-threshold deltas", color: "#4ade80", bg: "rgba(34,197,94,0.12)" },
       { label: "MÜDEK / ABET ready", color: "#60a5fa", bg: "rgba(59,130,246,0.12)" },
     ],
+    visual: "outcome-chart",
     image: { light: analyticsLight, dark: analyticsDark },
   },
   {
