@@ -63,6 +63,7 @@ export default defineConfig({
         /e2e\/a11y\//,
         /e2e\/perf\//,
         /e2e\/visual\//,
+        /e2e\/screenshots\//,
       ],
     },
     {
@@ -89,6 +90,13 @@ export default defineConfig({
       // Performance — concurrent-jury load test, manual via perf.yml dispatch.
       name: "perf",
       testMatch: /e2e\/perf\//,
+    },
+    {
+      // Product-tour screenshots — captured against /demo/* (DemoAdminLoader handles auth).
+      // Run manually via `npm run screenshots`; CI drift check via screenshots.yml.
+      // Not in the default PR matrix.
+      name: "screenshots",
+      testMatch: /e2e\/screenshots\/[^_].*\.spec\.(ts|js)$/,
     },
   ],
   webServer: {

@@ -38,6 +38,7 @@ export default function ReadinessPopover({ readiness, onFix }) {
         type="button"
         className={`periods-readiness-badge${isReady ? " ready" : " blocked"}`}
         onClick={() => setIsOpen((o) => !o)}
+        data-testid="readiness-badge"
       >
         {isReady ? (
           <>
@@ -57,6 +58,7 @@ export default function ReadinessPopover({ readiness, onFix }) {
           className="periods-readiness-inspector"
           style={floatingStyle}
           onClick={(e) => e.stopPropagation()}
+          data-testid="readiness-inspector"
         >
           <div className="periods-readiness-inspector-header">
             <div>

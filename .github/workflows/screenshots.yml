@@ -1,0 +1,101 @@
+name: Screenshots
+
+on:
+  pull_request:
+    paths:
+      - 'src/admin/**'
+      - 'src/jury/**'
+      - 'src/styles/**'
+      - 'src/router.jsx'
+      - 'docs/tutorials/**'
+      - 'e2e/screenshots/**'
+      - 'package.json'
+      - 'playwright.config.ts'
+  workflow_dispatch:
+
+concurrency:
+  group: screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screenshots:
+    name: Regenerate + diff screenshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright (Chromium only)
+        run: npx playwright install chromium --with-deps
+
+      - name: Write demo env file
+        run: |
+          cat > .env.local <<EOF
+          VITE_DEMO_SUPABASE_URL=${{ secrets.VITE_DEMO_SUPABASE_URL }}
+          VITE_DEMO_SUPABASE_ANON_KEY=${{ secrets.VITE_DEMO_SUPABASE_ANON_KEY }}
+          VITE_DEMO_ADMIN_EMAIL=${{ secrets.VITE_DEMO_ADMIN_EMAIL }}
+          VITE_DEMO_ADMIN_PASSWORD=${{ secrets.VITE_DEMO_ADMIN_PASSWORD }}
+          VITE_DEMO_ENTRY_TOKEN=${{ secrets.VITE_DEMO_ENTRY_TOKEN }}
+          EOF
+
+      - name: Start dev server
+        run: npm run dev -- --port 5173 &
+        env:
+          VITE_DEMO_SUPABASE_URL: ${{ secrets.VITE_DEMO_SUPABASE_URL }}
+          VITE_DEMO_SUPABASE_ANON_KEY: ${{ secrets.VITE_DEMO_SUPABASE_ANON_KEY }}
+          VITE_DEMO_ADMIN_EMAIL: ${{ secrets.VITE_DEMO_ADMIN_EMAIL }}
+          VITE_DEMO_ADMIN_PASSWORD: ${{ secrets.VITE_DEMO_ADMIN_PASSWORD }}
+          VITE_DEMO_ENTRY_TOKEN: ${{ secrets.VITE_DEMO_ENTRY_TOKEN }}
+
+      - name: Wait for dev server
+        run: npx wait-on http://localhost:5173 --timeout 60000
+
+      - name: Run screenshots
+        run: npm run screenshots
+        env:
+          VITE_DEMO_SUPABASE_URL: ${{ secrets.VITE_DEMO_SUPABASE_URL }}
+          VITE_DEMO_SUPABASE_ANON_KEY: ${{ secrets.VITE_DEMO_SUPABASE_ANON_KEY }}
+          VITE_DEMO_ADMIN_EMAIL: ${{ secrets.VITE_DEMO_ADMIN_EMAIL }}
+          VITE_DEMO_ADMIN_PASSWORD: ${{ secrets.VITE_DEMO_ADMIN_PASSWORD }}
+          VITE_DEMO_ENTRY_TOKEN: ${{ secrets.VITE_DEMO_ENTRY_TOKEN }}
+
+      - name: Check for screenshot drift
+        id: diff
+        run: |
+          if git diff --quiet docs/tutorials/_images/; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --name-only docs/tutorials/_images/
+          fi
+
+      - name: Upload changed screenshots as artifact
+        if: steps.diff.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-${{ github.run_number }}
+          path: docs/tutorials/_images/
+          retention-days: 14
+
+      - name: Comment on PR about screenshot drift
+        if: steps.diff.outputs.changed == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 📸 Screenshots changed in this PR\n\nOne or more product-tour screenshots differ from the committed versions. This is expected when UI changes land.\n\n**To update:**\n1. Download the \`screenshots-${{ github.run_number }}\` artifact from the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).\n2. Review the new PNGs — confirm they look correct.\n3. Copy them into \`docs/tutorials/_images/\` and commit.\n\nOr run locally:\n\`\`\`\nnpm run screenshots\ngit add docs/tutorials/_images/\ngit commit -m "chore(tutorials): refresh screenshots"\n\`\`\`\n\n> This check is informational — it does not block merge.`
+            })

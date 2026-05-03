@@ -9,6 +9,8 @@
 
 # VERA — Documentation
 
+> _Last updated: 2026-05-02_
+
 Multi-tenant academic jury evaluation platform. This directory is the single
 source of truth for architecture, deployment, testing, and design decisions.
 
@@ -28,6 +30,7 @@ source of truth for architecture, deployment, testing, and design decisions.
 
 | Section | Contents |
 | --- | --- |
+| [tutorials/](tutorials/README.md) | **Product tour** — screenshot-driven admin and juror walkthroughs for sales and onboarding conversations. |
 | [architecture/](architecture/README.md) | System design, routing, storage policy, period lifecycle, multi-tenancy, framework outcomes, edge-function patterns, E2E architecture primer. |
 | [decisions/](decisions/README.md) | Architectural Decision Records — pathname routing, no client caching, JWT auth, jury entry token, snapshot migrations. |
 | [walkthroughs/](walkthroughs/README.md) | Tutorial-style end-to-end narratives — jury day, tenant onboarding, period lifecycle, audit trail, multi-tenant data flow. |

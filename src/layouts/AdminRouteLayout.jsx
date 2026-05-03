@@ -303,11 +303,19 @@ export default function AdminRouteLayout() {
 
   // Block direct access to /admin/setup once onboarding is complete: the
   // wizard is single-use, so re-entering its URL bounces back to overview.
+  // Escape hatch for product-tour screenshot capture: `/demo/admin/setup?fresh=1`
+  // bypasses the redirect so the wizard's first step renders. Double-gated on
+  // demo namespace + explicit query param — production never serves `/demo/*`.
   useEffect(() => {
     if (
       currentPage === "setup" &&
       activeOrganization?.setupCompletedAt
     ) {
+      const isDemoFreshTour =
+        typeof window !== "undefined" &&
+        window.location.pathname.startsWith("/demo/") &&
+        new URLSearchParams(window.location.search).get("fresh") === "1";
+      if (isDemoFreshTour) return;
       navigate(`${basePath}/overview`, { replace: true });
     }
   }, [currentPage, activeOrganization?.setupCompletedAt, basePath, navigate]);

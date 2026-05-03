@@ -1,5 +1,7 @@
 # Getting Started
 
+> _Last updated: 2026-05-03_
+
 Bring up a working VERA dev environment. Target: clone to running dev server in
 30 minutes.
 
@@ -36,7 +38,6 @@ Create `.env.local` at the repo root with at minimum:
 ```env
 VITE_SUPABASE_URL=https://<project-ref>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon-key>
-VITE_RPC_SECRET=<vault-rpc_secret-value>   # dev only
 ```
 
 For demo-environment access (used by the `/demo/*` routes and the
@@ -86,6 +87,22 @@ under [qa/](qa/) (and will move to `testing/` in a future restructure session).
 Frontend deploys to Vercel — see [deployment/vercel-deployment.md](deployment/vercel-deployment.md).
 Database migrations and Edge Functions deploy via the Supabase MCP server;
 both prod and demo projects must receive the same change in the same step.
+
+---
+
+## 6. Product tour
+
+To see what VERA looks like from the outside — useful when preparing a demo for a prospective university — open the screenshot-driven product tour:
+
+- [docs/tutorials/README.md](tutorials/README.md) — hub with admin and juror walkthrough links.
+
+To regenerate the screenshots after UI changes:
+
+```bash
+npm run screenshots
+git add docs/tutorials/_images/
+git commit -m "chore(tutorials): refresh screenshots"
+```
 
 ---
 

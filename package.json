@@ -29,6 +29,7 @@
     "allure:open": "allure open test-results/allure-report",
     "e2e": "playwright test",
     "e2e:report": "playwright show-report test-results/playwright-report",
+    "screenshots": "playwright test --project=screenshots",
     "e2e:excel": "node scripts/pw-to-xlsx.cjs",
     "seed:demo": "node scripts/generate_demo_seed.js",
     "report:all": "npm run test:report && npm run e2e && node scripts/generate-test-report.cjs && node scripts/pw-to-xlsx.cjs"

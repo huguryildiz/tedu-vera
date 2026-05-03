@@ -59,13 +59,21 @@ export default function SetupWizardPage() {
   // shows "Your evaluation is ready!" instead of dumping the user back onto
   // step 7 (which reactive derivation would do once all data is in place).
   // Source of truth is the DB-backed organizations.setup_completed_at flag.
+  // Escape hatch for product-tour screenshot capture: `/demo/admin/setup?fresh=1`
+  // forces the wizard to render its first step even when the org has already
+  // completed setup. Double-gated on demo namespace + query param.
+  const isDemoFreshTour =
+    typeof window !== "undefined" &&
+    window.location.pathname.startsWith("/demo/") &&
+    new URLSearchParams(window.location.search).get("fresh") === "1";
   const [showCompletion, setShowCompletion] = useState(
-    () => !!activeOrganization?.setupCompletedAt
+    () => !isDemoFreshTour && !!activeOrganization?.setupCompletedAt
   );
 
   useEffect(() => {
+    if (isDemoFreshTour) return;
     if (activeOrganization?.setupCompletedAt) setShowCompletion(true);
-  }, [activeOrganization?.setupCompletedAt]);
+  }, [activeOrganization?.setupCompletedAt, isDemoFreshTour]);
 
   const periodId = wizardData.periodId;
 
