@@ -1,6 +1,6 @@
 import "./RegisterScreen.css";
 import { useContext, useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import { UserPlus, Eye, EyeOff, Check, AlertCircle, Icon } from "lucide-react";
 import FbAlert from "@/shared/ui/FbAlert";
 import { checkEmailAvailable } from "@/shared/api";
@@ -86,11 +86,16 @@ export default function RegisterScreen({ onSwitchToLogin, onReturnHome, error: e
   // Skip in demo mode: the demo admin is always auto-logged-in so this would
   // immediately redirect away from /demo/register on every visit.
   const isDemo = location.pathname.startsWith("/demo");
-  useEffect(() => {
-    if (!isDemo && !auth?.loading && auth?.user && !auth?.profileIncomplete && auth?.organizations?.length > 0) {
-      navigate(`${base}/admin/overview`, { replace: true });
-    }
-  }, [isDemo, auth?.loading, auth?.user, auth?.profileIncomplete, auth?.organizations?.length, navigate, base]);
+
+  // While auth is resolving (e.g. OAuth callback processing), show nothing to
+  // prevent the form from flashing before the redirect fires.
+  if (!isDemo && auth?.loading) return null;
+
+  // Authenticated user with a complete profile landed here via OAuth redirectTo.
+  // Send them straight to the admin panel without rendering the signup form.
+  if (!isDemo && auth?.user && !auth?.profileIncomplete && auth?.organizations?.length > 0) {
+    return <Navigate to={`${base}/admin/overview`} replace />;
+  }
 
   const isEmailFormatValid = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
   const markTouched = (field) => setTouched((prev) => ({ ...prev, [field]: true }));
