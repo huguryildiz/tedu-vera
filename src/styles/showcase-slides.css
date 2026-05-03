@@ -12,9 +12,11 @@ body:not(.dark-mode) .landing-sandbox-btn{
 .landing-trust-sandbox .landing-proof-live-dot{margin-left:0}
 body:not(.dark-mode) .landing-trust-sandbox{color:#94a3b8}
 
-/* ═══ Product Showcase — New Slide Component Styles ═══ */
+/* ═══════════════════════════════════════════════════════════
+   Product Showcase — slide layout
+   ═══════════════════════════════════════════════════════════ */
 
-/* Override stacked layout → side-by-side grid (matching mockup) */
+/* Override stacked layout → side-by-side grid (text + screenshot). */
 .product-showcase .ps-card-shell{
   display:grid !important;
   grid-template-columns:260px 1fr;
@@ -30,107 +32,73 @@ body:not(.dark-mode) .landing-trust-sandbox{color:#94a3b8}
 .ps-card-feature{display:flex;align-items:center;gap:8px;font-size:12px;color:#cbd5e1;font-weight:500}
 .ps-feature-icon{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
 
-/* ── Jury Flow slide ── */
-
-/* ── Entry Control slide ── */
-
-/* ── Criteria & Outcomes slide ── */
-
-/* ── Management slide ── */
-.ps-mgmt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.ps-mgmt-section{background:rgba(255,255,255,0.02);border:1px solid rgba(148,163,184,0.05);border-radius:7px;padding:10px}
-.ps-mgmt-title{font-size:9.5px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px}
-.ps-mgmt-right{display:flex;flex-direction:column;gap:10px}
-.ps-juror-row{display:flex;align-items:center;gap:7px;padding:3px 0}
-.ps-juror-avatar{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0}
-.ps-juror-info{flex:1;min-width:0}
-.ps-juror-name{font-size:10.5px;font-weight:500;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ps-juror-dept{font-size:8.5px;color:#475569}
-.ps-project-row{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid rgba(148,163,184,0.03)}
-.ps-project-row:last-child{border-bottom:none}
-.ps-project-code{font-family:var(--mono);font-size:9.5px;font-weight:600;color:#93c5fd;flex-shrink:0}
-.ps-project-title{font-size:10.5px;font-weight:500;color:#cbd5e1;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ps-project-team{font-size:8.5px;color:#475569;flex-shrink:0}
-.ps-period-badge{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid rgba(148,163,184,0.04);margin-bottom:5px}
-.ps-period-badge:last-child{margin-bottom:0}
-.ps-period-name{font-size:10.5px;font-weight:500;color:#cbd5e1}
-
-/* ── Overview slide ── */
-.ps-kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
-.ps-kpi-card{background:rgba(255,255,255,0.03);border:1px solid rgba(148,163,184,0.06);border-radius:8px;padding:10px;position:relative;overflow:hidden}
-.ps-kpi-accent{position:absolute;top:0;left:0;right:0;height:2px;border-radius:8px 8px 0 0}
-.ps-kpi-label{font-size:9.5px;color:#64748b;font-weight:500;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:4px}
-.ps-kpi-row{display:flex;align-items:baseline;gap:4px}
-.ps-kpi-value{font-family:var(--mono);font-size:18px;font-weight:700;color:#f1f5f9}
-.ps-kpi-delta{font-size:9px;font-weight:600;color:#4ade80;background:rgba(34,197,94,0.1);padding:1px 5px;border-radius:6px}
-.ps-feed{background:rgba(255,255,255,0.02);border:1px solid rgba(148,163,184,0.05);border-radius:8px;padding:10px}
-.ps-feed-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.ps-feed-title{font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.4px}
-.ps-feed-row{display:flex;align-items:center;gap:8px;padding:4px 0}
-.ps-feed-avatar{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0}
-.ps-feed-text{flex:1;font-size:10.5px;display:flex;gap:4px;min-width:0}
-.ps-feed-who{font-weight:600;color:#cbd5e1;white-space:nowrap}
-.ps-feed-action{color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ps-feed-time{font-family:var(--mono);font-size:9px;color:#475569;flex-shrink:0}
-
-/* ── Evaluation composite slide ── */
-.ps-eval-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.ps-eval-panel{background:rgba(255,255,255,0.02);border:1px solid rgba(148,163,184,0.05);border-radius:7px;padding:10px}
-.ps-eval-panel-title{font-size:9.5px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px}
-.ps-mini-bars{display:flex;align-items:flex-end;gap:6px;height:70px}
-.ps-mini-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end}
-.ps-mini-bar{width:100%;border-radius:3px 3px 1px 1px;min-height:4px}
-.ps-mini-bar-score{font-family:var(--mono);font-size:8.5px;font-weight:600;color:#cbd5e1}
-.ps-mini-bar-label{font-size:7.5px;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:50px;text-align:center}
-.ps-mini-heatmap{display:grid;grid-template-columns:auto repeat(4,1fr);gap:3px;font-size:9px}
-.ps-heatmap-corner{width:24px}
-.ps-heatmap-col-header{font-family:var(--mono);font-size:8px;color:#64748b;text-align:center;font-weight:600}
-.ps-heatmap-row-header{font-family:var(--mono);font-size:8px;color:#64748b;font-weight:600;display:flex;align-items:center}
-.ps-heatmap-cell{font-family:var(--mono);font-size:9px;font-weight:600;text-align:center;padding:3px 2px;border-radius:3px}
-.ps-eval-reviews{background:rgba(255,255,255,0.02);border:1px solid rgba(148,163,184,0.05);border-radius:7px;padding:10px}
-.ps-review-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:10.5px}
-.ps-review-juror{display:flex;align-items:center;gap:6px;min-width:100px}
-.ps-review-avatar{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;flex-shrink:0}
-.ps-review-name{font-size:10px;font-weight:500;color:#cbd5e1;white-space:nowrap}
-.ps-review-project{font-family:var(--mono);font-size:9.5px;color:#64748b;font-weight:600}
-.ps-review-scores{display:flex;gap:8px;margin-left:auto}
-.ps-review-score{font-family:var(--mono);font-size:10px;font-weight:600}
-
-/* Badge extensions */
-.ps-badge.purple{color:#c4b5fd;background:rgba(139,92,246,0.08);border-color:rgba(139,92,246,0.15)}
-.ps-badge.neutral{color:#94a3b8;background:rgba(148,163,184,0.08);border-color:rgba(148,163,184,0.12)}
-
-/* ── Light mode overrides for new slides ── */
 body:not(.dark-mode) .ps-card-feature{color:#475569}
-body:not(.dark-mode) .ps-scoring-project{color:#0f172a}
-body:not(.dark-mode) .ps-criteria-track{background:rgba(15,23,42,0.06)}
-body:not(.dark-mode) .ps-step-done{color:#16a34a;background:rgba(22,163,74,0.06)}
-body:not(.dark-mode) .ps-step-current{color:#2563eb;background:rgba(37,99,235,0.06);border-color:rgba(37,99,235,0.15)}
-body:not(.dark-mode) .ps-step-upcoming{color:#94a3b8}
-body:not(.dark-mode) .ps-step-arrow{color:#cbd5e1}
-body:not(.dark-mode) .ps-kpi-value{color:#0f172a}
-body:not(.dark-mode) .ps-kpi-label{color:#64748b}
-body:not(.dark-mode) .ps-feed-who{color:#0f172a}
-body:not(.dark-mode) .ps-crit-name{color:#0f172a}
-body:not(.dark-mode) .ps-juror-name{color:#0f172a}
-body:not(.dark-mode) .ps-session-name{color:#0f172a}
-body:not(.dark-mode) .ps-project-title{color:#0f172a}
-body:not(.dark-mode) .ps-period-name{color:#0f172a}
-body:not(.dark-mode) .ps-mapping-code{color:#2563eb;background:rgba(37,99,235,0.06)}
-body:not(.dark-mode) .ps-mapping-direct{color:#16a34a;background:rgba(22,163,74,0.06)}
-body:not(.dark-mode) .ps-mapping-indirect{color:#d97706;background:rgba(217,119,6,0.06)}
-body:not(.dark-mode) .ps-heatmap-col-header,
-body:not(.dark-mode) .ps-heatmap-row-header{color:#64748b}
-body:not(.dark-mode) .ps-review-name{color:#0f172a}
-body:not(.dark-mode) .ps-mini-bar-score{color:#0f172a}
 
-/* ── Responsive for new slides ── */
+/* ═══════════════════════════════════════════════════════════
+   Screenshot window — browser-style frame around real product PNG
+   ═══════════════════════════════════════════════════════════ */
+.ps-screenshot-window{
+  display:flex;flex-direction:column;
+  width:100%;
+  border-radius:10px;
+  overflow:hidden;
+  background:rgba(15,23,42,0.55);
+  border:1px solid rgba(148,163,184,0.10);
+  box-shadow:
+    0 12px 36px rgba(0,0,0,0.30),
+    0 4px 12px rgba(0,0,0,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+body:not(.dark-mode) .ps-screenshot-window{
+  background:#ffffff;
+  border-color:rgba(15,23,42,0.10);
+  box-shadow:
+    0 8px 28px rgba(15,23,42,0.10),
+    0 3px 10px rgba(15,23,42,0.06),
+    0 0 0 1px rgba(15,23,42,0.04);
+}
+
+.ps-screenshot-chrome{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 12px;
+  background:rgba(255,255,255,0.04);
+  border-bottom:1px solid rgba(148,163,184,0.08);
+  flex-shrink:0;
+}
+body:not(.dark-mode) .ps-screenshot-chrome{
+  background:#f4f6fa;
+  border-bottom-color:rgba(15,23,42,0.08);
+}
+
+.ps-screenshot-dot{
+  width:9px;height:9px;border-radius:50%;
+  background:rgba(255,255,255,0.10);
+}
+body:not(.dark-mode) .ps-screenshot-dot{
+  background:rgba(15,23,42,0.13);
+}
+
+.ps-screenshot-frame{
+  flex:1;
+  min-height:0;
+  display:flex;
+  background:transparent;
+}
+.ps-screenshot-frame img{
+  display:block;
+  width:100%;
+  height:auto;
+  object-fit:cover;
+  object-position:top left;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════════════ */
 @media(max-width:900px){
   .product-showcase .ps-card-shell{
     grid-template-columns:220px 1fr;gap:20px;min-height:280px;
   }
-  .ps-kpi-strip{grid-template-columns:repeat(2,1fr)}
-  .ps-mgmt-grid,.ps-eval-grid{grid-template-columns:1fr}
   .ps-card-features{gap:4px}
 }
 @media(max-width:700px){
@@ -140,35 +108,5 @@ body:not(.dark-mode) .ps-mini-bar-score{color:#0f172a}
   }
 }
 @media(max-width:600px){
-  .ps-kpi-strip{grid-template-columns:1fr 1fr}
-  .ps-mini-bars{height:50px}
-  .ps-mini-heatmap{font-size:7px;gap:2px}
-  .ps-heatmap-corner{width:18px}
-  .ps-review-juror{min-width:70px}
-  .ps-review-scores{gap:5px}
-  .ps-review-score{font-size:9px}
   .ps-card-features{display:none}
-  .ps-mgmt-grid{grid-template-columns:1fr}
-  .ps-kpi-value{font-size:15px}
-}
-@media(max-width:440px){
-  .product-showcase .ps-card-shell{gap:12px}
-  .ps-kpi-strip{grid-template-columns:1fr 1fr;gap:6px}
-  .ps-kpi-card{padding:8px}
-  .ps-kpi-value{font-size:14px}
-  .ps-kpi-label{font-size:8.5px}
-  .ps-juror-avatar{width:18px;height:18px;font-size:7px}
-  .ps-juror-name{font-size:9.5px}
-  .ps-project-code{font-size:8.5px}
-  .ps-project-title{font-size:9.5px}
-  .ps-mini-bars{height:40px;gap:4px}
-  .ps-mini-bar-score{font-size:7.5px}
-  .ps-mini-bar-label{font-size:7px;max-width:40px}
-  .ps-review-row{gap:5px;font-size:9.5px}
-  .ps-review-juror{min-width:60px}
-  .ps-review-avatar{width:14px;height:14px;font-size:6px}
-  .ps-review-name{font-size:9px}
-  .ps-feed-row{gap:6px}
-  .ps-feed-avatar{width:16px;height:16px;font-size:7px}
-  .ps-feed-text{font-size:9.5px}
 }

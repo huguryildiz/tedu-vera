@@ -1,21 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import "@/styles/showcase-slides.css";
 import { SLIDES } from "./showcase/showcaseData";
-import SlideAnalytics from "./showcase/SlideAnalytics";
-import SlideJuryFlow from "./showcase/SlideJuryFlow";
-import SlideEntryControl from "./showcase/SlideEntryControl";
-import SlideCriteria from "./showcase/SlideCriteria";
-import SlideManagement from "./showcase/SlideManagement";
+import SlideScreenshot from "./showcase/SlideScreenshot";
 
 import { Icon } from "lucide-react";
-
-const VISUAL_MAP = {
-  analytics: SlideAnalytics,
-  juryflow: SlideJuryFlow,
-  entrycontrol: SlideEntryControl,
-  criteria: SlideCriteria,
-  management: SlideManagement,
-};
 
 const INTERVAL = 5500;
 
@@ -64,39 +52,36 @@ export default function ProductShowcase() {
             className="product-showcase-track"
             style={{ transform: `translate3d(-${activeIndex * 100}%, 0, 0)` }}
           >
-            {SLIDES.map((s, i) => {
-              const Visual = VISUAL_MAP[s.theme];
-              return (
-                <div
-                  key={s.theme}
-                  className={`product-showcase-slide${i === activeIndex ? " is-active" : ""}`}
-                >
-                  <div className="ps-card-shell">
-                    <div className="ps-card-meta">
-                      <div className="ps-card-eyebrow">
-                        <span className="ps-eyebrow-dot" style={{ background: s.color, boxShadow: `0 0 8px ${s.color}66` }} />
-                        {s.eyebrow}
+            {SLIDES.map((s, i) => (
+              <div
+                key={s.theme}
+                className={`product-showcase-slide${i === activeIndex ? " is-active" : ""}`}
+              >
+                <div className="ps-card-shell">
+                  <div className="ps-card-meta">
+                    <div className="ps-card-eyebrow">
+                      <span className="ps-eyebrow-dot" style={{ background: s.color, boxShadow: `0 0 8px ${s.color}66` }} />
+                      {s.eyebrow}
+                    </div>
+                    <h3 className="ps-card-title">{s.title}</h3>
+                    <p className="ps-card-desc">{s.desc}</p>
+                    {s.features && (
+                      <div className="ps-card-features">
+                        {s.features.map((f) => (
+                          <div key={f.label} className="ps-card-feature">
+                            <span className="ps-feature-icon" style={{ background: f.bg, color: f.color }}>◆</span>
+                            {f.label}
+                          </div>
+                        ))}
                       </div>
-                      <h3 className="ps-card-title">{s.title}</h3>
-                      <p className="ps-card-desc">{s.desc}</p>
-                      {s.features && (
-                        <div className="ps-card-features">
-                          {s.features.map((f) => (
-                            <div key={f.label} className="ps-card-feature">
-                              <span className="ps-feature-icon" style={{ background: f.bg, color: f.color }}>◆</span>
-                              {f.label}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="ps-card-visual">
-                      <Visual />
-                    </div>
+                    )}
+                  </div>
+                  <div className="ps-card-visual">
+                    <SlideScreenshot image={s.image} alt={s.title} />
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
       </div>

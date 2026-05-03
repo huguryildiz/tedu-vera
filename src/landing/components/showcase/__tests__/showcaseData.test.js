@@ -1,18 +1,21 @@
 import { describe, expect } from "vitest";
 import { qaTest } from "@/test/qaTest";
-import { PROJECTS, JURORS, CRITERIA } from "../showcaseData";
+import { SLIDES } from "../showcaseData";
 
 describe("showcaseData", () => {
   qaTest("coverage.showcase-data.shape", () => {
-    expect(Array.isArray(PROJECTS)).toBe(true);
-    expect(PROJECTS[0]).toHaveProperty("code");
-    expect(PROJECTS[0]).toHaveProperty("score");
-
-    expect(Array.isArray(JURORS)).toBe(true);
-    expect(JURORS[0]).toHaveProperty("name");
-
-    expect(Array.isArray(CRITERIA)).toBe(true);
-    expect(CRITERIA[0]).toHaveProperty("key");
-    expect(CRITERIA[0]).toHaveProperty("max");
+    expect(Array.isArray(SLIDES)).toBe(true);
+    expect(SLIDES.length).toBe(6);
+    for (const slide of SLIDES) {
+      expect(slide).toHaveProperty("theme");
+      expect(slide).toHaveProperty("title");
+      expect(slide).toHaveProperty("desc");
+      expect(slide).toHaveProperty("color");
+      expect(slide.image).toMatchObject({
+        light: expect.any(String),
+        dark: expect.any(String),
+      });
+      expect(Array.isArray(slide.features)).toBe(true);
+    }
   });
 });

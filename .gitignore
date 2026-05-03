@@ -48,3 +48,7 @@ npm-debug.log*
 
 # Supabase local
 supabase/.temp/
+
+# Brainstorming scaffolding (visual companion + spec drafts)
+.superpowers/
+docs/superpowers/

@@ -4,16 +4,29 @@ import { qaTest } from "@/test/qaTest";
 
 vi.mock("../showcase/showcaseData", () => ({
   SLIDES: [
-    { theme: "analytics", eyebrow: "Analytics", title: "Slide A", desc: "desc A", color: "#3b82f6" },
-    { theme: "juryflow", eyebrow: "Jury", title: "Slide B", desc: "desc B", color: "#22c55e" },
+    {
+      theme: "overview",
+      eyebrow: "Overview",
+      title: "Slide A",
+      desc: "desc A",
+      color: "#3b82f6",
+      image: { light: "a-light.png", dark: "a-dark.png" },
+    },
+    {
+      theme: "juryflow",
+      eyebrow: "Jury",
+      title: "Slide B",
+      desc: "desc B",
+      color: "#22c55e",
+      image: { light: "b-light.png", dark: "b-dark.png" },
+    },
   ],
 }));
 
-vi.mock("../showcase/SlideAnalytics", () => ({ default: () => <div>analytics-visual</div> }));
-vi.mock("../showcase/SlideJuryFlow", () => ({ default: () => <div>juryflow-visual</div> }));
-vi.mock("../showcase/SlideEntryControl", () => ({ default: () => null }));
-vi.mock("../showcase/SlideCriteria", () => ({ default: () => null }));
-vi.mock("../showcase/SlideManagement", () => ({ default: () => null }));
+vi.mock("@/shared/theme/ThemeProvider", () => ({
+  useTheme: () => ({ theme: "light" }),
+}));
+
 vi.mock("@/styles/showcase-slides.css", () => ({}));
 
 import ProductShowcase from "../ProductShowcase";
