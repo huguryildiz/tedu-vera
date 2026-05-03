@@ -413,7 +413,7 @@ export default function AdminSidebar({ currentPage, basePath, mobileOpen, onClos
             className="sb-signout-btn"
             type="button"
             data-testid="admin-shell-signout"
-            onClick={async () => { await signOut(); window.location.href = "/"; }}
+            onClick={() => { navigate("/", { replace: true }); signOut(); }}
             aria-label="Sign out"
             title="Sign Out"
           >

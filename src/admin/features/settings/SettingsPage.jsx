@@ -433,12 +433,12 @@ export default function SettingsPage() {
               </div>
               <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap", alignItems: "center" }}>
                 <button className="btn btn-outline btn-sm" onClick={() => setViewSessionsOpen(true)}>View Sessions</button>
-                <button className="btn btn-outline btn-sm" style={{ borderColor: "rgba(225,29,72,0.25)", color: "var(--danger)" }} onClick={async () => { await signOutAll(); window.location.href = "/"; }} title="Sign out from all devices">Sign Out All</button>
+                <button className="btn btn-outline btn-sm" style={{ borderColor: "rgba(225,29,72,0.25)", color: "var(--danger)" }} onClick={() => { navigate("/", { replace: true }); signOutAll(); }} title="Sign out from all devices">Sign Out All</button>
                 <div style={{ flex: 1 }} />
                 <button
                   className="btn btn-outline btn-sm"
                   style={{ borderColor: "rgba(225,29,72,0.25)", color: "var(--danger)" }}
-                  onClick={async () => { await signOut(); window.location.href = "/"; }}
+                  onClick={() => { navigate("/", { replace: true }); signOut(); }}
                 >
                   Sign Out
                 </button>
