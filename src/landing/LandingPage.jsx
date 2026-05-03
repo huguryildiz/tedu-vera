@@ -216,7 +216,7 @@ export function LandingPage() {
                 style={{ opacity: 0.95 }}>
                 <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
               </Icon>
-              Experience Demo
+              Be a Juror
             </span>
           </button>
           <button className="btn-landing-secondary" onClick={() => navigate("/demo")}>
@@ -236,7 +236,7 @@ export function LandingPage() {
               <rect width="7" height="9" x="14" y="12" rx="1.5" />
               <rect width="7" height="5" x="3" y="16" rx="1.5" />
             </Icon>
-            Explore Admin Panel
+            Tour the Admin Panel
           </button>
         </div>
         <p className="landing-cta-hint">Interactive demo with real evaluation data — no sign-up required.</p>
