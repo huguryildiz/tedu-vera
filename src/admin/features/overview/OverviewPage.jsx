@@ -23,8 +23,6 @@ import {
   SendIcon,
   PencilLineIcon,
   CircleSlashIcon,
-  LockIcon,
-  PlayIcon,
   ChevronUpIcon,
   ChevronDownIcon,
 
@@ -33,6 +31,8 @@ import { Users, Trophy, Activity, CheckCircle2, ShieldCheck, Info } from "lucide
 import PremiumTooltip from "@/shared/ui/PremiumTooltip";
 import { TeamMemberNames } from "@/shared/ui/EntityMeta";
 import AvgDonut from "@/admin/shared/AvgDonut";
+import StatusPill from "@/admin/features/periods/components/StatusPill";
+import { getPeriodState } from "@/admin/features/periods/components/periodHelpers";
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -574,26 +574,8 @@ export default function OverviewPage() {
               <div>
                 {!selectedPeriod ? (
                   <span className="text-muted">—</span>
-                ) : selectedPeriod.closed_at ? (
-                  <span className="sem-status sem-status-closed" style={{ fontSize: 10, padding: "2px 8px" }}>
-                    <LockIcon size={10} />
-                    Closed
-                  </span>
-                ) : selectedPeriod.is_locked && rawScores.length > 0 ? (
-                  <span className="sem-status sem-status-live" style={{ fontSize: 10, padding: "2px 8px" }}>
-                    <PlayIcon size={10} />
-                    Live
-                  </span>
-                ) : selectedPeriod.is_locked ? (
-                  <span className="sem-status sem-status-published" style={{ fontSize: 10, padding: "2px 8px" }}>
-                    <SendIcon size={10} />
-                    Published
-                  </span>
                 ) : (
-                  <span className="sem-status sem-status-draft" style={{ fontSize: 10, padding: "2px 8px" }}>
-                    <PencilLineIcon size={10} />
-                    Draft
-                  </span>
+                  <StatusPill status={getPeriodState(selectedPeriod, rawScores.length > 0, null)} />
                 )}
               </div>
             </div>
