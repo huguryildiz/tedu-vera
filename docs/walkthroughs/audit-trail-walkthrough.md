@@ -1,5 +1,7 @@
 # Audit Trail Walkthrough
 
+> _Last updated: 2026-04-28_
+
 **Scenario.** An admin performs three actions in sequence: changes a
 criterion weight, locks a period, and revokes an entry token. This
 walkthrough shows what gets written to `public.audit_logs` for each action,

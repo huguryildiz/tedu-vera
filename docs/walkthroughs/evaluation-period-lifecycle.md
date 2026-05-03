@@ -1,5 +1,7 @@
 # Evaluation Period Lifecycle
 
+> _Last updated: 2026-05-02_
+
 **Scenario.** A tenant-admin runs an evaluation period from creation through
 publication of results. This walkthrough traces the period's state machine —
 the conditions for each transition, what becomes editable and what becomes

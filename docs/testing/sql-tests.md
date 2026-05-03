@@ -1,5 +1,7 @@
 # SQL Tests (pgTAP)
 
+> _Last updated: 2026-04-28_
+
 The pgTAP test suite under [`sql/tests/`](../../sql/tests/) runs against
 an ephemeral Postgres seeded purely from the
 [snapshot migrations](../decisions/0005-snapshot-migrations.md). It is

@@ -1,5 +1,7 @@
 # Pre-Jury-Day Smoke Checklist
 
+> _Last updated: 2026-04-28_
+
 Run this 24 hours before any high-stakes evaluation event. Catches
 regressions that unit + E2E suites would have caught in CI but missed
 because the deploy happened after the suite last ran.

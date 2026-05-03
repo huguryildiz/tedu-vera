@@ -1,5 +1,7 @@
 # Walkthroughs
 
+> _Last updated: 2026-04-28_
+
 End-to-end narratives that show how VERA actually works in operation. Where
 the [architecture/](../architecture/) docs explain *what* a component is and
 [decisions/](../decisions/) explain *why* it was chosen, walkthroughs show

@@ -1,5 +1,7 @@
 # Needs Attention Panel — Overview Page
 
+> _Last updated: 2026-05-03_
+
 The **Needs Attention** card on the Overview page surfaces actionable juror status issues for the active evaluation period. Items are derived entirely from data already loaded by `listJurorsSummary` — no extra API calls.
 
 ## Item Types
@@ -30,9 +32,9 @@ The `isLocked` field maps to `is_blocked` on the `juror_period_auth` table. The 
 
 ## Relevant Files
 
-- `src/admin/pages/OverviewPage.jsx` — `attentionItems` memo (line ~258), bullet rendering (line ~440)
+- `src/admin/features/overview/OverviewPage.jsx` — `attentionItems` memo (line ~258), bullet rendering (line ~440)
 - `src/shared/api/admin/scores.js` — `listJurorsSummary` (maps DB fields to juror objects)
-- `src/admin/hooks/useAdminData.js` — populates `allJurors` state
+- `src/admin/shared/useAdminData.js` — populates `allJurors` state
 
 ---
 
@@ -87,6 +89,6 @@ A `.live-feed-dot` element (CSS-animated pulsing circle) is rendered in the card
 
 ## Relevant Files
 
-- `src/admin/pages/OverviewPage.jsx` — `recentActivity` memo (line ~241), feed rendering (line ~568)
+- `src/admin/features/overview/OverviewPage.jsx` — `recentActivity` memo (line ~241), feed rendering (line ~568)
 - `src/shared/api/admin/scores.js` — `listJurorsSummary` (populates `lastScoredProject`, `lastSeenMs`, `failedAttempts`)
-- `src/admin/hooks/useAdminData.js` — populates `allJurors` state
+- `src/admin/shared/useAdminData.js` — populates `allJurors` state

@@ -93,6 +93,55 @@ body:not(.dark-mode) .ps-screenshot-dot{
 }
 
 /* ═══════════════════════════════════════════════════════════
+   Phone variant — portrait device frame around mobile screenshot
+   ═══════════════════════════════════════════════════════════ */
+.ps-card-visual:has(.ps-screenshot-window--phone){
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px 0;
+}
+.ps-screenshot-window--phone{
+  flex:0 0 auto;
+  width:220px;
+  height:380px;
+  border-radius:30px;
+  padding:8px;
+  background:linear-gradient(180deg,#1f2937 0%,#0f172a 100%);
+  border:1px solid rgba(148,163,184,0.18);
+  box-shadow:
+    0 18px 44px rgba(0,0,0,0.45),
+    0 6px 14px rgba(0,0,0,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 0 0 1px rgba(255,255,255,0.04);
+}
+body:not(.dark-mode) .ps-screenshot-window--phone{
+  background:linear-gradient(180deg,#e2e8f0 0%,#cbd5e1 100%);
+  border-color:rgba(15,23,42,0.18);
+  box-shadow:
+    0 14px 36px rgba(15,23,42,0.18),
+    0 4px 12px rgba(15,23,42,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.7),
+    inset 0 0 0 1px rgba(15,23,42,0.05);
+}
+.ps-screenshot-window--phone .ps-screenshot-frame{
+  border-radius:22px;
+  overflow:hidden;
+  height:100%;
+  width:100%;
+  background:#0f172a;
+}
+body:not(.dark-mode) .ps-screenshot-window--phone .ps-screenshot-frame{
+  background:#ffffff;
+}
+.ps-screenshot-window--phone .ps-screenshot-frame img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:top center;
+}
+
+/* ═══════════════════════════════════════════════════════════
    Responsive
    ═══════════════════════════════════════════════════════════ */
 @media(max-width:900px){

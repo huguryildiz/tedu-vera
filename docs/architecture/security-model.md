@@ -1,5 +1,7 @@
 # Security Model
 
+> _Last updated: 2026-05-03_
+
 Single-page reference for VERA's security guarantees. Use this for compliance
 review, vendor assessment, or any "how does VERA protect tenant data?"
 question. Each guarantee is paired with the enforcement mechanism, the audit
@@ -248,8 +250,11 @@ access grants, and tenant membership are always validated server-side.
 
 - **Supabase keys:** anon key in `VITE_SUPABASE_ANON_KEY` (public,
   safe to bundle); service role key never appears in frontend code.
-- **Vault:** `VITE_RPC_SECRET` is dev-only and refers to a Supabase Vault
-  secret used by some legacy RPCs. Not required in production deployment.
+- **Legacy `VITE_RPC_SECRET`:** historically passed to the retired
+  `rpc-proxy` Edge Function alongside the v1 password-based RPCs. With the
+  JWT migration ([ADR 0003](../decisions/0003-jwt-admin-auth.md)) both the
+  proxy and the v1 RPCs are gone; the variable is no longer required by the
+  running app, only by some legacy Playwright fixtures.
 - **Demo credentials:** `VITE_DEMO_*` env vars carry demo admin email +
   password + entry token. Demo project is intentionally low-stakes; no
   real tenant data lives there.

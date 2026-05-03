@@ -1,5 +1,7 @@
 # Vercel Deployment — VERA
 
+> _Last updated: 2026-05-03_
+
 VERA's frontend is deployed as a static site via Vercel. The Supabase backend (database, Edge Functions) is deployed separately — see [supabase-setup.md](supabase-setup.md).
 
 ---
@@ -36,10 +38,18 @@ In **Project Settings → Environment Variables**, add the following. Apply to t
 | --- | --- | --- |
 | `VITE_SUPABASE_URL` | `https://<project-ref>.supabase.co` | From Supabase Project Settings → API |
 | `VITE_SUPABASE_ANON_KEY` | `eyJ...` | Anon/public key from Supabase |
-| `VITE_DEMO_MODE` | `true` or `false` | Optional. Set `true` for a public demo deployment. |
-| `VITE_DEMO_ADMIN_PASSWORD` | `<password>` | Optional. Only if `VITE_DEMO_MODE=true`. |
+| `VITE_DEMO_SUPABASE_URL` | `https://<demo-ref>.supabase.co` | Demo project URL — required for `/demo/*` routes |
+| `VITE_DEMO_SUPABASE_ANON_KEY` | `eyJ...` | Demo project anon key |
+| `VITE_DEMO_ADMIN_EMAIL` | `<email>` | Email used by the `/demo` auto-login redirect |
+| `VITE_DEMO_ADMIN_PASSWORD` | `<password>` | Password used by the `/demo` auto-login redirect |
+| `VITE_DEMO_ENTRY_TOKEN` | `<token>` | Entry token the demo jury showcase uses |
+| `VITE_TURNSTILE_SITE_KEY` | `0x4AAAAAA…` | Optional — Cloudflare Turnstile site key for the public registration form |
 
-**Do NOT add `VITE_RPC_SECRET` to Vercel.** In production, the RPC secret lives in Supabase Vault and is injected by the `rpc-proxy` Edge Function — it never needs to be in the browser environment.
+**Do NOT add `VITE_RPC_SECRET` to Vercel.** It is no longer used by the
+running app — the historical `rpc-proxy` Edge Function it served was retired
+with the JWT migration ([ADR 0003](../decisions/0003-jwt-admin-auth.md)).
+Admin RPCs are now called directly via `supabase.rpc("rpc_admin_*", …)` and
+gated by `_assert_tenant_admin()` on the JWT.
 
 ---
 
@@ -55,16 +65,17 @@ After configuring environment variables, trigger a deploy:
 ## 5. Verify the Deployment
 
 1. Open the production URL (e.g. `https://vera.vercel.app` or your custom domain).
-2. The home page should load.
-3. Click **Admin Panel** → enter the admin password → the dashboard should load with data from Supabase.
-4. Click **Jury Evaluation** → you should land on the `jury_gate` screen. Follow a valid entry-token link (QR or `?t=<token>`) to reach the evaluation flow.
+2. The landing page should load.
+3. Click **Login** → sign in as a super-admin or org-admin → the Overview
+   page should load with data from Supabase.
+4. Open `/eval` and follow a valid entry-token link (QR or `?eval=<token>`)
+   to reach the jury evaluation flow.
 
-If admin RPCs fail (403/401), verify the `rpc-proxy` Edge Function is deployed and the `RPC_SECRET` Vault secret is set correctly. See [supabase-setup.md](supabase-setup.md).
-
-If the browser shows a CORS error for `rpc-proxy`, also verify Supabase Edge Function secrets:
-
-- `ALLOWED_ORIGINS` includes your active Vercel URL (for example `https://vera-demo.vercel.app`)
-- `ALLOW_WILDCARD_ORIGIN=false` in production
+If admin RPCs fail (401/403), the JWT failed `_assert_tenant_admin()`. Most
+common causes: the user has no membership row in the target organization, the
+membership `status` is not `active`, or the JWT was issued by a different
+Supabase project. Check `mcp__claude_ai_Supabase__get_logs service=postgres`
+for the SQL-level error.
 
 ---
 

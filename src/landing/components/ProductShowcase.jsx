@@ -77,7 +77,7 @@ export default function ProductShowcase() {
                     )}
                   </div>
                   <div className="ps-card-visual">
-                    <SlideScreenshot image={s.image} alt={s.title} />
+                    <SlideScreenshot image={s.image} alt={s.title} variant={s.variant} />
                   </div>
                 </div>
               </div>

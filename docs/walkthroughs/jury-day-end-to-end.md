@@ -1,5 +1,7 @@
 # Jury Day, End to End
 
+> _Last updated: 2026-04-28_
+
 **Scenario.** A tenant runs an evaluation event. The admin mints entry
 tokens for ~10 jurors; jurors arrive at the venue, scan a QR, identify
 themselves, score ~50 student projects, and the period is locked when the

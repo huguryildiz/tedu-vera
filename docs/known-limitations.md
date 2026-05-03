@@ -1,5 +1,7 @@
 # Known Limitations
 
+> _Last updated: 2026-04-28_
+
 What VERA does not yet do, or does only partially. Use this page when
 scoping a tenant onboarding, a compliance review, or a vendor
 assessment — every item below is also surfaced in a more specific

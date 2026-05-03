@@ -1,7 +1,12 @@
 # 0003 — JWT-based admin auth with legacy v1 coexistence
 
-**Status:** Accepted
+**Status:** Accepted (v1 retirement complete)
 **Date:** 2026-04-24
+**Last reviewed:** 2026-05-03 — v1 password-based RPCs and the `rpc-proxy`
+Edge Function that fronted them have been removed from the codebase. `p_secret`
+no longer exists in any migration; `admin_legacy` table is gone. JWT is now
+the sole admin auth path. The "coexistence" rationale below is preserved for
+historical context.
 
 ## Context
 
@@ -30,9 +35,10 @@ JWT and tenant membership. Tenant scope comes from the `memberships` table:
 super-admin has `organization_id IS NULL`; tenant-admin has a row pointing at
 their organization.
 
-Legacy v1 password RPCs are retained **only for backward compatibility** with
-the original admin user pool that has not yet migrated. They are not used by
-new feature work and are subject to removal once the migration is complete.
+Legacy v1 password RPCs were retained **for backward compatibility** during
+the original migration window. As of 2026-05-03 they have been fully removed
+from `sql/migrations/`; no `p_secret`-style admin function remains. The
+`rpc-proxy` Edge Function that wrapped them has likewise been deleted.
 
 ## Consequences
 

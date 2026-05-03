@@ -1,5 +1,7 @@
 # Operations
 
+> _Last updated: 2026-04-28_
+
 Run-time documentation for VERA: how the audit system works in practice,
 incident response playbooks, and the operational shape of database
 migrations and deployments.

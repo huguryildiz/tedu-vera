@@ -1,5 +1,7 @@
 # ADR: Kong JWT Gate Workaround for Edge Functions
 
+> _Last updated: 2026-04-25_
+
 ## Problem
 
 Kong (Supabase's API gateway) historically rejects valid ES256-signed JWTs from Supabase Auth-v1, even when those same tokens are valid within the Supabase Auth API. When a client calls an edge function with a valid JWT in the Authorization header, Kong returns:
@@ -155,6 +157,10 @@ The following edge functions have `verify_jwt: false` and implement custom JWT a
 5. **`send-juror-pin-email`** — Sends PIN via email to jurors
    - `config.toml`: `verify_jwt = false`
    - Custom auth: Public endpoint with rate limiting
+
+6. **`log-export-event`** — Audit-writes an export action via service role
+   - `config.toml`: `verify_jwt = false`
+   - Custom auth: Bearer token → `auth.getUser()` → tenant membership check → service-role audit write
 
 ## Why This Matters
 

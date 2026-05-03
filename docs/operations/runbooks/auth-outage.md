@@ -1,5 +1,7 @@
 # Runbook — Auth Outage
 
+> _Last updated: 2026-04-28_
+
 **Use when:** admins cannot sign in to `/admin`, or sign-in succeeds but
 the admin dashboard never loads (stuck on spinner, redirected to
 `/register`, or stuck on the pending-review screen).

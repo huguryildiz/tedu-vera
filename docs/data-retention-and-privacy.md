@@ -1,5 +1,7 @@
 # Data Retention and Privacy
 
+> _Last updated: 2026-04-28_
+
 What personal data VERA stores, why it's retained, how long, and what
 rights tenants and end-users have. This page is the canonical reference
 for compliance reviews (GDPR, KVKK) and tenant onboarding privacy

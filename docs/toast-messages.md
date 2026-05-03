@@ -1,5 +1,7 @@
 # User-Facing Messages
 
+> _Last updated: 2026-04-29_
+
 Canonical reference for **all** user-facing messages in VERA — toasts, inline errors, validation, and modal feedback. Update this file whenever a message changes.
 
 ## Style Guide

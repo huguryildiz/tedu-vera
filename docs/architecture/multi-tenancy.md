@@ -1,5 +1,7 @@
 # Multi-Tenancy
 
+> _Last updated: 2026-05-03_
+
 VERA is a multi-tenant SaaS. Every record belongs to an organization (a
 "tenant"); every admin action is performed in the context of one tenant; every
 read or write is bound by RLS to the caller's tenant scope. This document
@@ -36,7 +38,6 @@ by an entry token rather than a JWT identity.
 | Tenant-admin | Supabase Auth user + `memberships` row pointing at an org | `auth.users`, `public.memberships`, `public.organizations` |
 | Juror | Server-issued session token, no Auth identity | `public.juror_sessions`, browser storage |
 | Anonymous tenant applicant | Email + form submission, no account | `public.org_applications` |
-| Legacy v1 admin | Shared password, derived token | `public.admin_legacy` (pre-migration; deprecated, not used by new code) |
 
 ---
 

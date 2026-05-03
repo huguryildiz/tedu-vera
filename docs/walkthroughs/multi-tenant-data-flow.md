@@ -1,5 +1,7 @@
 # Multi-Tenant Data Flow
 
+> _Last updated: 2026-05-03_
+
 **Scenario.** A tenant-admin opens the Jurors page and a juror row renders.
 This walkthrough traces the round-trip — from the admin's mouse click in
 the browser to the row appearing on screen — paying attention to every
@@ -151,8 +153,8 @@ the canonical card-section / card-tap rules in `CLAUDE.md`.
 ### The page tries to call a non-existent RPC
 
 - **Where caught:** PostgREST returns 404; API wrapper throws.
-- **Drift sentinel:** `npm run check:rpc-tests` fails CI if `adminApi.js`
-  references an RPC that no longer exists.
+- **Drift sentinel:** `npm run check:rpc-tests` fails CI if any module under
+  `src/shared/api/admin/` references an RPC that no longer exists.
 
 ### The DB type contract drifts
 

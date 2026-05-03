@@ -1,5 +1,7 @@
 # Design Reference
 
+> _Last updated: 2026-05-02_
+
 UI mockups and design concepts for VERA. The folder is split into a small
 canonical reference set and a date-grouped archive of historical exploration.
 

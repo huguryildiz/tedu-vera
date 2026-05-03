@@ -1,5 +1,7 @@
 # E2E Tests (Playwright)
 
+> _Last updated: 2026-04-28_
+
 Playwright-driven end-to-end tests in `e2e/` — real browser against the
 real `vera-demo` Supabase project. Asserts user-visible behavior through
 the full stack (Vercel → Kong → PostgREST → Postgres → RLS).

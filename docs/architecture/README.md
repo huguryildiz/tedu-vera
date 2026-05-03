@@ -1,5 +1,7 @@
 # Architecture
 
+> _Last updated: 2026-04-28_
+
 System design, routing, storage, multi-tenant patterns, and integration
 references. Start with [system-overview.md](system-overview.md) and branch into
 the topic you need.

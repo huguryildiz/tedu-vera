@@ -68,6 +68,7 @@ export const SLIDES = [
       { label: "Mobile-first scoring grid", color: "#60a5fa", bg: "rgba(59,130,246,0.12)" },
     ],
     image: { light: juryflowLight, dark: juryflowDark },
+    variant: "phone",
   },
   {
     theme: "periods",

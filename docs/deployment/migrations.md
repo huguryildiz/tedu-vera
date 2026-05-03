@@ -1,5 +1,7 @@
 # Database Migrations — Operational Guide
 
+> _Last updated: 2026-04-28_
+
 How migrations are applied, in what order, to which projects. Why migrations
 are organized this way is in
 [decisions/0005-snapshot-migrations.md](../decisions/0005-snapshot-migrations.md);

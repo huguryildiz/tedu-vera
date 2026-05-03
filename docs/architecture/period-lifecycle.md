@@ -1,5 +1,7 @@
 # Period Lifecycle & Publish Model
 
+> _Last updated: 2026-05-03_
+
 This document describes how a period moves from creation to completion in VERA — the five lifecycle states, the transitions between them, the readiness checklist gating publish, and the admin journey through each stage.
 
 ---
@@ -62,7 +64,7 @@ function getPeriodState(period, hasScores, readiness) {
 }
 ```
 
-Implementation: [src/admin/pages/PeriodsPage.jsx:90](src/admin/pages/PeriodsPage.jsx#L90).
+Implementation: [src/admin/features/periods/PeriodsPage.jsx](../../src/admin/features/periods/PeriodsPage.jsx).
 
 **Draft · Incomplete ↔ Draft · Ready is not a transition.** It is a computed UI attribute of Draft driven by the readiness check. Editing criteria or projects can flip a period between the two sub-states without any admin action.
 

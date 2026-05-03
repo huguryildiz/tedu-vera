@@ -1,6 +1,14 @@
 # Supabase Setup — VERA
 
+> _Last updated: 2026-05-03_
+
 How to set up a Supabase project for VERA (new installation or new environment).
+
+VERA uses two Supabase projects in production: **vera-prod** (real data) and
+**vera-demo** (showcase / sandbox). Every schema change and Edge Function
+deployment runs on **both** projects in the same step. See
+[`.claude/rules/db-migrations.md`](../../.claude/rules/db-migrations.md) for
+the full policy.
 
 ---
 
@@ -8,140 +16,179 @@ How to set up a Supabase project for VERA (new installation or new environment).
 
 1. Go to [supabase.com](https://supabase.com) and sign in.
 2. Click **New project**.
-3. Choose an organization, name the project (e.g. `vera-production` or `vera-dev`), set a database password, and select a region.
+3. Choose an organization, name the project (e.g. `vera-prod` or `vera-demo`),
+   set a database password, and select a region.
 4. Wait for the project to finish provisioning (~2 minutes).
+
+Repeat for the second environment if this is a fresh installation.
 
 ---
 
 ## 2. Apply the Database Schema
 
-The full schema (tables, RLS policies, RPC functions, triggers, grants) lives in `sql/000_bootstrap.sql`.
+The schema is **snapshot-based**: every migration file represents the final
+state of one subsystem rather than an incremental patch. Files live in
+[`sql/migrations/`](../../sql/migrations/) and must be applied in numeric order
+**from a fresh database**:
 
-### Option A — Supabase Studio SQL Editor (recommended for first setup)
+```text
+000_dev_teardown            (dev only — never apply to live prod)
+001_extensions
+002_tables
+003_helpers_and_triggers
+004_rls
+005_rpcs_jury
+006a_rpcs_admin
+006b_rpcs_admin
+007_identity
+008_platform
+009_audit
+```
 
-1. In your Supabase project, go to **SQL Editor**.
-2. Open `sql/000_bootstrap.sql` from this repository.
-3. Paste the entire contents into the editor and click **Run**.
-4. Verify no errors. All tables, functions, and grants should be created.
+### Option A — Supabase MCP (recommended)
 
-### Option B — Supabase CLI
+If you have the Supabase MCP available, apply each file via
+`mcp__claude_ai_Supabase__apply_migration` against the project ref. Apply to
+both `vera-prod` and `vera-demo` in lockstep.
+
+### Option B — Supabase Studio SQL Editor
+
+1. In your Supabase project, open **SQL Editor**.
+2. For each file `001_extensions.sql` … `009_audit.sql` (skip `000_dev_teardown`
+   on prod), open the file from this repository, paste the contents, and run.
+3. Verify there are no errors after each step.
+
+`sql/README.md` is the authoritative module index.
+
+> The `supabase/migrations/` folder is **not** the source of truth. The files
+> under `sql/migrations/` are.
+
+---
+
+## 3. Load Demo Seed (demo project only)
+
+For the demo environment, regenerate and apply the demo seed:
 
 ```bash
-supabase db push --db-url "postgresql://postgres:<password>@<host>:5432/postgres"
+node scripts/generate_demo_seed.js
 ```
 
-> Note: `sql/000_bootstrap.sql` is the authoritative schema, not the `supabase/migrations/` folder. Apply it directly.
+Then apply `sql/seeds/demo_seed.sql` against **vera-demo only**. Never apply
+the demo seed to the production project. The seed file is regenerated, not
+checked in as a manually maintained artifact.
 
 ---
 
-## 3. Load Seed Data (dev/staging only)
+## 4. Bootstrap the First Super-Admin
 
-For development or demo environments, apply the dummy seed data:
+Admin auth is JWT-based (Supabase Auth). There is no shared admin password and
+no `rpc_admin_bootstrap_password` RPC.
 
-1. In the SQL Editor, paste and run `sql/001_dummy_seed.sql`.
-2. This creates a test semester, sample projects, and test jurors.
+1. Sign up the founding admin via **Authentication → Users → Add user** in the
+   Supabase dashboard, or via the email/password sign-up flow on the deployed
+   app.
+2. Insert their `memberships` row with `organization_id IS NULL` and
+   `role = 'super_admin'` directly in the SQL Editor:
 
-> Do not apply seed data to a production database.
+   ```sql
+   INSERT INTO memberships (user_id, organization_id, role, status)
+   VALUES ('<auth.users.id>', NULL, 'super_admin', 'active');
+   ```
 
----
+3. The user can now log in and reach the super-admin surfaces (Organizations,
+   Audit Log, Maintenance Mode, …).
 
-## 4. Set the Admin Password
-
-The admin password is stored as a bcrypt hash in the `settings` table. Use the
-bootstrap RPC functions in the SQL Editor:
-
-```sql
--- Set the initial admin password (only works when no password is set yet)
-SELECT rpc_admin_bootstrap_password('your-chosen-admin-password');
-```
-
-The admin password can also be changed later from the admin panel → Security tab.
-Delete and backup operations are secured by JWT auth + role checks + audit logging.
+Subsequent tenant admins are added via the in-app invite flow
+(`invite-org-admin` Edge Function) or by accepting an `org_application`.
 
 ---
 
-## 5. Deploy the Edge Function
+## 5. Deploy the Edge Functions
 
-The `rpc-proxy` Edge Function proxies admin RPC calls in production so that `RPC_SECRET` never reaches the browser.
-
-**Install Supabase CLI** (if not already installed):
+VERA ships ~21 Edge Functions in [`supabase/functions/`](../../supabase/functions/).
+They are deployed via the Supabase MCP (preferred) or the Supabase CLI, and
+**must be deployed to both vera-prod and vera-demo** in the same step.
 
 ```bash
-npm install -g supabase
+# CLI fallback (run twice, once per project):
+supabase link --project-ref <project-ref>
+supabase functions deploy <function-name>
 ```
 
-### Link your project
+Auth posture varies per function — see each function's `config.toml`. The full
+catalog and deployment rules live in
+[`docs/architecture/email-notifications.md`](../architecture/email-notifications.md)
+and [`.claude/rules/edge-functions.md`](../../.claude/rules/edge-functions.md).
 
-```bash
-supabase link --project-ref <your-project-ref>
-```
-
-The project ref is the string in your Supabase project URL: `https://supabase.com/dashboard/project/<project-ref>`.
-
-### Deploy the function
-
-```bash
-supabase functions deploy rpc-proxy
-```
+There is **no** `rpc-proxy` Edge Function in current VERA. Admin RPCs are
+called directly via `supabase.rpc("rpc_admin_*", …)` and gated by
+`_assert_tenant_admin()` / `_assert_super_admin()` on the JWT (see
+[ADR 0003](../decisions/0003-jwt-admin-auth.md)).
 
 ---
 
-## 6. Set the Vault Secret
+## 6. Configure Edge Function Secrets
 
-The Edge Function reads `RPC_SECRET` from Supabase Vault at runtime. Set it in the Supabase dashboard:
+In **Project Settings → Edge Functions → Secrets**, set the secrets the email
+and notification functions need. The full table lives in
+[`environment-variables.md`](environment-variables.md). At minimum:
 
-1. Go to **Project Settings → Vault**.
-2. Create a new secret named `RPC_SECRET`.
-3. Set the value to a random string (e.g. output of `openssl rand -hex 32`).
-4. Save.
+- `RESEND_API_KEY` — required for any function that sends email
+- `NOTIFICATION_FROM`, `NOTIFICATION_LOGO_URL`, `NOTIFICATION_APP_URL` —
+  optional branding overrides
 
-This same value is used in `.env.local` as `VITE_RPC_SECRET` for local development (where the Edge Function is not involved).
-
----
-
-## 7. Configure Edge Function CORS Origins
-
-The `rpc-proxy` function enforces an origin whitelist. If this is missing or incorrect, admin login fails in the browser with a CORS error.
-
-In **Supabase Dashboard → Edge Functions → `rpc-proxy` → Secrets**, set:
-
-- `ALLOWED_ORIGINS` as a comma-separated list of exact frontend origins (no trailing `/`), for example:
-  - `https://vera-demo.vercel.app,https://vera.example.com,http://localhost:5173`
-- `ALLOW_WILDCARD_ORIGIN=false` in production.
-
-Use wildcard patterns (for example `https://*.vercel.app`) only when `ALLOW_WILDCARD_ORIGIN=true`, and only in non-production environments.
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are auto-injected by the
+runtime; do not set them by hand.
 
 ---
 
-## 8. Configure `.env.local`
+## 7. Configure `.env.local`
 
-Copy your project credentials to `.env.local`:
+Copy your project credentials to `.env.local` at the repo root:
 
 ```env
-VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_URL=https://<prod-project-ref>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon-key-from-project-settings>
-VITE_RPC_SECRET=<same-value-you-set-in-vault>
+
+# Demo environment (drives /demo/* routes + auto-login)
+VITE_DEMO_SUPABASE_URL=https://<demo-project-ref>.supabase.co
+VITE_DEMO_SUPABASE_ANON_KEY=<demo-anon-key>
+VITE_DEMO_ADMIN_EMAIL=<demo-admin-email>
+VITE_DEMO_ADMIN_PASSWORD=<demo-admin-password>
+VITE_DEMO_ENTRY_TOKEN=<demo-entry-token>
 ```
 
 Find the URL and anon key in **Project Settings → API**.
 
 ---
 
-## 9. Verify
+## 8. Verify
 
-Start the dev server and test the connection:
+Start the dev server:
 
 ```bash
 npm run dev
 ```
 
 1. Open `http://localhost:5173`.
-2. Click **Admin Panel** — enter the password you set in step 4. The Overview tab should load (empty data is fine for a fresh setup).
-3. In the admin panel → Settings → Permissions, generate an entry token for the active semester.
-4. Click **Jury Evaluation** — you should be redirected to the `jury_gate` screen. Enter the entry token (or follow the QR link) to proceed to the evaluation flow.
+2. Click **Login**, sign in with the super-admin you bootstrapped in step 4.
+   The Overview page should load (empty data is fine on a fresh project).
+3. From **Organizations**, create a test organization and assign yourself as
+   its owner-admin (or invite a separate admin).
+4. As the org admin, set up a Period via the Setup Wizard (`/admin/setup`):
+   pick the framework, configure criteria, add a project + juror, generate an
+   entry token.
+5. Open the entry-token URL in a private window — you should land on the
+   `/eval` gate, then progress through `identity → period → pin → progress
+   → evaluate → complete`.
 
 ---
 
 ## RLS Note
 
-RLS (Row Level Security) is enabled by the bootstrap SQL with a default-deny policy. All table access goes through `SECURITY DEFINER` RPC functions. Never disable RLS on production tables.
+Row Level Security is enabled on every tenant-scoped table by `004_rls.sql`.
+All admin writes flow through `SECURITY DEFINER` RPC functions that re-assert
+caller identity via `_assert_tenant_admin(p_org_id)` (or
+`_assert_super_admin()` for platform-level RPCs). Never disable RLS on a
+production table; the drift sentinel `npm run check:rls-tests` will fail CI
+if a tenant-scoped table is added without matching RLS coverage.

@@ -1,7 +1,9 @@
 # 0002 — No client-side data caching
 
-**Status:** Accepted
+**Status:** Accepted (with one narrow exception — see Decision § "Per-period
+Reviews memo")
 **Date:** 2026-04-24
+**Last reviewed:** 2026-05-03
 
 ## Context
 
@@ -30,6 +32,16 @@ all admin panel views. It does **not** apply to:
   `src/config.js`) — bundled with the build.
 - Realtime subscriptions — `useAdminRealtime` keeps a live connection, which
   is push-based, not cached.
+- **Per-period Reviews memo (narrow exception):** the Reviews "details" view
+  in `src/admin/shared/useAdminData.js` keeps a module-level `Map` keyed by
+  `(orgId, periodId)` so that switching between *already-loaded* periods
+  inside a single Reviews session does not re-fetch every period from
+  scratch. The cache entry is populated on first view of a period and
+  invalidated explicitly by `useAdminRealtime` when score events for that
+  period arrive. New periods always fetch; the Reviews surface itself
+  re-fetches its sortedPeriods list on mount. This is the only data cache
+  in the admin panel; no other surface (Overview, Rankings, Heatmap,
+  Analytics, Audit) uses one.
 
 ## Consequences
 
@@ -72,6 +84,10 @@ How we know this decision is still in force:
 - **Negative-presence check:** the project does not depend on `react-query`,
   `swr`, or any cache library. If `package.json` ever grows such a
   dependency, this ADR is being violated.
+- **Scope of the Reviews exception:** the only legitimate `new Map()` cache
+  in admin code is `detailsCache` in `src/admin/shared/useAdminData.js`. Any
+  other module-level `Map`/`WeakMap` holding server data is a violation —
+  inspect the diff and either invalidate via realtime or remove.
 - **No audit signal.** Caching is a client-side absence; there is no event
   that fires when caching is correctly *not* happening. Detection is by
   inspection during incident review.

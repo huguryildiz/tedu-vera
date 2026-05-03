@@ -1,5 +1,7 @@
 # Audit Log Improvement Roadmap
 
+> _Last updated: 2026-04-28_
+
 > [!NOTE]
 > All five items below were addressed in the 2026-04-28 audit-hardening pass.
 > See [audit-coverage.md](./audit-coverage.md) for the current state.

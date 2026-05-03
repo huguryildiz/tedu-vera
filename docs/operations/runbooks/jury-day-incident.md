@@ -1,5 +1,7 @@
 # Runbook — Jury Day Incident
 
+> _Last updated: 2026-04-28_
+
 **Use when:** an evaluation session is in progress and something is
 failing for one or more jurors or for the admin monitoring the session.
 

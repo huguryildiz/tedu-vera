@@ -1,5 +1,7 @@
 # E2E Testing Primer — Auth, RPCs, Timing, and Known Traps
 
+> _Last updated: 2026-05-03_
+
 **Audience:** Any engineer (or agent) about to write or modify an E2E spec in this repo.
 **Purpose:** Capture the implicit architectural rules that E2E tests keep re-discovering sprint after sprint, so you don't waste a window relearning them.
 **Read this primer end-to-end before your first spec.** It's ~15 minutes and will save you significant debugging time.
@@ -64,14 +66,15 @@ The hook's useEffect is keyed on `[enabled]`, so when `enabled` flips to true, t
 
 ### Client-side dispatch
 
-Admin API modules in `src/shared/api/admin/**` call `supabase.rpc("rpc_admin_*", { ... })` directly in dev and route through the `rpc-proxy` Edge Function in prod:
+Admin API modules in `src/shared/api/admin/**` call
+`supabase.rpc("rpc_admin_*", { ... })` directly. The historical `rpc-proxy`
+Edge Function was retired with the JWT migration
+([ADR 0003](../decisions/0003-jwt-admin-auth.md)) — there is no longer a
+"prod uses a different transport" branch to reason about.
 
-```js
-// src/shared/api/core/invokeRpc.js (or equivalent)
-const USE_PROXY = !import.meta.env.DEV;
-```
-
-**E2E runs in dev mode** (Vite dev server started by Playwright's `webServer`), so `USE_PROXY = false` and RPCs go direct to PostgREST. You will almost never need to worry about the proxy in E2E.
+**E2E runs in dev mode** (Vite dev server started by Playwright's `webServer`),
+so RPC dispatch is identical to a real production call: caller JWT → PostgREST
+→ `SECURITY DEFINER` RPC → `_assert_tenant_admin()` / `_assert_super_admin()`.
 
 ### Server-side reception
 
@@ -150,11 +153,12 @@ Playwright loads env vars in this order (see `playwright.config.ts`):
 2. `.env.local` (override: false, backfill only)
 
 **Use `.env.e2e.local` for everything E2E-specific**, including:
-- `VITE_SUPABASE_URL` (points to vera-demo: `https://<demo-ref>.supabase.co`)
-- `VITE_SUPABASE_ANON_KEY`
-- `VITE_RPC_SECRET`
+- `E2E_SUPABASE_URL` (the dedicated E2E project — must not equal `VITE_SUPABASE_URL`; helpers guard against this to prevent accidental prod writes)
+- `E2E_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (used only by server-side seed scripts)
 - `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`
 - `E2E_BASE_URL` (default `http://localhost:5173`)
+- Per-area tenant / period IDs (`E2E_ORG_ID`, `E2E_CRITERIA_ORG_ID`, `E2E_CRITERIA_PERIOD_ID`, `E2E_PERIODS_ORG_ID`, …) — see `deployment/environment-variables.md`
 
 Never put E2E credentials in `.env.local` — that's the dev-mode file and can lead to prod/E2E mixing.
 

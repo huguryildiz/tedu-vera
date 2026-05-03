@@ -1,5 +1,7 @@
 # FbAlert Migration Audit
 
+> _Last updated: 2026-04-29_
+
 All inline `fs-alert` raw div patterns have been replaced with the canonical `<FbAlert>` component from `src/shared/ui/FbAlert.jsx`.
 
 ## What Changed

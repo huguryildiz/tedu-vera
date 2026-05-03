@@ -1,5 +1,7 @@
 # Glossary
 
+> _Last updated: 2026-05-02_
+
 VERA combines academic accreditation vocabulary with multi-tenant SaaS
 patterns. This page defines the terms that appear in code, schema, audit
 events, and the rest of the docs — in one place.

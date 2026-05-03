@@ -1,5 +1,7 @@
 # Backup and Recovery
 
+> _Last updated: 2026-04-28_
+
 How VERA backs up tenant data, what gets backed up, where the backups
 live, and how to recover from common loss scenarios. Read this before
 the incident, not during.

@@ -1,5 +1,7 @@
 # Email Notifications
 
+> _Last updated: 2026-05-03_
+
 VERA sends transactional emails through [Resend](https://resend.com) via Supabase Edge Functions.
 All functions live under `supabase/functions/` and are deployed to both **vera-prod** and **vera-demo**.
 
@@ -31,38 +33,7 @@ All functions check `NOTIFICATION_LOGO_URL` first; if empty, the hardcoded publi
 
 ## Email Functions
 
-### 1. `notify-application`
-
-Handles all admin application lifecycle events in one function.
-
-| Event | Trigger | Recipients |
-|---|---|---|
-| `application_submitted` | New tenant admin applies | Org admins (TO) + super admins (CC, if `ccOnTenantApplication` policy is on) |
-| `application_approved` | Super admin approves application | Applicant (TO) + super admins (CC, if policy on) |
-| `application_rejected` | Super admin rejects application | Applicant (TO) + super admins (CC, if policy on) |
-
-**Org name resolution:** All three event types resolve the organization name directly from the DB
-using `tenant_id`. `tenant_name` in the payload is only a fallback for cases where `tenant_id`
-is absent. This means approved/rejected emails always show the correct org name even when
-`tenant_name` is passed as an empty string.
-
-**Payload:**
-
-```json
-{
-  "type": "application_submitted | application_approved | application_rejected",
-  "application_id": "uuid",
-  "recipient_email": "applicant@email.com",
-  "tenant_id": "uuid",
-  "applicant_name": "Dr. Elif Yıldız",
-  "applicant_email": "elif@tedu.edu.tr",
-  "tenant_name": "TED University"
-}
-```
-
----
-
-### 2. `invite-org-admin`
+### 1. `invite-org-admin`
 
 Invites a new user to join an organization as an admin. Sends a Supabase native invite
 email with an accept link. If the user already has a VERA account, adds them directly
@@ -80,7 +51,7 @@ without sending an email.
 
 ---
 
-### 3. `password-reset-email`
+### 2. `password-reset-email`
 
 Generates a Supabase password recovery link via the admin API and sends a branded
 reset email. Called from the admin's "Forgot Password" flow.
@@ -95,7 +66,7 @@ reset email. Called from the admin's "Forgot Password" flow.
 
 ---
 
-### 4. `password-changed-notify`
+### 3. `password-changed-notify`
 
 Notifies a user that their password was successfully changed.
 
@@ -110,7 +81,7 @@ Notifies a user that their password was successfully changed.
 
 ---
 
-### 5. `send-juror-pin-email`
+### 4. `send-juror-pin-email`
 
 Sends a juror their newly generated or reset PIN. Optionally includes a QR code
 and "Join Evaluation" button if an entry token URL is provided.
@@ -131,7 +102,7 @@ and "Join Evaluation" button if an entry token URL is provided.
 
 ---
 
-### 6. `send-entry-token-email`
+### 5. `send-entry-token-email`
 
 Sends an evaluation access link (QR token URL) to a recipient. Includes a scannable
 QR code and a direct "Join Evaluation" button. Called from the admin Entry Control page.
@@ -150,7 +121,7 @@ QR code and a direct "Join Evaluation" button. Called from the admin Entry Contr
 
 ---
 
-### 7. `request-pin-reset`
+### 6. `request-pin-reset`
 
 Sent to the organization's admins when a juror is locked out after too many failed
 PIN attempts. Super admins are CC'd when the `ccOnPinReset` security policy is on (default: true).
@@ -168,7 +139,7 @@ PIN attempts. Super admins are CC'd when the `ccOnPinReset` security policy is o
 
 ---
 
-### 8. `request-score-edit`
+### 7. `request-score-edit`
 
 Sent to the organization's admins when a juror who has already submitted their scores
 requests the ability to edit them. Validates the juror's session token before sending.
@@ -186,7 +157,7 @@ requests the ability to edit them. Validates the juror's session token before se
 
 ---
 
-### 9. `send-export-report`
+### 8. `send-export-report`
 
 Sends an evaluation report file (XLSX, CSV, or PDF) as an email attachment to one or
 more recipients. Called from the admin Send Report dialog.
@@ -211,7 +182,7 @@ more recipients. Called from the admin Send Report dialog.
 
 ---
 
-### 10. `notify-maintenance`
+### 9. `notify-maintenance`
 
 Sends a scheduled maintenance notice to all org admin users. Called by the super admin
 from the Maintenance Mode panel.
@@ -228,6 +199,66 @@ from the Maintenance Mode panel.
 
 ---
 
+### 10. `email-verification-send`
+
+Issues a single-use email verification token and sends a branded verification email.
+Used during registration / register-from-application and when an admin re-requests
+verification from the unverified-banner.
+
+**Payload:**
+
+```json
+{
+  "email": "newadmin@tedu.edu.tr",
+  "displayName": "Dr. Mehmet Yılmaz"
+}
+```
+
+---
+
+### 11. `email-verification-confirm`
+
+Validates the token from the verification link and marks the user's email as
+verified. Writes a corresponding `auth.email.verified` audit row (fire-and-forget —
+audit failure does not break verification). Called by the `/verify-email` route.
+
+**Payload:**
+
+```json
+{
+  "token": "..."
+}
+```
+
+---
+
+### 12. `notify-juror`
+
+Generic juror-facing notification dispatcher. Used by admin flows that need to
+inform a juror of an event (e.g. score-edit window opened, evaluation reopened).
+
+**Payload:** event-typed; see `supabase/functions/notify-juror/index.ts` for the
+schema variants.
+
+---
+
+### 13. `notify-unlock-request`
+
+Sent to org admins when a juror or peer admin requests that a locked period be
+unlocked for editing. Surfaces the request in the Unlock Requests panel and via email.
+
+**Payload:**
+
+```json
+{
+  "periodId": "uuid",
+  "requesterName": "Dr. Ayşe Kaya",
+  "reason": "Need to correct a juror's mis-entered score before publication."
+}
+```
+
+---
+
 ## Security Policy CC Flags
 
 Several functions respect CC flags stored in the `security_policy` table.
@@ -237,7 +268,7 @@ These are checked via the shared helper `supabase/functions/_shared/super-admin-
 |---|---|---|
 | `ccOnPinReset` | `true` | `request-pin-reset` |
 | `ccOnScoreEdit` | `false` | `request-score-edit` |
-| `ccOnTenantApplication` | `true` | `notify-application` |
+| `ccOnTenantApplication` | `true` | (reserved — flag is read by the Settings UI but no current Edge Function consumes it; tenant application emails were retired with the legacy `notify-application` function) |
 
 ---
 
@@ -256,15 +287,14 @@ Open it directly in a browser.
 |---|---|
 | Password Reset | `password-reset-email` |
 | Password Changed | `password-changed-notify` |
-| Application Approved | `notify-application` |
-| Application Rejected | `notify-application` |
-| Application Submitted | `notify-application` |
+| Email Verification | `email-verification-send` |
 | Juror PIN | `send-juror-pin-email` |
 | Entry Token | `send-entry-token-email` |
 | Export Report | `send-export-report` |
 | Maintenance Notice | `notify-maintenance` |
 | PIN Reset Request | `request-pin-reset` |
 | Score Edit Request | `request-score-edit` |
+| Unlock Request | `notify-unlock-request` |
 | Org Admin Invite | `invite-org-admin` |
 
 ---
@@ -281,14 +311,26 @@ Provides two helpers used by functions that need to CC super admins:
 When deploying functions that use these helpers via the Supabase MCP tool, the cross-directory
 import `../_shared/super-admin-cc.ts` cannot be resolved by the bundler. In that case, inline
 the helper functions directly into `index.ts` for deployment. The source file remains canonical
-at `supabase/functions/_shared/super-admin-cc.ts`; `notify-application` currently ships with
-the helpers inlined.
+at `supabase/functions/_shared/super-admin-cc.ts`.
 
 ---
 
 ## Deployment
 
-Both **vera-prod** (`etxgvkvxvbyserhrugjw`) and **vera-demo** (`kmprsxrofnemmsryjhfj`)
-must be kept in sync. All 10 functions have `verify_jwt: false` — they use custom
-auth (session token validation, service role key) or are called only from trusted
-admin surfaces.
+Both **vera-prod** and **vera-demo** must be kept in sync — every function
+deployment is done twice via the Supabase MCP, once per project ref. A function
+present in vera-prod but missing in vera-demo will silently fail in the demo
+environment.
+
+**Auth posture varies per function** (see each function's `config.toml`):
+
+- `verify_jwt = false` — Kong skips JWT validation; the function does its own auth
+  (session token, service role check, custom token). Used by:
+  `admin-session-touch`, `email-verification-confirm`, `invite-org-admin`,
+  `log-export-event`, `send-juror-pin-email`.
+- Default (Kong validates the caller JWT before invoking) — the rest of the
+  functions, including all admin-triggered email senders.
+
+When changing `verify_jwt`, update both the `config.toml` and the in-function
+auth checks. See `.claude/rules/edge-functions.md` for the diagnostic playbook
+(`execution_time_ms ≈ 0` → Kong rejection; `> 50ms` → in-function error).

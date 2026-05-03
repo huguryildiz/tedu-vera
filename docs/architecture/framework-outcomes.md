@@ -1,5 +1,7 @@
 # Framework Outcomes Reference
 
+> _Last updated: 2026-04-26_
+
 All framework outcomes defined in the VERA demo seed. Each entry: `code`, `label` (short display name), `description` (full text).
 
 - [Framework & Criteria Set Names](#framework--criteria-set-names)

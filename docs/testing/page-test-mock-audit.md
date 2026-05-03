@@ -1,5 +1,7 @@
 # Page-Test Mock Discipline
 
+> _Last updated: 2026-04-28_
+
 This guide governs how admin **page** component tests (`*Page.test.jsx`)
 should set up mocks. The rule is simple but easy to violate, so it has
 its own page.

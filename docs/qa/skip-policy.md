@@ -1,5 +1,7 @@
 # Skip Policy
 
+> _Last updated: 2026-04-28_
+
 ## Rule
 
 **`.skip` count may only decrease, never increase.**

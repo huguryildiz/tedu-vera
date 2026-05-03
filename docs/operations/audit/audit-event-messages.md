@@ -1,5 +1,7 @@
 # Audit Log Event Messages Reference
 
+> _Last updated: 2026-04-30_
+
 Source: [src/admin/utils/auditUtils.js](../../src/admin/utils/auditUtils.js)
 
 Each audit log row renders as two lines:

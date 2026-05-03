@@ -1,5 +1,7 @@
 # Testing
 
+> _Last updated: 2026-04-28_
+
 VERA has four automated test tiers plus a manual pre-event procedure.
 This section indexes the per-tier guides and shared references.
 

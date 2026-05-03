@@ -1,5 +1,7 @@
 # URL Routing Architecture
 
+> _Last updated: 2026-05-03_
+
 ## Overview
 
 VERA uses **React Router v6** (`createBrowserRouter`) with fully path-based routing.
@@ -181,9 +183,9 @@ and transparently delegates to the matching Supabase instance. No state, no sess
 | [src/shared/lib/environment.js](../../src/shared/lib/environment.js) | Pathname-based env resolution |
 | [src/jury/JuryGatePage.jsx](../../src/jury/JuryGatePage.jsx) | Token verification + entry |
 | [src/jury/JuryFlow.jsx](../../src/jury/JuryFlow.jsx) | Jury step orchestrator, URL sync |
-| [src/guards/JuryGuard.jsx](../../src/guards/JuryGuard.jsx) | Session guard for jury routes |
+| [src/jury/shared/JuryGuard.jsx](../../src/jury/shared/JuryGuard.jsx) | Session guard for jury routes |
 | [src/layouts/DemoLayout.jsx](../../src/layouts/DemoLayout.jsx) | `/demo/*` wrapper |
 | [src/layouts/AdminRouteLayout.jsx](../../src/layouts/AdminRouteLayout.jsx) | Admin auth + chrome |
 | [src/auth/screens/InviteAcceptScreen.jsx](../../src/auth/screens/InviteAcceptScreen.jsx) | Admin invitation acceptance |
-| [src/admin/pages/SetupWizardPage.jsx](../../src/admin/pages/SetupWizardPage.jsx) | Tenant onboarding wizard |
-| [src/admin/pages/OrganizationsPage.jsx](../../src/admin/pages/OrganizationsPage.jsx) | Super-admin org management |
+| [src/admin/features/setup-wizard/SetupWizardPage.jsx](../../src/admin/features/setup-wizard/SetupWizardPage.jsx) | Tenant onboarding wizard |
+| [src/admin/features/organizations/OrganizationsPage.jsx](../../src/admin/features/organizations/OrganizationsPage.jsx) | Super-admin org management |

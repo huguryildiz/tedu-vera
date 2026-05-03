@@ -1,5 +1,7 @@
 # VERA — Target Test Architecture
 
+> _Last updated: 2026-05-03_
+
 **Status:** Forward-looking design spec. Read this as the architecture future
 contributors should aim at, not as a description of current state.
 
@@ -114,7 +116,7 @@ Conversely, we keep E2E at ~5% because:
   outcome attainment percentages) — same SQL math is also pinned in
   contract tests, but unit tests catch JS-side rounding and `Number`
   drift.
-- Hook state machines in `src/jury/hooks/`, particularly `lastWrittenRef`
+- Hook state machines in `src/jury/shared/`, particularly `lastWrittenRef`
   dedup logic and step transitions.
 - Component conditional rendering — locked period disables score inputs,
   pending review gate, error states.
@@ -157,7 +159,7 @@ short of Realtime and IntersectionObserver edge cases (those go to E2E).
 
 - **Hard fail** on any failure.
 - **Hard fail** if line coverage on `src/shared/api/`, `src/shared/lib/`,
-  and `src/jury/hooks/` drops below the per-folder threshold (§ 5).
+  and `src/jury/shared/` drops below the per-folder threshold (§ 5).
 - **Soft report** on global coverage; we do not gate the build on a global
   number because it incentivizes testing trivial getters.
 
@@ -786,11 +788,11 @@ The architecture is "working" iff the following hold simultaneously:
 |---|---|---|
 | `src/shared/api/` | unit + integration | 90% |
 | `src/shared/lib/` | unit | 85% |
-| `src/jury/hooks/` | unit + E2E | 90% |
-| `src/jury/useJuryState.js` | unit + E2E | 95% |
-| `src/admin/hooks/` | unit + integration | 80% |
+| `src/jury/shared/` | unit + E2E | 90% |
+| `src/jury/shared/useJuryState.js` | unit + E2E | 95% |
+| `src/admin/shared/` | unit + integration | 80% |
 | `src/shared/storage/` | unit | 90% (Safari private mode branches) |
-| `src/admin/pages/`, `src/jury/`, `src/landing/` (UI) | E2E + visual | not gated by coverage |
+| `src/admin/features/`, `src/jury/features/`, `src/landing/` (UI) | E2E + visual | not gated by coverage |
 | `sql/migrations/00[5-9]*.sql` (RPCs) | pgTAP + integration | 100% of RPCs have a contract file |
 | `sql/migrations/004_rls.sql` | pgTAP | 100% of RLS-enabled tables have an isolation file |
 | `supabase/functions/*/index.ts` | Deno + integration | 100% have schema + test file |

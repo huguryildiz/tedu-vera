@@ -1,5 +1,7 @@
 # Architectural Decision Records
 
+> _Last updated: 2026-04-28_
+
 This folder holds the architectural decisions that shape VERA. Each record
 captures **why** a decision was made and **what would break** if it were
 reversed — not just what the code does today.

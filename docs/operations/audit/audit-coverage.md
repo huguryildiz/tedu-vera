@@ -1,5 +1,7 @@
 # VERA Audit Log
 
+> _Last updated: 2026-05-03_
+
 Every security-relevant action in VERA is recorded in a single append-only
 `audit_logs` table. This document is the authoritative reference for what gets
 logged, how it gets there, and how to verify it.
@@ -251,7 +253,6 @@ Canonical PIN taxonomy is `juror.pin_locked` / `juror.pin_unlocked` /
 | `notification.juror_reminder` | `notify-juror` |
 | `notification.export_report` | `send-export-report` |
 | `notification.admin_invite` | `invite-org-admin` |
-| `notification.application` | `notify-application` |
 | `notification.maintenance` | `notify-maintenance` |
 | `notification.unlock_request` | `notify-unlock-request` |
 | `notification.email_verification` | `email-verification-send` — fires whenever an admin requests a verification link, with `recipient`, `send_result` (`sent` / `skipped_no_key`), `send_error`, and `expires_at` in `details` |

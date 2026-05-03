@@ -1,5 +1,7 @@
 # Runbook — Demo Environment Broken
 
+> _Last updated: 2026-04-28_
+
 **Use when:** the demo environment (`/demo/*` routes, vera-demo Supabase
 project) shows missing data, login fails, or auto-login lands on an empty
 admin dashboard.

@@ -1,5 +1,7 @@
 # Audit Documentation
 
+> _Last updated: 2026-04-28_
+
 This directory contains comprehensive documentation for VERA's audit logging system.
 
 ## Files

@@ -25,8 +25,6 @@
   /* ── Trust band ── */
   .landing-trust{padding:32px 16px}
   .landing-proof-logos{gap:10px;font-size:13px;flex-wrap:wrap}
-  .trust-usecase-grid{grid-template-columns:repeat(3,1fr);gap:8px}
-  .trust-usecase-card{padding:14px 8px 10px}
   .trust-usecase-icon{width:34px;height:34px;border-radius:8px}
   .trust-usecase-icon svg{width:16px;height:16px}
   .trust-usecase-label{font-size:11px}
@@ -110,6 +108,14 @@
   .tfc-icon{width:34px;height:34px;border-radius:8px}
   .tfc-title{font-size:12px}
   .tfc-desc{font-size:10.5px}
+  /* Six-card premium grid — 3 cols × 2 rows in mobile portrait */
+  .trust-feature-grid--six{grid-template-columns:repeat(3,1fr);gap:6px;margin-top:18px}
+  .trust-feature-grid--six .trust-feature-card{padding:12px 8px;gap:8px;border-radius:12px}
+  .trust-feature-grid--six .tfc-icon{width:32px;height:32px;border-radius:8px}
+  .trust-feature-grid--six .tfc-icon svg{width:16px;height:16px}
+  .trust-feature-grid--six .tfc-title{font-size:11px;line-height:1.25;gap:5px}
+  .trust-feature-grid--six .tfc-desc{font-size:9.5px;line-height:1.4}
+  .trust-feature-grid--six .tfc-live-dot{width:5px;height:5px}
 
   /* ── FAQ ── */
   .landing-faq{padding:36px 16px}

@@ -1,0 +1,1239 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VERA — landing redesign mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ─────────────────────────────────────────────────────────────
+   VERA — landing redesign mockup
+   - Plus Jakarta Sans + JetBrains Mono (project theme fonts)
+   - Project navy palette in dark, project sky palette in light
+   - Editorial layout with numbered sections, hairlines, italic accents
+   - Real product screenshots embedded throughout
+   ───────────────────────────────────────────────────────────── */
+
+/* ─── Dark theme (default) ─── */
+:root,
+html[data-theme="dark"] {
+  --bg:           #080d1a;
+  --bg-2:         #0b1022;
+  --bg-3:         #151d32;
+  --bg-4:         #1c2740;
+  --paper:        #f1f5f9;
+  --paper-mute:   #a8b8ca;
+  --paper-faint:  #7a8ca0;
+  --paper-deep:   #556070;
+  --rule:         rgba(168,184,202,0.07);
+  --rule-2:       rgba(168,184,202,0.16);
+  --rule-3:       rgba(168,184,202,0.32);
+  --accent:       #60a5fa;
+  --accent-2:     #93c5fd;
+  --accent-deep:  #3b82f6;
+  --accent-soft:  rgba(96,165,250,0.12);
+  --accent-glow:  rgba(96,165,250,0.55);
+  --live:         #4ade80;
+  --warn:         #fbbf24;
+  --gold:         #fde68a;
+  --bg-grad: radial-gradient(1200px 600px at 8% -10%, rgba(96,165,250,0.10), transparent 60%),
+             radial-gradient(900px 500px at 95% 12%, rgba(147,197,253,0.06), transparent 70%),
+             linear-gradient(180deg, var(--bg) 0%, #050810 100%);
+  --shadow-card:  0 30px 80px rgba(0,0,0,0.55);
+  --primary-fg:   #0b1022;
+  --primary-bg:   #f1f5f9;
+  --primary-bg-h: #ffffff;
+  color-scheme: dark;
+}
+
+/* ─── Light theme ─── */
+html[data-theme="light"] {
+  --bg:           #f4f7fb;
+  --bg-2:         #ffffff;
+  --bg-3:         #eef2f8;
+  --bg-4:         #e3eaf4;
+  --paper:        #0f172a;
+  --paper-mute:   #475569;
+  --paper-faint:  #64748b;
+  --paper-deep:   #94a3b8;
+  --rule:         rgba(15,23,42,0.07);
+  --rule-2:       rgba(15,23,42,0.13);
+  --rule-3:       rgba(15,23,42,0.28);
+  --accent:       #2563eb;
+  --accent-2:     #1d4ed8;
+  --accent-deep:  #1e40af;
+  --accent-soft:  rgba(37,99,235,0.07);
+  --accent-glow:  rgba(37,99,235,0.4);
+  --live:         #16a34a;
+  --warn:         #d97706;
+  --gold:         #b45309;
+  --bg-grad: radial-gradient(1200px 600px at 8% -10%, rgba(37,99,235,0.06), transparent 60%),
+             radial-gradient(900px 500px at 95% 12%, rgba(99,102,241,0.04), transparent 70%),
+             linear-gradient(180deg, var(--bg) 0%, #ffffff 100%);
+  --shadow-card:  0 24px 50px rgba(15,23,42,0.10);
+  --primary-fg:   #ffffff;
+  --primary-bg:   #0f172a;
+  --primary-bg-h: #1e293b;
+  color-scheme: light;
+}
+
+/* ─── Sans ─── */
+:root {
+  --sans:  'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono:  'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+  --max:   1280px;
+  --gutter:48px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg);
+  color: var(--paper);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'ss01' 1, 'cv11' 1;
+  scroll-behavior: smooth;
+  transition: background-color .35s ease, color .35s ease;
+}
+body {
+  background-image: var(--bg-grad);
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+::selection { background: var(--accent); color: var(--bg); }
+
+/* ─── Hairline grid background ─── */
+.grid-bg {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(to right, var(--rule) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--rule) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: linear-gradient(180deg, black 0%, black 80%, transparent 100%);
+  opacity: 0.7;
+}
+
+.wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); position: relative; z-index: 2; }
+
+/* ─── Image swap by theme ─── */
+.img-light { display: none; }
+html[data-theme="light"] .img-dark { display: none; }
+html[data-theme="light"] .img-light { display: block; }
+
+/* ─── Masthead ─── */
+.masthead {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid var(--rule);
+}
+.masthead-inner {
+  max-width: var(--max); margin: 0 auto; padding: 14px var(--gutter);
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px;
+}
+.brand {
+  display: flex; align-items: baseline; gap: 10px;
+  font-family: var(--sans); font-weight: 800; font-size: 22px; line-height: 1;
+  letter-spacing: -0.025em;
+}
+.brand .mark { color: var(--accent); font-style: italic; font-weight: 800; }
+.brand .sub {
+  font-family: var(--mono); font-size: 9.5px; color: var(--paper-faint);
+  letter-spacing: 0.18em; text-transform: uppercase; font-weight: 500;
+  border-left: 1px solid var(--rule-2); padding-left: 10px; margin-left: 4px;
+}
+.mast-meta {
+  display: flex; align-items: center; gap: 18px;
+  font-family: var(--mono); font-size: 10.5px; color: var(--paper-faint);
+  letter-spacing: 0.05em; font-weight: 500;
+}
+.mast-meta .dot {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--live); margin-right: 6px; box-shadow: 0 0 8px rgba(74,222,128,0.55);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.78); }
+}
+.mast-actions { display: flex; align-items: center; gap: 6px; }
+.mast-btn {
+  font-family: var(--sans); font-size: 13px; font-weight: 500;
+  background: transparent; color: var(--paper-mute); border: none;
+  padding: 9px 14px; cursor: pointer; letter-spacing: 0.005em;
+  transition: color .18s, background .18s, border-color .18s;
+}
+.mast-btn:hover { color: var(--paper); }
+.theme-toggle {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--rule-2); display: grid; place-items: center;
+  cursor: pointer; background: transparent; color: var(--paper-mute);
+  transition: border-color .2s, color .2s, background .2s;
+}
+.theme-toggle:hover { border-color: var(--rule-3); color: var(--paper); background: var(--bg-3); }
+.theme-toggle .moon { display: none; }
+html[data-theme="light"] .theme-toggle .moon { display: block; }
+html[data-theme="light"] .theme-toggle .sun  { display: none; }
+.mast-btn--code {
+  border: 1px solid var(--rule-2); border-radius: 999px;
+  padding: 8px 14px; display: inline-flex; align-items: center; gap: 8px;
+}
+.mast-btn--code:hover { border-color: var(--rule-3); background: var(--bg-3); }
+.mast-btn--signin {
+  background: var(--primary-bg); color: var(--primary-fg); border-radius: 999px;
+  padding: 9px 18px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.mast-btn--signin:hover { background: var(--primary-bg-h); }
+
+/* ─── 01. Hero ─── */
+.hero {
+  position: relative; padding: 110px 0 90px;
+  border-bottom: 1px solid var(--rule);
+}
+.hero-eyebrow {
+  display: flex; align-items: center; gap: 14px;
+  font-family: var(--mono); font-size: 11px; color: var(--paper-faint);
+  letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 38px;
+  font-weight: 500;
+}
+.hero-eyebrow .num { color: var(--accent); font-weight: 600; }
+.hero-eyebrow .bar { flex: 1; height: 1px; background: var(--rule-2); max-width: 220px; }
+.hero-eyebrow .meta { display: flex; gap: 14px; }
+.hero-eyebrow .meta b { color: var(--paper-mute); font-weight: 600; }
+
+.hero-h1 {
+  font-family: var(--sans); font-weight: 800;
+  font-size: clamp(56px, 9vw, 132px);
+  line-height: 0.94; letter-spacing: -0.045em;
+  color: var(--paper); max-width: 1120px;
+  margin-bottom: 40px;
+}
+.hero-h1 em {
+  font-style: italic; font-weight: 800; color: var(--accent);
+}
+.hero-h1 .light {
+  display: block; font-weight: 300; color: var(--paper-mute);
+  font-size: 0.62em; letter-spacing: -0.025em; margin-top: 12px;
+  font-style: italic;
+}
+
+.hero-grid {
+  display: grid; grid-template-columns: 1.6fr 1fr; gap: 80px;
+  align-items: end; padding-top: 24px;
+}
+.hero-lede {
+  font-size: 17px; line-height: 1.55; color: var(--paper-mute);
+  max-width: 540px; padding-left: 18px;
+  border-left: 1px solid var(--rule-2); font-weight: 400;
+}
+.hero-lede b {
+  font-weight: 600; color: var(--paper);
+  background: var(--accent-soft); padding: 1px 7px; border-radius: 4px;
+}
+
+.hero-aside {
+  font-family: var(--mono); font-size: 11px; color: var(--paper-faint);
+  letter-spacing: 0.04em; font-weight: 500;
+}
+.hero-aside-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 9px 0; border-bottom: 1px dashed var(--rule-2);
+}
+.hero-aside-row:last-child { border-bottom: none; }
+.hero-aside-row .k { color: var(--paper-faint); text-transform: uppercase; letter-spacing: 0.16em; font-size: 10px; }
+.hero-aside-row .v { color: var(--paper); font-weight: 600; font-size: 13px; font-feature-settings: 'tnum' 1; }
+.hero-aside-row .v .delta { color: var(--live); font-size: 10.5px; margin-left: 8px; font-weight: 500; }
+
+.hero-cta {
+  display: flex; align-items: center; gap: 14px; margin-top: 56px;
+  flex-wrap: wrap;
+}
+.cta-primary {
+  display: inline-flex; align-items: center; gap: 14px;
+  background: var(--primary-bg); color: var(--primary-fg);
+  font-family: var(--sans); font-size: 14.5px; font-weight: 600;
+  letter-spacing: -0.005em;
+  padding: 16px 26px 16px 22px; border: none; border-radius: 999px;
+  cursor: pointer; transition: transform .25s cubic-bezier(.2,.8,.3,1.1), box-shadow .25s, background .2s;
+  position: relative; overflow: hidden;
+}
+.cta-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 38px var(--accent-glow); background: var(--primary-bg-h); }
+.cta-primary .arr { font-style: italic; font-weight: 700; font-size: 18px; line-height: 0; }
+.cta-primary .badge {
+  font-family: var(--mono); font-size: 9.5px; color: var(--paper-faint);
+  border: 1px solid color-mix(in srgb, var(--primary-fg) 20%, transparent);
+  padding: 3px 7px; border-radius: 3px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.cta-secondary {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: transparent; color: var(--paper);
+  font-family: var(--sans); font-size: 14.5px; font-weight: 500;
+  padding: 16px 22px; border: 1px solid var(--rule-2); border-radius: 999px;
+  cursor: pointer; transition: border-color .2s, background .2s;
+}
+.cta-secondary:hover { border-color: var(--rule-3); background: var(--bg-3); }
+.cta-secondary svg { opacity: 0.65; }
+
+.hero-foot {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 36px; padding-top: 22px; border-top: 1px solid var(--rule);
+  font-family: var(--mono); font-size: 10.5px; color: var(--paper-faint);
+  letter-spacing: 0.06em; font-weight: 500;
+}
+
+/* ─── Live ticker strip ─── */
+.ticker {
+  border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 1.5%, transparent), transparent);
+  padding: 24px 0; overflow: hidden;
+}
+.ticker-inner {
+  display: grid; grid-template-columns: auto repeat(4, 1fr) auto; gap: 36px; align-items: center;
+}
+.ticker-label {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--mono); font-size: 10.5px; color: var(--paper-faint);
+  letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600;
+}
+.ticker-label .live-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--live);
+  box-shadow: 0 0 10px var(--accent-glow);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.ticker-stat { display: flex; flex-direction: column; gap: 4px; }
+.ticker-stat .num {
+  font-family: var(--sans); font-size: 32px; font-weight: 800; line-height: 1;
+  color: var(--paper); font-feature-settings: 'tnum' 1; letter-spacing: -0.035em;
+}
+.ticker-stat .num em { font-style: italic; color: var(--accent); }
+.ticker-stat .lbl {
+  font-family: var(--mono); font-size: 9.5px; color: var(--paper-faint);
+  letter-spacing: 0.16em; text-transform: uppercase; font-weight: 500;
+}
+.ticker-source {
+  font-family: var(--mono); font-size: 9.5px; color: var(--paper-faint);
+  letter-spacing: 0.12em; text-align: right; line-height: 1.6; font-weight: 500;
+}
+.ticker-source b { color: var(--paper-mute); font-weight: 600; }
+
+/* ─── Numbered section header ─── */
+.section-num {
+  display: grid; grid-template-columns: 80px 1fr; gap: 32px;
+  padding: 100px 0 56px; align-items: start;
+}
+.section-num .num {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  letter-spacing: 0.2em; text-transform: uppercase; padding-top: 14px;
+  border-top: 1px solid var(--accent); font-weight: 700;
+}
+.section-num h2 {
+  font-family: var(--sans); font-weight: 800;
+  font-size: clamp(40px, 5.4vw, 78px); line-height: 1.0; letter-spacing: -0.04em;
+  color: var(--paper); margin-bottom: 18px;
+}
+.section-num h2 em { font-style: italic; font-weight: 800; color: var(--accent); }
+.section-num .sub {
+  font-size: 18px; line-height: 1.55; color: var(--paper-mute);
+  max-width: 600px; font-weight: 400;
+}
+
+/* ─── 02. The Moment ─── */
+.moment { position: relative; height: 380vh; }
+.moment-sticky {
+  position: sticky; top: 0; height: 100vh; padding-top: 76px;
+  display: flex; flex-direction: column;
+}
+.moment-head {
+  max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter);
+  display: grid; grid-template-columns: 80px 1fr auto; gap: 32px; align-items: end;
+  padding-bottom: 44px;
+}
+.moment-head .num {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  letter-spacing: 0.2em; text-transform: uppercase; padding-top: 14px;
+  border-top: 1px solid var(--accent); font-weight: 700;
+}
+.moment-head h2 {
+  font-family: var(--sans); font-weight: 800;
+  font-size: clamp(40px, 5vw, 64px); line-height: 1.02; letter-spacing: -0.04em;
+}
+.moment-head h2 em { font-style: italic; font-weight: 800; color: var(--accent); }
+.moment-head .progress-meta {
+  font-family: var(--mono); font-size: 10.5px; color: var(--paper-faint);
+  letter-spacing: 0.14em; text-transform: uppercase; text-align: right;
+  line-height: 1.6; font-weight: 500;
+}
+.moment-head .progress-meta b { color: var(--paper); font-weight: 700; }
+
+.moment-stage {
+  flex: 1; max-width: 1480px; width: 100%; margin: 0 auto;
+  padding: 0 var(--gutter) 60px; position: relative;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px;
+  align-items: center;
+}
+.moment-station {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  text-align: center; opacity: 0.32; transition: opacity .55s ease;
+}
+.moment-station.active { opacity: 1; }
+.moment-station .stamp {
+  font-family: var(--mono); font-size: 10px; color: var(--paper-faint);
+  letter-spacing: 0.22em; text-transform: uppercase; font-weight: 600;
+  display: flex; gap: 8px; align-items: center;
+}
+.moment-station.active .stamp { color: var(--accent); }
+.moment-station .stamp .step-n {
+  font-family: var(--sans); font-style: italic; font-size: 13px; font-weight: 700;
+  color: inherit; letter-spacing: 0;
+}
+.shot {
+  width: 100%; max-width: 260px; aspect-ratio: 16/10;
+  position: relative; border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--rule-2);
+  background: var(--bg-2);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.35);
+  transition: border-color .55s ease, box-shadow .55s ease, transform .55s ease;
+}
+html[data-theme="light"] .shot { box-shadow: 0 12px 36px rgba(15,23,42,0.10); }
+.shot::before, .shot::after,
+.shot > .corner-tl, .shot > .corner-tr,
+.shot > .corner-bl, .shot > .corner-br {
+  content: ""; position: absolute; width: 9px; height: 9px;
+  border-color: var(--rule-2); border-style: solid; border-width: 0;
+  pointer-events: none; transition: border-color .55s ease;
+}
+.shot > .corner-tl { top: -5px; left: -5px; border-top-width: 1px; border-left-width: 1px; }
+.shot > .corner-tr { top: -5px; right: -5px; border-top-width: 1px; border-right-width: 1px; }
+.shot > .corner-bl { bottom: -5px; left: -5px; border-bottom-width: 1px; border-left-width: 1px; }
+.shot > .corner-br { bottom: -5px; right: -5px; border-bottom-width: 1px; border-right-width: 1px; }
+.shot img {
+  width: 100%; height: 100%; object-fit: cover;
+  object-position: top left;
+  transition: transform 1.2s cubic-bezier(.2,.7,.3,1);
+  display: block;
+}
+.moment-station .shot img.shot-tap   { object-position: top center; }
+
+/* phone-frame variant for mobile portrait screenshots */
+.shot.shot--phone {
+  max-width: 124px;
+  aspect-ratio: 9 / 16.4;
+  border-radius: 22px;
+  padding: 6px;
+  background: var(--bg-3);
+  border: 1.5px solid var(--rule-3);
+  box-shadow: 0 14px 38px rgba(0,0,0,0.45);
+}
+html[data-theme="light"] .shot.shot--phone { box-shadow: 0 14px 38px rgba(15,23,42,0.14); }
+.shot.shot--phone img {
+  border-radius: 14px;
+  object-position: top center;
+}
+.shot.shot--phone::after {
+  content: ""; position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+  width: 36px; height: 5px; border-radius: 999px;
+  background: var(--bg); z-index: 2; opacity: 0.85;
+}
+.shot.shot--phone > .corner-tl, .shot.shot--phone > .corner-tr,
+.shot.shot--phone > .corner-bl, .shot.shot--phone > .corner-br { display: none; }
+.moment-station.active .shot.shot--phone {
+  border-color: var(--accent);
+  box-shadow: 0 18px 50px var(--accent-glow);
+}
+.moment-station .shot img.shot-pers  { object-position: top left; }
+.moment-station .shot img.shot-rank  { object-position: top center; }
+.moment-station .shot img.shot-att   { object-position: top center; }
+.moment-station .shot img.shot-rep   { object-position: top center; }
+.moment-station.active .shot {
+  border-color: var(--accent);
+  box-shadow: 0 16px 50px var(--accent-glow);
+  transform: translateY(-4px);
+}
+.moment-station.active .shot > .corner-tl,
+.moment-station.active .shot > .corner-tr,
+.moment-station.active .shot > .corner-bl,
+.moment-station.active .shot > .corner-br {
+  border-color: var(--accent);
+}
+.moment-station .label {
+  font-family: var(--sans); font-weight: 700;
+  font-size: 22px; line-height: 1.1; letter-spacing: -0.02em;
+  color: var(--paper);
+}
+.moment-station .label em { font-style: italic; font-weight: 700; color: var(--accent); }
+.moment-station .caption {
+  font-family: var(--mono); font-size: 10px; color: var(--paper-faint);
+  letter-spacing: 0.04em; line-height: 1.5; max-width: 220px; font-weight: 500;
+}
+.moment-station.active .caption { color: var(--paper-mute); }
+
+/* connector line */
+.moment-path {
+  position: absolute; top: calc(28px + 16px + 81px); left: 0; right: 0;
+  height: 2px; pointer-events: none; z-index: 0;
+  transform: translateY(-1px);
+}
+.moment-path-line { height: 1px; background: var(--rule-2); margin: 0 var(--gutter); }
+.moment-path-fill {
+  position: absolute; left: var(--gutter); top: 0; height: 1px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  width: 0%; box-shadow: 0 0 12px var(--accent-glow);
+  transition: width .12s linear;
+}
+
+.moment-foot {
+  max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--mono); font-size: 10.5px; color: var(--paper-faint);
+  letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500;
+  border-top: 1px solid var(--rule); padding-top: 22px;
+}
+.moment-foot .progress-bar {
+  flex: 1; max-width: 360px; height: 2px; background: var(--rule);
+  margin: 0 24px; position: relative; overflow: hidden;
+}
+.moment-foot .progress-bar-fill {
+  position: absolute; left: 0; top: 0; height: 100%; width: 0%;
+  background: var(--accent);
+}
+
+/* ─── 03. Live specimen — full real screenshot ─── */
+.specimen { padding-bottom: 100px; }
+.spec-frame {
+  margin-top: 24px; position: relative; padding: 24px;
+  border: 1px solid var(--rule-2); border-radius: 18px;
+  background: linear-gradient(180deg, var(--bg-2), var(--bg));
+  box-shadow: var(--shadow-card);
+}
+.spec-frame > .corner-tl, .spec-frame > .corner-tr,
+.spec-frame > .corner-bl, .spec-frame > .corner-br {
+  content: ""; position: absolute; width: 14px; height: 14px;
+  border-color: var(--accent); border-style: solid; border-width: 0;
+}
+.spec-frame > .corner-tl { top: -7px; left: -7px; border-top-width: 1px; border-left-width: 1px; }
+.spec-frame > .corner-tr { top: -7px; right: -7px; border-top-width: 1px; border-right-width: 1px; }
+.spec-frame > .corner-bl { bottom: -7px; left: -7px; border-bottom-width: 1px; border-left-width: 1px; }
+.spec-frame > .corner-br { bottom: -7px; right: -7px; border-bottom-width: 1px; border-right-width: 1px; }
+
+.spec-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 18px; border-bottom: 1px solid var(--rule);
+}
+.spec-bar-l {
+  display: flex; align-items: center; gap: 14px;
+  font-family: var(--mono); font-size: 11px; color: var(--paper-faint);
+  letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500;
+}
+.spec-bar-l .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--live); animation: pulse 1.6s ease-in-out infinite; }
+.spec-bar-l b { color: var(--paper); font-weight: 700; }
+.spec-bar-r {
+  display: flex; gap: 18px; font-family: var(--mono); font-size: 11px; color: var(--paper-faint);
+  letter-spacing: 0.04em; font-weight: 500;
+}
+.spec-bar-r span b { color: var(--paper-mute); font-weight: 600; }
+
+.spec-shot {
+  margin-top: 22px; position: relative;
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--rule-2);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+}
+html[data-theme="light"] .spec-shot { box-shadow: 0 24px 60px rgba(15,23,42,0.12); }
+.spec-shot img { display: block; width: 100%; height: auto; }
+.spec-shot-overlay {
+  position: absolute; top: 14px; right: 14px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 75%, transparent);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--rule-2);
+  font-family: var(--mono); font-size: 10px; color: var(--paper);
+  letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600;
+}
+.spec-shot-overlay .live-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--live);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.spec-annotations {
+  margin-top: 26px; padding-top: 24px;
+  border-top: 1px solid var(--rule);
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
+}
+.spec-anno {
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.spec-anno .num {
+  font-family: var(--mono); font-size: 11px; color: var(--accent); font-weight: 700;
+  letter-spacing: 0.16em; padding-top: 2px; min-width: 28px;
+}
+.spec-anno .body strong {
+  display: block; font-family: var(--sans); font-weight: 700; font-size: 14px;
+  color: var(--paper); margin-bottom: 4px;
+}
+.spec-anno .body span {
+  font-family: var(--sans); font-weight: 400; font-size: 13.5px; color: var(--paper-mute);
+  line-height: 1.5;
+}
+
+.spec-caption {
+  margin-top: 36px;
+  display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end;
+}
+.spec-caption .note {
+  font-size: 17px; line-height: 1.55; color: var(--paper-mute);
+  max-width: 620px; font-weight: 400;
+}
+.spec-caption .note b {
+  font-weight: 600; color: var(--paper);
+  background: var(--accent-soft); padding: 1px 7px; border-radius: 4px;
+}
+
+/* ─── 04. Proof ─── */
+.proof { padding-bottom: 100px; }
+.proof-quote {
+  font-family: var(--sans); font-weight: 700;
+  font-size: clamp(28px, 3.6vw, 52px); line-height: 1.18; letter-spacing: -0.025em;
+  color: var(--paper); margin: 0 auto; max-width: 1080px;
+  position: relative; padding-left: 60px;
+}
+.proof-quote::before {
+  content: "“"; position: absolute; left: -16px; top: -42px;
+  font-family: var(--sans); font-style: italic; font-size: 200px; font-weight: 800;
+  line-height: 1; color: var(--accent); opacity: 0.7;
+}
+.proof-quote em { font-style: italic; font-weight: 800; color: var(--accent); }
+.proof-attr {
+  margin-top: 36px; padding-left: 60px;
+  display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center;
+}
+.proof-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 1px solid var(--rule-2); background: var(--accent-soft);
+  display: grid; place-items: center;
+  font-family: var(--sans); font-style: italic; font-weight: 800; font-size: 17px;
+  color: var(--paper); letter-spacing: -0.02em;
+}
+.proof-attr .who {
+  font-family: var(--sans); font-size: 14px; color: var(--paper); font-weight: 600;
+}
+.proof-attr .who span {
+  display: block; font-family: var(--mono); font-size: 11px; color: var(--paper-faint);
+  letter-spacing: 0.06em; margin-top: 2px; font-weight: 500;
+}
+.proof-attr .stars {
+  display: flex; gap: 2px; color: var(--gold);
+  font-style: normal; font-size: 18px;
+}
+
+.proof-stats {
+  margin-top: 80px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+  border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+}
+.proof-stat {
+  padding: 28px 24px; border-right: 1px solid var(--rule);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.proof-stat:last-child { border-right: none; }
+.proof-stat .v {
+  font-family: var(--sans); font-weight: 800;
+  font-size: 56px; line-height: 1; letter-spacing: -0.045em;
+  color: var(--paper); font-feature-settings: 'tnum' 1;
+}
+.proof-stat .v em { font-style: italic; font-weight: 800; color: var(--accent); }
+.proof-stat .l {
+  font-family: var(--mono); font-size: 10.5px; color: var(--paper-faint);
+  letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500;
+}
+
+.proof-accred {
+  margin-top: 38px; display: flex; align-items: center; gap: 24px;
+  font-family: var(--mono); font-size: 11px; color: var(--paper-faint);
+  letter-spacing: 0.18em; text-transform: uppercase; font-weight: 500;
+  flex-wrap: wrap;
+}
+.proof-accred .badges { display: flex; gap: 12px; flex-wrap: wrap; }
+.proof-accred .badge {
+  font-family: var(--sans); font-weight: 600; font-size: 13px;
+  color: var(--paper); letter-spacing: 0.06em;
+  border: 1px solid var(--rule-2); padding: 6px 16px; border-radius: 999px;
+}
+.proof-accred .badge:hover { border-color: var(--rule-3); }
+
+/* ─── 05. Final CTA ─── */
+.final {
+  border-top: 1px solid var(--rule); padding: 130px 0;
+  text-align: center;
+}
+.final-eyebrow {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 32px;
+  display: inline-flex; align-items: center; gap: 10px; font-weight: 700;
+}
+.final-eyebrow::before, .final-eyebrow::after {
+  content: ""; width: 40px; height: 1px; background: var(--accent);
+}
+.final-h2 {
+  font-family: var(--sans); font-weight: 800;
+  font-size: clamp(56px, 9vw, 134px); line-height: 0.94; letter-spacing: -0.05em;
+  color: var(--paper);
+}
+.final-h2 em { font-style: italic; font-weight: 800; color: var(--accent); }
+.final-h2 .arr {
+  display: inline-block; font-style: italic; font-weight: 800; color: var(--accent);
+  margin-left: 14px; transform: translateY(-6px); transition: transform .35s cubic-bezier(.2,.8,.3,1.1);
+}
+.final-h2:hover .arr { transform: translate(12px, -6px); }
+.final-cta {
+  margin-top: 56px; display: inline-flex; align-items: center; gap: 18px;
+  font-family: var(--mono); font-size: 11px; color: var(--paper-faint);
+  letter-spacing: 0.18em; text-transform: uppercase; flex-wrap: wrap; justify-content: center;
+  font-weight: 500;
+}
+.final-cta a {
+  color: var(--paper); text-decoration: none; font-weight: 600;
+  border-bottom: 1px solid var(--rule-2); padding-bottom: 2px;
+}
+.final-cta a:hover { border-color: var(--paper); }
+
+/* ─── Footer ─── */
+.footer {
+  border-top: 1px solid var(--rule); padding: 28px 0;
+  background: var(--bg-2);
+}
+.footer-inner {
+  max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--mono); font-size: 10.5px; color: var(--paper-faint);
+  letter-spacing: 0.06em; font-weight: 500;
+}
+.footer-inner a { color: var(--paper-mute); text-decoration: none; }
+.footer-inner a:hover { color: var(--paper); }
+
+/* ─── Responsive ─── */
+@media (max-width: 1024px) {
+  :root { --gutter: 28px; }
+  .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+  .hero-aside { padding-top: 24px; border-top: 1px solid var(--rule); }
+  .moment { height: 320vh; }
+  .moment-stage { grid-template-columns: repeat(2, 1fr); gap: 50px 30px; padding-bottom: 40px; }
+  .moment-station:nth-child(5) { grid-column: 1 / -1; }
+  .moment-path { display: none; }
+  .ticker-inner { grid-template-columns: 1fr 1fr; gap: 22px; }
+  .ticker-source { grid-column: 1 / -1; text-align: left; }
+  .ticker-label { grid-column: 1 / -1; }
+  .spec-annotations { grid-template-columns: 1fr; gap: 18px; }
+}
+@media (max-width: 640px) {
+  .hero { padding: 60px 0 50px; }
+  .hero-h1 { font-size: 48px; letter-spacing: -0.035em; }
+  .moment { height: 240vh; }
+  .moment-sticky { padding-top: 40px; }
+  .moment-head { grid-template-columns: 1fr; gap: 14px; }
+  .moment-head .progress-meta { display: none; }
+  .moment-stage { grid-template-columns: 1fr; gap: 32px; padding-bottom: 24px; overflow: hidden; }
+  .moment-station:nth-child(n+3) { display: none; }
+  .moment-foot { flex-direction: column; gap: 12px; align-items: flex-start; }
+  .moment-foot .progress-bar { margin: 0; width: 100%; max-width: none; }
+  .proof-quote { padding-left: 30px; font-size: 24px; }
+  .proof-quote::before { font-size: 110px; top: -28px; left: -8px; }
+  .proof-attr { padding-left: 30px; }
+  .proof-stats { grid-template-columns: 1fr 1fr; }
+  .proof-stat { border-bottom: 1px solid var(--rule); }
+  .proof-stat:nth-child(odd) { border-right: 1px solid var(--rule); }
+  .final-h2 { font-size: 52px; }
+  .section-num { grid-template-columns: 1fr; gap: 14px; padding: 60px 0 30px; }
+  .spec-frame { padding: 14px; }
+  .spec-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .spec-bar-r { flex-wrap: wrap; gap: 12px; }
+  .footer-inner { flex-direction: column; gap: 8px; align-items: flex-start; }
+  .mast-meta { display: none; }
+}
+
+/* ─── Reveal animation ─── */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .9s cubic-bezier(.2,.7,.3,1), transform .9s cubic-bezier(.2,.7,.3,1); }
+.reveal.in { opacity: 1; transform: translateY(0); }
+.reveal-stagger > * { opacity: 0; transform: translateY(18px); transition: opacity .7s cubic-bezier(.2,.7,.3,1), transform .7s cubic-bezier(.2,.7,.3,1); }
+.reveal.in.reveal-stagger > * { opacity: 1; transform: translateY(0); }
+.reveal.in.reveal-stagger > *:nth-child(1) { transition-delay: 0s; }
+.reveal.in.reveal-stagger > *:nth-child(2) { transition-delay: .08s; }
+.reveal.in.reveal-stagger > *:nth-child(3) { transition-delay: .16s; }
+.reveal.in.reveal-stagger > *:nth-child(4) { transition-delay: .24s; }
+.reveal.in.reveal-stagger > *:nth-child(5) { transition-delay: .32s; }
+
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- ─── Masthead ─── -->
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand">
+      <span class="mark">V</span>ERA
+      <span class="sub">Mockup · v1</span>
+    </div>
+    <div class="mast-meta">
+      <span><span class="dot"></span>Live demo · vera-demo</span>
+      <span id="now-stamp">— · —</span>
+    </div>
+    <div class="mast-actions">
+      <button class="theme-toggle" type="button" id="themeToggle" aria-label="Toggle theme">
+        <svg class="sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg class="moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="mast-btn mast-btn--code" type="button">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15 19 4"/><path d="m18 5 3 3"/><path d="m15 8 3 3"/></svg>
+        Enter code
+      </button>
+      <button class="mast-btn mast-btn--signin" type="button">
+        Sign in
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ─── 01. Hero ─── -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-eyebrow">
+      <span class="num">01</span>
+      <span>Visual Evaluation · Reporting · Analytics</span>
+      <span class="bar"></span>
+      <span class="meta"><span>Issue</span><b>Vol. 1</b><span>·</span><b>2026</b></span>
+    </div>
+
+    <h1 class="hero-h1">
+      Evaluate <em>anything.</em><br/>
+      Prove <em>everything.</em>
+      <span class="light">Live, on any device, in real time.</span>
+    </h1>
+
+    <div class="hero-grid">
+      <p class="hero-lede">
+        Structured jury scoring for capstones, exhibitions, hackathons, and accreditation review panels.
+        Configurable criteria, real-time data capture, and <b>programme-outcome reports</b> that compile
+        the moment the last juror clicks submit.
+      </p>
+
+      <div class="hero-aside">
+        <div class="hero-aside-row"><span class="k">Active sessions</span><span class="v" id="hs-active">— <span class="delta">+0</span></span></div>
+        <div class="hero-aside-row"><span class="k">Scores · 24h</span><span class="v" id="hs-scores">— <span class="delta">+0</span></span></div>
+        <div class="hero-aside-row"><span class="k">Organizations</span><span class="v" id="hs-orgs">—</span></div>
+        <div class="hero-aside-row"><span class="k">Avg. session</span><span class="v" id="hs-avg">—</span></div>
+      </div>
+    </div>
+
+    <div class="hero-cta">
+      <button class="cta-primary" type="button">
+        Be a juror <span class="badge">Demo</span> <span class="arr">→</span>
+      </button>
+      <button class="cta-secondary" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="7" height="9" x="3" y="3" rx="1.5"/><rect width="7" height="5" x="14" y="3" rx="1.5"/>
+          <rect width="7" height="9" x="14" y="12" rx="1.5"/><rect width="7" height="5" x="3" y="16" rx="1.5"/>
+        </svg>
+        Tour the admin panel
+      </button>
+    </div>
+
+    <div class="hero-foot">
+      <span>No sign-up · Real evaluation data · Sandbox isolated</span>
+      <span>↓ Scroll</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Live ticker ─── -->
+<section class="ticker">
+  <div class="wrap ticker-inner">
+    <div class="ticker-label"><span class="live-dot"></span>Live signal</div>
+
+    <div class="ticker-stat">
+      <div class="num"><em id="t-1">47</em></div>
+      <div class="lbl">Active jurors · now</div>
+    </div>
+    <div class="ticker-stat">
+      <div class="num" id="t-2">1,287</div>
+      <div class="lbl">Scores · last 24h</div>
+    </div>
+    <div class="ticker-stat">
+      <div class="num" id="t-3">76%</div>
+      <div class="lbl">Avg. outcome attainment</div>
+    </div>
+    <div class="ticker-stat">
+      <div class="num" id="t-4">2.4h</div>
+      <div class="lbl">Avg. evaluation window</div>
+    </div>
+
+    <div class="ticker-source">
+      Source · <b>vera-demo</b><br/>
+      Last sync <b id="t-sync">3s ago</b>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 02. The Moment — real screenshots ─── -->
+<section class="moment" id="moment">
+  <div class="moment-sticky">
+    <div class="moment-head">
+      <span class="num">02</span>
+      <h2>Five steps. <em>Five seconds.</em></h2>
+      <div class="progress-meta">
+        Frame · <b id="moment-frame">01 / 05</b><br/>
+        <b id="moment-stage-name">Tap</b>
+      </div>
+    </div>
+
+    <div class="moment-stage" id="moment-stage">
+      <div class="moment-path">
+        <div class="moment-path-line"></div>
+        <div class="moment-path-fill" id="moment-path-fill"></div>
+      </div>
+
+      <!-- Station 1 — Tap (juror scoring · mobile portrait) -->
+      <div class="moment-station active" data-stage="0" data-name="Tap">
+        <div class="stamp"><span class="step-n">01</span><span>Tap</span></div>
+        <div class="shot shot--phone">
+          <img class="img-dark shot-tap"  src="../../../src/assets/landing/showcase/jury-evaluate-mobile-dark.png"  alt="Jury scoring · phone — dark" />
+          <img class="img-light shot-tap" src="../../../src/assets/landing/showcase/jury-evaluate-mobile-light.png" alt="Jury scoring · phone — light" />
+        </div>
+        <div class="label">A juror taps <em>“8”</em></div>
+        <div class="caption">Score input · on the phone</div>
+      </div>
+
+      <!-- Station 2 — Persist (audit log row appears) -->
+      <div class="moment-station" data-stage="1" data-name="Persist">
+        <div class="stamp"><span class="step-n">02</span><span>Persist</span></div>
+        <div class="shot">
+          <span class="corner-tl"></span><span class="corner-tr"></span><span class="corner-bl"></span><span class="corner-br"></span>
+          <img class="img-dark shot-pers"  src="../../../src/assets/landing/showcase/auditlog-dark.png"  alt="Audit log — dark" />
+          <img class="img-light shot-pers" src="../../../src/assets/landing/showcase/auditlog-light.png" alt="Audit log — light" />
+        </div>
+        <div class="label">Saved &amp; <em>chained</em></div>
+        <div class="caption">audit log · upsert · &lt; 80 ms</div>
+      </div>
+
+      <!-- Station 3 — Rank -->
+      <div class="moment-station" data-stage="2" data-name="Rank">
+        <div class="stamp"><span class="step-n">03</span><span>Rank</span></div>
+        <div class="shot">
+          <span class="corner-tl"></span><span class="corner-tr"></span><span class="corner-bl"></span><span class="corner-br"></span>
+          <img class="img-dark shot-rank"  src="../../../src/assets/landing/showcase/rankings-dark.png"  alt="Rankings — dark" />
+          <img class="img-light shot-rank" src="../../../src/assets/landing/showcase/rankings-light.png" alt="Rankings — light" />
+        </div>
+        <div class="label">Rankings <em>recompute</em></div>
+        <div class="caption">live · per project · per period</div>
+      </div>
+
+      <!-- Station 4 — Attain -->
+      <div class="moment-station" data-stage="3" data-name="Attain">
+        <div class="stamp"><span class="step-n">04</span><span>Attain</span></div>
+        <div class="shot">
+          <span class="corner-tl"></span><span class="corner-tr"></span><span class="corner-bl"></span><span class="corner-br"></span>
+          <img class="img-dark shot-att"  src="../../../src/assets/landing/showcase/analytics-dark.png"  alt="Analytics — dark" />
+          <img class="img-light shot-att" src="../../../src/assets/landing/showcase/analytics-light.png" alt="Analytics — light" />
+        </div>
+        <div class="label">Outcomes <em>recalculate</em></div>
+        <div class="caption">criterion → outcome map · weighted</div>
+      </div>
+
+      <!-- Station 5 — Report (overview) -->
+      <div class="moment-station" data-stage="4" data-name="Report">
+        <div class="stamp"><span class="step-n">05</span><span>Report</span></div>
+        <div class="shot">
+          <span class="corner-tl"></span><span class="corner-tr"></span><span class="corner-bl"></span><span class="corner-br"></span>
+          <img class="img-dark shot-rep"  src="../../../src/assets/landing/showcase/overview-dark.png"  alt="Overview — dark" />
+          <img class="img-light shot-rep" src="../../../src/assets/landing/showcase/overview-light.png" alt="Overview — light" />
+        </div>
+        <div class="label">Report <em>ready</em></div>
+        <div class="caption">audit-chained · export-ready</div>
+      </div>
+    </div>
+
+    <div class="moment-foot wrap">
+      <span>Architecture · React + Supabase + Postgres triggers</span>
+      <div class="progress-bar"><div class="progress-bar-fill" id="moment-foot-bar"></div></div>
+      <span>Latency · &lt; 200 ms end-to-end</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 03. Live specimen — full real screenshot ─── -->
+<section class="specimen">
+  <div class="wrap">
+    <div class="section-num reveal">
+      <span class="num">03</span>
+      <div>
+        <h2>This is our demo,<br/><em>sampled in real time.</em></h2>
+        <p class="sub">Not a marketing render. Not a re-skinned mockup. The dashboard below is the same admin overview an evaluation chair sees on jury day, connected to live demo data — refreshed as you read.</p>
+      </div>
+    </div>
+
+    <div class="spec-frame reveal">
+      <span class="corner-tl"></span><span class="corner-tr"></span>
+      <span class="corner-bl"></span><span class="corner-br"></span>
+
+      <div class="spec-bar">
+        <div class="spec-bar-l">
+          <span class="live-dot"></span>
+          <span><b>Fall 2025 · EE Capstone</b> · 41 projects · 19 jurors</span>
+        </div>
+        <div class="spec-bar-r">
+          <span>Last sync · <b id="spec-sync">2s</b></span>
+          <span>Filter · <b>All advisors</b></span>
+          <span>Density · <b>Comfortable</b></span>
+        </div>
+      </div>
+
+      <div class="spec-shot">
+        <img class="img-dark"  src="../../../src/assets/landing/showcase/overview-dark.png"  alt="Admin overview — dark" />
+        <img class="img-light" src="../../../src/assets/landing/showcase/overview-light.png" alt="Admin overview — light" />
+        <div class="spec-shot-overlay">
+          <span class="live-dot"></span>
+          <span>Live · vera-demo</span>
+        </div>
+      </div>
+
+      <div class="spec-annotations">
+        <div class="spec-anno">
+          <span class="num">01</span>
+          <div class="body">
+            <strong>Live KPI strip</strong>
+            <span>Active period, project count, juror coverage, completion percent — recomputed on every score write.</span>
+          </div>
+        </div>
+        <div class="spec-anno">
+          <span class="num">02</span>
+          <div class="body">
+            <strong>Coverage heatmap</strong>
+            <span>Project × juror density. One glance tells you which group still needs eyes before final submit.</span>
+          </div>
+        </div>
+        <div class="spec-anno">
+          <span class="num">03</span>
+          <div class="body">
+            <strong>Outcome attainment</strong>
+            <span>Programme outcomes (PO-1 … PO-n) computed live from criterion-to-outcome maps. Export-ready when you are.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-caption reveal">
+      <p class="note">
+        Every chart and number above is queried from the same Postgres tables that power live evaluation days.
+        <b>Open the demo</b> to filter by advisor, drill into an outcome, and export an accreditation-ready report.
+      </p>
+      <button class="cta-primary" type="button">Open the full demo <span class="arr">→</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 04. Proof ─── -->
+<section class="proof">
+  <div class="wrap">
+    <div class="section-num reveal">
+      <span class="num">04</span>
+      <div>
+        <h2>What chairs say <em>after the jury day.</em></h2>
+        <p class="sub">VERA is in production at universities, competitions, and accreditation review boards. The pattern is consistent: scoring takes minutes, reports take seconds, the binder takes care of itself.</p>
+      </div>
+    </div>
+
+    <blockquote class="proof-quote reveal">
+      We evaluated <em>41 capstone projects</em> with 19 jurors in under two hours. Scores were live, rankings
+      were instant, and the <em>attainment report</em> was on the dean's desk before we left the building.
+    </blockquote>
+
+    <div class="proof-attr reveal">
+      <div class="proof-avatar">AY</div>
+      <div class="who">Prof. Dr. Ahmet Yılmaz<span>EE Department · Capstone Coordinator · TED University</span></div>
+      <div class="stars">★★★★★</div>
+    </div>
+
+    <div class="proof-stats reveal reveal-stagger">
+      <div class="proof-stat"><div class="v"><em>1,287</em></div><div class="l">Scores · last 24h</div></div>
+      <div class="proof-stat"><div class="v">468</div><div class="l">Projects evaluated</div></div>
+      <div class="proof-stat"><div class="v">36</div><div class="l">Active jurors</div></div>
+      <div class="proof-stat"><div class="v">6</div><div class="l">Institutions</div></div>
+    </div>
+
+    <div class="proof-accred reveal">
+      <span>Accreditation-ready</span>
+      <div class="badges">
+        <span class="badge">MÜDEK</span>
+        <span class="badge">ABET</span>
+        <span class="badge">EUR-ACE</span>
+        <span class="badge">Custom frameworks</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 05. Final CTA ─── -->
+<section class="final">
+  <div class="wrap">
+    <div class="final-eyebrow">05 · Begin</div>
+    <h2 class="final-h2"><em>Open</em> the demo<span class="arr">→</span></h2>
+    <div class="final-cta">
+      <span>No sign-up</span>
+      <span>·</span>
+      <a href="#">Be a juror</a>
+      <span>·</span>
+      <a href="#">Tour the admin panel</a>
+      <span>·</span>
+      <span>Sandbox · isolated</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Footer ─── -->
+<footer class="footer">
+  <div class="footer-inner">
+    <span>© 2026 VERA · Visual Evaluation, Reporting &amp; Analytics</span>
+    <span>Designed &amp; built by <a href="https://huguryildiz.com" target="_blank" rel="noopener">Hüseyin Uğur Yıldız</a></span>
+  </div>
+</footer>
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   Theme toggle (persisted to localStorage)
+   ───────────────────────────────────────────────────────────── */
+(function () {
+  const html = document.documentElement;
+  const KEY = 'vera-mockup-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved === 'light' || saved === 'dark') html.setAttribute('data-theme', saved);
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem(KEY, next);
+  });
+})();
+
+/* ─────────────────────────────────────────────────────────────
+   Live data simulation — fake-but-believable signal
+   ───────────────────────────────────────────────────────────── */
+(function () {
+  const state = {
+    active: 47, scores: 1287, attain: 76, avg: 2.4, orgs: 6,
+    syncSec: 0,
+  };
+  const j = (n) => n.toLocaleString('en-US');
+  function nowStamp() {
+    const d = new Date();
+    return d.toISOString().slice(0,16).replace('T', ' · ') + ' UTC';
+  }
+  const $ = (id) => document.getElementById(id);
+
+  $('now-stamp').textContent = nowStamp();
+  $('hs-active').firstChild.nodeValue = state.active + ' ';
+  $('hs-scores').firstChild.nodeValue = j(state.scores) + ' ';
+  $('hs-orgs').textContent = state.orgs;
+  $('hs-avg').textContent = state.avg + ' h';
+  $('t-1').textContent = state.active;
+  $('t-2').textContent = j(state.scores);
+  $('t-3').textContent = state.attain + '%';
+  $('t-4').textContent = state.avg + 'h';
+
+  setInterval(() => {
+    state.syncSec++;
+    $('t-sync').textContent = state.syncSec + 's ago';
+    $('spec-sync').textContent = state.syncSec + 's';
+  }, 1000);
+
+  function activity() {
+    const newScores = Math.floor(Math.random() * 4) + 1;
+    state.scores += newScores;
+    state.syncSec = 0;
+    const activeDelta = Math.random() > 0.5 ? 1 : -1;
+    state.active = Math.max(38, Math.min(58, state.active + activeDelta));
+    if (Math.random() > 0.7) {
+      const dir = Math.random() > 0.5 ? 1 : -1;
+      state.attain = Math.max(70, Math.min(82, state.attain + dir));
+    }
+
+    $('hs-active').firstChild.nodeValue = state.active + ' ';
+    $('hs-active').querySelector('.delta').textContent = (activeDelta >= 0 ? '+' : '') + activeDelta;
+    $('hs-scores').firstChild.nodeValue = j(state.scores) + ' ';
+    $('hs-scores').querySelector('.delta').textContent = '+' + newScores;
+    $('t-1').textContent = state.active;
+    $('t-2').textContent = j(state.scores);
+    $('t-3').textContent = state.attain + '%';
+
+    setTimeout(activity, 3500 + Math.random() * 3500);
+  }
+  setTimeout(activity, 2200);
+})();
+
+/* ─────────────────────────────────────────────────────────────
+   The Moment — scroll-driven station progression
+   ───────────────────────────────────────────────────────────── */
+(function () {
+  const section = document.getElementById('moment');
+  const stations = [...document.querySelectorAll('.moment-station')];
+  const pathFill = document.getElementById('moment-path-fill');
+  const footBar = document.getElementById('moment-foot-bar');
+  const frameEl = document.getElementById('moment-frame');
+  const stageNameEl = document.getElementById('moment-stage-name');
+
+  function update() {
+    const rect = section.getBoundingClientRect();
+    const scrollable = section.offsetHeight - window.innerHeight;
+    if (scrollable <= 0) return;
+    const scrolled = Math.max(0, Math.min(scrollable, -rect.top));
+    const progress = scrolled / scrollable;
+
+    const N = stations.length;
+    const eff = Math.max(0, Math.min(1, (progress - 0.05) / 0.85));
+    const activeIdx = Math.min(N - 1, Math.floor(eff * N));
+
+    stations.forEach((s, i) => s.classList.toggle('active', i <= activeIdx));
+
+    const stageWidth = 100 / (N - 1);
+    const pct = Math.min(100, activeIdx * stageWidth + (eff * N - activeIdx) * stageWidth);
+    pathFill.style.width = pct + '%';
+    footBar.style.width = (progress * 100).toFixed(1) + '%';
+
+    frameEl.textContent = String(activeIdx + 1).padStart(2, '0') + ' / 0' + N;
+    stageNameEl.textContent = stations[activeIdx].dataset.name;
+  }
+  let raf;
+  window.addEventListener('scroll', () => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(update);
+  }, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+})();
+
+/* ─────────────────────────────────────────────────────────────
+   Reveal on scroll
+   ───────────────────────────────────────────────────────────── */
+(function () {
+  const els = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.18 });
+  els.forEach((el) => obs.observe(el));
+})();
+</script>
+</body>
+</html>

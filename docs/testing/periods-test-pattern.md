@@ -1,5 +1,7 @@
 # Periods — Reference Test Pattern
 
+> _Last updated: 2026-04-28_
+
 Periods is the worked example for an admin feature with the broadest
 risk surface in VERA. New admin features (Jurors, Projects, Criteria,
 Outcomes, Settings, Reviews) should copy this shape rather than

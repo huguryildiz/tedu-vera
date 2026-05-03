@@ -1,5 +1,7 @@
 # Unit Tests (Vitest)
 
+> _Last updated: 2026-04-28_
+
 Vitest-driven unit tests under `src/**/__tests__/`. Runs in jsdom — no
 real browser, no real Supabase. Mocks the Supabase client at module
 scope so every test is deterministic.

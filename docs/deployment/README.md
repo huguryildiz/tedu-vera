@@ -1,5 +1,7 @@
 # Deployment
 
+> _Last updated: 2026-04-28_
+
 Setting up environments and deploying VERA. The platform runs on Supabase
 (database + auth + edge functions) and Vercel (frontend), with prod and demo
 projects in each.

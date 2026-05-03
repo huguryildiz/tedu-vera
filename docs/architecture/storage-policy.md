@@ -1,5 +1,7 @@
 # Browser Storage Policy
 
+> _Last updated: 2026-05-03_
+
 This document defines VERA's browser storage architecture: what lives in `localStorage`, what lives in `sessionStorage`, what stays server-side only, and why.
 
 ---
@@ -39,7 +41,7 @@ All keys are defined in `src/shared/storage/keys.js`. Below is the full inventor
 | `JURY_JUROR_NAME` | `jury.juror_name` | localStorage | String | Juror's display name |
 | `JURY_AFFILIATION` | `jury.affiliation` | localStorage | String | Juror's institutional affiliation |
 | `JURY_CURRENT` | `jury.current` | localStorage | Integer string | Index of the project the juror is currently scoring |
-| `JURY_RAW_TOKEN_PREFIX` | `jury_raw_token_` | Both | Entry token string | Admin-generated entry tokens (per semester, `+ semesterId`) |
+| `JURY_RAW_TOKEN_PREFIX` | `jury_raw_token_` | Both | Entry token string | Admin-generated entry tokens (per period, `+ periodId`) |
 
 **Why localStorage for jury session?** Jurors evaluate on phones/tablets. When the screen locks and the browser is killed, the session must survive so the juror can resume scoring without re-entering their PIN. The session token is validated server-side on every RPC call, so a stale token is harmless — the server rejects it.
 
@@ -52,6 +54,10 @@ All keys are defined in `src/shared/storage/keys.js`. Below is the full inventor
 | `ADMIN_REMEMBER_ME` | `admin.remember_me` | localStorage | `"true"` / `"false"` | Whether to persist Supabase auth across restarts |
 | `ADMIN_REMEMBERED_EMAIL` | `admin.remembered_email` | localStorage | Email string | Pre-fill login form when Remember Me is on |
 | `ADMIN_DEVICE_ID` | `admin.device_id` | localStorage | `dev_<uuid>` | Stable device fingerprint for audit trail |
+| `ADMIN_TOUR_DONE` | `vera.admin_tour_done` | localStorage | `"true"` | Flag set after the admin guided tour finishes |
+| `SETUP_SKIP_PREFIX` | `vera.setup_skipped_` | localStorage | `"true"` | Per-step skip flags for the Setup Wizard (`+ orgId + stepId`) |
+| `CRITERIA_SCRATCH_PREFIX` | `vera.criteria_scratch_` | localStorage | JSON blob | Unsaved criteria draft restored when the user re-opens the Criteria editor (`+ periodId`) |
+| `OUTCOMES_SCRATCH_PREFIX` | `vera.outcomes_scratch_` | localStorage | JSON blob | Unsaved outcomes draft restored when the user re-opens the Outcomes editor (`+ periodId`) |
 
 ### Shared / UI Keys
 

@@ -1,5 +1,7 @@
 # Tenant Onboarding
 
+> _Last updated: 2026-04-28_
+
 **Scenario.** A new university wants to use VERA. Someone fills out the "Apply
 for VERA" form on the landing page. A super-admin reviews the application,
 approves it, and within seconds a new organization is provisioned with a

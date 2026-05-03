@@ -1,5 +1,7 @@
 # Architecture — VERA
 
+> _Last updated: 2026-05-03_
+
 ## Overview
 
 Multi-tenant academic jury evaluation platform. Jurors score student capstone
@@ -25,13 +27,13 @@ React Router v6 via `createBrowserRouter` in `src/router.jsx`.
 
 ```text
 /                        Landing
-/login | /register | /forgot-password | /reset-password | /invite/accept
+/login | /register | /forgot-password | /reset-password | /verify-email | /invite/accept
                          Auth screens (AuthRouteLayout)
 /eval                    Jury entry-token gate
 /jury/*                  Jury flow (JuryGuard)
-  identity → period → (pin | pin-reveal) → locked → progress → evaluate → complete
+  arrival → identity → period → (pin | pin-reveal) → locked → progress → evaluate → complete
 /admin/*                 Admin panel (AdminRouteLayout + AuthGuard)
-  overview | rankings | analytics | heatmap | reviews
+  overview | setup | rankings | analytics | heatmap | reviews
   jurors | projects | periods | criteria | outcomes
   entry-control | pin-blocking | audit-log | organizations | settings
 /demo                    DemoAdminLoader → auto-login → /demo/admin
@@ -108,29 +110,38 @@ Jurors do not have Supabase Auth accounts. They authenticate via:
 ## Admin Auth Flow
 
 1. User signs in via email/password or Google OAuth → Supabase Auth session.
-2. `AuthProvider` checks `memberships` table: no active membership → `PendingReviewGate`.
+2. `AuthProvider` checks `memberships` table: no active membership →
+   `PendingReviewGate`. Unverified email surfaces an unverified-email banner
+   that re-issues the verification token via the `email-verification-send`
+   Edge Function.
 3. New Google OAuth users complete `CompleteProfileForm` before entering admin.
 4. JWT attached to every request; RLS enforces org scope on all tables.
-5. Production admin RPCs route through `supabase/functions/rpc-proxy/index.ts`
-   (keeps `RPC_SECRET` out of the browser — lives in Supabase Vault).
-   In dev, RPCs called directly using `VITE_RPC_SECRET` from `.env.local`.
+5. Admin RPCs are called directly via `supabase.rpc("rpc_admin_*", …)`. Each
+   `rpc_admin_*` function calls `_assert_tenant_admin(p_org_id)` (or
+   `_assert_super_admin()` for platform-level RPCs) as its first statement —
+   the caller's JWT is the source of truth for identity and tenancy. There is
+   no longer a separate `rpc-proxy` Edge Function or shared `RPC_SECRET`; the
+   legacy v1 password-based RPCs and the proxy that fronted them have been
+   retired (see ADR 0003).
 
 ---
 
 ## Jury Evaluation Flow
 
-`src/jury/useJuryState.js` orchestrates sub-hooks. Step components are dumb
-(receive state + callbacks via hook).
+`src/jury/shared/useJuryState.js` orchestrates sub-hooks. Step components live
+under `src/jury/features/` and are dumb (receive state + callbacks via hook).
 
 ```text
 JuryGatePage.jsx                    ← QR / entry-token verification
 └── (on success) → jury flow
-    └── useJuryState.js             ← orchestrates sub-hooks
-        ├── identity                ← juror name + department
+    └── shared/useJuryState.js      ← orchestrates sub-hooks
+        ├── arrival                 ← landing inside the jury shell
+        ├── identity                ← juror name + affiliation
         ├── period                  ← select active evaluation period
-        ├── pin | pin_reveal        ← 4-digit PIN entry / first-login PIN display
+        ├── pin | pin-reveal        ← 4-digit PIN entry / first-login PIN display
         ├── (progress_check)        ← internal gate, no dedicated component
         ├── evaluate                ← score all projects
+        ├── lock                    ← shown when juror has finalized / period locked
         └── complete                ← confirmation screen
 ```
 
@@ -138,27 +149,31 @@ JuryGatePage.jsx                    ← QR / entry-token verification
 `writeGroup(pid)` upserts to DB. Group navigation and `visibilitychange` also
 save. `lastWrittenRef` deduplication prevents redundant RPCs.
 
-**Sub-hooks** (`src/jury/hooks/`):
+**Sub-hooks** (`src/jury/shared/`):
 
-- `useJurorIdentity` — juror name, dept, auth error
+- `useJurorIdentity` — juror name, affiliation, auth error
 - `useJurorSession` — PIN / session token
 - `useJuryLoading` — period/project loading + abort ref
 - `useJuryScoring` — scoring state + pending refs
 - `useJuryEditState` — edit/lock state + polling effect
 - `useJuryWorkflow` — step navigation, derived values
 - `useJuryAutosave` — `writeGroup`, visibility auto-save
-- `useJuryHandlers` — cross-hook callbacks
+- `useJuryHandlers` / `useJuryScoreHandlers` / `useJurySessionHandlers` /
+  `useJuryLifecycleHandlers` — cross-hook callbacks split by concern
 
 ---
 
 ## Admin Panel Architecture
 
-Pages in `src/admin/pages/`. Hooks in `src/admin/hooks/`.
+Each admin page lives in its own `src/admin/features/<area>/` folder, paired with
+its feature hooks, drawers, and tests. Cross-feature shared hooks/components live
+in `src/admin/shared/`. Layout shell is in `src/admin/layout/`.
 
 ```text
 AdminRouteLayout
-└── AdminPanel.jsx
-    ├── OverviewPage       ← summary metrics, juror activity
+└── AdminPanel
+    ├── OverviewPage       ← summary metrics, juror activity, period snapshot
+    ├── SetupWizardPage    ← onboarding stepper for new orgs (criteria/outcomes/jurors/projects)
     ├── RankingsPage       ← project rankings
     ├── AnalyticsPage      ← MÜDEK/ABET charts (lazy-loaded)
     ├── HeatmapPage        ← juror consistency heatmap
@@ -175,11 +190,16 @@ AdminRouteLayout
     └── SettingsPage       ← org-level settings
 ```
 
-**Key hooks:**
+`src/admin/features/export/` holds shared export composition used by Rankings /
+Reviews / Analytics surfaces (no standalone route).
+
+**Key shared hooks** (`src/admin/shared/`):
 
 - `useSettingsCrud` — orchestrator wiring domain hooks
-- `useAdminData` — score data loading + project summary
-- `useAdminRealtime` — Supabase Realtime subscriptions
+- `useAdminData` — score data loading + project / juror / period summaries
+  (thin wrappers around the three server-side aggregation RPCs — never
+  re-aggregates client-side)
+- `useAdminRealtime` — Supabase Realtime subscriptions for the score cluster
 - `useAdminTeam` — admin team members, invite flow, ownership, delegation flag
 - `useManageOrganizations` — super-admin org list + per-org admin management
 
@@ -203,9 +223,10 @@ Component
 **API module structure** (`src/shared/api/`):
 
 - `index.js` — re-exports everything; always import from here
-- `adminApi.js` — all admin RPC wrappers
-- `admin/` — modular: auth, profiles, organizations, scores, semesters, projects,
-  jurors, tokens, export, audit
+- `admin/` — modular admin RPC wrappers: `auth`, `profiles`, `organizations`,
+  `periods`, `projects`, `jurors`, `criteria`/`outcomes` (via `frameworks`),
+  `scores`, `tokens`, `export`, `audit`, `backups`, `emailVerification`,
+  `maintenance`, `notifications`, `platform`, `security`, `sessions`
 - `juryApi.js` — jury RPC wrappers
 - `fieldMapping.js` — UI ↔ DB field name translation (`design`↔`written`, `delivery`↔`oral`)
 - `core/client.js` — Supabase client init + Proxy config
@@ -260,19 +281,22 @@ src/
 ├── router.jsx              ← React Router v6 route tree
 ├── config.js               ← evaluation criteria, MÜDEK outcomes, colors
 ├── admin/
-│   ├── pages/              ← one file per admin page
-│   ├── hooks/              ← focused hooks (useAdminTeam, useSettingsCrud, etc.)
-│   ├── components/         ← shared admin components + cards
-│   ├── drawers/            ← drawer components
-│   ├── modals/             ← modal components
+│   ├── features/           ← one folder per admin page (overview, periods, jurors, …)
+│   │                          each contains the page, drawers, hooks, tests
+│   ├── shared/             ← cross-feature hooks/components (useAdminData,
+│   │                          useAdminRealtime, useSettingsCrud, JurorBadge, …)
+│   ├── layout/             ← AdminRouteLayout, sidebar, header
+│   ├── analytics/          ← MÜDEK/ABET chart helpers shared with AnalyticsPage
+│   ├── selectors/          ← derived-state selectors used by feature hooks
 │   └── utils/              ← auditUtils, sorting helpers
 ├── jury/
-│   ├── useJuryState.js     ← jury flow orchestrator
-│   ├── hooks/              ← 8 focused hooks
-│   └── utils/              ← scoreState, progress, scoreSnapshot
+│   ├── features/           ← arrival, identity, period, pin, pin-reveal,
+│   │                          progress, evaluation, lock, complete (UI only)
+│   └── shared/             ← useJuryState orchestrator + sub-hooks + handlers
+├── auth/
+│   └── shared/             ← AuthProvider, AuthGuard, SecurityPolicyContext
 ├── shared/
 │   ├── api/                ← API layer (never call supabase directly from components)
-│   ├── auth/               ← AuthProvider, AuthGuard, Google OAuth
 │   ├── hooks/              ← useToast, useCardSelection, etc.
 │   ├── lib/                ← supabaseClient (Proxy), environment
 │   ├── storage/            ← keys.js, juryStorage, adminStorage, persist
@@ -281,15 +305,24 @@ src/
 └── test/                   ← qaTest helper, qa-catalog.json
 ```
 
+**Removed:** `src/shared/constants.js` was eliminated in commit `a8ada838` —
+its callers now import directly from `src/config.js` or the relevant
+feature-local module.
+
 ---
 
 ## Testing
 
 - **Unit tests** — Vitest + Testing Library. `src/admin/__tests__/`,
-  `src/jury/__tests__/`, `src/shared/__tests__/`.
-- **E2E tests** — Playwright. `e2e/` spec files.
+  `src/jury/__tests__/`, `src/shared/__tests__/`, plus per-feature
+  `src/admin/features/<area>/__tests__/`.
+- **pgTAP tests** — SQL-level tests in `sql/tests/` (RLS, RPC contracts, triggers).
+- **Edge function tests** — Deno + Zod under `supabase/functions/_test/`.
+- **E2E tests** — Playwright. `e2e/` spec files; six projects (`admin`, `other`,
+  `maintenance`, `a11y`, `visual`, `perf`) — see `playwright.config.ts`.
 - **Run:** `npm test -- --run` (unit), `npm run e2e` (E2E).
-- **CI** — GitHub Actions runs unit tests on every push/PR.
+- **CI** — GitHub Actions runs unit tests, edge fn tests, pgTAP, and the three
+  PR-blocking Playwright projects on every push/PR.
 
 See [docs/testing/unit-tests.md](../testing/unit-tests.md) and
 [docs/testing/e2e-tests.md](../testing/e2e-tests.md) for full guides.

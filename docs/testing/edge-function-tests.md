@@ -1,5 +1,7 @@
 # Edge Function Tests (Deno)
 
+> _Last updated: 2026-04-28_
+
 Edge Functions live in [`supabase/functions/`](../../supabase/functions/)
 and are tested via Deno's built-in test runner. Tests use a custom
 harness in `supabase/functions/_test/` that mocks the Supabase client.

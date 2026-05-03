@@ -1,8 +1,12 @@
 # Database Webhooks — VERA
 
+> _Last updated: 2026-05-03_
+
 Supabase Database Webhooks call Edge Functions when specific table events occur.
-VERA uses three webhooks, all requiring manual configuration in the Supabase dashboard
-(no CLI or migration can configure webhooks).
+VERA uses two webhooks, both requiring manual configuration in the Supabase dashboard
+(no CLI or migration can configure webhooks). A third audit-related Edge Function
+(`audit-anomaly-sweep`) runs on the cron scheduler — listed at the bottom of this
+file for completeness, but it is not a webhook.
 
 ---
 

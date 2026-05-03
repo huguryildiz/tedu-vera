@@ -9,6 +9,21 @@ import veraLogoDark from "@/assets/vera_logo_dark.png";
 import veraLogoWhite from "@/assets/vera_logo_white.png";
 import navLogoDark from "@/assets/favicon/web-app-manifest-512x512.png";
 import navLogoLight from "@/assets/favicon/favicon_light.png";
+import juryStep1Dark from "@/assets/landing/jury-flow/step1-identity-dark.png";
+import juryStep1Light from "@/assets/landing/jury-flow/step1-identity-light.png";
+import juryStep2Dark from "@/assets/landing/jury-flow/step2-pin-dark.png";
+import juryStep2Light from "@/assets/landing/jury-flow/step2-pin-light.png";
+import juryStep3Dark from "@/assets/landing/jury-flow/step3-score-dark.png";
+import juryStep3Light from "@/assets/landing/jury-flow/step3-score-light.png";
+import juryStep4Dark from "@/assets/landing/jury-flow/step4-done-dark.png";
+import juryStep4Light from "@/assets/landing/jury-flow/step4-done-light.png";
+
+const JURY_FLOW_STEPS = [
+  { label: "1 · Identity",    light: juryStep1Light, dark: juryStep1Dark, alt: "Jury identity step screenshot" },
+  { label: "2 · Session PIN", light: juryStep2Light, dark: juryStep2Dark, alt: "Session PIN reveal screenshot" },
+  { label: "3 · Score",       light: juryStep3Light, dark: juryStep3Dark, alt: "Scoring screen screenshot" },
+  { label: "4 · Done",        light: juryStep4Light, dark: juryStep4Dark, alt: "Submission complete screenshot" },
+];
 
 const FALLBACK_STATS = {
   organizations: 6, evaluations: 468, jurors: 36, projects: 76,
@@ -252,232 +267,26 @@ export function LandingPage() {
           No app to install, no training needed. Jurors scan a QR code, enter their name, and start scoring.
         </p>
         <div className="mobile-flow">
-
-          {/* Phone 1: Identity */}
-          <div>
-            <div className="mobile-frame">
-              <div className="mobile-notch" />
-              <div className="mobile-inner">
-                <div style={{ flex: 1, padding: "14px 12px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", overflow: "hidden" }}>
-                  <div style={{ width: "38px", height: "38px", borderRadius: "12px", background: "linear-gradient(135deg,rgba(99,102,241,0.22),rgba(139,92,246,0.18))", border: "1px solid rgba(139,92,246,0.25)", display: "grid", placeItems: "center", marginBottom: "9px", marginTop: "6px", boxShadow: "0 4px 12px rgba(99,102,241,0.18)" }}>
-                    <Icon
-                      iconNode={[]}
-                      width="17"
-                      height="17"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#a78bfa"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </Icon>
+          {JURY_FLOW_STEPS.map((step, i) => (
+            <React.Fragment key={step.label}>
+              {i > 0 && <div className="mobile-flow-arrow">→</div>}
+              <div>
+                <div className="mobile-frame">
+                  <div className="mobile-notch" />
+                  <div className="mobile-inner">
+                    <img
+                      className="mobile-screenshot"
+                      src={theme === "dark" ? step.dark : step.light}
+                      alt={step.alt}
+                      loading="lazy"
+                      decoding="async"
+                    />
                   </div>
-                  <div style={{ fontSize: "11.5px", fontWeight: 700, color: "#f1f5f9", marginBottom: "2px" }}>Jury Information</div>
-                  <div style={{ fontSize: "7.5px", color: "#64748b", marginBottom: "9px", lineHeight: 1.3 }}>Enter your details to begin the evaluation</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "5px", justifyContent: "center", marginBottom: "4px", fontSize: "6.5px", color: "#64748b" }}>
-                    <Icon
-                      iconNode={[]}
-                      width="8"
-                      height="8"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 10 3 12 0v-5" /></Icon>
-                    <span>TED University</span>
-                    <span style={{ color: "#334155" }}>·</span>
-                    <Icon
-                      iconNode={[]}
-                      width="8"
-                      height="8"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a4 4 0 0 0-8 0v2" /></Icon>
-                    <span>Electrical &amp; Electronics Eng.</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "5px", justifyContent: "center", marginBottom: "9px", fontSize: "6.5px", color: "#64748b" }}>
-                    <Icon
-                      iconNode={[]}
-                      width="8"
-                      height="8"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></Icon>
-                    <span>Fall 2025</span>
-                    <span style={{ color: "#334155" }}>·</span>
-                    <span>20 Dec 2025</span>
-                    <span style={{ color: "#334155" }}>·</span>
-                    <span>12 Groups</span>
-                  </div>
-                  <div style={{ width: "100%", display: "flex", alignItems: "flex-start", gap: "5px", padding: "5px 7px", borderRadius: "6px", background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.14)", marginBottom: "9px", textAlign: "left" }}>
-                    <Icon
-                      iconNode={[]}
-                      width="9"
-                      height="9"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#60a5fa"
-                      strokeWidth="2"
-                      style={{ flexShrink: 0, marginTop: "1px" }}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></Icon>
-                    <span style={{ fontSize: "7px", color: "#93c5fd", lineHeight: 1.35, fontWeight: 500 }}>Name and Affiliation cannot be changed once evaluation starts.</span>
-                  </div>
-                  <div style={{ width: "100%", textAlign: "left", marginBottom: "5px" }}>
-                    <div style={{ fontSize: "7.5px", fontWeight: 600, color: "#94a3b8", marginBottom: "2px" }}>Full Name</div>
-                    <div style={{ padding: "5px 7px", borderRadius: "5px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", fontSize: "8.5px", color: "#e2e8f0" }}>Prof. Dr. Ayşe Demir</div>
-                  </div>
-                  <div style={{ width: "100%", textAlign: "left", marginBottom: "5px" }}>
-                    <div style={{ fontSize: "8px", fontWeight: 700, color: "#94a3b8", marginBottom: "2px" }}>Affiliation</div>
-                    <div style={{ padding: "5px 7px", borderRadius: "5px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", fontSize: "8.5px", color: "#e2e8f0" }}>TED University / EE</div>
-                  </div>
-                  <div style={{ width: "100%", textAlign: "left", marginBottom: "10px" }}>
-                    <div style={{ fontSize: "7.5px", fontWeight: 600, color: "#94a3b8", marginBottom: "2px" }}>E-mail <span style={{ color: "#475569", fontWeight: 400 }}>(optional)</span></div>
-                    <div style={{ padding: "5px 7px", borderRadius: "5px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", fontSize: "8.5px", color: "#475569" }}>jury@example.com</div>
-                  </div>
-                  <div style={{ width: "100%", padding: "8px", borderRadius: "7px", background: "linear-gradient(180deg,#4b8ef2,#2563eb)", textAlign: "center", fontSize: "9.5px", color: "#fff", fontWeight: 600, boxShadow: "0 3px 10px rgba(37,99,235,0.35)" }}>Start Evaluation →</div>
-                  <div style={{ marginTop: "7px", fontSize: "7.5px", color: "#475569" }}>&larr; Return Home</div>
                 </div>
+                <div className="mobile-step-label">{step.label}</div>
               </div>
-            </div>
-            <div className="mobile-step-label">1 · Identity</div>
-          </div>
-
-          <div className="mobile-flow-arrow">→</div>
-
-          {/* Phone 2: Session PIN */}
-          <div>
-            <div className="mobile-frame">
-              <div className="mobile-notch" />
-              <div className="mobile-inner">
-                <div style={{ flex: 1, padding: "16px 14px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-                  <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg,rgba(99,102,241,0.3),rgba(59,130,246,0.2))", border: "1px solid rgba(147,197,253,0.15)", display: "grid", placeItems: "center", marginBottom: "10px", marginTop: "8px" }}>
-                    <Icon
-                      iconNode={[]}
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#93c5fd"
-                      strokeWidth="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></Icon>
-                  </div>
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#f1f5f9", marginBottom: "3px" }}>Your Session PIN</div>
-                  <div style={{ fontSize: "8px", color: "#64748b", marginBottom: "16px", lineHeight: 1.4 }}>Use this PIN to resume if you get disconnected.</div>
-                  <div style={{ display: "flex", gap: "6px", marginBottom: "14px" }}>
-                    {["4","7","2","1"].map((d) => (
-                      <div key={d} style={{ width: "38px", height: "44px", borderRadius: "8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(147,197,253,0.15)", display: "grid", placeItems: "center", fontFamily: "var(--mono)", fontSize: "18px", fontWeight: 700, color: "#f1f5f9" }}>{d}</div>
-                    ))}
-                  </div>
-                  <div style={{ fontSize: "8px", color: "#64748b", padding: "4px 10px", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", marginBottom: "16px" }}>📋 Copy PIN</div>
-                  <div style={{ width: "100%", textAlign: "left", display: "flex", flexDirection: "column", gap: "6px", fontSize: "8.5px", color: "#94a3b8", marginBottom: "14px" }}>
-                    <div style={{ display: "flex", gap: "6px" }}><span style={{ color: "#475569", width: "60px" }}>Juror</span><span style={{ color: "#e2e8f0", fontWeight: 600 }}>Prof. Dr. Ayşe Demir</span></div>
-                    <div style={{ display: "flex", gap: "6px" }}><span style={{ color: "#475569", width: "60px" }}>Org</span><span style={{ color: "#e2e8f0", fontWeight: 600 }}>TED University — EE</span></div>
-                    <div style={{ display: "flex", gap: "6px" }}><span style={{ color: "#475569", width: "60px" }}>Period</span><span style={{ color: "#e2e8f0", fontWeight: 600 }}>Fall 2025</span></div>
-                  </div>
-                  <div style={{ width: "100%", padding: "9px", borderRadius: "8px", background: "linear-gradient(180deg,#4b8ef2,#2563eb)", textAlign: "center", fontSize: "10px", color: "#fff", fontWeight: 600, marginTop: "auto" }}>Begin Evaluation →</div>
-                </div>
-              </div>
-            </div>
-            <div className="mobile-step-label">2 · Session PIN</div>
-          </div>
-
-          <div className="mobile-flow-arrow">→</div>
-
-          {/* Phone 3: Score */}
-          <div>
-            <div className="mobile-frame">
-              <div className="mobile-notch" />
-              <div className="mobile-inner">
-                <div style={{ padding: "6px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(148,163,184,0.08)", background: "rgba(6,10,22,0.6)", flexShrink: 0 }}>
-                  <div style={{ fontSize: "8px", color: "#e2e8f0", fontWeight: 600 }}>Prof. Dr. Ayşe Demir</div>
-                  <div style={{ display: "flex", gap: "4px", alignItems: "center" }}><span style={{ fontSize: "7px", padding: "2px 6px", borderRadius: "4px", background: "rgba(34,197,94,0.1)", color: "#4ade80", border: "1px solid rgba(74,222,128,0.2)" }}>✓ Saved</span></div>
-                </div>
-                <div style={{ padding: "6px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(148,163,184,0.08)", flexShrink: 0 }}>
-                  <div>
-                    <div style={{ fontSize: "9px", fontWeight: 700, color: "#f1f5f9", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "120px" }}>Adaptive RF Harvesting</div>
-                    <div style={{ fontSize: "7px", color: "#475569" }}>Elif A., Berk K., Zeynep T.</div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-                    <span style={{ fontSize: "8px", color: "#64748b" }}>‹</span>
-                    <span style={{ fontFamily: "var(--mono)", fontSize: "8px", color: "#e2e8f0", fontWeight: 600 }}>7/12</span>
-                    <span style={{ fontSize: "8px", color: "#64748b" }}>›</span>
-                  </div>
-                </div>
-                <div style={{ height: "3px", background: "rgba(255,255,255,0.06)", flexShrink: 0 }}>
-                  <div style={{ height: "100%", width: "88%", background: "linear-gradient(90deg,#3b82f6,#6366f1)" }} />
-                </div>
-                <div style={{ flex: 1, padding: "8px", display: "flex", flexDirection: "column", gap: "5px", overflow: "hidden" }}>
-                  {[
-                    { label: "Technical Content", color: "#60a5fa", max: 30, val: 27, pct: "90%" },
-                    { label: "Written Comm.", color: "#4ade80", max: 30, val: 22, pct: "73%" },
-                    { label: "Oral Comm.", color: "#a78bfa", max: 30, val: 24, pct: "80%" },
-                    { label: "Teamwork", color: "#fbbf24", max: 10, val: 8, pct: "80%" },
-                  ].map((c) => (
-                    <div key={c.label} style={{ padding: "8px", borderRadius: "8px", background: "rgba(255,255,255,0.03)", border: `1px solid rgba(255,255,255,0.06)`, borderLeft: `3px solid ${c.color}` }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-                        <div style={{ fontSize: "8px", fontWeight: 700, color: "#f1f5f9" }}>{c.label} <span style={{ color: "#4ade80" }}>✓</span></div>
-                        <span style={{ fontSize: "6.5px", padding: "2px 5px", borderRadius: "4px", border: "1px solid rgba(255,255,255,0.08)", color: "#64748b" }}>Rubric</span>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <div style={{ width: "28px", height: "24px", borderRadius: "4px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", fontFamily: "var(--mono)", fontSize: "11px", fontWeight: 700, color: "#f1f5f9", textAlign: "center", display: "grid", placeItems: "center" }}>{c.val}</div>
-                        <div style={{ flex: 1, height: "3px", borderRadius: "99px", background: "rgba(255,255,255,0.06)" }}>
-                          <div style={{ height: "100%", width: c.pct, borderRadius: "99px", background: c.color }} />
-                        </div>
-                        <span style={{ fontSize: "7px", color: "#64748b", fontFamily: "var(--mono)" }}>{c.val}/{c.max}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="mobile-step-label">3 · Score</div>
-          </div>
-
-          <div className="mobile-flow-arrow">→</div>
-
-          {/* Phone 4: Done */}
-          <div>
-            <div className="mobile-frame">
-              <div className="mobile-notch" />
-              <div className="mobile-inner">
-                <div style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-                  <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "linear-gradient(135deg,rgba(34,197,94,0.3),rgba(22,163,74,0.2))", border: "1px solid rgba(74,222,128,0.2)", display: "grid", placeItems: "center", marginTop: "8px", marginBottom: "10px" }}>
-                    <Icon
-                      iconNode={[]}
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#4ade80"
-                      strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4 12 14.01l-3-3" /></Icon>
-                  </div>
-                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#f1f5f9", marginBottom: "2px" }}>Thank You, Prof. Demir!</div>
-                  <div style={{ fontFamily: "var(--mono)", fontSize: "28px", fontWeight: 800, color: "#4ade80", marginBottom: "2px" }}>81</div>
-                  <div style={{ fontSize: "7px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px" }}>Your Score — Group 7 / 100 pts</div>
-                  <div style={{ fontSize: "8px", color: "#94a3b8", lineHeight: 1.5, marginBottom: "10px" }}>Your evaluations have been submitted. Contact the administrator if you need changes.</div>
-                  <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "2px", textAlign: "left", fontSize: "8px" }}>
-                    {[
-                      { g: "Group 1", s: "78", ok: true },
-                      { g: "Group 2", s: "85", ok: true },
-                      { g: "Group 3", s: "72", ok: true },
-                      { g: "Group 4", s: "91", ok: true },
-                      { g: "Group 5", s: "66", ok: true },
-                      { g: "Group 6", s: "—", ok: false },
-                    ].map((row) => (
-                      <div key={row.g} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 7px", borderRadius: "5px", background: "rgba(30,41,59,0.4)", border: "1px solid rgba(148,163,184,0.06)" }}>
-                        <span style={{ color: row.ok ? "#4ade80" : "#fbbf24" }}>{row.ok ? "✓" : "⚠"}</span>
-                        <span style={{ color: "#94a3b8", flex: 1 }}>{row.g}</span>
-                        <span style={{ fontFamily: "var(--mono)", color: row.ok ? "#e2e8f0" : "#475569", fontWeight: row.ok ? 600 : 400 }}>{row.s}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="mobile-step-label">4 · Done</div>
-          </div>
-
+            </React.Fragment>
+          ))}
         </div>
       </section>
       {/* Trust Band */}
@@ -497,10 +306,10 @@ export function LandingPage() {
               style={{ opacity: 0.6 }}>
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </Icon>
-            Built for every evaluation
+            One platform — built for every evaluation
           </div>
           <div
-            className="trust-feature-grid"
+            className="trust-feature-grid trust-feature-grid--six"
             onMouseMove={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               const x = e.clientX - rect.left;
@@ -517,8 +326,8 @@ export function LandingPage() {
               <div className="tfc-icon">
                 <Icon
                   iconNode={[]}
-                  width="20"
-                  height="20"
+                  width="22"
+                  height="22"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -526,15 +335,15 @@ export function LandingPage() {
               </div>
               <div className="tfc-body">
                 <div className="tfc-title">Works on any device</div>
-                <div className="tfc-desc">Mobile, tablet, or desktop — zero installation required</div>
+                <div className="tfc-desc">Mobile, tablet, or desktop — zero installation, zero friction.</div>
               </div>
             </div>
             <div className="trust-feature-card reveal-child">
               <div className="tfc-icon tfc-icon--green">
                 <Icon
                   iconNode={[]}
-                  width="20"
-                  height="20"
+                  width="22"
+                  height="22"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -542,15 +351,34 @@ export function LandingPage() {
               </div>
               <div className="tfc-body">
                 <div className="tfc-title">PIN-secured sessions</div>
-                <div className="tfc-desc">Jurors authenticate with a PIN — no accounts needed</div>
+                <div className="tfc-desc">Jurors authenticate with a single-use PIN — no accounts, no passwords.</div>
+              </div>
+            </div>
+            <div className="trust-feature-card reveal-child">
+              <div className="tfc-icon tfc-icon--amber">
+                <Icon
+                  iconNode={[]}
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></Icon>
+              </div>
+              <div className="tfc-body">
+                <div className="tfc-title">
+                  Real-time analytics
+                  <span className="tfc-live-dot" aria-hidden="true" />
+                </div>
+                <div className="tfc-desc">Live dashboards update the moment a juror submits — no polling, no delay.</div>
               </div>
             </div>
             <div className="trust-feature-card reveal-child">
               <div className="tfc-icon tfc-icon--violet">
                 <Icon
                   iconNode={[]}
-                  width="20"
-                  height="20"
+                  width="22"
+                  height="22"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -558,166 +386,44 @@ export function LandingPage() {
               </div>
               <div className="tfc-body">
                 <div className="tfc-title">XLSX &amp; PDF export</div>
-                <div className="tfc-desc">Full score reports in one click, formatted for review</div>
-              </div>
-            </div>
-            <div className="trust-feature-card reveal-child">
-              <div className="tfc-icon tfc-icon--amber">
-                <Icon
-                  iconNode={[]}
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></Icon>
-              </div>
-              <div className="tfc-body">
-                <div className="tfc-title">Real-time analytics</div>
-                <div className="tfc-desc">Live dashboards update as jurors score across projects</div>
+                <div className="tfc-desc">One-click reports formatted for committees, deans, and accreditors.</div>
               </div>
             </div>
             <div className="trust-feature-card reveal-child">
               <div className="tfc-icon tfc-icon--rose">
                 <Icon
                   iconNode={[]}
-                  width="20"
-                  height="20"
+                  width="22"
+                  height="22"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="1.5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><path d="M14 2v6h6" /><path d="m9 15 2 2 4-4" /></Icon>
               </div>
               <div className="tfc-body">
-                <div className="tfc-title">Accreditation-ready</div>
-                <div className="tfc-desc">Built-in MÜDEK / ABET outcome mapping and programme reports</div>
+                <div className="tfc-title">MÜDEK &amp; ABET ready</div>
+                <div className="tfc-desc">Built-in outcome mapping and programme attainment rollups.</div>
               </div>
             </div>
-          </div>
-          <div className="landing-proof-eyebrow landing-proof-eyebrow--usecase">
-            <Icon
-              iconNode={[]}
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ opacity: 0.6 }}>
-              <circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" />
-            </Icon>
-            Works across every context
-          </div>
-          <div className="trust-usecase-grid">
-            <div className="trust-usecase-card">
-              <div className="trust-usecase-icon">
+            <div className="trust-feature-card trust-feature-card--context reveal-child">
+              <div className="tfc-icon tfc-icon--cyan">
                 <Icon
                   iconNode={[]}
-                  width="20"
-                  height="20"
+                  width="22"
+                  height="22"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round">
-                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5" />
+                  <circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" />
                 </Icon>
               </div>
-              <span className="trust-usecase-label">Universities</span>
-              <span className="trust-usecase-hint">Capstone & thesis defenses</span>
-            </div>
-            <div className="trust-usecase-card">
-              <div className="trust-usecase-icon">
-                <Icon
-                  iconNode={[]}
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round">
-                  <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" /><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
-                </Icon>
+              <div className="tfc-body">
+                <div className="tfc-title">Every evaluation context</div>
+                <div className="tfc-desc">University capstones, hackathons, TEKNOFEST &amp; CanSat, research grants, design exhibitions, and ABET / MÜDEK accreditation reviews.</div>
               </div>
-              <span className="trust-usecase-label">Hackathons</span>
-              <span className="trust-usecase-hint">48-hour innovation sprints</span>
-            </div>
-            <div className="trust-usecase-card">
-              <div className="trust-usecase-icon">
-                <Icon
-                  iconNode={[]}
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round">
-                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                </Icon>
-              </div>
-              <span className="trust-usecase-label">Competitions</span>
-              <span className="trust-usecase-hint">TEKNOFEST, CanSat, IEEE</span>
-            </div>
-            <div className="trust-usecase-card">
-              <div className="trust-usecase-icon">
-                <Icon
-                  iconNode={[]}
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round">
-                  <path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2" /><path d="M8.5 2h7" /><path d="M7 16.5h10" />
-                </Icon>
-              </div>
-              <span className="trust-usecase-label">Research Councils</span>
-              <span className="trust-usecase-hint">Grant reviews & project evaluations</span>
-            </div>
-            <div className="trust-usecase-card">
-              <div className="trust-usecase-icon">
-                <Icon
-                  iconNode={[]}
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round">
-                  <path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8" /><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4" /><path d="M12 4v6" /><path d="M2 20h20" /><path d="m6 10 4 4" /><path d="m14 10 4 4" />
-                </Icon>
-              </div>
-              <span className="trust-usecase-label">Design Exhibitions</span>
-              <span className="trust-usecase-hint">Poster days & showcases</span>
-            </div>
-            <div className="trust-usecase-card">
-              <div className="trust-usecase-icon">
-                <Icon
-                  iconNode={[]}
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round">
-                  <path d="M3 7V5a2 2 0 0 1 2-2h2" /><path d="M17 3h2a2 2 0 0 1 2 2v2" /><path d="M21 17v2a2 2 0 0 1-2 2h-2" /><path d="M7 21H5a2 2 0 0 1-2-2v-2" /><rect x="7" y="7" width="10" height="10" rx="1" />
-                </Icon>
-              </div>
-              <span className="trust-usecase-label">Accreditation</span>
-              <span className="trust-usecase-hint">ABET, MÜDEK, EUR-ACE</span>
             </div>
           </div>
         </div>
@@ -845,114 +551,6 @@ export function LandingPage() {
           </div>
         </div>
       </div>
-      {/* Features */}
-      <div className="landing-features-section reveal-section" id="section-features">
-        <div className="landing-section-label">
-          <Icon
-            iconNode={[]}
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            style={{ opacity: 0.6 }}>
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.27 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z" />
-          </Icon>
-          Why teams choose VERA
-        </div>
-        <div className="landing-features">
-          <div className="landing-feature reveal-child">
-            <div className="landing-feature-icon">
-              <Icon
-                iconNode={[]}
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5">
-                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
-                <rect x="9" y="3" width="6" height="4" rx="1" />
-                <path d="M9 14l2 2 4-4" />
-              </Icon>
-            </div>
-            <h3>Flexible Criteria</h3>
-            <p>Define rubrics per evaluation period — technical, design, delivery, or any domain-specific criteria. Map each to programme outcomes.</p>
-          </div>
-          <div className="landing-feature reveal-child">
-            <div className="landing-feature-icon">
-              <Icon
-                iconNode={[]}
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-              </Icon>
-            </div>
-            <h3>Real-Time Scoring</h3>
-            <p>Jurors score on any device during the event. Auto-save on every input, live sync, PIN-secured sessions. Zero friction.</p>
-          </div>
-          <div className="landing-feature reveal-child">
-            <div className="landing-feature-icon">
-              <Icon
-                iconNode={[]}
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5">
-                <path d="M3 3v18h18" />
-                <path d="M7 14l4-4 4 4 6-6" />
-              </Icon>
-            </div>
-            <h3>Outcome-Level Reporting</h3>
-            <p>Every score maps to programme outcomes. Generate accreditation-ready attainment reports — not just rankings.</p>
-          </div>
-        </div>
-      </div>
-      {/* Before / After */}
-      <section className="landing-before-after reveal-section">
-        <div className="landing-section-label">
-          <Icon
-            iconNode={[]}
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            style={{ opacity: 0.6 }}>
-            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-          </Icon>
-          The difference
-        </div>
-        <div className="ba-grid">
-          <div className="ba-card before reveal-child">
-            <h4>Without VERA</h4>
-            <div className="ba-item"><span style={{ color: "#f87171", flexShrink: 0 }}>✗</span> Paper forms collected manually at the event</div>
-            <div className="ba-item"><span style={{ color: "#f87171", flexShrink: 0 }}>✗</span> Scores entered into spreadsheets after the fact</div>
-            <div className="ba-item"><span style={{ color: "#f87171", flexShrink: 0 }}>✗</span> Outcome mapping done by hand for accreditation</div>
-            <div className="ba-item"><span style={{ color: "#f87171", flexShrink: 0 }}>✗</span> No audit trail — impossible to verify or defend</div>
-            <div className="ba-item"><span style={{ color: "#f87171", flexShrink: 0 }}>✗</span> Results take days to compile and distribute</div>
-          </div>
-          <div className="ba-arrow">→</div>
-          <div className="ba-card after reveal-child">
-            <h4>With VERA</h4>
-            <div className="ba-item"><span style={{ color: "#4ade80", flexShrink: 0 }}>✓</span> Jurors score on their phones in real time</div>
-            <div className="ba-item"><span style={{ color: "#4ade80", flexShrink: 0 }}>✓</span> Every input auto-saved — zero data entry</div>
-            <div className="ba-item"><span style={{ color: "#4ade80", flexShrink: 0 }}>✓</span> Scores auto-map to programme outcomes</div>
-            <div className="ba-item"><span style={{ color: "#4ade80", flexShrink: 0 }}>✓</span> Full audit trail with action-level history</div>
-            <div className="ba-item"><span style={{ color: "#4ade80", flexShrink: 0 }}>✓</span> Rankings and reports ready the moment scoring ends</div>
-          </div>
-        </div>
-      </section>
       {/* Comparison Table */}
       <section className="landing-compare reveal-section">
         <div className="landing-section-label">

@@ -1,5 +1,7 @@
 # Contributing
 
+> _Last updated: 2026-04-28_
+
 Conventions for branches, commits, and pull requests. The goal is small,
 reviewable units — not heroic single-author rewrites.
 

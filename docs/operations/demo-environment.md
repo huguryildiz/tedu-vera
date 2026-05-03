@@ -1,5 +1,7 @@
 # Demo Environment
 
+> _Last updated: 2026-04-28_
+
 The demo environment is the public face of VERA — what prospective tenants
 see when they click "Try the demo" on the landing page. This document
 covers what the demo contains, how it gets there, and how to update it.
