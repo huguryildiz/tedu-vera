@@ -16,8 +16,8 @@ test.describe("landing page CTA navigation", () => {
       localStorage.setItem("vera.admin_tour_done", "1");
     });
     await page.goto("/");
-    // Wait for nav to mount
-    await page.waitForSelector(".landing-nav", { timeout: 10_000 });
+    // Wait for masthead to mount
+    await page.waitForSelector(".ed-masthead", { timeout: 10_000 });
   });
 
   test("Sign In nav button navigates to /login", async ({ page }) => {
@@ -26,12 +26,12 @@ test.describe("landing page CTA navigation", () => {
   });
 
   test("Enter Code nav button navigates to /eval", async ({ page }) => {
-    await page.click(".nav-enter-code");
+    await page.click(".ed-mast-btn--code");
     await expect(page).toHaveURL(/\/eval/);
   });
 
-  test("Explore Admin Panel button navigates to /demo", async ({ page }) => {
-    await page.click(".btn-landing-secondary");
+  test("Tour the admin panel button navigates to /demo", async ({ page }) => {
+    await page.click(".ed-cta-secondary");
     await expect(page).toHaveURL(/\/demo/);
   });
 });

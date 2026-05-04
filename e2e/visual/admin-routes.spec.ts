@@ -23,7 +23,7 @@ const ROUTES: RouteEntry[] = [
   { path: "/demo/jury/evaluate",   name: "score-grid",     type: "demo" },
 
   // P2-6 key screens — public (no auth)
-  { path: "/",      name: "landing",    type: "public", waitFor: ".landing-nav" },
+  { path: "/",      name: "landing",    type: "public", waitFor: ".ed-masthead" },
   { path: "/login", name: "login",      type: "public", waitFor: "form" },
   { path: "/eval",  name: "jury-gate",  type: "public", waitFor: ".eval-entry, form, [data-testid]" },
 ];
@@ -66,7 +66,8 @@ for (const route of ROUTES) {
               transition-duration: 0s !important;
               transition-delay: 0s !important;
             }
-            .reveal-section, .reveal-section .reveal-child, .landing-steps {
+            .reveal-section, .reveal-section .reveal-child, .landing-steps,
+            .editorial-reveal {
               opacity: 1 !important;
               transform: none !important;
             }
@@ -114,7 +115,7 @@ for (const route of ROUTES) {
         // change mid-screenshot.
         await page.evaluate(() => {
           document
-            .querySelectorAll(".reveal-section, .landing-steps")
+            .querySelectorAll(".reveal-section, .landing-steps, .editorial-reveal")
             .forEach((el) => el.classList.add("is-visible"));
         });
         await page.waitForTimeout(150);
