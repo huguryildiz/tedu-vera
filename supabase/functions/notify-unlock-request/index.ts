@@ -94,19 +94,28 @@ function resolvePortalUrl(req: Request): string {
   return "https://vera-eval.app";
 }
 
+function buildScopeBlock(orgName: string, periodName: string): string {
+  return `
+    <div style="margin:0 0 18px; border:1px solid rgba(108,71,255,0.5); border-radius:16px; background:rgba(255,255,255,0.03); overflow:hidden;">
+      <div style="padding:14px 18px;">
+        <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">ORGANIZATION</p>
+        <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${escapeHtml(orgName)}</p>
+      </div>
+      <div style="padding:14px 18px; border-top:1px solid rgba(255,255,255,0.08);">
+        <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">PERIOD</p>
+        <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${escapeHtml(periodName)}</p>
+      </div>
+    </div>`;
+}
+
 function buildHtmlTemplate(params: {
   title: string;
   intro: string;
-  rawHtmlLines: string[];
-  ctaLabel?: string;
-  ctaUrl?: string;
+  customRows: string[];
   bandGradient?: string;
 }): string {
-  const lineHtml = params.rawHtmlLines.join("");
+  const rowsHtml = params.customRows.join("");
   const band = params.bandGradient ?? "linear-gradient(90deg,#6c47ff,#a78bfa,#6c47ff)";
-  const cta = params.ctaLabel && params.ctaUrl
-    ? `<a href="${escapeHtml(params.ctaUrl)}" style="display:inline-block; background:linear-gradient(135deg,#6c47ff,#a78bfa); color:#ffffff; text-decoration:none; font-size:16px; font-weight:600; padding:14px 36px; border-radius:50px; letter-spacing:0.3px; box-shadow:0 4px 20px rgba(108,71,255,0.45);">${escapeHtml(params.ctaLabel)} &rarr;</a>`
-    : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -119,8 +128,7 @@ function buildHtmlTemplate(params: {
         <tr><td align="center" style="padding:40px 40px 20px;"><img src="https://vera-eval.app/vera_logo_dark.png" alt="VERA" width="120" style="display:block; border:0;" /></td></tr>
         <tr><td align="center" style="padding:8px 48px 12px;"><h1 style="margin:0; font-size:25px; font-weight:700; color:#ffffff; letter-spacing:-0.5px;">${escapeHtml(params.title)}</h1></td></tr>
         <tr><td align="center" style="padding:0 48px 20px;"><p style="margin:0; font-size:15px; line-height:1.7; color:#a0aec0;">${escapeHtml(params.intro)}</p></td></tr>
-        <tr><td style="padding:0 48px 8px;">${lineHtml}</td></tr>
-        <tr><td align="center" style="padding:16px 48px 24px;">${cta}</td></tr>
+        ${rowsHtml}
         <tr><td style="padding:0 48px;"><div style="border-top:1px solid rgba(255,255,255,0.08); font-size:0;">&nbsp;</div></td></tr>
         <tr><td align="center" style="padding:16px 48px 30px;"><p style="margin:0; font-size:12px; color:#4a5568; line-height:1.6;">&copy; 2026 VERA. All rights reserved.</p></td></tr>
         <tr><td style="background:${band}; height:4px; font-size:0; line-height:0;">&nbsp;</td></tr>
@@ -181,18 +189,18 @@ Deno.serve(async (req: Request) => {
 
         subject = `Unlock request: ${periodLabel} (${orgLabel})`;
         body = `${requesterLabel} has requested to unlock "${periodLabel}" in ${orgLabel}. Reason: ${reasonText || "(no reason)"}`;
+
+        const scopeBlockReq = buildScopeBlock(orgLabel, periodLabel);
         html = buildHtmlTemplate({
           title: "Period Unlock Request",
           intro: "An org admin has requested to unlock a period that already has evaluation scores.",
           bandGradient: "linear-gradient(90deg,#d97706,#f59e0b,#d97706)",
-          rawHtmlLines: [
-            `<p style="margin:0 0 8px; font-size:14px; line-height:1.7; color:#a0aec0;"><strong style="color:#f1f5f9;">${escapeHtml(requesterLabel)}</strong> requested to unlock <strong style="color:#f1f5f9;">${escapeHtml(periodLabel)}</strong> in <strong style="color:#f1f5f9;">${escapeHtml(orgLabel)}</strong>.</p>`,
-            reasonText
-              ? `<p style="margin:8px 0 0; padding:12px 14px; font-size:13px; line-height:1.6; color:#cbd5e1; background:rgba(255,255,255,0.04); border-left:3px solid #a78bfa; border-radius:6px;"><strong style="color:#f1f5f9;">Reason:</strong> ${escapeHtml(reasonText)}</p>`
-              : "",
+          customRows: [
+            `<tr><td style="padding:0 48px 4px;"><p style="margin:0; font-size:18px; font-weight:700; color:#ffffff;">${escapeHtml(requesterLabel)}</p></td></tr>`,
+            `<tr><td style="padding:8px 48px 8px;">${scopeBlockReq}${reasonText ? `<p style="margin:14px 0 0; padding:12px 14px; font-size:13px; line-height:1.6; color:#cbd5e1; background:rgba(255,255,255,0.04); border-left:3px solid #a78bfa; border-radius:6px;"><strong style="color:#f1f5f9;">Reason:</strong> ${escapeHtml(reasonText)}</p>` : ""}</td></tr>`,
+            `<tr><td style="padding:10px 48px 20px;"><p style="margin:0; font-size:12px; line-height:1.6; color:#4a5568;">Approving an unlock bypasses the fairness guard. Existing scores remain but may become inconsistent if structural fields (weights, rubric bands, outcome mappings) are changed.</p></td></tr>`,
+            `<tr><td align="center" style="padding:4px 48px 28px;"><a href="${escapeHtml(`${portalUrl}/admin/unlock-requests`)}" style="display:inline-block; background:linear-gradient(135deg,#6c47ff,#a78bfa); color:#ffffff; text-decoration:none; font-size:16px; font-weight:600; padding:14px 36px; border-radius:50px; letter-spacing:0.3px; box-shadow:0 4px 20px rgba(108,71,255,0.45);">Review Request &rarr;</a></td></tr>`,
           ],
-          ctaLabel: "Review Request",
-          ctaUrl: `${portalUrl}/admin/unlock-requests`,
         });
         break;
       }
@@ -206,23 +214,32 @@ Deno.serve(async (req: Request) => {
 
         subject = `Unlock request ${decision}: ${periodLabel}`;
         body = `Your unlock request for "${periodLabel}" was ${decision}.${note ? ` Note: ${note}` : ""}`;
+
         const bandGradient = decision === "approved"
           ? "linear-gradient(90deg,#16a34a,#4ade80,#16a34a)"
           : "linear-gradient(90deg,#dc2626,#f87171,#dc2626)";
+        const accent = decision === "approved" ? "#4ade80" : "#f87171";
+        const decisionPill = decision === "approved" ? "APPROVED" : "REJECTED";
+        const explanationText = decision === "approved"
+          ? "The period is now unlocked. Labels and descriptions can be edited; structural fields remain read-only until the next QR is generated. Re-generate the QR code to re-freeze the rubric when you are done."
+          : "The period stays locked. If you still need to unlock, submit a new request with additional context.";
+        const ctaRow = decision === "approved"
+          ? `<tr><td align="center" style="padding:4px 48px 28px;"><a href="${escapeHtml(`${portalUrl}/admin/periods`)}" style="display:inline-block; background:linear-gradient(135deg,#6c47ff,#a78bfa); color:#ffffff; text-decoration:none; font-size:16px; font-weight:600; padding:14px 36px; border-radius:50px; letter-spacing:0.3px; box-shadow:0 4px 20px rgba(108,71,255,0.45);">Open Periods &rarr;</a></td></tr>`
+          : "";
+
+        const scopeBlockRes = buildScopeBlock(orgLabel, periodLabel);
         html = buildHtmlTemplate({
           title: decision === "approved" ? "Unlock Approved" : "Unlock Rejected",
           intro: decision === "approved"
             ? "Your unlock request has been approved."
             : "Your unlock request has been rejected.",
           bandGradient,
-          rawHtmlLines: [
-            `<p style="margin:0 0 8px; font-size:14px; line-height:1.7; color:#a0aec0;">Your request to unlock <strong style="color:#f1f5f9;">${escapeHtml(periodLabel)}</strong> in <strong style="color:#f1f5f9;">${escapeHtml(orgLabel)}</strong> was <strong style="color:${decision === "approved" ? "#4ade80" : "#f87171"};">${escapeHtml(decision)}</strong>.</p>`,
-            note
-              ? `<p style="margin:8px 0 0; padding:12px 14px; font-size:13px; line-height:1.6; color:#cbd5e1; background:rgba(255,255,255,0.04); border-left:3px solid #a78bfa; border-radius:6px;"><strong style="color:#f1f5f9;">Review note:</strong> ${escapeHtml(note)}</p>`
-              : "",
+          customRows: [
+            `<tr><td style="padding:0 48px 4px;"><p style="margin:0 0 6px; font-size:11px; line-height:1.3; letter-spacing:1.2px; font-weight:700; color:${accent};">${decisionPill}</p></td></tr>`,
+            `<tr><td style="padding:0 48px 8px;">${scopeBlockRes}${note ? `<p style="margin:14px 0 0; padding:12px 14px; font-size:13px; line-height:1.6; color:#cbd5e1; background:rgba(255,255,255,0.04); border-left:3px solid #a78bfa; border-radius:6px;"><strong style="color:#f1f5f9;">Review note:</strong> ${escapeHtml(note)}</p>` : ""}</td></tr>`,
+            `<tr><td style="padding:14px 48px 20px;"><p style="margin:0; font-size:12px; line-height:1.6; color:#4a5568;">${escapeHtml(explanationText)}</p></td></tr>`,
+            ctaRow,
           ],
-          ctaLabel: decision === "approved" ? "Open Periods" : undefined,
-          ctaUrl: decision === "approved" ? `${portalUrl}/admin/periods` : undefined,
         });
         break;
       }

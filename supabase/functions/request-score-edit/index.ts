@@ -169,9 +169,22 @@ async function shouldCcSuperAdmin(client: ReturnType<typeof createClient>): Prom
 
 // ── HTML builder ─────────────────────────────────────────────
 
+function buildScopeBlock(orgName: string, periodName: string): string {
+  return `
+    <div style="margin:0 0 18px; border:1px solid rgba(108,71,255,0.5); border-radius:16px; background:rgba(255,255,255,0.03); overflow:hidden;">
+      <div style="padding:14px 18px;">
+        <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">ORGANIZATION</p>
+        <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${escapeHtml(orgName)}</p>
+      </div>
+      <div style="padding:14px 18px; border-top:1px solid rgba(255,255,255,0.08);">
+        <p style="margin:0; font-size:11px; line-height:1.3; letter-spacing:1.2px; color:#7c5cff; font-weight:700;">PERIOD</p>
+        <p style="margin:6px 0 0; font-size:16px; line-height:1.4; color:#f1f5f9; font-weight:700;">${escapeHtml(periodName)}</p>
+      </div>
+    </div>`;
+}
+
 function buildHtml(params: {
   jurorName: string;
-  affiliation: string;
   periodName: string;
   orgName: string;
   logoUrl: string;
@@ -180,12 +193,7 @@ function buildHtml(params: {
     ? `<img src="${escapeHtml(params.logoUrl)}" alt="VERA" width="160" style="display:block;margin:0 auto;height:auto;" />`
     : `<img src="https://vera-eval.app/vera_logo_dark.png" alt="VERA" width="120" style="display:block; border:0;" />`;
 
-  const metaParts: string[] = [];
-  if (params.affiliation) metaParts.push(escapeHtml(params.affiliation));
-  if (params.orgName) metaParts.push(escapeHtml(params.orgName));
-  const affilLine = metaParts.length
-    ? `<p style="margin:0 0 16px;font-size:13px;color:#6c47ff;">${metaParts.join(" &middot; ")}</p>`
-    : "";
+  const scopeBlock = buildScopeBlock(params.orgName, params.periodName);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -207,12 +215,11 @@ function buildHtml(params: {
           <tr><td align="center" style="padding:0 48px 20px;">
             <p style="margin:0;font-size:15px;line-height:1.7;color:#a0aec0;">A juror has submitted their scores and is requesting the ability to edit them.</p>
           </td></tr>
-          <tr><td style="padding:0 48px 20px;">
-            <div style="padding:16px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;">
-              <p style="margin:0 0 4px;font-size:18px;font-weight:700;color:#ffffff;">${escapeHtml(params.jurorName)}</p>
-              ${affilLine}
-              <p style="margin:0;font-size:13px;color:#718096;">Period: <strong style="color:#a0aec0;">${escapeHtml(params.periodName || "—")}</strong></p>
-            </div>
+          <tr><td style="padding:0 48px 4px;">
+            <p style="margin:0;font-size:18px;font-weight:700;color:#ffffff;">${escapeHtml(params.jurorName)}</p>
+          </td></tr>
+          <tr><td style="padding:8px 48px 20px;">
+            ${scopeBlock}
           </td></tr>
           <tr><td style="padding:0 48px 20px;">
             <p style="margin:0;font-size:14px;line-height:1.7;color:#a0aec0;">To allow this juror to edit their scores, go to <strong style="color:#f1f5f9;">Settings &rarr; Jurors</strong> in your admin panel and enable <strong style="color:#f1f5f9;">Edit Mode</strong> for this juror.</p>
@@ -301,7 +308,6 @@ Deno.serve(async (req: Request) => {
 
     const html = buildHtml({
       jurorName: payload.jurorName,
-      affiliation: payload.affiliation || "",
       periodName: info.periodName,
       orgName: info.orgName,
       logoUrl: Deno.env.get("NOTIFICATION_LOGO_URL") || "",
