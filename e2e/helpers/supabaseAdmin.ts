@@ -74,10 +74,19 @@ export async function extractAuthHash(
   appBase: string,
 ): Promise<string> {
   const redirectPath = type === "invite" ? "/invite/accept" : "/reset-password";
-  const actionLink =
+  const rawLink =
     type === "invite"
       ? await generateInviteLink(email, `${appBase}${redirectPath}`)
       : await generateRecoveryLink(email);
+  // Recent Supabase CLI/GoTrue releases return action_link as
+  // `http://127.0.0.1:54321/verify?...` without the `/auth/v1/` prefix Kong
+  // routes on, so a direct fetch hits Kong's 404 ("no Route matched").
+  // Insert the prefix when it is missing; older CLIs that already include it
+  // pass through unchanged.
+  const actionLink = rawLink.replace(
+    /^(https?:\/\/[^/]+)\/(verify|otp|callback|authorize|magiclink|recover|signup)\b/,
+    "$1/auth/v1/$2",
+  );
   const res = await fetch(actionLink, { redirect: "manual" });
   const location = res.headers.get("location") ?? "";
   const hashIdx = location.indexOf("#");

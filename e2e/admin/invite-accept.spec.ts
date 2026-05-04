@@ -35,7 +35,12 @@ test.describe("admin invite-accept flow", () => {
     expect(error, `generateLink failed: ${error?.message}`).toBeNull();
     expect(data?.properties?.action_link).toBeTruthy();
 
-    const actionLink = data.properties.action_link;
+    // Recent Supabase CLI/GoTrue releases drop the `/auth/v1/` prefix from
+    // action_link, so a direct fetch hits Kong's 404. Insert it when missing.
+    const actionLink = data.properties.action_link.replace(
+      /^(https?:\/\/[^/]+)\/(verify|otp|callback|authorize|magiclink|recover|signup)\b/,
+      "$1/auth/v1/$2",
+    );
     const res = await fetch(actionLink, { redirect: "manual" });
     const location = res.headers.get("location") ?? "";
     const hashIdx = location.indexOf("#");
