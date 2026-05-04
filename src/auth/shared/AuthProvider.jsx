@@ -116,7 +116,10 @@ export default function AuthProvider({ children }) {
         id: newSession.user.id,
         email: newSession.user.email,
         newEmail: newSession.user.new_email ?? null,
-        name: newSession.user.user_metadata?.name || newSession.user.email,
+        name:
+          newSession.user.user_metadata?.name
+          || newSession.user.user_metadata?.full_name
+          || newSession.user.email,
         orgName: newSession.user.user_metadata?.orgName || "",
       });
       currentUserIdRef.current = newSession.user.id;
@@ -169,7 +172,10 @@ export default function AuthProvider({ children }) {
       id: newSession.user.id,
       email: newSession.user.email,
       newEmail: newSession.user.new_email ?? null,
-      name: newSession.user.user_metadata?.name || newSession.user.email,
+      name:
+        newSession.user.user_metadata?.name
+        || newSession.user.user_metadata?.full_name
+        || newSession.user.email,
       orgName: newSession.user.user_metadata?.orgName || "",
     });
     currentUserIdRef.current = newSession.user.id;
@@ -295,7 +301,10 @@ export default function AuthProvider({ children }) {
     }
 
     if (!skipAdminBootstrap) {
-      const displayNameFromUser = newSession.user.user_metadata?.name || newSession.user.email;
+      const displayNameFromUser =
+        newSession.user.user_metadata?.name
+        || newSession.user.user_metadata?.full_name
+        || newSession.user.email;
       upsertProfile(displayNameFromUser).then((profile) => {
         if (mountedRef.current && profile?.display_name) {
           setDisplayName(profile.display_name);
@@ -499,16 +508,18 @@ export default function AuthProvider({ children }) {
     catch {}
     // Preserve /demo namespace across the OAuth round-trip so the callback
     // resolves to the demo Supabase project (not prod). Without this, a user
-    // starting from /demo/login is redirected to /register and the Proxy
+    // starting from /demo/login is redirected to /admin and the Proxy
     // client switches to prod mid-flow — causing 401s against prod tables.
     const pathname = typeof window !== "undefined" ? window.location.pathname : "";
     const base = pathname.startsWith("/demo") ? "/demo" : "";
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        // Route OAuth callback through /register so first-time Google users
-        // land directly on the application form.
-        redirectTo: `${window.location.origin}${base}/register`,
+        // Route OAuth callback through /admin so AdminRouteLayout's
+        // profileIncomplete gate renders CompleteProfileForm for first-time
+        // Google users (Name + Org only, no password). Returning users with
+        // a complete profile pass through directly to the admin panel.
+        redirectTo: `${window.location.origin}${base}/admin`,
       },
     });
     if (error) throw error;

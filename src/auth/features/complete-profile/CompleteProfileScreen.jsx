@@ -7,7 +7,11 @@ import useShakeOnError from "@/shared/hooks/useShakeOnError";
 import { UserPlus } from "lucide-react";
 
 export default function CompleteProfileScreen({ user, onComplete, onSignOut }) {
-  const [fullName, setFullName] = useState(user?.name || "");
+  // AuthProvider falls back name → email when metadata has neither `name` nor
+  // `full_name`; treat that case as "no name" so the field is empty rather
+  // than pre-filled with the email address.
+  const initialName = user?.name && user.name !== user?.email ? user.name : "";
+  const [fullName, setFullName] = useState(initialName);
   const [orgName, setOrgName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);

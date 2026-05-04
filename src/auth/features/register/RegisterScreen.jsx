@@ -80,21 +80,24 @@ export default function RegisterScreen({ onSwitchToLogin, onReturnHome, error: e
   const [touched, setTouched] = useState({});
   const [emailCheck, setEmailCheck] = useState({ status: "idle", message: "" });
 
-  // Returning authenticated users (e.g. super-admin after Google OAuth) land here
-  // because redirectTo is set to /register for all OAuth flows. Redirect them to
-  // the admin panel instead of showing the signup form.
+  // Authenticated users that somehow land on /register (e.g. clicking the
+  // Register link while already signed in, or a stale tab) should be sent to
+  // /admin where AdminRouteLayout handles the right next step via its gates
+  // (CompleteProfileForm for incomplete profiles, PendingReviewGate for
+  // pending join requests, or the admin panel for active members).
   // Skip in demo mode: the demo admin is always auto-logged-in so this would
   // immediately redirect away from /demo/register on every visit.
   const isDemo = location.pathname.startsWith("/demo");
 
-  // While auth is resolving (e.g. OAuth callback processing), show nothing to
-  // prevent the form from flashing before the redirect fires.
+  // While auth is resolving, show nothing to prevent the form from flashing
+  // before the redirect below fires.
   if (!isDemo && auth?.loading) return null;
 
-  // Authenticated user with a complete profile landed here via OAuth redirectTo.
-  // Send them straight to the admin panel without rendering the signup form.
-  if (!isDemo && auth?.user && !auth?.profileIncomplete && auth?.organizations?.length > 0) {
-    return <Navigate to={`${base}/admin/overview`} replace />;
+  // Any authenticated user landing here is forwarded to /admin — that route
+  // owns the profile/pending/admin gating logic, so /register doesn't have
+  // to duplicate it.
+  if (!isDemo && auth?.user) {
+    return <Navigate to={`${base}/admin`} replace />;
   }
 
   const isEmailFormatValid = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());

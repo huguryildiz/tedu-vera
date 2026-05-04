@@ -139,7 +139,7 @@ describe("AuthProvider — Google OAuth", () => {
   });
 
   qaTest("auth.oauth.01", async () => {
-    // signInWithGoogle calls signInWithOAuth with provider=google and redirectTo=/register
+    // signInWithGoogle calls signInWithOAuth with provider=google and redirectTo=/admin
     const { getPublicAuthFlags } = await import("@/shared/api");
     renderProvider();
 
@@ -163,7 +163,7 @@ describe("AuthProvider — Google OAuth", () => {
 
     const call = mockSignInWithOAuth.mock.calls[0][0];
     expect(call.provider).toBe("google");
-    expect(call.options.redirectTo).toContain("/register");
+    expect(call.options.redirectTo).toContain("/admin");
   });
 
   qaTest("auth.oauth.02", async () => {
@@ -428,8 +428,8 @@ describe("AuthProvider — Google OAuth", () => {
     }, { timeout: 3000 });
 
     let call = mockSignInWithOAuth.mock.calls[0][0];
-    expect(call.options.redirectTo).toMatch(/\/register$/);
-    expect(call.options.redirectTo).not.toContain("/demo/register");
+    expect(call.options.redirectTo).toMatch(/\/admin$/);
+    expect(call.options.redirectTo).not.toContain("/demo/admin");
   });
 
   qaTest("auth.oauth.09", async () => {
@@ -499,6 +499,6 @@ describe("AuthProvider — Google OAuth", () => {
         redirectTo: expect.any(String),
       }),
     });
-    expect(args.options.redirectTo).toMatch(/\/(demo\/)?register$/);
+    expect(args.options.redirectTo).toMatch(/\/(demo\/)?admin$/);
   });
 });
