@@ -171,7 +171,7 @@
   font-size: 14px;
   font-family: var(--font);
 }
-.ed-cmp-table thead th {
+.ed-cmp-table thead th /* table-font-ok */ {
   font-family: var(--mono);
   font-size: 10.5px;
   font-weight: 700;
@@ -188,14 +188,14 @@
   color: var(--ed-accent);
   border-left: 2px solid var(--ed-accent);
 }
-.ed-cmp-table tbody th {
+.ed-cmp-table tbody th /* table-font-ok */ {
   text-align: left;
   font-weight: 600;
   color: var(--ed-paper);
   padding: 16px 22px;
   border-bottom: 1px solid var(--ed-rule);
 }
-.ed-cmp-table tbody td {
+.ed-cmp-table tbody td /* table-font-ok */ {
   text-align: center;
   font-family: var(--mono);
   font-size: 16px;
@@ -248,7 +248,7 @@
   .ed-cmp-head .sub { grid-column: 1; grid-row: auto; }
   .ed-cmp-frame { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .ed-cmp-table { min-width: 640px; font-size: 12px; }
-  .ed-cmp-table thead th { padding: 12px 14px; font-size: 9.5px; }
+  .ed-cmp-table thead th /* table-font-ok */ { padding: 12px 14px; font-size: 9.5px; }
   .ed-cmp-table tbody th,
-  .ed-cmp-table tbody td { padding: 12px 14px; font-size: 13px; }
+  .ed-cmp-table tbody td /* table-font-ok */ { padding: 12px 14px; font-size: 13px; }
 }
