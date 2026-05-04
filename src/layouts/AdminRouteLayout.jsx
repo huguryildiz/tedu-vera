@@ -424,7 +424,10 @@ export default function AdminRouteLayout() {
   ]);
 
   // ── Auth gate ─────────────────────────────────────────────
-  if (authLoading) return null;
+  // Render the auth-form background instead of blank so the transition to
+  // CompleteProfileForm (OAuth first-time users) or LoginScreen feels
+  // seamless — both use .login-screen, so there is no background flash.
+  if (authLoading) return <div className="login-screen" aria-busy="true" />;
 
   const loginHandler = async (email, password, rememberMe, captchaToken) => {
     setAuthError("");

@@ -89,9 +89,9 @@ export default function RegisterScreen({ onSwitchToLogin, onReturnHome, error: e
   // immediately redirect away from /demo/register on every visit.
   const isDemo = location.pathname.startsWith("/demo");
 
-  // While auth is resolving, show nothing to prevent the form from flashing
-  // before the redirect below fires.
-  if (!isDemo && auth?.loading) return null;
+  // While auth is resolving, show the same background as the auth forms so
+  // the redirect to /admin (fired once auth settles) has no visible flash.
+  if (!isDemo && auth?.loading) return <div className="apply-screen" aria-busy="true" />;
 
   // Any authenticated user landing here is forwarded to /admin — that route
   // owns the profile/pending/admin gating logic, so /register doesn't have
