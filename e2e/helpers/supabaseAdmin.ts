@@ -82,7 +82,20 @@ export async function extractAuthHash(
   const location = res.headers.get("location") ?? "";
   const hashIdx = location.indexOf("#");
   if (hashIdx === -1) {
-    throw new Error(`No hash fragment in Supabase redirect. Location: ${location.slice(0, 120)}`);
+    let bodySnippet = "";
+    try {
+      bodySnippet = (await res.text()).slice(0, 400);
+    } catch {}
+    const headerDump: Record<string, string> = {};
+    res.headers.forEach((v, k) => { headerDump[k] = v; });
+    throw new Error(
+      `No hash fragment in Supabase redirect.\n` +
+      `  status=${res.status} ${res.statusText}\n` +
+      `  actionLink=${actionLink.slice(0, 200)}\n` +
+      `  location=${location.slice(0, 200)}\n` +
+      `  headers=${JSON.stringify(headerDump)}\n` +
+      `  body=${bodySnippet}`,
+    );
   }
   return location.slice(hashIdx); // "#access_token=...&refresh_token=...&type=invite|recovery"
 }
