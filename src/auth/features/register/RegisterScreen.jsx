@@ -89,6 +89,12 @@ export default function RegisterScreen({ onSwitchToLogin, onReturnHome, error: e
   // immediately redirect away from /demo/register on every visit.
   const isDemo = location.pathname.startsWith("/demo");
 
+  // useShakeOnError must be called unconditionally before any early returns.
+  const internalError = (error || "").trim();
+  const externalNormalized = externalError ? normalizeError(String(externalError).trim()) : "";
+  const displayError = internalError || externalNormalized;
+  const submitBtnRef = useShakeOnError(displayError);
+
   // While auth is resolving, show the same background as the auth forms so
   // the redirect to /admin (fired once auth settles) has no visible flash.
   if (!isDemo && auth?.loading) return <div className="apply-screen" aria-busy="true" />;
@@ -147,11 +153,6 @@ export default function RegisterScreen({ onSwitchToLogin, onReturnHome, error: e
       setLoading(false);
     }
   }
-
-  const internalError = (error || "").trim();
-  const externalNormalized = externalError ? normalizeError(String(externalError).trim()) : "";
-  const displayError = internalError || externalNormalized;
-  const submitBtnRef = useShakeOnError(displayError);
 
   return (
     <div className="apply-screen">
