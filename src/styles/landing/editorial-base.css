@@ -1,0 +1,162 @@
+/* ═══════════════════════════════════════════════════
+   LANDING — EDITORIAL BASE
+   Reusable typographic + layout primitives the
+   redesigned sections compose against. Consumers may
+   not redefine these properties — extend or wrap.
+   ═══════════════════════════════════════════════════ */
+
+/* ── Page shell (replaces legacy .landing background work) ── */
+.landing-editorial {
+  background: var(--ed-bg);
+  color: var(--ed-paper);
+  background-image:
+    radial-gradient(1200px 600px at 8% -10%, var(--ed-accent-soft), transparent 60%),
+    radial-gradient(900px 500px at 95% 12%, var(--ed-accent-soft), transparent 70%),
+    linear-gradient(180deg, var(--ed-bg) 0%, color-mix(in srgb, var(--ed-bg) 70%, #000000) 100%);
+  background-attachment: fixed;
+  position: relative;
+  overflow-x: hidden;
+}
+body:not(.dark-mode) .landing-editorial {
+  background-image:
+    radial-gradient(1200px 600px at 8% -10%, rgba(37,99,235,0.06), transparent 60%),
+    radial-gradient(900px 500px at 95% 12%, rgba(99,102,241,0.04), transparent 70%),
+    linear-gradient(180deg, var(--ed-bg) 0%, #ffffff 100%);
+}
+
+/* ── Hairline grid background ── */
+.editorial-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, var(--ed-rule) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--ed-rule) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: linear-gradient(180deg, black 0%, black 80%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, black 0%, black 80%, transparent 100%);
+  opacity: 0.7;
+}
+
+/* ── Layout wrap ── */
+.ed-wrap {
+  max-width: var(--ed-max);
+  margin: 0 auto;
+  padding: 0 var(--ed-gutter);
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Editorial typography primitives ── */
+.editorial-kicker {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ed-paper-faint);
+  font-weight: 500;
+}
+.editorial-kicker .num {
+  color: var(--ed-accent);
+  font-weight: 600;
+}
+
+.editorial-italic {
+  font-style: italic;
+  font-weight: inherit;
+  color: var(--ed-accent);
+}
+
+.editorial-rule {
+  height: 1px;
+  background: var(--ed-rule);
+  border: 0;
+  width: 100%;
+  margin: 0;
+}
+
+/* ── Justified body — applies to lede / capability / FAQ answer prose ── */
+.editorial-body {
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+  line-height: 1.55;
+}
+
+/* ── Numbered section header — used by every section ── */
+.editorial-section-num {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 32px;
+  padding: 100px 0 56px;
+  align-items: start;
+}
+.editorial-section-num .num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ed-accent);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding-top: 14px;
+  border-top: 1px solid var(--ed-accent);
+  font-weight: 700;
+}
+.editorial-section-num h2 {
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: clamp(40px, 5.4vw, 78px);
+  line-height: 1.0;
+  letter-spacing: -0.04em;
+  color: var(--ed-paper);
+  margin: 0 0 18px;
+}
+.editorial-section-num h2 em { font-style: italic; font-weight: 800; color: var(--ed-accent); }
+.editorial-section-num .sub {
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--ed-paper-mute);
+  max-width: 600px;
+  font-weight: 400;
+}
+
+/* ── Editorial frame — single 1px border, no glow ── */
+.editorial-frame {
+  border: 1px solid var(--ed-rule-2);
+  border-radius: 12px;
+  background: var(--ed-bg-2);
+  position: relative;
+  overflow: hidden;
+}
+.editorial-frame--accent {
+  border-color: var(--ed-accent);
+}
+
+/* ── Reveal-on-scroll (subtle, no scroll-jacking) ── */
+.editorial-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity .7s cubic-bezier(.2,.7,.3,1), transform .7s cubic-bezier(.2,.7,.3,1);
+}
+.editorial-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .editorial-reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* ── Selection ── */
+.landing-editorial ::selection {
+  background: var(--ed-accent);
+  color: var(--ed-bg);
+}
+
+/* ── Mobile portrait gutter shrink ── */
+@media (max-width: 640px) {
+  .editorial-section-num {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 60px 0 30px;
+  }
+}

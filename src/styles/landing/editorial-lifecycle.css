@@ -1,0 +1,238 @@
+/* ═══════════════════════════════════════════════════
+   LANDING — 03 · PERIOD LIFECYCLE
+   Single editorial frame with stage progression strip;
+   preserves Design 1 content verbatim:
+   Draft → Published → Live → Closed + description + 3 bullets.
+   ═══════════════════════════════════════════════════ */
+
+.ed-lifecycle {
+  position: relative;
+  padding: 100px 0 60px;
+  border-bottom: 1px solid var(--ed-rule);
+}
+
+.ed-life-head {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 32px;
+  padding-bottom: 56px;
+  align-items: start;
+}
+.ed-life-head .num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ed-accent);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding-top: 14px;
+  border-top: 1px solid var(--ed-accent);
+  font-weight: 700;
+  align-self: start;
+}
+.ed-life-head h2 {
+  grid-column: 2;
+  grid-row: 1;
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: clamp(40px, 5.4vw, 78px);
+  line-height: 1.0;
+  letter-spacing: -0.04em;
+  color: var(--ed-paper);
+  margin: 0 0 18px;
+}
+.ed-life-head h2 em {
+  font-style: italic;
+  font-weight: 800;
+  color: var(--ed-accent);
+}
+.ed-life-head .sub {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ed-paper-mute);
+  max-width: 720px;
+  font-weight: 400;
+  margin: 0;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/* Stage progression strip — Draft → Published → Live → Closed */
+.ed-life-stages {
+  list-style: none;
+  margin: 0 0 36px;
+  padding: 18px 24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--ed-rule-2);
+  border-bottom: 1px solid var(--ed-rule-2);
+}
+.ed-life-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: baseline;
+  padding: 4px 18px 4px 0;
+  column-gap: 10px;
+}
+.ed-life-stage + .ed-life-stage {
+  padding-left: 18px;
+  border-left: 1px dashed var(--ed-rule-2);
+}
+.ed-life-step-n {
+  grid-row: 1;
+  grid-column: 1;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ed-accent);
+  letter-spacing: 0.18em;
+}
+.ed-life-stage-label {
+  grid-row: 1;
+  grid-column: 2;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ed-paper);
+  letter-spacing: -0.01em;
+}
+.ed-life-stage-note {
+  grid-row: 2;
+  grid-column: 1 / span 2;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ed-paper-faint);
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+.ed-life-stage.is-terminal .ed-life-stage-label {
+  color: var(--ed-accent);
+}
+.ed-life-arrow {
+  grid-row: 1;
+  grid-column: 3;
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--ed-paper-deep);
+  font-weight: 500;
+}
+
+/* Single editorial frame for the periods screenshot */
+.ed-life-figure { margin: 0; }
+.ed-life-shot {
+  position: relative;
+  border: 1px solid var(--ed-rule-2);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--ed-bg-2);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+}
+body:not(.dark-mode) .ed-life-shot {
+  box-shadow: 0 24px 60px rgba(15,23,42,0.12);
+}
+.ed-life-shot > .corner-tl,
+.ed-life-shot > .corner-tr,
+.ed-life-shot > .corner-bl,
+.ed-life-shot > .corner-br {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--ed-accent);
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.ed-life-shot > .corner-tl { top: -7px; left: -7px; border-top-width: 1px; border-left-width: 1px; }
+.ed-life-shot > .corner-tr { top: -7px; right: -7px; border-top-width: 1px; border-right-width: 1px; }
+.ed-life-shot > .corner-bl { bottom: -7px; left: -7px; border-bottom-width: 1px; border-left-width: 1px; }
+.ed-life-shot > .corner-br { bottom: -7px; right: -7px; border-bottom-width: 1px; border-right-width: 1px; }
+
+.ed-life-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.ed-life-shot-overlay {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ed-bg) 75%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--ed-rule-2);
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ed-paper);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.ed-life-shot-overlay .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ed-live);
+  animation: ed-pulse 1.6s ease-in-out infinite;
+}
+
+/* 3 sub-bullets — inline mono row */
+.ed-life-bullets {
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ed-paper-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.ed-life-bullets li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ed-life-bullets .diamond {
+  color: var(--ed-accent);
+  font-size: 10px;
+  line-height: 1;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .ed-life-stages {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 14px;
+    padding: 16px 18px;
+  }
+  .ed-life-stage:nth-child(2n+1) { padding-left: 0; }
+  .ed-life-stage:nth-child(2n+1) + .ed-life-stage { padding-left: 18px; }
+  .ed-life-stage:nth-child(3) { border-left: none; padding-left: 0; }
+}
+@media (max-width: 640px) {
+  .ed-lifecycle { padding: 60px 0 40px; }
+  .ed-life-head { grid-template-columns: 1fr; gap: 14px; padding-bottom: 28px; }
+  .ed-life-head .num { padding-top: 0; }
+  .ed-life-head h2 { grid-column: 1; grid-row: auto; }
+  .ed-life-head .sub { grid-column: 1; grid-row: auto; }
+  .ed-life-stages { grid-template-columns: 1fr; padding: 14px 16px; }
+  .ed-life-stage,
+  .ed-life-stage:nth-child(2n+1) + .ed-life-stage,
+  .ed-life-stage + .ed-life-stage { border-left: none; border-top: 1px dashed var(--ed-rule-2); padding: 10px 0 10px 0; }
+  .ed-life-stage:first-child { border-top: none; padding-top: 0; }
+  .ed-life-arrow { display: none; }
+}

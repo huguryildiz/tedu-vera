@@ -7727,11 +7727,33 @@
     "module": "landing/LandingPage",
     "area": "LandingPage",
     "story": "hero heading renders",
-    "scenario": "renders 'Evaluate anything' hero headline in the DOM",
+    "scenario": "renders 'Evaluate' / 'Prove' headline in the DOM",
     "whyItMatters": "Hero is the first impression; must render for any visitor to understand the product.",
     "risk": "Broken hero render leaves a blank landing page — zero conversion.",
     "coverageStrength": "render",
     "severity": "critical"
+  },
+  {
+    "id": "coverage.landing.hero-renders-dual-cta",
+    "module": "landing/LandingPage",
+    "area": "LandingPage",
+    "story": "hero CTA buttons render",
+    "scenario": "renders 'Be a juror' and 'Tour the admin panel' buttons",
+    "whyItMatters": "These two CTAs are the only path into the demo from landing; missing buttons block all conversion.",
+    "risk": "Missing CTA → zero entry into demo or admin.",
+    "coverageStrength": "render",
+    "severity": "critical"
+  },
+  {
+    "id": "coverage.landing.live-signal-renders-four-stats",
+    "module": "landing/LandingPage",
+    "area": "LandingPage",
+    "story": "live signal ticker renders four real metrics",
+    "scenario": "renders Active jurors, Evaluations, Organizations, Projects · scored labels in the live signal section",
+    "whyItMatters": "Live signal is the trust anchor of the editorial hero — the page claims real metrics; missing labels = broken claim.",
+    "risk": "Missing live signal section makes the hero feel hollow and breaks the 'real evaluation data' promise.",
+    "coverageStrength": "render",
+    "severity": "important"
   },
   {
     "id": "coverage.demo-loader.shows-loading-steps-on-mount",
@@ -8350,17 +8372,6 @@
     "severity": "normal"
   },
   {
-    "id": "coverage.showcase-data.shape",
-    "module": "landing/components/showcase/showcaseData",
-    "area": "showcaseData",
-    "story": "exports SLIDES array with screenshot pairs",
-    "scenario": "SLIDES has 6 entries each with theme, title, desc, color, features, and image{light,dark}",
-    "whyItMatters": "Each slide pairs landing copy with a real demo screenshot — wrong shape breaks the showcase carousel.",
-    "risk": "Missing image.light or image.dark → screenshot fails to render in the matching theme.",
-    "coverageStrength": "smoke",
-    "severity": "low"
-  },
-  {
     "id": "coverage.capture-chart-image.null-element",
     "module": "admin/analytics/captureChartImage",
     "area": "captureChartImage",
@@ -8446,17 +8457,6 @@
     "whyItMatters": "All auth screens (/login, /register) depend on this layout.",
     "risk": "Broken layout → auth screens render nothing.",
     "coverageStrength": "render",
-    "severity": "normal"
-  },
-  {
-    "id": "coverage.product-showcase.has-slides",
-    "module": "landing/components/ProductShowcase",
-    "area": "ProductShowcase",
-    "story": "shows slide navigation",
-    "scenario": "ProductShowcase renders at least one navigation tab",
-    "whyItMatters": "Tabs drive slide selection; missing tabs mean no navigation.",
-    "risk": "Missing tabs → users cannot navigate showcase.",
-    "coverageStrength": "behaviour",
     "severity": "normal"
   },
   {

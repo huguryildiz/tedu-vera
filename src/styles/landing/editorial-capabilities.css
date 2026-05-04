@@ -1,0 +1,254 @@
+/* ═══════════════════════════════════════════════════
+   LANDING — 04 · CAPABILITIES + 05 · COMPARISON
+   Numbered ledger list (6 rows) + editorial dark table.
+   No icons in capability rows; plain glyphs in comparison.
+   ═══════════════════════════════════════════════════ */
+
+/* ── 04 · Capabilities ── */
+.ed-capabilities {
+  position: relative;
+  padding: 100px 0 60px;
+  border-bottom: 1px solid var(--ed-rule);
+}
+
+.ed-cap-head {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: 32px;
+  padding-bottom: 56px;
+  align-items: start;
+}
+.ed-cap-head .num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ed-accent);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding-top: 14px;
+  border-top: 1px solid var(--ed-accent);
+  font-weight: 700;
+  align-self: start;
+}
+.ed-cap-head h2 {
+  grid-column: 2;
+  grid-row: 1;
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: clamp(40px, 5.4vw, 78px);
+  line-height: 1.0;
+  letter-spacing: -0.04em;
+  color: var(--ed-paper);
+  margin: 0 0 18px;
+}
+.ed-cap-head h2 em { font-style: italic; font-weight: 800; color: var(--ed-accent); }
+.ed-cap-head .sub {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ed-paper-mute);
+  max-width: 720px;
+  font-weight: 400;
+  margin: 0;
+  text-align: justify;
+  text-justify: inter-word;
+}
+.ed-cap-head .meta {
+  grid-column: 3;
+  grid-row: 1;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ed-paper-faint);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding-top: 14px;
+  font-feature-settings: "tnum" 1;
+}
+
+.ed-cap-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ed-cap-row {
+  display: grid;
+  grid-template-columns: 80px 280px 1fr;
+  gap: 32px;
+  padding: 22px 0;
+  border-top: 1px solid var(--ed-rule-2);
+  align-items: baseline;
+  transition: background-color .25s ease;
+}
+.ed-cap-row:last-child { border-bottom: 1px solid var(--ed-rule-2); }
+.ed-cap-row:hover {
+  background: linear-gradient(90deg, var(--ed-accent-soft), transparent 60%);
+}
+.ed-cap-row .kicker {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ed-accent);
+  letter-spacing: 0.18em;
+  font-weight: 700;
+}
+.ed-cap-row .name {
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 17px;
+  text-transform: uppercase;
+  letter-spacing: -0.005em;
+  color: var(--ed-paper);
+}
+.ed-cap-row .desc {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ed-paper-mute);
+  max-width: 640px;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/* ── 05 · Comparison ── */
+.ed-comparison {
+  position: relative;
+  padding: 100px 0 60px;
+  border-bottom: 1px solid var(--ed-rule);
+}
+
+.ed-cmp-head {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 32px;
+  padding-bottom: 48px;
+  align-items: start;
+}
+.ed-cmp-head .num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ed-accent);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding-top: 14px;
+  border-top: 1px solid var(--ed-accent);
+  font-weight: 700;
+  align-self: start;
+}
+.ed-cmp-head h2 {
+  grid-column: 2;
+  grid-row: 1;
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: clamp(40px, 5.4vw, 78px);
+  line-height: 1.0;
+  letter-spacing: -0.04em;
+  color: var(--ed-paper);
+  margin: 0 0 18px;
+}
+.ed-cmp-head h2 em { font-style: italic; font-weight: 800; color: var(--ed-accent); }
+.ed-cmp-head .sub {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ed-paper-mute);
+  max-width: 720px;
+  font-weight: 400;
+  margin: 0;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.ed-cmp-frame {
+  border: 1px solid var(--ed-rule-2);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--ed-bg-2);
+}
+
+.ed-cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-family: var(--font);
+}
+.ed-cmp-table thead th {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ed-paper-faint);
+  padding: 18px 22px;
+  text-align: center;
+  border-bottom: 1px solid var(--ed-rule-2);
+  background: color-mix(in srgb, var(--ed-paper) 2%, transparent);
+}
+.ed-cmp-table thead th:first-child { text-align: left; }
+.ed-cmp-table thead th.is-highlight {
+  color: var(--ed-accent);
+  border-left: 2px solid var(--ed-accent);
+}
+.ed-cmp-table tbody th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ed-paper);
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--ed-rule);
+}
+.ed-cmp-table tbody td {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--ed-rule);
+  font-feature-settings: "tnum" 1;
+}
+.ed-cmp-table tbody tr:last-child th,
+.ed-cmp-table tbody tr:last-child td { border-bottom: none; }
+
+.ed-cmp-yes { color: var(--ed-live); }
+.ed-cmp-partial { color: var(--ed-warn); }
+.ed-cmp-no { color: var(--ed-paper-deep); }
+.ed-cmp-table tbody td.is-highlight {
+  border-left: 2px solid var(--ed-accent);
+  background: var(--ed-accent-soft);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .ed-cap-head {
+    grid-template-columns: 80px 1fr;
+  }
+  .ed-cap-head .meta { grid-column: 2; grid-row: 3; padding-top: 8px; }
+  .ed-cap-row { grid-template-columns: 60px 220px 1fr; gap: 22px; }
+  .ed-cmp-frame { overflow-x: auto; }
+  .ed-cmp-table { min-width: 720px; }
+}
+@media (max-width: 640px) {
+  .ed-capabilities { padding: 60px 0 40px; }
+  .ed-cap-head { grid-template-columns: 1fr; gap: 14px; padding-bottom: 28px; }
+  .ed-cap-head .num { padding-top: 0; }
+  .ed-cap-head h2 { grid-column: 1; grid-row: auto; }
+  .ed-cap-head .sub { grid-column: 1; grid-row: auto; }
+  .ed-cap-head .meta { grid-column: 1; grid-row: auto; padding-top: 0; }
+  .ed-cap-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 18px 0;
+  }
+  .ed-cap-row .kicker { display: inline; }
+  .ed-cap-row .name { font-size: 15px; }
+  .ed-cap-row .desc { font-size: 14px; }
+
+  .ed-comparison { padding: 60px 0 40px; }
+  .ed-cmp-head { grid-template-columns: 1fr; gap: 14px; padding-bottom: 28px; }
+  .ed-cmp-head .num { padding-top: 0; }
+  .ed-cmp-head h2 { grid-column: 1; grid-row: auto; }
+  .ed-cmp-head .sub { grid-column: 1; grid-row: auto; }
+  .ed-cmp-frame { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .ed-cmp-table { min-width: 640px; font-size: 12px; }
+  .ed-cmp-table thead th { padding: 12px 14px; font-size: 9.5px; }
+  .ed-cmp-table tbody th,
+  .ed-cmp-table tbody td { padding: 12px 14px; font-size: 13px; }
+}

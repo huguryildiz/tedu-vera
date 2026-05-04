@@ -1,0 +1,88 @@
+/* ═══════════════════════════════════════════════════
+   LANDING — EDITORIAL DESIGN TOKENS
+   Single source of truth for the editorial redesign.
+   Light mode overrides the same names; class rules
+   reference vars only — no per-mode class duplication.
+   ═══════════════════════════════════════════════════ */
+
+/* ── Dark editorial defaults — applied via .landing root scope ── */
+.landing {
+  /* surface scale */
+  --ed-bg:           #080d1a;
+  --ed-bg-2:         #0b1022;
+  --ed-bg-3:         #151d32;
+  --ed-bg-4:         #1c2740;
+
+  /* typographic ink */
+  --ed-paper:        #f1f5f9;
+  --ed-paper-mute:   #a8b8ca;
+  --ed-paper-faint:  #7a8ca0;
+  --ed-paper-deep:   #556070;
+
+  /* hairline rules */
+  --ed-rule:         rgba(168,184,202,0.07);
+  --ed-rule-2:       rgba(168,184,202,0.16);
+  --ed-rule-3:       rgba(168,184,202,0.32);
+
+  /* accent + supporting hues */
+  --ed-accent:       #60a5fa;
+  --ed-accent-2:     #93c5fd;
+  --ed-accent-deep:  #3b82f6;
+  --ed-accent-soft:  rgba(96,165,250,0.12);
+  --ed-accent-glow:  rgba(96,165,250,0.55);
+  --ed-live:         #4ade80;
+  --ed-warn:         #fbbf24;
+  --ed-gold:         #fde68a;
+
+  /* CTA primary inversion (light pill on dark surface) */
+  --ed-primary-fg:   #0b1022;
+  --ed-primary-bg:   #f1f5f9;
+  --ed-primary-bg-h: #ffffff;
+
+  /* card depth */
+  --ed-shadow-card:  0 30px 80px rgba(0,0,0,0.55);
+
+  /* layout */
+  --ed-max:    1280px;
+  --ed-gutter: 48px;
+
+  /* reused project type tokens (already global) */
+  /* --font, --mono come from src/styles/variables.css */
+}
+
+/* ── Light overrides — flip token values, no class-level switching ── */
+body:not(.dark-mode) .landing {
+  --ed-bg:           #f4f7fb;
+  --ed-bg-2:         #ffffff;
+  --ed-bg-3:         #eef2f8;
+  --ed-bg-4:         #e3eaf4;
+
+  --ed-paper:        #0f172a;
+  --ed-paper-mute:   #475569;
+  --ed-paper-faint:  #64748b;
+  --ed-paper-deep:   #94a3b8;
+
+  --ed-rule:         rgba(15,23,42,0.07);
+  --ed-rule-2:       rgba(15,23,42,0.13);
+  --ed-rule-3:       rgba(15,23,42,0.28);
+
+  --ed-accent:       #2563eb;
+  --ed-accent-2:     #1d4ed8;
+  --ed-accent-deep:  #1e40af;
+  --ed-accent-soft:  rgba(37,99,235,0.07);
+  --ed-accent-glow:  rgba(37,99,235,0.4);
+  --ed-live:         #16a34a;
+  --ed-warn:         #d97706;
+  --ed-gold:         #b45309;
+
+  --ed-primary-fg:   #ffffff;
+  --ed-primary-bg:   #0f172a;
+  --ed-primary-bg-h: #1e293b;
+
+  --ed-shadow-card:  0 24px 50px rgba(15,23,42,0.10);
+}
+
+/* Mobile gutter shrink — keeps content breathing room on small phones */
+@media (max-width: 1024px) {
+  .landing { --ed-gutter: 28px; }
+}

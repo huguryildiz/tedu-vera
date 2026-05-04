@@ -17,7 +17,8 @@ function RootLayoutInner() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const auth = useContext(AuthContext);
-  const showToggle = !pathname.startsWith("/admin") && !pathname.startsWith("/demo/admin");
+  const isLandingRoot = pathname === "/" || pathname === "/demo" || pathname === "/demo/";
+  const showToggle = !pathname.startsWith("/admin") && !pathname.startsWith("/demo/admin") && !isLandingRoot;
 
   // After Google OAuth, Supabase may redirect to site root instead of /register
   // when the redirect URL isn't in the allow-list. Catch that here.

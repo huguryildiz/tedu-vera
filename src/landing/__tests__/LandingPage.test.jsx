@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { qaTest } from "@/test/qaTest";
 
-// jsdom has no IntersectionObserver — polyfill for useCountUp and scroll reveals
+// jsdom has no IntersectionObserver — polyfill for editorial-reveal observer
 beforeAll(() => {
   global.IntersectionObserver = vi.fn(() => ({
     observe: vi.fn(),
@@ -12,8 +12,6 @@ beforeAll(() => {
   }));
 });
 
-// ── Stable constants ─────────────────────────────────────────────────────────
-
 const { DEMO_CLIENT } = vi.hoisted(() => {
   const DEMO_CLIENT = {
     rpc: () => Promise.resolve({ data: null, error: null }),
@@ -21,23 +19,14 @@ const { DEMO_CLIENT } = vi.hoisted(() => {
   return { DEMO_CLIENT };
 });
 
-// ── Module mocks ─────────────────────────────────────────────────────────────
-
 vi.mock("@/shared/lib/supabaseClient", () => ({
   supabase: {},
   getDemoClient: () => DEMO_CLIENT,
 }));
 
 vi.mock("@/shared/theme/ThemeProvider", () => ({
-  useTheme: () => ({ theme: "light", setTheme: () => {} }),
+  useTheme: () => ({ theme: "dark", setTheme: () => {} }),
 }));
-
-vi.mock("../components/ProductShowcase", () => ({ default: () => null }));
-
-vi.mock("@/assets/vera_logo_dark.png", () => ({ default: "vera_logo_dark.png" }));
-vi.mock("@/assets/vera_logo_white.png", () => ({ default: "vera_logo_white.png" }));
-vi.mock("@/assets/favicon/web-app-manifest-512x512.png", () => ({ default: "nav-dark.png" }));
-vi.mock("@/assets/favicon/favicon_light.png", () => ({ default: "nav-light.png" }));
 
 import { LandingPage } from "../LandingPage";
 
@@ -52,7 +41,23 @@ function renderPage() {
 describe("LandingPage", () => {
   qaTest("coverage.landing.hero-displays-headline-text", () => {
     renderPage();
-    expect(screen.getByText(/Evaluate anything/i)).toBeInTheDocument();
+    const h1 = screen.getByRole("heading", { level: 1 });
+    expect(h1).toHaveTextContent(/Evaluate/i);
+    expect(h1).toHaveTextContent(/Prove/i);
   });
 
+  qaTest("coverage.landing.hero-renders-dual-cta", () => {
+    renderPage();
+    expect(screen.getByRole("button", { name: /Be a juror/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Tour the admin panel/i })).toBeInTheDocument();
+  });
+
+  qaTest("coverage.landing.live-signal-renders-four-stats", () => {
+    renderPage();
+    expect(screen.getByLabelText(/live signal/i)).toBeInTheDocument();
+    expect(screen.getByText(/Active jurors/i)).toBeInTheDocument();
+    expect(screen.getByText(/Evaluations/i)).toBeInTheDocument();
+    expect(screen.getByText(/Organizations/i)).toBeInTheDocument();
+    expect(screen.getByText(/Projects · scored/i)).toBeInTheDocument();
+  });
 });
